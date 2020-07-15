@@ -1,0 +1,181 @@
+<script lang="ts">
+  import _ from 'lodash'
+  import {onMount,setContext} from 'svelte'
+  import {fade} from 'svelte/transition'
+  import Editor from './Editor.svelte'
+  import View from './View.svelte'
+  import Firebase from '@fb'
+  import FirebaseFirestore from '@fb/firestore'
+  import {getAllData} from '@fb/firestore/domains'
+  import {getUserRole} from '@fb/firestore/users'
+  import FirebaseAuth, {checkIfLoggedIn} from '@fb/auth'
+  import {Button} from '@components/buttons'
+  import {getHeadStyles, setCustomScripts, setHeadScript, getPageLibraries, setPageJsLibraries} from './pageUtils.js'
+  import {FeedbackForm,Spinner} from '@components/misc'
+  import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from 'utils'
+
+  import {symbols,settings,dependencies,domainInfo,pageData,content,site,tailwind,loadingTailwind,user} from '@stores/data'
+  import {modal} from '@stores/app'
+
+  let signedIn : boolean = false
+  user.subscribe(s => {
+    signedIn = s.signedIn
+    setContext('editable', s.canEditPage)
+  })
+
+  export let subdomain : string
+  export let pageId : string
+
+	$: domainInfo.save({page: pageId})
+
+  let enteringPassword = false;
+
+  let siteStyles:string 
+  $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')
+
+  let pageStyles:string 
+  $: pageStyles = wrapInStyleTags($settings.globalStyles.compiled, 'page-styles')
+
+  let identity:any 
+  $: identity = $settings.identity
+
+  let libraries:Array<any>
+  $: libraries = $dependencies.libraries
+
+  let headEmbed:string
+  $: headEmbed = $dependencies.headEmbed
+
+  let customScripts:Array<any> = []
+
+  onMount(async() => {
+    if (!$user.signedIn) {
+      // openUnlockModal()
+    } 
+  })
+
+  let firestoreLoaded:boolean = false
+  async function setPageData(pageId) {
+    const { page:newPageData, site:siteData, symbols:symbolData } = await getAllData(pageId, subdomain)
+		pageData.set(newPageData)
+		content.set(newPageData.content)
+		settings.set(newPageData.settings)
+		dependencies.set(newPageData.dependencies)
+    site.update(s => ({ ...s, ...siteData }))
+    symbols.set(symbolData)
+  }
+
+  let cssLibraries:Array<any>
+  $: cssLibraries = libraries.filter(l => l.type === 'css')
+
+  let jsLibraries:Array<any>
+  $: jsLibraries = libraries.filter(l => l.type === 'js')
+
+  function openUnlockModal() {
+    if ($user.signedIn) {
+      unlockPage()
+    } else {
+      enteringPassword = true
+      modal.show('AUTHENTICATION')
+    }
+  }
+
+  function unlockPage() {
+    user.set({canEditPage: true})
+  }
+
+  function containsField(row, fieldType) {
+    return _.some(row.value.raw.fields, ['type', fieldType])
+  }
+
+  let signedInWithEmail:boolean
+  $: signedInWithEmail = !!$user.email
+  $: if (signedInWithEmail && !$user.role) {
+    getUserRole().then(role => {
+      user.update(u => ({ ...u, role }))
+      // unlockPage()
+    }).catch(e => { console.error('could not get user role') })
+  }
+
+
+  // This is how we use SystemJS to get modules working inside components
+  let importMap:string
+  $: importMap = JSON.stringify({
+    "imports": _.mapValues(_.keyBy(libraries.filter(l => l.src.slice(-5).includes('.js')), 'name'), 'src')
+  })
+  
+  let systemJsNode
+  $: {
+    if (systemJsNode) {
+      systemJsNode.innerHTML = importMap
+    }
+  }
+
+  $: if (signedIn) {
+    user.set({canEditPage: true})
+  }
+  
+</script>
+
+<svelte:head>
+  <title>{identity.title}</title>
+  <meta name="Description" content={identity.description}>
+  {@html headEmbed}
+  {@html wrapInStyleTags($tailwind, 'tailwind')}
+  {@html siteStyles}
+  {@html pageStyles}
+
+  {#each customScripts as {src}}
+    <script {src}></script>
+  {/each}
+
+  {#each cssLibraries as library}
+    <link href="${library.src}" rel="stylesheet" />
+  {/each}
+  {#if jsLibraries.length > 0}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.1/system.min.js" integrity="sha256-15j2fw0zp8UuYXmubFHW7ScK/xr5NhxkxmJcp7T3Lrc=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/named-register.min.js" integrity="sha256-ezV7DuHnj9ggFddRE32dDuLSGesXoT2ZWY8g+mEknMM=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/use-default.min.js" integrity="sha256-uVDULWwA/sIHxnO31dK8ThAuK46MrPmrVn+JXlMXc5A=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/amd.min.js" integrity="sha256-7vS4pPsg7zx1oTAJ1zQIr2lDg/q8anzUCcz6nxuaKhU=" crossorigin="anonymous"></script>
+    <script type="systemjs-importmap" bind:this={systemJsNode}></script>
+  {/if}
+</svelte:head>
+
+<FirebaseFirestore on:load={async () => {
+    firestoreLoaded = true
+    await setPageData(pageId)
+    tailwind.setInitial()
+}}/>
+<FirebaseAuth on:load={async () => {
+  // checkIfLoggedIn() // Causes race-condition (https://discuss.primo.so/t/unable-to-add-components/30)
+}} />
+
+<Editor />
+
+
+{#if $loadingTailwind}
+  <div class="flex" id="loading" transition:fade={{ duration: 200 }}>
+    <span class="text-white text-xs mr-2">Loading Tailwind styles</span>
+    <Spinner variants="text-white" size="xs"/>
+  </div>
+{/if}
+
+<style>
+
+  #loading {
+    @apply fixed font-medium rounded-full bg-primored py-1 px-3 shadow-lg;
+    left: 0.5rem;
+    bottom: 0.5rem;
+    z-index: 99999999999;
+  }
+
+  #primo-symbol {
+    width: 3rem;
+    height: 2rem;
+  }
+
+  /* remove random annoying Monaco alert that sometimes shows up at the bottom of the page */
+  :global(.monaco-alert) {
+    display: none !important;
+  }
+
+</style>

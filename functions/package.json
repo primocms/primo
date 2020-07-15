@@ -1,0 +1,44 @@
+{
+  "name": "functions",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w | npx firebase serve --only functions --port=9000",
+    "serve": "npm run build && npx firebase serve --only functions",
+    "shell": "npm run build && npx firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "npx firebase deploy --only functions",
+    "logs": "npx firebase functions:log"
+  },
+  "engines": {
+    "node": "10"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "autoprefixer": "^9.7.6",
+    "axios": "^0.19.2",
+    "cors": "^2.8.5",
+    "cssnano": "^4.1.10",
+    "express": "^4.17.1",
+    "firebase": "^7.3.0",
+    "firebase-admin": "^8.6.0",
+    "firebase-functions": "^3.7.0",
+    "handlebars": "^4.7.2",
+    "heroku-client": "^3.1.0",
+    "lodash": "^4.17.15",
+    "mailgun-js": "^0.22.0",
+    "node-fetch": "^2.6.0",
+    "node-sass": "^4.13.1",
+    "object-path": "^0.11.4",
+    "postcss": "^7.0.27",
+    "precss": "^4.0.0",
+    "stripe": "^8.29.0",
+    "tailwindcss": "^1.4.6"
+  },
+  "devDependencies": {
+    "clean-css": "^4.2.3",
+    "firebase-functions-test": "^0.1.6",
+    "firebase-tools": "^8.4.2",
+    "typescript": "^3.2.2"
+  },
+  "private": true
+}
