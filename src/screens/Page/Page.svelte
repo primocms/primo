@@ -14,7 +14,7 @@
   import {FeedbackForm,Spinner} from '@components/misc'
   import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from 'utils'
 
-  import {symbols,settings,dependencies,domainInfo,pageData,content,site,tailwind,loadingTailwind,user} from '@stores/data'
+  import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,content,site,tailwind,loadingTailwind,user} from '@stores/data'
   import {modal} from '@stores/app'
 
   let signedIn : boolean = false
@@ -23,7 +23,9 @@
     setContext('editable', s.canEditPage)
   })
 
-  export let subdomain : string
+	export let pageData;
+	export let siteData;
+  export let symbolData;
   export let pageId : string
 
 	$: domainInfo.save({page: pageId})
@@ -55,11 +57,10 @@
 
   let firestoreLoaded:boolean = false
   async function setPageData(pageId) {
-    const { page:newPageData, site:siteData, symbols:symbolData } = await getAllData(pageId, subdomain)
-		pageData.set(newPageData)
-		content.set(newPageData.content)
-		settings.set(newPageData.settings)
-		dependencies.set(newPageData.dependencies)
+		pageDataStore.set(pageData)
+		content.set(pageData.content)
+		settings.set(pageData.settings)
+		dependencies.set(pageData.dependencies)
     site.update(s => ({ ...s, ...siteData }))
     symbols.set(symbolData)
   }

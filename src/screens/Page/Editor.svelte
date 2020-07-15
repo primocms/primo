@@ -24,8 +24,8 @@
 
   let mounted:boolean = false
   onMount(async () => {
-    const domainData = await getDomainData()
-    $repo = domainData.repo
+    // const domainData = await getDomainData()
+    // $repo = domainData.repo
     mounted = true
   })
 

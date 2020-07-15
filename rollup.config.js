@@ -34,12 +34,13 @@ export default {
   input: 'src/main.js',
   output: {
     sourcemap: true,
+    // file: 'run/public/bundle.js',
     file: 'public/bundle.js',
     format: 'iife',
     inlineDynamicImports: true,
+    name: 'app',
     // sourcemap: true,
     // format: 'esm',
-    // name: 'app',
     // dir: 'public/build',
   },
   plugins: [

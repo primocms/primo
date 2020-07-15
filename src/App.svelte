@@ -13,6 +13,10 @@
 	import {domainInfo} from '@stores/data'
   import {modal,onDashboard} from '@stores/app'
 
+	export let pageData;
+	export let siteData;
+	export let symbolData;
+
 	export let isPrimoHomepage:boolean = false
 	export let action:string = null
 	export let subdomain:string = ''
@@ -33,7 +37,7 @@
 
 <Firebase />
 
-<Page pageId={'index'} />
+<Page pageId={'index'} {pageData} {siteData} {symbolData} />
 
 <!-- <Router>
 	<Route path="/:pageId" let:params>
