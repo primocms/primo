@@ -229,6 +229,7 @@
 
   function savePage(): void {
     content.save()
+    dispatch('save')
     unsavedContentExists = false
     updatingDatabase = true
     setTimeout(() => {

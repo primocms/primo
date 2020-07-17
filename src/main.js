@@ -10,7 +10,7 @@ const subdomain = domain.split('.')[0]
 const params = new URL(location.href).searchParams;
 const preview = params.get('preview'); 
 const action = params.get('a')
-let app;
+let app
 
 const pageData = {
   content: [
@@ -154,9 +154,6 @@ if (!preview) {
     target: document.body,
     props: {
       subdomain,
-      pageData,
-      siteData,
-      symbolData,
     }
   });
 } else if (preview === 'single') {
@@ -170,5 +167,6 @@ if (!preview) {
 } else if (preview) {
   app = new ComponentPreview({ target: document.body });
 }
+
 
 export default app;

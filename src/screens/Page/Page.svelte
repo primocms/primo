@@ -147,6 +147,7 @@
 }}/> -->
 <Editor 
   on:change
+  on:save
 />
 
 

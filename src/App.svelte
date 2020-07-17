@@ -12,7 +12,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	import {domainInfo, content} from '@stores/data'
+	import {domainInfo, content, site, symbols} from '@stores/data'
   import {modal,onDashboard} from '@stores/app'
 
 
@@ -37,19 +37,22 @@
 		modal.show('COLLABORATE')
 	}
 
+	function dispatchSave() {
+		dispatch('save', {
+			site: $site,
+			symbols: $symbols
+		})
+	}
+
 </script>
 
 
 <Router>
 	<Route path="/:pageId" let:params>
-		<Page on:change={() => {
-			dispatch('change', $content)
-		}} pageId={params.pageId} {siteData} {symbolData} />
+		<Page pageId={params.pageId} {siteData} {symbolData} on:save={dispatchSave} />
 	</Route>
 	<Route>
-		<Page on:change={() => {
-			dispatch('change', $content)
-		}} pageId={'index'} {siteData} {symbolData} />
+		<Page pageId={'index'} {siteData} {symbolData} on:save={dispatchSave} />
 	</Route>
 </Router>
 
