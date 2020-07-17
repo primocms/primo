@@ -1,9 +1,11 @@
 <script lang="ts">
   import Mousetrap from 'mousetrap'
   import _ from 'lodash'
-  import { onMount } from 'svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import store from '@libraries/store.js'
+
+  const dispatch = createEventDispatcher()
   
   import Toolbar from './editor/Toolbar.svelte'
   import ToolbarButton from './editor/ToolbarButton.svelte'
@@ -261,6 +263,7 @@
 <Doc 
 on:contentChanged={() => {
   unsavedContentExists = true
+  dispatch('change')
 }}
 on:componentEditClick={({detail:component}) => {
   modal.show('COMPONENT_EDITOR', { 

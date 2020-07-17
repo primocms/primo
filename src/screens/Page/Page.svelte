@@ -1,6 +1,6 @@
 <script lang="ts">
   import _ from 'lodash'
-  import {onMount,setContext} from 'svelte'
+  import {onMount,setContext,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
   import Editor from './Editor.svelte'
   import View from './View.svelte'
@@ -17,13 +17,14 @@
   import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,content,site,tailwind,loadingTailwind,user} from '@stores/data'
   import {modal} from '@stores/app'
 
+  const dispatch = createEventDispatcher()
+
   let signedIn : boolean = false
   user.subscribe(s => {
     signedIn = s.signedIn
     setContext('editable', s.canEditPage)
   })
 
-	export let pageData;
 	export let siteData;
   export let symbolData;
   export let pageId : string
@@ -49,14 +50,13 @@
 
   let customScripts:Array<any> = []
 
-  onMount(async() => {
-    if (!$user.signedIn) {
-      // openUnlockModal()
-    } 
+  onMount(() => {
+    setPageData(pageId)
   })
 
   let firestoreLoaded:boolean = false
   async function setPageData(pageId) {
+    const pageData = siteData.pages[pageId]
 		pageDataStore.set(pageData)
 		content.set(pageData.content)
 		settings.set(pageData.settings)
@@ -140,17 +140,14 @@
     <script type="systemjs-importmap" bind:this={systemJsNode}></script>
   {/if}
 </svelte:head>
-
-<FirebaseFirestore on:load={async () => {
-    firestoreLoaded = true
-    await setPageData(pageId)
-    tailwind.setInitial()
-}}/>
-<FirebaseAuth on:load={async () => {
-  // checkIfLoggedIn() // Causes race-condition (https://discuss.primo.so/t/unable-to-add-components/30)
-}} />
-
-<Editor />
+<!-- <FirebaseFirestore on:load={async () => {
+  firestoreLoaded = true
+  await setPageData(pageId)
+  tailwind.setInitial()
+}}/> -->
+<Editor 
+  on:change
+/>
 
 
 {#if $loadingTailwind}
