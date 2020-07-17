@@ -25,9 +25,16 @@
     setContext('editable', s.canEditPage)
   })
 
-	export let siteData;
-  export let symbolData;
+  export let data;
   export let pageId : string
+
+  const pageData = data.pages[pageId]
+  pageDataStore.set(pageData)
+  content.set(pageData.content)
+  settings.set(pageData.settings)
+  dependencies.set(pageData.dependencies)
+  site.update(s => ({ ...s, ...data }))
+  symbols.set(data.symbols)
 
 	$: domainInfo.save({page: pageId})
 
@@ -50,20 +57,7 @@
 
   let customScripts:Array<any> = []
 
-  onMount(() => {
-    setPageData(pageId)
-  })
-
   let firestoreLoaded:boolean = false
-  async function setPageData(pageId) {
-    const pageData = siteData.pages[pageId]
-		pageDataStore.set(pageData)
-		content.set(pageData.content)
-		settings.set(pageData.settings)
-		dependencies.set(pageData.dependencies)
-    site.update(s => ({ ...s, ...siteData }))
-    symbols.set(symbolData)
-  }
 
   let cssLibraries:Array<any>
   $: cssLibraries = libraries.filter(l => l.type === 'css')

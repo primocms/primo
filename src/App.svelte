@@ -15,11 +15,8 @@
 	import {domainInfo, content, site, symbols} from '@stores/data'
   import {modal,onDashboard} from '@stores/app'
 
-
 	export let data
-	
-	let siteData = data.site;
-	let symbolData = data.symbols;
+
 
 	export let isPrimoHomepage:boolean = false
 	export let action:string = null
@@ -38,10 +35,7 @@
 	}
 
 	function dispatchSave() {
-		dispatch('save', {
-			site: $site,
-			symbols: $symbols
-		})
+		dispatch('save', $site)
 	}
 
 </script>
@@ -49,10 +43,10 @@
 
 <Router>
 	<Route path="/:pageId" let:params>
-		<Page pageId={params.pageId} {siteData} {symbolData} on:save={dispatchSave} />
+		<Page pageId={params.pageId} {data} on:save={dispatchSave} />
 	</Route>
 	<Route>
-		<Page pageId={'index'} {siteData} {symbolData} on:save={dispatchSave} />
+		<Page pageId={'index'} {data} on:save={dispatchSave} />
 	</Route>
 </Router>
 
