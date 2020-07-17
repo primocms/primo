@@ -34,14 +34,9 @@ export default {
   input: 'src/main.js',
   output: {
     sourcemap: true,
-    // file: 'run/public/bundle.js',
-    file: 'public/bundle.js',
-    format: 'iife',
-    inlineDynamicImports: true,
+    format: 'esm',
     name: 'app',
-    // sourcemap: true,
-    // format: 'esm',
-    // dir: 'public/build',
+    dir: 'public/build',
   },
   plugins: [
     rimraf('./public/build', () => {
