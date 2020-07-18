@@ -53,6 +53,7 @@
 <Modal />
 
 <style type="scss" global>
+	@import "./home.bulma.scss";
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
