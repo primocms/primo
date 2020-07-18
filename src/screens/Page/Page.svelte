@@ -28,7 +28,7 @@
   export let data;
   export let pageId : string
 
-  const pageData = data.pages[pageId]
+  const pageData = _.find(data.pages, ['id', pageId])
   pageDataStore.set(pageData)
   content.set(pageData.content)
   settings.set(pageData.settings)
