@@ -20,10 +20,11 @@
   const dispatch = createEventDispatcher()
 
   let signedIn : boolean = false
-  user.subscribe(s => {
-    signedIn = s.signedIn
-    setContext('editable', s.canEditPage)
+  user.subscribe(u => {
+    signedIn = u.signedIn
   })
+
+  setContext('editable', true)
 
   export let data;
   export let pageId : string
