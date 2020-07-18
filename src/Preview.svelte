@@ -15,7 +15,6 @@
   let previewHTML = html
   let previewCSS = wrapInStyleTags(css)
 
-  let globalStyles = settings ? wrapInStyleTags(settings.globalStyles.compiled) : ''
   let headEmbed = dependencies ? dependencies.headEmbed : ''
   let cssLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'css') : []
   let jsLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'js') : []
@@ -68,7 +67,6 @@
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />
   {/each}
-  {@html globalStyles}
   {#if jsLibraries.length > 0}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.1/system.min.js" integrity="sha256-15j2fw0zp8UuYXmubFHW7ScK/xr5NhxkxmJcp7T3Lrc=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/named-register.min.js" integrity="sha256-ezV7DuHnj9ggFddRE32dDuLSGesXoT2ZWY8g+mEknMM=" crossorigin="anonymous"></script>
