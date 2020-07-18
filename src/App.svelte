@@ -35,8 +35,6 @@
 	}
 
 	$: dispatch('save', $site)
-	// reactively dispatch 'save' when $site changes
-	// next: dispatch save when saving component library
 
 </script>
 
