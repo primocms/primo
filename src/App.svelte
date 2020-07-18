@@ -34,19 +34,19 @@
 		modal.show('COLLABORATE')
 	}
 
-	function dispatchSave() {
-		dispatch('save', $site)
-	}
+	$: dispatch('save', $site)
+	// reactively dispatch 'save' when $site changes
+	// next: dispatch save when saving component library
 
 </script>
 
 
 <Router>
 	<Route path="/:pageId" let:params>
-		<Page pageId={params.pageId} {data} on:save={dispatchSave} />
+		<Page pageId={params.pageId} {data} />
 	</Route>
 	<Route>
-		<Page pageId={'index'} {data} on:save={dispatchSave} />
+		<Page pageId={'index'} {data} />
 	</Route>
 </Router>
 
