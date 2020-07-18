@@ -44,7 +44,7 @@
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')
 
   let pageStyles:string 
-  $: pageStyles = wrapInStyleTags($settings.globalStyles.compiled, 'page-styles')
+  $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, 'page-styles')
 
   let identity:any 
   $: identity = $settings.identity
