@@ -3,10 +3,10 @@ context('Site Navigation', () => {
 
   describe('Creating Nav items', () => {
     
-    it('opens the Site Settings modal', () => {
+    it('opens the Site Data modal', () => {
       cy.visit('http://test.localhost:5001')
       cy.get('button#site-settings').click()
-      cy.get('.modal-title').contains('Site Settings')
+      cy.get('.modal-title').contains('Site Data')
     })
 
     it('adds a nav item', () => {

@@ -139,7 +139,7 @@
       {
         title: 'Settings', 
         icon: 'cog', 
-        onclick:  () => modal.show('PAGE_SETTINGS') 
+        onclick:  () => modal.show('PAGE_DATA') 
       }
     ]
   ]
@@ -192,9 +192,9 @@
         onclick: () => modal.show('PAGE_STYLES') 
       },
       {
-        title: 'Page Settings',
-        icon: 'cog',
-        onclick: () => modal.show('PAGE_SETTINGS')
+        title: 'Page Data',
+        icon: 'database',
+        onclick: () => modal.show('PAGE_DATA')
       },
     ],
     [
@@ -214,9 +214,9 @@
       },
       {
         id: 'site-settings',
-        title: 'Site Settings',
-        icon: 'cog',
-        onclick: () => modal.show('SITE_SETTINGS')
+        title: 'Site Data',
+        icon: 'database',
+        onclick: () => modal.show('SITE_DATA')
       },
     ]
   ]
