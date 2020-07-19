@@ -1,0 +1,14 @@
+{
+  "name": "primo-app",
+  "version": "1.0.3",
+  "description": "it's primo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "primo"
+  ],
+  "author": "Mateo Morris",
+  "license": "ISC"
+}

@@ -1,0 +1,5 @@
+{
+  "search.exclude": {
+    "!/packages/primo-app/src/node_modules": true
+  }
+}
