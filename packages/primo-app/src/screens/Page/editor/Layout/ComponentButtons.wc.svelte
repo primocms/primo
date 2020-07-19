@@ -1,4 +1,4 @@
-<svelte:options tag="component-buttons" />
+<svelte:options tag={null} />
 <script>
   import {code, trash, chevron} from '@svg/small'
 

@@ -1,33 +1,39 @@
-<script lang="ts">
+<script>
   import {createEventDispatcher, onMount, getContext} from 'svelte'
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../../pageUtils.js'
   import {dependencies} from '@stores/data'
-  import './ComponentButtons.wc.svelte'
-  import {Component} from './LayoutTypes'
+  
+  import ComponentButtons from './ComponentButtons.wc.svelte'
+  if (!customElements.get('component-buttons')) { 
+    customElements.define('component-buttons', ComponentButtons); 
+  }
 
-  const active:boolean = getContext('editable')
+
+  // import {Component} from './LayoutTypes'
+
+  const active = getContext('editable')
 
   const dispatch = createEventDispatcher()
 
-  export let row:Component
-  export let contentAbove:boolean = false
-  export let contentBelow:boolean = false
+  export let row
+  export let contentAbove = false
+  export let contentBelow = false
 
-  let js:string
+  let js
   $: js = row.value.final.js
   $: appendJS(js)
 
-  let mounted:boolean = false
+  let mounted = false
   onMount(() => {
     mounted = true
     appendJS(js)
   })
 
-  function appendJS(js:string): void {
+  function appendJS(js) {
 
-    const libraryNames:Array<any> = $dependencies.libraries.map(l => l.name)
-    const systemJsLibraries:string = libraryNames.map(name => `System.import('${name}')`).join(',')
+    const libraryNames = $dependencies.libraries.map(l => l.name)
+    const systemJsLibraries = libraryNames.map(name => `System.import('${name}')`).join(',')
 
     // TODO: Parse the component's JS to replace es6 import statements with SystemJS import statements
     if (mounted) {
