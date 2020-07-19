@@ -33,7 +33,6 @@
   pageDataStore.set(pageData)
   content.set(pageData.content)
   settings.set(pageData.settings)
-  dependencies.set(pageData.dependencies)
   site.update(s => ({ ...s, ...data }))
   symbols.set(data.symbols)
 
