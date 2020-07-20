@@ -1,7 +1,6 @@
-node-functions/node_modules
-other-functions/node_modules
 node_modules
-!/src/node_modules
 public/build
 public/bundle.js
 public/bundle.js.map
+
+!/packages/primo-app/src/node_modules
