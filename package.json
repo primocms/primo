@@ -1,6 +1,6 @@
 {
   "name": "svelte-app",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "scripts": {
     "build": "rollup -c",
     "dev": "concurrently --kill-others \"rollup -c -w\" \"cd functions && npm run watch\" \"npx cypress open\" \"cd other-functions && nodemon index.js\"",
