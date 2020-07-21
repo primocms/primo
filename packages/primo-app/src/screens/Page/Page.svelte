@@ -24,12 +24,15 @@
   export let data;
   export let pageId : string
 
-  const pageData = _.find(data.pages, ['id', pageId])
-  pageDataStore.set(pageData)
-  content.set(pageData.content)
-  settings.set(pageData.settings)
-  site.update(s => ({ ...s, ...data }))
-  symbols.set(data.symbols)
+  $: {
+    const pageData = _.find(data.pages, ['id', pageId])
+    if (pageData) {
+      pageDataStore.set(pageData)
+      content.set(pageData.content)
+      site.update(s => ({ ...s, ...data }))
+      symbols.set(data.symbols)
+    }
+  }
 
 	$: domainInfo.save({page: pageId})
 
@@ -42,7 +45,7 @@
   $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, 'page-styles')
 
   let identity:any 
-  $: identity = $settings.identity
+  // $: identity = $settings.identity // TODO
 
   let libraries:Array<any>
   $: libraries = $dependencies.libraries
@@ -107,8 +110,8 @@
 </script>
 
 <svelte:head>
-  <title>{identity.title}</title>
-  <meta name="Description" content={identity.description}>
+  <!-- <title>{identity.title}</title>
+  <meta name="Description" content={identity.description}> -->
   {@html headEmbed}
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
