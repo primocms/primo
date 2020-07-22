@@ -7,12 +7,14 @@
 
 	const dispatch = createEventDispatcher()
 
-	import {domainInfo, content, site, symbols} from '@stores/data'
+	import {domainInfo, content, site, symbols, tailwind} from '@stores/data'
   import {modal} from '@stores/app'
 
 	export let data
 
 	$: dispatch('save', $site)
+
+	tailwind.setInitial()
 
 </script>
 
