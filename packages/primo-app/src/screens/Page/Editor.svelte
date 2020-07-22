@@ -13,7 +13,7 @@
 
   import {processStyles} from 'utils'
 
-  import {content,site,repo,domainInfo,user} from '@stores/data'
+  import {content,site,repo,domainInfo,user,pageData} from '@stores/data'
   import {focusedNode, modal} from '@stores/app'
 
   import {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
@@ -137,7 +137,12 @@
       {
         title: 'Settings', 
         icon: 'cog', 
-        onclick:  () => modal.show('PAGE_DATA') 
+        onclick: () => modal.show('PAGE_DATA', { 
+          fields: $pageData.fields, 
+          onsave: (fields) => {
+            pageData.save('fields', fields)
+          } 
+        })
       }
     ]
   ]
@@ -192,7 +197,12 @@
       {
         title: 'Page Data',
         icon: 'database',
-        onclick: () => modal.show('PAGE_DATA')
+        onclick: () => modal.show('PAGE_DATA', { 
+          fields: $pageData.fields, 
+          onsave: (fields) => {
+            pageData.save('fields', fields)
+          } 
+        })
       },
     ],
     [
@@ -206,7 +216,13 @@
         id: 'site-settings',
         title: 'Site Data',
         icon: 'database',
-        onclick: () => modal.show('SITE_DATA')
+        // onclick: () => modal.show('SITE_DATA'),
+        onclick: () => modal.show('PAGE_DATA', { 
+          fields: $site.fields, 
+          onsave: (fields) => {
+            site.save({fields})
+          } 
+        })
       },
     ],
     [
