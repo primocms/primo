@@ -153,9 +153,7 @@
         title: 'Content',
         icon: 'heading',
         buttons: _.flatten(editorialButtons)
-      }
-    ],
-    [
+      },
       {
         title: 'Create Component',
         icon: 'code',
@@ -167,16 +165,14 @@
         })
       },
       {
-        title: 'Symbol Library',
-        icon: 'th-large',
+        title: 'Place Symbol',
+        icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
             onclick: addComponentToPage
           }
         }) 
       },
-    ],
-    [
       {
         title: 'Page Section',
         icon: 'columns',
@@ -190,31 +186,24 @@
         onclick: () => modal.show('DEPENDENCIES'),
       },
       {
-        title: 'Page Styles',
-        icon: 'fab fa-css3',
-        onclick: () => modal.show('PAGE_STYLES') 
-      },
-      {
-        title: 'Page Data',
-        icon: 'database',
-        onclick: () => modal.show('FIELDS', { 
-          fields: $pageData.fields, 
-          onsave: (fields) => {
-            pageData.save('fields', fields)
-          } 
-        })
-      },
-    ],
-    [
-      {
         id: 'site-styles',
         title: 'Site Styles',
         icon: 'fab fa-css3',
         onclick: () => modal.show('SITE_STYLES')
-      },
+      }
+    ],
+    [
+      {
+        id: 'pages',
+        title: 'Pages',
+        icon: 'th-large',
+        onclick: () => modal.show('SITE_PAGES') 
+      }
+    ],
+    [
       {
         id: 'site-settings',
-        title: 'Site Data',
+        title: 'Content',
         icon: 'database',
         onclick: () => modal.show('FIELDS', { 
           fields: $site.fields, 
@@ -223,20 +212,12 @@
           } 
         }, { 
           header: {
-            title: 'Site Data',
+            title: 'Content',
             icon: 'fas fa-database'
           } 
         })
-      },
-    ],
-    [
-      {
-        id: 'pages',
-        title: 'Pages',
-        icon: 'file',
-        onclick: () => modal.show('SITE_PAGES') 
       }
-    ]
+    ],
   ]
 
   function addComponentToPage(component:Component): void {
