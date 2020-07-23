@@ -216,11 +216,15 @@
         id: 'site-settings',
         title: 'Site Data',
         icon: 'database',
-        // onclick: () => modal.show('SITE_DATA'),
-        onclick: () => modal.show('PAGE_DATA', { 
+        onclick: () => modal.show('FIELDS', { 
           fields: $site.fields, 
           onsave: (fields) => {
             site.save({fields})
+          } 
+        }, { 
+          header: {
+            title: 'Site Data',
+            icon: 'fas fa-database'
           } 
         })
       },
