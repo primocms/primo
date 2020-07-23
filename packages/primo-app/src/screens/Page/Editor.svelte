@@ -137,7 +137,7 @@
       {
         title: 'Settings', 
         icon: 'cog', 
-        onclick: () => modal.show('PAGE_DATA', { 
+        onclick: () => modal.show('FIELDS', { 
           fields: $pageData.fields, 
           onsave: (fields) => {
             pageData.save('fields', fields)
@@ -197,7 +197,7 @@
       {
         title: 'Page Data',
         icon: 'database',
-        onclick: () => modal.show('PAGE_DATA', { 
+        onclick: () => modal.show('FIELDS', { 
           fields: $pageData.fields, 
           onsave: (fields) => {
             pageData.save('fields', fields)
