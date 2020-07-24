@@ -13,7 +13,8 @@
 
   import {processStyles} from 'utils'
 
-  import {content,site,repo,domainInfo,user,pageData} from '@stores/data'
+  import {site,repo,domainInfo,user,pageData} from '@stores/data'
+  import {content} from '@stores/data/page'
   import {focusedNode, modal} from '@stores/app'
 
   import {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
@@ -155,7 +156,7 @@
         buttons: _.flatten(editorialButtons)
       },
       {
-        title: 'Create Component',
+        title: 'One-off Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
           button: {
@@ -165,7 +166,7 @@
         })
       },
       {
-        title: 'Place Symbol',
+        title: 'Symbol',
         icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
@@ -174,7 +175,7 @@
         }) 
       },
       {
-        title: 'Page Section',
+        title: 'Section',
         icon: 'columns',
         onclick: () => modal.show('PAGE_SECTIONS') 
       },
@@ -187,9 +188,9 @@
       },
       {
         id: 'site-styles',
-        title: 'Site Styles',
+        title: 'Styles',
         icon: 'fab fa-css3',
-        onclick: () => modal.show('SITE_STYLES')
+        onclick: () => modal.show('STYLES')
       }
     ],
     [
@@ -203,7 +204,7 @@
     [
       {
         id: 'site-settings',
-        title: 'Content',
+        title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS', { 
           fields: $site.fields, 
@@ -212,7 +213,7 @@
           } 
         }, { 
           header: {
-            title: 'Content',
+            title: 'Fields',
             icon: 'fas fa-database'
           } 
         })

@@ -7,7 +7,8 @@
 
 	const dispatch = createEventDispatcher()
 
-	import {domainInfo, content, site, symbols, tailwind} from '@stores/data'
+	import {domainInfo, site, symbols, tailwind} from '@stores/data'
+	import {content} from '@stores/data/page'
   import {modal} from '@stores/app'
 
 	export let data
