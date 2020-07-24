@@ -9,7 +9,8 @@
   import {FeedbackForm,Spinner} from '@components/misc'
   import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from 'utils'
 
-  import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,content,site,tailwind,loadingTailwind,user} from '@stores/data'
+  import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,site,tailwind,loadingTailwind,user} from '@stores/data'
+  import {content} from '@stores/data/page'
   import {modal} from '@stores/app'
 
   const dispatch = createEventDispatcher()

@@ -9,7 +9,7 @@
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
   import {focusedNode} from '@stores/app'
-  import {content} from '@stores/data'
+  import {content} from '@stores/data/page'
   const dispatch = createEventDispatcher()
   import {IconButton} from '@components/misc'
 
