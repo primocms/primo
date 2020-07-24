@@ -48,7 +48,7 @@
           {/each}
         </div>
     </div>
-    <div class="secondary-buttons fixed lg:static right-0 bottom-0 mr-2 mb-2 lg:m-0">
+    <div class="secondary-buttons fixed sm:static right-0 bottom-0 mr-2 mb-2 md:m-0">
       <slot {showKeyHint} />
     </div>
   </div>
@@ -96,7 +96,7 @@
     @apply justify-between flex-1;
   }
 
-  @screen lg {
+  @screen sm {
     .logo {
       @apply hidden;
     }
