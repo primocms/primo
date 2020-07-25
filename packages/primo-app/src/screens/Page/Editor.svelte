@@ -255,10 +255,10 @@
 
 <Toolbar buttons={toolbarButtons} let:showKeyHint={showKeyHint}>
   <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={updatingDatabase} on:click={savePage} disabled={!unsavedContentExists} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
-  {#if $user.role === 'developer' && mounted}
-    <ToolbarButton icon="fab fa-github" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
-  {:else if mounted}
-    <ToolbarButton on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-primored text-gray-100">build</ToolbarButton>
+  {#if $user.role === 'developer'}
+    <ToolbarButton icon="fab fa-github" on:click={() => dispatch('build', $site)} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
+  {:else}
+    <ToolbarButton on:click={() => dispatch('build', $site)} disabled={updatingDatabase} variant="bg-primored text-gray-100">build</ToolbarButton>
   {/if}
 </Toolbar>
 <Doc 

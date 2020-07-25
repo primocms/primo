@@ -138,6 +138,7 @@
 <Editor 
   on:change
   on:save
+  on:build
 />
 
 
