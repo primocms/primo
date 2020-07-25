@@ -5,8 +5,7 @@ const precss = require('precss')
 const tailwindCSS = require('tailwindcss')
 var CleanCSS = require('clean-css')
 
-function processPostCSS(req, res) {
-  let { css, html, options } = req.body
+async function processPostCSS(css, html, options, onsuccess) {
   let { tailwindConfig, includeBase, purge, includeTailwind } = options
 
   try {
@@ -27,7 +26,7 @@ function processPostCSS(req, res) {
     }
   } catch (e) {
     console.error(e)
-    res.end({ error: e })
+    // res.end({ error: e })
   }
 
   const tailwind = tailwindCSS(tailwindConfig)
@@ -49,27 +48,123 @@ function processPostCSS(req, res) {
     
   ${css}`
 
-  postcss([tailwind, precss, autoprefixer])
+  const result = await postcss([tailwind, precss, autoprefixer])
     .process(stylesWithTailwind, { from: undefined, to: 'styles.css' })
-    .then((result) => {
-      if (includeTailwind) {
-        var output = new CleanCSS({}).minify(result.css)
-        res.end(output.styles)
-      } else {
-        res.end(result.css)
-      }
-
-      if (result.map) {
-        console.log(result.map)
-      }
-    })
     .catch((e) => {
       console.error(e)
-      res.end(data);
+      // res.end(data);
     })
-  
+
+  if (includeTailwind) {
+    var output = new CleanCSS({}).minify(result.css)
+    return output.styles
+  } else {
+    return result.css
+  }
+
+}
+
+const fs = require('fs')
+const prettier = require("prettier");
+const _ = require('lodash')
+
+async function buildSite(site) {
+  fs.mkdir('./build', { recursive: true }, (err) => {
+    if (err) throw err;
+  });
+
+  const siteCSS = site.styles.final
+  const formattedSiteCSS = prettier.format(siteCSS, { parser: 'css' })
+  fs.writeFile(`./build/styles.css`, formattedSiteCSS, (err) => {
+    if (err) throw err 
+  })
+
+  site.pages.forEach(async page => {
+    const HTML = buildPageHTML(page)
+    const formattedHTML = prettier.format(HTML, { parser: 'html' })
+    fs.writeFile(`./build/${page.id}.html`, formattedHTML, (err) => {
+      if (err) throw err 
+    })
+
+    const CSS = await buildPageCSS(page.content, HTML, site.styles.raw + page.styles.raw, site.styles.tailwind)
+    const formattedCSS = prettier.format(CSS, { parser: 'css' })
+    fs.writeFile(`./build/${page.id}.css`, formattedCSS, (err) => {
+      if (err) throw err 
+    })
+  })
+
+  function buildPageHTML({ id, title, content, dependencies, styles }) {
+    let html = ''
+    content.forEach(section => {
+      html += `<section id="section-${section.id}">\n` +
+                `\t<div class="columns flex flex-wrap ${section.width === 'contained' ? 'container' : ''}">\n`
+      section.columns.forEach(column => {
+        html += `\t\t<div class="column ${column.size}" id="column-${column.id}">\n`
+        column.rows.forEach(row => {
+          html += row.type === 'component' 
+                  ? `\t\t\t<div class="primo-component">\n` +
+                      `\t\t\t\t<div id="component-${row.id}" class="w-full">${row.value.final.html}</div>\n` +
+                      `\t\t\t\t<script>${row.value.final.js}</script>\n` + 
+                    `\t\t\t</div>\n`
+                  : `\t\t\t<div class="primo-content">\n` +
+                      `\t\t\t\t${row.value.html}\n` + 
+                    `\t\t\t</div>\n`
+        })
+        html += `\t\t</div>\n`
+      })
+      html += `\t</div>\n` +
+            `</section>\n`
+    })
+
+    var regex = /href=(['"])\/([\S]+)(\1)[^>\s]*/g;
+    html = html.replace(regex, "href='/$2.html'")
+
+    return `
+      <!doctype html>
+
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <title>${ title }</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="./styles.css" />
+        <link rel="stylesheet" type="text/css" href="./${id}.css" />
+        <script src="./${id}.js"></script>
+        `+
+        `${dependencies.headEmbed}
+      </head>
+      <body data-instant-intensity="all" class="primo-page">   
+        ${html}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.js" integrity="sha256-DdSiNPR71ROAVMqT6NiHagLAtZv9EHeByYuVxygZM5g=" crossorigin="anonymous"></script>
+      </body>
+      </html>
+    `
+  }
+
+  async function buildPageCSS(content, HTML, rawCSS, tailwindConfig) {
+
+    const components = _.flatMapDeep(content, (section) => section.columns.map(column => column.rows.filter(row => row.type === 'component')))
+    const componentStyles = components.map(component => `#component-${component.id} {${component.value.raw.css}}`).join('\n')
+
+    const allStyles = rawCSS + componentStyles
+
+    const pageStyles = await processPostCSS(
+      allStyles, 
+      HTML, 
+      { 
+        includeBase: true,
+        includeTailwind: true,
+        purge: true,
+        tailwindConfig
+      }
+    )
+
+    return pageStyles
+
+  }
 }
 
 module.exports = {
-  processPostCSS
+  processPostCSS,
+  buildSite
 }
