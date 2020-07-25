@@ -89,6 +89,7 @@
   .primo-component.active:hover {
     outline: 2px solid rgb(206,78,74);
     transition: outline 0.25s;
+    z-index: 9;
   }
   .primo-component.active:hover component-buttons {
     @apply opacity-100; 
