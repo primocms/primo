@@ -10,7 +10,7 @@
   import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from 'utils'
 
   import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,site,tailwind,loadingTailwind,user} from '@stores/data'
-  import {content} from '@stores/data/page'
+  import {content,pageId as pageIdStore} from '@stores/data/page'
   import {modal} from '@stores/app'
 
   const dispatch = createEventDispatcher()
@@ -35,7 +35,7 @@
     }
   }
 
-	$: domainInfo.save({page: pageId})
+	$: pageIdStore.set(pageId)
 
   let enteringPassword = false;
 
@@ -107,7 +107,7 @@
   $: if (signedIn) {
     user.set({canEditPage: true})
   }
-  
+
 </script>
 
 <svelte:head>
