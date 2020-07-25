@@ -68,25 +68,25 @@ const fs = require('fs')
 const prettier = require("prettier");
 const _ = require('lodash')
 
-async function buildSite(site) {
+async function buildSite({ pages, siteStyles }) {
   fs.mkdir('./build', { recursive: true }, (err) => {
     if (err) throw err;
   });
 
-  const siteCSS = site.styles.final
+  const siteCSS = siteStyles.final
   const formattedSiteCSS = prettier.format(siteCSS, { parser: 'css' })
   fs.writeFile(`./build/styles.css`, formattedSiteCSS, (err) => {
     if (err) throw err 
   })
 
-  site.pages.forEach(async page => {
+  pages.forEach(async page => {
     const HTML = buildPageHTML(page)
     const formattedHTML = prettier.format(HTML, { parser: 'html' })
     fs.writeFile(`./build/${page.id}.html`, formattedHTML, (err) => {
       if (err) throw err 
     })
 
-    const CSS = await buildPageCSS(page.content, HTML, site.styles.raw + page.styles.raw, site.styles.tailwind)
+    const CSS = await buildPageCSS(page.content, HTML, siteStyles.raw + page.styles.raw, siteStyles.tailwind)
     const formattedCSS = prettier.format(CSS, { parser: 'css' })
     fs.writeFile(`./build/${page.id}.css`, formattedCSS, (err) => {
       if (err) throw err 

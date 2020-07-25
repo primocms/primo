@@ -14,6 +14,7 @@
   export let variant = ''
   export let loading = false
   export let buttons = null
+  export let type = null
 
   export let showKeyHint = false
 
@@ -30,6 +31,7 @@
     {id}
     aria-label={title}
     class="{ buttonStyles } {variant}"
+    class:primo={type === 'primo'}
     class:has-subbuttons={buttons}
     transition:fade
     {disabled}
@@ -71,6 +73,9 @@
 </div>
 
 <style>
+  .primo {
+    @apply bg-primored text-gray-100;
+  }
 
   .key-hint {
     @apply absolute w-full text-center left-0 opacity-0;
