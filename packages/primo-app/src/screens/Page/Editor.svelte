@@ -114,30 +114,30 @@
     ],
     [
       {
-        title: 'Page Section',
-        icon: 'columns',
-        onclick: () => modal.show('PAGE_SECTIONS') 
-      },
-      {
         title: 'Symbol Library',
-        icon: 'th-large',
+        icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
             onclick: addComponentToPage
           }
         }) 
       },
+      {
+        title: 'Page Section',
+        icon: 'columns',
+        onclick: () => modal.show('PAGE_SECTIONS') 
+      },
     ],
     [
       {
         id: 'pages',
         title: 'Pages',
-        icon: 'file',
+        icon: 'th-large',
         onclick: () => modal.show('SITE_PAGES') 
       },
       {
-        title: 'Settings', 
-        icon: 'cog', 
+        title: 'Content', 
+        icon: 'database', 
         onclick: () => modal.show('FIELDS', { 
           fields: $pageData.fields, 
           onsave: (fields) => {
