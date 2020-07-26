@@ -3,11 +3,14 @@
 </svelte:head>
 
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
   import { fade, slide } from "svelte/transition";
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '@components/buttons'
   import {ButtonGroup} from './Layout/LayoutTypes'
+  import {editorViewDev} from '@stores/app'
+
+  const dispatch = createEventDispatcher()
   
   import Mousetrap from 'mousetrap'
 
@@ -46,6 +49,11 @@
               {/each}
             </div>
           {/each}
+          <ToolbarButton  
+            title="Switch to {$editorViewDev ? 'Content' : 'Code'}"
+            icon={$editorViewDev ? 'edit' : 'code'}
+            onclick={() => dispatch('toggleView')}
+          />
         </div>
     </div>
     <div class="secondary-buttons fixed sm:static right-0 bottom-0 mr-2 mb-2 md:m-0">

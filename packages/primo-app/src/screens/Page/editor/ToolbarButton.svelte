@@ -33,7 +33,7 @@
     class="{ buttonStyles } {variant}"
     class:primo={type === 'primo'}
     class:has-subbuttons={buttons}
-    transition:fade
+    in:fade={{duration:200}}
     {disabled}
     on:click={() => {
       subButtonsActive = !subButtonsActive

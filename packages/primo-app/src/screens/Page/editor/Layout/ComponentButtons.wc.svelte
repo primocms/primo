@@ -1,6 +1,6 @@
 <svelte:options tag={null} />
 <script>
-  import {code, trash, chevron} from '@svg/small'
+  import {code, trash, chevron, edit} from '@svg/small'
 
   // Workaround to get events firing https://github.com/sveltejs/svelte/issues/3119
   import { createEventDispatcher } from "svelte"
@@ -13,6 +13,7 @@
     component.dispatchEvent && component.dispatchEvent(new CustomEvent(name, { detail }))
   }
 
+  export let icon
   export let contentbelow
   export let contentabove
 
@@ -21,7 +22,11 @@
 
 <div class="component-buttons">
   <button on:click={() => dispatch('edit')}>
-    {@html code(iconStyles)}    
+    {#if icon === 'code'}
+      {@html code(iconStyles)}    
+    {:else}
+      {@html edit(iconStyles)}    
+    {/if}
     <span>Edit</span>
   </button>
   <button on:click={() => dispatch('delete')}>
@@ -31,13 +36,13 @@
   {#if !contentabove}
     <button on:click={() => dispatch('addContentAbove')}>
       {@html chevron(iconStyles)}    
-      <span>Add Content Above</span>
+      <span>Add Row Above</span>
     </button>
   {/if}
   {#if !contentbelow}
     <button on:click={() => dispatch('addContentBelow')}>
       {@html chevron(`${iconStyles}transform: scaleY(-1);top:-3px;`)}    
-      <span>Add Content Below</span>
+      <span>Add Row Below</span>
     </button>
   {/if}
 </div>

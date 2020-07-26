@@ -15,7 +15,7 @@
 
   import {site,repo,domainInfo,user,pageData} from '@stores/data'
   import {content} from '@stores/data/page'
-  import {focusedNode, modal} from '@stores/app'
+  import {focusedNode, modal,editorViewDev} from '@stores/app'
 
   import {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
 
@@ -238,7 +238,7 @@
   }
 
   let toolbarButtons:Array<ButtonGroup>
-  $: toolbarButtons = $user.role === 'developer' || !$user.role ? developerButtons : editorButtons
+  $: toolbarButtons = $editorViewDev ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
   $: if (unsavedContentExists && !$domainInfo.onDev) {
@@ -253,12 +253,12 @@
 
 </script>
 
-<Toolbar buttons={toolbarButtons} let:showKeyHint={showKeyHint}>
+<Toolbar buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => editorViewDev.set(!$editorViewDev)}>
   <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={updatingDatabase} on:click={savePage} disabled={!unsavedContentExists} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
-  {#if $user.role === 'developer'}
-    <ToolbarButton icon="fab fa-github" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
+  {#if $editorViewDev}
+    <ToolbarButton type="primo" icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
   {:else}
-    <ToolbarButton icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} type="primo">build</ToolbarButton>
+    <ToolbarButton type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
   {/if}
 </Toolbar>
 <Doc 

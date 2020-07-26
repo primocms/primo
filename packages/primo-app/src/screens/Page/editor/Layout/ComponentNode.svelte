@@ -3,6 +3,7 @@
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../../pageUtils.js'
   import {dependencies} from '@stores/data'
+  import {editorViewDev} from '@stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
   if (!customElements.get('component-buttons')) { 
@@ -57,6 +58,7 @@
 <div class="primo-component" class:active out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   {#if active}
     <component-buttons 
+      icon={$editorViewDev ? 'code' : 'edit'}
       contentabove={contentAbove}
       contentbelow={contentBelow}
       on:edit
