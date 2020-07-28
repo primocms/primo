@@ -26,10 +26,10 @@
 
 <Router>
 	<Route path="/:pageId" let:params>
-		<Page pageId={params.pageId} {data} on:build />
+		<Page pageId={params.pageId} on:build />
 	</Route>
 	<Route>
-		<Page pageId={'index'} {data} on:build />
+		<Page pageId={'index'} on:build />
 	</Route>
 </Router>
 
