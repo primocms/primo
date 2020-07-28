@@ -100,10 +100,11 @@
 </script>
 
 <svelte:head>
+  {@html $pageDataStore.wrapper.final.head}
   <!-- <title>{identity.title}</title>
   <meta name="Description" content={identity.description}> -->
   <!-- TODO: Default 'head' which includes field data in a title tag -->
-  {@html headEmbed}
+  <!-- {@html headEmbed} -->
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
   {@html pageStyles}

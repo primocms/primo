@@ -187,6 +187,11 @@
         onclick: () => modal.show('DEPENDENCIES'),
       },
       {
+        title: 'Wrapper',
+        icon: 'fab fa-html5',
+        onclick: () => modal.show('WRAPPER'),
+      },
+      {
         id: 'site-styles',
         title: 'Styles',
         icon: 'fab fa-css3',
