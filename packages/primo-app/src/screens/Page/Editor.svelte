@@ -182,7 +182,7 @@
     ],
     [
       {
-        title: 'Page Dependencies',
+        title: 'Dependencies',
         icon: 'cube',
         onclick: () => modal.show('DEPENDENCIES'),
       },
