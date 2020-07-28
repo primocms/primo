@@ -18,6 +18,7 @@
 	tailwind.setInitial()
 
 	$: site.update(s => ({
+		...s,
 		...data
 	}))
 

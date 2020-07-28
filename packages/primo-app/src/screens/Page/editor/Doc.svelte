@@ -9,7 +9,7 @@
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
   import {focusedNode} from '@stores/app'
-  import {pageData} from '@stores/data'
+  import {pageData,site} from '@stores/data'
   import {content} from '@stores/data/page'
   const dispatch = createEventDispatcher()
   import {IconButton} from '@components/misc'
@@ -77,6 +77,7 @@
 </script>
 
 <div class="primo-page" style="margin-top: 58px;">
+  {@html $site.wrapper.final.above}
   {@html $pageData.wrapper.final.above}
   {#each $content as section, i (section.id)}
     <Section {section}>
@@ -138,4 +139,5 @@
     </Section>
   {/each}
   {@html $pageData.wrapper.final.below}
+  {@html $site.wrapper.final.below}
 </div>

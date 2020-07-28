@@ -143,6 +143,11 @@
           onsave: (fields) => {
             pageData.save('fields', fields)
           } 
+        }, { 
+          header: {
+            title: 'Content',
+            icon: 'fas fa-database'
+          } 
         })
       }
     ]
