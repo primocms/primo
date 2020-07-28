@@ -22,18 +22,7 @@
 
   setContext('editable', true)
 
-  export let data;
   export let pageId : string
-
-  $: {
-    const pageData = _.find(data.pages, ['id', pageId])
-    if (pageData) {
-      pageDataStore.set(pageData)
-      // content.set(pageData.content)
-      site.update(s => ({ ...s, ...data }))
-      // symbols.set(data.symbols)
-    }
-  }
 
 	$: pageIdStore.set(pageId)
 
