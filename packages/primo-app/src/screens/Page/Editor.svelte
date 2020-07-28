@@ -161,7 +161,7 @@
         buttons: _.flatten(editorialButtons)
       },
       {
-        title: 'One-off Component',
+        title: 'Single-use Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
           button: {
@@ -192,13 +192,13 @@
         onclick: () => modal.show('DEPENDENCIES'),
       },
       {
-        title: 'Wrapper',
+        title: 'HTML',
         icon: 'fab fa-html5',
         onclick: () => modal.show('WRAPPER'),
       },
       {
         id: 'site-styles',
-        title: 'Styles',
+        title: 'CSS',
         icon: 'fab fa-css3',
         onclick: () => modal.show('STYLES')
       }
