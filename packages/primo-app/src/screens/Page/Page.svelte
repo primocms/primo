@@ -15,27 +15,17 @@
 
   const dispatch = createEventDispatcher()
 
-  let signedIn : boolean = false
-  user.subscribe(u => {
-    signedIn = u.signedIn
-  })
-
   setContext('editable', true)
 
   export let pageId : string
 
 	$: pageIdStore.set(pageId)
 
-  let enteringPassword = false;
-
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')
 
   let pageStyles:string 
   $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, 'page-styles')
-
-  let identity:any 
-  // $: identity = $settings.identity // TODO
 
   let libraries:Array<any>
   $: libraries = $pageDataStore.dependencies.libraries
@@ -50,15 +40,6 @@
   let jsLibraries:Array<any>
   $: jsLibraries = libraries.filter(l => l.type === 'js')
 
-  function openUnlockModal() {
-    if ($user.signedIn) {
-      unlockPage()
-    } else {
-      enteringPassword = true
-      modal.show('AUTHENTICATION')
-    }
-  }
-
   function unlockPage() {
     user.set({canEditPage: true})
   }
@@ -66,16 +47,6 @@
   function containsField(row, fieldType) {
     return _.some(row.value.raw.fields, ['type', fieldType])
   }
-
-  let signedInWithEmail:boolean
-  $: signedInWithEmail = !!$user.email
-  $: if (signedInWithEmail && !$user.role) {
-    // getUserRole().then(role => {
-    //   user.update(u => ({ ...u, role }))
-    //   // unlockPage()
-    // }).catch(e => { console.error('could not get user role') })
-  }
-
 
   // This is how we use SystemJS to get modules working inside components
   let importMap:string
@@ -88,10 +59,6 @@
     if (systemJsNode) {
       systemJsNode.innerHTML = importMap
     }
-  }
-
-  $: if (signedIn) {
-    user.set({canEditPage: true})
   }
 
 </script>
