@@ -46,7 +46,8 @@ export type Property = 'html' | 'css' | 'js' | 'fields'
 
 export type FieldType = {
   id: string
-  label: string
+  label: string,
+  component?: any
 }
 
 // TABS
