@@ -15,7 +15,6 @@
   let previewHTML = html
   let previewCSS = wrapInStyleTags(css)
 
-  let headEmbed = dependencies ? dependencies.headEmbed : ''
   let cssLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'css') : []
   let jsLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'js') : []
 
@@ -62,7 +61,6 @@
 </script>
 
 <svelte:head>
-  {@html headEmbed}
   {@html getPageLibraries(cssLibraries)}
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />

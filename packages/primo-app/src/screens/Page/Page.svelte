@@ -38,10 +38,7 @@
   // $: identity = $settings.identity // TODO
 
   let libraries:Array<any>
-  $: libraries = $dependencies.libraries
-
-  let headEmbed:string
-  $: headEmbed = $dependencies.headEmbed
+  $: libraries = $pageDataStore.dependencies.libraries
 
   let customScripts:Array<any> = []
 
@@ -101,10 +98,6 @@
 
 <svelte:head>
   {@html $pageDataStore.wrapper.final.head}
-  <!-- <title>{identity.title}</title>
-  <meta name="Description" content={identity.description}> -->
-  <!-- TODO: Default 'head' which includes field data in a title tag -->
-  <!-- {@html headEmbed} -->
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
   {@html pageStyles}
