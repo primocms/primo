@@ -22,7 +22,7 @@
 			...data
 		}))
 
-		const currentPage = find($site.pages, ['id', $pageId || 'index'])
+		const currentPage = find(data.pages, ['id', $pageId || 'index'])
 		pageData.update(s => ({
 			...s, 
 			...currentPage
