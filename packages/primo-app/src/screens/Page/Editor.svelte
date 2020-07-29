@@ -110,9 +110,7 @@
         title: 'Content',
         icon: 'heading',
         buttons: _.flatten(editorialButtons)
-      }
-    ],
-    [
+      },
       {
         title: 'Symbol Library',
         icon: 'clone',

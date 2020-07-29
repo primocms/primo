@@ -53,6 +53,7 @@
             title="Switch to {$editorViewDev ? 'Content' : 'Code'}"
             icon={$editorViewDev ? 'edit' : 'code'}
             onclick={() => dispatch('toggleView')}
+            tooltipStyle="width:7rem"
           />
         </div>
     </div>

@@ -15,6 +15,7 @@
   export let loading = false
   export let buttons = null
   export let type = null
+  export let tooltipStyle = ''
 
   export let showKeyHint = false
 
@@ -50,7 +51,7 @@
   </button>
   {#if buttons}
     <!-- <div class="tooltip sub-buttons" class:active={subButtonsActive}> -->
-    <div class="tooltip sub-buttons">
+    <div class="tooltip sub-buttons" style={tooltipStyle}>
       {#each buttons as button}
         <button 
           id="primo-toolbar--{button.id}"
