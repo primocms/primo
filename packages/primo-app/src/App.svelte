@@ -16,13 +16,13 @@
 
 	$: dispatch('save', $site)
 
-	$: {
-		site.update(s => ({
-			...s,
-			...data
-		}))
+	$: site.update(s => ({
+		...s,
+		...data
+	}))
 
-		const currentPage = find(data.pages, ['id', $pageId || 'index'])
+	$: {
+		const currentPage = find($site.pages, ['id', $pageId || 'index'])
 		pageData.update(s => ({
 			...s, 
 			...currentPage
