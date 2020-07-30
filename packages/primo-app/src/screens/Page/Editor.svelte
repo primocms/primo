@@ -293,9 +293,3 @@ on:componentEditClick={({detail:component}) => {
   })
 }}
 />
-
-<svelte:head>
-  <script src="https://twitter.github.io/typeahead.js/js/handlebars.js"></script>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script> -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.6/handlebars.min.js" integrity="sha512-zT3zHcFYbQwjHdKjCu6OMmETx8fJA9S7E6W7kBeFxultf75OPTYUJigEKX58qgyQMi1m1EgenfjMXlRZG8BXaw==" crossorigin="anonymous"></script> -->
-</svelte:head>
