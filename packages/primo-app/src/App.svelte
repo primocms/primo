@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { find } from 'lodash'
   import { Router, Link, Route } from "svelte-routing";
-	import { ax, updateDataToCurrentVersion, getEmptyData } from 'utils'
+	import { ax, updateDataToCurrentVersion } from 'utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
 	import Page from './screens/Page/Page.svelte'
   import Modal from '@modal'
