@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { find } from 'lodash'
+	import find from 'lodash/find'
   import { Router, Link, Route } from "svelte-routing";
 	import { ax, updateDataToCurrentVersion } from 'utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
@@ -13,6 +13,9 @@
   import {modal} from '@stores/app'
 
 	export let data
+	export let endpoint
+
+	setContext('functions', endpoint)
 
 	$: dispatch('save', $site)
 

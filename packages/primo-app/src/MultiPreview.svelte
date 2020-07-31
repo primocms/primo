@@ -1,8 +1,5 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
-  import _ from 'lodash'
-  import { fade } from 'svelte/transition'
-  import {WebDeveloper} from '@svg';
   import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './screens/Page/pageUtils.js'
   import store from '@libraries/store.js'
 
