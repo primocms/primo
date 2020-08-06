@@ -1,7 +1,0 @@
-{
-  "baseUrl": "http://localhost:5001",
-  "hosts": {
-    "*.localhost": "127.0.0.1"
-  },
-  "viewportWidth": 1100
-}
