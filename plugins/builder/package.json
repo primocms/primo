@@ -1,9 +1,10 @@
 {
-  "name": "primo-app",
+  "name": "primo-builder",
   "version": "1.0.22",
   "description": "it's primo",
-  "main": "dist/build/main.js",
+  "main": "dist/main.js",
   "scripts": {
+    "start": "sirv public",
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "test": "echo \"Error: no test specified\" && exit 1"

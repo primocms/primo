@@ -5,13 +5,21 @@ import SinglePreview from './src/SinglePreview.svelte'
 
 // import Modal from './node_modules/@modal'
 import {modal} from './src/node_modules/@stores/app'
+import {pageData, site} from './src/node_modules/@stores/data'
 import {pageId} from './src/node_modules/@stores/data/page'
+
+import * as utils from './src/node_modules/utils'
+import * as components from './node_modules/@components'
 
 export {
   ComponentPreview,
   MultiPreview,
   SinglePreview,
   modal,
-  pageId
+  pageId,
+  utils,
+  components,
+  pageData,
+  site
 }
 export default Primo
