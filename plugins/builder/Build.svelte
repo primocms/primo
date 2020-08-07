@@ -4,32 +4,16 @@
   import { fade } from 'svelte/transition'
   import { createEventDispatcher, getContext } from 'svelte'
   import axios from 'axios'
-  import {buildPageHTML,buildPageStyles} from './utils'
 
   export let site
   export let onbuild = () => {}
-
-  $: console.log('site', site)
 
   let loading = false
   let selection = 'Page'
 
   async function buildSelection() {
-
-    const pages = await Promise.all(
-      site.pages.map(async page => {
-        const html = buildPageHTML(page, true)
-        const css = await buildPageStyles(page, site, html)
-        return { 
-          id: page.id, 
-          html, 
-          css 
-        }
-      })
-    )
-
     loading = true
-    onbuild(pages, site)
+    onbuild(site)
     setTimeout(() => {
       loading = false
     }, 2000)
