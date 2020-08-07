@@ -5,8 +5,8 @@ const precss = require('precss')
 const tailwindCSS = require('tailwindcss')
 var CleanCSS = require('clean-css')
 
-async function processPostCSS(css, html, options, onsuccess) {
-  let { tailwindConfig, includeBase, purge, includeTailwind } = options
+async function processPostCSS(css, html, options) {
+  let { tailwindConfig, includeBase = false, purge = false, includeTailwind = false } = options
 
   try {
     tailwindConfig = tailwindConfig
@@ -25,8 +25,8 @@ async function processPostCSS(css, html, options, onsuccess) {
       },
     }
   } catch (e) {
-    console.error(e)
-    return ''
+    // console.error(e)
+    return e
     // res.end({ error: e })
   }
 
@@ -65,12 +65,12 @@ async function processPostCSS(css, html, options, onsuccess) {
         return result.css
       }
     } else {
-      return ''
+      return 'could not process'
     }
   } catch(e) {
-    console.log('PostCSS error')
-    console.error(e)
-    return ''
+    // console.log('PostCSS error')
+    // console.error(e)
+    return e
   }
 
 }
