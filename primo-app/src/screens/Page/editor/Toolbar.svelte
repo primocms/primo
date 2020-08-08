@@ -28,7 +28,6 @@
   in:slide
   role="navigation"
   aria-label="toolbar"
-  style="-webkit-app-region: drag"
   id="primo-toolbar">
   <div class="container">
     <div class="logo">
