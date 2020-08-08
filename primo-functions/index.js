@@ -23,6 +23,9 @@ async function processPostCSS(css, html, options) {
           },
         ],
       },
+      plugins: [
+        require('@tailwindcss/ui'),
+      ]
     }
   } catch (e) {
     // console.error(e)
