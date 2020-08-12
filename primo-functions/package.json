@@ -1,6 +1,6 @@
 {
   "name": "primo-functions",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Functions which support the primo app",
   "main": "dist/index.js",
   "scripts": {

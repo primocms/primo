@@ -1,6 +1,6 @@
 {
   "name": "primo-app",
-  "version": "1.0.22",
+  "version": "1.0.24",
   "description": "it's primo",
   "main": "dist/build/main.js",
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "name": "primo-builder",
-  "version": "1.0.22",
-  "description": "it's primo",
+  "version": "1.0.0",
+  "description": "builder for primo",
   "main": "dist/main.js",
   "scripts": {
     "start": "sirv public",
