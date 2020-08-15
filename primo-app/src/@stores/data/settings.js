@@ -1,6 +1,6 @@
 import { writable, readable, derived, get } from 'svelte/store';
-import { tailwindConfig } from '../const'
-import {site} from '../@stores/data'
+import { tailwindConfig } from '../../const'
+import {site} from './index'
 
 const store = writable({
   javascript: '',

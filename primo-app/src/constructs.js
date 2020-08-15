@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { tailwindConfig } from '../../const'
+import { tailwindConfig } from './const'
 
 export const Preferences = (settings = {}) => ({
   globalStyles: settings.globalStyles || { uncompiled: '', compiled: '', tailwindConfig },

@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
-import { site } from '../@stores/data'
+import { site } from './index'
 import {content} from './page'
-import { getAllFields, convertFieldsToData, parseHandlebars } from '../utils'
+import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
 
 let pageData
 const store = writable({

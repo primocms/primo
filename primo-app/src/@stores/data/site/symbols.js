@@ -1,6 +1,6 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import _ from 'lodash'
-import {site} from '../@stores/data'
+import {site} from '../index'
 
 const store = writable([])
 

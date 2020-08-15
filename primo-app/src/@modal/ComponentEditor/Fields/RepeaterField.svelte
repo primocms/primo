@@ -4,7 +4,7 @@
   const dispatch = createEventDispatcher() 
 
   import {getUniqueId} from 'utils'
-  import {Card} from '@components/misc'
+  import {Card} from '../../../@components/misc'
   import {ContentField, EditField, GenericField, ImageField} from '../../../@components/inputs'
   import RepeaterField from '../RepeaterField.svelte'
 

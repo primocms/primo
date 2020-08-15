@@ -4,8 +4,8 @@ import { writable, get } from 'svelte/store';
 import dependencies from './dependencies'
 import content from './content'
 
-import {pageData} from '../@stores/data'
-import site from '../@stores/data/site'
+import {pageData} from '../index'
+import site from '../site'
 
 export const pageId = writable(null)
 

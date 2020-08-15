@@ -2,8 +2,8 @@
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher() 
 
-  import {Card} from '@components/misc'
-  import {ContentField, EditField, GenericField, ImageField} from '@components/inputs'
+  import {Card} from '../../../@components/misc'
+  import {ContentField, EditField, GenericField, ImageField} from '../../../@components/inputs'
 
   export let field
 

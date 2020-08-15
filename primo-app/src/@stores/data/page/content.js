@@ -1,8 +1,8 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import _ from "lodash";
-import { hydrateAllComponents, getUniqueId, updateInstancesInContent } from '../utils'
-import {focusedNode} from '../@stores/app'
-import {pageData,site} from '../@stores/data'
+import { hydrateAllComponents, getUniqueId, updateInstancesInContent } from '../../../utils'
+import {focusedNode} from '../../app'
+import {pageData,site} from '../index'
 
 let content = []
 const store = writable([

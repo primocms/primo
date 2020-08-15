@@ -1,11 +1,11 @@
 import symbols from './symbols'
 
 import { writable, readable, derived, get } from 'svelte/store';
-import { tailwindConfig, pageStyles } from '../const'
-import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../utils'
+import { tailwindConfig, pageStyles } from '../../../const'
+import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
-import {domainInfo,pageData} from '../@stores/data'
-import {content} from '../@stores/data/page'
+import {domainInfo,pageData} from '../index'
+import {content} from '../page'
 
 let site
 const store = writable({

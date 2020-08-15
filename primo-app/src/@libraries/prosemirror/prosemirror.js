@@ -13,7 +13,7 @@ import {Plugin} from "prosemirror-state"
 import {buildKeymap} from './keymap.js'
 
 import {get} from 'svelte/store'
-import {focusedNode} from '@stores/app'
+import {focusedNode} from '../../@stores/app'
 
 import {buildInputRules} from './inputrules.js'
 

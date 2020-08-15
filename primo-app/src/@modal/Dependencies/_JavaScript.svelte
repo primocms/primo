@@ -1,6 +1,6 @@
 <script>
   import {CodeMirror} from '../../@components'
-  import { compileScss } from 'utils'
+  import { compileScss } from '../../utils'
   import { settings } from '../../@stores/data'
 
   let { javascript } = $settings

@@ -1,4 +1,4 @@
-import {processStyles} from '../../utils'
+import {processStyles} from './utils'
 
 export const MODAL_TYPES = {
   image : 'Image (uploaded or from URL)',

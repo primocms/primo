@@ -2,11 +2,11 @@
   import { fade } from 'svelte/transition'
   import { createEventDispatcher, getContext } from 'svelte'
   import axios from 'axios'
-  import {Spinner} from '../../@components/misc'
-  import {PrimaryButton} from '../../@components/buttons'
-  import {pageData, site} from '../../@stores/data'
-  import {modal} from '../../@stores/app'
-  import {buildPageHTML,buildPageStyles} from '../../utils'
+  import {Spinner} from '../@components/misc'
+  import {PrimaryButton} from '../@components/buttons'
+  import {pageData, site} from '../@stores/data'
+  import {modal} from '../@stores/app'
+  import {buildPageHTML,buildPageStyles} from '../utils'
 
   let loading = false
   let selection = 'Page'

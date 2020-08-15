@@ -1,5 +1,5 @@
 import { writable, readable, derived, get } from 'svelte/store';
-import { User } from '../constructs'
+import { User } from '../../constructs'
 
 const store = writable(User())
 

@@ -1,6 +1,6 @@
 <svelte:options tag={null} />
 <script>
-  import {code, trash, chevron, edit} from '@svg/small'
+  import {code, trash, chevron, edit} from '../../../../@svg/small'
 
   // Workaround to get events firing https://github.com/sveltejs/svelte/issues/3119
   import { createEventDispatcher } from "svelte"
