@@ -1,22 +1,21 @@
 <script lang="ts">
 	import find from 'lodash/find'
   import { Router, Link, Route } from "svelte-routing";
-	import { ax, updateDataToCurrentVersion } from 'utils'
+	import { ax, updateDataToCurrentVersion } from './utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
 	import Page from './screens/Page/Page.svelte'
-  import Modal from '@modal'
+  import Modal from './@modal'
 
 	const dispatch = createEventDispatcher()
 
-	import {domainInfo, site, symbols, tailwind, pageData} from '@stores/data'
-	import {content,pageId} from '@stores/data/page'
-  import {modal} from '@stores/app'
+	import {domainInfo, site, symbols, tailwind, pageData} from './@stores/data'
+	import {content,pageId} from './@stores/data/page'
+  import {modal} from './@stores/app'
 
 	export let data
-	export let endpoint
-	export let processPostCSS
+	export let functions
 
-	setContext('functions', endpoint)
+	setContext('functions', functions)
 
 	$: dispatch('save', $site)
 

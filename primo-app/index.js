@@ -4,12 +4,12 @@ import MultiPreview from './src/MultiPreview.svelte'
 import SinglePreview from './src/SinglePreview.svelte'
 
 // import Modal from './node_modules/@modal'
-import {modal} from './src/node_modules/@stores/app'
-import {pageData, site} from './src/node_modules/@stores/data'
-import {pageId} from './src/node_modules/@stores/data/page'
+import {modal} from './src/@stores/app'
+import {pageData, site} from './src/@stores/data'
+import {pageId} from './src/@stores/data/page'
 
-import * as utils from './src/node_modules/utils'
-import * as components from './node_modules/@components'
+import * as utils from './src/utils'
+import * as components from './src/@components'
 
 export {
   ComponentPreview,

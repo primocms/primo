@@ -2,17 +2,17 @@
   import _ from 'lodash'
   import {fade} from 'svelte/transition'
   import { onMount, createEventDispatcher } from 'svelte' 
-  import {getUniqueId,wrapInStyleTags} from 'utils'
+  import {getUniqueId,wrapInStyleTags} from '../../../utils'
   import {getStyles,appendHtml} from '../pageUtils.js'
   import Section from './Layout/Section.svelte'
   import Column from './Layout/Column.svelte'
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
-  import {focusedNode} from '@stores/app'
-  import {pageData,site} from '@stores/data'
-  import {content} from '@stores/data/page'
+  import {focusedNode} from '../../../@stores/app'
+  import {pageData,site} from '../../../@stores/data'
+  import {content} from '../../../@stores/data/page'
   const dispatch = createEventDispatcher()
-  import {IconButton} from '@components/misc'
+  import {IconButton} from '../../../@components/misc'
 
   import {Row,Column as ColumnType,Section as SectionType} from './Layout/LayoutTypes'
 

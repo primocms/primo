@@ -1,8 +1,8 @@
 {
   "name": "primo-app",
-  "version": "1.0.24",
+  "version": "1.0.29",
   "description": "it's primo",
-  "main": "dist/build/main.js",
+  "main": "index.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",

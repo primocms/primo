@@ -4,14 +4,14 @@
   import {fade} from 'svelte/transition'
   import Editor from './Editor.svelte'
   import View from './View.svelte'
-  import {Button} from '@components/buttons'
+  import {Button} from '../../@components/buttons'
   import {getHeadStyles, setCustomScripts, setHeadScript, getPageLibraries, setPageJsLibraries} from './pageUtils.js'
-  import {FeedbackForm,Spinner} from '@components/misc'
-  import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from 'utils'
+  import {FeedbackForm,Spinner} from '../../@components/misc'
+  import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from '../../utils'
 
-  import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,site,tailwind,loadingTailwind,user} from '@stores/data'
-  import {content,pageId as pageIdStore} from '@stores/data/page'
-  import {modal} from '@stores/app'
+  import {symbols,settings,dependencies,domainInfo,pageData as pageDataStore,site,tailwind,loadingTailwind,user} from '../../@stores/data'
+  import {content,pageId as pageIdStore} from '../../@stores/data/page'
+  import {modal} from '../../@stores/app'
 
   const dispatch = createEventDispatcher()
 

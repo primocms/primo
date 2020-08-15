@@ -1,0 +1,25 @@
+import _ from 'lodash'
+import { writable, get } from 'svelte/store';
+
+import dependencies from './dependencies'
+import content from './content'
+
+import {pageData} from '../@stores/data'
+import site from '../@stores/data/site'
+
+export const pageId = writable(null)
+
+pageId.subscribe(id => {
+  const currentPage = _.find(get(site).pages, ['id', id || 'index'])
+  if (currentPage && pageData) {
+    pageData.update(p => ({
+      ...p,
+      ...currentPage
+    }))
+  }
+})
+
+export {
+  dependencies,
+  content
+}

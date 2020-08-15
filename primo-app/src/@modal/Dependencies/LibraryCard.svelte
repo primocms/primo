@@ -1,0 +1,60 @@
+<script>
+  import {createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
+
+  import {fade} from 'svelte/transition'
+  import {IconButton} from '../../@components/buttons'
+
+  export let library
+  export let i
+  export let button = null
+  export let valid = true
+
+  $: typeLabel = library.type ? library.type.toUpperCase() : null
+</script>
+
+<li class="list-item" in:fade={{ delay: 100 * i, duration: 100 }} title={ library.type === 'js' ? `Accessible from within component JavaScript as ${library.name}` : ''}>
+    <div class="flex-3">
+      {#if !valid}
+        <span class="bg-red-500 text-white font-medium block mb-2 py-1 px-2 rounded">Invalid file type. Expected JS or CSS but got {typeLabel}</span>
+      {/if}
+      <strong>{library.name} { typeLabel ? `(${typeLabel})` : ''}<span class="type">| {library.version}</span></strong>
+      <p class="description">{library.description}</p>
+      <div class="buttons">
+        {#each library.links as link}
+          {#if link.site === 'homepage'}
+            <IconButton icon="home" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }}/>
+          {:else if link.site === 'npm'}
+            <IconButton iconClasses="fab fa-npm" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }} />
+          {:else if link.site === 'repository'}
+            <IconButton iconClasses="fab fa-github" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }} />
+          {/if}
+        {/each}
+      </div>
+    </div>
+    <div class="flex-1 flex justify-end">
+      {#if button}
+        <button class="button is-light is-small" on:click={button.onclick}>{button.label}</button>
+      {/if}
+    </div>
+</li>
+
+<style>
+  .buttons {
+    margin-top: 0.5rem;
+  }
+  .description {
+    font-size: 14px;
+  }
+  .type {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-weight: 500;
+  }
+  .list-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    @apply p-4 shadow;
+  }
+</style>

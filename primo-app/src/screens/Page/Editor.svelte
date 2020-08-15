@@ -3,7 +3,7 @@
   import _ from 'lodash'
   import { onMount, createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
-  import store from '@libraries/store.js'
+  import store from '../../@libraries/store.js'
 
   const dispatch = createEventDispatcher()
   
@@ -11,11 +11,9 @@
   import ToolbarButton from './editor/ToolbarButton.svelte'
   import Doc from './editor/Doc.svelte'
 
-  import {processStyles} from 'utils'
-
-  import {site,repo,domainInfo,user,pageData} from '@stores/data'
-  import {content} from '@stores/data/page'
-  import {focusedNode, modal,editorViewDev} from '@stores/app'
+  import {site,repo,domainInfo,user,pageData} from '../../@stores/data'
+  import {content} from '../../@stores/data/page'
+  import {focusedNode, modal,editorViewDev} from '../../@stores/app'
 
   import {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
 

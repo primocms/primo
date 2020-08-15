@@ -2,8 +2,8 @@
   import {createEventDispatcher, onMount, getContext} from 'svelte'
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../../pageUtils.js'
-  import {dependencies} from '@stores/data'
-  import {editorViewDev} from '@stores/app'
+  import {dependencies} from '../../../../@stores/data'
+  import {editorViewDev} from '../../../../@stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
   if (!customElements.get('component-buttons')) { 
