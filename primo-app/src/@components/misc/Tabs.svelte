@@ -1,7 +1,7 @@
 <script lang="ts">
   import {fade} from 'svelte/transition'
 
-  import {Tab,Tabs} from '../../types/components'
+  import type {Tab,Tabs} from '../../types/components'
 
   export let tabs:Tabs
   export let activeTab:Tab

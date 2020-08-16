@@ -1,6 +1,6 @@
 <script>
   import {createEventDispatcher} from 'svelte'
-  import {getUniqueId} from '../../utils'
+  import {getUniqueId} from '../../utils.js'
   import {ImageField} from '../../@components/inputs'
   import {fade} from 'svelte/transition'
   const dispatch = createEventDispatcher() 

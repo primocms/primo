@@ -10,7 +10,7 @@
   import {Card} from '../@components/misc'
   import RepeaterField from './ComponentEditor/RepeaterField.svelte'
   import {CodePreview} from '../@components/misc'
-  import {Subfield, Field, Fields, Component, Property, FieldType} from '../types/components'
+  import type {Subfield, Field, Fields, Component, Property, FieldType} from '../types/components'
   import {getUniqueId} from '../utils'
 
   import {site,pageData} from '../@stores/data'

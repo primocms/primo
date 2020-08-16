@@ -6,7 +6,7 @@
 
   import {createEditor} from '../../../../@libraries/prosemirror/prosemirror.js'
   import {focusedNode} from '../../../../@stores/app'
-  import {Content} from './LayoutTypes'
+  import type {Content} from './LayoutTypes'
 
   export let row:Content
 

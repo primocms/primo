@@ -2,10 +2,10 @@
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import { domainInfo } from '@stores/data'
+  import { domainInfo } from '../../@stores/data'
   import { get } from 'svelte/store'
 
-  import {getUniqueId} from 'utils'
+  import {getUniqueId} from '../../utils.js'
 
   export let field
   

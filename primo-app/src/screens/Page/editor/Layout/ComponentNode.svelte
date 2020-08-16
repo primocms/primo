@@ -11,7 +11,7 @@
   }
 
 
-  // import {Component} from './LayoutTypes'
+  // import type {Component} from './LayoutTypes'
 
   const active = getContext('editable')
 

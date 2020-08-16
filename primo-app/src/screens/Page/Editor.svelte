@@ -15,7 +15,7 @@
   import {content} from '../../@stores/data/page'
   import {focusedNode, modal,editorViewDev} from '../../@stores/app'
 
-  import {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
+  import type {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
 
   let unlockingPage:boolean = false
   let updatingDatabase:boolean = false

@@ -2,14 +2,14 @@ import _ from "lodash";
 import axios from 'axios'
 import {getContext} from 'svelte'
 import { get } from 'svelte/store'
-import {getDefaultPageStyles} from 'const'
-import {Preferences} from 'constructs'
+import {getDefaultPageStyles} from './const.js'
+import {Preferences} from './constructs.js'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
-import Handlebars from '@libraries/handlebars'
+import Handlebars from './@libraries/handlebars.js'
 
-import {settings,dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from '@stores/data'
-import {content} from '@stores/data/page'
+import {settings,dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from './@stores/data'
+import {content} from './@stores/data/page'
 
 
 const functionsServer = (endpoint) => get(domainInfo).onDev ? `http://localhost:9000/primo-d4041/us-central1/${endpoint}` : `https://us-central1-primo-d4041.cloudfunctions.net/${endpoint}`

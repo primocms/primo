@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './screens/Page/pageUtils.js'
-  import store from '@libraries/store.js'
+  import store from './@libraries/store.js'
 
   let pages = []
 

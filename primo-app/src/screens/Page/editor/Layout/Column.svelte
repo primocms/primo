@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {Column} from './LayoutTypes'
+  import type {Column} from './LayoutTypes'
 
   export let column:Column
 </script>

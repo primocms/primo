@@ -32,7 +32,7 @@
   const slowDebounce = createDebouncer(1000)
   const quickDebounce = createDebouncer(500)
 
-  import {Subfield, Field, Fields, Component, Property, FieldType} from '../../types/components'
+  import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../types/components'
 
   export let component:Component = {
     type: 'component',

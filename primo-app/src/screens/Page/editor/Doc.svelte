@@ -14,7 +14,7 @@
   const dispatch = createEventDispatcher()
   import {IconButton} from '../../../@components/misc'
 
-  import {Row,Column as ColumnType,Section as SectionType} from './Layout/LayoutTypes'
+  import type {Row,Column as ColumnType,Section as SectionType} from './Layout/LayoutTypes'
 
   function hasContentAbove(rowIndex: number, rows: Array<Row>): boolean {
     const rowAbove:Row = rows[rowIndex-1]

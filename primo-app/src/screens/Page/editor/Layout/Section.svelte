@@ -1,6 +1,6 @@
 <script lang="ts">
   import {fade} from 'svelte/transition'
-  import {Section} from './LayoutTypes'
+  import type {Section} from './LayoutTypes'
 
   export let section:Section;
 
