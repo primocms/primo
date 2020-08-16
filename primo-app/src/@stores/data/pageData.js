@@ -38,7 +38,7 @@ store.subscribe(s => {
     site.pages.modify(s)
   }
   if (s && content) {
-    // content.set(s.content) // don't overwrite unsaved content
+    content.set(s.content) 
   }
 })
 
