@@ -50,7 +50,7 @@
             </div>
           {/each}
           <ToolbarButton  
-            title="Switch to {$editorViewDev ? 'Content' : 'Code'}"
+            title="See {$editorViewDev ? 'Content' : 'Code'}"
             icon={$editorViewDev ? 'edit' : 'code'}
             onclick={() => dispatch('toggleView')}
             tooltipStyle="width:7rem"

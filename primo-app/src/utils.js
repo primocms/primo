@@ -286,9 +286,7 @@ export async function sendSiteInvitation(domain, email, role) {
 }
 
 export async function processStyles(css, html, options = {}) {
-  // console.log(processPostCSS)
   const {processPostCSS} = getContext('functions')
-  console.log('processPostCSS', processPostCSS)
   try {
     const result = await processPostCSS({css, html, options})
     if (result.error) {

@@ -147,7 +147,7 @@ export default {
     }
 
     function createModal(modal) {
-      const { id, component, componentProps, options={} } = modal
+      const { id, component, componentProps={}, options={} } = modal
       modalTypes[id] = {
         component,
         header: options.header,
