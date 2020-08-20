@@ -38,7 +38,7 @@
 {#if pages}
   {#each pages as page, i}
     <div class="preview-container" style="height:{iframeHeights[i]}px">
-      <iframe bind:this={iframes[i]} on:load={() => setIframeHeight(i)} title="Preview HTML" src="preview.html?=preview=single&page={i}"></iframe>
+      <iframe bind:this={iframes[i]} on:load={() => setIframeHeight(i)} title="Preview HTML" src="preview.html?preview=single&page={i}"></iframe>
     </div>
   {/each}
 {/if}
