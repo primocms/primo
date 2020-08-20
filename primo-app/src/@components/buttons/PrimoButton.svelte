@@ -3,6 +3,9 @@
   import {fade} from 'svelte/transition'
 
   export let variants = ''
+
+  const siteDomain = window.location.hostname.split('.').slice(1).join('.')
+  const homeURL = `${window.location.protocol}//${siteDomain}`
 </script>
 
 <a
@@ -10,7 +13,7 @@
   transition:fade
   title="Back to primo dashboard"
   class={variants}
-  href="https://primo.af">
+  href={homeURL}>
 </a>
 
 <style>
