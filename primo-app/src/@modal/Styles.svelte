@@ -18,14 +18,6 @@
 
   let pageHTML
   let siteHTML 
-  // let allPages = $site.pages.map(page => {
-  //   console.log(page)
-  //   if (page.id === $pageData.id) {
-  //     return currentPage
-  //   } else {
-  //     return wrapInStyleTags(siteStyles.final) + wrapInStyleTags(page.styles.final) + buildPagePreview(page.content)
-  //   }
-  // })
 
   function buildPreview(siteCSS, pageCSS, content) {
     return {
@@ -60,11 +52,6 @@
       return result
     } 
   }
-
-  // pagesWithSiteStyles = allPages.map(page => ({
-  //   html: page,
-  //   css: siteStyles.final
-  // }))
 
   let rawStyles = pageStyles.raw;
   let finalStyles = pageStyles.final; 

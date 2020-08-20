@@ -8,7 +8,7 @@
 
   export let page
 
-  let preview = wrapInStyleTags($tailwind) + wrapInStyleTags($site.styles.final) + wrapInStyleTags($pageData.styles.final) + buildPagePreview(page.content)
+  $: preview = wrapInStyleTags($tailwind) + wrapInStyleTags($site.styles.final) + wrapInStyleTags(page.styles.final) + buildPagePreview(page.content)
 
   let iframeLoaded = false
 
