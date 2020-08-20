@@ -90,11 +90,6 @@
   let shouldReloadTailwind = false
 
   $: {
-    // styles = {
-    //   raw: rawStyles,
-    //   final: finalStyles,
-    //   tailwind: tailwindConfig
-    // }
     if (tailwindConfig !== cachedTailwindConfig) {
       shouldReloadTailwind = true
     }
@@ -216,7 +211,8 @@
   </div>
   <div class="flex justify-end py-2">
     <SaveButton {loading} on:click={() => {
-      site.saveStyles(styles)
+      site.saveStyles(siteStyles)
+      pageData.save('styles', pageStyles)
       if (shouldReloadTailwind) {
         tailwind.saveSwappedInConfig()
       } else {
