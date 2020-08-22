@@ -7,6 +7,7 @@ import site from './site'
 import symbols from './symbols.js'
 import tailwind, {combinedTailwindConfig, loadingTailwind, getCombinedTailwindConfig} from './tailwind.js'
 import user from './user'
+import allSites from './allSites'
 
 export {
   symbols,
@@ -21,4 +22,5 @@ export {
   getCombinedTailwindConfig,
   loadingTailwind,
   user,
+  allSites
 }

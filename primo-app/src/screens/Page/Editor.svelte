@@ -105,6 +105,14 @@
   const editorButtons = [
     [
       {
+        id: 'pages',
+        title: 'Pages',
+        icon: 'th-large',
+        onclick: () => modal.show('SITE_PAGES') 
+      }
+    ],
+    [
+      {
         title: 'Content',
         icon: 'heading',
         buttons: _.flatten(editorialButtons)
@@ -126,12 +134,6 @@
     ],
     [
       {
-        id: 'pages',
-        title: 'Pages',
-        icon: 'th-large',
-        onclick: () => modal.show('SITE_PAGES') 
-      },
-      {
         title: 'Content', 
         icon: 'database', 
         onclick: () => modal.show('FIELDS', { 
@@ -150,6 +152,14 @@
   ]
 
   const developerButtons = [
+    [
+      {
+        id: 'pages',
+        title: 'Pages',
+        icon: 'th-large',
+        onclick: () => modal.show('SITE_PAGES') 
+      }
+    ],
     [
       {
         title: 'Content',
@@ -197,14 +207,6 @@
         title: 'CSS',
         icon: 'fab fa-css3',
         onclick: () => modal.show('STYLES')
-      }
-    ],
-    [
-      {
-        id: 'pages',
-        title: 'Pages',
-        icon: 'th-large',
-        onclick: () => modal.show('SITE_PAGES') 
       }
     ],
     [

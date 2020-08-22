@@ -61,9 +61,9 @@
   <div class="flex-1">
     <span class="mb-1 inline-block font-semibold text-gray-700">{'<head>'}</span> 
     <CodeMirror 
-      bind:value={wrapper.raw.head} 
+      bind:value={wrapper.head.raw} 
       on:change={_.debounce( async() => { 
-        wrapper.final.head = await updateHtmlWithFieldData(wrapper.raw.head)
+        wrapper.head.final = await updateHtmlWithFieldData(wrapper.head.raw)
       }, 1000 )}
       style="height:10rem" 
       mode={{
@@ -74,9 +74,9 @@
 
     <span class="mb-1 mt-4 inline-block font-semibold text-gray-700">{'Before </body>'}</span> 
     <CodeMirror 
-      bind:value={wrapper.raw.below} 
+      bind:value={wrapper.below.raw} 
       on:change={_.debounce( async() => { 
-        wrapper.final.below = await updateHtmlWithFieldData(wrapper.raw.below)
+        wrapper.below.final = await updateHtmlWithFieldData(wrapper.below.raw)
       }, 1000 )}
       style="height:15rem" 
       mode={{

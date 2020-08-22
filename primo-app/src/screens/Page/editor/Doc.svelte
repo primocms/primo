@@ -77,8 +77,6 @@
 </script>
 
 <div class="primo-page" style="margin-top: 58px;">
-  {@html $site.wrapper.final.above}
-  {@html $pageData.wrapper.final.above}
   {#each $content as section, i (section.id)}
     <Section {section}>
       {#each section.columns as column, i (column.id)}
@@ -138,6 +136,6 @@
       {/each}
     </Section>
   {/each}
-  {@html $pageData.wrapper.final.below}
-  {@html $site.wrapper.final.below}
+  {@html $pageData.wrapper.below.final}
+  {@html $site.wrapper.below.final}
 </div>

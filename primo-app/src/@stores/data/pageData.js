@@ -18,15 +18,13 @@ const store = writable({
     tailwind: ''
   },
   wrapper: {
-    raw: {
-      head: '',
-      above: '',
-      below: ''
+    head: {
+      raw: '',
+      final: ''
     },
-    final: {
-      head: '',
-      above: '',
-      below: ''
+    below: {
+      raw: '',
+      final: ''
     }
   },
   fields: []
@@ -56,17 +54,20 @@ export default {
     }))
   },
   hydrateWrapper: async () => {
-    const { head, above, below } = pageData.wrapper.raw
+    const { head, below } = pageData.wrapper
     const fields = getAllFields()
     const data = await convertFieldsToData(fields, 'all')
-    const [ newHead, newAbove, newBelow ] = await Promise.all([parseHandlebars(head, data), parseHandlebars(above, data), parseHandlebars(below, data)])
+    const [ newHead, newBelow ] = await Promise.all([parseHandlebars(head.raw, data),  parseHandlebars(below.raw, data)])
 
     const newWrapper = {
       ...pageData.wrapper,
-      final: {
-        head: newHead,
-        above: newAbove,
-        below: newBelow
+      head: {
+        ...head,
+        final: newHead
+      },
+      below: {
+        ...below,
+        final: newBelow
       }
     }
 

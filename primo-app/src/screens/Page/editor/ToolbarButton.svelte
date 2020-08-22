@@ -146,9 +146,6 @@
     left: 50%;
     position: absolute;
     pointer-events: none;
-  }
-
-  .tooltip:before, .tooltip:after {
     border-width: 7px;
     margin-left: -7px;
   }

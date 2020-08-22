@@ -64,7 +64,7 @@
 </script>
 
 <svelte:head>
-  {@html $pageDataStore.wrapper.final.head}
+  {@html $pageDataStore.wrapper.head.final}
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
   {@html pageStyles}

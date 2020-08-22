@@ -321,7 +321,7 @@ const boilerplate = async (html) => {
         : ``
       }
       `+
-      `${get(pageData).wrapper.final.head}
+      `${get(pageData).wrapper.head.final}
     </head>
 
     <body data-instant-intensity="all" class="primo-page">   

@@ -22,13 +22,19 @@
   Mousetrap.bind('command', () => showKeyHint = true, 'keydown');
   Mousetrap.bind('command', () => showKeyHint = false, 'keyup');
 
+  let mounted = false
+  onMount(() => {
+    mounted = true
+  })
+
 </script>
 
 <nav
   in:slide
   role="navigation"
   aria-label="toolbar"
-  id="primo-toolbar">
+  id="primo-toolbar"
+  class:mounted>
   <div class="container">
     <div class="logo">
       <PrimoButton />
@@ -90,11 +96,17 @@
 
   #primo-toolbar {
     position: fixed; 
-    top: 0;
+    top: -5rem;
     left: 0;
     right: 0;
     z-index: 999;
+    transition: top 0.25s;
     @apply bg-codeblack p-2;
+
+    &.mounted {
+      top: 0;
+      transition: top 0.25s;
+    }
 
     & > .container {
       @apply flex-col;

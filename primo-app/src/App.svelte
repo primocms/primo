@@ -8,16 +8,23 @@
 
 	const dispatch = createEventDispatcher()
 
-	import {domainInfo, site, symbols, tailwind, pageData} from './@stores/data'
+	import {domainInfo, site, symbols, tailwind, pageData, allSites} from './@stores/data'
 	import {content,pageId} from './@stores/data/page'
   import {modal} from './@stores/app'
 
 	export let data
 	export let functions
+	export let sites = []
+	export let showDashboardLink = false
 
 	setContext('functions', functions)
+	setContext('showDashboardLink', showDashboardLink)
+
+	$: setContext('sites', sites)
 
 	$: dispatch('save', $site)
+
+	$: allSites.set(sites)
 
 	$: site.update(s => ({
 		...s,
@@ -49,7 +56,6 @@
 <Modal />
 
 <style type="scss" global>
-	/* @import "./home.bulma.scss"; */
   @tailwind base;
   @tailwind components;
   @tailwind utilities;

@@ -1,7 +1,7 @@
 import symbols from './symbols'
 
 import { writable, readable, derived, get } from 'svelte/store';
-import { tailwindConfig, pageStyles } from '../../../const'
+import { tailwindConfig } from '../../../const'
 import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
 import {domainInfo,pageData} from '../index'
@@ -69,20 +69,18 @@ const store = writable({
   ],
   fields: [],
   styles: {
-    raw: pageStyles,
+    raw: '',
     final: '',
     tailwind: tailwindConfig
   },
   wrapper: {
-    raw: {
-      head: '',
-      above: '',
-      below: ''
+    head: {
+      raw: '',
+      final: ''
     },
-    final: {
-      head: '',
-      above: '',
-      below: ''
+    below: {
+      raw: '',
+      final: ''
     }
   },
   symbols: [],
@@ -99,6 +97,7 @@ export {
 }
 
 export default {
+  set: store.set,
   subscribe: store.subscribe, 
   update: store.update,
   fields: {
