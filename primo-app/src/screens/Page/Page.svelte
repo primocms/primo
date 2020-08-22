@@ -89,6 +89,7 @@
   on:change
   on:save
   on:build
+  on:signOut
 />
 
 

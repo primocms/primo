@@ -37,7 +37,7 @@
   class:mounted>
   <div class="container">
     <div class="logo">
-      <PrimoButton />
+      <PrimoButton on:signOut />
       <MobileNavButton active={mobileNavOpen} on:click={() => mobileNavOpen = !mobileNavOpen} />
     </div>
     <div
@@ -46,7 +46,7 @@
       >
         <div class="custom-buttons">
           <div class="button-group hidden lg:block">
-            <PrimoButton />
+            <PrimoButton on:signOut />
           </div>
           {#each buttons as group}
             <div class="button-group">

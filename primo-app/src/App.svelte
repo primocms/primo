@@ -49,10 +49,10 @@
 
 <Router>
 	<Route path="/:pageId" let:params>
-		<Page pageId={params.pageId} on:build />
+		<Page pageId={params.pageId} on:build on:signOut />
 	</Route>
 	<Route>
-		<Page pageId={'index'} on:build />
+		<Page pageId={'index'} on:build on:signOut />
 	</Route>
 </Router>
 

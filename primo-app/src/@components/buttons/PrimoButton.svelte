@@ -1,11 +1,13 @@
 <script>
   import {flatten} from 'lodash'
-  import {getContext} from 'svelte'
+  import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
   import PageItem from '../../@modal/PageList/PageItem.svelte'
   import SiteButton from './SiteButton.svelte'
   import {site, allSites} from '../../@stores/data'
   import PrimoLogo from '../../@svg/PrimoLogo.svelte'
+
+  const dispatch = createEventDispatcher()
 
   const showDashboardLink = getContext('showDashboardLink')
 
@@ -48,6 +50,12 @@
       <i class="fas fa-users mr-1"></i>
       <span>Get help</span>
     </a>
+    {#if showDashboardLink}
+      <button class="dashboard-button my-2" on:click={() => dispatch('signOut')}>
+        <i class="fas fa-sign-out-alt mr-1"></i>
+        <span>Sign Out</span>
+      </button>
+    {/if}
   </div>
 {/if}
 
@@ -68,7 +76,7 @@
       @apply absolute h-0 w-0 border-solid border-primored;
       bottom: -13px;
       pointer-events: none;
-      left: 37px;
+      left: 52px;
       border-top-color: transparent;
       border-left-color: transparent;
       border-right-color: transparent;
