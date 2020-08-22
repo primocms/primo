@@ -10,17 +10,20 @@
 
 	import {domainInfo, site, symbols, tailwind, pageData, allSites} from './@stores/data'
 	import {content,pageId} from './@stores/data/page'
-  import {modal} from './@stores/app'
+  import {modal,editorViewDev, userRole} from './@stores/app'
 
 	export let data
 	export let functions
 	export let sites = []
 	export let showDashboardLink = false
+	export let role = 'developer'
 
 	setContext('functions', functions)
 	setContext('showDashboardLink', showDashboardLink)
 
 	$: setContext('sites', sites)
+	$: $editorViewDev = (role === 'developer') ? true : false
+	$: $userRole = role
 
 	$: dispatch('save', $site)
 

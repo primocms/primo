@@ -8,7 +8,7 @@
   import {MODAL_TYPES} from '../../const'
   import { wrapInStyleTags, getUniqueId, createInstance } from '../../utils'
 
-  import {modal,editorViewDev} from '../../@stores/app'
+  import {modal,editorViewDev,userRole} from '../../@stores/app'
   import {symbols} from '../../@stores/data/site'
   import {content} from '../../@stores/data/page'
 
@@ -90,7 +90,13 @@
     <span>Create New Symbol</span>
   </PrimaryButton>
 {:else if $symbols.length === 0}
-  <p class="p-48 text-center">This is where you can add components which you can reuse across your site (we call them Symbols). You'll need to be in Developer mode to make a Symbol.</p>
+  <p class="p-48 text-center">
+    {#if $userRole === 'developer'}
+      This is where you can add components which you can reuse across your site (we call them Symbols). You'll need to be in Developer mode to make a Symbol.
+    {:else}
+      This is where your reusable components go (we call them Symbols), but you'll need the site developer to make some first.
+    {/if}
+  </p>
 {/if}
 
 {#each $symbols as symbol (getID(symbol))}

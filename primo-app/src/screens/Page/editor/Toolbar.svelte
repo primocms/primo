@@ -3,12 +3,12 @@
 </svelte:head>
 
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte'
+  import { onMount, createEventDispatcher, getContext } from 'svelte'
   import { fade, slide } from "svelte/transition";
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '../../../@components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {editorViewDev} from '../../../@stores/app'
+  import {editorViewDev,userRole} from '../../../@stores/app'
 
   const dispatch = createEventDispatcher()
   
@@ -55,12 +55,14 @@
               {/each}
             </div>
           {/each}
-          <ToolbarButton  
-            title="See {$editorViewDev ? 'Content' : 'Code'}"
-            icon={$editorViewDev ? 'edit' : 'code'}
-            onclick={() => dispatch('toggleView')}
-            tooltipStyle="width:7rem"
-          />
+          {#if $userRole === 'developer'}
+            <ToolbarButton  
+              title="See {$editorViewDev ? 'Content' : 'Code'}"
+              icon={$editorViewDev ? 'edit' : 'code'}
+              onclick={() => dispatch('toggleView')}
+              tooltipStyle="width:7rem"
+            />
+          {/if}
         </div>
     </div>
     <div class="secondary-buttons fixed sm:static right-0 bottom-0 mr-2 mb-2 md:m-0">

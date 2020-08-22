@@ -14,7 +14,7 @@
   import {getUniqueId} from '../utils'
 
   import {site,pageData} from '../@stores/data'
-  import {modal,editorViewDev} from '../@stores/app'
+  import {modal,editorViewDev,userRole} from '../@stores/app'
   import {content} from '../@stores/data/page'
 
   let pageFields = _.cloneDeep($pageData.fields) || []
@@ -367,7 +367,13 @@
           <ContentField {field} on:input={() => updateHtmlWithFieldData('static')} />
         {/if}
       {:else}
-      <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit content from here</p>
+      <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">
+        {#if $userRole === 'developer'}
+          You'll need to create and integrate a field before you can edit content from here
+        {:else}
+          The site developer will need to create and integrate a field before you can edit content from here
+        {/if}
+      </p>
     {/each}
   {/if}
 </div>

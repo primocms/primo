@@ -21,13 +21,6 @@
   let updatingDatabase:boolean = false
   let unsavedContentExists:boolean = false
 
-  let mounted:boolean = false
-  onMount(async () => {
-    // const domainData = await getDomainData()
-    // $repo = domainData.repo
-    mounted = true
-  })
-
   // setup key-bindings
   Mousetrap.bind(['mod+s'], (e) => {
     e.preventDefault()
