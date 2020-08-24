@@ -469,7 +469,7 @@ export async function buildPageFiles(content, rawPageStyles) {
       path: 'README.md',
       mode: '100644',
       type: 'blob',
-      content: `# Built with [primo](https://primo.so)`
+      content: `# Built with [primo](https://primo.af)`
     },
     // {
     //   path: 'pages',

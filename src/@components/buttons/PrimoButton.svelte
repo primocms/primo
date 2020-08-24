@@ -31,7 +31,7 @@
 {#if showingDropdown}
   <div class="dropdown" out:fade={{duration:100}}>
     {#if showDashboardLink}
-      <a class="dashboard-button mb-4" href="https://primo.so">
+      <a class="dashboard-button mb-4" href="https://primocloud.io">
         <i class="fas fa-arrow-left mr-1"></i>
         <span>Go back to Dashboard</span>
       </a>

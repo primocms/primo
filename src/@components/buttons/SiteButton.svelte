@@ -34,7 +34,7 @@
 </script>
 
 {#if isLink}
-  <a href="https://{site.id}.primo.so">
+  <a href="https://{site.id}.primocloud.io">
     <div bind:this={container}>
       <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {resizePreview(); iframeLoaded = true }}></iframe>
     </div>
