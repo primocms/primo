@@ -13,3 +13,4 @@ primo is a labor of frustration and love - frustration at how difficult it still
 * Migrate to TypeScript
 * Write integration tests (w/ Cypress)
 * Docs, docs, docs
+* Pretty badges
