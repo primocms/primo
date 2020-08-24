@@ -121,13 +121,11 @@ function insertComponent(component) {
 
     if (selectedNodePosition === 0) { // first row is selected
       if (selectedNodeSelection === 0) { // top of first row selected
-        console.log('add component above first item')
         return [ 
           newRow,
         ...rows
         ]
       } else { 
-        console.log('add component below first item', [ ...rows.slice(0, 1), newRow, ...rows.slice(1)])
         return [ 
           ...rows.slice(0, 1),
           newRow,
@@ -135,16 +133,13 @@ function insertComponent(component) {
         ]
       }
     } else if (selectedNodePosition > 0) { // somewhere else in the list
-      console.log('add component to somewhere in the row list')
       if (selectedNodeSelection === 0) { 
-        console.log('add component above given item')
         return [ 
           ...rows.slice(0, selectedNodePosition),
           newRow,
           ...rows.slice(selectedNodePosition)
         ]
       } else { 
-        console.log('add component below given item')
         return [ 
           ...rows.slice(0, selectedNodePosition+1),
           newRow,
