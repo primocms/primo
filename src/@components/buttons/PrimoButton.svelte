@@ -94,7 +94,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply absolute bg-primored rounded overflow-scroll p-4;
+    @apply absolute bg-primored shadow-xl rounded overflow-scroll p-4;
 
     ul {
       @apply grid grid-cols-2 gap-2 mt-2 pb-4;
