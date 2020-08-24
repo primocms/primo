@@ -2,6 +2,3 @@ node_modules
 public/build
 public/bundle.js
 public/bundle.js.map
-primo-app/dist/**/*
-
-!/packages/primo-app/src/node_modules
