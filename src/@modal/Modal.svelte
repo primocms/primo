@@ -7,6 +7,8 @@
 
   import {editorViewDev,userRole} from '../@stores/app'
 
+  $: console.log('userRole', userRole)
+
   Mousetrap.bind(['esc'], () => {
     modal.hide()
   })
@@ -40,7 +42,7 @@
               {/if}
               <span class="modal-title">{header.title}</span>
             </p>
-            {#if $modal.showSwitch && userRole === 'developer'}
+            {#if $modal.showSwitch && $userRole === 'developer'}
               <button on:click={switchView} class="switch">
                 {#if $editorViewDev}
                   <i class="fas fa-edit"></i>
