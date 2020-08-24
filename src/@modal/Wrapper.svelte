@@ -91,6 +91,6 @@
         pageData.save('wrapper', pageWrapper)
         site.save({ wrapper: siteWrapper })
         modal.hide()
-      }}>Save Wrapper</SaveButton>
+      }}>Save HTML</SaveButton>
   </div>
 </div>

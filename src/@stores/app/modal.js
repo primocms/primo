@@ -107,7 +107,7 @@ const modalTypes = {
   'WRAPPER' : {
     component: Wrapper,
     header: {
-      title: 'Wrapper',
+      title: 'HTML',
       icon: 'fab fa-html5'
     },
     variants: 'max-w-xl'
