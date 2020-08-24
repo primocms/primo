@@ -76,7 +76,7 @@
       @apply absolute h-0 w-0 border-solid border-primored;
       bottom: -13px;
       pointer-events: none;
-      left: 52px;
+      left: 21px;
       border-top-color: transparent;
       border-left-color: transparent;
       border-right-color: transparent;
