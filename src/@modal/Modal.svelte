@@ -7,8 +7,6 @@
 
   import {editorViewDev,userRole} from '../@stores/app'
 
-  $: console.log('userRole', userRole)
-
   Mousetrap.bind(['esc'], () => {
     modal.hide()
   })
