@@ -83,7 +83,7 @@ async function getTailwind(tailwindConfig) {
 }
 
 function setLocalStorage(tw) {
-  storeLib.clearAll()
+  // storeLib.clearAll()
   storeLib.set('tailwind', tw)
 }
 
