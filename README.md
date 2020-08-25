@@ -6,11 +6,10 @@
 
 # primo is a visual, integrated, delightful code editor and content management system
 
-primo is a labor of frustration and love - frustration at how difficult it still is in the year 2020 to build sites from scratch, and love for all the developers who have found themselves unable to put their HTML, CSS, and JavaScript to use without <em>also</em> learning the latest fancy framework (they're great, don't get me wrong, but for most things they're too much). Whether you're a seasoned or unseasoned developer, if you've also felt frustrated at the way things are and want to make things better, you're more than welcome to contribute.
+primo isn't in the slightest in an ideal place - so please, if you see things that could be improved, file an issue or submit a PR. Whether you're a seasoned or unseasoned developer, if you want to help make it easier to make websites, you're welcome here.
 
-## TODO
+## Not sure how to contribute? Start here
 
 * Migrate to TypeScript
 * Write integration tests (w/ Cypress)
 * Docs, docs, docs
-* Pretty badges
