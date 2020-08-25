@@ -9,6 +9,7 @@ import Styles from './Styles.svelte'
 import Fields from './Fields.svelte'
 import Build from './Build.svelte'
 import Wrapper from './Wrapper.svelte'
+import ReleaseNotes from './ReleaseNotes.svelte'
 import Dependencies from './Dependencies/Dependencies.svelte'
 
 export {
@@ -22,7 +23,8 @@ export {
   Styles,
   Fields,
   Build,
-  Wrapper
+  Wrapper,
+  ReleaseNotes
 }
 
 export default Modal

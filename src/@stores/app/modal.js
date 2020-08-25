@@ -1,7 +1,7 @@
 'use strict'
 
 import {writable,get} from 'svelte/store'
-import {ComponentEditor,ComponentLibrary,PageSections,SitePages,PageStyles,SiteStyles,Styles,Fields,Dependencies,Build,Wrapper} from '../../@modal'
+import {ComponentEditor,ComponentLibrary,PageSections,ReleaseNotes,SitePages,PageStyles,SiteStyles,Styles,Fields,Dependencies,Build,Wrapper} from '../../@modal'
 import Mousetrap from 'mousetrap'
 
 const initialState = {
@@ -117,6 +117,14 @@ const modalTypes = {
     header: {
       title: 'Build',
       icon: 'fas fa-hammer'
+    },
+    // variants: 'fullscreen'
+  },
+  'RELEASE_NOTES' : {
+    component: ReleaseNotes,
+    header: {
+      title: 'Release Notes',
+      icon: 'fas fa-book-open'
     },
     // variants: 'fullscreen'
   },

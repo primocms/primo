@@ -1,5 +1,5 @@
 import {focusedNode} from './editor.js'
-import {onDashboard,editorViewDev,userRole} from './misc.js'
+import {onDashboard,editorViewDev,userRole,hideReleaseNotes} from './misc.js'
 import modal from './modal.js'
 
 export {
@@ -7,5 +7,6 @@ export {
   editorViewDev,
   onDashboard,
   focusedNode, 
-  modal
+  modal,
+  hideReleaseNotes
 }

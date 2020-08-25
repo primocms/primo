@@ -8,7 +8,7 @@
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '../../../@components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {editorViewDev,userRole} from '../../../@stores/app'
+  import {editorViewDev,userRole,modal,hideReleaseNotes} from '../../../@stores/app'
 
   const dispatch = createEventDispatcher()
   
@@ -62,6 +62,12 @@
               onclick={() => dispatch('toggleView')}
               tooltipStyle="width:7rem"
             />
+            {#if !$hideReleaseNotes}
+              <button class="release-notes" on:click={() => modal.show('RELEASE_NOTES')}>
+                <i class="fas fa-book-open mr-1"></i>
+                <span>Release Notes</span>
+              </button>
+            {/if}
           {/if}
         </div>
     </div>
@@ -72,6 +78,13 @@
 </nav>
 
 <style>
+
+  .release-notes {
+    @apply font-semibold px-4 ml-4 text-primored text-sm border-l border-gray-700 transition-colors duration-200;
+    &:hover {
+      @apply bg-gray-800 text-white border-transparent rounded;
+    }
+  }
 
   .logo {
     @apply flex justify-between items-center px-2;
