@@ -13,7 +13,7 @@
   import RepeaterField from './Fields/RepeaterField.svelte'
   // import ImageField from './ImageField.svelte'
 
-  import {ContentField, EditField, GenericField, ImageField} from '../../@components/inputs'
+  import {ContentField, EditField, GenericField, ImageField, SubField as SubfieldField} from '../../@components/inputs'
   import {PrimaryButton,SaveButton} from '../../@components/buttons'
   import {IconButton,Tabs} from '../../@components/misc'
   import {CodeMirror} from '../../@components'
@@ -202,6 +202,40 @@
     saveRawValue('fields', fields)
   }
 
+  function removeRepeaterItem(fieldId:string, itemId:string): void {
+    fields = fields.map(field => field.id !== fieldId ? field : ({
+      ...field,
+      value: Array.isArray(field.value) ? field.value.filter(item => item.id !== itemId) : field.value
+    }))
+    refreshFields()
+    updateHtmlWithFieldData('static')
+    saveRawValue('fields', fields)
+  }
+
+  function moveRepeaterItem(field, item, direction): void {
+    const indexOfItem:number = _.findIndex(field.value, ['id', item.id])
+    const withoutItem:Fields = field.value.filter(i => i.id !== item.id)
+    if (direction === 'up') {
+      field.value = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
+    } else {
+      field.value = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
+    }
+    refreshFields()
+    saveRawValue('fields', fields)
+  }
+
+  function addRepeaterItem(repeaterField:Field): void {
+    const keys = repeaterField.fields.map(f => f.key)
+    repeaterField.value = [
+      ...repeaterField.value,
+      keys.reduce((a,b) => (a[b]='',a), { id: getUniqueId() }) // turn keys into value object
+    ]
+    refreshFields()
+    updateHtmlWithFieldData('static')
+    saveRawValue('fields', fields)
+  }
+
+
   function deleteField(id:string): void {
     fields = fields.filter(field => field.id !== id)
     updateHtmlWithFieldData('static')
@@ -329,39 +363,39 @@
                   {:else if field.type === 'group'}
                     {#if field.fields}
                       {#each field.fields as subfield}
-                        <EditField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <SubfieldField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                           <select bind:value={subfield.type} slot="type" {disabled}>
                             {#each subFieldTypes as field}
                               <option value={field.id}>{ field.label }</option>
                             {/each}
                           </select>
-                          <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </EditField>
+                          <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                          <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                        </SubfieldField>
                       {/each}
                     {/if}
-                    <button class="button is-fullwidth" on:click={() => addSubField(field.id)} {disabled}>Add Subfield</button>
+                    <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
                   {:else if field.type === 'repeater'}
                     {#if field.fields}
                       {#each field.fields as subfield}
-                        <EditField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <SubfieldField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                           <select bind:value={subfield.type} slot="type" {disabled}>
                             {#each subFieldTypes as field}
                               <option value={field.id}>{ field.label }</option>
                             {/each}
                           </select>
-                          <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </EditField>
+                          <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                          <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                        </SubfieldField>
                       {/each}
                     {/if}
-                    <button class="button is-fullwidth" on:click={() => addSubField(field.id)} {disabled}>Add Subfield</button>
+                    <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
                   {:else if field.type === 'message'}
                     <textarea {disabled} rows="3" bind:value={field.value} class="w-full border border-solid border-gray-200 rounded"></textarea>
                   {/if}
                 </Card>
               {/each}
-              <PrimaryButton on:click={addField} {disabled}>Add a Field</PrimaryButton>
+              <PrimaryButton on:click={addField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
             </div>
           {/if}
         {:else}
@@ -403,5 +437,9 @@
     &[disabled] {
       @apply bg-gray-500 cursor-not-allowed;
     }
+  }
+  .subfield-button {
+    width: calc(100% - 1rem);
+    @apply ml-4 text-sm py-1;
   }
 </style>

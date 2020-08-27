@@ -1,0 +1,63 @@
+<script lang="ts">
+  import {onMount} from 'svelte'
+  import { fade } from 'svelte/transition';
+  import { createEventDispatcher } from 'svelte';
+  import {IconButton} from '../misc'
+  import _ from 'lodash'
+
+  export let disabled:boolean = false
+
+  const dispatch = createEventDispatcher();
+
+</script>
+
+
+<div class="subfield" in:fade={{ duration: 100 }}>
+  <div class="select">
+    <slot name="type"></slot>
+  </div>
+  <div class="input-group">
+    <span class="input-group-label">
+      Label
+    </span>
+    <div class="input-group-input">
+      <slot name="label"></slot>
+    </div>
+  </div>
+  <div class="input-group">
+    <span class="input-group-label">
+      ID
+    </span>
+    <div class="input-group-input">
+      <slot name="key"></slot>
+    </div>
+  </div>
+  <IconButton icon="times" variants="is-danger is-outlined" on:click={() => dispatch('delete')} {disabled} />
+</div>
+
+<style>
+  .subfield {
+    @apply flex w-full pl-4 pb-2;
+  }
+  .select {
+    @apply mr-2;
+  }
+  .input-group {
+    @apply flex flex-1 items-center;
+  }
+  .input-group-label {
+    @apply p-2 font-semibold;
+  }
+  :global {
+    .input-group-input {
+      @apply mr-4 flex-1 flex;
+      input {
+        @apply flex-1 outline-none border-b border-gray-200 transition-colors duration-200;
+        &:focus {
+          @apply border-primored;
+        }
+      }
+    }
+  }
+
+</style>
