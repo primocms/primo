@@ -3,23 +3,10 @@ import _ from "lodash";
 import { hydrateAllComponents, getUniqueId, updateInstancesInContent } from '../../../utils'
 import {focusedNode} from '../../app'
 import {pageData,site} from '../index'
+import {DEFAULTS} from '../../../const'
 
-let content = []
-const store = writable([
-  {
-    id: getUniqueId(),
-    width: 'contained',
-    columns: [
-      {
-        id: getUniqueId(),
-        size: 'w-full',
-        rows: [
-          ContentRow()
-        ]
-      }
-    ]
-  }
-]);
+let content = DEFAULTS.page.content
+const store = writable(DEFAULTS.page.content);
 store.subscribe(s => {
   content = s
 })

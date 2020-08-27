@@ -6,6 +6,7 @@ import SinglePreview from './src/SinglePreview.svelte'
 import {modal} from './src/@stores/app'
 import {pageData, site} from './src/@stores/data'
 import {pageId} from './src/@stores/data/page'
+import { DEFAULTS } from './src/const'
 
 import * as utils from './src/utils'
 import * as components from './src/@components'
@@ -19,6 +20,7 @@ export {
   utils,
   components,
   pageData,
-  site
+  site,
+  DEFAULTS
 }
 export default Primo

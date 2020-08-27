@@ -16,6 +16,7 @@ pageId.subscribe(id => {
       ...p,
       ...currentPage
     }))
+    content.set(currentPage.content)
   }
 })
 

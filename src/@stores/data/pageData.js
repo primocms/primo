@@ -1,44 +1,29 @@
+import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
 import { site } from './index'
-import {content} from './page'
+import { content } from './page'
 import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
+import { DEFAULTS } from '../../const'
 
 let pageData
-const store = writable({
-  id: '',
-  title: '',
-  content: [],
-  dependencies: {
-    headEmbed: '',
-    libraries: []
-  },
-  styles: {
-    raw: '',
-    final: '',
-    tailwind: ''
-  },
-  wrapper: {
-    head: {
-      raw: '',
-      final: ''
-    },
-    below: {
-      raw: '',
-      final: ''
-    }
-  },
-  fields: []
-})
+const store = writable(DEFAULTS.page)
 
 store.subscribe(s => {
   pageData = s
   if (s && site) {
     site.pages.modify(s)
   }
-  if (s && content) {
-    content.set(s.content) 
+  // prevent overwriting unsaved content
+  if (isEqual(get(content), DEFAULTS.page.content)) {
+    content.set(pageData.content)
   }
 })
+
+function contentShouldBeUpdated (savedContent, unsavedContent) {
+  if (isEqual(unsavedContent, DEFAULTS.page)) {
+    return true
+  } else return false
+}
 
 export default {
   save: (property, value) => {

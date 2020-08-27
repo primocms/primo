@@ -1,4 +1,5 @@
 import {processStyles} from './utils'
+import ShortUniqueId from 'short-unique-id';
 
 export const MODAL_TYPES = {
   image : 'Image (uploaded or from URL)',
@@ -78,5 +79,57 @@ export async function getDefaultPageStyles() {
       includeTailwind: false,
       purge: false
     })
+  }
+}
+
+function getUniqueId() {
+  return new ShortUniqueId().randomUUID(5).toLowerCase();
+}
+
+export const DEFAULTS = {
+  page: {
+    id: '',
+    title: '',
+    content: [
+      {
+        id: getUniqueId(),
+        width: 'contained',
+        columns: [
+          {
+            id: getUniqueId(),
+            size: 'w-full',
+            rows: [
+              {
+                id: getUniqueId(),
+                type: 'content',
+                value: {
+                  html: '<p><br></p>'
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    dependencies: {
+      headEmbed: '',
+      libraries: []
+    },
+    styles: {
+      raw: '',
+      final: '',
+      tailwind: ''
+    },
+    wrapper: {
+      head: {
+        raw: '',
+        final: ''
+      },
+      below: {
+        raw: '',
+        final: ''
+      }
+    },
+    fields: []
   }
 }
