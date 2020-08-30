@@ -64,3 +64,28 @@
     {/if}
   </button>
 {/if}
+
+<style>
+  .icon + span {
+    @apply ml-1;
+  }
+  .button {
+    @apply bg-codeblack px-2 py-1 mr-1 text-gray-100 text-sm rounded transition-colors duration-100;
+
+    &:last-child {
+      @apply mr-0;
+    }
+
+    &:hover {
+      @apply bg-gray-800;
+    }
+
+    &.is-main {
+      @apply bg-primored;
+
+      &:hover {
+        @apply bg-gray-800;
+      }
+    }
+  }
+</style>

@@ -51,9 +51,9 @@
   <div class="message-header">
     <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>{title}</p>
     <div class="buttons">
-      <IconButton variants="is-small is-light" icon="trash" on:click={() => dispatch('delete')}/>  
-      <IconButton variants="is-small is-light" icon="edit" on:click={() => dispatch('edit')}/>  
-      <IconButton variants="is-small is-link" icon="plus-circle" on:click={() => dispatch('select')}/>  
+      <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')}/>  
+      <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')}/>  
+      <IconButton label="Place" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')}/>  
     </div>
   </div>
   <div class="message-body">
@@ -62,6 +62,9 @@
 </article>
 
 <style> 
+  .buttons {
+    @apply flex justify-end;
+  }
   iframe {
     @apply w-full opacity-0 transition-opacity duration-200;
   }
@@ -69,9 +72,13 @@
     @apply opacity-100;
   }
   .component-wrapper {
-    position: relative;
+    @apply relative shadow-xl mb-8;
+  }
+  .message-header {
+    @apply flex justify-between items-center bg-gray-100 p-2;
   }
   .component-label {
+    @apply flex-1 font-bold text-gray-800 pl-2;
     display: block;
     min-width: 3rem;
     height: 1.5rem;
