@@ -442,4 +442,8 @@
     width: calc(100% - 1rem);
     @apply ml-4 text-sm py-1;
   }
+
+	@import "../../../node_modules/bulma/sass/utilities/_all.sass";
+	@import "../../../node_modules/bulma/sass/form/_all.sass";
+
 </style>

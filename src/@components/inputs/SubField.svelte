@@ -37,7 +37,7 @@
 
 <style>
   .subfield {
-    @apply flex w-full pl-4 pb-2;
+    @apply flex w-full px-3 py-2 items-center text-sm;
   }
   .select {
     @apply mr-2;

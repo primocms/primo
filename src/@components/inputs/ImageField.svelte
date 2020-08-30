@@ -15,7 +15,7 @@
   <div class="field-label is-normal">
     <label class="label">Image URL</label>
   </div>
-  <div class="field-body">
+  <div class="flex justify-between items-center">
     <div class="control is-expanded mb-4">
       <input bind:value={field.value} on:input={() => dispatch('input', field.value)} class="input" type="url" placeholder="https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg">
     </div>

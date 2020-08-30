@@ -18,7 +18,7 @@
 
 </script>
 
-<div class="field has-addons">
+<div class="field has-addons text-sm">
   <div class="control">
     <input class="input is-info" class:is-success={copied} type="text" {value} readonly>
   </div>

@@ -99,7 +99,7 @@
 {/if}
 
 Add a library
-<form class="field has-addons" on:submit|preventDefault={searchForPackages}>
+<form class="field has-addons text-sm" on:submit|preventDefault={searchForPackages}>
   <div class="control is-expanded">
     <input class="input" type="text" placeholder="alpinejs" bind:value={packageName}>
   </div>

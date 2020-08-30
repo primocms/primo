@@ -26,7 +26,7 @@
     <div class="field-label">
       <label class="label" for={field.id}>{ field.label }</label>
     </div>
-    <div class="field-body">
+    <div class="flex justify-between items-center">
       <div class="field">
         <p class="control">
           {#if isCheckbox}

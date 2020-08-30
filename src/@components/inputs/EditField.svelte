@@ -13,15 +13,15 @@
 
 
 <div class="field is-horizontal" in:fade={{ duration: 100 }}>
-  <div class="field-body">
-    <div class="field has-addons">
+  <div class="flex justify-between items-center">
+    <div class="field has-addons text-sm">
       <p class="control">
         <span class="select">
           <slot name="type"></slot>
         </span>
       </p>
     </div>
-    <div class="field has-addons is-expanded">
+    <div class="field has-addons text-sm is-expanded">
       <p class="control">
         <span class="button is-static">
           Label
@@ -32,7 +32,7 @@
       </p>
     </div>
     <div class="field is-expanded">
-      <div class="field has-addons">
+      <div class="field has-addons text-sm">
         <p class="control">
           <span class="button is-static">
             ID

@@ -31,7 +31,7 @@
       </label>
     </div>
   {/if}
-  <div class="field-body">
+  <div class="flex justify-between items-center">
     <div class="field is-expanded" class:has-addons={label}>
       {#if label}
         <p class="control">

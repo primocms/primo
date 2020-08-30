@@ -1,5 +1,5 @@
 <!-- <div class="field is-horizontal" in:fade={{ duration: 100 }}>
-  <div class="field-body">
+  <div class="flex justify-between items-center">
     <GenericField 
       label="Endpoint" 
       bind:value={field.endpoint} 
