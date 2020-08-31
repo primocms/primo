@@ -62,12 +62,12 @@
               onclick={() => dispatch('toggleView')}
               tooltipStyle="width:7rem"
             />
-            {#if !$hideReleaseNotes}
+            <!-- {#if !$hideReleaseNotes}
               <button class="release-notes" on:click={() => modal.show('RELEASE_NOTES')}>
                 <i class="fas fa-book-open mr-1"></i>
                 <span>Release Notes</span>
               </button>
-            {/if}
+            {/if} -->
           {/if}
         </div>
     </div>
