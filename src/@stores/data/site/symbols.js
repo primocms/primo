@@ -7,6 +7,7 @@ const store = writable([])
 let symbols
 store.subscribe(s => {
   symbols = s
+  if (site) site.save({ symbols })
 })
 
 const actions = {
@@ -24,17 +25,14 @@ const actions = {
     } else {
       actions.add(symbol)
     }
-    site.save({ symbols })
   },
   modify: (symbol) => {
     const newLibrary = symbols.map(s => s.id === symbol.id ? symbol : s)
     store.set(newLibrary)
-    site.save({ symbols })
   },
   remove: (symbolID) => {
     const newLibrary = symbols.filter(s => s.id !== symbolID)
     store.set(newLibrary)
-    site.save({ symbols })
   },
   get: (symbolID) => find(symbols, ['id', symbolID]),
   subscribe: store.subscribe,
