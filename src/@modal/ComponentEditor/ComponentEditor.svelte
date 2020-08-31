@@ -145,9 +145,9 @@
         onclick: async (symbol) => {
           loading = true
           await Promise.all([
-            // saveSymbolToDomain(symbol), // TODO
+            symbols.place(symbol),
+            content.updateInstances(symbol),
             // updateInstancesInDomain(symbol), // TODO
-            content.updateInstances(symbol)
           ])
           modal.hide()
         }

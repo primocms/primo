@@ -26,8 +26,8 @@
             modal.show('COMPONENT_LIBRARY', {button})
             await Promise.all([
               symbols.place(symbol),
+              content.updateInstances(symbol),
               // updateInstancesInDomain(symbol), // TODO
-              // content.updateInstances(symbol) // TODO
             ])
           }
         }
