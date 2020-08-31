@@ -11,7 +11,7 @@
 
   $: homePage = site.pages.filter(p => p.id === 'index')[0]
 
-  $: preview = wrapInStyleTags($tailwind) + wrapInStyleTags(site.styles.final) + wrapInStyleTags(homePage.styles.final) + buildPagePreview(homePage.content)
+  $: preview = wrapInStyleTags($tailwind) + wrapInStyleTags(site.styles ? site.styles.final : '') + wrapInStyleTags(homePage.styles ? homePage.styles.final : '') + buildPagePreview(homePage.content)
 
   let iframeLoaded = false
 
