@@ -23,7 +23,7 @@ export default {
     const tw = storeLib.get('tailwind')
     if (typeof tw === 'string') {
       store.set(tw)
-    } else {
+    } else if (!tw)  {
       await hydrateTailwind()
     }
   },
