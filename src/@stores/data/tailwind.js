@@ -23,8 +23,9 @@ export default {
     const tw = storeLib.get('tailwind')
     if (typeof tw === 'string') {
       store.set(tw)
+    } else {
+      await hydrateTailwind()
     }
-    await hydrateTailwind()
   },
   reload: async () => {
     await hydrateTailwind()
