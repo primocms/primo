@@ -1,4 +1,3 @@
-import {processStyles} from './utils'
 import ShortUniqueId from 'short-unique-id';
 
 export const MODAL_TYPES = {
@@ -69,18 +68,6 @@ export const pageStyles = `\
   }
 }`
 
-export async function getDefaultPageStyles() {
-  return {
-    tailwindConfig,
-    uncompiled: pageStyles,
-    compiled: await processStyles(pageStyles, '', {
-      tailwindConfig: JSON.stringify(tailwindConfig), 
-      includeBase: true,
-      includeTailwind: false,
-      purge: false
-    })
-  }
-}
 
 function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();

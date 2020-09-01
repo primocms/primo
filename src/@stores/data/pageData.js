@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
-import { site } from './index'
+import site from './site'
 import { content } from './page'
 import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
 import { DEFAULTS } from '../../const'

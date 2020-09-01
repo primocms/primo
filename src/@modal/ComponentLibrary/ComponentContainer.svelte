@@ -5,7 +5,7 @@
   const dispatch = createEventDispatcher();
   import {getComponentPreviewCode} from '../../utils'
 
-  import {settings,site,tailwind,pageData} from '../../@stores/data'
+  import {site,tailwind,pageData} from '../../@stores/data'
   let {styles} = $site
 
   export let component;

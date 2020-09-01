@@ -3,15 +3,7 @@ import _ from 'lodash'
 import {wrapInStyleTags,processStyles,ax} from '../../utils'
 import storeLib from '../../@libraries/store.js'
 
-import {site,settings,pageData} from './index'
-
-export const combinedTailwindConfig = derived([site, settings], ([$site, $page]) => {
-  const { tailwind:siteTailwind } = $site.styles
-  const { tailwind:pageTailwind } = $page.styles
-  const siteTailwindObject = new Function(`return ${siteTailwind}`)() // convert string object to literal object
-  const pageTailwindObject = new Function(`return ${pageTailwind}`)()
-  return Object.assign(siteTailwindObject, pageTailwindObject); // overwrite site config with page config
-})
+import {site,pageData} from './index'
 
 const store = writable(storeLib.get('tailwind'))
 

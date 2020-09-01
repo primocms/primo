@@ -63,14 +63,6 @@ const modalTypes = {
     },
     variants: 'max-w-md'
   },
-  'PAGE_STYLES' : {
-    component: PageStyles,
-    header: {
-      title: 'Page Styles',
-      icon: 'fab fa-css3'
-    },
-    variants: 'fullscreen'
-  },
   'FIELDS' : {
     component: Fields,
     // header: {
@@ -87,14 +79,6 @@ const modalTypes = {
       icon: 'fas fa-cube'
     },
     variants: 'max-w-lg'
-  },
-  'SITE_STYLES' : {
-    component: SiteStyles,
-    header: {
-      title: 'Site Styles',
-      icon: 'fab fa-css3'
-    },
-    variants: 'fullscreen'
   },
   'STYLES' : {
     component: Styles,

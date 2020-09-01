@@ -115,12 +115,13 @@
     left: 0;
     right: 0;
     z-index: 999;
-    transition: top 0.25s;
+    transition: top 1;
+    will-change: top;
     @apply bg-codeblack p-2;
 
     &.mounted {
       top: 0;
-      transition: top 0.25s;
+      transition: top 1s;
     }
 
     & > .container {

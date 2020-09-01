@@ -8,7 +8,7 @@
   import {SaveButton} from '../@components/buttons'
   import { compileScss, processStyles, wrapInStyleTags, buildPageHTML, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../utils'
 
-  import {pageData,domainInfo,settings,site,tailwind,getCombinedTailwindConfig} from '../@stores/data'
+  import {pageData,domainInfo,site,tailwind,getCombinedTailwindConfig} from '../@stores/data'
   import {content} from '../@stores/data/page'
   import {modal} from '../@stores/app'
 
@@ -55,7 +55,7 @@
 
   let rawStyles = pageStyles.raw;
   let finalStyles = pageStyles.final; 
-  let moduleTailwindConfig = pageStyles.tailwind || pageStyles.tailwindConfig;
+  let moduleTailwindConfig = pageStyles.tailwind;
 
   $: tailwindConfig = moduleTailwindConfig.replace('export default ','')
   $: combinedTailwindConfig = getCombinedTailwindConfig(tailwindConfig)

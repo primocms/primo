@@ -9,7 +9,7 @@
   import { wrapInStyleTags, getUniqueId, createInstance } from '../../utils'
 
   import {modal,editorViewDev,userRole} from '../../@stores/app'
-  import {symbols} from '../../@stores/data/site'
+  import symbols from '../../@stores/data/site/symbols'
   import {content} from '../../@stores/data/page'
 
   export let button;
@@ -29,6 +29,7 @@
               content.updateInstances(symbol),
               // updateInstancesInDomain(symbol), // TODO
             ])
+            site.save({ symbols: $symbols })
           }
         }
       }, 
@@ -80,6 +81,7 @@
       ...symbol,
       ...value
     })
+    site.save({ symbols: $symbols })
   }
 
 </script>

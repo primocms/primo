@@ -2,13 +2,11 @@ import _ from "lodash";
 import axios from 'axios'
 import {getContext} from 'svelte'
 import { get } from 'svelte/store'
-import {getDefaultPageStyles} from './const.js'
-import {Preferences} from './constructs.js'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
 import Handlebars from './@libraries/handlebars.js'
 
-import {settings,dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from './@stores/data'
+import {dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from './@stores/data'
 import {content} from './@stores/data/page'
 
 
@@ -119,17 +117,6 @@ export async function convertFieldsToData(fields, typeToUpdate = 'static') {
 export async function compileScss(scss) {
   let result = await ax.post('primo/scss', { scss })
   return result;
-}
-
-
-export function updateDataToCurrentVersion(data) {
-  let newData = { ...data };
-  let { settings } = newData;
-
-  // include any new page preferences, prune extraneous ones
-  newData.settings = Preferences({ ...settings });
-
-  return newData
 }
 
 export async function notify(params, appName = 'firebase') {

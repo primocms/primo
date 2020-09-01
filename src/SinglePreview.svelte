@@ -9,7 +9,7 @@
 
   export let previewId
 
-  const { dependencies, settings, id, html, css, js } = store.get(`preview-${previewId}`) || {}
+  const { dependencies, id, html, css, js } = store.get(`preview-${previewId}`) || {}
 
   let previewHTML = html
   let previewCSS = wrapInStyleTags(css)

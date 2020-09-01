@@ -23,9 +23,9 @@
 
   import { parseHandlebars, convertFieldsToData, processStyles, createDebouncer, wrapInStyleTags } from '../../utils'
 
-  import {settings, dependencies, site, user, pageData} from '../../@stores/data'
+  import {dependencies, site, user, pageData} from '../../@stores/data'
   import {content} from '../../@stores/data/page'
-  import {symbols} from '../../@stores/data/site'
+  import symbols from '../../@stores/data/site/symbols'
   import {modal,editorViewDev} from '../../@stores/app'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
@@ -149,6 +149,7 @@
             content.updateInstances(symbol),
             // updateInstancesInDomain(symbol), // TODO
           ])
+          site.save({ symbols: $symbols })
           modal.hide()
         }
       }
@@ -417,7 +418,6 @@
         html={finalHTML} 
         css={finalCSS} 
         js={finalJS}
-        settings={$settings}
         dependencies={$pageData.dependencies}
         includeParentStyles
       />

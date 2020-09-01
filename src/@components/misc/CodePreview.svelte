@@ -1,7 +1,7 @@
 <script>
   import {onMount} from 'svelte'
   import store from 'store2'
-  import {site,settings as settingsStore,pageData} from '../../@stores/data'
+  import {site,pageData} from '../../@stores/data'
 
   export let multiple = false
   export let pages = null
@@ -9,7 +9,6 @@
   export let html = ''
   export let css = ''
   export let js = ''
-  export let settings = null
   export let dependencies = null
   export let loading = false;
   export let view = null
@@ -34,7 +33,6 @@
     html,
     css,
     js,
-    settings,
     dependencies
   })
 

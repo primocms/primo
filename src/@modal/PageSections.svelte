@@ -49,13 +49,13 @@
 </div>
 {#each sections as columns}
   <article class="message component-wrapper" transition:fade={{ delay: 250, duration: 200 }}>
-    <div class="message-header">
-      <p class="component-label"></p>
-      <div class="buttons">
-        <IconButton variants="is-small is-link" icon="plus-circle" on:click={() => selectSection(columns)}/>  
-      </div>
+    <div class="flex justify-end">
+      <button on:click={() => selectSection(columns)} class="add-to-page">
+        <i class="fas fa-plus-circle"></i>
+        <span>Add to Page</span>
+      </button>
     </div>
-    <div class="message-body" class:fullwidth>
+    <div class="column-container" class:fullwidth>
       <div class="flex flex-wrap" class:is-gapless={gapless}>
         {#each columns as column}
           <div class="column {column}">
@@ -69,21 +69,33 @@
 
 
 <style>
-  .fullwidth {
-    padding: 1.25em 0 !important;
-    transition: padding 0.25s;
+  .column-container {
+    @apply pt-4 pl-4 pr-4 pb-4;
+    transition: padding-left 0.5s, padding-right 0.5s;
   }
-  .fullwidth .column:first-child {
+  button.add-to-page {
+    @apply text-xs px-4 py-2 bg-primored text-white transition-colors duration-100;
+    &:hover {
+      @apply bg-red-700;
+    }
+  }
+  .column-container.fullwidth {
+    /* padding: 1.25em 0 !important; */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    transition: padding-left 0.5s, padding-right 0.5s;
+  }
+  .column-container.fullwidth .column:first-child {
     @apply pl-0;
   }
-  .fullwidth .column:last-child {
+  .column-container.fullwidth .column:last-child {
     @apply pr-0;
   }
   .message-body {
     transition: padding 0.25s;
   }
   .placeholder {
-    @apply bg-primored;
+    @apply bg-gray-500;
     height: 2rem;
   }
   .columns {
@@ -107,10 +119,6 @@
     padding-bottom: 0 !important;
     outline: 1px solid transparent;
     outline-color: transparent;
-    transition: 0.25s outline-color;
-  }
-  .column:hover {
-    outline-color: gainsboro;
     transition: 0.25s outline-color;
   }
 </style>

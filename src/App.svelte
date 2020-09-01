@@ -1,7 +1,7 @@
 <script lang="ts">
 	import find from 'lodash/find'
   import { Router, Link, Route } from "svelte-routing";
-	import { ax, updateDataToCurrentVersion } from './utils'
+	import { ax } from './utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
 	import Page from './screens/Page/Page.svelte'
   import Modal from './@modal'
@@ -57,9 +57,3 @@
 </Router>
 
 <Modal />
-
-<style type="scss" global>
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-</style>

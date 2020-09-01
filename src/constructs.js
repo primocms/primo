@@ -1,10 +1,4 @@
 import { get } from 'svelte/store';
-import { tailwindConfig } from './const'
-
-export const Preferences = (settings = {}) => ({
-  globalStyles: settings.globalStyles || { uncompiled: '', compiled: '', tailwindConfig },
-  javascript: settings.javascript || ''
-})
 
 export const TbButton = (title, attr, icon, key = null, action = null, fn = () => {}, buttonStyles = '') => ({
   title,

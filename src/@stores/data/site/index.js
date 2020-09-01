@@ -1,11 +1,8 @@
-import symbols from './symbols'
-
 import { writable, readable, derived, get } from 'svelte/store';
 import { tailwindConfig } from '../../../const'
 import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
-import {domainInfo,pageData} from '../index'
-import {content} from '../page'
+import domainInfo from '../domainInfo'
 
 let site
 const store = writable({
@@ -87,14 +84,10 @@ const store = writable({
 })
 store.subscribe(s => {
   site = s
-  if (s && symbols) {
-    symbols.set(s.symbols)
-  }
+  // if (s && symbols) {
+  //   symbols.set(s.symbols)
+  // }
 })
-
-export {
-  symbols
-}
 
 export default {
   set: store.set,
@@ -122,6 +115,7 @@ export default {
       }))
     },
     modify: (page) => {
+      console.log('modify', page)
       store.update(s => ({
         ...s,
         pages: s.pages.map(p => p.id === page.id ? page : p)
@@ -140,11 +134,6 @@ export default {
         pages: updatedPages
       }))
     }
-  },
-  saveNav: async (navItems) => {
-    const { pageId } = get(domainInfo)
-    await saveSiteData({ navItems })
-    await Promise.all([ hydrateComponentLibrary(), hydratePageContent(), hydrateSitePagesContent(pageId)])
   },
   saveStyles: async (styles) => {
     store.update(s => ({ ...s, styles }))
@@ -179,11 +168,6 @@ export default {
 // REDUCERS
 async function saveSiteData(data) {
   store.update(s => ({ ...s, data }))
-}
-
-async function hydratePageContent() {
-  const updatedContent = await hydrateAllComponents(get(content))
-  content.set(updatedContent)
 }
 
 async function hydrateSitePagesContent(exclude = null) {
