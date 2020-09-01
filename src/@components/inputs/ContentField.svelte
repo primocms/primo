@@ -22,63 +22,62 @@
 </script>
 
 {#if horizontal}
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <label class="label" for={field.id}>{ field.label }</label>
-    </div>
+  <div class="">
+    <label class="label text-xl font-medium" for={field.id}>{ field.label }</label>
     <div class="flex justify-between items-center">
-      <div class="field">
-        <p class="control">
-          {#if isCheckbox}
-            <input 
-              {title}
-              {disabled}
-              id={field.id}
-              type="checkbox" 
-              checked={field.value} 
-              on:input={onInput}
-            >
-          {:else}
-            <input 
-              class="input"
-              {title}
-              {disabled}
-              id={field.id}
-              type={field.type} 
-              checked={field.value}
-              value={field.value} 
-              on:input={onInput} 
-            >
-          {/if}
-        </p>
-      </div>
+      {#if isCheckbox}
+        <input 
+          {title}
+          {disabled}
+          id={field.id}
+          type="checkbox" 
+          checked={field.value} 
+          on:input={onInput}
+        >
+      {:else}
+        <input 
+          class="input"
+          {title}
+          {disabled}
+          id={field.id}
+          type={field.type} 
+          checked={field.value}
+          value={field.value} 
+          on:input={onInput} 
+        >
+      {/if}
     </div>
   </div>
 {:else}
-  <div class="field">
-    <label class="label">{ field.label }
-      <div class="control">
-        {#if isCheckbox}
-          <input 
-            {title}
-            {disabled}
-            type="checkbox" 
-            checked={field.value} 
-            on:input={onInput}
-          >
-        {:else}
-          <input 
-            class="input"
-            {title}
-            {disabled}
-            type={field.type} 
-            checked={field.value}
-            value={field.value} 
-            on:input={onInput} 
-          >
-        {/if}
-      </div>
+  <div class="">
+    <label class="flex flex-col text-xl font-medium">
+      <span class="mb-2">{ field.label }</span>
+      {#if isCheckbox}
+        <input 
+          {title}
+          {disabled}
+          type="checkbox" 
+          checked={field.value} 
+          on:input={onInput}
+        >
+      {:else}
+        <input 
+          class="input"
+          {title}
+          {disabled}
+          type={field.type} 
+          checked={field.value}
+          value={field.value} 
+          on:input={onInput} 
+        >
+      {/if}
     </label>
   </div>
 {/if}
 
+<style>
+  input {
+    outline-color: rgb(248,68,73);
+    @apply bg-gray-100 p-2;
+  }
+</style>

@@ -12,37 +12,31 @@
 </script>
 
 
-<div class="field is-horizontal" in:fade={{ duration: 100 }}>
+<div class="" in:fade={{ duration: 100 }}>
   <div class="flex justify-between items-center">
-    <div class="field has-addons text-sm">
-      <p class="control">
-        <span class="select">
-          <slot name="type"></slot>
-        </span>
-      </p>
+    <div class="text-sm">
+      <slot name="type"></slot>
     </div>
-    <div class="field has-addons text-sm is-expanded">
-      <p class="control">
-        <span class="button is-static">
-          Label
+    <div class="text-sm">
+      <label class="flex flex-col">
+        <span class="text-xs font-semibold">Label</span>
+        <span>
+          <slot name="label"></slot>
         </span>
-      </p>
-      <p class="control is-expanded">
-        <slot name="label"></slot>
-      </p>
+      </label>
     </div>
-    <div class="field is-expanded">
-      <div class="field has-addons text-sm">
-        <p class="control">
-          <span class="button is-static">
-            ID
+    <div class="field">
+      <div class="text-sm">
+        <label class="flex flex-col">
+          <span class="text-xs font-semibold">ID</span>
+          <span>
+            <slot name="key"></slot>
           </span>
-        </p>
-        <p class="control is-expanded">
-          <slot name="key"></slot>
-        </p>
+        </label>
       </div>
     </div>
-    <IconButton icon="times" variants="is-danger is-outlined" on:click={() => dispatch('delete')} {disabled} />
+    <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 bg-gray-100 text-gray-600 transition-colors duration-100 hover:bg-gray-300 focus:bg-gray-300" title="delete field">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
 </div>

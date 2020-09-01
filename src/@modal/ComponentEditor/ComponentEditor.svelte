@@ -67,8 +67,8 @@
   function getAllFields() {
     const siteFields = _.cloneDeep($site.fields)
     const pageFields = _.cloneDeep($pageData.fields)
-    const componentFields = localComponent.value.raw.fields;
-    const allFields = _.unionBy(siteFields, pageFields, componentFields, "key");
+    // const componentFields = localComponent.value.raw.fields;
+    const allFields = _.unionBy(siteFields, pageFields, fields, "key");
     return allFields
   }
 
@@ -161,10 +161,15 @@
     })
   }
 
-  function addField(): void {
+  function addNewField(): void {
     fields = [
       ...fields,
-      {
+      createField()
+    ]
+    saveRawValue('fields', fields)
+
+    function createField () { 
+      return {
         id: getUniqueId(),
         key: '',
         label: '',
@@ -172,8 +177,7 @@
         type: 'text',
         fields: []
       }
-    ]
-    saveRawValue('fields', fields)
+    }
   }
 
   function addSubField(id:string): void {
@@ -247,6 +251,21 @@
     fields = fields.filter(f => true)
   }
 
+  function setPlaceholderValues() {
+    fields = fields.map(f => !f.value ? ({
+      ...f,
+      value: getFakeValue(f.type)
+    }) : f)
+    updateHtmlWithFieldData('static')
+  }
+
+  function getFakeValue(type) {
+      return {
+        'text' : faker.random.words(),
+        'image' : faker.image.unsplash.image()
+      }[type] || ''
+    }
+
   // TODO: attach component to field type
   const fieldTypes:Array<FieldType> = [
     {
@@ -318,6 +337,11 @@
 
   let disabled:boolean = !!localComponent.symbolID
 
+  let faker
+  onMount(async() => {
+    faker = await import('faker')
+  })
+
 </script>
 
 <div class="flex flex-col h-full" in:fade={{ duration: 200 }}>
@@ -345,13 +369,13 @@
               {#each fields as field}
                 <Card>
                   <EditField on:delete={() => deleteField(field.id)} {disabled}>
-                    <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
+                    <select bind:value={field.type} slot="type" on:change={setPlaceholderValues} {disabled}>
                       {#each fieldTypes as field}
                         <option value={field.id}>{ field.label }</option>
                       {/each}
                     </select>
-                    <input class="input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
-                    <input class="input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
+                    <input class="input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled} on:focus={setPlaceholderValues}>
+                    <input class="input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled} on:input={() => updateHtmlWithFieldData('static')}>
                   </EditField>
                   {#if field.type === 'js'}
                     <CodeMirror 
@@ -396,7 +420,7 @@
                   {/if}
                 </Card>
               {/each}
-              <PrimaryButton on:click={addField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
+              <PrimaryButton on:click={addNewField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
             </div>
           {/if}
         {:else}
@@ -441,6 +465,18 @@
   .subfield-button {
     width: calc(100% - 1rem);
     @apply ml-4 text-sm py-1;
+  }
+
+
+  input {
+    &:focus {
+      @apply outline-none;
+    }
+  }
+
+  select {
+    outline-offset: 3px;
+    outline-color: rgb(248,68,73);
   }
 
 	@import "../../../node_modules/bulma/sass/utilities/_all.sass";
