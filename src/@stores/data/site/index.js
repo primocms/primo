@@ -115,7 +115,6 @@ export default {
       }))
     },
     modify: (page) => {
-      console.log('modify', page)
       store.update(s => ({
         ...s,
         pages: s.pages.map(p => p.id === page.id ? page : p)
