@@ -4,7 +4,6 @@ import {getContext} from 'svelte'
 import { get } from 'svelte/store'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
-import Handlebars from './@libraries/handlebars.js'
 
 import {dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from './@stores/data'
 import {content} from './@stores/data/page'
@@ -35,9 +34,14 @@ export const ax = {
   }
 }
 
+let Handlebars
 export async function parseHandlebars(code, data) {
-    const template = Handlebars.compile(code);
-    return template(data)
+  if (!Handlebars) {
+    Handlebars = await import('handlebars/dist/handlebars.min.js')
+    console.log(Handlebars)
+  } 
+  const template = Handlebars.compile(code);
+  return template(data)
 }
 
 

@@ -1,7 +1,7 @@
 'use strict'
 
 import {writable,get} from 'svelte/store'
-import {ComponentEditor,ComponentLibrary,PageSections,ReleaseNotes,SitePages,PageStyles,SiteStyles,Styles,Fields,Dependencies,Build,Wrapper} from '../../@modal'
+import {ComponentEditor,ComponentLibrary,PageSections,ReleaseNotes,SitePages,Styles,Fields,Dependencies,Build,Wrapper} from '../../@modal'
 import Mousetrap from 'mousetrap'
 
 const initialState = {
