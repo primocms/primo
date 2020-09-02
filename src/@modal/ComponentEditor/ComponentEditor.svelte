@@ -260,9 +260,10 @@
   }
 
   function getFakeValue(type) {
+      if (!faker) return ''
       return {
         'text' : faker.lorem.sentence(),
-        'content': faker.lorem.bs(),
+        'content': faker.lorem.paragraph(),
         'image' : faker.image.unsplash.image(),
       }[type] || ''
     }
@@ -350,7 +351,7 @@
     <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
       <div class="flex flex-col h-full">
         {#if $editorViewDev}
-          <Tabs {tabs} bind:activeTab variants="mb-2" />
+          <Tabs {tabs} bind:activeTab variants="my-2" />
           {#if disabled}
             <p class="mb-2 text-xs text-gray-700">This component is tied to a <button class="underline" on:click={loadSymbol} title="Edit the Symbol">Symbol</button>. You won't be able to edit it unless you <button class="underline" on:click={separateFromSymbol} title="Separate the component instance from its Symbol">emancipate it</button>.</p>
           {/if}
@@ -388,7 +389,7 @@
                   {:else if field.type === 'group'}
                     {#if field.fields}
                       {#each field.fields as subfield}
-                        <SubfieldField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                           <select bind:value={subfield.type} slot="type" {disabled}>
                             {#each subFieldTypes as field}
                               <option value={field.id}>{ field.label }</option>
@@ -396,14 +397,14 @@
                           </select>
                           <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
                           <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </SubfieldField>
+                        </EditField>
                       {/each}
                     {/if}
                     <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
                   {:else if field.type === 'repeater'}
                     {#if field.fields}
                       {#each field.fields as subfield}
-                        <SubfieldField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                           <select bind:value={subfield.type} slot="type" {disabled}>
                             {#each subFieldTypes as field}
                               <option value={field.id}>{ field.label }</option>
@@ -411,7 +412,7 @@
                           </select>
                           <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
                           <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </SubfieldField>
+                        </EditField>
                       {/each}
                     {/if}
                     <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
@@ -429,7 +430,7 @@
               {#if field.label}
                 <svelte:component this={_.find(fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
               {:else}
-                 The <strong>{field.type}</strong> needs a label to be valid
+              <span>This field needs a label to be valid</span>
               {/if}
             {:else}
               <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit this component's content</p>
@@ -458,7 +459,7 @@
 
 <style>
   .field-button {
-    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
+    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-100;
     &:hover {
       @apply bg-gray-900;
     }
@@ -466,9 +467,12 @@
       @apply bg-gray-500 cursor-not-allowed;
     }
   }
-  .subfield-button {
+  .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply ml-4 text-sm py-1;
+    @apply ml-4 text-sm py-1 mb-2 mt-2 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
+    &:hover {
+      @apply bg-gray-200;
+    }
   }
 
 
@@ -481,6 +485,9 @@
   select {
     outline-offset: 3px;
     outline-color: rgb(248,68,73);
+    padding: 0.5rem;
+    border-right-width: 0.5rem;
+    @apply p-2 border-transparent text-sm font-semibold;
   }
 
 	@import "../../../node_modules/bulma/sass/utilities/_all.sass";

@@ -6,7 +6,6 @@ import {keymap} from "prosemirror-keymap"
 import {baseKeymap,toggleMark,setBlockType,wrapIn} from "prosemirror-commands"
 import {DOMSerializer,DOMParser,Schema} from "prosemirror-model"
 import {addListNodes,wrapInList} from "prosemirror-schema-list"
-import {MenuItem} from "prosemirror-menu"
 
 import {Plugin} from "prosemirror-state"
 

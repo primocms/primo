@@ -5,6 +5,7 @@
   import {IconButton} from '../misc'
   import _ from 'lodash'
 
+  export let variants:string = 'text-sm'
   export let disabled:boolean = false
 
   const dispatch = createEventDispatcher();
@@ -12,17 +13,17 @@
 </script>
 
 
-<div class="field-container" transition:fade={{ duration: 100 }}>
-  <div class="text-sm">
+<div class="field-container {variants}" in:fade={{ duration: 100 }}>
+  <div class="rounded-sm border border-gray-100">
     <slot name="type"></slot>
   </div>
   <label class="flex flex-col flex-1">
-    <span class="text-xs font-semibold">Label</span>
+    <span class="font-semibold text-xs">Label</span>
     <slot name="label"></slot>
   </label>
   <div class="field">
     <label class="flex flex-col flex-1">
-      <span class="text-xs font-semibold">ID</span>
+      <span class="font-semibold text-xs">ID</span>
       <slot name="key"></slot>
     </label>
   </div>
@@ -33,8 +34,7 @@
 
 <style>
   .field-container {
-    display: grid;
+    @apply grid p-2 gap-8;
     grid-template-columns: auto 1fr 1fr auto;
-    grid-column-gap: 2rem;
   }
 </style>

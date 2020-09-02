@@ -9,7 +9,6 @@
 
   export let disabled:boolean = false
   export let title:null|string = null;
-  export let horizontal:boolean = false;
 
   let isCheckbox:boolean
   $: isCheckbox = field.type === 'checkbox' 
@@ -21,59 +20,28 @@
 
 </script>
 
-{#if horizontal}
-  <div class="">
-    <label class="label text-xl font-medium" for={field.id}>{ field.label }</label>
-    <div class="flex justify-between items-center">
-      {#if isCheckbox}
-        <input 
-          {title}
-          {disabled}
-          id={field.id}
-          type="checkbox" 
-          checked={field.value} 
-          on:input={onInput}
-        >
-      {:else}
-        <input 
-          class="input"
-          {title}
-          {disabled}
-          id={field.id}
-          type={field.type} 
-          checked={field.value}
-          value={field.value} 
-          on:input={onInput} 
-        >
-      {/if}
-    </div>
-  </div>
-{:else}
-  <div class="">
-    <label class="flex flex-col text-xl font-medium">
-      <span class="mb-2">{ field.label }</span>
-      {#if isCheckbox}
-        <input 
-          {title}
-          {disabled}
-          type="checkbox" 
-          checked={field.value} 
-          on:input={onInput}
-        >
-      {:else}
-        <input 
-          class="input"
-          {title}
-          {disabled}
-          type={field.type} 
-          checked={field.value}
-          value={field.value} 
-          on:input={onInput} 
-        >
-      {/if}
-    </label>
-  </div>
-{/if}
+<label class="flex flex-col text-xl font-medium p-4 shadow-sm mb-2">
+  <span class="mb-2">{ field.label }</span>
+  {#if isCheckbox}
+    <input 
+      {title}
+      {disabled}
+      type="checkbox" 
+      checked={field.value} 
+      on:input={onInput}
+    >
+  {:else}
+    <input 
+      class="input"
+      {title}
+      {disabled}
+      type={field.type} 
+      checked={field.value}
+      value={field.value} 
+      on:input={onInput} 
+    >
+  {/if}
+</label>
 
 <style>
   input {

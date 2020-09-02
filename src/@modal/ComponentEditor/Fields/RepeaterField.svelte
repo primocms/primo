@@ -35,7 +35,8 @@
   }
 </script>
 
-<Card title={field.label} variants="p-2 pb-4">
+<Card variants="p-2 pb-4">
+  <header>{field.label}</header>
   {#each field.value as item (item.id)} 
     <RepeaterField 
       {field} 
