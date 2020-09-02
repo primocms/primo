@@ -1,6 +1,6 @@
 {
   "name": "primo-app",
-  "version": "1.0.86",
+  "version": "1.0.87",
   "description": "it's primo",
   "main": "index.js",
   "svelte": "index.js",
