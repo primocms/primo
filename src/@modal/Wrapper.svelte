@@ -88,8 +88,8 @@
   <div class="flex justify-end py-2">
     <SaveButton 
       on:click={() => {
-        pageData.save('wrapper', pageWrapper)
-        site.save({ wrapper: siteWrapper })
+        site.save({ wrapper: pageWrapper })
+        site.saveCurrentPage({ wrapper: siteWrapper })
         modal.hide()
       }}>Save HTML</SaveButton>
   </div>

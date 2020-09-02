@@ -32,7 +32,7 @@
       {#if header}
         <header class="modal-card-head">
           <div class="flex items-center flex-1 justify-between pr-2">
-            <p class="modal-card-title mr-4">
+            <p class="text-sm text-gray-700 mr-4">
               {#if header.icon}
                 <span class="icon">
                   <i class={header.icon}></i>

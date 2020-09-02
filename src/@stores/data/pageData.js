@@ -1,6 +1,5 @@
 import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
-import site from './site'
 import { content } from './page'
 import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
 import { DEFAULTS } from '../../const'
@@ -10,9 +9,6 @@ const store = writable(DEFAULTS.page)
 
 store.subscribe(s => {
   pageData = s
-  if (s && site) {
-    site.pages.modify(s)
-  }
   // prevent overwriting unsaved content
   if (isEqual(get(content), DEFAULTS.page.content)) {
     content.set(pageData.content)

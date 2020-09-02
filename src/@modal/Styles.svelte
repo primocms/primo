@@ -199,7 +199,7 @@
   <div class="flex justify-end py-2">
     <SaveButton {loading} on:click={() => {
       site.saveStyles(siteStyles)
-      pageData.save('styles', pageStyles)
+      site.saveCurrentPage({ styles: pageStyles })
       if (shouldReloadTailwind) {
         tailwind.saveSwappedInConfig()
       } else {

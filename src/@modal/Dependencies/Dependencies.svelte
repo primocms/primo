@@ -7,7 +7,7 @@
   import {SaveButton} from '../../@components/buttons'
 
   import {modal} from '../../@stores/app'
-  import {pageData} from '../../@stores/data'
+  import {pageData, site} from '../../@stores/data'
 
   import HeadEmbeds from './_HeadEmbeds.svelte'
   import Libraries from './_Libraries.svelte'
@@ -48,7 +48,7 @@
     <SaveButton 
       disabled={disableSave}
       on:click={() => {
-        pageData.save('dependencies', localDependencies)
+        site.saveCurrentPage({ dependencies: localDependencies })
         modal.hide()
       }}>Save Dependencies</SaveButton>
   </div>

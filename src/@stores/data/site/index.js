@@ -3,6 +3,7 @@ import { tailwindConfig } from '../../../const'
 import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
 import domainInfo from '../domainInfo'
+import { pageId } from '../page'
 
 let site
 const store = writable({
@@ -100,6 +101,15 @@ export default {
         fields 
       }))
     }
+  },
+  saveCurrentPage: (newData) => {
+    store.update(s => ({
+      ...s,
+      pages: s.pages.map(p => p.id === get(pageId) ? ({
+        ...p,
+        ...newData
+      }) : p)
+    }))
   },
   pages: {
     add: (page) => {

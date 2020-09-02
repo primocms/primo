@@ -2,6 +2,7 @@
   import _ from 'lodash'
   import pluralize from 'pluralize'
   import {createEventDispatcher} from 'svelte'
+  import {fade} from 'svelte/transition'
   const dispatch = createEventDispatcher()
   import {PrimaryButton,SaveButton} from '../@components/buttons'
   import {ContentField, EditField, GenericField, ImageField} from '../@components/inputs'
@@ -188,8 +189,8 @@
   }
 
   function applyFields() {
-    pageData.save('fields', pageFields) // TODO: standardize these
-    site.fields.save(siteFields)
+    site.saveCurrentPage({ fields: pageFields })
+    site.save({ fields: siteFields })
     pageData.hydrateWrapper()
     content.hydrateComponents()
     site.pages.hydrateComponents()

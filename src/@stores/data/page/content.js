@@ -13,7 +13,7 @@ store.subscribe(s => {
 
 export default {
   save: () => {
-    pageData.save('content', content)
+    site.saveCurrentPage({content})
   },
   refresh: async () => {
     // const data = await getPageData()
@@ -22,7 +22,7 @@ export default {
   hydrateComponents: async () => {
     const hydratedContent = await hydrateAllComponents(content)
     store.set(hydratedContent)
-    pageData.save('content', hydratedContent)
+    site.saveCurrentPage({ content: hydratedContent})
   },
   insertContentRow,
   saveRow: (row) => {

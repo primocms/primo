@@ -132,7 +132,7 @@
         onclick: () => modal.show('FIELDS', { 
           fields: $pageData.fields, 
           onsave: (fields) => {
-            pageData.save('fields', fields)
+            site.saveCurrentPage({ fields })
           } 
         }, { 
           header: {
