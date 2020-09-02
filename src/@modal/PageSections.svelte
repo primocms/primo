@@ -43,9 +43,9 @@
 
 </script>
 
-<div class="buttons has-addons is-fullwidth">
-  <button on:click={() => fullwidth = !fullwidth} class="button is-expanded" type="checkbox" class:is-link={fullwidth}>Fullwidth</button>
-  <button on:click={() => gapless = !gapless} class="button is-expanded" type="checkbox" class:is-link={gapless}>Gapless</button>
+<div class="flex w-full">
+  <button on:click={() => fullwidth = !fullwidth} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={fullwidth}>Fullwidth</button>
+  <button on:click={() => gapless = !gapless} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={gapless}>Gapless</button>
 </div>
 {#each sections as columns}
   <article class="message component-wrapper" transition:fade={{ delay: 250, duration: 200 }}>
