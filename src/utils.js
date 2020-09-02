@@ -38,7 +38,6 @@ let Handlebars
 export async function parseHandlebars(code, data) {
   if (!Handlebars) {
     Handlebars = await import('handlebars/dist/handlebars.min.js')
-    console.log(Handlebars)
   } 
   const template = Handlebars.compile(code);
   return template(data)

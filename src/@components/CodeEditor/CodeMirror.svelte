@@ -1,22 +1,8 @@
 <script>
   import {onMount,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
-  import CodeMirror from 'codemirror/lib/codemirror.js'
-  import 'codemirror/mode/javascript/javascript.js'
-  import 'codemirror/mode/handlebars/handlebars.js'
-  import 'codemirror/mode/xml/xml.js'
-  import 'codemirror/mode/css/css.js'
-
-  import emmet from '@emmetio/codemirror-plugin';
-  emmet(CodeMirror);
 
   // import 'codemirror/lib/codemirror.css'
-
-  import 'codemirror/addon/selection/active-line.js'
-  import 'codemirror/addon/comment/comment.js'
-  import 'codemirror/addon/fold/foldcode.js'
-  import 'codemirror/addon/fold/xml-fold.js'
-  import 'codemirror/keymap/sublime.js'
 
   const dispatch = createEventDispatcher()
 
@@ -33,7 +19,35 @@
 
   var Editor
 
-  onMount(() => {
+  let CodeMirror
+  async function mountCodeMirror() {
+    CodeMirror = (await import('codemirror/lib/codemirror.js')).default
+    console.log(CodeMirror)
+
+    const {default:emmet} = await import('@emmetio/codemirror-plugin')
+    console.log(emmet)
+    emmet(CodeMirror);
+
+    const res = await Promise.all([
+      import('codemirror/mode/javascript/javascript.js'),
+      import('codemirror/mode/handlebars/handlebars.js'),
+      import('codemirror/mode/xml/xml.js'),
+      import('codemirror/mode/css/css.js'),
+      import('codemirror/addon/selection/active-line.js'),
+      import('codemirror/addon/comment/comment.js'),
+      import('codemirror/addon/fold/foldcode.js'),
+      import('codemirror/addon/fold/xml-fold.js'),
+      import('codemirror/keymap/sublime.js')
+    ])
+
+    
+  }
+
+  onMount(async () => {
+    await mountCodeMirror()
+
+    console.log(CodeMirror)
+
     Editor = CodeMirror(editorNode, {
       // passed values
       value: prefix + value,
@@ -58,7 +72,7 @@
         previewOpenTag: false
       }
     });
-    setTimeout(() => {Editor.refresh()}, 500)
+    setTimeout(() => {Editor.refresh()}, 500) // needs this for some reason
 
     Editor.on('change', () => {
       const newValue = Editor.doc.getValue()
