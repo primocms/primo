@@ -16,6 +16,7 @@
   export let buttons = null
   export let type = null
   export let tooltipStyle = ''
+  export let tooltipVariants = ''
 
   export let showKeyHint = false
 
@@ -69,7 +70,7 @@
       {/each}
     </div>
   {:else if title}
-    <div class="tooltip hidden lg:block">{title}</div>
+    <div class="tooltip hidden lg:block {tooltipVariants}">{title}</div>
   {/if}
 </div>
 

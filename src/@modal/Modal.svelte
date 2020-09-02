@@ -44,10 +44,10 @@
               <button on:click={switchView} class="switch">
                 {#if $editorViewDev}
                   <i class="fas fa-edit"></i>
-                  <span>Switch to Content</span>
+                  <span>Switch to CMS</span>
                 {:else}
                   <i class="fas fa-code"></i>
-                  <span>Switch to Code</span>
+                  <span>Switch to IDE</span>
                 {/if}
               </button>
             {/if}

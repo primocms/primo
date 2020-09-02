@@ -57,7 +57,8 @@
           {/each}
           {#if $userRole === 'developer'}
             <ToolbarButton  
-              title="See {$editorViewDev ? 'Content' : 'Code'}"
+              title="Switch to {$editorViewDev ? 'CMS' : 'IDE'}"
+              tooltipVariants="w-24"
               icon={$editorViewDev ? 'edit' : 'code'}
               onclick={() => dispatch('toggleView')}
               tooltipStyle="width:7rem"
