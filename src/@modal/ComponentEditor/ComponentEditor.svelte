@@ -261,8 +261,9 @@
 
   function getFakeValue(type) {
       return {
-        'text' : faker.random.words(),
-        'image' : faker.image.unsplash.image()
+        'text' : faker.lorem.sentence(),
+        'content': faker.lorem.bs(),
+        'image' : faker.image.unsplash.image(),
       }[type] || ''
     }
 
@@ -345,8 +346,8 @@
 </script>
 
 <div class="flex flex-col h-full" in:fade={{ duration: 200 }}>
-  <div class="flex flex-1">
-    <div class="w-1/2">
+  <div class="flex flex-1 flex-wrap">
+    <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
       <div class="flex flex-col h-full">
         {#if $editorViewDev}
           <Tabs {tabs} bind:activeTab variants="mb-2" />
@@ -363,7 +364,6 @@
               bind:js={rawJS}
               on:save={() => button.onclick(localComponent)}
             />
-
           {:else if activeTab === tabs[1]}
             <div class="flex flex-col">
               {#each fields as field}
@@ -426,7 +426,11 @@
         {:else}
           <div class="pt-8">
             {#each fields as field}
-              <svelte:component this={_.find(fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+              {#if field.label}
+                <svelte:component this={_.find(fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+              {:else}
+                 The <strong>{field.type}</strong> needs a label to be valid
+              {/if}
             {:else}
               <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit this component's content</p>
             {/each}
@@ -434,7 +438,7 @@
       {/if}
       </div>
     </div>
-    <div class="w-1/2">
+    <div class="w-full lg:w-1/2">
       <CodePreview 
         view="small"
         {loading}

@@ -12,31 +12,29 @@
 </script>
 
 
-<div class="" in:fade={{ duration: 100 }}>
-  <div class="flex justify-between items-center">
-    <div class="text-sm">
-      <slot name="type"></slot>
-    </div>
-    <div class="text-sm">
-      <label class="flex flex-col">
-        <span class="text-xs font-semibold">Label</span>
-        <span>
-          <slot name="label"></slot>
-        </span>
-      </label>
-    </div>
-    <div class="field">
-      <div class="text-sm">
-        <label class="flex flex-col">
-          <span class="text-xs font-semibold">ID</span>
-          <span>
-            <slot name="key"></slot>
-          </span>
-        </label>
-      </div>
-    </div>
-    <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 bg-gray-100 text-gray-600 transition-colors duration-100 hover:bg-gray-300 focus:bg-gray-300" title="delete field">
-      <i class="fas fa-times"></i>
-    </button>
+<div class="field-container" transition:fade={{ duration: 100 }}>
+  <div class="text-sm">
+    <slot name="type"></slot>
   </div>
+  <label class="flex flex-col flex-1">
+    <span class="text-xs font-semibold">Label</span>
+    <slot name="label"></slot>
+  </label>
+  <div class="field">
+    <label class="flex flex-col flex-1">
+      <span class="text-xs font-semibold">ID</span>
+      <slot name="key"></slot>
+    </label>
+  </div>
+  <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 bg-gray-100 text-gray-600 transition-colors duration-100 hover:bg-gray-300 focus:bg-gray-300" title="delete field">
+    <i class="fas fa-times"></i>
+  </button>
 </div>
+
+<style>
+  .field-container {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr auto;
+    grid-column-gap: 2rem;
+  }
+</style>
