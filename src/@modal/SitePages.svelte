@@ -97,7 +97,7 @@
       <div class="shadow-xl mb-4 rounded">
         <PageItem {page} />
         <div class="w-full flex justify-between px-3 py-2 border-t border-gray-100 ">
-          <div on:click={() => modal.hide()}>
+          <div>
             {#if $pageData.id === page.id}
               <span class="text-xs font-semibold text-gray-700">{page.title}</span>
             {:else}

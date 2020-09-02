@@ -22,10 +22,8 @@
   let CodeMirror
   async function mountCodeMirror() {
     CodeMirror = (await import('codemirror/lib/codemirror.js')).default
-    console.log(CodeMirror)
 
     const {default:emmet} = await import('@emmetio/codemirror-plugin')
-    console.log(emmet)
     emmet(CodeMirror);
 
     const res = await Promise.all([
@@ -45,8 +43,6 @@
 
   onMount(async () => {
     await mountCodeMirror()
-
-    console.log(CodeMirror)
 
     Editor = CodeMirror(editorNode, {
       // passed values

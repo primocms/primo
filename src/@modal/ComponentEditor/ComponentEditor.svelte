@@ -249,6 +249,7 @@
 
   function refreshFields(): void {
     fields = fields.filter(f => true)
+    saveRawValue('fields', fields)
   }
 
   function setPlaceholderValues() {
