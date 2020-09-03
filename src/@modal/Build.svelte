@@ -4,9 +4,11 @@
   import axios from 'axios'
   import {Spinner} from '../@components/misc'
   import {PrimaryButton} from '../@components/buttons'
-  import {pageData, site} from '../@stores/data'
-  import {modal} from '../@stores/app'
+  import {site} from '../@stores/data'
+  import pageData from '../@stores/data/pageData'
+
   import {buildPageHTML,buildPageStyles} from '../utils'
+  import modal from '../@stores/app/modal'
 
   let loading = false
   let selection = 'Page'

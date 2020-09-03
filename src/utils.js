@@ -5,8 +5,8 @@ import { get } from 'svelte/store'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
 
-import {dependencies,site,getCombinedTailwindConfig,domainInfo,user,pageData} from './@stores/data'
-import {content} from './@stores/data/page'
+import {site,getCombinedTailwindConfig,domainInfo,user} from './@stores/data'
+import pageData from './@stores/data/pageData'
 
 
 const functionsServer = (endpoint) => get(domainInfo).onDev ? `http://localhost:9000/primo-d4041/us-central1/${endpoint}` : `https://us-central1-primo-d4041.cloudfunctions.net/${endpoint}`
@@ -167,87 +167,6 @@ export function createDebouncer(time) {
   }, time)
 }
 
-export function createInstance(symbol) {
-  const instanceID = getUniqueId()
-  const instanceFinalCSS = symbol.value.final.css.replace(RegExp(`${symbol.id}`, 'g'),`${instanceID}`)
-  return {
-    type: 'component',
-    id: instanceID,
-    symbolID: symbol.id,
-    value: {
-      ...symbol.value,
-      final: {
-        ...symbol.value.final,
-        css: instanceFinalCSS
-      }
-    }
-  }
-}
-
-export function includeNavField(fields) {
-  const navField = {
-    key: 'nav',
-    value: get(site).data.navItems,
-  }
-  return [ ...fields, navField ]
-}
-
-export async function updateInstancesInContent(symbol, content) {
-  return Promise.all(content.map(async section => {
-    return {
-      ...section,
-      columns: await Promise.all(section.columns.map(async column => {
-          return {
-            ...column,
-            rows: await Promise.all(column.rows.map(async instance => { 
-              if (instance.type !== 'component' || instance.symbolID !== symbol.id) return instance
-
-              // Update instance from Symbol's HTML, CSS, and JS & Instance's data
-
-              // Replace instance's fields with symbol's fields while preserving instance's data
-              const symbolFields = _.cloneDeep(symbol.value.raw.fields)
-              const instanceFields = instance.value.raw.fields
-              const mergedFields = _.unionBy(symbolFields, instanceFields, "id");
-
-              instanceFields.forEach(field => {
-                let newFieldIndex = _.findIndex(mergedFields, ['id',field.id])
-                mergedFields[newFieldIndex]['value'] = field.value
-              })
-
-              const allFields = getAllFields(instance)
-              const data = await convertFieldsToData(allFields, 'all')
-
-              const symbolRawHTML = symbol.value.raw.html
-              const instanceFinalHTML = await parseHandlebars(symbolRawHTML, data)
-
-              const symbolFinalCSS = symbol.value.final.css
-              const instanceFinalCSS = symbolFinalCSS.replace(RegExp(`${symbol.id}`, 'g'),`${instance.id}`)
-
-              return {
-                ...instance,
-                value: {
-                  ...instance.value,
-                  raw: {
-                    ...instance.value.raw,
-                    fields: mergedFields,
-                    css: symbol.value.raw.css,
-                    js: symbol.value.raw.js,
-                    html: symbolRawHTML,
-                  },
-                  final: {
-                    ...symbol.value.final,
-                    css: instanceFinalCSS,
-                    html: instanceFinalHTML,
-                    js: symbol.value.final.js
-                  }
-                }
-              }
-            }))
-          }
-      }))
-    }
-  }))
-}
 
 export function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
@@ -425,52 +344,6 @@ export async function buildPageStyles(page, site, HTML) {
 }
 
 
-export async function buildPageFiles(content, rawPageStyles) {
-  const HTML = await buildPageHTML(content, true)
-  const tailwindConfig = JSON.stringify(getCombinedTailwindConfig(globalStyles.tailwindConfig))
-  const combinedCSS = get(site).styles.raw + rawPageStyles
-  const CSS = await buildPageCSS(content, HTML, combinedCSS, tailwindConfig)
-  return [
-    {
-      path: `styles.css`,
-      mode: '100644',
-      type: 'blob',
-      content: get(site).styles.final
-    },
-    {
-      path: `${get(domainInfo).page}.html`,
-      mode: '100644',
-      type: 'blob',
-      content: HTML
-    },
-    {
-      path: `${get(domainInfo).page}.css`,
-      mode: '100644',
-      type: 'blob',
-      content: CSS
-    },
-    // {
-    //   path: `${get(domainInfo).page}.js`,
-    //   mode: '100644',
-    //   type: 'blob',
-    //   content: javascript
-    // },
-    {
-      path: 'README.md',
-      mode: '100644',
-      type: 'blob',
-      content: `# Built with [primo](https://primo.af)`
-    },
-    // {
-    //   path: 'pages',
-    //   mode: '040000',
-    //   type: 'tree',
-    //   content: 'something'
-    // }
-  ]
-}
-
-
 export async function hydrateAllComponents(content) {
   return await Promise.all(
     content.map(async section => ({
@@ -564,14 +437,5 @@ export function duplicatePage(page, title, url) {
     }))
   })
   return newPage
-}
-
-// make a url string valid
-export const makeValidUrl = (str = '') => {
-  if (str) {
-    return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
-  } else {
-    return ''
-  }
 }
   

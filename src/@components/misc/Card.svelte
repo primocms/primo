@@ -20,7 +20,7 @@
     {#if image}
       <article class="flex">
         <figure class="w-1/6 mr-2">
-          <img src="{image}">
+          <img src="{image}" alt="used for field">
         </figure>
         <div class="w-5/6">
           <slot></slot>

@@ -6,9 +6,10 @@
 
   import Container from './ComponentContainer.svelte'
   import {MODAL_TYPES} from '../../const'
-  import { wrapInStyleTags, getUniqueId, createInstance } from '../../utils'
+  import { wrapInStyleTags, getUniqueId } from '../../utils'
 
-  import {modal,editorViewDev,userRole} from '../../@stores/app'
+  import {editorViewDev,userRole} from '../../@stores/app'
+  import modal from '../../@stores/app/modal'
   import symbols from '../../@stores/data/site/symbols'
   import {content} from '../../@stores/data/page'
 
@@ -82,6 +83,23 @@
       ...value
     })
     site.save({ symbols: $symbols })
+  }
+
+  function createInstance(symbol) {
+    const instanceID = getUniqueId()
+    const instanceFinalCSS = symbol.value.final.css.replace(RegExp(`${symbol.id}`, 'g'),`${instanceID}`)
+    return {
+      type: 'component',
+      id: instanceID,
+      symbolID: symbol.id,
+      value: {
+        ...symbol.value,
+        final: {
+          ...symbol.value.final,
+          css: instanceFinalCSS
+        }
+      }
+    }
   }
 
 </script>

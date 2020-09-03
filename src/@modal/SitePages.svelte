@@ -6,11 +6,12 @@
   import {SelectOne,TextInput} from '../@components/inputs'
   import {PrimaryButton} from '../@components/buttons'
   import {Spinner,Card,Countdown} from '../@components/misc'
-  import {getUniqueId, makeValidUrl, duplicatePage} from '../utils'
   import PageItem from './PageList/PageItem.svelte'
+  import ShortUniqueId from 'short-unique-id';
 
-  import { modal } from '../@stores/app'
-  import {domainInfo,site,pageData,tailwind} from '../@stores/data'
+  import modal from '../@stores/app/modal'
+  import {domainInfo,site,tailwind} from '../@stores/data'
+  import pageData from '../@stores/data/pageData'
 
   let pages = []
   $: {
@@ -73,6 +74,96 @@
     site.pages.remove(pageId)
   }
 
+  function duplicatePage(page, title, url) {
+    const newPage = _.cloneDeep(page)
+    const [newContent, IDmap] = scrambleIds(page.content)
+    newPage.content = newContent
+    newPage.title = title
+    newPage.id = url
+
+    // Replace all the old IDs in the page styles with the new IDs
+    let rawPageStyles = newPage.styles.raw
+    let finalPageStyles = newPage.styles.final
+    IDmap.forEach(([oldID, newID]) => {
+      newPage.styles.raw = rawPageStyles.replace(
+        new RegExp(oldID, 'g'),
+        newID
+      )
+      newPage.styles.final = finalPageStyles.replace(
+        new RegExp(oldID, 'g'),
+        newID
+      )
+    })
+
+    // Replace all the old IDs in the components
+    IDmap.forEach(([oldID, newID]) => {
+      newPage.content = newPage.content.map((section) => ({
+        ...section,
+        columns: section.columns.map((column) => ({
+          ...column,
+          rows: column.rows.map((row) =>
+            row.type === 'component'
+              ? {
+                  ...row,
+                  value: {
+                    ...row.value,
+                    raw: {
+                      ...row.value.raw,
+                      css: row.value.raw.css.replace(
+                        new RegExp(oldID, 'g'),
+                        newID
+                      ),
+                    },
+                    final: {
+                      ...row.value.final,
+                      css: row.value.final.css.replace(
+                        new RegExp(oldID, 'g'),
+                        newID
+                      ),
+                    },
+                  },
+                }
+              : row
+          ),
+        })),
+      }))
+    })
+    return newPage
+
+    function scrambleIds(content) {
+      let IDs = []
+      const newContent = content.map(section => {
+        const newID = getUniqueId()
+        IDs.push([ section.id, newID])
+        return {
+          ...section,
+          id: newID,
+          columns: section.columns.map(column => {
+            const newID = getUniqueId()
+            IDs.push([ column.id, newID])
+            return {
+              ...column,
+              id: newID,
+              rows: column.rows.map(row => {
+                const newID = getUniqueId()
+                IDs.push([ row.id, newID])
+                return {
+                  ...row, 
+                  id: newID
+                }
+              })
+            }
+          })
+        }
+      })
+      return [ newContent, IDs ]
+    }
+
+    function getUniqueId() {
+      return new ShortUniqueId().randomUUID(5).toLowerCase();
+    }
+  }
+
   let creatingPage = false
 
   let pageBeingCreated
@@ -83,11 +174,19 @@
     mounted = true
   })
 
-  const validateUrl = ({ detail }) => {
-    pageUrl = makeValidUrl(detail)
+  function validateUrl ({ detail }) {
+    let validUrl 
+    if (detail) {
+      validUrl = str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
+    } else {
+      validUrl = ''
+    }
+    pageUrl = validUrl
   }
 
   let pageUrl = ''
+
+
 
 </script>
 

@@ -4,8 +4,9 @@
   import {onMount} from 'svelte'
   import {fade} from 'svelte/transition'
   import {buildPagePreview,wrapInStyleTags} from '../../utils'
-  import {site,tailwind,pageData} from '../../@stores/data'
-  import { modal } from '../../@stores/app'
+  import {site,tailwind} from '../../@stores/data'
+  import pageData from '../../@stores/data/pageData'
+  import modal from '../../@stores/app/modal'
   import { navigate } from 'svelte-routing';
 
   export let page

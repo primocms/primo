@@ -1,5 +1,5 @@
 <script>
-  import { modal } from '../@stores/app'
+  import modal from '../@stores/app/modal'
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import {Spinner} from '../@components/misc'

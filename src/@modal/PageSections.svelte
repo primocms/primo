@@ -3,7 +3,7 @@
   import {IconButton} from '../@components/buttons'
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
-  import {modal} from '../@stores/app'
+  import modal from '../@stores/app/modal'
   import {content} from '../@stores/data/page'
 
   let fullwidth = false

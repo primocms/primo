@@ -8,8 +8,9 @@
   import {CodeMirror} from '../@components'
   import { parseHandlebars, convertFieldsToData } from '../utils'
 
-  import {modal} from '../@stores/app'
-  import {pageData,site} from '../@stores/data'
+  import modal from '../@stores/app/modal'
+  import {site} from '../@stores/data'
+  import pageData from '../@stores/data/pageData'
 
   let pageWrapper = _.cloneDeep($pageData.wrapper)
   let siteWrapper = _.cloneDeep($site.wrapper)

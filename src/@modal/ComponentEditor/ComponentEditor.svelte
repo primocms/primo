@@ -1,7 +1,7 @@
 <script lang="ts">
   import _ from "lodash";
+  import ShortUniqueId from "short-unique-id";
   import pluralize from 'pluralize'
-  import {getUniqueId,includeNavField} from '../../utils'
   import { createEventDispatcher, onMount, onDestroy, setContext } from 'svelte'
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()
@@ -23,10 +23,12 @@
 
   import { parseHandlebars, convertFieldsToData, processStyles, createDebouncer, wrapInStyleTags } from '../../utils'
 
-  import {dependencies, site, user, pageData} from '../../@stores/data'
+  import {dependencies, site, user} from '../../@stores/data'
+  import pageData from '../../@stores/data/pageData'
   import {content} from '../../@stores/data/page'
   import symbols from '../../@stores/data/site/symbols'
-  import {modal,editorViewDev} from '../../@stores/app'
+  import {editorViewDev} from '../../@stores/app'
+  import modal from '../../@stores/app/modal'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000)
@@ -178,6 +180,10 @@
         fields: []
       }
     }
+  }
+
+  function getUniqueId() {
+    return new ShortUniqueId().randomUUID(5).toLowerCase();
   }
 
   function addSubField(id:string): void {

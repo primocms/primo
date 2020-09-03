@@ -1,4 +1,3 @@
-import Modal from './Modal.svelte'
 import ComponentEditor from './ComponentEditor/ComponentEditor.svelte'
 import ComponentLibrary from './ComponentLibrary/ComponentLibrary.svelte'
 import PageSections from './PageSections.svelte'
@@ -22,5 +21,3 @@ export {
   Wrapper,
   ReleaseNotes
 }
-
-export default Modal

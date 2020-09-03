@@ -8,7 +8,8 @@
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '../../../@components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {editorViewDev,userRole,modal,hideReleaseNotes} from '../../../@stores/app'
+  import {editorViewDev,userRole,hideReleaseNotes} from '../../../@stores/app'
+  import modal from '../../../@stores/app/modal'
 
   const dispatch = createEventDispatcher()
   

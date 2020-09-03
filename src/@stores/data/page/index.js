@@ -1,10 +1,9 @@
 import _ from 'lodash'
 import { writable, get } from 'svelte/store';
 
-import dependencies from './dependencies'
 import content from './content'
 
-import {pageData} from '../index'
+import pageData from '../pageData'
 import site from '../site'
 
 export const pageId = writable(null)
@@ -21,6 +20,5 @@ pageId.subscribe(id => {
 })
 
 export {
-  dependencies,
   content
 }

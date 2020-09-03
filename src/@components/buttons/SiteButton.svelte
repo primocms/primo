@@ -4,7 +4,9 @@
   import {onMount} from 'svelte'
   import {fade} from 'svelte/transition'
   import {buildPagePreview,wrapInStyleTags} from '../../utils'
-  import {tailwind,pageData, site as siteStore} from '../../@stores/data'
+  import {site as siteStore} from '../../@stores/data'
+  import tailwind from '../../@stores/data/tailwind'
+  import pageData from '../../@stores/data/pageData'
   import {pageId} from '../../@stores/data/page'
 
   export let site

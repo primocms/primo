@@ -1,5 +1,5 @@
 import { writable, readable, derived, get } from 'svelte/store';
-import {pageData} from '../index'
+import pageData from '../pageData'
 
 const store = writable({
   headEmbed : '',

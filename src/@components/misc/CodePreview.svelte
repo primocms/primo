@@ -1,7 +1,8 @@
 <script>
   import {onMount} from 'svelte'
   import store from 'store2'
-  import {site,pageData} from '../../@stores/data'
+  import {site} from '../../@stores/data'
+  import pageData from '../../@stores/data/pageData'
 
   export let multiple = false
   export let pages = null

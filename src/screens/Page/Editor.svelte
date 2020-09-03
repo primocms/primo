@@ -11,9 +11,11 @@
   import ToolbarButton from './editor/ToolbarButton.svelte'
   import Doc from './editor/Doc.svelte'
 
-  import {site,repo,domainInfo,user,pageData} from '../../@stores/data'
+  import {site,repo,domainInfo,user} from '../../@stores/data'
+  import pageData from '../../@stores/data/pageData'
   import {content} from '../../@stores/data/page'
-  import {focusedNode, modal,editorViewDev} from '../../@stores/app'
+  import {focusedNode,editorViewDev} from '../../@stores/app'
+  import modal from '../../@stores/app/modal'
 
   import type {Button,ButtonGroup,Component} from './editor/Layout/LayoutTypes'
 

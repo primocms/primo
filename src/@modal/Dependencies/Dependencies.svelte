@@ -6,8 +6,9 @@
   import {Tabs} from '../../@components/misc'
   import {SaveButton} from '../../@components/buttons'
 
-  import {modal} from '../../@stores/app'
-  import {pageData, site} from '../../@stores/data'
+  import modal from '../../@stores/app/modal'
+  import {site} from '../../@stores/data'
+  import pageData from '../../@stores/data/pageData'
 
   import HeadEmbeds from './_HeadEmbeds.svelte'
   import Libraries from './_Libraries.svelte'

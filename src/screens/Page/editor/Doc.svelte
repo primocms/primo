@@ -9,7 +9,8 @@
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
   import {focusedNode} from '../../../@stores/app'
-  import {pageData,site} from '../../../@stores/data'
+  import {site} from '../../../@stores/data'
+  import pageData from '../../../@stores/data/pageData'
   import {content} from '../../../@stores/data/page'
   const dispatch = createEventDispatcher()
   import {IconButton} from '../../../@components/misc'

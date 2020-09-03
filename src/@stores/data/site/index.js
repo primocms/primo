@@ -1,6 +1,6 @@
 import { writable, readable, derived, get } from 'svelte/store';
+import ShortUniqueId from 'short-unique-id';
 import { tailwindConfig } from '../../../const'
-import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
 import domainInfo from '../domainInfo'
 import { pageId } from '../page'
@@ -190,7 +190,23 @@ async function hydrateComponentLibrary() {
   // await Promise.all([ hydratedComponents.map(async component => saveSymbolToDomain(component)) ]) TODO
 }
 
-
+async function hydrateAllComponents(content) {
+  return await Promise.all(
+    content.map(async section => ({
+      ...section,
+      columns: await Promise.all(
+        section.columns.map(async column => ({
+        ...column,
+        rows: await Promise.all(
+          column.rows.map(async row => {
+            if (row.type === 'content') return row
+            else return hydrateComponent(row)
+          })
+        )
+      })))
+    }))
+  )
+}
 
 // HELPERS
 async function hydrateSiteComponents(exclude = null) {
@@ -201,4 +217,17 @@ async function hydrateSiteComponents(exclude = null) {
   //   content: await hydrateAllComponents(page.content)
   // })))
   // return updatedPages
+}
+
+async function hydrateComponent(component) {
+  const {value} = component
+  const fields = getAllFields(component)
+  const data = await convertFieldsToData(fields, 'all')
+  const finalHTML = await parseHandlebars(value.raw.html, data)
+  component.value.final.html = finalHTML
+  return component
+}
+
+function getUniqueId() {
+  return new ShortUniqueId().randomUUID(5).toLowerCase();
 }

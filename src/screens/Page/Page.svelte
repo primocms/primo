@@ -9,9 +9,10 @@
   import {FeedbackForm,Spinner} from '../../@components/misc'
   import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from '../../utils'
 
-  import {dependencies,domainInfo,pageData as pageDataStore,site,tailwind,loadingTailwind,user} from '../../@stores/data'
+  import {dependencies,domainInfo,site,tailwind,loadingTailwind,user} from '../../@stores/data'
+  import pageDataStore from '../../@stores/data/pageData'
   import {content,pageId as pageIdStore} from '../../@stores/data/page'
-  import {modal} from '../../@stores/app'
+  import modal from '../../@stores/app/modal'
 
   const dispatch = createEventDispatcher()
 

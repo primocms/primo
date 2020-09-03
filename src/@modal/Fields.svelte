@@ -14,8 +14,10 @@
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../types/components'
   import {getUniqueId} from '../utils'
 
-  import {site,pageData} from '../@stores/data'
-  import {modal,editorViewDev,userRole} from '../@stores/app'
+  import {site} from '../@stores/data'
+  import pageData from '../@stores/data/pageData'
+  import {editorViewDev,userRole} from '../@stores/app'
+  import modal from '../@stores/app/modal'
   import {content} from '../@stores/data/page'
 
   let pageFields = _.cloneDeep($pageData.fields) || []

@@ -1,5 +1,7 @@
 <script>
-  import {hideReleaseNotes,modal} from '../@stores/app'
+  import {hideReleaseNotes} from '../@stores/app'
+  import modal from '../@stores/app/modal'
+  
 </script>
 
 <iframe title="primo release notes" src="https://www.youtube.com/embed/skmXGM17Zi4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

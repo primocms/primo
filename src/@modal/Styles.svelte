@@ -8,9 +8,10 @@
   import {SaveButton} from '../@components/buttons'
   import { compileScss, processStyles, wrapInStyleTags, buildPageHTML, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../utils'
 
-  import {pageData,domainInfo,site,tailwind,getCombinedTailwindConfig} from '../@stores/data'
+  import {domainInfo,site,tailwind,getCombinedTailwindConfig} from '../@stores/data'
+  import pageData from '../@stores/data/pageData'
   import {content} from '../@stores/data/page'
-  import {modal} from '../@stores/app'
+  import modal from '../@stores/app/modal'
 
   let pageStyles = _.cloneDeep($pageData.styles)
   let siteStyles = _.cloneDeep($site.styles)

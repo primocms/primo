@@ -3,7 +3,8 @@ import _ from 'lodash'
 import {wrapInStyleTags,processStyles,ax} from '../../utils'
 import storeLib from '../../@libraries/store.js'
 
-import {site,pageData} from './index'
+import {site} from './index'
+import pageData from './pageData'
 
 const store = writable(storeLib.get('tailwind'))
 
