@@ -2,7 +2,7 @@ import { writable, readable, derived, get } from 'svelte/store';
 import _ from "lodash";
 import { hydrateAllComponents, getUniqueId, updateInstancesInContent } from '../../../utils'
 import {focusedNode} from '../../app'
-import {pageData,site} from '../index'
+import {site} from '../index'
 import {DEFAULTS} from '../../../const'
 
 let content = DEFAULTS.page.content

@@ -4,6 +4,7 @@ import {hydrateAllComponents,hydrateComponent,getUniqueId} from '../../../utils'
 
 import domainInfo from '../domainInfo'
 import { pageId } from '../page'
+import allSites from '../allSites'
 
 let site
 const store = writable({
@@ -85,9 +86,7 @@ const store = writable({
 })
 store.subscribe(s => {
   site = s
-  // if (s && symbols) {
-  //   symbols.set(s.symbols)
-  // }
+  allSites.saveSite(site)
 })
 
 export default {
@@ -103,6 +102,7 @@ export default {
     }
   },
   saveCurrentPage: (newData) => {
+    console.log('saving current page', newData, get(pageId))
     store.update(s => ({
       ...s,
       pages: s.pages.map(p => p.id === get(pageId) ? ({

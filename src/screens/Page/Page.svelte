@@ -19,7 +19,7 @@
 
   export let pageId : string
 
-	$: pageIdStore.set(pageId)
+	$: pageIdStore.set(pageId === 'index.html' ? 'index' : pageId) // pageId has .html on desktop
 
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')

@@ -6,7 +6,7 @@
   import {buildPagePreview,wrapInStyleTags} from '../../utils'
   import {site,tailwind,pageData} from '../../@stores/data'
   import { modal } from '../../@stores/app'
-  import { link } from 'svelte-routing';
+  import { navigate } from 'svelte-routing';
 
   export let page
 
@@ -25,15 +25,21 @@
   }
 
   onMount(resizePreview)
+
+  function openPage(e) {
+    e.preventDefault()
+    navigate(`/${page.id === 'index' ? '' : page.id}`)
+    modal.hide()
+  }
 </script>
 
-<a use:link on:click={() => modal.hide()} class="page-preview" bind:this={container} href="/{page.id === 'index' ? '' : page.id}" aria-label="Go to /{page.id}">
+<button on:click={openPage} class="page-preview" bind:this={container} aria-label="Go to /{page.id}">
   <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {iframeLoaded = true }}></iframe>
-</a>
+</button>
 
 <style>
   .page-preview {
-    @apply block relative overflow-hidden pointer-events-none;
+    @apply block w-full relative overflow-hidden pointer-events-none;
     height: 15vh;
 
     &:after {

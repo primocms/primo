@@ -36,7 +36,7 @@
       { 
         header: {
           title: `Edit ${component.title || 'Symbol'}`,
-          icon: 'fas fa-th-large'
+          icon: 'fas fa-clone'
         } 
       }
     )

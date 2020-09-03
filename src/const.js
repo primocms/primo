@@ -73,7 +73,80 @@ function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
 
+export const createPage = (id, title = 'Home Page') => ({
+  id,
+  title,
+  content: [
+    {
+      id: getUniqueId(),
+      width: 'contained',
+      columns: [
+        {
+          id: getUniqueId(),
+          size: 'w-full',
+          rows: [
+            {
+              id: getUniqueId(),
+              type: 'content',
+              value: {
+                html: '<p><br></p>'
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  dependencies: {
+    headEmbed: '',
+    libraries: []
+  },
+  styles: {
+    raw: '',
+    final: '',
+    tailwind: ''
+  },
+  wrapper: {
+    head: {
+      raw: '',
+      final: ''
+    },
+    below: {
+      raw: '',
+      final: ''
+    }
+  },
+  fields: []
+})
+
+export const createSite = () => ({
+  id: getUniqueId(),
+  label: '',
+  pages: [ createPage('index') ],
+  dependencies: {
+    headEmbed: '',
+    libraries: []
+  },
+  styles: {
+    raw: '',
+    final: '',
+    tailwind: ''
+  },
+  wrapper: {
+    head: {
+      raw: '',
+      final: ''
+    },
+    below: {
+      raw: '',
+      final: ''
+    }
+  },
+  fields: []
+})
+
 export const DEFAULTS = {
+  site: createSite(),
   page: {
     id: '',
     title: '',

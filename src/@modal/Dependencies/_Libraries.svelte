@@ -99,13 +99,9 @@
 {/if}
 
 Add a library
-<form class="field has-addons text-sm" on:submit|preventDefault={searchForPackages}>
-  <div class="control is-expanded">
-    <input class="input" type="text" placeholder="alpinejs" bind:value={packageName}>
-  </div>
-  <div class="control">
-    <IconButton variants="is-primary" icon="search"/>
-  </div>
+<form class="flex mt-2" on:submit|preventDefault={searchForPackages}>
+  <input class="flex-1 bg-gray-100 p-2 focus:outline-none" type="text" placeholder="alpinejs" bind:value={packageName}>
+  <IconButton variants="px-4 bg-gray-900 text-gray-100" icon="search"/>
 </form>
 
 <ul class="list is-hoverable">

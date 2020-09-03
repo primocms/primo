@@ -5,9 +5,11 @@
   import {fade} from 'svelte/transition'
   import {buildPagePreview,wrapInStyleTags} from '../../utils'
   import {tailwind,pageData, site as siteStore} from '../../@stores/data'
+  import {pageId} from '../../@stores/data/page'
 
   export let site
   export let isLink
+  export let active
 
   $: homePage = site.pages.filter(p => p.id === 'index')[0]
 
@@ -30,6 +32,7 @@
 
   function navigateToSite() {
     $siteStore = site
+    pageId.set('index')
   }
 </script>
 
@@ -40,9 +43,9 @@
     </div>
   </a>
 {:else}
-  <button on:click={navigateToSite}>
-    <div bind:this={container}>
-      <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {resizePreview(); iframeLoaded = true }}></iframe>
+  <button on:click={navigateToSite} class:active>
+    <div bind:this={container} class:active>
+      <iframe class:active bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {resizePreview(); iframeLoaded = true }}></iframe>
     </div>
   </button>
 {/if}
@@ -53,6 +56,9 @@
     &:hover {
       @apply opacity-25 bg-codeblack;
     }
+  }
+  .active {
+    @apply opacity-25 bg-codeblack cursor-default pointer-events-none;
   }
   iframe {
     @apply pointer-events-none opacity-0 transition-opacity duration-200 bg-white;

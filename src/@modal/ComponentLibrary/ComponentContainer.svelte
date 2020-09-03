@@ -51,9 +51,9 @@
   <div class="message-header">
     <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>{title}</p>
     <div class="buttons">
-      <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')}/>  
-      <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')}/>  
-      <IconButton label="Place" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')}/>  
+      <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')} />  
+      <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')} />  
+      <IconButton label="Place" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')} />  
     </div>
   </div>
   <div class="message-body">

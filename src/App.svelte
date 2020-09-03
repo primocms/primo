@@ -25,7 +25,7 @@
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	$: dispatch('save', $site)
+	$: dispatch('save', $allSites)
 
 	$: allSites.set(sites)
 

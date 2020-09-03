@@ -22,19 +22,25 @@
       <p class="description">{library.description}</p>
       <div class="buttons">
         {#each library.links as link}
-          {#if link.site === 'homepage'}
-            <IconButton icon="home" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }}/>
-          {:else if link.site === 'npm'}
-            <IconButton iconClasses="fab fa-npm" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }} />
-          {:else if link.site === 'repository'}
-            <IconButton iconClasses="fab fa-github" variants="is-small" link={{ href: link.href, target: 'blank', rel: 'nofollow' }} />
+          {#if link.site === 'repository'}
+            <a aria-label="{library.name} github" href={link.href} target="blank" rel="nofollow">
+              <i class="fab fas-github"></i>
+            </a>
+          {:else if link.site === 'homepage'}
+            <a aria-label="{library.name} homepage" href={link.href} target="blank" rel="nofollow">
+              <i class="fa fas-globe"></i>
+            </a>
+          {:else if link.site === 'npme'}
+            <a aria-label="{library.name} npm" href={link.href} target="blank" rel="nofollow">
+              <i class="fab fas-npm"></i>
+            </a>
           {/if}
         {/each}
       </div>
     </div>
     <div class="flex-1 flex justify-end">
       {#if button}
-        <button class="button is-light is-small" on:click={button.onclick}>{button.label}</button>
+        <button class="bg-gray-900 text-gray-100 py-2 px-3 text-xs rounded font-semibold" on:click={button.onclick}>{button.label}</button>
       {/if}
     </div>
 </li>
@@ -52,9 +58,6 @@
     font-weight: 500;
   }
   .list-item {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    @apply p-4 shadow;
+    @apply flex justify-between items-center p-4 shadow;
   }
 </style>

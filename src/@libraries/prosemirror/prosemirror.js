@@ -185,8 +185,8 @@ export function createEditor(editorNode, htmlString, eventListeners) {
       // keymap({"Mod-z": undo, "Mod-y": redo}),
       keymap(buildKeymap(schema, {})),
       keymap(baseKeymap),
-      menu
-    ]
+      document.querySelector('#primo-toolbar--ol') ? menu : null // ensure doc formatting items exist in toolbar
+    ].filter(i => i)
   })
 
   const view = new EditorView(editorNode, {

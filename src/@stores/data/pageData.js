@@ -10,21 +10,17 @@ const store = writable(DEFAULTS.page)
 store.subscribe(s => {
   pageData = s
   // prevent overwriting unsaved content
-  if (isEqual(get(content), DEFAULTS.page.content)) {
-    content.set(pageData.content)
-  }
+  // if (isEqual(get(content), DEFAULTS.page.content)) {
+  //   content.set(pageData.content)
+  // }
+  content.set(s.content)
 })
-
-function contentShouldBeUpdated (savedContent, unsavedContent) {
-  if (isEqual(unsavedContent, DEFAULTS.page)) {
-    return true
-  } else return false
-}
 
 export default {
   save: (property, value) => {
     store.update(s => ({
       ...s, 
+      content: get(content), // prevent overwriting unsaved content
       [property]: value
     }))
   },

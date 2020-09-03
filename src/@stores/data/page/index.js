@@ -10,13 +10,13 @@ import site from '../site'
 export const pageId = writable(null)
 
 pageId.subscribe(id => {
-  const currentPage = _.find(get(site).pages, ['id', id || 'index'])
-  if (currentPage && pageData) {
+  const newPage = _.find(get(site).pages, ['id', id || 'index'])
+  if (newPage && pageData) {
     pageData.update(p => ({
       ...p,
-      ...currentPage
+      ...newPage
     }))
-    content.set(currentPage.content)
+    content.set(newPage.content)
   }
 })
 

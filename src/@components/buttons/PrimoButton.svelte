@@ -5,6 +5,7 @@
   import PageItem from '../../@modal/PageList/PageItem.svelte'
   import SiteButton from './SiteButton.svelte'
   import {site, allSites} from '../../@stores/data'
+  import {pageId} from '../../@stores/data/page'
   import PrimoLogo from '../../@svg/PrimoLogo.svelte'
 
   const dispatch = createEventDispatcher()
@@ -14,6 +15,12 @@
   export let variants = ''
 
   let showingDropdown = false
+
+  function createSite() {
+    const newSite = allSites.create()
+    site.set(newSite)
+    pageId.set('index')
+  }
 </script>
 
 <button
@@ -39,15 +46,21 @@
     <nav>
       <p class="dropdown-heading">sites</p>
       <ul>
-        {#each $allSites as site}
+        {#each $allSites as siteItem}
           <li class="site-item">
-            <SiteButton {site} isLink={showDashboardLink}/>
+            <SiteButton active={siteItem.id === $site.id} site={siteItem} isLink={showDashboardLink}/>
           </li>
         {/each}
+          <li class="site-item">
+            <button on:click={createSite} class="text-gray-100 font-semibold text-xs flex items-center justify-center h-full w-full transition-colors duration-100 hover:bg-red-600">
+              <i class="fas fa-plus mr-1"></i>
+              <span>Create site</span>
+            </button>
+          </li>
       </ul>
     </nav>
-    <a class="dashboard-button my-2" href="http://discuss.primo.so/">
-      <i class="fas fa-users mr-1"></i>
+    <a class="dashboard-button flex flex-col my-2" href="http://discuss.primo.so/">
+      <i class="fas fa-users mb-1"></i>
       <span>Get help</span>
     </a>
     {#if showDashboardLink}
