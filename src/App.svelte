@@ -11,6 +11,7 @@
 	import { allSites} from './@stores/data'
 	import tailwind from './@stores/data/tailwind'
 	import site from './@stores/data/site'
+	import symbols from './@stores/data/site/symbols'
 	import pageData from './@stores/data/pageData'
 	import {pageId} from './@stores/data/page'
 	import content from './@stores/data/page/content'
@@ -38,6 +39,8 @@
 		...s,
 		...data
 	}))
+
+	$: symbols.set(data.symbols)
 
 	$: {
 		const currentPage = find($site.pages, ['id', $pageId || 'index'])

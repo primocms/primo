@@ -10,6 +10,7 @@
 
   import {editorViewDev,userRole} from '../../@stores/app'
   import modal from '../../@stores/app/modal'
+  import site from '../../@stores/data/site'
   import symbols from '../../@stores/data/site/symbols'
   import content from '../../@stores/data/page/content'
 
@@ -25,12 +26,12 @@
           label: `Save ${component.title || 'Symbol'}`,
           onclick: async (symbol) => {
             modal.show('COMPONENT_LIBRARY', {button})
-            await Promise.all([
+            const [newSymbols] = await Promise.all([
               symbols.place(symbol),
               content.updateInstances(symbol),
               // updateInstancesInDomain(symbol), // TODO
             ])
-            site.save({ symbols: $symbols })
+            site.save({ symbols: newSymbols })
           }
         }
       }, 

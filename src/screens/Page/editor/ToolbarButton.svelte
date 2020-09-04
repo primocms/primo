@@ -70,7 +70,7 @@
       {/each}
     </div>
   {:else if title}
-    <div class="tooltip hidden lg:block {tooltipVariants}">{title}</div>
+    <div class="tooltip lg:block {tooltipVariants}">{title}</div>
   {/if}
 </div>
 

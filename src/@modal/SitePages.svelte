@@ -1,19 +1,23 @@
 <script>
-  import _ from 'lodash'
+  import cloneDeep from 'lodash/cloneDeep'
   import {onMount,onDestroy} from 'svelte'
   import { link } from 'svelte-routing';
   import {fade} from 'svelte/transition'
+  import ShortUniqueId from 'short-unique-id';
   import {SelectOne,TextInput} from '../@components/inputs'
   import {PrimaryButton} from '../@components/buttons'
   import {Spinner,Card,Countdown} from '../@components/misc'
   import PageItem from './PageList/PageItem.svelte'
-  import ShortUniqueId from 'short-unique-id';
 
   import modal from '../@stores/app/modal'
   import {domainInfo} from '../@stores/data'
   import tailwind from '../@stores/data/tailwind'
   import site from '../@stores/data/site'
   import pageData from '../@stores/data/pageData'
+
+  function getUniqueId() {
+    return new ShortUniqueId().randomUUID(5).toLowerCase();
+  }
 
   let pages = []
   $: {
@@ -77,7 +81,7 @@
   }
 
   function duplicatePage(page, title, url) {
-    const newPage = _.cloneDeep(page)
+    const newPage = cloneDeep(page)
     const [newContent, IDmap] = scrambleIds(page.content)
     newPage.content = newContent
     newPage.title = title
@@ -179,7 +183,7 @@
   function validateUrl ({ detail }) {
     let validUrl 
     if (detail) {
-      validUrl = str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
+      validUrl = detail.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
     } else {
       validUrl = ''
     }

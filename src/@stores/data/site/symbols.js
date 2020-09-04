@@ -22,6 +22,7 @@ const actions = {
     } else {
       actions.add(symbol)
     }
+    return symbols
   },
   modify: (symbol) => {
     const newLibrary = symbols.map(s => s.id === symbol.id ? symbol : s)

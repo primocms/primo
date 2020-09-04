@@ -46,7 +46,7 @@
 
 </script>
 
-<article class="message component-wrapper" in:fade={{ delay: 250, duration: 200 }} out:fade={{ duration: 200 }}>
+<article class="message component-wrapper" in:fade={{ delay: 250, duration: 200 }}>
   <form on:submit|preventDefault={changeTitle}>
     <input type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
   </form>
@@ -55,7 +55,7 @@
     <div class="buttons">
       <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')} />  
       <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')} />  
-      <IconButton label="Place" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')} />  
+      <IconButton label="Add" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')} />  
     </div>
   </div>
   <div class="message-body">
