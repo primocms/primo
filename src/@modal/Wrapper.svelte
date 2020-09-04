@@ -9,7 +9,7 @@
   import { parseHandlebars, convertFieldsToData } from '../utils'
 
   import modal from '../@stores/app/modal'
-  import {site} from '../@stores/data'
+  import site from '../@stores/data/site'
   import pageData from '../@stores/data/pageData'
 
   let pageWrapper = _.cloneDeep($pageData.wrapper)

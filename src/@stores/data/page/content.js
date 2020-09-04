@@ -2,7 +2,7 @@ import { writable, readable, derived, get } from 'svelte/store';
 import _ from "lodash";
 import ShortUniqueId from 'short-unique-id';
 import {focusedNode} from '../../app'
-import {site} from '../index'
+import site from '../site'
 import {DEFAULTS} from '../../../const'
 
 let content = DEFAULTS.page.content

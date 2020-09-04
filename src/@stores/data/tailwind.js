@@ -1,9 +1,9 @@
+import {getContext} from 'svelte'
 import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
-import {wrapInStyleTags,processStyles,ax} from '../../utils'
 import storeLib from '../../@libraries/store.js'
 
-import {site} from './index'
+import site from './site'
 import pageData from './pageData'
 
 const store = writable(storeLib.get('tailwind'))
@@ -64,6 +64,21 @@ async function hydrateTailwind() {
     store.set(tw)
     setLocalStorage(tw)
   } 
+}
+
+async function processStyles(css, html, options = {}) {
+  const {processPostCSS} = getContext('functions')
+  try {
+    const result = await processPostCSS({css, html, options})
+    if (result.error) {
+      console.error(result.error)
+      return '';
+    } else {
+      return result;
+    }
+  } catch(e) {
+    console.error(e)
+  }
 }
 
 async function getTailwind(tailwindConfig) {

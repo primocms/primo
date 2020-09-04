@@ -11,7 +11,7 @@
   import {editorViewDev,userRole} from '../../@stores/app'
   import modal from '../../@stores/app/modal'
   import symbols from '../../@stores/data/site/symbols'
-  import {content} from '../../@stores/data/page'
+  import content from '../../@stores/data/page/content'
 
   export let button;
 

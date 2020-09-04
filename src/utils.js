@@ -5,7 +5,10 @@ import { get } from 'svelte/store'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
 
-import {site,getCombinedTailwindConfig,domainInfo,user} from './@stores/data'
+import domainInfo from './@stores/data/domainInfo'
+import user from './@stores/data/user'
+import {getCombinedTailwindConfig} from './@stores/data/tailwind'
+import site from './@stores/data/site'
 import pageData from './@stores/data/pageData'
 
 
@@ -256,35 +259,6 @@ export function buildSiteHTML(pages) {
   return siteHTML
 }
 
-export async function buildPageHTML(content, buildWholePage = false) {
-  let html = ''
-  content.forEach(section => {
-    html += `<section id="section-${section.id}">\n` +
-              `\t<div class="columns flex flex-wrap ${section.width === 'contained' ? 'container' : ''}">\n`
-    section.columns.forEach(column => {
-      html += `\t\t<div class="column ${column.size}" id="column-${column.id}">\n`
-      column.rows.forEach(row => {
-        html += row.type === 'component' 
-                ? `\t\t\t<div class="primo-component">\n` +
-                    `\t\t\t\t<div id="component-${row.id}" class="w-full">${row.value.final.html}</div>\n` +
-                    `\t\t\t\t<script>${row.value.final.js}</script>\n` + 
-                  `\t\t\t</div>\n`
-                : `\t\t\t<div class="primo-content">\n` +
-                    `\t\t\t\t${row.value.html}\n` + 
-                  `\t\t\t</div>\n`
-      })
-      html += `\t\t</div>\n`
-    })
-    html += `\t</div>\n` +
-          `</section>\n`
-  })
-
-  var regex = /href=(['"])\/([\S]+)(\1)[^>\s]*/g;
-  html = html.replace(regex, "href='/$2.html'")
-
-  return buildWholePage ? await boilerplate(html) : html
-}
-
 export function buildPagePreview(content) {
   let html = ''
   content.forEach(section => {
@@ -334,13 +308,6 @@ export async function buildPageCSS(content, HTML, rawCSS, tailwindConfig) {
 
   return pageStyles
 
-}
-
-
-export async function buildPageStyles(page, site, HTML) {
-    const tailwind = JSON.stringify(getCombinedTailwindConfig(page.styles.tailwind))
-    const combinedCSS = site.styles.raw + page.styles.raw
-    return await buildPageCSS(page.content, HTML, combinedCSS, tailwind)
 }
 
 

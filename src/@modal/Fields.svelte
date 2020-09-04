@@ -14,11 +14,11 @@
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../types/components'
   import {getUniqueId} from '../utils'
 
-  import {site} from '../@stores/data'
+  import site from '../@stores/data/site'
   import pageData from '../@stores/data/pageData'
   import {editorViewDev,userRole} from '../@stores/app'
   import modal from '../@stores/app/modal'
-  import {content} from '../@stores/data/page'
+  import content from '../@stores/data/page/content'
 
   let pageFields = _.cloneDeep($pageData.fields) || []
   let siteFields = _.cloneDeep($site.fields) || []

@@ -7,7 +7,7 @@
   import {SaveButton} from '../../@components/buttons'
 
   import modal from '../../@stores/app/modal'
-  import {site} from '../../@stores/data'
+  import site from '../../@stores/data/site'
   import pageData from '../../@stores/data/pageData'
 
   import HeadEmbeds from './_HeadEmbeds.svelte'

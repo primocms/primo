@@ -4,7 +4,7 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   import modal from '../@stores/app/modal'
-  import {content} from '../@stores/data/page'
+  import content from '../@stores/data/page/content'
 
   let fullwidth = false
   let gapless = false

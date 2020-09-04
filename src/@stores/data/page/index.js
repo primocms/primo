@@ -1,24 +1,20 @@
 import _ from 'lodash'
 import { writable, get } from 'svelte/store';
 
-import content from './content'
-
 import pageData from '../pageData'
 import site from '../site'
 
 export const pageId = writable(null)
 
 pageId.subscribe(id => {
-  const newPage = _.find(get(site).pages, ['id', id || 'index'])
-  if (newPage && pageData) {
-    pageData.update(p => ({
-      ...p,
-      ...newPage
-    }))
-    content.set(newPage.content)
+  if (site) {
+    const newPage = _.find(get(site).pages, ['id', id || 'index'])
+    if (newPage && pageData) {
+      pageData.update(p => ({
+        ...p,
+        ...newPage
+      }))
+    }
   }
 })
 
-export {
-  content
-}

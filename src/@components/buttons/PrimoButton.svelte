@@ -4,7 +4,8 @@
   import {fade} from 'svelte/transition'
   import PageItem from '../../@modal/PageList/PageItem.svelte'
   import SiteButton from './SiteButton.svelte'
-  import {site, allSites} from '../../@stores/data'
+  import {allSites} from '../../@stores/data'
+  import site from '../../@stores/data/site'
   import {pageId} from '../../@stores/data/page'
   import PrimoLogo from '../../@svg/PrimoLogo.svelte'
 
@@ -84,18 +85,6 @@
     &:hover, &:focus {
       @apply bg-gray-800 transition-colors duration-200;
     }
-    &.chevron:before, &.chevron:after {
-      content: " ";
-      @apply absolute h-0 w-0 border-solid border-primored;
-      bottom: -13px;
-      pointer-events: none;
-      left: 21px;
-      border-top-color: transparent;
-      border-left-color: transparent;
-      border-right-color: transparent;
-      border-width: 7px;
-      margin-left: -7px;
-    }
   }
 
   .dropdown-heading {
@@ -107,7 +96,20 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply absolute bg-primored shadow-xl rounded overflow-scroll p-4;
+    @apply absolute bg-primored shadow-xl rounded p-4;
+
+    &:before, &:after {
+      content: " ";
+      @apply absolute h-0 w-0 border-solid border-primored;
+      top: -14px;
+      pointer-events: none;
+      left: 21px;
+      border-top-color: transparent;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      border-width: 7px;
+      margin-left: -7px;
+    }
 
     ul {
       @apply grid grid-cols-2 gap-2 mt-2 pb-4;

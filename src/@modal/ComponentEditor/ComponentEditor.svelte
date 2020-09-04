@@ -23,9 +23,10 @@
 
   import { parseHandlebars, convertFieldsToData, processStyles, createDebouncer, wrapInStyleTags } from '../../utils'
 
-  import {dependencies, site, user} from '../../@stores/data'
+  import {dependencies, user} from '../../@stores/data'
+  import site from '../../@stores/data/site'
   import pageData from '../../@stores/data/pageData'
-  import {content} from '../../@stores/data/page'
+  import content from '../../@stores/data/page/content'
   import symbols from '../../@stores/data/site/symbols'
   import {editorViewDev} from '../../@stores/app'
   import modal from '../../@stores/app/modal'

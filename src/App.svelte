@@ -8,9 +8,12 @@
 
 	const dispatch = createEventDispatcher()
 
-	import { site, tailwind, allSites} from './@stores/data'
+	import { allSites} from './@stores/data'
+	import tailwind from './@stores/data/tailwind'
+	import site from './@stores/data/site'
 	import pageData from './@stores/data/pageData'
-	import {content,pageId} from './@stores/data/page'
+	import {pageId} from './@stores/data/page'
+	import content from './@stores/data/page/content'
   import {editorViewDev, userRole} from './@stores/app'
   import modal from './@stores/app/modal'
 

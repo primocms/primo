@@ -6,11 +6,13 @@
   import {Tabs} from '../@components/misc'
   import {CodePreview} from '../@components/misc'
   import {SaveButton} from '../@components/buttons'
-  import { compileScss, processStyles, wrapInStyleTags, buildPageHTML, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../utils'
+  import { compileScss, processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../utils'
 
-  import {domainInfo,site,tailwind,getCombinedTailwindConfig} from '../@stores/data'
+  import {domainInfo} from '../@stores/data'
+  import tailwind, {getCombinedTailwindConfig} from '../@stores/data/tailwind'
+  import site from '../@stores/data/site'
   import pageData from '../@stores/data/pageData'
-  import {content} from '../@stores/data/page'
+  import content from '../@stores/data/page/content'
   import modal from '../@stores/app/modal'
 
   let pageStyles = _.cloneDeep($pageData.styles)

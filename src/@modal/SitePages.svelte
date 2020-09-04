@@ -10,7 +10,9 @@
   import ShortUniqueId from 'short-unique-id';
 
   import modal from '../@stores/app/modal'
-  import {domainInfo,site,tailwind} from '../@stores/data'
+  import {domainInfo} from '../@stores/data'
+  import tailwind from '../@stores/data/tailwind'
+  import site from '../@stores/data/site'
   import pageData from '../@stores/data/pageData'
 
   let pages = []
