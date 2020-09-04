@@ -11,7 +11,7 @@
   import ToolbarButton from './editor/ToolbarButton.svelte'
   import Doc from './editor/Doc.svelte'
 
-  import {repo,domainInfo,user} from '../../@stores/data'
+  import {domainInfo,user} from '../../@stores/data'
   import site from '../../@stores/data/site'
   import pageData from '../../@stores/data/pageData'
   import content from '../../@stores/data/page/content'
