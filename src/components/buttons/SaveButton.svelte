@@ -1,7 +1,8 @@
 <script>
-  import {Spinner} from '../misc'
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher();
+
+  import {Spinner} from '../misc'
 
   export let variants = ''
   export let type = 'button'

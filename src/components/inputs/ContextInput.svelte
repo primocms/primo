@@ -1,7 +1,3 @@
-<script>
-
-</script>
-
 <form>
   <label for="context-input">Email:</label>
   <input type="text" id="context-input" />

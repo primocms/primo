@@ -1,6 +1,5 @@
 import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
-import content from './page/content'
 import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
 import { DEFAULTS } from '../../const'
 
@@ -13,7 +12,7 @@ store.subscribe(s => {
   // if (isEqual(get(content), DEFAULTS.page.content)) {
   //   content.set(pageData.content)
   // }
-  content.set(s.content)
+  // content.set(s.content)
 })
 
 export default {

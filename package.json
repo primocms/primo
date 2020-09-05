@@ -65,7 +65,7 @@
     "firebase": "^7.16.1",
     "handlebars": "^4.7.6",
     "jszip": "^3.5.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.20",
     "lowdb": "^1.0.0",
     "mousetrap": "^1.6.5",
     "object-path": "^0.11.4",

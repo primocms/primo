@@ -144,33 +144,10 @@ export default {
       }))
     }
   },
-  saveStyles: async (styles) => {
-    store.update(s => ({ ...s, styles }))
-  },
-  savePageSettings: (settings) => {
-    const { pageId } = get(domainInfo)
-    store.update(s => ({ 
-      ...s,  
-      pages: s.pages.map(page => page.id === pageId ? ({
-          ...page,
-          settings
-      }) : page)
-    }))
-  },
   save: (data = {}) => {
     store.update(s => ({ ...s, ...data }))
     // saveToSite(data)
   },
-  saveContent: (content) => {
-    const { page:pageId } = get(domainInfo)
-    store.update(s => ({ 
-      ...s,  
-      pages: s.pages.map(page => page.id === pageId ? ({
-          ...page,
-          content
-      }) : page)
-    }))
-  }
 };
 
 

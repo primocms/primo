@@ -2,12 +2,12 @@
   import {flatten} from 'lodash'
   import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
-  import PageItem from '../../modal/PageList/PageItem.svelte'
+  import PageItem from '../../views/modal/PageList/PageItem.svelte'
   import SiteButton from './SiteButton.svelte'
   import {allSites} from '../../stores/data'
   import site from '../../stores/data/site'
   import {pageId} from '../../stores/data/page'
-  import PrimoLogo from '../svg/PrimoLogo.svelte'
+  import PrimoLogo from '../../components/svg/PrimoLogo.svelte'
 
   const dispatch = createEventDispatcher()
 

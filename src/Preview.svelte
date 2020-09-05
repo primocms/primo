@@ -4,7 +4,7 @@
   import { fade } from 'svelte/transition'
   import {WebDeveloper} from './components/svg';
   import {wrapInStyleTags} from './utils'
-  import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './screens/Page/pageUtils.js'
+  import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './views/editor/pageUtils.js'
   import store from './libraries/store.js'
 
   let tailwindStyles = store.get('tailwind')

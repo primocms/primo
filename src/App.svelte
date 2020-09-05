@@ -3,8 +3,8 @@
   import { Router, Link, Route } from "svelte-routing";
 	import { ax } from './utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
-	import Page from './screens/Page/Page.svelte'
-  import Modal from './modal/ModalContainer.svelte'
+	import Page from './views/editor/Page.svelte'
+  import Modal from './views/modal/ModalContainer.svelte'
 
 	const dispatch = createEventDispatcher()
 
