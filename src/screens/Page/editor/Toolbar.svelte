@@ -6,10 +6,10 @@
   import { onMount, createEventDispatcher, getContext } from 'svelte'
   import { fade, slide } from "svelte/transition";
   import ToolbarButton from "./ToolbarButton.svelte";
-  import {PrimoButton,MobileNavButton} from '../../../@components/buttons'
+  import {PrimoButton,MobileNavButton} from '../../../components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {editorViewDev,userRole,hideReleaseNotes} from '../../../@stores/app'
-  import modal from '../../../@stores/app/modal'
+  import {editorViewDev,userRole,hideReleaseNotes} from '../../../stores/app'
+  import modal from '../../../stores/app/modal'
 
   const dispatch = createEventDispatcher()
   

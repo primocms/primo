@@ -4,7 +4,7 @@
   import ContentNode from './editor/Layout/ContentNode.svelte'
   import ComponentNode from './editor/Layout/ComponentNode.svelte'
 
-  import content from '../../@stores/data/page/content'
+  import content from '../../stores/data/page/content'
 
 
 

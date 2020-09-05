@@ -4,18 +4,18 @@
   import {fade} from 'svelte/transition'
   import Editor from './Editor.svelte'
   import View from './View.svelte'
-  import {Button} from '../../@components/buttons'
+  import {Button} from '../../components/buttons'
   import {getHeadStyles, setCustomScripts, setHeadScript, getPageLibraries, setPageJsLibraries} from './pageUtils.js'
-  import {FeedbackForm,Spinner} from '../../@components/misc'
+  import {FeedbackForm,Spinner} from '../../components/misc'
   import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from '../../utils'
 
-  import {dependencies,domainInfo,user} from '../../@stores/data'
-  import tailwind, {loadingTailwind} from '../../@stores/data/tailwind'
-  import site from '../../@stores/data/site'
-  import pageDataStore from '../../@stores/data/pageData'
-  import {pageId as pageIdStore} from '../../@stores/data/page'
-  import content from '../../@stores/data/page/content'
-  import modal from '../../@stores/app/modal'
+  import {dependencies,domainInfo,user} from '../../stores/data'
+  import tailwind, {loadingTailwind} from '../../stores/data/tailwind'
+  import site from '../../stores/data/site'
+  import pageDataStore from '../../stores/data/pageData'
+  import {pageId as pageIdStore} from '../../stores/data/page'
+  import content from '../../stores/data/page/content'
+  import modal from '../../stores/app/modal'
 
   const dispatch = createEventDispatcher()
 

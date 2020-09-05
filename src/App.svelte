@@ -4,19 +4,19 @@
 	import { ax } from './utils'
 	import { onMount, createEventDispatcher, setContext } from 'svelte'
 	import Page from './screens/Page/Page.svelte'
-  import Modal from './@modal/ModalContainer.svelte'
+  import Modal from './modal/ModalContainer.svelte'
 
 	const dispatch = createEventDispatcher()
 
-	import { allSites} from './@stores/data'
-	import tailwind from './@stores/data/tailwind'
-	import site from './@stores/data/site'
-	import symbols from './@stores/data/site/symbols'
-	import pageData from './@stores/data/pageData'
-	import {pageId} from './@stores/data/page'
-	import content from './@stores/data/page/content'
-  import {editorViewDev, userRole} from './@stores/app'
-  import modal from './@stores/app/modal'
+	import { allSites} from './stores/data'
+	import tailwind from './stores/data/tailwind'
+	import site from './stores/data/site'
+	import symbols from './stores/data/site/symbols'
+	import pageData from './stores/data/pageData'
+	import {pageId} from './stores/data/page'
+	import content from './stores/data/page/content'
+  import {editorViewDev, userRole} from './stores/app'
+  import modal from './stores/app/modal'
 
 	export let data
 	export let functions

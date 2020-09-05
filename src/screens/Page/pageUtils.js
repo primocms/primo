@@ -1,6 +1,6 @@
 import { get } from 'svelte/store'
 import { convertFieldsToData, parseHandlebars } from '../../utils'
-import site from '../../@stores/data/site'
+import site from '../../stores/data/site'
 
 
 export function setHeadScript(js) {

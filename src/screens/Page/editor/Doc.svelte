@@ -8,12 +8,12 @@
   import Column from './Layout/Column.svelte'
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
-  import {focusedNode} from '../../../@stores/app'
-  import site from '../../../@stores/data/site'
-  import pageData from '../../../@stores/data/pageData'
-  import content from '../../../@stores/data/page/content'
+  import {focusedNode} from '../../../stores/app'
+  import site from '../../../stores/data/site'
+  import pageData from '../../../stores/data/pageData'
+  import content from '../../../stores/data/page/content'
   const dispatch = createEventDispatcher()
-  import {IconButton} from '../../../@components/misc'
+  import {IconButton} from '../../../components/misc'
 
   import type {Row,Column as ColumnType,Section as SectionType} from './Layout/LayoutTypes'
 

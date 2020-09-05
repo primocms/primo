@@ -2,10 +2,10 @@
   import { onMount, onDestroy } from 'svelte'
   import _ from 'lodash'
   import { fade } from 'svelte/transition'
-  import {WebDeveloper} from './@svg';
+  import {WebDeveloper} from './svg';
   import {wrapInStyleTags} from './utils'
   import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './screens/Page/pageUtils.js'
-  import store from './@libraries/store.js'
+  import store from './libraries/store.js'
 
   export let previewId
 

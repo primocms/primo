@@ -5,11 +5,11 @@ import { get } from 'svelte/store'
 import ShortUniqueId from "short-unique-id";
 import objectPath from 'object-path'
 
-import domainInfo from './@stores/data/domainInfo'
-import user from './@stores/data/user'
-import {getCombinedTailwindConfig} from './@stores/data/tailwind'
-import site from './@stores/data/site'
-import pageData from './@stores/data/pageData'
+import domainInfo from './stores/data/domainInfo'
+import user from './stores/data/user'
+import {getCombinedTailwindConfig} from './stores/data/tailwind'
+import site from './stores/data/site'
+import pageData from './stores/data/pageData'
 
 
 const functionsServer = (endpoint) => get(domainInfo).onDev ? `http://localhost:9000/primo-d4041/us-central1/${endpoint}` : `https://us-central1-primo-d4041.cloudfunctions.net/${endpoint}`

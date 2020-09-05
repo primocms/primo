@@ -4,8 +4,8 @@
 
   import {fade} from 'svelte/transition'
 
-  import {createEditor} from '../../../../@libraries/prosemirror/prosemirror.js'
-  import {focusedNode} from '../../../../@stores/app'
+  import {createEditor} from '../../../../libraries/prosemirror/prosemirror.js'
+  import {focusedNode} from '../../../../stores/app'
   import type {Content} from './LayoutTypes'
 
   export let row:Content
