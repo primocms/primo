@@ -22,8 +22,11 @@
   setContext('editable', true)
 
   export let pageId : string
+  $: pageId = pageId === 'index.html' ? 'index' : pageId // pageId has .html on desktop
 
-	$: pageIdStore.set(pageId === 'index.html' ? 'index' : pageId) // pageId has .html on desktop
+	$: pageIdStore.set(pageId) 
+  $: pageDataStore.set(site.getPage(pageId))
+  $: content.set($pageDataStore.content)
 
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')

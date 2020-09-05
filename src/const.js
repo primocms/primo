@@ -73,7 +73,7 @@ function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
 
-export const createPage = (id, title = 'Home Page') => ({
+export const createPage = (id = getUniqueId(), title) => ({
   id,
   title,
   content: [
@@ -122,7 +122,7 @@ export const createPage = (id, title = 'Home Page') => ({
 export const createSite = () => ({
   id: getUniqueId(),
   label: '',
-  pages: [ createPage('index') ],
+  pages: [ createPage('index', 'Home Page') ],
   dependencies: {
     headEmbed: '',
     libraries: []

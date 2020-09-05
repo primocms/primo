@@ -9,6 +9,7 @@
   import {Spinner,Card,Countdown} from '../../components/misc'
   import PageItem from './PageList/PageItem.svelte'
 
+  import {createPage} from '../../const'
   import modal from '../../stores/app/modal'
   import {domainInfo} from '../../stores/data'
   import tailwind from '../../stores/data/tailwind'
@@ -24,53 +25,11 @@
     pages = pages.map(p => ({ key: getUniqueId(), ...p })) // Add keys for templating (if one doesn't exist)
   }
 
-  async function createPage(form) {
+  async function submitForm(form) {
     const inputs = Object.values(form.target)
     const [ title, url ] = inputs.map(f => f.value)
     const isEmpty = inputs[2].classList.contains('selected')
-    const newPage = isEmpty ? {
-      id: url,
-      title,
-      content: [
-        {
-          id: getUniqueId(),
-          width: 'contained',
-          columns: [
-            {
-              id: getUniqueId(),
-              size: 'w-full',
-              rows: [
-                {
-                  id: getUniqueId(),
-                  type: 'content',
-                  value: {
-                    html: '<p><br></p>'
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      styles: {
-        raw: '',
-        final: '',
-        tailwind: '{  theme: {    container: {      center: true    }  },  variants: {}}'
-      },
-      dependencies: {
-        headEmbed : '',
-        libraries: [],
-        // customScripts: [],
-      },
-      settings: {
-        javascript: '',
-        identity : {
-          title, 
-          url,
-          description: ''
-        }
-      }
-    } : duplicatePage($pageData, title, url) 
+    const newPage = isEmpty ? createPage(url, title) : duplicatePage($pageData, title, url) 
     site.pages.add(newPage)
     creatingPage = false
     pageUrl = ''
@@ -229,7 +188,7 @@
   </PrimaryButton>
   {:else}
     <Card variants="p-4">
-      <form on:submit|preventDefault={createPage} in:fade={{ duration: 100 }}>
+      <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
         <TextInput id="page-title" autofocus={true} variants="mb-4" label="Page Label" placeholder="About Us" />
         <TextInput id="page-url" variants="mb-4" label="Page URL" prefix="/" on:input={validateUrl} bind:value={pageUrl} placeholder="about-us" />
         <SelectOne 

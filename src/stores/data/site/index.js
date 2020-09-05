@@ -1,3 +1,4 @@
+import {find} from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
 import ShortUniqueId from 'short-unique-id';
 import { tailwindConfig } from '../../../const'
@@ -101,6 +102,7 @@ export default {
       }))
     }
   },
+  getPage: (pageId) => find(site.pages, ['id', pageId]),
   saveCurrentPage: (newData) => {
     console.log('saving current page', newData, get(pageId))
     store.update(s => ({
