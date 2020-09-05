@@ -44,7 +44,6 @@
   </div>
   {#if activeTab === 'html'}
     <CodeMirror 
-      {height}
       bind:value={html}
       mode={{
         name: 'handlebars',
@@ -57,7 +56,6 @@
     />
   {:else if activeTab === 'css'}
     <CodeMirror 
-      {height}
       bind:value={css}
       mode={'css'}
       {disabled}
@@ -66,7 +64,6 @@
     />
   {:else}
     <CodeMirror 
-      {height}
       bind:value={js}
       mode={'javascript'}
       {disabled}

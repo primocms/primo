@@ -7,7 +7,7 @@
   import {allSites} from '../../stores/data'
   import site from '../../stores/data/site'
   import {pageId} from '../../stores/data/page'
-  import PrimoLogo from '../../svg/PrimoLogo.svelte'
+  import PrimoLogo from '../svg/PrimoLogo.svelte'
 
   const dispatch = createEventDispatcher()
 
