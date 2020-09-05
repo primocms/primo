@@ -10,7 +10,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "primo"
+    "primo",
+    "ide",
+    "cms"
   ],
   "author": "Mateo Morris",
   "license": "ISC",

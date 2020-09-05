@@ -51,6 +51,7 @@
       readOnly: disabled,
       ...CodeMirrorOptions,
       // set values
+      autofocus: true,
       theme: 'vscode-dark',
       lineNumbers: true,
       gutter: true,
