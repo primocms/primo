@@ -60,7 +60,7 @@
     }
   }
   .active {
-    @apply opacity-25 bg-codeblack cursor-default pointer-events-none;
+    @apply cursor-default pointer-events-none;
   }
   iframe {
     @apply pointer-events-none opacity-0 transition-opacity duration-200 bg-white;

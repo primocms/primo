@@ -44,6 +44,7 @@
 <style global>
   .primo-content {
     outline: none;
+    caret-color: rgb(248,68,73);
   }
   .primo-content li p {
     display: inline-block;

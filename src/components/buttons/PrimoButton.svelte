@@ -48,7 +48,7 @@
       <p class="dropdown-heading">sites</p>
       <ul>
         {#each $allSites as siteItem}
-          <li class="site-item">
+          <li class="site-item" class:active={siteItem.id === $site.id}>
             <SiteButton active={siteItem.id === $site.id} site={siteItem} isLink={showDashboardLink}/>
           </li>
         {/each}
@@ -126,6 +126,9 @@
   .site-item {
     @apply shadow-lg relative overflow-hidden;
     height: 15vh;
+    &.active {
+      outline: 5px solid rgb(30,30,30);
+    }
   }
 
 </style>
