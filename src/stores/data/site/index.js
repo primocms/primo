@@ -1,90 +1,14 @@
 import {find} from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
 import ShortUniqueId from 'short-unique-id';
-import { tailwindConfig } from '../../../const'
+import { tailwindConfig, createSite } from '../../../const'
 
 import domainInfo from '../domainInfo'
 import { pageId } from '../page'
 import allSites from '../allSites'
 
 let site
-const store = writable({
-  pages: [
-    {
-      id: getUniqueId(),
-      title: 'New Page',
-      content: [
-        {
-          id: getUniqueId(),
-          width: 'contained',
-          columns: [
-            {
-              id: getUniqueId(),
-              size: 'w-full',
-              rows: [
-                {
-                  id: getUniqueId(),
-                  type: 'content',
-                  value: {
-                    html: '<p><br></p>'
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      styles: {
-        raw: '',
-        final: '',
-        tailwind: '{  theme: {    container: {      center: true    }  },  variants: {}}'
-      },
-      dependencies: {
-        headEmbed : '',
-        libraries: [],
-        // customScripts: [],
-      },
-      settings: {
-        javascript: '',
-        identity : {
-          title: '', 
-          url: '',
-          description: ''
-        }
-      },
-      wrapper: {
-        raw: {
-          head: '',
-          above: '',
-          below: ''
-        },
-        final: {
-          head: '',
-          above: '',
-          below: ''
-        }
-      },
-      fields: []
-    },
-  ],
-  fields: [],
-  styles: {
-    raw: '',
-    final: '',
-    tailwind: tailwindConfig
-  },
-  wrapper: {
-    head: {
-      raw: '',
-      final: ''
-    },
-    below: {
-      raw: '',
-      final: ''
-    }
-  },
-  symbols: [],
-})
+const store = writable(createSite())
 store.subscribe(s => {
   site = s
   allSites.saveSite(site)

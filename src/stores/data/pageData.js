@@ -1,10 +1,10 @@
 import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
 import { getAllFields, convertFieldsToData, parseHandlebars } from '../../utils'
-import { DEFAULTS } from '../../const'
+import { createPage } from '../../const'
 
 let pageData
-const store = writable(DEFAULTS.page)
+const store = writable(createPage())
 
 store.subscribe(s => {
   pageData = s

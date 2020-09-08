@@ -7,7 +7,7 @@ import modal from './src/stores/app/modal'
 import site from './src/stores/data/site'
 import pageData from './src/stores/data/pageData'
 import {pageId} from './src/stores/data/page'
-import { DEFAULTS } from './src/const'
+import { DEFAULTS, createPage, createSite } from './src/const'
 
 import * as utils from './src/utils'
 import * as components from './src/components'
@@ -22,6 +22,8 @@ export {
   components,
   site,
   pageData,
-  DEFAULTS
+  DEFAULTS,
+  createPage,
+  createSite
 }
 export default Primo
