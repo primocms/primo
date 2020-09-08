@@ -72,6 +72,7 @@
 
 <svelte:head>
   {@html $pageDataStore.wrapper.head.final}
+  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
   {@html pageStyles}
@@ -100,12 +101,12 @@
 />
 
 
-{#if $loadingTailwind}
+<!-- {#if $loadingTailwind}
   <div class="flex" id="loading" transition:fade={{ duration: 200 }}>
     <span class="text-white text-xs mr-2">Loading Tailwind styles</span>
     <Spinner variants="text-white" size="xs"/>
   </div>
-{/if}
+{/if} -->
 
 <style>
 
