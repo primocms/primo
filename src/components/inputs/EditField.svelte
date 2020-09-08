@@ -14,7 +14,7 @@
 
 
 <div class="field-container {variants}" in:fade={{ duration: 100 }}>
-  <div class="rounded-sm border border-gray-100">
+  <div class="rounded-sm border border-gray-100 flex items-center px-2">
     <slot name="type"></slot>
   </div>
   <label class="flex flex-col flex-1">
