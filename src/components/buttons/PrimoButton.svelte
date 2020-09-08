@@ -62,7 +62,11 @@
     </nav>
     <a class="dashboard-button flex flex-col my-2" href="http://discuss.primo.so/">
       <i class="fas fa-users mb-1"></i>
-      <span>Get help</span>
+      <span>Discuss</span>
+    </a>
+    <a class="dashboard-button flex flex-col my-2" href="https://github.com/primo-app/primo/issues">
+      <i class="fab fa-github mb-1"></i>
+      <span>Report a Bug</span>
     </a>
     {#if showDashboardLink}
       <button class="dashboard-button my-2" on:click={() => dispatch('signOut')}>
@@ -96,7 +100,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply absolute bg-primored shadow-xl rounded p-4;
+    @apply overflow-scroll absolute bg-primored shadow-xl rounded p-4;
 
     &:before, &:after {
       content: " ";
