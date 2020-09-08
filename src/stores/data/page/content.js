@@ -4,6 +4,7 @@ import ShortUniqueId from 'short-unique-id';
 import {focusedNode} from '../../app'
 import site from '../site'
 import {DEFAULTS} from '../../../const'
+import {hydrateAllComponents,updateInstancesInContent} from '../helpers/components'
 
 let content = DEFAULTS.page.content
 const store = writable(DEFAULTS.page.content);
@@ -192,81 +193,6 @@ function insertSection(section, position) {
     store.set(contentWithNewSection)
   } 
 
-}
-
-async function hydrateAllComponents(content) {
-  return await Promise.all(
-    content.map(async section => ({
-      ...section,
-      columns: await Promise.all(
-        section.columns.map(async column => ({
-        ...column,
-        rows: await Promise.all(
-          column.rows.map(async row => {
-            if (row.type === 'content') return row
-            else return hydrateComponent(row)
-          })
-        )
-      })))
-    }))
-  )
-}
-
-async function updateInstancesInContent(symbol, content) {
-  return Promise.all(content.map(async section => {
-    return {
-      ...section,
-      columns: await Promise.all(section.columns.map(async column => {
-          return {
-            ...column,
-            rows: await Promise.all(column.rows.map(async instance => { 
-              if (instance.type !== 'component' || instance.symbolID !== symbol.id) return instance
-
-              // Update instance from Symbol's HTML, CSS, and JS & Instance's data
-
-              // Replace instance's fields with symbol's fields while preserving instance's data
-              const symbolFields = _.cloneDeep(symbol.value.raw.fields)
-              const instanceFields = instance.value.raw.fields
-              const mergedFields = _.unionBy(symbolFields, instanceFields, "id");
-
-              instanceFields.forEach(field => {
-                let newFieldIndex = _.findIndex(mergedFields, ['id',field.id])
-                mergedFields[newFieldIndex]['value'] = field.value
-              })
-
-              const allFields = getAllFields(instance)
-              const data = await convertFieldsToData(allFields, 'all')
-
-              const symbolRawHTML = symbol.value.raw.html
-              const instanceFinalHTML = await parseHandlebars(symbolRawHTML, data)
-
-              const symbolFinalCSS = symbol.value.final.css
-              const instanceFinalCSS = symbolFinalCSS.replace(RegExp(`${symbol.id}`, 'g'),`${instance.id}`)
-
-              return {
-                ...instance,
-                value: {
-                  ...instance.value,
-                  raw: {
-                    ...instance.value.raw,
-                    fields: mergedFields,
-                    css: symbol.value.raw.css,
-                    js: symbol.value.raw.js,
-                    html: symbolRawHTML,
-                  },
-                  final: {
-                    ...symbol.value.final,
-                    css: instanceFinalCSS,
-                    html: instanceFinalHTML,
-                    js: symbol.value.final.js
-                  }
-                }
-              }
-            }))
-          }
-      }))
-    }
-  }))
 }
 
 function getUniqueId() {
