@@ -5,7 +5,7 @@
   import {PrimaryButton} from '../../../components/buttons'
 
   import Container from './ComponentContainer.svelte'
-  import {MODAL_TYPES} from '../../../const'
+  import {MODAL_TYPES, createSymbol} from '../../../const'
   import { wrapInStyleTags, getUniqueId } from '../../../utils'
 
   import {editorViewDev,userRole} from '../../../stores/app'
@@ -45,23 +45,7 @@
   }
 
   async function addSymbol() {
-    const symbol = {
-      type: 'component',
-      id: getUniqueId(),
-      value: {
-        raw: {
-          css: '',
-          html: '',
-          js: '',
-          fields: []
-        },
-        final: {
-          css: '',
-          html: '',
-          js: '',
-        }
-      }
-    }
+    const symbol = createSymbol()
     editSymbol(symbol)
   }
 

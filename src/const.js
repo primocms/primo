@@ -68,6 +68,23 @@ export const pageStyles = `\
   }
 }`
 
+export const createSymbol = () => ({
+  type: 'component',
+  id: getUniqueId(),
+  value: {
+    raw: {
+      css: '',
+      html: '',
+      js: '',
+      fields: []
+    },
+    final: {
+      css: '',
+      html: '',
+      js: '',
+    }
+  }
+})
 
 function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
