@@ -77,7 +77,7 @@
       dispatch('change')
     })
     Editor.on("gutterClick", foldHTML);
-    function foldHTML(cm, where) { console.log(cm, where); cm.foldCode(where, CodeMirror.tagRangeFinder); }
+    function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
   })
 
   $: {
