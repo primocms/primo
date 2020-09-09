@@ -20,7 +20,6 @@ export default {
   save: (property, value) => {
     store.update(s => ({
       ...s, 
-      content: get(content), // prevent overwriting unsaved content
       [property]: value
     }))
   },

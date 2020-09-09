@@ -193,6 +193,7 @@
   function applyFields() {
     site.saveCurrentPage({ fields: pageFields })
     site.save({ fields: siteFields })
+    pageData.save('fields', pageFields)
     pageData.hydrateWrapper()
     content.hydrateComponents()
     site.pages.hydrateComponents()
