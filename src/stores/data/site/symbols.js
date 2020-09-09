@@ -31,6 +31,7 @@ const actions = {
   remove: (symbolID) => {
     const newLibrary = symbols.filter(s => s.id !== symbolID)
     store.set(newLibrary)
+    return symbols
   },
   get: (symbolID) => find(symbols, ['id', symbolID]),
   subscribe: store.subscribe,

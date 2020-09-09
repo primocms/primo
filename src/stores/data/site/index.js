@@ -28,7 +28,6 @@ export default {
   },
   getPage: (pageId) => find(site.pages, ['id', pageId]),
   saveCurrentPage: (newData) => {
-    console.log('saving current page', newData, get(pageId))
     store.update(s => ({
       ...s,
       pages: s.pages.map(p => p.id === get(pageId) ? ({

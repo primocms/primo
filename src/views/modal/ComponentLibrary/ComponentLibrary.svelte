@@ -66,7 +66,8 @@
   }
 
   async function deleteSymbol(symbol) {
-    symbols.remove(symbol.id)
+    const newSymbols = symbols.remove(symbol.id)
+    site.save({ symbols: newSymbols })
   }
 
   function addComponentToPage(symbol) {
@@ -113,7 +114,7 @@
 {:else if $symbols.length === 0}
   <p class="p-48 text-center">
     {#if $userRole === 'developer'}
-      This is where you can add components which you can reuse across your site (we call them Symbols). You'll need to be in Developer mode to make a Symbol.
+      This is where your reusable components go (we call them Symbols). You'll need to be in Developer mode to make a Symbol.
     {:else}
       This is where your reusable components go (we call them Symbols), but you'll need the site developer to make some first.
     {/if}
