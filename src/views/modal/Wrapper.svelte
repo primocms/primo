@@ -44,7 +44,7 @@
   function getAllFields() {
     const siteFields = _.cloneDeep($site.fields)
     const pageFields = _.cloneDeep($pageData.fields)
-    const allFields = _.unionBy(siteFields, pageFields, "key");
+    const allFields = _.unionBy(pageFields, siteFields, "key");
     return allFields
   }
 

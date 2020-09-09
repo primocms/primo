@@ -71,7 +71,7 @@
     const siteFields = _.cloneDeep($site.fields)
     const pageFields = _.cloneDeep($pageData.fields)
     // const componentFields = localComponent.value.raw.fields;
-    const allFields = _.unionBy(siteFields, pageFields, fields, "key");
+    const allFields = _.unionBy(fields, pageFields, siteFields, "key");
     return allFields
   }
 
@@ -479,6 +479,9 @@
     width: calc(100% - 1rem);
     @apply ml-4 text-sm py-1 mb-2 mt-2 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
     &:hover {
+      @apply bg-gray-300;
+    }
+    &:focus {
       @apply bg-gray-200;
     }
   }
