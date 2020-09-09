@@ -14,6 +14,7 @@
 	import symbols from './stores/data/site/symbols'
 	import pageData from './stores/data/pageData'
 	import {pageId} from './stores/data/page'
+	import content from './stores/data/page/content'
   import {editorViewDev, userRole} from './stores/app'
   import modal from './stores/app/modal'
 
@@ -41,8 +42,11 @@
 
 	$: symbols.set(data.symbols)
 
-	$: {
-		const currentPage = find($site.pages, ['id', $pageId || 'index'])
+	$: setPage($pageId, data)
+
+	function setPage(pageId, site) {
+		const currentPage = find(site.pages, ['id', pageId || 'index'])
+		content.set(currentPage.content)
 		pageData.update(s => ({
 			...s, 
 			...currentPage
@@ -50,6 +54,7 @@
 
 		tailwind.setInitial()
 	}
+
 
 </script>
 

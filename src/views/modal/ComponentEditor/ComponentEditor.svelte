@@ -30,6 +30,7 @@
   import symbols from '../../../stores/data/site/symbols'
   import {editorViewDev} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
+  import {createComponent} from '../../../const'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000)
@@ -37,24 +38,7 @@
 
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../../types/components'
 
-  export let component:Component = {
-    type: 'component',
-    id: getUniqueId(),
-    symbolID: null,
-    value: {
-      raw: {
-        html: '',
-        css: '',
-        js: '',
-        fields: []
-      },
-      final: {
-        html: '',
-        css: '',
-        js: ''
-      }
-    }
-  }
+  export let component:Component = createComponent()
   export let button;
 
   let localComponent:Component = _.cloneDeep(component)
@@ -147,12 +131,15 @@
         label: `Save ${symbol.title || 'Symbol'}`,
         onclick: async (symbol) => {
           loading = true
-          await Promise.all([
+          const [ newSymbols, newContent ] = await Promise.all([
             symbols.place(symbol),
             content.updateInstances(symbol),
             // updateInstancesInDomain(symbol), // TODO
           ])
-          site.save({ symbols: $symbols })
+          site.save({ symbols: newSymbols })
+          site.saveCurrentPage({
+            content: newContent
+          })
           modal.hide()
         }
       }

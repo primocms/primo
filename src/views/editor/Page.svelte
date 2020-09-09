@@ -16,6 +16,7 @@
   import {pageId as pageIdStore} from '../../stores/data/page'
   import content from '../../stores/data/page/content'
   import modal from '../../stores/app/modal'
+  import {DEFAULTS} from '../../const'
 
   const dispatch = createEventDispatcher()
 
@@ -23,10 +24,7 @@
 
   export let pageId : string
   $: pageId = pageId === 'index.html' ? 'index' : pageId // pageId has .html on desktop
-
 	$: pageIdStore.set(pageId) 
-  $: pageDataStore.set(site.getPage(pageId))
-  $: content.set($pageDataStore.content)
 
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')

@@ -68,6 +68,25 @@ export const pageStyles = `\
   }
 }`
 
+export const createComponent = () => ({
+  type: 'component',
+  id: getUniqueId(),
+  symbolID: null,
+  value: {
+    raw: {
+      html: '',
+      css: '',
+      js: '',
+      fields: []
+    },
+    final: {
+      html: '',
+      css: '',
+      js: ''
+    }
+  }
+})
+
 export const createSymbol = () => ({
   type: 'component',
   id: getUniqueId(),

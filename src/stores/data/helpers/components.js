@@ -106,14 +106,18 @@ export async function updateInstancesInContent(symbol, content) {
       columns: await Promise.all(section.columns.map(async column => {
           return {
             ...column,
-            rows: await Promise.all(column.rows.map(async instance => { 
-              if (instance.type !== 'component' || instance.symbolID !== symbol.id) return instance
+            rows: await Promise.all(column.rows.map(async row => { 
+              console.log({
+                row,
+                symbol
+              })
+              if (row.type !== 'component' || row.symbolID !== symbol.id) return row
 
-              // Update instance from Symbol's HTML, CSS, and JS & Instance's data
+              // Update row from Symbol's HTML, CSS, and JS & Instance's data
 
-              // Replace instance's fields with symbol's fields while preserving instance's data
+              // Replace row's fields with symbol's fields while preserving row's data
               const symbolFields = _.cloneDeep(symbol.value.raw.fields)
-              const instanceFields = instance.value.raw.fields
+              const instanceFields = row.value.raw.fields
               const mergedFields = _.unionBy(symbolFields, instanceFields, "id");
 
               instanceFields.forEach(field => {
@@ -121,21 +125,21 @@ export async function updateInstancesInContent(symbol, content) {
                 mergedFields[newFieldIndex]['value'] = field.value
               })
 
-              const allFields = getAllFields(instance)
+              const allFields = getAllFields(row)
               const data = await convertFieldsToData(allFields, 'all')
 
               const symbolRawHTML = symbol.value.raw.html
               const instanceFinalHTML = await parseHandlebars(symbolRawHTML, data)
 
               const symbolFinalCSS = symbol.value.final.css
-              const instanceFinalCSS = symbolFinalCSS.replace(RegExp(`${symbol.id}`, 'g'),`${instance.id}`)
+              const instanceFinalCSS = symbolFinalCSS.replace(RegExp(`${symbol.id}`, 'g'),`${row.id}`)
 
-              return {
-                ...instance,
+              const updatedComponent = {
+                ...row,
                 value: {
-                  ...instance.value,
+                  ...row.value,
                   raw: {
-                    ...instance.value.raw,
+                    ...row.value.raw,
                     fields: mergedFields,
                     css: symbol.value.raw.css,
                     js: symbol.value.raw.js,
@@ -149,6 +153,8 @@ export async function updateInstancesInContent(symbol, content) {
                   }
                 }
               }
+
+              return updatedComponent
             }))
           }
       }))

@@ -41,8 +41,9 @@ export default {
     }
   },
   updateInstances: async (symbol) => {
-    const newContent = await updateInstancesInContent(symbol, get(store))
+    const newContent = await updateInstancesInContent(symbol, content)
     store.set(newContent)
+    return newContent
   },
   insertSection,
   deleteSection: (sectionId) => {
@@ -54,7 +55,7 @@ export default {
 
 // Helpers
 function getRow(id) {
-  const rows = _.flattenDeep(get(store).map(section => section.columns.map(column => column.rows)))
+  const rows = _.flattenDeep(content.map(section => section.columns.map(column => column.rows)))
   return _.find(rows, ['id', id])
 }
 
@@ -86,7 +87,6 @@ function insertComponent(component) {
       }))
     })))
   } else if (content.length > 0) {
-    const content = get(store)
     const lastSection = content.slice(-1)[0]
     const lastColumn = lastSection.columns.slice(-1)[0]
     store.update(content => content.map(section => section.id === lastSection.id ? ({
@@ -183,7 +183,6 @@ function insertSection(section, position) {
   if (!focusedSection) {
     store.update(content => [ ...content, newSection ])
   } else {
-    const content = get(store)
     const indexOfFocusedSection = _.findIndex(content, ['id', focusedSection.id])
     const contentWithNewSection = [ 
       ...content.slice(0, indexOfFocusedSection+1),
