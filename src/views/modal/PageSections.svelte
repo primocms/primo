@@ -48,7 +48,7 @@
   <button on:click={() => gapless = !gapless} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={gapless}>Gapless</button>
 </div>
 {#each sections as columns}
-  <article class="my-2" transition:fade={{ delay: 250, duration: 200 }}>
+  <article class="my-2 shadow" transition:fade={{ delay: 250, duration: 200 }}>
     <div class="flex justify-end">
       <button on:click={() => selectSection(columns)} class="add-to-page">
         <i class="fas fa-plus-circle"></i>

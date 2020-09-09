@@ -262,7 +262,7 @@
             </EditField>
           {/each}
         {/if}
-        <button class="button is-fullwidth" on:click={() => addSubField(field.id)} {disabled}>Add Subfield</button>
+        <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
       {:else if field.type === 'repeater'}
         {#if field.fields}
           {#each field.fields as subfield}
@@ -277,7 +277,7 @@
             </EditField>
           {/each}
         {/if}
-        <button class="button is-fullwidth" on:click={() => addSubField(field.id)} {disabled}>Add Subfield</button>
+        <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
       {:else if field.type === 'message'}
         <textarea {disabled} rows="3" bind:value={field.value} class="w-full border border-solid border-gray-200 rounded"></textarea>
       {/if}
@@ -329,9 +329,9 @@
                   <span class="text-xs font-bold">{subfield.label}</span>
                   <input type="checkbox" bind:checked={item[subfield.key]} on:input={() => updateHtmlWithFieldData('static')}>
                 </label>
-                <label slot="content">
+                <label slot="content" class="flex flex-col mb-2">
                   <span class="text-xs font-bold">{subfield.label}</span>
-                  <textarea class="textarea is-medium" bind:value={item[subfield.key]} on:input={() => updateHtmlWithFieldData('static')}></textarea>
+                  <textarea class="p-2" bind:value={item[subfield.key]} on:input={() => updateHtmlWithFieldData('static')}></textarea>
                 </label>
                 <div slot="image">
                   <ImageField 
@@ -393,6 +393,16 @@
     }
     &[disabled] {
       @apply bg-gray-500 cursor-not-allowed;
+    }
+  }
+  .field-button.subfield-button {
+    width: calc(100% - 1rem);
+    @apply ml-4 text-sm py-1 mb-2 mt-2 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
+    &:hover {
+      @apply bg-gray-300;
+    }
+    &:focus {
+      @apply bg-gray-200;
     }
   }
 </style>

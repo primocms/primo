@@ -1,4 +1,5 @@
 <script>
+  import {findIndex} from 'lodash'
   import pluralize from 'pluralize'
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher() 
@@ -25,7 +26,7 @@
   }
 
   function moveRepeaterItem(item, direction) {
-    const indexOfItem = _.findIndex(field.value, ['id', item.id])
+    const indexOfItem = findIndex(field.value, ['id', item.id])
     const withoutItem = field.value.filter(i => i.id !== item.id)
     if (direction === 'up') {
       field.value = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
@@ -33,6 +34,8 @@
       field.value = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
     }
   }
+
+  $: console.log(field)
 </script>
 
 <Card variants="p-2 pb-4">
@@ -52,7 +55,7 @@
         <span class="text-xs font-bold">{subfield.label}</span>
         <input type="checkbox" bind:checked={item[subfield.key]} on:input>
       </label>
-      <label slot="content">
+      <label class="flex flex-col mb-2" slot="content">
         <span class="text-xs font-bold">{subfield.label}</span>
         <textarea class="textarea is-medium" bind:value={item[subfield.key]} on:input></textarea>
       </label>
