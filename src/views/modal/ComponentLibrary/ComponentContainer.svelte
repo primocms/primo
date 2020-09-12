@@ -46,7 +46,7 @@
 
 </script>
 
-<article class="message component-wrapper mt-2" in:fade={{ delay: 250, duration: 200 }}>
+<article class="message component-wrapper mt-2" in:fade={{ delay: 250, duration: 200 }} id="symbol-{component.id}">
   <form on:submit|preventDefault={changeTitle}>
     <input type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
   </form>

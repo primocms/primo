@@ -189,7 +189,7 @@
   {:else}
     <Card variants="p-4">
       <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
-        <TextInput id="page-title" autofocus={true} variants="mb-4" label="Page Label" placeholder="About Us" />
+        <TextInput id="page-label" autofocus={true} variants="mb-4" label="Page Label" placeholder="About Us" />
         <TextInput id="page-url" variants="mb-4" label="Page URL" prefix="/" on:input={validateUrl} bind:value={pageUrl} placeholder="about-us" />
         <SelectOne 
           id="page-base"
