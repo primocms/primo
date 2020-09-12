@@ -28,8 +28,7 @@ export const tailwindConfig = `{
 }`
 
 
-// TODO: Make these defaut site styles instead
-export const pageStyles = `\
+export const defaultStyles = `\
 /* Default content styles */
 .primo-content {
   @apply text-lg;
@@ -164,7 +163,7 @@ export const createSite = () => ({
     libraries: []
   },
   styles: {
-    raw: '',
+    raw: defaultStyles,
     final: '',
     tailwind: ''
   },
@@ -178,7 +177,8 @@ export const createSite = () => ({
       final: ''
     }
   },
-  fields: []
+  fields: [],
+  symbols: []
 })
 
 export const DEFAULTS = {
