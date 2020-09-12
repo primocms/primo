@@ -159,6 +159,13 @@
     ],
     [
       {
+        title: 'Content',
+        icon: 'heading',
+        buttons: _.flatten(editorialButtons)
+      }
+    ],
+    [
+      {
         title: 'Single-use Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {

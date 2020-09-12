@@ -169,8 +169,7 @@ function menuPlugin() {
   })
 }
 
-let menu = menuPlugin()
-
+const menu = menuPlugin()
 
 export function createEditor(editorNode, htmlString, eventListeners) {
 
