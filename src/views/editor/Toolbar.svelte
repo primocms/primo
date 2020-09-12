@@ -14,7 +14,6 @@
 
   const dispatch = createEventDispatcher()
   
-
   export let buttons:Array<ButtonGroup>;
 
   let mobileNavOpen = false

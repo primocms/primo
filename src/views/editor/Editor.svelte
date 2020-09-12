@@ -115,6 +115,7 @@
       },
       {
         title: 'Symbol Library',
+        id: 'symbol-library',
         icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
@@ -169,6 +170,7 @@
       },
       {
         title: 'Symbol',
+        id: 'symbol-library',
         icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
@@ -228,6 +230,7 @@
 
   function savePage(): void {
     content.save()
+    pageData.save('content', $content)
     dispatch('save')
     unsavedContentExists = false
     updatingDatabase = true
