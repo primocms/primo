@@ -42,7 +42,7 @@
 
 	$: symbols.set(data.symbols)
 
-	$: setPage($pageId, data)
+	$: setPage($pageId, $site)
 
 	function setPage(pageId, site) {
 		const currentPage = find(site.pages, ['id', pageId || 'index'])

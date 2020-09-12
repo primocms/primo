@@ -41,7 +41,7 @@
 
 <style>
   .page-preview {
-    @apply block w-full relative overflow-hidden pointer-events-none;
+    @apply block w-full relative overflow-hidden;
     height: 15vh;
 
     &:after {
@@ -55,7 +55,7 @@
     }
   }
   iframe {
-    @apply opacity-0 transition-opacity duration-200;
+    @apply pointer-events-none opacity-0 transition-opacity duration-200;
     width: 100vw;
     transform-origin: top left;
     height: 1000vh;
