@@ -1,5 +1,5 @@
 node_modules
-public/build
-public/bundle.js
-public/bundle.js.map
+example/node_modules
+example/public/build/
+example/public/preview/
 .vscode
