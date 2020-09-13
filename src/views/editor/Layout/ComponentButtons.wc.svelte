@@ -21,7 +21,7 @@
 </script>
 
 <div class="component-buttons">
-  <button on:click={() => dispatch('edit')}>
+  <button on:click={() => dispatch('edit')} id="component-edit">
     {#if icon === 'code'}
       {@html code(iconStyles)}    
     {:else}
@@ -29,18 +29,18 @@
     {/if}
     <span>Edit</span>
   </button>
-  <button on:click={() => dispatch('delete')}>
+  <button on:click={() => dispatch('delete')} id="component-remove">
     {@html trash(`${iconStyles} margin-right: 3px;`)}    
     <span>Remove</span>
   </button>
   {#if !contentabove}
-    <button on:click={() => dispatch('addContentAbove')}>
+    <button on:click={() => dispatch('addContentAbove')} id="component-add-row-above">
       {@html chevron(iconStyles)}    
       <span>Add Row Above</span>
     </button>
   {/if}
   {#if !contentbelow}
-    <button on:click={() => dispatch('addContentBelow')}>
+    <button on:click={() => dispatch('addContentBelow')} id="component-add-row-below">
       {@html chevron(`${iconStyles}transform: scaleY(-1);top:-3px;`)}    
       <span>Add Row Below</span>
     </button>

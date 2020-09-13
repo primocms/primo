@@ -24,6 +24,7 @@
   <span class="mb-2">{ field.label }</span>
   {#if isCheckbox}
     <input 
+      id="content-field-{field.key}"
       {title}
       {disabled}
       type="checkbox" 
@@ -32,6 +33,7 @@
     >
   {:else}
     <input 
+      id="content-field-{field.key}"
       class="input"
       {title}
       {disabled}

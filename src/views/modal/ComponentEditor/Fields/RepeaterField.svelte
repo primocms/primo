@@ -35,12 +35,11 @@
     }
   }
 
-  $: console.log(field)
 </script>
 
-<Card variants="p-2 pb-4">
+<Card variants="p-2 pb-4" id="field-{field.key}">
   <header>{field.label}</header>
-  {#each field.value as item (item.id)} 
+  {#each field.value as item, i (item.id)} 
     <RepeaterField 
       {field} 
       on:delete={() => removeRepeaterItem(item.id)}

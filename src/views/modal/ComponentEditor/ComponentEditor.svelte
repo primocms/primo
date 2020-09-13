@@ -321,10 +321,12 @@
 
   const tabs = [
     {
+      id: 'code',
       label: 'Code',
       icon: 'code'
     },
     {
+      id: 'fields',
       label: 'Fields',
       icon: 'database'
     },
@@ -348,7 +350,7 @@
         {#if $editorViewDev}
           <Tabs {tabs} bind:activeTab variants="my-2" />
           {#if disabled}
-            <p class="mb-2 text-xs text-gray-700">This component is tied to a <button class="underline" on:click={loadSymbol} title="Edit the Symbol">Symbol</button>. You won't be able to edit it unless you <button class="underline" on:click={separateFromSymbol} title="Separate the component instance from its Symbol">emancipate it</button>.</p>
+            <p class="mb-2 text-xs text-gray-700">This component is tied to a <button class="underline" on:click={loadSymbol} id="edit-symbol" title="Edit the Symbol">Symbol</button>. You won't be able to edit it unless you <button class="underline" on:click={separateFromSymbol} title="Separate the component instance from its Symbol" id="emancipate-symbol">emancipate it</button>.</p>
           {/if}
           {#if activeTab === tabs[0]}
             <FullCodeEditor 
@@ -362,16 +364,16 @@
             />
           {:else if activeTab === tabs[1]}
             <div class="flex flex-col">
-              {#each fields as field}
-                <Card>
+              {#each fields as field, i}
+                <Card id="field-{i}" variants="field-item">
                   <EditField on:delete={() => deleteField(field.id)} {disabled}>
                     <select bind:value={field.type} slot="type" on:change={setPlaceholderValues} {disabled}>
                       {#each fieldTypes as field}
                         <option value={field.id}>{ field.label }</option>
                       {/each}
                     </select>
-                    <input class="input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled} on:focus={setPlaceholderValues}>
-                    <input class="input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled} on:input={() => updateHtmlWithFieldData('static')}>
+                    <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled} on:focus={setPlaceholderValues}>
+                    <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled} on:input={() => updateHtmlWithFieldData('static')}>
                   </EditField>
                   {#if field.type === 'js'}
                     <CodeMirror 
@@ -390,8 +392,8 @@
                               <option value={field.id}>{ field.label }</option>
                             {/each}
                           </select>
-                          <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                          <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                          <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
                         </EditField>
                       {/each}
                     {/if}
@@ -405,8 +407,8 @@
                               <option value={field.id}>{ field.label }</option>
                             {/each}
                           </select>
-                          <input type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                          <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                          <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
                         </EditField>
                       {/each}
                     {/if}

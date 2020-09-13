@@ -1,12 +1,13 @@
-<script>
+<script lang="ts">
 
-  export let title = null
-  export let image = null
-  export let variants = 'shadow-sm mb-2'
+  export let id:string = null
+  export let title:string = null
+  export let image:string = null
+  export let variants:string = 'shadow-sm mb-2'
 
 </script>
 
-<div class="{variants}">
+<div class="{variants}" {id}>
   {#if title}
     <header>
       {#if title}

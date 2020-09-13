@@ -166,6 +166,7 @@
     ],
     [
       {
+        id: 'single-use-component',
         title: 'Single-use Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
