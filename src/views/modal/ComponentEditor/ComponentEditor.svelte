@@ -418,7 +418,7 @@
                   {/if}
                 </Card>
               {/each}
-              <PrimaryButton on:click={addNewField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
+              <PrimaryButton variants="field-button" on:click={addNewField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
             </div>
           {/if}
         {:else}

@@ -20,9 +20,9 @@
 
 <style>
   .save-button {
-    @apply bg-blue-600 text-white py-2 px-4 rounded transition-colors duration-200;
+    @apply bg-primored text-white py-2 px-4 rounded font-semibold transition-colors duration-200;
     &:hover {
-      @apply bg-blue-700;
+      @apply bg-red-700;
     }
 
     &.disabled {

@@ -37,7 +37,7 @@
 
 </script>
 
-<Card variants="p-2 pb-4" id="field-{field.key}">
+<Card variants="p-2 pb-4" id="repeater-{field.key}">
   <header>{field.label}</header>
   {#each field.value as item, i (item.id)} 
     <RepeaterField 
@@ -48,20 +48,21 @@
     >
       <label slot="text">
         <span class="text-xs font-bold">{subfield.label}</span>
-        <input class="bg-white border border-gray-300 rounded p-2 mb-2 block w-full appearance-none leading-normal" type={subfield.type} value={item[subfield.key]||''} on:input={({target}) => { item[subfield.key] = target.value; dispatch('input')}}>
+        <input id="repeater-{field.key}-{subfield.key}" class="bg-white border border-gray-300 rounded p-2 mb-2 block w-full appearance-none leading-normal" type={subfield.type} value={item[subfield.key]||''} on:input={({target}) => { item[subfield.key] = target.value; dispatch('input')}}>
       </label> 
-      <label slot="checkbox">
+      <label slot="checkbox" i>
         <span class="text-xs font-bold">{subfield.label}</span>
-        <input type="checkbox" bind:checked={item[subfield.key]} on:input>
+        <input id="repeater-{field.key}-{subfield.key}" type="checkbox" bind:checked={item[subfield.key]} on:input>
       </label>
       <label class="flex flex-col mb-2" slot="content">
         <span class="text-xs font-bold">{subfield.label}</span>
-        <textarea class="textarea is-medium" bind:value={item[subfield.key]} on:input></textarea>
+        <textarea id="repeater-{field.key}-{subfield.key}" class="textarea is-medium" bind:value={item[subfield.key]} on:input></textarea>
       </label>
       <div slot="image">
         <ImageField 
           field={{
-            value: item[subfield.key]
+            value: item[subfield.key],
+            id: `repeater-${field.key}-${subfield.key}`
           }}
           on:input={({detail:url}) => {
             item[subfield.key] = url

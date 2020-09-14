@@ -92,7 +92,7 @@
         }
 
         &.is-active {
-          @apply bg-primored text-white;
+          @apply bg-codeblack text-white;
         }
 
         &:first-child {

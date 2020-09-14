@@ -41,7 +41,7 @@
               <span class="modal-title">{header.title}</span>
             </p>
             {#if $modal.showSwitch && $userRole === 'developer'}
-              <button on:click={switchView} class="switch">
+              <button on:click={switchView} class="switch" class:to-cms={$editorViewDev} class:to-ide={!$editorViewDev}>
                 {#if $editorViewDev}
                   <i class="fas fa-edit"></i>
                   <span>Switch to CMS</span>
@@ -84,9 +84,10 @@
 <style>
 
   .switch {
-    @apply py-1 px-3 bg-gray-200 text-gray-700 text-sm rounded transition-colors duration-200;
+    @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
+    outline-color: rgb(248,68,73);
     &:hover {
-      @apply bg-primored text-white;
+      @apply bg-red-700 text-white;
     }
   }
 

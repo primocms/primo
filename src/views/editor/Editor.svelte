@@ -212,7 +212,7 @@
     ],
     [
       {
-        id: 'site-settings',
+        id: 'fields',
         title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS', { 

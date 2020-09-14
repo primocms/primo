@@ -207,15 +207,15 @@
 <div class="flex flex-col pt-2">
   {#if $editorViewDev}
     {#each fields as field}
-    <Card>
+    <Card variants="field-item">
       <EditField on:delete={() => deleteField(field.id)} {disabled}>
         <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
           {#each fieldTypes as field}
             <option value={field.id}>{ field.label }</option>
           {/each}
         </select>
-        <input class="input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
-        <input class="input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
+        <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
+        <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
       </EditField>
       {#if field.type === 'api'}
         <div class="field is-horizontal" in:fade={{ duration: 100 }}>
