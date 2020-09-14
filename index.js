@@ -3,6 +3,7 @@ import ComponentPreview from './src/Preview.svelte'
 import MultiPreview from './src/MultiPreview.svelte'
 import SinglePreview from './src/SinglePreview.svelte'
 
+import fieldTypes from './src/stores/app/fieldTypes'
 import modal from './src/stores/app/modal'
 import site from './src/stores/data/site'
 import pageData from './src/stores/data/pageData'
@@ -24,6 +25,7 @@ export {
   pageData,
   DEFAULTS,
   createPage,
-  createSite
+  createSite,
+  fieldTypes
 }
 export default Primo

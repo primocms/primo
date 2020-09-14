@@ -2,18 +2,11 @@
   import _ from "lodash";
   import ShortUniqueId from "short-unique-id";
   import pluralize from 'pluralize'
-  import { createEventDispatcher, onMount, onDestroy, setContext } from 'svelte'
+  import { createEventDispatcher, onMount, onDestroy, setContext, getContext } from 'svelte'
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()
 
-  import API from './Fields/Api.svelte'
-  import TextAreaField from './Fields/TextAreaField.svelte'
-  import MessageField from './Fields/MessageField.svelte'
-  import GroupField from './Fields/GroupField.svelte'
-  import RepeaterField from './Fields/RepeaterField.svelte'
-  // import ImageField from './ImageField.svelte'
-
-  import {ContentField, EditField, GenericField, ImageField, SubField as SubfieldField} from '../../../components/inputs'
+  import {EditField, GenericField, ImageField, SubField as SubfieldField} from '../../../components/inputs'
   import {PrimaryButton,SaveButton} from '../../../components/buttons'
   import {IconButton,Tabs} from '../../../components/misc'
   import {CodeMirror} from '../../../components'
@@ -29,6 +22,7 @@
   import content from '../../../stores/data/page/content'
   import symbols from '../../../stores/data/site/symbols'
   import {editorViewDev} from '../../../stores/app'
+  import fieldTypes from '../../../stores/app/fieldTypes'
   import modal from '../../../stores/app/modal'
   import {createComponent} from '../../../const'
 
@@ -263,61 +257,7 @@
       }[type] || ''
     }
 
-  // TODO: attach component to field type
-  const fieldTypes:Array<FieldType> = [
-    {
-      id: 'text',
-      label: 'Text',
-      component: ContentField
-    },
-    {
-      id: 'content',
-      label: 'Text Area',
-      component: TextAreaField
-    },
-    {
-      id: 'number',
-      label: 'Number',
-      component: ContentField
-    },
-    {
-      id: 'url',
-      label: 'URL',
-      component: ContentField
-    },
-    {
-      id: 'image',
-      label: 'Image',
-      component: ImageField
-    },
-    {
-      id: 'checkbox',
-      label: 'True / False',
-      component: ContentField
-    },
-    {
-      id: 'repeater',
-      label: 'Repeater',
-      component: RepeaterField
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField
-    },
-    {
-      id: 'js',
-      label: 'JavaScript',
-      component: ContentField
-    },
-    {
-      id: 'message',
-      label: 'Message',
-      component: MessageField
-    }
-  ]
-
-  const subFieldTypes:Array<FieldType> = fieldTypes.filter(field => !['repeater','group','api','js'].includes(field.id))
+  const subFieldTypes:Array<FieldType> = $fieldTypes.filter(field => !['repeater','group','api','js'].includes(field.id))
 
   const tabs = [
     {
@@ -368,7 +308,7 @@
                 <Card id="field-{i}" variants="field-item">
                   <EditField on:delete={() => deleteField(field.id)} {disabled}>
                     <select bind:value={field.type} slot="type" on:change={setPlaceholderValues} {disabled}>
-                      {#each fieldTypes as field}
+                      {#each $fieldTypes as field}
                         <option value={field.id}>{ field.label }</option>
                       {/each}
                     </select>
@@ -425,7 +365,7 @@
           <div class="pt-8">
             {#each fields as field}
               {#if field.label}
-                <svelte:component this={_.find(fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+                <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
               {:else}
               <span>This field needs a label to be valid</span>
               {/if}

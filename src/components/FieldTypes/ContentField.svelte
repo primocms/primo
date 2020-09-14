@@ -20,8 +20,8 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium p-4 shadow-sm mb-2">
-  <span class="mb-2">{ field.label }</span>
+<label class="flex flex-col text-xl font-medium p-4 shadow-sm mb-2 bg-white">
+  <span class="mb-2 text-sm">{ field.label }</span>
   {#if isCheckbox}
     <input 
       id="field-{field.key}"
