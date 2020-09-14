@@ -51,7 +51,10 @@
     <input type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
   </form>
   <div class="message-header">
-    <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>{title}</p>
+    <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>
+      <i class="far fa-edit text-xs text-gray-500 cursor-pointer mr-2"></i>
+      <span>{title}</span>
+    </p>
     <div class="buttons">
       <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')} />  
       <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')} />  
@@ -80,8 +83,7 @@
     @apply flex justify-between items-center bg-gray-100 p-2;
   }
   .component-label {
-    @apply flex-1 font-bold text-gray-800 pl-2;
-    display: block;
+    @apply flex items-center flex-1 font-bold text-gray-800 pl-2;
     min-width: 3rem;
     height: 1.5rem;
   }
