@@ -81,6 +81,7 @@
 
         &.is-active {
           @apply bg-primored text-white;
+          @apply border-codeblack !important;
         }
 
         &:first-child {

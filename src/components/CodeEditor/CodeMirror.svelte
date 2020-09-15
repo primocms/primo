@@ -42,6 +42,7 @@
   }
 
   onMount(async () => {
+
     await mountCodeMirror()
 
     Editor = CodeMirror(editorNode, {
@@ -78,6 +79,10 @@
     })
     Editor.on("gutterClick", foldHTML);
     function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
+
+    // set editor height (can't figure out how to set it without to not overflow the modal height)
+    Editor.setSize(null, editorNode.clientHeight)
+    setTimeout(() => {editorNode.firstChild.classList.add('fadein')}, 100) // so the fade works
   })
 
   $: {
@@ -98,7 +103,7 @@
 <div class="codemirror-container" style="{style}">
   <div in:fade={{ duration: 200 }} bind:this={editorNode}></div>
   {#if docs}
-    <a in:fade={{ duration: 200 }} target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
+    <a target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
       <i class="fas fa-external-link-alt mr-1"></i>
       <span>Docs</span>
     </a>
@@ -112,9 +117,13 @@
   .CodeMirror {
     /* Set height, width, borders, and global font properties here */
     font-family: monospace;
-    height: 300px;
     color: black;
     direction: ltr;
+    @apply opacity-0 transition-opacity duration-100;
+
+    &.fadein {
+      @apply opacity-100;
+    }
   }
 
   /* PADDING */
@@ -459,14 +468,13 @@
 
 
   .codemirror-container {
-    @apply relative w-full h-full bg-codeblack;
-    max-height: 73vh;
+    @apply relative flex w-full flex-1 bg-codeblack;
   }
   .codemirror-container > div {
-    height: 100%;
+    @apply flex flex-1 w-full;
   }
   .CodeMirror {
-    height: 100% !important;
+    height: 0;
     font-size: 16px;
     font-family: -apple-system,BlinkMacSystemFont,Segoe WPC,Segoe UI,HelveticaNeue-Light,Ubuntu,Droid Sans,sans-serif !important;
   }
