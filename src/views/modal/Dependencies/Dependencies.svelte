@@ -10,6 +10,7 @@
   import site from '../../../stores/data/site'
   import pageData from '../../../stores/data/pageData'
 
+  import ModalHeader from '../ModalHeader.svelte'
   import HeadEmbeds from './_HeadEmbeds.svelte'
   import Libraries from './_Libraries.svelte'
 
@@ -34,23 +35,20 @@
 
 </script>
 
-<div class="flex flex-col h-full">
-  <!-- <Tabs {tabs} bind:activeTab={selectedTab} variants="mb-4" /> -->
-  <Libraries bind:libraries={localDependencies.libraries} />
+<ModalHeader 
+  icon="fas fa-cube"
+  title="Page Dependencies"
+  button={{
+    label: `Save`,
+    icon: 'fas fa-save',
+    onclick: () => {
+      site.saveCurrentPage({ dependencies: localDependencies })
+      modal.hide()
+    }
+  }}
+  variants="mb-4"
+/>
 
-  <!-- <div class="flex-1">
-    {#if selectedTab === tabs[0]}
-      <HeadEmbeds bind:headEmbed={localDependencies.headEmbed} />
-    {:else if selectedTab === tabs[1]}
-      <Libraries bind:libraries={localDependencies.libraries} />
-    {/if}
-  </div> -->
-  <div class="flex justify-end py-2">
-    <SaveButton 
-      disabled={disableSave}
-      on:click={() => {
-        site.saveCurrentPage({ dependencies: localDependencies })
-        modal.hide()
-      }}>Save Dependencies</SaveButton>
-  </div>
+<div class="flex flex-col h-full">
+  <Libraries bind:libraries={localDependencies.libraries} />
 </div>

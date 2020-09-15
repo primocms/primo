@@ -1,5 +1,5 @@
 import ComponentEditor from './ComponentEditor/ComponentEditor.svelte'
-import ComponentLibrary from './ComponentLibrary/ComponentLibrary.svelte'
+import SymbolLibrary from './SymbolLibrary/SymbolLibrary.svelte'
 import PageSections from './PageSections.svelte'
 import SitePages from './SitePages.svelte'
 import Styles from './Styles.svelte'
@@ -10,7 +10,7 @@ import Dependencies from './Dependencies/Dependencies.svelte'
 
 export {
   ComponentEditor,
-  ComponentLibrary,
+  SymbolLibrary,
   PageSections,
   SitePages,
   Dependencies,

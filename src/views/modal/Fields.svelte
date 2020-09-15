@@ -13,6 +13,7 @@
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../types/components'
   import {getUniqueId} from '../../utils'
 
+  import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
   import site from '../../stores/data/site'
   import pageData from '../../stores/data/pageData'
@@ -157,12 +158,23 @@
 
 </script>
 
-<Tabs {tabs} bind:activeTab variants="mb-2" />
+<ModalHeader 
+  icon="fas fa-database"
+  title={$editorViewDev ? 'Fields' : 'Content'}
+  button={{
+    label: `Save`,
+    icon: 'fas fa-save',
+    onclick: applyFields
+  }}
+  variants="mb-4"
+/>
 
-<div class="flex flex-col pt-2">
+<Tabs {tabs} bind:activeTab />
+
+<div class="flex flex-col p-2 bg-gray-100">
   {#if $editorViewDev}
-    {#each fields as field}
-      <Card variants="field-item">
+    {#each fields as field (field.id)}
+      <Card variants="field-item bg-white shadow-sm mb-2">
         <EditField on:delete={() => deleteField(field.id)} {disabled}>
           <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
             {#each $fieldTypes as field}
@@ -255,10 +267,6 @@
       </p>
     {/each}
   {/if}
-</div>
-
-<div class="flex flex-row justify-end mt-4">
-  <SaveButton on:click={applyFields}>Save</SaveButton>
 </div>
 
 <style>

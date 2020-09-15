@@ -46,6 +46,6 @@
 <style>
   input {
     outline-color: rgb(248,68,73);
-    @apply bg-gray-100 p-2;
+    @apply bg-white p-2;
   }
 </style>

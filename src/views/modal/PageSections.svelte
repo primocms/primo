@@ -5,6 +5,7 @@
   const dispatch = createEventDispatcher();
   import modal from '../../stores/app/modal'
   import content from '../../stores/data/page/content'
+  import ModalHeader from './ModalHeader.svelte'
 
   let fullwidth = false
   let gapless = false
@@ -42,6 +43,12 @@
   }
 
 </script>
+
+<ModalHeader 
+  icon="fas fa-columns"
+  title="Add Page Section"
+  variants="mb-4"
+/>
 
 <div class="flex w-full">
   <button on:click={() => fullwidth = !fullwidth} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={fullwidth}>Fullwidth</button>
