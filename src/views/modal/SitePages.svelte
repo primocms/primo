@@ -159,23 +159,19 @@
   {#each $site.pages as page (page.id)}
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
       <div class="shadow-xl mb-4 rounded">
-        <PageItem {page} />
-        <div class="w-full flex justify-between px-3 py-2 border-t border-gray-100 ">
+        <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
           <div>
-            {#if $pageData.id === page.id}
-              <span class="text-xs font-semibold text-gray-700">{page.title}</span>
-            {:else}
-              <a use:link class="text-xs font-semibold text-blue-500 underline hover:text-blue-800 transition-colors duration-200" href="/{page.id === 'index' ? '' : page.id}">{page.title}</a>
-            {/if}
+            <span class="text-xs font-semibold text-gray-700">{page.title}</span>
           </div>
           <div class="flex justify-end">
             {#if page.id !== 'index'}
-              <button title="Delete page" on:click={() => deletePage(page.id)} class="delete-page text-xs text-yellow-800 hover:text-yellow-900">
+              <button title="Delete page" on:click={() => deletePage(page.id)} class="delete-page text-xs text-red-500 hover:text-red-600">
                 <i class="fas fa-trash"></i>
               </button>
             {/if}
           </div>
         </div>
+        <PageItem {page} active={$pageData.id === page.id}/>
       </div>
     </li>
   {/each}

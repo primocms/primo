@@ -11,6 +11,7 @@
   import modal from '../../../stores/app/modal'
 
   export let page
+  export let active = false
 
   $: preview = wrapInStyleTags($tailwind) + wrapInStyleTags($site.styles.final) + wrapInStyleTags(page.styles.final) + buildPagePreview(page.content)
 
@@ -35,23 +36,29 @@
   }
 </script>
 
-<button on:click={openPage} class="page-preview" bind:this={container} aria-label="Go to /{page.id}">
+<button on:click={openPage} class:active bind:this={container} aria-label="Go to /{page.id}">
   <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {iframeLoaded = true }}></iframe>
 </button>
 
 <style>
-  .page-preview {
+  .active {
+    @apply cursor-default opacity-50;
+    &:after {
+      @apply opacity-50;
+    }
+  }
+  button {
     @apply block w-full relative overflow-hidden;
     height: 15vh;
 
     &:after {
       content: '';
-      @apply absolute top-0 left-0 right-0 bottom-0 bg-primored opacity-0 transition-opacity duration-100;
+      @apply absolute top-0 left-0 right-0 bottom-0 bg-codeblack opacity-0 transition-opacity duration-100;
       pointer-events: all;
     }
 
     &:hover:after {
-      opacity: 0.5;
+      @apply opacity-50;
     }
   }
   iframe {
