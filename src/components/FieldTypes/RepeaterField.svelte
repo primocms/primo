@@ -56,19 +56,25 @@
     dispatch('input')
   }
 
+  $: console.log(fieldValues)
+
 </script>
 
 <Card variants="p-2 pb-4" id="repeater-{field.key}">
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
-  {#each fieldValues as fieldValue, i } 
+  {#each fieldValues as fieldValue, i (fieldValues.id) } 
     <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
       <div class="absolute top-0 right-0 py-1 px-2 text-gray-600 bg-gray-100 z-10 rounded">
-        <button title="Move item up" on:click={() => moveRepeaterItem(i, 'up')}>
-          <i class="fas fa-arrow-up"></i>
-        </button>
-        <button class="mr-2" title="Move item down" on:click={() => moveRepeaterItem(i, 'down')}>
-          <i class="fas fa-arrow-down"></i>
-        </button>
+        {#if i !== 0}
+          <button title="Move {field.label} up" on:click={() => moveRepeaterItem(i, 'up')}>
+            <i class="fas fa-arrow-up"></i>
+          </button>
+        {/if}
+        {#if i !== fieldValues.length-1}
+          <button class="mr-2" title="Move {field.label} down" on:click={() => moveRepeaterItem(i, 'down')}>
+            <i class="fas fa-arrow-down"></i>
+          </button>
+        {/if}
         <button class="text-red-400 hover:text-red-500" title="Delete {field.label} item" on:click={() => removeRepeaterItem(i)}>
           <i class="fas fa-trash"></i>
         </button>
