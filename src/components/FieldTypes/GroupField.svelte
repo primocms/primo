@@ -5,8 +5,6 @@
 
   import fieldTypes from '../../stores/app/fieldTypes'
   import {Card} from '../misc'
-  import ContentField from './ContentField.svelte'
-  import {EditField, GenericField, ImageField} from '../inputs'
 
   export let field
 

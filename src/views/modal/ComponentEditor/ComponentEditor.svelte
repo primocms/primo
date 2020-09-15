@@ -365,7 +365,7 @@
           <div class="pt-8">
             {#each fields as field}
               {#if (field.label && field.key)}
-                <div class="field-item" id="field-{field.key}">
+                <div class="field-item mb-2 shadow" id="field-{field.key}">
                   <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
                 </div>
               {:else}

@@ -58,7 +58,7 @@
 
 </script>
 
-<Card variants="p-2 pb-4 shadow" id="repeater-{field.key}">
+<Card variants="p-2 pb-4" id="repeater-{field.key}">
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
   {#each fieldValues as fieldValue, i } 
     <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
