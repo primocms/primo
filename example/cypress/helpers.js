@@ -39,38 +39,41 @@ export function addField({ label, key, type = 'text', subfields, value }) {
   cy.get('.field-item:last-of-type input.label-input').type(label)
   cy.get('.field-item:last-of-type input.key-input').type(key)
 
+  if (value && type !== 'repeater') {
+    populateField(key, value)
+  }
+
   if (subfields) {
-    subfields.forEach(({ label, key:subfieldKey, type = 'text', value }) => {
+    // const subfieldValues = []
+    subfields.forEach(({ label, key:subfieldKey, type = 'text', value }, i) => {
       click('button.subfield-button')
       cy.get('.field-item:last-of-type .field-container:last-of-type select').select(type)
       cy.get('.field-item:last-of-type .field-container:last-of-type .label-input').type(label)
       cy.get('.field-item:last-of-type .field-container:last-of-type .key-input').type(subfieldKey)
-
-      if (value) {
-        populateField(`${key}-${subfieldKey}`, value, true)
-      }
+      // if (value) subfieldValues.push({ id: `${key}-${i}-${subfieldKey}`, value })
+      // if (value) {
+      //   populateField(`${key}-${i}-${subfieldKey}`, value, true)
+      // }
     })
-  }
-
-  if (value) {
-    populateField(key, value)
-  }
-
-  function populateField(key, value, isRepeater = false) {
     click('.switch.to-cms')
-    if (isRepeater) {
+    value.forEach((item, i) => {
       click('.field-button')
-    }
-    if (typeof value === 'number') {
-      cy.get(`#${isRepeater ? 'repeater' : 'field'}-${key}`).clear().type(value)
-    } else {
-      cy.get(`#${isRepeater ? 'repeater' : 'field'}-${key}`)
-        .invoke('val', value)
-        .type(' ')
-    }
-    if (cy.get('.switch.to-ide')) {
-      click('.switch.to-ide')
-    } 
+      subfields.forEach(({ key:subfieldKey }) => {
+        const value = item[subfieldKey]
+        populateSubfield(`${key}-${i}-${subfieldKey}`, value)
+      })
+    })
+    click('.switch.to-ide')
+  }
+
+  function populateField(key, value) {
+    click('.switch.to-cms')
+    cy.get(`#field-${key} input`).clear().type(value)
+    click('.switch.to-ide')
+  }
+
+  function populateSubfield(key, value) {
+    cy.get(`#repeater-${key} input`).clear().type(value)
   }
 
 }

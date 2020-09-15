@@ -4,7 +4,7 @@ context('Page List', () => {
   describe('Page Creation', () => {
     
     it('opens the Page List modal', () => {
-      cy.visit('http://test.localhost:5001')
+      cy.visit('http://cypress.localhost:5000')
       cy.get('button#pages').click()
       cy.get('.modal-title').contains('Pages')
     })

@@ -2,8 +2,8 @@ import { click, navigateToPage, createPage, createComponent, addField } from '..
 
 const testComponent = `\
 {{heading}}<br>\
-{{#each test-repeater}}\
-  {{test-text}} & {{test-number}}\
+{{#each people}}\
+  {{name}} - {{age}}<br>\
 {{/each}}\
 `
 
@@ -18,22 +18,30 @@ context('Components', () => {
         {
           label: 'Heading',
           key: 'heading',
-          value: 'Test heading'
+          value: 'People'
         },
         {
           type: 'repeater',
-          label: 'Test Repeater',
-          key: 'test-repeater',
+          label: 'People',
+          key: 'people',
           subfields: [
             {
-              label: 'Repeater Text',
-              key: 'test-text',
-              value: 'Test Repeater Text'
+              label: 'Name',
+              key: 'name'
             },
             {
-              label: 'Repeater Number',
-              key: 'test-number',
-              vaue: 100
+              label: 'Age',
+              key: 'age'
+            }
+          ],
+          value: [
+            {
+              name: 'John Doe',
+              age: 55
+            },
+            {
+              name: 'Jane Doe',
+              age: 75
             }
           ]
         }
@@ -43,7 +51,7 @@ context('Components', () => {
   })
 
   it('displays component on the page', () => {
-    cy.get('#single-use')
+    cy.get('.primo-component').contains('People John Doe - 55 Jane Doe - 75')
   })
 
 })

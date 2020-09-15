@@ -61,7 +61,7 @@
 <Card variants="p-2 pb-4 shadow" id="repeater-{field.key}">
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
   {#each fieldValues as fieldValue, i } 
-    <div class="p-4 mb-2 bg-gray-100 flex flex-col relative transition-colors duration-100" in:fade={{duration:100}}>
+    <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
       <div class="absolute top-0 right-0 py-1 px-2 text-gray-600 bg-gray-100 z-10 rounded">
         <button title="Move item up" on:click={() => moveRepeaterItem(i, 'up')}>
           <i class="fas fa-arrow-up"></i>
@@ -69,20 +69,37 @@
         <button class="mr-2" title="Move item down" on:click={() => moveRepeaterItem(i, 'down')}>
           <i class="fas fa-arrow-down"></i>
         </button>
-        <button class="text-red-500 hover:text-red-700" title="Delete item" on:click={() => removeRepeaterItem(i)}>
+        <button class="text-red-400 hover:text-red-500" title="Delete {field.label} item" on:click={() => removeRepeaterItem(i)}>
           <i class="fas fa-trash"></i>
         </button>
       </div>
       {#each fieldValue as subfield}
-        <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
+        <div class="repeater-item-field" id="repeater-{field.key}-{i}-{subfield.key}">
+          <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
+        </div>
       {/each}
     </div>
   {/each}
-  <button class="field-button" on:click={() => addRepeaterItem()}>Add {pluralize.singular(field.label)}</button>
+  <div class="p-2 pt-0 bg-gray-100">
+    <button class="field-button" on:click={() => addRepeaterItem()}>
+      <i class="fas fa-plus mr-1"></i>
+      <span>Add {pluralize.singular(field.label)}</span>
+    </button>
+  </div>
 </Card>
 
 
 <style>
+  .repeater-item {
+    @apply p-2 bg-gray-100 flex flex-col relative;
+  }
+  .repeater-item-field {
+    @apply border-b border-gray-100;
+
+    &:not(:first-child) {
+      @apply pt-0;
+    }
+  }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
     &:hover {

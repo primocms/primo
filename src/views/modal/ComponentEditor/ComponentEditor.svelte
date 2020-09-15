@@ -364,10 +364,12 @@
         {:else}
           <div class="pt-8">
             {#each fields as field}
-              {#if field.label}
-                <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+              {#if (field.label && field.key)}
+                <div class="field-item" id="field-{field.key}">
+                  <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+                </div>
               {:else}
-              <span>This field needs a label to be valid</span>
+                <span>This field needs a label and key in order to be valid</span>
               {/if}
             {:else}
               <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit this component's content</p>

@@ -242,7 +242,9 @@
     <button class="field-button" on:click={addField} {disabled}><i class="fas fa-plus mr-2"></i>Add a Field</button>
   {:else}
     {#each fields as field}
-      <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+      <div class="field-item" id="field-{field.key}">
+        <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+      </div>
     {:else}
       <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">
         {#if $userRole === 'developer'}
@@ -260,6 +262,9 @@
 </div>
 
 <style>
+  input, select {
+    @apply outline-none;
+  }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
     &:hover {

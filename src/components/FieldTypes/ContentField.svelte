@@ -20,11 +20,10 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium p-4 shadow-sm mb-2 bg-white">
+<label class="flex flex-col text-xl font-medium p-4 shadow-sm bg-white">
   <span class="mb-2 text-sm">{ field.label }</span>
   {#if isCheckbox}
     <input 
-      id="field-{field.key}"
       {title}
       {disabled}
       type="checkbox" 
@@ -33,7 +32,6 @@
     >
   {:else}
     <input 
-      id="field-{field.key}"
       class="input"
       {title}
       {disabled}
