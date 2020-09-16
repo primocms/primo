@@ -24,7 +24,7 @@ Despite all the advancements that have been made in web development, developers 
 
 
 <p align="center">
-  <img src="readme_assets/screenshot.png" alt="screenshot"/>
+  <img src="readme_assets/demo.gif" alt="demo"/>
 </p>
 
 ## Development
