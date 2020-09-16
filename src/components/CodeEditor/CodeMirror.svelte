@@ -100,6 +100,12 @@
 
 </script>
 
+<svelte:window 
+  on:resize={() => {
+    Editor.setSize(null, editorNode.clientHeight)
+  }}
+/>
+
 <div class="codemirror-container" style="{style}">
   <div in:fade={{ duration: 200 }} bind:this={editorNode}></div>
   {#if docs}
