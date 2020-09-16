@@ -1,29 +1,55 @@
 <p align="center">
-  <img src="logo.svg" alt="primo logo"/>
+  <img src="readme_assets/logo.svg" alt="primo logo"/>
 </p>
 
-![demo](demo.gif)
+![demo](readme_assets/comic.png)
 
-# primo is a visual, integrated, delightful code editor and content management system
+# primo is a page builder for developers 
 
-primo is built with and heavily inspired by [Svelte](https://svelte.dev/) - arguably the simplest, fastest, and most out-of-the-box-powerful frontend framework in existence. The best way I can describe it is HTML+JavaScript with superpowers. If you've never used Svelte before but you're interested in trying, I think you'll find that it's incredibly easy to [learn](https://svelte.dev/tutorial/basics).
+Despite all the advancements that have been made in web development, developers looking to build editable static sites still find themselves at the mercy of either limited/buggy no-code page builders like Squareix, or overly-powerful frameworks like Next wired up to the latest and greatest Ned Stark CMS. primo solves this by being *both* an IDE *and* a CMS. And since it combines both, a whole range of benefits open up that would be tough to pull off otherwise. 
 
-Code-wise, primo isn't at all in an ideal place at the moment. In particular, there's little to no test coverage, TypeScript is only used in a fraction of the components, and there are still some artifacts from the many refactors the project has gone through that need to be cleaned up. But on the bright side, that means that anyone can jump in and start helping out. Yes, especially you.
+**For developers:**
+  * Edit pages component-by-component (as opposed to file by file)
+  * Integrate component/page/site fields in literal seconds
+  * Use Tailwind & JS modules without *any* setup
+  * Create a component library (we call it a Symbol Library) 
+  * Build a static site that can be hosted anywhere for dirt cheap
 
-Whether you're a seasoned or unseasoned developer, if you want to help make it easier to make websites, you're more than welcome to [help out](https://opensource.guide/how-to-contribute/#how-to-submit-a-contribution).
+**For content editors:**
+  * Edit editorial content on the frontend (like a Squareix, but better)
+  * Edit structured content in clearly defined fields
+  * Use the Symbol Library to build entire pages
 
-## Running primo locally
 
-* nothing will happen if you download this repo and try building it *. This repo is for the core primo editor, it gets used by [primo-desktop](https://primo.af) and [primo cloud](https://primocloud.io) (and by the self-hosted version of primo in the future). If you want to run primo locally to tinker with it:
 
-1. Fork and clone `primo-desktop`
-2. Fork and clone this repo into the same directory
-3. Run `npm link` in `primo`
-4. Run `npm link primo-app` in `primo-desktop` (this makes it so any changes in `primo-app` rebuild `primo-desktop`)
-5. Follow directions in `primo-desktop`'s readme to build for development
+## Development
 
-## Not sure how to contribute? Start here
+primo is built with and heavily inspired by [Svelte](https://svelte.dev/) - arguably the simplest, fastest, and most out-of-the-box-powerful frontend framework in existence. It's basically HTML+JavaScript with superpowers. If you've never used Svelte before but you're interested in trying, you'll find that it's incredibly easy to [learn](https://svelte.dev/tutorial/basics) (even for junior developers).
 
-* Migrate to TypeScript
+### Extending
+
+Besides making it way easier for developers to build websites, primo's foundational goal is to make the IDE itself easy to extend. At the moment, only the field types are extendible, but API development is ongoing to make it easy to add new languages (e.g. SCSS, Pug, WASM), component types (e.g. Svelte, React, Vue), and CMS plugins. 
+
+### Maintaining
+
+Maintenance-wise, primo could use all the help it can get. There are integration tests but no unit tests, TypeScript is only used in a few of the components, and there are still some artifacts from the many refactors the project has gone through that need to be cleaned up. On the bright side, that means that anyone can jump in and start helping out. Yes, especially you.
+
+Whether you're a junior or senior developer, writer, or just a web development enthusiast, if you want to make it easier for anyone to make websites, you're more than welcome to join the team.
+
+### Running primo locally
+
+This repo is for the core primo editor used by [primo-desktop](https://github.com/primo-app/primo-desktop) and [primo cloud](https://primocloud.io) (and by the self-hosted version of primo in the future). If you want to run primo locally for development:
+
+1. `git clone git@github.com:primo-app/primo.git`
+2. `cd primo`
+3. `npm install`
+4. `npm run dev`
+5. Go to [http://localhost:5000](http://localhost:5000)
+
+### How you can help
+
+* Migrate non-TS components to TS
 * Write integration tests (w/ Cypress)
-* Docs, docs, docs
+* Refactoring
+
+If that's not enough to go off of or you get stuck somewhere, somebody in the [Discord](https://discord.gg/kPsAsq) will be happy to point you in the right direction.
