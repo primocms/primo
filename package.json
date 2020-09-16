@@ -1,7 +1,7 @@
 {
   "name": "primo-app",
   "version": "1.0.99",
-  "description": "it's primo",
+  "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "index.js",
   "svelte": "index.js",
   "scripts": {
@@ -12,7 +12,9 @@
   "keywords": [
     "primo",
     "ide",
-    "cms"
+    "cms",
+    "component library",
+    "static site generator"
   ],
   "author": "Mateo Morris",
   "license": "ISC",
