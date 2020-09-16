@@ -2,6 +2,7 @@
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
+  import modal from '../../stores/app/modal'
   import {editorViewDev,userRole} from '../../stores/app/misc'
 
   export let variants:string = ''
@@ -12,7 +13,7 @@
 
 <header class="modal-card-head {variants}">
   <div class="flex-1 flex justify-start">
-    <button id="modal-close" on:click={() => dispatch('close')} type="button" class="inline-flex items-center justify-center rounded-md text-gray-400 p-2 hover:text-gray-500 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 focus:text-gray-500 transition duration-150 ease-in-out" aria-label="Close modal">
+    <button id="modal-close" on:click={() => modal.hide()} type="button" class="inline-flex items-center justify-center rounded-md text-gray-400 p-2 hover:text-gray-500 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 focus:text-gray-500 transition duration-150 ease-in-out" aria-label="Close modal">
       <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
