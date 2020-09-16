@@ -32,7 +32,7 @@
   <div class="flex-1 flex justify-end">
     {#if $userRole === 'developer'}
       <button on:click={() => $editorViewDev = !$editorViewDev} class="button switch" class:to-cms={$editorViewDev} class:to-ide={!$editorViewDev}>
-        {#if $editorViewDev}
+        {#if $editorViewDev && $modal.showSwitch}
           <i class="fas fa-edit"></i>
           <span class="hidden lg:inline-block">Switch to CMS</span>
         {:else}
