@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="readme_assets/logo.svg" alt="primo logo"/>
+  <img src="readme_assets/logo.svg" alt="logo"/>
 </p>
 
 <p align="center">
-  <img src="readme_assets/comic.png" alt="primo comic"/>
+  <img src="readme_assets/comic.png" alt="comic"/>
 </p>
 
 # primo is a page builder for developers 
@@ -23,6 +23,9 @@ Despite all the advancements that have been made in web development, developers 
   * Use the Symbol Library to build entire pages
 
 
+<p align="center">
+  <img src="readme_assets/screenshot.png" alt="screenshot"/>
+</p>
 
 ## Development
 
