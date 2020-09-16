@@ -405,6 +405,9 @@
 </div>
 
 <style>
+  .field-item {
+    @apply p-4 shadow mb-2 bg-white;
+  }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-100;
     &:hover {

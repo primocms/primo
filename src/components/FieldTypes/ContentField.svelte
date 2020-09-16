@@ -12,7 +12,7 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium p-4 {variants}">
+<label class="flex flex-col text-xl font-medium {variants}">
   <span class="mb-2 text-sm">{ field.label }</span>
   <input 
     class="input"
@@ -27,6 +27,6 @@
 <style>
   input {
     outline-color: rgb(248,68,73);
-    @apply bg-white p-2;
+    @apply border-2 border-gray-100 p-2 ;
   }
 </style>

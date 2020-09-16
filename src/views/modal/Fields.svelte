@@ -156,6 +156,17 @@
     modal.hide()
   }
 
+  function getComponent(field) {
+    const fieldType =  _.find($fieldTypes, ['id', field.type])
+    if (fieldType) {
+      return fieldType.component
+    } else {
+      return null
+      console.warn(`Field type '${field.type}' no longer exists, removing '${field.label}' field`)
+    }
+    
+  }
+
 </script>
 
 <ModalHeader 
@@ -184,39 +195,7 @@
           <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
           <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
         </EditField>
-        {#if field.type === 'api'}
-          <div class="field is-horizontal" in:fade={{ duration: 100 }}>
-            <div class="flex justify-between items-center">
-              <GenericField 
-                label="Endpoint" 
-                bind:value={field.endpoint} 
-                on:input={_.debounce( () => { updateHtmlWithFieldData('api') }, 1000 )}
-                input={{
-                  type: 'api',
-                  placeholder: 'https://jsonplaceholder.typicode.com/todos/1'
-                }} 
-                {disabled}/>
-              <GenericField 
-                label="Path" 
-                bind:value={field.endpointPath} 
-                on:input={_.debounce( () => { updateHtmlWithFieldData('api') }, 1000 )}
-                input={{
-                  type: 'text',
-                  placeholder: `2.prop.5['another-prop']`
-                }} 
-                {disabled}/>
-                <IconButton title="Open browser console to monitor data" icon="sync-alt" variants="is-link is-outlined" on:click={() => updateHtmlWithFieldData('api')} {disabled} />
-            </div>
-          </div>
-        {:else if field.type === 'js'}
-          <CodeMirror 
-            {disabled}
-            mode="javascript" 
-            style="height:25vh" 
-            bind:value={field.code} 
-            on:change={() => updateHtmlWithFieldData('js')} 
-          />
-        {:else if field.type === 'group'}
+        {#if field.type === 'group'}
           {#if field.fields}
             {#each field.fields as subfield}
               <EditField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
@@ -246,17 +225,17 @@
             {/each}
           {/if}
           <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
-        {:else if field.type === 'message'}
-          <textarea {disabled} rows="3" bind:value={field.value} class="w-full border border-solid border-gray-200 rounded"></textarea>
         {/if}
       </Card>
     {/each}
     <button class="field-button" on:click={addField} {disabled}><i class="fas fa-plus mr-2"></i>Add a Field</button>
   {:else}
     {#each fields as field}
-      <div class="field-item" id="field-{field.key}">
-        <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
-      </div>
+      {#if getComponent(field)}
+        <div class="field-item" id="field-{field.key}">
+          <svelte:component this={getComponent(field)} {field} on:input={() => updateHtmlWithFieldData('static')} />
+        </div>
+      {/if}
     {:else}
       <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">
         {#if $userRole === 'developer'}
@@ -270,6 +249,9 @@
 </div>
 
 <style>
+  .field-item {
+    @apply p-4 shadow mb-2 bg-white;
+  }
   input, select {
     @apply outline-none;
   }

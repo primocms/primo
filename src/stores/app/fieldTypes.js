@@ -22,10 +22,10 @@ const fieldTypes = writable([
 ])
 
 export default {
-  register: (newType) => {
+  register: (userTypes) => {
     fieldTypes.update(types => [
       ...types,
-      newType
+      ...userTypes
     ])
   },
   set: fieldTypes.set,

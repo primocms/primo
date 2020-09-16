@@ -2,7 +2,8 @@
 	import {setContext} from 'svelte'
 	import axios from 'axios/dist/axios'
 	import _ from 'lodash'
-	import Primo, {modal, pageId, utils, createSite} from '../../index'
+	import Primo, {modal, pageId, utils, createSite, fieldTypes} from '../../index'
+	import PrimoFields from '@primo-app/field-types'
 	import Build from './extensions/Build.svelte'
 
   import { domainInfo } from './stores'
@@ -28,7 +29,7 @@
 	}
 
 	// Create Modals
-	modal.create([
+	modal.register([
 		{
 			id: 'BUILD',
 			component: Build,
@@ -41,6 +42,9 @@
 			},
 		}
 	])
+
+	// Register Field Types
+	fieldTypes.register(PrimoFields)
 
 	let role = 'developer'
 
