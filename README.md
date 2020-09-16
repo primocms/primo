@@ -29,11 +29,11 @@ Despite all the advancements that have been made in web development, developers 
 
 ## Development
 
-primo is built with and heavily inspired by [Svelte](https://svelte.dev/) - arguably the simplest, fastest, and most out-of-the-box-powerful frontend framework in existence. It's basically HTML+JavaScript with superpowers. If you've never used Svelte before but you're interested in trying, you'll find that it's incredibly easy to [learn](https://svelte.dev/tutorial/basics) (even for junior developers).
+primo is built with and heavily inspired by [Svelte](https://svelte.dev/) - arguably the simplest, fastest, and most out-of-the-box-powerful frontend framework in existence. It's basically HTML+JavaScript with superpowers. If you've never used Svelte before but you're interested in trying, you'll find that it's incredibly easy to [learn](https://svelte.dev/tutorial/basics) (even for junior developers). 
 
 ### Extending
 
-Besides making it way easier for developers to build websites, primo's foundational goal is to make the IDE itself easy to extend. At the moment, only the field types are extendible, but API development is ongoing to make it easy to add new languages (e.g. SCSS, Pug, WASM), component types (e.g. Svelte, React, Vue), and CMS plugins. 
+Besides making it way easier for developers to build websites, primo's foundational goal is to make the IDE itself easy to extend. At the moment, only the field types are extendible, but API development is ongoing to make it easy to add new languages (e.g. SCSS, Pug, WASM), component types (e.g. Svelte, React, Vue), and CMS plugins. And since apps built with Svelte play well with apps built with any other JS framework, you can build on top of primo with your framework of choice. 
 
 ### Maintaining
 
