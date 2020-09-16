@@ -123,7 +123,7 @@ export default {
     modal_cleanup()
     store.update(s => ({...initialState}) )
   },
-  create: (modal) => {
+  register: (modal) => {
     if (Array.isArray(modal)) {
       modal.forEach(createModal)
     } else if (typeof modal === 'object') {
