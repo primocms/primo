@@ -61,7 +61,7 @@
 </script>
 
 <svelte:head>
-  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" type="text/css">
   {@html getPageLibraries(cssLibraries)}
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />

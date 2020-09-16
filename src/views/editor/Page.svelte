@@ -70,7 +70,7 @@
 
 <svelte:head>
   {@html $pageDataStore.wrapper.head.final}
-  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" type="text/css">
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html siteStyles}
   {@html pageStyles}
