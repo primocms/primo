@@ -18,28 +18,27 @@
   export let button;
 
   let componentBeingEdited = null
-  function editSymbol(component) {
+  function editSymbol(symbol) {
     modal.show(
       'COMPONENT_EDITOR', 
       {
-        component,
-        button: {
-          label: `Save ${component.title || 'Symbol'}`,
-          onclick: async (symbol) => {
-            modal.show('COMPONENT_LIBRARY', {button})
-            const [newSymbols] = await Promise.all([
-              symbols.place(symbol),
-              content.updateInstances(symbol),
-              // updateInstancesInDomain(symbol), // TODO
-            ])
-            site.save({ symbols: newSymbols })
-          }
-        }
-      }, 
-      { 
+        component: symbol,
         header: {
-          title: `Edit ${component.title || 'Symbol'}`,
-          icon: 'fas fa-clone'
+          title: `Edit ${symbol.title || 'Symbol'}`,
+          icon: 'fas fa-clone',
+          button: {
+            label: `Save ${symbol.title || 'Symbol'}`,
+            icon: 'fas fa-save',
+            onclick: async (symbol) => {
+              modal.show('COMPONENT_LIBRARY', {button})
+              const [newSymbols] = await Promise.all([
+                symbols.place(symbol),
+                content.updateInstances(symbol),
+                // updateInstancesInDomain(symbol), // TODO
+              ])
+              site.save({ symbols: newSymbols })
+            }
+          }
         } 
       }
     )
