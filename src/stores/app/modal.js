@@ -53,7 +53,8 @@ const modalTypes = {
       title: 'Add Page Section',
       icon: 'fas fa-columns'
     },
-    variants: 'max-w-lg'
+    variants: 'max-w-lg',
+    showSwitch: false
   },
   'SITE_PAGES' : {
     component: SitePages,

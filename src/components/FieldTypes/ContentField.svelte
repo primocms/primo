@@ -9,6 +9,7 @@
 
   export let disabled:boolean = false
   export let title:null|string = null;
+  export let variants:string = ''
 
   let isCheckbox:boolean
   $: isCheckbox = field.type === 'checkbox' 
@@ -20,7 +21,7 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium p-4">
+<label class="flex flex-col text-xl font-medium p-4 {variants}">
   <span class="mb-2 text-sm">{ field.label }</span>
   {#if isCheckbox}
     <input 

@@ -12,6 +12,14 @@
 
 <Card title={field.label} variants="p-2">
   {#each field.fields as subfield}
-    <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input />
+    <div class="group-item">
+      <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input />
+    </div>
   {/each}
 </Card>
+
+<style>
+  .group-item {
+    @apply bg-gray-100 mb-1;
+  }
+</style>
