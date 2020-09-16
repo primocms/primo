@@ -36,19 +36,43 @@
   }
 </script>
 
-<button on:click={openPage} class:active bind:this={container} aria-label="Go to /{page.id}">
-  <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {iframeLoaded = true }}></iframe>
-</button>
+
+<div class="shadow-xl mb-4 rounded">
+  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
+    <div>
+      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
+    </div>
+    <div class="flex justify-end">
+      {#if page.id !== 'index'}
+        <button title="Delete page" on:click={() => dispatch('delete')} class="delete-page text-xs text-red-500 hover:text-red-600">
+          <i class="fas fa-trash"></i>
+        </button>
+      {/if}
+    </div>
+  </div>
+  <button class="page-container" on:click={openPage} class:active bind:this={container} aria-label="Go to /{page.id}">
+    <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {iframeLoaded = true }}></iframe>
+  </button>
+</div>
 
 <style>
-  .active {
+  .page-title {
+    @apply text-lg font-semibold transition-colors duration-100 items-start;
+  }
+  a.page-title {
+    @apply underline text-blue-700;
+  }
+  a.page-title:hover {
+    @apply text-blue-800;
+  }
+  button.page-container.active {
     @apply cursor-default opacity-50;
     &:after {
       @apply opacity-50;
     }
   }
-  button {
-    @apply block w-full relative overflow-hidden;
+  button.page-container {
+    @apply block w-full relative overflow-hidden transition-colors duration-100;
     height: 15vh;
 
     &:after {

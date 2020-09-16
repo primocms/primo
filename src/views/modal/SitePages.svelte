@@ -158,21 +158,7 @@
 <ul class="grid grid-cols-2 gap-4">
   {#each $site.pages as page (page.id)}
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
-      <div class="shadow-xl mb-4 rounded">
-        <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
-          <div>
-            <span class="text-xs font-semibold text-gray-700">{page.title}</span>
-          </div>
-          <div class="flex justify-end">
-            {#if page.id !== 'index'}
-              <button title="Delete page" on:click={() => deletePage(page.id)} class="delete-page text-xs text-red-500 hover:text-red-600">
-                <i class="fas fa-trash"></i>
-              </button>
-            {/if}
-          </div>
-        </div>
-        <PageItem {page} active={$pageData.id === page.id}/>
-      </div>
+      <PageItem {page} active={$pageData.id === page.id} on:delete={() => deletePage(page.id)}/>
     </li>
   {/each}
 </ul>
@@ -202,17 +188,5 @@
 <style>
   li {
     @apply list-none;
-  }
-  .page-title {
-    @apply text-lg font-semibold transition-colors duration-100 items-start;
-  }
-  a.page-title {
-    @apply underline text-blue-700;
-  }
-  a.page-title:hover {
-    @apply text-blue-800;
-  }
-  button {
-    @apply transition-colors duration-200;
   }
 </style>
