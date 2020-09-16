@@ -2,7 +2,9 @@
   <img src="readme_assets/logo.svg" alt="primo logo"/>
 </p>
 
-![demo](readme_assets/comic.png)
+<p align="center">
+  <img src="readme_assets/comic.png alt="primo comic"/>
+</p>
 
 # primo is a page builder for developers 
 
