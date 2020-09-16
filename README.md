@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="readme_assets/comic.png alt="primo comic"/>
+  <img src="readme_assets/comic.png" alt="primo comic"/>
 </p>
 
 # primo is a page builder for developers 
