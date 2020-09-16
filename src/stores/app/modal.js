@@ -79,7 +79,8 @@ const modalTypes = {
       title: 'Dependencies',
       icon: 'fas fa-cube'
     },
-    variants: 'max-w-xl'
+    variants: 'max-w-xl',
+    showSwitch: false
   },
   'STYLES' : {
     component: Styles,
