@@ -4,8 +4,9 @@
   import _ from 'lodash'
   import {PrimaryButton} from '../../../components/buttons'
 
+  import ModalHeader from '../ModalHeader.svelte'
   import Container from './ComponentContainer.svelte'
-  import {MODAL_TYPES, createSymbol} from '../../../const'
+  import {createSymbol} from '../../../const'
   import { wrapInStyleTags, getUniqueId } from '../../../utils'
 
   import {editorViewDev,userRole} from '../../../stores/app'
@@ -89,6 +90,12 @@
   }
 
 </script>
+
+<ModalHeader 
+  icon="fas fa-clone"
+  title="Add Symbol"
+  variants="mb-4"
+/>
 
 {#if $editorViewDev}
   <PrimaryButton on:click={addSymbol} variants="mb-4">

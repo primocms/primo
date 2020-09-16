@@ -26,57 +26,12 @@
 </script>
 
 {#if $modal.visible}
-  <div class="modal mousetrap" transition:fade={{ duration: 100 }}>
+  <div class="modal m-2 lg:m-0 mousetrap" transition:fade={{ duration: 100 }}>
     <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
     <div class="modal-card {variants}">
-      {#if header}
-        <header class="modal-card-head">
-          <div class="flex items-center flex-1 justify-between pr-2">
-            <p class="text-sm text-gray-700 mr-4">
-              {#if header.icon}
-                <span class="icon">
-                  <i class={header.icon}></i>
-                </span>
-              {/if}
-              <span class="modal-title">{header.title}</span>
-            </p>
-            {#if $modal.showSwitch && $userRole === 'developer'}
-              <button on:click={switchView} class="switch">
-                {#if $editorViewDev}
-                  <i class="fas fa-edit"></i>
-                  <span>Switch to CMS</span>
-                {:else}
-                  <i class="fas fa-code"></i>
-                  <span>Switch to IDE</span>
-                {/if}
-              </button>
-            {/if}
-            </div>
-          <button on:click={closeModal} type="button" class="inline-flex items-center justify-center rounded-md text-gray-400 p-2 hover:text-gray-500 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 focus:text-gray-500 transition duration-150 ease-in-out" aria-label="Close modal">
-            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </header>
-      {/if}
       <div class="modal-card-body">
         <svelte:component this={$modal.component} { ...$modal.componentProps } />
       </div>
-      {#if button}
-        <footer class="modal-card-foot">
-          <button 
-            id="modal-footer-button"
-            class="button is-link" 
-            disabled={false}
-            on:click={button.onclick}>
-              {#if button.loading}
-                <Spinner size="lg" />
-              {:else}
-                {button.label}
-              {/if}
-          </button>
-        </footer>
-      {/if}
     </div>
   </div>
 {/if}
@@ -84,9 +39,10 @@
 <style>
 
   .switch {
-    @apply py-1 px-3 bg-gray-200 text-gray-700 text-sm rounded transition-colors duration-200;
+    @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
+    outline-color: rgb(248,68,73);
     &:hover {
-      @apply bg-primored text-white;
+      @apply bg-red-700 text-white;
     }
   }
 
@@ -106,24 +62,12 @@
     max-height: calc(100vh - 2rem);
   }
 
-  .modal-card-foot, .modal-card-head {
+  .modal-card-foot {
     @apply flex items-center justify-start p-4 relative bg-gray-100;
   }
 
-  .modal-card-head {
-    @apply text-gray-800 text-lg font-semibold py-2 px-4;
-  }
-
-  .modal-card-title {
-    @apply text-lg;
-  }
-
-  .modal-card-title > .modal-title {
-    @apply pl-1;
-  }
-
   .modal-card-body {
-    @apply bg-white flex-1 p-5;
+    @apply bg-white flex-1 p-3 flex flex-col;
   }
 
   .modal-card-foot {
@@ -146,8 +90,6 @@
   }
 
   .fullscreen .modal-card-body {
-    padding-bottom: 0;
-    padding-top: 0;
     @apply overflow-scroll;
   }
 

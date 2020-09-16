@@ -1,23 +1,5 @@
 import ShortUniqueId from 'short-unique-id';
 
-export const MODAL_TYPES = {
-  image : 'Image (uploaded or from URL)',
-  video : 'Video (embed from YouTube or Vimeo',
-  embed : 'Custom Component',
-  pageCode : 'Page code',
-  sections : 'Page sections',
-  settings : 'Page Data (logo/site name, page nav)',
-  publish: 'Publish site with password',
-  unlock: 'Unlock page for editing',
-  pages: 'Pages under domain name',
-  componentLibrary: 'Component Library',
-  login: 'Logging in and signing up',
-  user: 'User settings',
-  domain: 'Connect custom domain name',
-  pageList: 'Pages within domain',
-  pageStyles: 'Page Styles'
-}
-
 export const tailwindConfig = `{
   theme: {
     container: {

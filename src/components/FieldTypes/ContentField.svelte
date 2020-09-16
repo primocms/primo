@@ -20,11 +20,10 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium p-4 shadow-sm mb-2">
-  <span class="mb-2">{ field.label }</span>
+<label class="flex flex-col text-xl font-medium p-4">
+  <span class="mb-2 text-sm">{ field.label }</span>
   {#if isCheckbox}
     <input 
-      id="content-field-{field.key}"
       {title}
       {disabled}
       type="checkbox" 
@@ -33,7 +32,6 @@
     >
   {:else}
     <input 
-      id="content-field-{field.key}"
       class="input"
       {title}
       {disabled}
@@ -48,6 +46,6 @@
 <style>
   input {
     outline-color: rgb(248,68,73);
-    @apply bg-gray-100 p-2;
+    @apply bg-white p-2;
   }
 </style>

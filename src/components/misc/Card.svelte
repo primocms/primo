@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {fade} from 'svelte/transition'
 
   export let id:string = null
   export let title:string = null
@@ -7,7 +8,7 @@
 
 </script>
 
-<div class="{variants}" {id}>
+<div class="{variants}" {id} in:fade={{ duration: 100 }}>
   {#if title}
     <header>
       {#if title}

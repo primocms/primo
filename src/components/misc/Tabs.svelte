@@ -6,7 +6,7 @@
   export let tabs:Tabs
   export let activeTab:Tab
   export let variants:string = ''
-  export let activeColor:string = 'rgb(248,68,73)'
+  export let activeColor:string = 'rgb(30,30,30)'
 
   const tabStyles = (active:boolean): string => active ? `border-color:${activeColor};color:${activeColor};` : `border-color:transparent;`
 </script>
@@ -81,6 +81,7 @@
 
         &.is-active {
           @apply bg-primored text-white;
+          @apply border-codeblack !important;
         }
 
         &:first-child {

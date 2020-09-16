@@ -7,6 +7,7 @@
   import {SaveButton} from '../../components/buttons'
   import {CodeMirror} from '../../components'
   import { parseHandlebars, convertFieldsToData } from '../../utils'
+  import ModalHeader from './ModalHeader.svelte'
 
   import modal from '../../stores/app/modal'
   import site from '../../stores/data/site'
@@ -57,6 +58,22 @@
 
 </script>
 
+<ModalHeader 
+  icon="fab fa-html5"
+  title="HTML"
+  button={{
+    label: `Save`,
+    icon: 'fas fa-save',
+    onclick: () => {
+      site.saveCurrentPage({ wrapper: pageWrapper })
+      site.save({ wrapper: siteWrapper })
+      pageData.save('wrapper', pageWrapper)
+      modal.hide()
+    }
+  }}
+  variants="mb-4"
+/>
+
 <div class="flex flex-col">
   <Tabs {tabs} bind:activeTab variants="mb-4" />
   <div class="flex-1">
@@ -86,7 +103,7 @@
       }}
     />
   </div>
-  <div class="flex justify-end py-2">
+  <!-- <div class="flex justify-end py-2">
     <SaveButton 
       on:click={() => {
         site.saveCurrentPage({ wrapper: pageWrapper })
@@ -94,5 +111,5 @@
         pageData.save('wrapper', pageWrapper)
         modal.hide()
       }}>Save HTML</SaveButton>
-  </div>
+  </div> -->
 </div>

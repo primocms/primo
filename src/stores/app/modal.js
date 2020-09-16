@@ -1,7 +1,7 @@
 'use strict'
 
 import {writable,get} from 'svelte/store'
-import {ComponentEditor,ComponentLibrary,PageSections,ReleaseNotes,SitePages,Styles,Fields,Dependencies,Wrapper} from '../../views/modal'
+import {ComponentEditor,SymbolLibrary,PageSections,ReleaseNotes,SitePages,Styles,Fields,Dependencies,Wrapper} from '../../views/modal'
 import Mousetrap from 'mousetrap'
 
 const initialState = {
@@ -39,7 +39,7 @@ const modalTypes = {
     showSwitch: true
   },
   'COMPONENT_LIBRARY' : {
-    component: ComponentLibrary,
+    component: SymbolLibrary,
     header: {
       title: 'Symbol Library',
       icon: 'fas fa-clone'
@@ -78,7 +78,7 @@ const modalTypes = {
       title: 'Dependencies',
       icon: 'fas fa-cube'
     },
-    variants: 'max-w-lg'
+    variants: 'max-w-xl'
   },
   'STYLES' : {
     component: Styles,
@@ -94,7 +94,7 @@ const modalTypes = {
       title: 'HTML',
       icon: 'fab fa-html5'
     },
-    variants: 'max-w-xl'
+    variants: 'max-w-2xl'
   },
   'RELEASE_NOTES' : {
     component: ReleaseNotes,

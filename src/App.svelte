@@ -60,11 +60,8 @@
 
 
 <Router>
-	<Route path="/:pageId" let:params>
-		<Page pageId={params.pageId} on:build on:signOut />
-	</Route>
 	<Route>
-		<Page pageId={'index'} on:build on:signOut />
+		<Page pageId={window.location.pathname.slice(1) ? '/:pageId' : 'index'} on:build on:signOut />
 	</Route>
 </Router>
 

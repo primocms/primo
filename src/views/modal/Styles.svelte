@@ -7,6 +7,7 @@
   import {CodePreview} from '../../components/misc'
   import {SaveButton} from '../../components/buttons'
   import { compileScss, processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../../utils'
+  import ModalHeader from './ModalHeader.svelte'
 
   import {domainInfo} from '../../stores/data'
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
@@ -136,6 +137,26 @@
 
 </script>
 
+<ModalHeader 
+  icon="fab fa-css3"
+  title="CSS"
+  button={{
+    label: `Save CSS`,
+    icon: 'fas fa-save',
+    onclick: () => {
+      site.save({ styles: siteStyles })
+      site.saveCurrentPage({ styles: pageStyles })
+      if (shouldReloadTailwind) {
+        tailwind.saveSwappedInConfig()
+      } else {
+        tailwind.swapOutConfig()
+      }
+      modal.hide()
+    }
+  }}
+  variants="mb-4"
+/>
+
 <div class="h-full flex flex-col">
   <div class="flex flex-row flex-1">
     <div class="w-1/2 flex flex-col">
@@ -199,7 +220,7 @@
 
     </div>
   </div>
-  <div class="flex justify-end py-2">
+  <!-- <div class="flex justify-end py-2">
     <SaveButton {loading} on:click={() => {
       site.save({ styles: siteStyles })
       site.saveCurrentPage({ styles: pageStyles })
@@ -210,7 +231,7 @@
       }
       modal.hide()
     }}>Save</SaveButton>
-  </div>
+  </div> -->
 </div>
 
 

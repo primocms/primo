@@ -27,8 +27,8 @@
       <slot name="key"></slot>
     </label>
   </div>
-  <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 bg-gray-100 text-gray-600 transition-colors duration-100 hover:bg-gray-300 focus:bg-gray-300" title="delete field">
-    <i class="fas fa-times"></i>
+  <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 text-red-500 transition-colors duration-100 hover:bg-gray-200 focus:bg-gray-100 rounded-sm" title="delete field">
+    <i class="fas fa-trash"></i>
   </button>
 </div>
 

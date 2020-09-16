@@ -2,18 +2,12 @@
   import _ from "lodash";
   import ShortUniqueId from "short-unique-id";
   import pluralize from 'pluralize'
-  import { createEventDispatcher, onMount, onDestroy, setContext } from 'svelte'
+  import { createEventDispatcher, onMount, onDestroy, setContext, getContext } from 'svelte'
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()
 
-  import API from './Fields/Api.svelte'
-  import TextAreaField from './Fields/TextAreaField.svelte'
-  import MessageField from './Fields/MessageField.svelte'
-  import GroupField from './Fields/GroupField.svelte'
-  import RepeaterField from './Fields/RepeaterField.svelte'
-  // import ImageField from './ImageField.svelte'
-
-  import {ContentField, EditField, GenericField, ImageField, SubField as SubfieldField} from '../../../components/inputs'
+  import ModalHeader from '../ModalHeader.svelte'
+  import {EditField, GenericField, ImageField, SubField as SubfieldField} from '../../../components/inputs'
   import {PrimaryButton,SaveButton} from '../../../components/buttons'
   import {IconButton,Tabs} from '../../../components/misc'
   import {CodeMirror} from '../../../components'
@@ -29,6 +23,7 @@
   import content from '../../../stores/data/page/content'
   import symbols from '../../../stores/data/site/symbols'
   import {editorViewDev} from '../../../stores/app'
+  import fieldTypes from '../../../stores/app/fieldTypes'
   import modal from '../../../stores/app/modal'
   import {createComponent} from '../../../const'
 
@@ -39,7 +34,11 @@
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../../types/components'
 
   export let component:Component = createComponent()
-  export let button;
+  export let header = {
+    label: 'Create Component',
+    icon: 'fas fa-code',
+    button: {}
+  }
 
   let localComponent:Component = _.cloneDeep(component)
 
@@ -126,27 +125,27 @@
     const symbol:Component = symbols.get(localComponent.symbolID)
     localComponent = _.cloneDeep(symbol)
     modal.show('COMPONENT_EDITOR', {
-      component: symbol,
-      button: {
-        label: `Save ${symbol.title || 'Symbol'}`,
-        onclick: async (symbol) => {
-          loading = true
-          const [ newSymbols, newContent ] = await Promise.all([
-            symbols.place(symbol),
-            content.updateInstances(symbol),
-            // updateInstancesInDomain(symbol), // TODO
-          ])
-          site.save({ symbols: newSymbols })
-          site.saveCurrentPage({
-            content: newContent
-          })
-          modal.hide()
-        }
-      }
+      component: symbol
     }, {
       header: {
         title: `Edit ${symbol.title || 'Symbol'}`,
-        icon: 'fas fa-th-large'
+        icon: 'fas fa-th-large',
+        button: {
+          label: `Save ${symbol.title || 'Symbol'}`,
+          onclick: async (symbol) => {
+            loading = true
+            const [ newSymbols, newContent ] = await Promise.all([
+              symbols.place(symbol),
+              content.updateInstances(symbol),
+              // updateInstancesInDomain(symbol), // TODO
+            ])
+            site.save({ symbols: newSymbols })
+            site.saveCurrentPage({
+              content: newContent
+            })
+            modal.hide()
+          }
+        }
       },
     })
   }
@@ -263,61 +262,7 @@
       }[type] || ''
     }
 
-  // TODO: attach component to field type
-  const fieldTypes:Array<FieldType> = [
-    {
-      id: 'text',
-      label: 'Text',
-      component: ContentField
-    },
-    {
-      id: 'content',
-      label: 'Text Area',
-      component: TextAreaField
-    },
-    {
-      id: 'number',
-      label: 'Number',
-      component: ContentField
-    },
-    {
-      id: 'url',
-      label: 'URL',
-      component: ContentField
-    },
-    {
-      id: 'image',
-      label: 'Image',
-      component: ImageField
-    },
-    {
-      id: 'checkbox',
-      label: 'True / False',
-      component: ContentField
-    },
-    {
-      id: 'repeater',
-      label: 'Repeater',
-      component: RepeaterField
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField
-    },
-    {
-      id: 'js',
-      label: 'JavaScript',
-      component: ContentField
-    },
-    {
-      id: 'message',
-      label: 'Message',
-      component: MessageField
-    }
-  ]
-
-  const subFieldTypes:Array<FieldType> = fieldTypes.filter(field => !['repeater','group','api','js'].includes(field.id))
+  const subFieldTypes:Array<FieldType> = $fieldTypes.filter(field => !['repeater','group','api','js'].includes(field.id))
 
   const tabs = [
     {
@@ -343,114 +288,119 @@
 
 </script>
 
-<div class="flex flex-col h-full" in:fade={{ duration: 200 }}>
-  <div class="flex flex-1 flex-wrap">
-    <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
-      <div class="flex flex-col h-full">
-        {#if $editorViewDev}
-          <Tabs {tabs} bind:activeTab variants="my-2" />
-          {#if disabled}
-            <p class="mb-2 text-xs text-gray-700">This component is tied to a <button class="underline" on:click={loadSymbol} id="edit-symbol" title="Edit the Symbol">Symbol</button>. You won't be able to edit it unless you <button class="underline" on:click={separateFromSymbol} title="Separate the component instance from its Symbol" id="emancipate-symbol">emancipate it</button>.</p>
-          {/if}
-          {#if activeTab === tabs[0]}
-            <FullCodeEditor 
-              variants="flex-1" 
-              height="30rem" 
-              {disabled} 
-              bind:html={rawHTML}
-              bind:css={rawCSS}
-              bind:js={rawJS}
-              on:save={() => button.onclick(localComponent)}
-            />
-          {:else if activeTab === tabs[1]}
-            <div class="flex flex-col">
-              {#each fields as field, i}
-                <Card id="field-{i}" variants="field-item">
-                  <EditField on:delete={() => deleteField(field.id)} {disabled}>
-                    <select bind:value={field.type} slot="type" on:change={setPlaceholderValues} {disabled}>
-                      {#each fieldTypes as field}
-                        <option value={field.id}>{ field.label }</option>
-                      {/each}
-                    </select>
-                    <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled} on:focus={setPlaceholderValues}>
-                    <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled} on:input={() => updateHtmlWithFieldData('static')}>
-                  </EditField>
-                  {#if field.type === 'js'}
-                    <CodeMirror 
-                      {disabled}
-                      mode="javascript" 
-                      style="height:25vh" 
-                      bind:value={field.code} 
-                      on:change={() => updateHtmlWithFieldData('js')} 
-                    />
-                  {:else if field.type === 'group'}
-                    {#if field.fields}
-                      {#each field.fields as subfield}
-                        <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
-                          <select bind:value={subfield.type} slot="type" {disabled}>
-                            {#each subFieldTypes as field}
-                              <option value={field.id}>{ field.label }</option>
-                            {/each}
-                          </select>
-                          <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </EditField>
-                      {/each}
-                    {/if}
-                    <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
-                  {:else if field.type === 'repeater'}
-                    {#if field.fields}
-                      {#each field.fields as subfield}
-                        <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
-                          <select bind:value={subfield.type} slot="type" {disabled}>
-                            {#each subFieldTypes as field}
-                              <option value={field.id}>{ field.label }</option>
-                            {/each}
-                          </select>
-                          <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                          <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-                        </EditField>
-                      {/each}
-                    {/if}
-                    <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
-                  {:else if field.type === 'message'}
-                    <textarea {disabled} rows="3" bind:value={field.value} class="w-full border border-solid border-gray-200 rounded"></textarea>
+<ModalHeader 
+  { ...header }
+  button={{
+    ...header.button,
+    onclick: () => header.button.onclick(localComponent)
+  }}
+/>
+
+<div class="flex flex-1 flex-wrap">
+  <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
+    <div class="flex flex-col h-full">
+      {#if $editorViewDev}
+        <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />
+        {#if disabled}
+          <p class="mb-2 text-xs text-gray-700">This component is tied to a <button class="underline" on:click={loadSymbol} id="edit-symbol" title="Edit the Symbol">Symbol</button>. You won't be able to edit it unless you <button class="underline" on:click={separateFromSymbol} title="Separate the component instance from its Symbol" id="emancipate-symbol">emancipate it</button>.</p>
+        {/if}
+        {#if activeTab === tabs[0]}
+          <FullCodeEditor 
+            variants="flex-1" 
+            height="30rem" 
+            {disabled} 
+            bind:html={rawHTML}
+            bind:css={rawCSS}
+            bind:js={rawJS}
+            on:save={() => button.onclick(localComponent)}
+          />
+        {:else if activeTab === tabs[1]}
+          <div class="flex flex-col">
+            {#each fields as field, i}
+              <Card id="field-{i}" variants="field-item">
+                <EditField on:delete={() => deleteField(field.id)} {disabled}>
+                  <select bind:value={field.type} slot="type" on:change={setPlaceholderValues} {disabled}>
+                    {#each $fieldTypes as field}
+                      <option value={field.id}>{ field.label }</option>
+                    {/each}
+                  </select>
+                  <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled} on:focus={setPlaceholderValues}>
+                  <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled} on:input={() => updateHtmlWithFieldData('static')}>
+                </EditField>
+                {#if field.type === 'js'}
+                  <CodeMirror 
+                    {disabled}
+                    mode="javascript" 
+                    style="height:25vh" 
+                    bind:value={field.code} 
+                    on:change={() => updateHtmlWithFieldData('js')} 
+                  />
+                {:else if field.type === 'group'}
+                  {#if field.fields}
+                    {#each field.fields as subfield}
+                      <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <select bind:value={subfield.type} slot="type" {disabled}>
+                          {#each subFieldTypes as field}
+                            <option value={field.id}>{ field.label }</option>
+                          {/each}
+                        </select>
+                        <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                        <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                      </EditField>
+                    {/each}
                   {/if}
-                </Card>
-              {/each}
-              <PrimaryButton on:click={addNewField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
-            </div>
-          {/if}
-        {:else}
-          <div class="pt-8">
-            {#each fields as field}
-              {#if field.label}
-                <svelte:component this={_.find(fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
-              {:else}
-              <span>This field needs a label to be valid</span>
-              {/if}
-            {:else}
-              <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit this component's content</p>
+                  <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
+                {:else if field.type === 'repeater'}
+                  {#if field.fields}
+                    {#each field.fields as subfield}
+                      <EditField variants="ml-4 text-sm" fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                        <select bind:value={subfield.type} slot="type" {disabled}>
+                          {#each subFieldTypes as field}
+                            <option value={field.id}>{ field.label }</option>
+                          {/each}
+                        </select>
+                        <input class="label-input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                        <input class="key-input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                      </EditField>
+                    {/each}
+                  {/if}
+                  <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
+                {:else if field.type === 'message'}
+                  <textarea {disabled} rows="3" bind:value={field.value} class="w-full border border-solid border-gray-200 rounded"></textarea>
+                {/if}
+              </Card>
             {/each}
+            <PrimaryButton variants="field-button" on:click={addNewField} {disabled}><i class="fas fa-plus mr-2"></i>Create a Field</PrimaryButton>
           </div>
-      {/if}
-      </div>
-    </div>
-    <div class="w-full lg:w-1/2">
-      <CodePreview 
-        view="small"
-        {loading}
-        id={localComponent.id}
-        html={finalHTML} 
-        css={finalCSS} 
-        js={finalJS}
-        dependencies={$pageData.dependencies}
-        includeParentStyles
-      />
+        {/if}
+      {:else}
+        <div class="pt-8">
+          {#each fields as field}
+            {#if (field.label && field.key)}
+              <div class="field-item mb-2 shadow" id="field-{field.key}">
+                <svelte:component this={_.find($fieldTypes, ['id', field.type]).component} {field} on:input={() => updateHtmlWithFieldData('static')} />
+              </div>
+            {:else}
+              <span>This field needs a label and key in order to be valid</span>
+            {/if}
+          {:else}
+            <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">You'll need to create and integrate a field before you can edit this component's content</p>
+          {/each}
+        </div>
+    {/if}
     </div>
   </div>
-  <div class="flex justify-end py-2">
-    <SaveButton {loading} on:click={() => button.onclick(localComponent)}>{button.label}</SaveButton>
+  <div class="w-full lg:w-1/2">
+    <CodePreview 
+      view="small"
+      {loading}
+      id={localComponent.id}
+      html={finalHTML} 
+      css={finalCSS} 
+      js={finalJS}
+      dependencies={$pageData.dependencies}
+      includeParentStyles
+    />
   </div>
 </div>
 

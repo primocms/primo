@@ -212,7 +212,7 @@
     ],
     [
       {
-        id: 'site-settings',
+        id: 'fields',
         title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS', { 
@@ -279,18 +279,18 @@ on:contentChanged={() => {
 on:componentEditClick={({detail:component}) => {
   modal.show('COMPONENT_EDITOR', { 
     component,
+    header: {
+      title: 'Edit Component',
+      icon: 'fas fa-code'
+    },
     button: {
       label: 'Save Component',
+      icon: 'fas fa-save',
       onclick: (component) => {
         unsavedContentExists = true
         content.saveRow(component)
         modal.hide()
       }
-    }
-  }, {
-    header: {
-      title: 'Edit Component',
-      icon: 'fas fa-code'
     }
   })
 }}
