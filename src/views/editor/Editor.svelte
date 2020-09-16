@@ -170,9 +170,14 @@
         title: 'Single-use Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
-          button: {
-            label: 'Add to page',
-            onclick: addComponentToPage
+          header: {
+            title: 'Create Single-Use Component',
+            icon: 'fas fa-code',
+            button: {
+              icon: 'fas fa-plus',
+              label: 'Add to page',
+              onclick: addComponentToPage
+            }
           }
         })
       },
@@ -281,15 +286,15 @@ on:componentEditClick={({detail:component}) => {
     component,
     header: {
       title: 'Edit Component',
-      icon: 'fas fa-code'
-    },
-    button: {
-      label: 'Save Component',
-      icon: 'fas fa-save',
-      onclick: (component) => {
-        unsavedContentExists = true
-        content.saveRow(component)
-        modal.hide()
+      icon: 'fas fa-code',
+      button: {
+        label: 'Add changes',
+        icon: 'fas fa-plus',
+        onclick: (component) => {
+          unsavedContentExists = true
+          content.saveRow(component)
+          modal.hide()
+        }
       }
     }
   })
