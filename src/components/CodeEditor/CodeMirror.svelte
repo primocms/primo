@@ -125,7 +125,7 @@
     font-family: monospace;
     color: black;
     direction: ltr;
-    @apply opacity-0 transition-opacity duration-100;
+    @apply w-full opacity-0 transition-opacity duration-100;
 
     &.fadein {
       @apply opacity-100;

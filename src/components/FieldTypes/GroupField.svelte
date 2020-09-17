@@ -10,7 +10,7 @@
 
 </script>
 
-<Card title={field.label} variants="p-2">
+<Card title={field.label}>
   {#each field.fields as subfield}
     <div class="group-item">
       <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input />
@@ -20,6 +20,6 @@
 
 <style>
   .group-item {
-    @apply bg-gray-100 mb-1;
+    @apply bg-gray-100 mb-1 p-2;
   }
 </style>
