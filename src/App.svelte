@@ -55,13 +55,11 @@
 		tailwind.setInitial()
 	}
 
-
 </script>
 
-
 <Router>
-	<Route>
-		<Page pageId={window.location.pathname.slice(1) ? '/:pageId' : 'index'} on:build on:signOut />
+	<Route path="/*id" let:params>
+		<Page pageId={params.id === '' ? 'index' : params.id} on:build on:signOut />
 	</Route>
 </Router>
 
