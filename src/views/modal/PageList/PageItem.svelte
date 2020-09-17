@@ -37,7 +37,7 @@
 </script>
 
 
-<div class="shadow-xl mb-4 rounded">
+<div class="shadow-xl rounded">
   <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
     <div>
       <span class="text-xs font-semibold text-gray-700">{page.title}</span>

@@ -8,6 +8,7 @@
   import {PrimaryButton} from '../../components/buttons'
   import {Spinner,Card,Countdown} from '../../components/misc'
   import PageItem from './PageList/PageItem.svelte'
+  import ModalHeader from './ModalHeader.svelte'
 
   import {createPage} from '../../const'
   import modal from '../../stores/app/modal'
@@ -151,11 +152,14 @@
 
   let pageUrl = ''
 
-
-
 </script>
 
-<ul class="grid grid-cols-2 gap-4">
+<ModalHeader 
+  icon="fas fa-th-large"
+  title="Pages"
+/>
+
+<ul class="grid grid-cols-2 gap-4 mb-4">
   {#each $site.pages as page (page.id)}
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
       <PageItem {page} active={$pageData.id === page.id} on:delete={() => deletePage(page.id)}/>
@@ -163,27 +167,25 @@
   {/each}
 </ul>
 
-<div>
-  {#if !creatingPage}
+{#if !creatingPage}
   <PrimaryButton on:click={() => creatingPage = true} id="new-page" icon="fas fa-plus mr-2">
     New Page
   </PrimaryButton>
-  {:else}
-    <Card variants="p-4">
-      <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
-        <TextInput id="page-label" autofocus={true} variants="mb-4" label="Page Label" placeholder="About Us" />
-        <TextInput id="page-url" variants="mb-4" label="Page URL" prefix="/" on:input={validateUrl} bind:value={pageUrl} placeholder="about-us" />
-        <SelectOne 
-          id="page-base"
-          variants="mb-8"
-          label="Page Base" 
-          options={[ 'Empty', 'Duplicate' ]}
-        />
-        <PrimaryButton id="create-page" type='submit'>Create</PrimaryButton>
-      </form>
-    </Card>
-  {/if}
-</div>
+{:else}
+  <Card variants="p-4 shadow">
+    <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
+      <TextInput id="page-label" autofocus={true} variants="mb-4" label="Page Label" placeholder="About Us" />
+      <TextInput id="page-url" variants="mb-4" label="Page URL" prefix="/" on:input={validateUrl} bind:value={pageUrl} placeholder="about-us" />
+      <SelectOne 
+        id="page-base"
+        variants="mb-8"
+        label="Page Base" 
+        options={[ 'Empty', 'Duplicate' ]}
+      />
+      <PrimaryButton id="create-page" type='submit'>Create</PrimaryButton>
+    </form>
+  </Card>
+{/if}
 
 <style>
   li {
