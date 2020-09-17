@@ -2,7 +2,7 @@
 context('Site Pages', () => {
 
   it('creates a new page', () => {
-    cy.visit('http://cypress.localhost:5000')
+    cy.visit('http://localhost:5000')
     cy.get('#pages').click()
     cy.get('.primary-button').click()
     cy.get('#page-label input').type('Test Page')
@@ -25,5 +25,5 @@ context('Site Pages', () => {
 })
 
 function navigateToPage(id) {
-  cy.get(`li#page-${id} button.page-preview`).click()
+  cy.get(`li#page-${id} button.page-container`).click()
 }

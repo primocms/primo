@@ -5,7 +5,7 @@ export function click(selector) {
 
 export function navigateToPage(pageId) {
   click('#pages')
-  click(`#page-${pageId} button.page-preview`)
+  click(`#page-${pageId} button.page-container`)
 }
 
 export function createPage(pageLabel, pageId) {

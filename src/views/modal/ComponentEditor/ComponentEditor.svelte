@@ -125,19 +125,18 @@
     const symbol:Component = symbols.get(localComponent.symbolID)
     localComponent = _.cloneDeep(symbol)
     modal.show('COMPONENT_EDITOR', {
-      component: symbol
-    }, {
+      component: symbol,
       header: {
         title: `Edit ${symbol.title || 'Symbol'}`,
         icon: 'fas fa-th-large',
         button: {
+          icon: 'fas fa-save',
           label: `Save ${symbol.title || 'Symbol'}`,
           onclick: async (symbol) => {
             loading = true
             const [ newSymbols, newContent ] = await Promise.all([
               symbols.place(symbol),
-              content.updateInstances(symbol),
-              // updateInstancesInDomain(symbol), // TODO
+              content.updateInstances(symbol)
             ])
             site.save({ symbols: newSymbols })
             site.saveCurrentPage({
@@ -285,6 +284,8 @@
   onMount(async() => {
     faker = await import('faker')
   })
+
+  $: console.log(header)
 
 </script>
 

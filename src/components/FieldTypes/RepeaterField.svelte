@@ -60,9 +60,9 @@
 
 </script>
 
-<Card variants="p-2 pb-4" id="repeater-{field.key}">
+<Card variants="pb-4" id="repeater-{field.key}">
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
-  {#each fieldValues as fieldValue, i (fieldValues.id) } 
+  {#each fieldValues as fieldValue, i} 
     <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
       <div class="absolute top-0 right-0 py-1 px-2 text-gray-600 bg-gray-100 z-10 rounded">
         {#if i !== 0}
@@ -86,7 +86,7 @@
       {/each}
     </div>
   {/each}
-  <div class="p-2 pt-0 bg-gray-100">
+  <div class="p-2 bg-gray-100">
     <button class="field-button" on:click={() => addRepeaterItem()}>
       <i class="fas fa-plus mr-1"></i>
       <span>Add {pluralize.singular(field.label)}</span>
@@ -97,7 +97,10 @@
 
 <style>
   .repeater-item {
-    @apply p-2 bg-gray-100 flex flex-col relative;
+    @apply p-2 bg-gray-100 flex flex-col relative mb-2;
+    &:last-of-type {
+      @apply mb-0;
+    }
   }
   .repeater-item-field {
     @apply border-b border-gray-100;

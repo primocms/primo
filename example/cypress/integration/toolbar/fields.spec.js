@@ -3,7 +3,7 @@ import { click, addField, createComponent } from '../../helpers'
 context('Fields', () => {
 
   it('creates page and site fields', () => {
-    cy.visit('http://cypress.localhost:5000')
+    cy.visit('http://localhost:5000')
     click('#fields')
     addField({
       label: 'First Test',
@@ -16,7 +16,7 @@ context('Fields', () => {
       type: 'number',
       value: 100
     })
-    click('button.save-button')
+    click('button.primary')
   })
 
   it('uses page and site fields in single-use component', () => {
@@ -29,7 +29,7 @@ context('Fields', () => {
         value: 200
       }]
     })
-    click('button.save-button')
+    click('button.primary')
   })
 
   it('reflects fields in created component', () => {

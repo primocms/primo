@@ -10,7 +10,7 @@ const testComponent = `\
 context('Components', () => {
 
   it('creates a component', () => {
-    cy.visit('http://cypress.localhost:5000')
+    cy.visit('http://localhost:5000')
     createComponent({
       id: 'single-use',
       value: testComponent,
@@ -47,7 +47,7 @@ context('Components', () => {
         }
       ]
     })
-    click('button.save-button')
+    click('button.primary')
   })
 
   it('displays component on the page', () => {

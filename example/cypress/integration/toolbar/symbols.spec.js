@@ -5,11 +5,11 @@ context('Symbol Library', () => {
   describe('Updating a symbol', () => {
 
     it('creates a symbol', () => {
-      cy.visit('http://cypress.localhost:5000')
+      cy.visit('http://localhost:5000')
       click('button#symbol-library')
       click('button.primary-button')
       typeComponent('test-element', 'Test Symbol')
-      click('button.save-button')
+      click('button.primary')
       cy.get('iframe')
     }) 
 
@@ -18,7 +18,7 @@ context('Symbol Library', () => {
       cy.get('.primo-component').find('#test-element')
       click('#pages')
       createPage('Test Page','test')
-      click('#page-test button.page-preview')
+      click('#page-test button.page-container')
       cy.wait(1000)
       click('button#symbol-library')
       click('article:last-child button.is-main')
@@ -33,7 +33,7 @@ context('Symbol Library', () => {
       click('button#edit-symbol')
       cy.get('.CodeMirror')
         .type('<div id="edited-element" class="w-full p-24 bg-red-500 font-bold text-5xl text-white text-center">Edited Symbol</div>')
-      click('button.save-button')
+      click('button.primary')
     })
 
     it('reflects the change on both pages', () => {

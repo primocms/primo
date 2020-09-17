@@ -2,7 +2,7 @@
 context('Editor', () => {
 
   it('types and saves text', () => {
-    cy.visit('http://cypress.localhost:5000')
+    cy.visit('http://localhost:5000')
     const editor = cy.get('.primo-content')
     editor.clear().type('test')
     cy.get('#save').click()

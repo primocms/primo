@@ -1,7 +1,9 @@
 <svelte:window on:resize={resizePreview} />
 
 <script>
-  import {onMount} from 'svelte'
+  import {onMount, createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
+
   import {fade} from 'svelte/transition'
   import { navigate } from 'svelte-routing';
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
