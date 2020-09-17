@@ -19,7 +19,7 @@
     {title}
     {disabled}
     type="text"
-    value={field.value} 
+    bind:value={field.value} 
     on:input={() => dispatch('input')} 
   >
 </label>
