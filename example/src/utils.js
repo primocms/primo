@@ -371,7 +371,7 @@ export function buildPageHTML(page, buildWholePage = false) {
   const { content } = page 
   let html = ''
   content.forEach(section => {
-    html += `<section id="section-${section.id}">\n` +
+    html += `<div id="section-${section.id}">\n` +
               `\t<div class="columns flex flex-wrap ${section.width === 'contained' ? 'container' : ''}">\n`
     section.columns.forEach(column => {
       html += `\t\t<div class="column ${column.size}" id="column-${column.id}">\n`
