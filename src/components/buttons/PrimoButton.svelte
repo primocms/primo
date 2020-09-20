@@ -52,16 +52,18 @@
             <SiteButton active={siteItem.id === $site.id} site={siteItem} isLink={showDashboardLink}/>
           </li>
         {/each}
+        {#if !showDashboardLink}
           <li class="site-item">
             <button on:click={createSite} class="text-gray-100 font-semibold text-xs flex items-center justify-center h-full w-full transition-colors duration-100 hover:bg-red-600">
               <i class="fas fa-plus mr-1"></i>
               <span>Create site</span>
             </button>
           </li>
+        {/if}
       </ul>
     </nav>
-    <a class="dashboard-button flex flex-col my-2" href="http://discuss.primo.so/">
-      <i class="fas fa-users mb-1"></i>
+    <a class="dashboard-button flex flex-col my-2" href="https://discord.gg/jpZwmJ">
+      <i class="fab fa-discord mb-1"></i>
       <span>Discuss</span>
     </a>
     <a class="dashboard-button flex flex-col my-2" href="https://github.com/primo-app/primo/issues">

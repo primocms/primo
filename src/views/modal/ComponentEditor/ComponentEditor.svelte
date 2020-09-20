@@ -79,7 +79,7 @@
   let rawCSS:string = localComponent.value.raw.css
   let finalCSS:string = localComponent.value.final.css
   // $: compileCss(rawCSS)
-  $: quickDebounce([compileCss, rawCSS])
+  $: slowDebounce([compileCss, rawCSS])
   $: ((css) => { loading = true })(rawCSS)
   async function compileCss(css:string): Promise<void> {
     saveRawValue('css', css)
