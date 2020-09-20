@@ -126,6 +126,7 @@
     padding-bottom: 0 !important;
     outline: 1px solid transparent;
     outline-color: transparent;
+    outline-offset: -1px;
     transition: 0.25s outline-color;
   }
 </style>
