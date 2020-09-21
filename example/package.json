@@ -3,7 +3,7 @@
   "version": "0.2.1",
   "scripts": {
     "build": "rollup -c",
-    "dev": "concurrently --kill-others \"rollup -c -w\" \"npx cypress open\" \"cd functions && nodemon index.js\"",
+    "dev": "concurrently --kill-others \"rollup -c -w\" \"npx cypress open\"",
     "start": "sirv public",
     "validate": "svelte-check"
   },
