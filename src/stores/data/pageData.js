@@ -1,6 +1,5 @@
 import { isEqual } from 'lodash'
 import { writable, readable, derived, get } from 'svelte/store';
-import { getAllFields } from '../../utils'
 import { convertFieldsToData, parseHandlebars } from './helpers/components'
 import { createPage } from '../../const'
 
@@ -55,4 +54,15 @@ export default {
   subscribe: store.subscribe,
   set: store.set,
   update: store.update
+}
+
+function getAllFields(component = null) {
+  const siteFields = _.cloneDeep(get(site).fields)
+  const pageFields = _.cloneDeep(get(pageData).fields)
+  let componentFields = []
+  if (component) {
+    componentFields = component.value.raw.fields;
+  }
+  const allFields = _.unionBy(componentFields, pageFields, siteFields, "key");
+  return allFields
 }
