@@ -22,7 +22,6 @@
   let unsavedContentExists:boolean = false
 
   let updatingDatabase:boolean = false
-  $: updatingDatabase = getContext('saving')
 
   // setup key-bindings
   Mousetrap.bind(['mod+s'], (e) => {
@@ -242,10 +241,14 @@
   }
 
   function savePage(): void {
+    updatingDatabase = true
     content.save()
     pageData.save('content', $content)
     dispatch('save')
     unsavedContentExists = false
+    setTimeout(() => {
+      updatingDatabase = false
+    }, 6000)
   }
 
   let toolbarButtons:Array<ButtonGroup>
