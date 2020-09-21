@@ -1,9 +1,7 @@
 <script lang="ts">
   import Mousetrap from 'mousetrap'
   import _ from 'lodash'
-  import { onMount, createEventDispatcher } from 'svelte'
-  import { fade } from 'svelte/transition'
-  import store from '../../libraries/store.js'
+  import { onMount, createEventDispatcher, getContext } from 'svelte'
 
   const dispatch = createEventDispatcher()
   
@@ -21,8 +19,10 @@
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
 
   let unlockingPage:boolean = false
-  let updatingDatabase:boolean = false
   let unsavedContentExists:boolean = false
+
+  let updatingDatabase:boolean = false
+  $: updatingDatabase = getContext('saving')
 
   // setup key-bindings
   Mousetrap.bind(['mod+s'], (e) => {
@@ -246,10 +246,6 @@
     pageData.save('content', $content)
     dispatch('save')
     unsavedContentExists = false
-    updatingDatabase = true
-    setTimeout(() => {
-      updatingDatabase = false
-    }, 1000) 
   }
 
   let toolbarButtons:Array<ButtonGroup>

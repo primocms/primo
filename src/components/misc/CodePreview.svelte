@@ -87,7 +87,7 @@
 
 <div class="h-full flex flex-col lg:pl-2 lg:pt-2">
   <div class="preview-container flex-1" class:loading bind:this={container}>
-    <iframe class:scaled={view === 'large'} on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} title="Preview HTML" src="preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
+    <iframe class:scaled={view === 'large'} on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
   </div>
   <div class="footer-buttons">
     {#if view}
@@ -95,7 +95,7 @@
         change view
       </button>
     {/if}
-    <a target="blank" class="separate-tab" href="preview.html?preview={multiple ? 'multiple' : 'single' }">
+    <a target="blank" class="separate-tab" href="/preview.html?preview={multiple ? 'multiple' : 'single' }">
       <span>preview in separate tab</span>
       <span class="icon ml-1">
         <i class="fas fa-external-link-alt"></i>

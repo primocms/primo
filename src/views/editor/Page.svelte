@@ -22,9 +22,10 @@
 
   setContext('editable', true)
 
-  export let pageId : string
-  $: pageId = pageId === 'index.html' ? 'index' : pageId // pageId has .html on desktop
-	$: pageIdStore.set(pageId) 
+  export let route : string
+
+  let pageId = route.split('/')[1]
+	$: pageIdStore.set(pageId || 'index') // pageId is undefined in index
 
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')

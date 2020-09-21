@@ -44,7 +44,7 @@
         <span>Go back to Dashboard</span>
       </a>
     {/if}
-    <nav>
+    <!-- <nav>
       <p class="dropdown-heading">sites</p>
       <ul>
         {#each $allSites as siteItem}
@@ -61,7 +61,7 @@
           </li>
         {/if}
       </ul>
-    </nav>
+    </nav> -->
     <a class="dashboard-button flex flex-col my-2" href="https://discord.gg/jpZwmJ">
       <i class="fab fa-discord mb-1"></i>
       <span>Discuss</span>

@@ -24,6 +24,9 @@
 	export let showDashboardLink = false
 	export let role = 'developer'
 
+	export let saving = false
+	$: setContext('saving', saving)
+
 	setContext('functions', functions)
 	setContext('showDashboardLink', showDashboardLink)
 
@@ -31,7 +34,7 @@
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	$: dispatch('save', $allSites)
+	$: dispatch('save', $site)
 
 	$: allSites.set(sites)
 
@@ -58,8 +61,8 @@
 </script>
 
 <Router>
-	<Route path="/*id" let:params>
-		<Page pageId={params.id === '' ? 'index' : params.id} on:build on:signOut />
+	<Route path="/site/*route" let:params>
+		<Page route={params.route === '' ? 'index' : params.route} on:build on:signOut />
 	</Route>
 </Router>
 
