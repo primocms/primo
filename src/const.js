@@ -208,7 +208,8 @@ export const createPage = (id = getUniqueId(), title) => ({
       final: ''
     }
   },
-  fields: []
+  fields: [],
+  symbols: []
 })
 
 export const createSite = (id = getUniqueId()) => ({
