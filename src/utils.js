@@ -7,7 +7,6 @@ import objectPath from 'object-path'
 
 import domainInfo from './stores/data/domainInfo'
 import user from './stores/data/user'
-import {getCombinedTailwindConfig} from './stores/data/tailwind'
 import site from './stores/data/site'
 import pageData from './stores/data/pageData'
 

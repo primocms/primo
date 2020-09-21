@@ -4,12 +4,10 @@
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import {fade} from 'svelte/transition'
   import { navigate } from 'svelte-routing';
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
   import tailwind from '../../../stores/data/tailwind'
   import site from '../../../stores/data/site'
-  import pageData from '../../../stores/data/pageData'
   import modal from '../../../stores/app/modal'
 
   export let page
@@ -33,7 +31,8 @@
 
   function openPage(e) {
     e.preventDefault()
-    navigate(`/${page.id === 'index' ? '' : page.id}`)
+    const [ site ] = window.location.pathname.split('/').slice(2)
+    navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`)
     modal.hide()
   }
 </script>

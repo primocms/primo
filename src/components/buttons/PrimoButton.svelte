@@ -1,9 +1,6 @@
 <script>
-  import {flatten} from 'lodash'
   import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
-  import PageItem from '../../views/modal/PageList/PageItem.svelte'
-  import SiteButton from './SiteButton.svelte'
   import {allSites} from '../../stores/data'
   import site from '../../stores/data/site'
   import {pageId} from '../../stores/data/page'
@@ -39,7 +36,7 @@
 {#if showingDropdown}
   <div class="dropdown" out:fade={{duration:100}}>
     {#if showDashboardLink}
-      <a class="dashboard-button mb-4" href="https://primocloud.io">
+      <a class="dashboard-button mb-4" href={`${window.location.origin}/sites`}>
         <i class="fas fa-arrow-left mr-1"></i>
         <span>Go back to Dashboard</span>
       </a>

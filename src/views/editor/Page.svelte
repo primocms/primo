@@ -1,22 +1,14 @@
 <script lang="ts">
   import _ from 'lodash'
-  import {onMount,setContext,createEventDispatcher} from 'svelte'
-  import {fade} from 'svelte/transition'
+  import {setContext,createEventDispatcher} from 'svelte'
   import Editor from './Editor.svelte'
-  import View from './View.svelte'
-  import {Button} from '../../components/buttons'
-  import {getHeadStyles, setCustomScripts, setHeadScript, getPageLibraries, setPageJsLibraries} from './pageUtils.js'
-  import {FeedbackForm,Spinner} from '../../components/misc'
-  import { parseHandlebars, convertFieldsToData, ax, wrapInStyleTags } from '../../utils'
+  import { wrapInStyleTags } from '../../utils'
 
-  import {dependencies,domainInfo,user} from '../../stores/data'
-  import tailwind, {loadingTailwind} from '../../stores/data/tailwind'
+  import {user} from '../../stores/data'
+  import tailwind from '../../stores/data/tailwind'
   import site from '../../stores/data/site'
   import pageDataStore from '../../stores/data/pageData'
   import {pageId as pageIdStore} from '../../stores/data/page'
-  import content from '../../stores/data/page/content'
-  import modal from '../../stores/app/modal'
-  import {DEFAULTS} from '../../const'
 
   const dispatch = createEventDispatcher()
 
@@ -25,6 +17,7 @@
   export let route : string
 
   let pageId = route.split('/')[1]
+  $: pageId = route.split('/')[1]
 	$: pageIdStore.set(pageId || 'index') // pageId is undefined in index
 
   let siteStyles:string 
