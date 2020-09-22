@@ -41,7 +41,7 @@
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^5.1.2",
     "sass": "^1.26.8",
-    "svelte": "^3.0.0",
+    "svelte": "^3.26.0",
     "svelte-preprocess": "^3.9.10",
     "tslib": "^2.0.0",
     "typescript": "^3.9.7"
