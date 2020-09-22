@@ -36,36 +36,15 @@
   </button>
 {/if}
 
-{#if showingDropdown}
-  <div class="dropdown" out:fade={{duration:100}}>
-    {#each $dropdown as button}
-      {#if button.component}
-        <svelte:component this={button.component} {...button.props} />
-      {:else}
-        <DropdownButton {button} />
-      {/if}
-    {/each}
-    <!-- <nav>
-      <p class="dropdown-heading">sites</p>
-      <ul>
-        {#each $allSites as siteItem}
-          <li class="site-item" class:active={siteItem.id === $site.id}>
-            <SiteButton active={siteItem.id === $site.id} site={siteItem} isLink={showDashboardLink}/>
-          </li>
-        {/each}
-        {#if !showDashboardLink}
-          <li class="site-item">
-            <button on:click={createSite} class="text-gray-100 font-semibold text-xs flex items-center justify-center h-full w-full transition-colors duration-100 hover:bg-red-600">
-              <i class="fas fa-plus mr-1"></i>
-              <span>Create site</span>
-            </button>
-          </li>
-        {/if}
-      </ul>
-    </nav> -->
-
-  </div>
-{/if}
+<div class="dropdown" class:fadein={showingDropdown}>
+  {#each $dropdown as button}
+    {#if button.component}
+      <svelte:component this={button.component} {...button.props} />
+    {:else}
+      <DropdownButton {button} />
+    {/if}
+  {/each}
+</div>
 
 <style>
 
@@ -90,7 +69,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply absolute bg-primored shadow-xl rounded p-4;
+    @apply absolute bg-primored shadow-xl rounded p-4 opacity-0 transition-opacity duration-100 pointer-events-none;
 
     &:before, &:after {
       content: " ";
@@ -108,14 +87,12 @@
     ul {
       @apply grid grid-cols-2 gap-2 mt-2 pb-4;
     }
-  }
 
-  .site-item {
-    @apply shadow-lg relative overflow-hidden;
-    height: 15vh;
-    &.active {
-      outline: 5px solid rgb(30,30,30);
+    &.fadein {
+      @apply opacity-100 pointer-events-auto;
     }
   }
+
+
 
 </style>
