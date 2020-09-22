@@ -1,5 +1,5 @@
 {
-  "name": "svelte-app",
+  "name": "primo-app-example",
   "version": "0.2.1",
   "scripts": {
     "build": "rollup -c",
@@ -13,7 +13,6 @@
     "@rollup/plugin-typescript": "^4.0.0",
     "@tsconfig/svelte": "^1.0.0",
     "concurrently": "^5.3.0",
-    "nodemon": "^2.0.4",
     "postcss-nested": "^4.2.3",
     "rollup": "^2.26.10",
     "rollup-plugin-delete": "^2.0.0",
