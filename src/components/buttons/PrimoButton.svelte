@@ -2,13 +2,13 @@
   import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
   import {allSites} from '../../stores/data'
+  import dropdown from '../../stores/app/dropdown'
   import site from '../../stores/data/site'
   import {pageId} from '../../stores/data/page'
   import PrimoLogo from '../../components/svg/PrimoLogo.svelte'
+  import DropdownButton from './DropdownButton.svelte'
 
   const dispatch = createEventDispatcher()
-
-  const showDashboardLink = getContext('showDashboardLink')
 
   export let variants = ''
 
@@ -19,6 +19,8 @@
     site.set(newSite)
     pageId.set('index')
   }
+
+  $: console.log($dropdown)
 </script>
 
 <button
@@ -35,12 +37,13 @@
 
 {#if showingDropdown}
   <div class="dropdown" out:fade={{duration:100}}>
-    {#if showDashboardLink}
-      <a class="dashboard-button mb-4" href={`${window.location.origin}/sites`}>
-        <i class="fas fa-arrow-left mr-1"></i>
-        <span>Go back to Dashboard</span>
-      </a>
-    {/if}
+    {#each $dropdown as button}
+      {#if button.component}
+        <svelte:component this={button.component} {...button.props} />
+      {:else}
+        <DropdownButton {button} />
+      {/if}
+    {/each}
     <!-- <nav>
       <p class="dropdown-heading">sites</p>
       <ul>
@@ -59,20 +62,7 @@
         {/if}
       </ul>
     </nav> -->
-    <a class="dashboard-button flex flex-col my-2" href="https://discord.gg/jpZwmJ">
-      <i class="fab fa-discord mb-1"></i>
-      <span>Discuss</span>
-    </a>
-    <a class="dashboard-button flex flex-col my-2" href="https://github.com/primo-app/primo/issues">
-      <i class="fab fa-github mb-1"></i>
-      <span>Report a Bug</span>
-    </a>
-    {#if showDashboardLink}
-      <button class="dashboard-button my-2" on:click={() => dispatch('signOut')}>
-        <i class="fas fa-sign-out-alt mr-1"></i>
-        <span>Sign Out</span>
-      </button>
-    {/if}
+
   </div>
 {/if}
 
@@ -99,7 +89,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply overflow-scroll absolute bg-primored shadow-xl rounded p-4;
+    @apply absolute bg-primored shadow-xl rounded p-4;
 
     &:before, &:after {
       content: " ";
@@ -116,13 +106,6 @@
 
     ul {
       @apply grid grid-cols-2 gap-2 mt-2 pb-4;
-    }
-  }
-
-  .dashboard-button {
-    @apply block px-4 py-2 bg-red-500 text-red-100 rounded transition-colors duration-100 w-full text-xs text-center;
-    &:hover {
-      @apply bg-red-600;
     }
   }
 

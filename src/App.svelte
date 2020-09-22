@@ -22,14 +22,12 @@
 	export let data
 	export let functions
 	export let sites = []
-	export let showDashboardLink = false
 	export let role = 'developer'
 
 	export let saving = false
 	$: $savingStore = saving
 
 	setContext('functions', functions)
-	setContext('showDashboardLink', showDashboardLink)
 
 	$: setContext('sites', sites)
 	$: $editorViewDev = (role === 'developer') ? true : false
@@ -62,9 +60,7 @@
 	}
 
 	function getPage(route) {
-		console.log({route})
 		const page = route.split('/')[1]
-		console.log({page})
 		return page ? page : 'index'
 	}
 
