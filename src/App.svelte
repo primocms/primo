@@ -16,6 +16,7 @@
 	import {pageId} from './stores/data/page'
 	import content from './stores/data/page/content'
   import {editorViewDev, userRole} from './stores/app'
+	import {saving as savingStore} from './stores/app/misc'
   import modal from './stores/app/modal'
 
 	export let data
@@ -25,7 +26,7 @@
 	export let role = 'developer'
 
 	export let saving = false
-	$: setContext('saving', saving)
+	$: $savingStore = saving
 
 	setContext('functions', functions)
 	setContext('showDashboardLink', showDashboardLink)

@@ -14,6 +14,7 @@
   import pageData from '../../stores/data/pageData'
   import content from '../../stores/data/page/content'
   import {focusedNode,editorViewDev} from '../../stores/app'
+  import {saving} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
 
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
@@ -241,14 +242,9 @@
   }
 
   function savePage(): void {
-    updatingDatabase = true
     content.save()
     pageData.save('content', $content)
     dispatch('save')
-    unsavedContentExists = false
-    setTimeout(() => {
-      updatingDatabase = false
-    }, 6000)
   }
 
   let toolbarButtons:Array<ButtonGroup>
@@ -268,7 +264,7 @@
 </script>
 
 <Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => editorViewDev.set(!$editorViewDev)}>
-  <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={updatingDatabase} on:click={savePage} disabled={!unsavedContentExists} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
+  <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!unsavedContentExists} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
   {#if $editorViewDev}
     <ToolbarButton type="primo" icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
   {:else}
@@ -276,26 +272,26 @@
   {/if}
 </Toolbar>
 <Doc 
-on:contentChanged={() => {
-  unsavedContentExists = true
-  dispatch('change')
-}}
-on:componentEditClick={({detail:component}) => {
-  modal.show('COMPONENT_EDITOR', { 
-    component,
-    header: {
-      title: 'Edit Component',
-      icon: 'fas fa-code',
-      button: {
-        label: 'Add changes',
-        icon: 'fas fa-plus',
-        onclick: (component) => {
-          unsavedContentExists = true
-          content.saveRow(component)
-          modal.hide()
+  on:contentChanged={() => {
+    unsavedContentExists = true
+    dispatch('change')
+  }}
+  on:componentEditClick={({detail:component}) => {
+    modal.show('COMPONENT_EDITOR', { 
+      component,
+      header: {
+        title: 'Edit Component',
+        icon: 'fas fa-code',
+        button: {
+          label: 'Add changes',
+          icon: 'fas fa-plus',
+          onclick: (component) => {
+            unsavedContentExists = true
+            content.saveRow(component)
+            modal.hide()
+          }
         }
       }
-    }
-  })
-}}
+    })
+  }}
 />
