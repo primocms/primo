@@ -20,20 +20,21 @@
     pageId.set('index')
   }
 
-  $: console.log($dropdown)
 </script>
 
-<button
-  id="primo-button"
-  transition:fade
-  class={variants}
-  class:bg-primored={showingDropdown}
-  class:chevron={showingDropdown}
-  aria-label="See all sites"
-  on:click={() => showingDropdown = !showingDropdown}
-  >
-  <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
-</button>
+{#if $dropdown.length > 0}
+  <button
+    id="primo-button"
+    transition:fade
+    class={variants}
+    class:bg-primored={showingDropdown}
+    class:chevron={showingDropdown}
+    aria-label="See all sites"
+    on:click={() => showingDropdown = !showingDropdown}
+    >
+    <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
+  </button>
+{/if}
 
 {#if showingDropdown}
   <div class="dropdown" out:fade={{duration:100}}>
