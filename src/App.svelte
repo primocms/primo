@@ -48,21 +48,30 @@
 	$: setPage($pageId, $site)
 
 	function setPage(pageId, site) {
-		const currentPage = find(site.pages, ['id', pageId || 'index'])
-		content.set(currentPage.content)
-		pageData.update(s => ({
-			...s, 
-			...currentPage
-		}))
+		const currentPage = find(site.pages, ['id', pageId])
+		if (currentPage) {
+			content.set(currentPage.content)
+			pageData.update(s => ({
+				...s, 
+				...currentPage
+			}))
+		}
 
 		tailwind.setInitial()
+	}
+
+	function getPage(route) {
+		console.log({route})
+		const page = route.split('/')[1]
+		console.log({page})
+		return page ? page : 'index'
 	}
 
 </script>
 
 <Router>
 	<Route path="/site/*route" let:params>
-		<Page route={params.route === '' ? 'index' : params.route} on:build on:signOut />
+		<Page route={getPage(params.route)} on:build on:signOut />
 	</Route>
 </Router>
 

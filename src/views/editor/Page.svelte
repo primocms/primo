@@ -8,7 +8,7 @@
   import tailwind from '../../stores/data/tailwind'
   import site from '../../stores/data/site'
   import pageDataStore from '../../stores/data/pageData'
-  import {pageId as pageIdStore} from '../../stores/data/page'
+  import {pageId} from '../../stores/data/page'
 
   const dispatch = createEventDispatcher()
 
@@ -16,9 +16,7 @@
 
   export let route : string
 
-  let pageId = route.split('/')[1]
-  $: pageId = route.split('/')[1]
-	$: pageIdStore.set(pageId || 'index') // pageId is undefined in index
+	$: pageId.set(route) 
 
   let siteStyles:string 
   $: siteStyles = wrapInStyleTags($site.styles.final, 'site-styles')
