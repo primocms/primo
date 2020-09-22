@@ -1,5 +1,17 @@
 import _ from 'lodash'
-import {getAllFields} from '../../../utils'
+import site from '../site'
+import pageData from '../pageData'
+
+export function getAllFields(component = null) {
+  const siteFields = _.cloneDeep(get(site).fields)
+  const pageFields = _.cloneDeep(get(pageData).fields)
+  let componentFields = []
+  if (component) {
+    componentFields = component.value.raw.fields;
+  }
+  const allFields = _.unionBy(componentFields, pageFields, siteFields, "key");
+  return allFields
+}
 
 export async function hydrateAllComponents(content) {
   return await Promise.all(
