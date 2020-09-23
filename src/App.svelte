@@ -19,26 +19,23 @@
 
 	export let data
 	export let functions
-	export let sites = []
 	export let role = 'developer'
-
 	export let saving = false
 	$: $savingStore = saving
 
 	setContext('functions', functions)
 
-	$: setContext('sites', sites)
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	$: dispatch('save', $site)
-
-	$: allSites.set(sites)
-
+	// set store from passed in data
 	$: site.update(s => ({
 		...s,
 		...data
 	}))
+
+	// dispatch save when the site gets updated
+	$: dispatch('save', $site)
 
 	$: symbols.set(data.symbols)
 

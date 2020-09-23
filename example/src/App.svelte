@@ -6,25 +6,17 @@
 	import Build from './extensions/Build.svelte'
 
   import { domainInfo } from './stores'
-
-	export let subdomain
-
-	$: domainInfo.save({ 
-		subdomain,
-		page: $pageId
-	})
-
+	
 	async function processPostCSS(args) {
 		const {data:styles} = await axios.post('http://localhost:3000/postcss', args)
 		return styles
 	}
 
-	let sites = JSON.parse(window.localStorage.getItem('sites')) || [createSite()]
-	let data = sites[0]
+	let data = window.localStorage.getItem('site') || createSite()
 
-	function saveData(sites) {
-		const json = JSON.stringify(sites)
-		window.localStorage.setItem('sites', json)
+	function saveData(site) {
+		const json = JSON.stringify(site)
+		window.localStorage.setItem('site', json)
 	}
 
 	// Create Modals
@@ -52,7 +44,6 @@
 
 <Primo 
 	{data}
-	{sites}
 	{role}
 	functions={{
 		processPostCSS

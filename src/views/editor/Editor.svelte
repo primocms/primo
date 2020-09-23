@@ -245,6 +245,7 @@
     content.save()
     pageData.save('content', $content)
     dispatch('save')
+    unsavedContentExists = false
   }
 
   let toolbarButtons:Array<ButtonGroup>
