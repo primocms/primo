@@ -11,9 +11,10 @@
 
   import modal from '../../stores/app/modal'
   import pageHTML from '../../stores/data/page/wrapper'
-  import siteHTML from '../../stores/data/site/wrapper'
+  // import siteHTML from '../../stores/data/site/wrapper'
   import pageFields from '../../stores/data/page/fields'
   import siteFields from '../../stores/data/site/fields'
+  import {wrapper as siteHTML} from '../../stores/data/draft'
 
   let activeHTML = $pageHTML
   $: activeHTML = activeTab.id === 'page' ? $pageHTML : $siteHTML

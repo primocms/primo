@@ -17,7 +17,8 @@
   import modal from '../../stores/app/modal'
 
   import pageStyles from '../../stores/data/page/styles'
-  import siteStyles from '../../stores/data/site/styles'
+  // import siteStyles from '../../stores/data/site/styles'
+  import {styles as siteStyles} from '../../stores/data/draft'
 
   let styles = $pageStyles
   $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles
@@ -143,8 +144,8 @@
   icon="fab fa-css3"
   title="CSS"
   button={{
-    label: `Save CSS`,
-    icon: 'fas fa-save',
+    label: `Draft`,
+    icon: 'fas fa-check',
     onclick: () => {
       if (shouldReloadTailwind) {
         tailwind.saveSwappedInConfig()

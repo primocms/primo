@@ -1,9 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { createSite } from '../../const'
-import fields from './site/fields'
-import styles from './site/styles'
-import symbols from './site/symbols'
-import wrapper from './site/wrapper'
+
+import {fields,styles,symbols,wrapper} from './draft'
 
 let site
 const {subscribe,set} = writable(createSite())

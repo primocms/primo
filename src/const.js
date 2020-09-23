@@ -165,78 +165,8 @@ function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
 
-export const createPage = (id = getUniqueId(), title) => ({
-  id,
-  title,
-  content: [
-    {
-      id: getUniqueId(),
-      width: 'contained',
-      columns: [
-        {
-          id: getUniqueId(),
-          size: 'w-full',
-          rows: [
-            {
-              id: getUniqueId(),
-              type: 'content',
-              value: {
-                html: '<p><br></p>'
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  dependencies: {
-    headEmbed: '',
-    libraries: []
-  },
-  styles: {
-    raw: '',
-    final: '',
-    tailwind: ''
-  },
-  wrapper: {
-    head: {
-      raw: '',
-      final: ''
-    },
-    below: {
-      raw: '',
-      final: ''
-    }
-  },
-  fields: [],
-  symbols: []
-})
-
-export const createSite = (id = getUniqueId()) => ({
-  id,
-  label: '',
-  pages: [ createPage('index', 'Home Page') ],
-  dependencies: {
-    headEmbed: '',
-    libraries: []
-  },
-  styles: defaultStyles,
-  wrapper: {
-    head: {
-      raw: '',
-      final: ''
-    },
-    below: {
-      raw: '',
-      final: ''
-    }
-  },
-  fields: [],
-  symbols: []
-})
-
 export const DEFAULTS = {
-  site: createSite(),
+  // site: createSite(),
   page: {
     id: '',
     title: '',
@@ -281,5 +211,62 @@ export const DEFAULTS = {
       }
     },
     fields: []
-  }
+  },
+  wrapper: {
+    head: {
+      raw: '',
+      final: ''
+    },
+    below: {
+      raw: '',
+      final: ''
+    }
+  },
+  styles: defaultStyles,
+  dependencies: {
+    headEmbed: '',
+    libraries: []
+  },
 }
+
+export const createPage = (id = getUniqueId(), title) => ({
+  id,
+  title,
+  content: [
+    {
+      id: getUniqueId(),
+      width: 'contained',
+      columns: [
+        {
+          id: getUniqueId(),
+          size: 'w-full',
+          rows: [
+            {
+              id: getUniqueId(),
+              type: 'content',
+              value: {
+                html: '<p><br></p>'
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  dependencies: DEFAULTS.dependencies,
+  styles: DEFAULTS.styles,
+  wrapper: DEFAULTS.wrapper,
+  fields: [],
+  symbols: []
+})
+
+export const createSite = (id = getUniqueId()) => ({
+  id,
+  label: '',
+  pages: [ createPage('index', 'Home Page') ],
+  dependencies: DEFAULTS.dependencies,
+  styles: DEFAULTS.styles,
+  wrapper: DEFAULTS.wrapper,
+  fields: [],
+  symbols: []
+})

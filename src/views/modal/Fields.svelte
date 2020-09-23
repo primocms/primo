@@ -21,7 +21,8 @@
   import modal from '../../stores/app/modal'
   import content from '../../stores/data/page/content'
   import pageFields from '../../stores/data/page/fields'
-  import siteFields from '../../stores/data/site/fields'
+  // import siteFields from '../../stores/data/site/fields'
+  import {fields as siteFields} from '../../stores/data/draft'
 
   let fields = $pageFields 
 
