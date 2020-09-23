@@ -1,37 +1,11 @@
 <script>
-  import { slide, fade } from 'svelte/transition'
-  import _ from 'lodash'
-  import { createEventDispatcher, onMount } from 'svelte'
-  const dispatch = createEventDispatcher()
-  import {Tabs} from '../../../components/misc'
-  import {SaveButton} from '../../../components/buttons'
+  import {cloneDeep} from 'lodash'
 
   import modal from '../../../stores/app/modal'
-  import site from '../../../stores/data/site'
-  import pageData from '../../../stores/data/pageData'
+  import dependencies from '../../../stores/data/page/dependencies'
 
   import ModalHeader from '../ModalHeader.svelte'
-  import HeadEmbeds from './_HeadEmbeds.svelte'
   import Libraries from './_Libraries.svelte'
-
-  let localDependencies = _.cloneDeep($pageData.dependencies)
-
-  const tabs = [
-    {
-      id: 'head',
-      label: 'Head Embeds',
-      component: HeadEmbeds
-    },
-    {
-      id: 'js',
-      label: 'Libraries',
-      component: Libraries
-    },
-  ]
-
-  let selectedTab = tabs[0]
-
-  let disableSave = false
 
 </script>
 
@@ -39,10 +13,9 @@
   icon="fas fa-cube"
   title="Page Dependencies"
   button={{
-    label: `Save`,
-    icon: 'fas fa-save',
+    label: `Done`,
+    icon: 'fas fa-check',
     onclick: () => {
-      site.saveCurrentPage({ dependencies: localDependencies })
       modal.hide()
     }
   }}
@@ -50,5 +23,5 @@
 />
 
 <div class="flex flex-col h-full">
-  <Libraries bind:libraries={localDependencies.libraries} />
+  <Libraries bind:libraries={$dependencies.libraries} />
 </div>
