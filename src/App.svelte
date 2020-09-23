@@ -16,7 +16,6 @@
 	import content from './stores/data/page/content'
   import {editorViewDev, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
-  import modal from './stores/app/modal'
 
 	export let data
 	export let functions
