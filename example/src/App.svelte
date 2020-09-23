@@ -6,7 +6,7 @@
 	import PrimoFields from '@primo-app/field-types'
 	import Build from './extensions/Build.svelte'
 
-  import { domainInfo } from './stores'
+  	import { domainInfo } from './stores'
 
 	export let subdomain
 

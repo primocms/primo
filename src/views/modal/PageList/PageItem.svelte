@@ -1,5 +1,3 @@
-<svelte:window on:resize={resizePreview} />
-
 <script>
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
@@ -10,24 +8,28 @@
   import site from '../../../stores/data/site'
   import modal from '../../../stores/app/modal'
 
-  export let page
-  export let active = false
+  export let page;
+  export let active = false;
 
-  $: preview = wrapInStyleTags($tailwind) + wrapInStyleTags($site.styles.final) + wrapInStyleTags(page.styles.final) + buildPagePreview(page.content)
+  $: preview =
+    wrapInStyleTags($tailwind) +
+    wrapInStyleTags($site.styles.final) +
+    wrapInStyleTags(page.styles.final) +
+    buildPagePreview(page.content);
 
-  let iframeLoaded = false
+  let iframeLoaded = false;
 
-  let container
-  let iframe
-  let scale
+  let container;
+  let iframe;
+  let scale;
 
   function resizePreview() {
-    const {clientWidth:parentWidth} = container
-    const {clientWidth:childWidth} = iframe
-    scale = parentWidth / childWidth
+    const { clientWidth: parentWidth } = container;
+    const { clientWidth: childWidth } = iframe;
+    scale = parentWidth / childWidth;
   }
 
-  onMount(resizePreview)
+  onMount(resizePreview);
 
   function openPage(e) {
     e.preventDefault()
@@ -36,25 +38,6 @@
     modal.hide()
   }
 </script>
-
-
-<div class="shadow-xl rounded">
-  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
-    <div>
-      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
-    </div>
-    <div class="flex justify-end">
-      {#if page.id !== 'index'}
-        <button title="Delete page" on:click={() => dispatch('delete')} class="delete-page text-xs text-red-500 hover:text-red-600">
-          <i class="fas fa-trash"></i>
-        </button>
-      {/if}
-    </div>
-  </div>
-  <button class="page-container" on:click={openPage} class:active bind:this={container} aria-label="Go to /{page.id}">
-    <iframe bind:this={iframe} style="transform: scale({scale})" class:fadein={iframeLoaded} title="page preview" srcdoc={preview} on:load={() => {iframeLoaded = true }}></iframe>
-  </button>
-</div>
 
 <style>
   .page-title {
@@ -77,7 +60,7 @@
     height: 15vh;
 
     &:after {
-      content: '';
+      content: "";
       @apply absolute top-0 left-0 right-0 bottom-0 bg-codeblack opacity-0 transition-opacity duration-100;
       pointer-events: all;
     }
@@ -96,3 +79,38 @@
     @apply opacity-100;
   }
 </style>
+
+<svelte:window on:resize={resizePreview} />
+<div class="shadow-xl rounded">
+  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
+    <div>
+      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
+    </div>
+    <div class="flex justify-end">
+      {#if page.id !== 'index'}
+        <button
+          title="Delete page"
+          on:click={() => dispatch('delete')}
+          class="delete-page text-xs text-red-500 hover:text-red-600">
+          <i class="fas fa-trash" />
+        </button>
+      {/if}
+    </div>
+  </div>
+  <button
+    class="page-container"
+    on:click={openPage}
+    class:active
+    bind:this={container}
+    aria-label="Go to /{page.id}">
+    <iframe
+      bind:this={iframe}
+      style="transform: scale({scale})"
+      class:fadein={iframeLoaded}
+      title="page preview"
+      srcdoc={preview}
+      on:load={() => {
+        iframeLoaded = true;
+      }} />
+  </button>
+</div>
