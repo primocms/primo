@@ -1,76 +1,19 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
-  import {fade} from 'svelte/transition'
-  const dispatch = createEventDispatcher()
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
 
-  import {CodeMirror} from '../../../components'
+  import { CodeMirror } from "../../../components";
 
-  export let disabled = false
+  export let disabled = false;
 
-  export let variants = ''
+  export let variants = "";
 
-  export let html = ''
-  export let css = ''
-  export let js = ''
+  export let html = "";
+  export let css = "";
+  export let js = "";
 
-  let activeTab = 'html'
-
-  let activeError = null;
-
-  let iframe;
-
+  let activeTab = "html";
 </script>
-
-<div class="flex flex-col {variants}">
-  <div class="tabs is-toggle is-fullwidth is-small">
-    <ul>
-      <li class:is-active={activeTab === 'html'}>
-        <button on:click={() => activeTab = 'html'}>
-          <span>HTML</span>
-        </button>
-      </li>
-      <li class:is-active={activeTab === 'css'}>
-        <button on:click={() => activeTab = 'css'}>
-          <span>CSS</span>
-        </button>
-      </li>
-      <li class:is-active={activeTab === 'js'}>
-        <button on:click={() => activeTab = 'js'}>
-          <span>JS</span>
-        </button>
-      </li>
-    </ul>
-  </div>
-  {#if activeTab === 'html'}
-    <CodeMirror 
-      bind:value={html}
-      mode={{
-        name: 'handlebars',
-        base: 'text/html'
-      }}
-      {disabled}
-      on:change={({ detail }) => dispatch('htmlChange')}
-      on:save={() => dispatch('save')}
-      docs="https://handlebarsjs.com/guide/"
-    />
-  {:else if activeTab === 'css'}
-    <CodeMirror 
-      bind:value={css}
-      mode={'css'}
-      {disabled}
-      on:change={({ detail }) => dispatch('cssChange')}
-      on:save={() => dispatch('save')}
-    />
-  {:else}
-    <CodeMirror 
-      bind:value={js}
-      mode={'javascript'}
-      {disabled}
-      on:change={({ detail }) => dispatch('jsChange')}
-      on:save={() => dispatch('save')}
-    />
-  {/if}
-</div>
 
 <style>
   .tabs {
@@ -108,5 +51,45 @@
       }
     }
   }
-
 </style>
+
+<div class="flex flex-col {variants}">
+  <div class="tabs is-toggle is-fullwidth is-small">
+    <ul>
+      <li class:is-active={activeTab === 'html'}>
+        <button on:click={() => (activeTab = 'html')}>
+          <span>HTML</span>
+        </button>
+      </li>
+      <li class:is-active={activeTab === 'css'}>
+        <button on:click={() => (activeTab = 'css')}> <span>CSS</span> </button>
+      </li>
+      <li class:is-active={activeTab === 'js'}>
+        <button on:click={() => (activeTab = 'js')}> <span>JS</span> </button>
+      </li>
+    </ul>
+  </div>
+  {#if activeTab === 'html'}
+    <CodeMirror
+      bind:value={html}
+      mode={{ name: 'handlebars', base: 'text/html' }}
+      {disabled}
+      on:change={({ detail }) => dispatch('htmlChange')}
+      on:save={() => dispatch('save')}
+      docs="https://handlebarsjs.com/guide/" />
+  {:else if activeTab === 'css'}
+    <CodeMirror
+      bind:value={css}
+      mode={'css'}
+      {disabled}
+      on:change={({ detail }) => dispatch('cssChange')}
+      on:save={() => dispatch('save')} />
+  {:else}
+    <CodeMirror
+      bind:value={js}
+      mode={'javascript'}
+      {disabled}
+      on:change={({ detail }) => dispatch('jsChange')}
+      on:save={() => dispatch('save')} />
+  {/if}
+</div>
