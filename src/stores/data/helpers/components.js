@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import site from '../site'
 import pageData from '../pageData'
+import {get} from 'svelte/store'
 
 export function getAllFields(component = null) {
   const siteFields = _.cloneDeep(get(site).fields)

@@ -220,17 +220,7 @@
         id: 'fields',
         title: 'Fields',
         icon: 'database',
-        onclick: () => modal.show('FIELDS', { 
-          fields: $site.fields, 
-          onsave: (fields) => {
-            site.save({fields})
-          } 
-        }, { 
-          header: {
-            title: 'Fields',
-            icon: 'fas fa-database'
-          } 
-        })
+        onclick: () => modal.show('FIELDS')
       }
     ],
   ]
