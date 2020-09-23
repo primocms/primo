@@ -8,20 +8,22 @@
 
 # primo is a page builder for developers 
 
-Despite all the advancements that have been made in web development, developers looking to build editable static sites still find themselves at the mercy of either limited/buggy no-code page builders like Squareix, or overly-powerful frameworks like Next wired up to the latest and greatest Ned Stark CMS. primo solves this by being *both* an IDE *and* a CMS. And since it combines both, a whole range of benefits open up that would be tough to pull off otherwise. 
+Despite all the advancements that have been made in web development, developers looking to build small, easily-editable sites still find themselves at the mercy of either limited/buggy no-code page builders like Squareix, or overly-powerful JS frameworks like NextJS wired up to the latest and greatest [Ned Stark CMS](https://headlesscms.org/). primo solves this by taking a new approach. Instead of forcing you to piece together a bunch of build scripts, frameworks, and services, it combines everything you need into a single unified app - **massively simplifying the process of building a fully custom site *without* losing the power of modern tooling.** Specifically:
 
-**For developers:**
-  * Edit pages component-by-component (as opposed to file by file)
-  * Integrate component/page/site fields in literal seconds
-  * Use Tailwind & JS modules without *any* setup
-  * Create a component library (we call it a Symbol Library) 
-  * Build a static site that can be hosted anywhere for dirt cheap
+## Developers
 
-**For content editors:**
-  * Edit editorial content on the frontend (like a Squareix, but better)
-  * Edit structured content in clearly defined fields
-  * Use the Symbol Library to build entire pages
+* Edit pages component-by-component (as opposed to file by file)
+* Integrate component/page/site fields in literal seconds
+* Use Tailwind & JS modules without *any* setup
+* Create a usable component library (we call it a Symbol Library) 
+* Build a static site that can be hosted anywhere for dirt cheap
 
+## Content Editors
+
+* Edit editorial content on the frontend (like a Squareix, but even better)
+* Edit structured content in clearly defined fields
+* Use the Symbol Library to build entire pages
+* Use formatted Markdown to write content 
 
 <p align="center">
   <img src="readme_assets/demo.gif" alt="demo"/>
