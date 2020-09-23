@@ -1,8 +1,7 @@
 <script lang="ts">
 	import find from 'lodash/find'
-  import { Router, Link, Route } from "svelte-routing";
-	import { ax } from './utils'
-	import { onMount, createEventDispatcher, setContext } from 'svelte'
+  import { Router, Route } from "svelte-routing";
+	import { createEventDispatcher, setContext } from 'svelte'
 	import Page from './views/editor/Page.svelte'
   import Modal from './views/modal/ModalContainer.svelte'
 
@@ -16,7 +15,6 @@
 	import {pageId} from './stores/data/page'
 	import content from './stores/data/page/content'
   import {editorViewDev, userRole} from './stores/app'
-  import modal from './stores/app/modal'
 
 	export let data
 	export let functions
