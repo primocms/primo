@@ -13,8 +13,8 @@
   setContext("editable", true);
 
   export let route : string
-
 	$: pageId.set(route) 
+  
   let siteStyles: string;
   $: siteStyles = wrapInStyleTags($site.styles.final, "site-styles");
 

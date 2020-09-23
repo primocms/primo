@@ -9,13 +9,13 @@
 
 	import { allSites} from './stores/data'
 	import tailwind from './stores/data/tailwind'
-	import site from './stores/data/site'
-	import symbols from './stores/data/site/symbols'
 	import pageData from './stores/data/pageData'
 	import {pageId} from './stores/data/page'
 	import content from './stores/data/page/content'
   import {editorViewDev, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
+
+	import saved from './stores/data/saved'
 
 	export let data
 	export let functions
@@ -28,19 +28,9 @@
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	// set store from passed in data
-	$: site.update(s => ({
-		...s,
-		...data
-	}))
+	$: saved.hydrate(data)
 
-	// dispatch save when the site gets updated
-	$: dispatch('save', $site)
-
-	$: symbols.set(data.symbols)
-
-	$: setPage($pageId, $site)
-
+	$: setPage($pageId, data)
 	function setPage(pageId, site) {
 		const currentPage = find(site.pages, ['id', pageId])
 		if (currentPage) {
@@ -59,11 +49,16 @@
 		return page ? page : 'index'
 	}
 
+	function saveSite() {
+		console.log('saved', saved.get())
+		dispatch('save', saved.get())
+	}
+
 </script>
 
 <Router>
 	<Route path="/*route" let:params>
-		<Page route={getPage(params.route)} on:build on:signOut />
+		<Page route={getPage(params.route)} on:save={saveSite} on:build on:signOut />
 	</Route>
 </Router>
 

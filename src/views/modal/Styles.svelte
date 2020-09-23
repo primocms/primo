@@ -161,7 +161,7 @@
   <div class="flex flex-row flex-1">
     <div class="w-1/2 flex flex-col">
         <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
+        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} />
         {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
           <CodeMirror 
             autofocus

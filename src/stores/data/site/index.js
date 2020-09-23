@@ -4,14 +4,12 @@ import ShortUniqueId from "short-unique-id";
 import { createSite } from "../../../const";
 
 import { pageId } from "../page";
-import allSites from "../allSites";
 import { hydrateComponent, hydrateAllComponents } from "../helpers/components";
 
 let site;
 const store = writable(createSite());
 store.subscribe((s) => {
   site = s;
-  allSites.saveSite(site);
 });
 
 export default {

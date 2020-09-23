@@ -232,8 +232,6 @@
   }
 
   function savePage(): void {
-    content.save()
-    pageData.save('content', $content)
     dispatch('save')
     unsavedContentExists = false
   }
