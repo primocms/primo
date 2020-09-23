@@ -164,6 +164,7 @@
         <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
         {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
           <CodeMirror 
+            autofocus
             bind:value={pageStyles.raw} 
             on:change={_.debounce( async() => { 
               pageStyles.final = await compileStyles(pageStyles.raw, pageStyles.tailwind) 
@@ -173,6 +174,7 @@
           />
         {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
           <CodeMirror 
+            autofocus
             prefix="export default "
             bind:value={pageStyles.tailwind} 
             on:change={_.debounce( async() => { 
@@ -184,6 +186,7 @@
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'styles'}
           <CodeMirror 
+            autofocus
             bind:value={siteStyles.raw} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
@@ -194,6 +197,7 @@
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
           <CodeMirror 
+            autofocus
             prefix="export default "
             bind:value={siteStyles.tailwind} 
             on:change={_.debounce( async() => { 

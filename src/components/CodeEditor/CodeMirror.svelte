@@ -16,6 +16,7 @@
   export let style = ''
   export let CodeMirrorOptions = {}
   export let docs = null
+  export let autofocus = false
 
   var Editor
 
@@ -52,7 +53,7 @@
       readOnly: disabled,
       ...CodeMirrorOptions,
       // set values
-      autofocus: true,
+      autofocus,
       theme: 'vscode-dark',
       lineNumbers: true,
       gutter: true,

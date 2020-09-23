@@ -71,6 +71,7 @@
   </div>
   {#if activeTab === 'html'}
     <CodeMirror
+      autofocus
       bind:value={html}
       mode={{ name: 'handlebars', base: 'text/html' }}
       {disabled}
@@ -79,6 +80,7 @@
       docs="https://handlebarsjs.com/guide/" />
   {:else if activeTab === 'css'}
     <CodeMirror
+      autofocus
       bind:value={css}
       mode={'css'}
       {disabled}
@@ -86,6 +88,7 @@
       on:save={() => dispatch('save')} />
   {:else}
     <CodeMirror
+      autofocus
       bind:value={js}
       mode={'javascript'}
       {disabled}
