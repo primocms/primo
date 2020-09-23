@@ -12,7 +12,7 @@
 		return styles
 	}
 
-	let data = window.localStorage.getItem('site') || createSite()
+	let data = JSON.parse(window.localStorage.getItem('site')) || createSite()
 
 	function saveData(site) {
 		const json = JSON.stringify(site)
