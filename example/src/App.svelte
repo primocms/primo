@@ -1,12 +1,11 @@
 <script>
-	import {setContext} from 'svelte'
 	import axios from 'axios/dist/axios'
 	import _ from 'lodash'
 	import Primo, {modal, pageId, utils, createSite, fieldTypes} from '../../index'
 	import PrimoFields from '@primo-app/field-types'
 	import Build from './extensions/Build.svelte'
 
-  	import { domainInfo } from './stores'
+  import { domainInfo } from './stores'
 
 	export let subdomain
 

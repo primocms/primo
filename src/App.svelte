@@ -65,7 +65,7 @@
 </script>
 
 <Router>
-	<Route path="/site/*route" let:params>
+	<Route path="/*route" let:params>
 		<Page route={getPage(params.route)} on:build on:signOut />
 	</Route>
 </Router>
