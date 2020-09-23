@@ -167,8 +167,8 @@
   icon="fas fa-database"
   title={$editorViewDev ? 'Fields' : 'Content'}
   button={{
-    label: `Save`,
-    icon: 'fas fa-save',
+    label: `Draft`,
+    icon: 'fas fa-check',
     onclick: applyFields
   }}
   variants="mb-4"

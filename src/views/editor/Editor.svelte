@@ -274,8 +274,8 @@
         title: 'Edit Component',
         icon: 'fas fa-code',
         button: {
-          label: 'Add changes',
-          icon: 'fas fa-plus',
+          label: 'Draft',
+          icon: 'fas fa-check',
           onclick: (component) => {
             unsavedContentExists = true
             content.saveRow(component)

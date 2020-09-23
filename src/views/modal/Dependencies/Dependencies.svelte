@@ -13,7 +13,7 @@
   icon="fas fa-cube"
   title="Page Dependencies"
   button={{
-    label: `Done`,
+    label: `Draft`,
     icon: 'fas fa-check',
     onclick: () => {
       modal.hide()

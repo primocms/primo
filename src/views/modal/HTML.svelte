@@ -63,7 +63,7 @@
   icon="fab fa-html5"
   title="HTML"
   button={{
-    label: `Done`,
+    label: `Draft`,
     icon: 'fas fa-check',
     onclick: () => modal.hide()
   }}

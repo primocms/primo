@@ -82,7 +82,7 @@
     position: relative;
     outline: 2px solid transparent;
     transition: outline 0.2s;
-    outline-offset: -2px;
+    /* outline-offset: -2px; */
     @apply w-full;
 
     & > div {

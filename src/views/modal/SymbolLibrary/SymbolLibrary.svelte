@@ -27,16 +27,15 @@
           title: `Edit ${symbol.title || 'Symbol'}`,
           icon: 'fas fa-clone',
           button: {
-            label: `Save ${symbol.title || 'Symbol'}`,
-            icon: 'fas fa-save',
+            label: `Draft`,
+            icon: 'fas fa-check',
             onclick: async (symbol) => {
               modal.show('COMPONENT_LIBRARY', {button})
               const [newSymbols] = await Promise.all([
                 symbols.place(symbol),
-                content.updateInstances(symbol),
-                // updateInstancesInDomain(symbol), // TODO
+                content.updateInstances(symbol)
               ])
-              site.save({ symbols: newSymbols })
+              // site.save({ symbols: newSymbols })
             }
           }
         } 
