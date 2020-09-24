@@ -11,6 +11,7 @@
 
   import {editorViewDev,userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
+  // import site from '../../../stores/data/site'
   import site from '../../../stores/data/site'
   import {symbols} from '../../../stores/data/draft'
   import {content} from '../../../stores/app/activePage'
@@ -32,12 +33,7 @@
             icon: 'fas fa-check',
             onclick: async (symbol) => {
               modal.show('COMPONENT_LIBRARY', {button})
-              const exists = some($symbols, ['id',symbol.id])
-              if (exists) {
-                $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
-              } else {
-                $symbols = [ ...$symbols, symbol ]
-              }
+              placeSymbol(symbol)
               updateInstances(symbol)
             }
           }
@@ -46,14 +42,22 @@
     )
   }
 
+  async function placeSymbol(symbol) {
+    const exists = some($symbols, ['id',symbol.id])
+    if (exists) {
+      $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+    } else {
+      $symbols = [ ...$symbols, symbol ]
+    }
+  }
+
   async function addSymbol() {
     const symbol = createSymbol()
     editSymbol(symbol)
   }
 
   async function deleteSymbol(symbol) {
-    const newSymbols = symbols.remove(symbol.id)
-    site.save({ symbols: newSymbols })
+    $symbols = $symbols.filter(s => s.id !== symbol.id)
   }
 
   function addComponentToPage(symbol) {
@@ -66,11 +70,10 @@
   }
 
   function updateSymbol(symbol, value) {
-    symbols.place({
+    placeSymbol({
       ...symbol,
       ...value
     })
-    site.save({ symbols: $symbols })
   }
 
   function createInstance(symbol) {
