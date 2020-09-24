@@ -167,6 +167,27 @@ function getUniqueId() {
 
 export const DEFAULTS = {
   // site: createSite(),
+  content: [
+    {
+      id: '00000',
+      width: 'contained',
+      columns: [
+        {
+          id: '00000',
+          size: 'w-full',
+          rows: [
+            {
+              id: '00000',
+              type: 'content',
+              value: {
+                html: '<p><br></p>'
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   page: {
     id: '',
     title: '',

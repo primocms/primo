@@ -12,11 +12,12 @@
 	import pageData from './stores/data/pageData'
 	// import {pageId} from './stores/data/page'
 	import {id as pageId} from './stores/app/activePage'
-	import content from './stores/data/page/content'
+	import {content} from './stores/app/activePage'
   import {editorViewDev, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
 
 	import saved from './stores/data/saved'
+	import {pages} from './stores/data/draft'
 
 	export let data
 	export let functions
@@ -31,15 +32,11 @@
 
 	$: saved.hydrate(data)
 
-	$: setPage($pageId, data)
-	function setPage(pageId, site) {
-		const currentPage = find(site.pages, ['id', pageId])
+	$: setPageContent($pageId, $pages)
+	function setPageContent(id, pages) {
+		const currentPage = find(pages, ['id', id])
 		if (currentPage) {
 			content.set(currentPage.content)
-			pageData.update(s => ({
-				...s, 
-				...currentPage
-			}))
 		}
 
 		tailwind.setInitial()

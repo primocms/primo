@@ -3,15 +3,8 @@
   import {writable} from 'svelte/store'
 
   import modal from '../../../stores/app/modal'
-  import {pages} from '../../../stores/data/draft'
-  import {id} from '../../../stores/app/activePage'
+  import {dependencies} from '../../../stores/app/activePage'
 
-  let dependencies = writable( find($pages, ['id', $id])['dependencies'] )
-
-  $: $pages = $pages.map(page => page.id === $id ? ({
-    ...page,
-    dependencies: $dependencies
-  }) : page)
 
 
   import ModalHeader from '../ModalHeader.svelte'

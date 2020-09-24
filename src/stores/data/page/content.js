@@ -49,11 +49,6 @@ export default {
     return newContent;
   },
   insertSection,
-  deleteSection: (sectionId) => {
-    store.update((content) =>
-      content.filter((section) => section.id !== sectionId)
-    );
-  },
   subscribe: store.subscribe,
   set: store.set,
 };
