@@ -2,7 +2,7 @@
   import {createEventDispatcher, onMount, getContext} from 'svelte'
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../pageUtils.js'
-  import {dependencies} from '../../../stores/data'
+  import {dependencies} from '../../../stores/app/activePage'
   import {editorViewDev} from '../../../stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
@@ -10,8 +10,6 @@
     customElements.define('component-buttons', ComponentButtons); 
   }
 
-
-  // import type {Component} from './LayoutTypes'
 
   const active = getContext('editable')
 

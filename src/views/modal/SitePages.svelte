@@ -10,9 +10,7 @@
   import ModalHeader from "./ModalHeader.svelte";
 
   import { createPage } from "../../const";
-  // import site from "../../stores/data/site";
   import {pages} from "../../stores/data/draft";
-  import pageData from "../../stores/data/pageData";
   import {id} from '../../stores/app/activePage'
 
   function getUniqueId() {
@@ -26,7 +24,7 @@
     const isEmpty = inputs[2].classList.contains("selected");
     const newPage = isEmpty
       ? createPage(url, title)
-      : duplicatePage($pageData, title, url);
+      : duplicatePage(title, url);
     $pages = [ ...$pages, newPage ]
     creatingPage = false;
     pageUrl = "";
@@ -36,9 +34,9 @@
     $pages = $pages.filter(p => p.id !== pageId)
   }
 
-  function duplicatePage(page, title, url) {
-    const newPage = cloneDeep(page);
-    const [newContent, IDmap] = scrambleIds(page.content);
+  function duplicatePage(title, url) {
+    const newPage = _.cloneDeep(_.find($pages, ['id', $id]))
+    const [newContent, IDmap] = scrambleIds(newPage.content);
     newPage.content = newContent;
     newPage.title = title;
     newPage.id = url;

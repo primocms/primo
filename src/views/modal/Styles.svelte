@@ -10,16 +10,12 @@
   import { compileScss, processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
 
-  import {domainInfo} from '../../stores/data'
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
-  import pageData from '../../stores/data/pageData'
-  // import content from '../../stores/data/page/content'
-  import {content} from '../../stores/app/activePage'
+  import {content,id} from '../../stores/app/activePage'
   import modal from '../../stores/app/modal'
 
   import {styles as pageStyles} from '../../stores/app/activePage'
   import {styles as siteStyles, pages} from '../../stores/data/draft'
-  import {id} from '../../stores/app/activePage'
 
   let styles = $pageStyles
   $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles
@@ -36,7 +32,7 @@
   }
 
   $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
-  $: allPages = $pages.map(page => page.id === $pageData.id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
+  $: allPages = $pages.map(page => page.id === $id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
 
   let loading = false
 

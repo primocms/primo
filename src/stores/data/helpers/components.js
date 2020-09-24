@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import pageData from '../pageData'
 import {get} from 'svelte/store'
 
 export async function hydrateAllComponents(content) {

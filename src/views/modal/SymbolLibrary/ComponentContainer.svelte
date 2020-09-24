@@ -7,8 +7,7 @@
 
   import tailwind from '../../../stores/data/tailwind'
   import {styles as siteStyles} from '../../../stores/data/draft'
-  // import site from '../../../stores/data/site'
-  import pageData from '../../../stores/data/pageData'
+  import {styles as pageStyles} from '../../../stores/app/activePage'
   let styles = $siteStyles
 
   export let component;
@@ -40,7 +39,7 @@
     }
   })
 
-  const parentStyles = $tailwind + $siteStyles.final + $pageData.styles.final
+  const parentStyles = $tailwind + $siteStyles.final + $pageStyles.final
   const previewCode = getComponentPreviewCode(component, parentStyles) 
 
   let iframeLoaded = false

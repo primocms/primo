@@ -10,9 +10,7 @@
   import ToolbarButton from './ToolbarButton.svelte'
   import Doc from './Doc.svelte'
 
-  import {domainInfo,user} from '../../stores/data'
   // import site from '../../stores/data/site'
-  import pageData from '../../stores/data/pageData'
   import {focusedNode,editorViewDev} from '../../stores/app'
   import {saving,unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'

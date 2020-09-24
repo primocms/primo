@@ -1,7 +1,6 @@
 <script>
   import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
-  import {allSites} from '../../stores/data'
   import dropdown from '../../stores/app/dropdown'
   import PrimoLogo from '../../components/svg/PrimoLogo.svelte'
   import DropdownButton from './DropdownButton.svelte'

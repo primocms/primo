@@ -16,11 +16,8 @@
 
   import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
-  // import site from '../../stores/data/site'
-  import pageData from '../../stores/data/pageData'
   import {editorViewDev,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
-  // import content from '../../stores/data/page/content'
   import {fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'

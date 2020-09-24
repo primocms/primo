@@ -4,7 +4,7 @@ import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
 
 import { styles as siteStyles } from './draft'
-import pageData from './pageData'
+import {styles as pageStyles} from '../app/activePage'
 
 const store = writable(storeLib.get('tailwind'))
 
@@ -52,7 +52,7 @@ export default {
 let tailwindRetrievalAttempts = 0
 async function hydrateTailwind() {
   loadingTailwind.set(true)
-  const config = getCombinedTailwindConfig(get(pageData).styles.tailwind)
+  const config = getCombinedTailwindConfig(get(pageStyles).tailwind)
   
   // This is my hacky attempt (works tho) to disregard invalid tailwind styles
   // when hydrateTailwind() gets called repeatedly (as it does when the app loads)

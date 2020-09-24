@@ -7,9 +7,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	import { allSites} from './stores/data'
 	import tailwind from './stores/data/tailwind'
-	import pageData from './stores/data/pageData'
 	import {id as pageId} from './stores/app/activePage'
 	import {content, styles, fields, dependencies, wrapper} from './stores/app/activePage'
   import {editorViewDev, userRole} from './stores/app'

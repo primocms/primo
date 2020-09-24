@@ -10,9 +10,8 @@
   import ContentNode from './Layout/ContentNode.svelte'
   import ComponentNode from './Layout/ComponentNode.svelte'
   import {focusedNode} from '../../stores/app'
-  // import site from '../../stores/data/site'
   import {wrapper as siteWrapper} from '../../stores/data/draft'
-  import pageData from '../../stores/data/pageData'
+  import {wrapper as pageWrapper} from '../../stores/app/activePage'
   const dispatch = createEventDispatcher()
   import {IconButton} from '../../components/misc'
 
@@ -286,6 +285,6 @@
       {/each}
     </Section>
   {/each}
-  {@html $pageData.wrapper.below.final}
+  {@html $pageWrapper.below.final}
   {@html $siteWrapper.below.final}
 </div>

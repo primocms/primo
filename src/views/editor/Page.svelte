@@ -4,25 +4,22 @@
   import Editor from './Editor.svelte'
   import { wrapInStyleTags } from '../../utils'
 
-  import {user} from '../../stores/data'
   import tailwind from '../../stores/data/tailwind'
-  import {styles as siteStylesStore} from '../../stores/data/draft'
-  import pageDataStore from '../../stores/data/pageData'
-  import {id} from '../../stores/app/activePage'
+  import {styles as siteStyles} from '../../stores/data/draft'
+  import {
+    id, 
+    styles as pageStyles, 
+    dependencies as pageDependencies,
+    wrapper as pageWrapper
+  } from '../../stores/app/activePage'
 
   setContext("editable", true);
 
   export let route : string
 	$: id.set(route) 
-  
-  let siteStyles: string;
-  $: siteStyles = wrapInStyleTags($siteStylesStore.final, "site-styles");
-
-  let pageStyles: string;
-  $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, "page-styles");
 
   let libraries: Array<any>;
-  $: libraries = $pageDataStore.dependencies.libraries;
+  $: libraries = $pageDependencies.libraries;
 
   let customScripts: Array<any> = [];
 
@@ -31,10 +28,6 @@
 
   let jsLibraries: Array<any>;
   $: jsLibraries = libraries.filter((l) => l.type === "js");
-
-  function unlockPage() {
-    user.set({ canEditPage: true });
-  }
 
   function containsField(row, fieldType) {
     return _.some(row.value.raw.fields, ["type", fieldType]);
@@ -80,14 +73,14 @@
 </style>
 
 <svelte:head>
-  {@html $pageDataStore.wrapper.head.final}
+  {@html $pageWrapper.head.final}
   <link
     href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
     rel="stylesheet"
     type="text/css" />
   {@html wrapInStyleTags($tailwind, 'tailwind')}
-  {@html siteStyles}
-  {@html pageStyles}
+  {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
+  {@html wrapInStyleTags($pageStyles.final, "page-styles")}
 
   {#each customScripts as { src }}
     <script {src}>

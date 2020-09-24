@@ -6,8 +6,6 @@ import SinglePreview from './src/SinglePreview.svelte'
 import dropdown from './src/stores/app/dropdown'
 import fieldTypes from './src/stores/app/fieldTypes'
 import modal from './src/stores/app/modal'
-// import site from './src/stores/data/site'
-import pageData from './src/stores/data/pageData'
 import { DEFAULTS, createPage, createSite } from './src/const'
 
 import * as utils from './src/utils'
@@ -18,11 +16,8 @@ export {
   MultiPreview,
   SinglePreview,
   modal,
-  // pageId,
   utils,
   components,
-  // site,
-  pageData,
   DEFAULTS,
   createPage,
   createSite,
