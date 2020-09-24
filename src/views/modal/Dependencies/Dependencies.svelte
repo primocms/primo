@@ -1,12 +1,12 @@
 <script>
-  import {cloneDeep} from 'lodash'
+  import {cloneDeep,find} from 'lodash'
   import {writable} from 'svelte/store'
 
   import modal from '../../../stores/app/modal'
   import {pages} from '../../../stores/data/draft'
   import {id} from '../../../stores/app/activePage'
 
-  let dependencies = writable( _.find($pages, ['id', $id])['dependencies'] )
+  let dependencies = writable( find($pages, ['id', $id])['dependencies'] )
 
   $: $pages = $pages.map(page => page.id === $id ? ({
     ...page,
