@@ -21,20 +21,15 @@
   import {editorViewDev,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
   import content from '../../stores/data/page/content'
-  // import pageFields from '../../stores/data/page/fields'
-  // import siteFields from '../../stores/data/site/fields'
+  import {fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'
 
-  let pageFields = writable( _.find($pages, ['id', $id])['fields'] )
-
-  $: $pages = $pages.map(page => page.id === $id ? ({
-    ...page,
-    fields: $pageFields
-  }) : page)
-
-
   let fields = $pageFields 
+
+  console.log(fields)
+
+  $: console.log(fields)
 
   function saveFields(fields) {
     if (showingPage) {

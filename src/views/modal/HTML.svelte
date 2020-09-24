@@ -10,7 +10,8 @@
   import ModalHeader from './ModalHeader.svelte'
 
   import modal from '../../stores/app/modal'
-  import pageHTML from '../../stores/data/page/wrapper'
+  import {wrapper as pageHTML} from '../../stores/app/activePage'
+  // import pageHTML from '../../stores/data/page/wrapper'
   // import siteHTML from '../../stores/data/site/wrapper'
   import pageFields from '../../stores/data/page/fields'
   import siteFields from '../../stores/data/site/fields'

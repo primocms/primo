@@ -11,7 +11,7 @@
 	import tailwind from './stores/data/tailwind'
 	import pageData from './stores/data/pageData'
 	import {id as pageId} from './stores/app/activePage'
-	import {content} from './stores/app/activePage'
+	import {content, styles, fields, dependencies, wrapper} from './stores/app/activePage'
   import {editorViewDev, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
 
@@ -37,6 +37,10 @@
 		const currentPage = find(pages, ['id', id])
 		if (currentPage) {
 			content.set(currentPage.content)
+			styles.set(currentPage.styles)
+			fields.set(currentPage.fields)
+			dependencies.set(currentPage.dependencies)
+			wrapper.set(currentPage.wrapper)
 		}
 
 		tailwind.setInitial()

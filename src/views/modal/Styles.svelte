@@ -17,18 +17,9 @@
   import content from '../../stores/data/page/content'
   import modal from '../../stores/app/modal'
 
-  // import pageStyles from '../../stores/data/page/styles'
-  // import siteStyles from '../../stores/data/site/styles'
+  import {styles as pageStyles} from '../../stores/app/activePage'
   import {styles as siteStyles, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'
-
-  let pageStyles = writable( _.find($pages, ['id', $id])['styles'] )
-
-  $: $pages = $pages.map(page => page.id === $id ? ({
-    ...page,
-    styles: $pageStyles
-  }) : page)
-
 
   let styles = $pageStyles
   $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles

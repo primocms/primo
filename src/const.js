@@ -248,6 +248,8 @@ export const DEFAULTS = {
     headEmbed: '',
     libraries: []
   },
+  fields: [],
+  symbols: []
 }
 
 export const createPage = (id = getUniqueId(), title) => ({
