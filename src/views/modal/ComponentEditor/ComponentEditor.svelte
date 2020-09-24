@@ -20,13 +20,14 @@
   } from "../../../utils";
 
   import site from "../../../stores/data/site";
-  import pageData from "../../../stores/data/pageData";
-  import content from "../../../stores/data/page/content";
-  import symbols from "../../../stores/data/site/symbols";
+  import {fields as pageFields, dependencies as pageDependencies} from "../../../stores/app/activePage"
+  import {content} from "../../../stores/app/activePage"
+  import {symbols} from "../../../stores/data/draft";
   import { editorViewDev } from "../../../stores/app";
   import fieldTypes from "../../../stores/app/fieldTypes";
   import modal from "../../../stores/app/modal";
   import { createComponent } from "../../../const";
+  import {updateInstances} from '../../../stores/actions'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
@@ -62,10 +63,7 @@
   }
 
   function getAllFields() {
-    const siteFields = _.cloneDeep($site.fields);
-    const pageFields = _.cloneDeep($pageData.fields);
-    // const componentFields = localComponent.value.raw.fields;
-    const allFields = _.unionBy(fields, pageFields, siteFields, "key");
+    const allFields = _.unionBy(fields, $pageFields, $site.fields, "key");
     return allFields;
   }
 
@@ -147,7 +145,7 @@
 
   async function loadSymbol(): Promise<void> {
     disabled = false;
-    const symbol: Component = symbols.get(localComponent.symbolID);
+    const symbol: Component = _.find($symbols, ['id', localComponent.symbolID]);
     localComponent = _.cloneDeep(symbol);
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
@@ -155,18 +153,12 @@
         title: `Edit ${symbol.title || "Symbol"}`,
         icon: "fas fa-th-large",
         button: {
-          icon: "fas fa-save",
-          label: `Save ${symbol.title || "Symbol"}`,
+          icon: "fas fa-check",
+          label: `Draft`,
           onclick: async (symbol) => {
             loading = true;
-            const [newSymbols, newContent] = await Promise.all([
-              symbols.place(symbol),
-              content.updateInstances(symbol),
-            ]);
-            site.save({ symbols: newSymbols });
-            site.saveCurrentPage({
-              content: newContent,
-            });
+            $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+            updateInstances(symbol);
             modal.hide();
           },
         },
@@ -550,7 +542,7 @@
       html={finalHTML}
       css={finalCSS}
       js={finalJS}
-      dependencies={$pageData.dependencies}
+      dependencies={$pageDependencies}
       includeParentStyles />
   </div>
 </div>
