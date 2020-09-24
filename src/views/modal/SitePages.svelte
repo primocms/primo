@@ -1,4 +1,5 @@
 <script>
+  import _ from 'lodash'
   import cloneDeep from "lodash/cloneDeep";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
@@ -8,15 +9,11 @@
   import { Card } from "../../components/misc";
   import PageItem from "./PageList/PageItem.svelte";
   import ModalHeader from "./ModalHeader.svelte";
+  import {getUniqueId} from '../../utils'
 
   import { createPage } from "../../const";
   import {pages} from "../../stores/data/draft";
   import {id} from '../../stores/app/activePage'
-
-  function getUniqueId() {
-    return new ShortUniqueId().randomUUID(5).toLowerCase();
-  }
-
 
   async function submitForm(form) {
     const inputs = Object.values(form.target);
@@ -116,9 +113,6 @@
       return [newContent, IDs];
     }
 
-    function getUniqueId() {
-      return new ShortUniqueId().randomUUID(5).toLowerCase();
-    }
   }
 
   let creatingPage = false;
