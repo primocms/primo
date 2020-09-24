@@ -2,6 +2,7 @@ import {find} from 'lodash'
 import {writable,get} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS} from '../../const'
+import {unsaved} from './misc'
 
 export const id = writable('index')
 
@@ -10,6 +11,7 @@ function updatePage(prop) {
     ...page,
     ...prop
   }) : page))
+  unsaved.set(true)
 }
 
 export const content = writable(DEFAULTS.content)

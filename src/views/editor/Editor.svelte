@@ -14,14 +14,13 @@
   import site from '../../stores/data/site'
   import pageData from '../../stores/data/pageData'
   import {focusedNode,editorViewDev} from '../../stores/app'
-  import {saving} from '../../stores/app/misc'
+  import {saving,unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
 
   import {id, content} from '../../stores/app/activePage'
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
 
   let unlockingPage:boolean = false
-  let unsavedContentExists:boolean = false
 
   let updatingDatabase:boolean = false
 
@@ -227,21 +226,19 @@
   ]
 
   function addComponentToPage(component:Component): void {
-    unsavedContentExists = true
     saveRow(component)
     modal.hide()
   }
 
   function savePage(): void {
     dispatch('save')
-    unsavedContentExists = false
   }
 
   let toolbarButtons:Array<ButtonGroup>
   $: toolbarButtons = $editorViewDev ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
-  $: if (unsavedContentExists && !window.location.hostname.includes('localhost')) {
+  $: if ($unsaved && !window.location.hostname.includes('localhost')) {
     window.onbeforeunload = function(e){
       e.returnValue = '';
     };
@@ -250,8 +247,6 @@
       delete e['returnValue'];
     };
   }
-
-
 
   function saveRow(row) {
     if (getRow(row.id)) {
@@ -287,7 +282,7 @@
   }
 
   function insertComponent(component) {
-    const focusedNodeId = get(focusedNode).id;
+    const focusedNodeId = $focusedNode.id;
 
     if (focusedNodeId) {
       // a content node is selected on the page
@@ -321,8 +316,8 @@
     }
 
     function positionComponent(rows, newRow) {
-      const selectedNodePosition = get(focusedNode).position;
-      const selectedNodeSelection = get(focusedNode).selection;
+      const selectedNodePosition = $focusedNode.position;
+      const selectedNodeSelection = $focusedNode.selection;
 
       if (selectedNodePosition === 0) {
         // first row is selected
@@ -356,7 +351,7 @@
 </script>
 
 <Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => editorViewDev.set(!$editorViewDev)}>
-  <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!unsavedContentExists} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
+  <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!$unsaved} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
   {#if $editorViewDev}
     <ToolbarButton type="primo" icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
   {:else}
@@ -366,7 +361,6 @@
 <Doc 
   bind:content={$content}
   on:contentChanged={() => {
-    unsavedContentExists = true
     dispatch('change')
   }}
   on:componentEditClick={({detail:component}) => {
@@ -379,7 +373,6 @@
           label: 'Draft',
           icon: 'fas fa-check',
           onclick: (component) => {
-            unsavedContentExists = true
             saveRow(component)
             modal.hide()
           }

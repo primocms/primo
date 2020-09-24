@@ -10,12 +10,12 @@
 	import { allSites} from './stores/data'
 	import tailwind from './stores/data/tailwind'
 	import pageData from './stores/data/pageData'
-	// import {pageId} from './stores/data/page'
 	import {id as pageId} from './stores/app/activePage'
 	import {content} from './stores/app/activePage'
   import {editorViewDev, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
 
+	import {unsaved} from './stores/app/misc'
 	import saved from './stores/data/saved'
 	import {pages} from './stores/data/draft'
 
@@ -54,6 +54,7 @@
 
 	function saveSite() {
 		console.log('saved', saved.get())
+		$unsaved = false
 		dispatch('save', saved.get())
 	}
 
