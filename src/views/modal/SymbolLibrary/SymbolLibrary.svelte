@@ -12,7 +12,6 @@
   import {editorViewDev,userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
   // import site from '../../../stores/data/site'
-  import site from '../../../stores/data/site'
   import {symbols} from '../../../stores/data/draft'
   import {content} from '../../../stores/app/activePage'
   import {updateInstances} from '../../../stores/actions'

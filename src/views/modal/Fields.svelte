@@ -16,20 +16,17 @@
 
   import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
-  import site from '../../stores/data/site'
+  // import site from '../../stores/data/site'
   import pageData from '../../stores/data/pageData'
   import {editorViewDev,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
-  import content from '../../stores/data/page/content'
+  // import content from '../../stores/data/page/content'
   import {fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'
+  import {hydrateComponents} from '../../stores/actions'
 
   let fields = $pageFields 
-
-  console.log(fields)
-
-  $: console.log(fields)
 
   function saveFields(fields) {
     if (showingPage) {
@@ -152,8 +149,9 @@
   }
 
   function applyFields() {
-    content.hydrateComponents()
-    site.pages.hydrateComponents()
+    // content.hydrateComponents()
+    // site.pages.hydrateComponents()
+    hydrateComponents()
     modal.hide()
   }
 

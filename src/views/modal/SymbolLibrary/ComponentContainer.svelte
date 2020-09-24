@@ -6,9 +6,10 @@
   import {getComponentPreviewCode} from '../../../utils'
 
   import tailwind from '../../../stores/data/tailwind'
-  import site from '../../../stores/data/site'
+  import {styles as siteStyles} from '../../../stores/data/draft'
+  // import site from '../../../stores/data/site'
   import pageData from '../../../stores/data/pageData'
-  let {styles} = $site
+  let styles = $siteStyles
 
   export let component;
   export let title = component.title || '';
@@ -39,7 +40,7 @@
     }
   })
 
-  const parentStyles = $tailwind + $site.styles.final + $pageData.styles.final
+  const parentStyles = $tailwind + $siteStyles.final + $pageData.styles.final
   const previewCode = getComponentPreviewCode(component, parentStyles) 
 
   let iframeLoaded = false

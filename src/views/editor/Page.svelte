@@ -6,7 +6,7 @@
 
   import {user} from '../../stores/data'
   import tailwind from '../../stores/data/tailwind'
-  import site from '../../stores/data/site'
+  import {styles as siteStylesStore} from '../../stores/data/draft'
   import pageDataStore from '../../stores/data/pageData'
   import {id} from '../../stores/app/activePage'
 
@@ -16,7 +16,7 @@
 	$: id.set(route) 
   
   let siteStyles: string;
-  $: siteStyles = wrapInStyleTags($site.styles.final, "site-styles");
+  $: siteStyles = wrapInStyleTags($siteStylesStore.final, "site-styles");
 
   let pageStyles: string;
   $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, "page-styles");

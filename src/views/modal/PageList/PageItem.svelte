@@ -5,7 +5,8 @@
   import { navigate } from 'svelte-routing';
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
   import tailwind from '../../../stores/data/tailwind'
-  import site from '../../../stores/data/site'
+  // import site from '../../../stores/data/site'
+  import {styles as siteStyles} from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
 
   export let page;
@@ -13,7 +14,7 @@
 
   $: preview =
     wrapInStyleTags($tailwind) +
-    wrapInStyleTags($site.styles.final) +
+    wrapInStyleTags($siteStyles.final) +
     wrapInStyleTags(page.styles.final) +
     buildPagePreview(page.content);
 

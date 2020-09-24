@@ -11,7 +11,7 @@
   import Doc from './Doc.svelte'
 
   import {domainInfo,user} from '../../stores/data'
-  import site from '../../stores/data/site'
+  // import site from '../../stores/data/site'
   import pageData from '../../stores/data/pageData'
   import {focusedNode,editorViewDev} from '../../stores/app'
   import {saving,unsaved} from '../../stores/app/misc'
@@ -133,17 +133,7 @@
       {
         title: 'Content', 
         icon: 'database', 
-        onclick: () => modal.show('FIELDS', { 
-          fields: $pageData.fields, 
-          onsave: (fields) => {
-            site.saveCurrentPage({ fields })
-          } 
-        }, { 
-          header: {
-            title: 'Content',
-            icon: 'fas fa-database'
-          } 
-        })
+        onclick: () => modal.show('FIELDS')
       }
     ]
   ]

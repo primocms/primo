@@ -19,7 +19,7 @@
     createDebouncer,
   } from "../../../utils";
 
-  import site from "../../../stores/data/site";
+  import { styles as siteStyles, fields as siteFields } from "../../../stores/data/draft";
   import {fields as pageFields, dependencies as pageDependencies} from "../../../stores/app/activePage"
   import {content} from "../../../stores/app/activePage"
   import {symbols} from "../../../stores/data/draft";
@@ -63,7 +63,7 @@
   }
 
   function getAllFields() {
-    const allFields = _.unionBy(fields, $pageFields, $site.fields, "key");
+    const allFields = _.unionBy(fields, $pageFields, $siteFields, "key");
     return allFields;
   }
 
@@ -104,7 +104,7 @@
       encapsulatedCss,
       localComponent.value.final.html,
       {
-        tailwindConfig: $site.styles.tailwind,
+        tailwindConfig: $siteStyles.tailwind,
       }
     );
     if (result) {

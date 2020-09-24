@@ -1,7 +1,7 @@
 <script>
 	import axios from 'axios/dist/axios'
 	import _ from 'lodash'
-	import Primo, {modal, pageId, utils, createSite, fieldTypes} from '../../index'
+	import Primo, {modal, createSite, fieldTypes} from '../../index'
 	import PrimoFields from '@primo-app/field-types'
 	import Build from './extensions/Build.svelte'
 

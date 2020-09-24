@@ -13,9 +13,10 @@
   import {wrapper as pageHTML} from '../../stores/app/activePage'
   // import pageHTML from '../../stores/data/page/wrapper'
   // import siteHTML from '../../stores/data/site/wrapper'
-  import pageFields from '../../stores/data/page/fields'
-  import siteFields from '../../stores/data/site/fields'
-  import {wrapper as siteHTML} from '../../stores/data/draft'
+  // import pageFields from '../../stores/data/page/fields'
+  // import siteFields from '../../stores/data/site/fields'
+  import {fields as pageFields} from '../../stores/app/activePage'
+  import {wrapper as siteHTML, fields as siteFields} from '../../stores/data/draft'
 
   let activeHTML = $pageHTML
   $: activeHTML = activeTab.id === 'page' ? $pageHTML : $siteHTML

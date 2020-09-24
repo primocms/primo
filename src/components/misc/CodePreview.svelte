@@ -1,7 +1,8 @@
 <script>
   import {onMount} from 'svelte'
   import store from 'store2'
-  import site from '../../stores/data/site'
+  // import site from '../../stores/data/site'
+  import {styles as siteStyles} from '../../stores/data/draft'
   import pageData from '../../stores/data/pageData'
 
   export let multiple = false
@@ -17,7 +18,7 @@
   export let includeParentStyles = false
 
   $: if (includeParentStyles) {
-    css = $site.styles.final + $pageData.styles.final + css
+    css = $siteStyles.final + $pageData.styles.final + css
   }
 
   var bc = new BroadcastChannel('preview');

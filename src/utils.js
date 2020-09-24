@@ -7,7 +7,6 @@ import objectPath from "object-path";
 
 import domainInfo from './stores/data/domainInfo'
 import user from './stores/data/user'
-import site from './stores/data/site'
 import pageData from './stores/data/pageData'
 
 const functionsServer = (endpoint) =>
@@ -360,17 +359,6 @@ export async function hydrateComponent(component) {
   const finalHTML = await parseHandlebars(value.raw.html, data);
   component.value.final.html = finalHTML;
   return component;
-}
-
-export function getAllFields(component = null) {
-  const siteFields = _.cloneDeep(get(site).fields);
-  const pageFields = _.cloneDeep(get(pageData).fields);
-  let componentFields = [];
-  if (component) {
-    componentFields = component.value.raw.fields;
-  }
-  const allFields = _.unionBy(componentFields, pageFields, siteFields, "key");
-  return allFields;
 }
 
 export function duplicatePage(page, title, url) {

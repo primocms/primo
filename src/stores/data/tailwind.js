@@ -3,7 +3,7 @@ import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
 
-import site from './site'
+import { styles as siteStyles } from './draft'
 import pageData from './pageData'
 
 const store = writable(storeLib.get('tailwind'))
@@ -39,7 +39,7 @@ export default {
     let siteTailwindObject = {}
     let pageTailwindObject = {}
     try {
-      siteTailwindObject = new Function(`return ${get(site).styles.tailwind}`)() // convert string object to literal object
+      siteTailwindObject = new Function(`return ${get(siteStyles).tailwind}`)() // convert string object to literal object
       pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
       return _.merge(siteTailwindObject, pageTailwindObject)
     } catch(e) {
@@ -103,7 +103,7 @@ export function getCombinedTailwindConfig(pageTailwindConfig) {
   let siteTailwindObject
   let pageTailwindObject
   try {
-    const siteTW = get(site).styles.tailwind
+    const siteTW = get(siteStyles).tailwind
     siteTailwindObject = new Function(`return ${siteTW}`)() // convert string object to literal object
     pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
     return _.merge(siteTailwindObject, pageTailwindObject)

@@ -12,9 +12,9 @@
 
   import {domainInfo} from '../../stores/data'
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
-  import site from '../../stores/data/site'
   import pageData from '../../stores/data/pageData'
-  import content from '../../stores/data/page/content'
+  // import content from '../../stores/data/page/content'
+  import {content} from '../../stores/app/activePage'
   import modal from '../../stores/app/modal'
 
   import {styles as pageStyles} from '../../stores/app/activePage'
@@ -36,7 +36,7 @@
   }
 
   $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
-  $: allPages = $site.pages.map(page => page.id === $pageData.id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
+  $: allPages = $pages.map(page => page.id === $pageData.id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
 
   let loading = false
 

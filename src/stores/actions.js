@@ -1,9 +1,10 @@
 import _ from 'lodash'
 import {get} from 'svelte/store'
 import {getAllFields} from './helpers'
-import {convertFieldsToData, parseHandlebars} from '../utils'
+import {convertFieldsToData, parseHandlebars, hydrateAllComponents, getUniqueId} from '../utils'
 import {id,content} from './app/activePage'
 import {pages} from './data/draft'
+import {focusedNode} from './app/editor'
 
 export async function updateInstances(symbol) {
   const updatedPages = await Promise.all(
@@ -72,4 +73,74 @@ export async function updateInstances(symbol) {
   const activePageContent = _.find(updatedPages, ['id', get(id)])['content']
   content.set(activePageContent)
   pages.set(updatedPages)
+}
+
+export async function hydrateComponents() {
+  const updatedPages = await Promise.all(
+    get(pages).map(async (page) => {
+      const updatedContent = await hydrateAllComponents(page.content);
+      return {
+        ...page,
+        content: updatedContent,
+      };
+    })
+  );
+  const activePageContent = _.find(updatedPages, ['id', get(id)])['content']
+  content.set(activePageContent)
+  pages.set(updatedPages)
+}
+
+
+export function insertSection(section, position) {
+  const focusedSection = get(focusedNode).path.section;
+  const newSection = createSection({
+    width: section.fullwidth ? "fullwidth" : "contained",
+    columns: section.columns.map((c) => ({
+      id: getUniqueId(),
+      size: c,
+      rows: [createContentRow()],
+    })),
+  });
+
+  if (!focusedSection) {
+    // store.update((content) => [...content, newSection]);
+    content.set([...content, newSection]);
+  } else {
+    const indexOfFocusedSection = _.findIndex(get(content), [
+      "id",
+      focusedSection.id,
+    ]);
+    const contentWithNewSection = [
+      ...get(content).slice(0, indexOfFocusedSection + 1),
+      newSection,
+      ...get(content).slice(indexOfFocusedSection + 1),
+    ];
+    content.set(contentWithNewSection);
+  }
+
+  function createSection(options = {}) {
+    return {
+      id: getUniqueId(),
+      width: "contained",
+      columns: [
+        {
+          id: getUniqueId(),
+          size: "",
+          rows: [createContentRow()],
+        },
+      ],
+      ...options,
+    }
+  }
+
+  function createContentRow() {
+    return {
+      id: getUniqueId(),
+      type: "content",
+      value: {
+        html: "",
+      },
+    };
+  }
+
 }

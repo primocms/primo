@@ -3,8 +3,6 @@
   import {fade} from 'svelte/transition'
   import {allSites} from '../../stores/data'
   import dropdown from '../../stores/app/dropdown'
-  import site from '../../stores/data/site'
-  import {pageId} from '../../stores/data/page'
   import PrimoLogo from '../../components/svg/PrimoLogo.svelte'
   import DropdownButton from './DropdownButton.svelte'
 
@@ -13,12 +11,6 @@
   export let variants = ''
 
   let showingDropdown = false
-
-  function createSite() {
-    const newSite = allSites.create()
-    site.set(newSite)
-    pageId.set('index')
-  }
 
 </script>
 
