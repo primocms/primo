@@ -46,7 +46,12 @@
 	}
 
 	function getPage(route) {
-		const page = route.split('/')[1]
+		let page
+		if (route.includes('site')) {
+			page = route.split('/')[1]
+		} else {
+			page = route
+		}
 		return page ? page : 'index'
 	}
 

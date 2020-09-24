@@ -33,8 +33,12 @@
 
   function openPage(e) {
     e.preventDefault()
-    const [ site ] = window.location.pathname.split('/').slice(2)
-    navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`)
+    if (window.location.pathname.includes('site')) {
+      const [ site ] = window.location.pathname.split('/').slice(2)
+      navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`) 
+    } else {
+      navigate(`/${page.id === 'index' ? '' : page.id}`) 
+    }
     modal.hide()
   }
 </script>
@@ -50,7 +54,7 @@
     @apply text-blue-800;
   }
   button.page-container.active {
-    @apply cursor-default opacity-50;
+    @apply cursor-default pointer-events-none opacity-50;
     &:after {
       @apply opacity-50;
     }

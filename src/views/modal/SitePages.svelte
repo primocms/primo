@@ -13,6 +13,7 @@
   // import site from "../../stores/data/site";
   import {pages} from "../../stores/data/draft";
   import pageData from "../../stores/data/pageData";
+  import {id} from '../../stores/app/activePage'
 
   function getUniqueId() {
     return new ShortUniqueId().randomUUID(5).toLowerCase();
@@ -161,7 +162,7 @@
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
       <PageItem
         {page}
-        active={$pageData.id === page.id}
+        active={$id === page.id}
         on:delete={() => deletePage(page.id)} />
     </li>
   {/each}
