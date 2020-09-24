@@ -8,11 +8,11 @@ export function navigateToPage(pageId) {
   click(`#page-${pageId} button.page-container`)
 }
 
-export function createPage(pageLabel, pageId) {
+export function createPage(pageLabel, pageId, duplicate = false) {
   click('#new-page')
   cy.get('#page-label input').type(pageLabel)
   cy.get('#page-url input').type(pageId)
-  cy.get('#page-base button:last-child').click()
+  cy.get(`#page-base button:${duplicate ? 'last' : 'first'}-child`).click()
   click('#create-page')
 }
 
