@@ -8,12 +8,12 @@
   import tailwind from '../../stores/data/tailwind'
   import site from '../../stores/data/site'
   import pageDataStore from '../../stores/data/pageData'
-  import {pageId} from '../../stores/data/page'
+  import {id} from '../../stores/app/activePage'
 
   setContext("editable", true);
 
   export let route : string
-	$: pageId.set(route) 
+	$: id.set(route) 
   
   let siteStyles: string;
   $: siteStyles = wrapInStyleTags($site.styles.final, "site-styles");

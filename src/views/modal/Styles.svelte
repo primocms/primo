@@ -1,5 +1,6 @@
 <script>
   import {createEventDispatcher, onMount, onDestroy} from 'svelte'
+  import {writable} from 'svelte/store'
   const dispatch = createEventDispatcher()
   import _ from 'lodash'
   import {CodeMirror} from '../../components'
@@ -16,9 +17,18 @@
   import content from '../../stores/data/page/content'
   import modal from '../../stores/app/modal'
 
-  import pageStyles from '../../stores/data/page/styles'
+  // import pageStyles from '../../stores/data/page/styles'
   // import siteStyles from '../../stores/data/site/styles'
-  import {styles as siteStyles} from '../../stores/data/draft'
+  import {styles as siteStyles, pages} from '../../stores/data/draft'
+  import {id} from '../../stores/app/activePage'
+
+  let pageStyles = writable( _.find($pages, ['id', $id])['styles'] )
+
+  $: $pages = $pages.map(page => page.id === $id ? ({
+    ...page,
+    styles: $pageStyles
+  }) : page)
+
 
   let styles = $pageStyles
   $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles
