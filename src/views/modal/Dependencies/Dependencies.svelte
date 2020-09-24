@@ -1,8 +1,18 @@
 <script>
   import {cloneDeep} from 'lodash'
+  import {writable} from 'svelte/store'
 
   import modal from '../../../stores/app/modal'
-  import dependencies from '../../../stores/data/page/dependencies'
+  import {pages} from '../../../stores/data/draft'
+  import {id} from '../../../stores/app/activePage'
+
+  let dependencies = writable( _.find($pages, ['id', $id])['dependencies'] )
+
+  $: $pages = $pages.map(page => page.id === $id ? ({
+    ...page,
+    dependencies: $dependencies
+  }) : page)
+
 
   import ModalHeader from '../ModalHeader.svelte'
   import Libraries from './_Libraries.svelte'
