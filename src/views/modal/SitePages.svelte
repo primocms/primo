@@ -10,17 +10,14 @@
   import ModalHeader from "./ModalHeader.svelte";
 
   import { createPage } from "../../const";
-  import site from "../../stores/data/site";
+  // import site from "../../stores/data/site";
+  import {pages} from "../../stores/data/draft";
   import pageData from "../../stores/data/pageData";
 
   function getUniqueId() {
     return new ShortUniqueId().randomUUID(5).toLowerCase();
   }
 
-  let pages = [];
-  $: {
-    pages = pages.map((p) => ({ key: getUniqueId(), ...p })); // Add keys for templating (if one doesn't exist)
-  }
 
   async function submitForm(form) {
     const inputs = Object.values(form.target);
@@ -29,13 +26,13 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage($pageData, title, url);
-    site.pages.add(newPage);
+    $pages = [ ...$pages, newPage ]
     creatingPage = false;
     pageUrl = "";
   }
 
   async function deletePage(pageId) {
-    site.pages.remove(pageId);
+    $pages = $pages.filter(p => p.id !== pageId)
   }
 
   function duplicatePage(page, title, url) {
@@ -160,7 +157,7 @@
 <ModalHeader icon="fas fa-th-large" title="Pages" />
 
 <ul class="grid grid-cols-2 gap-4 mb-4">
-  {#each $site.pages as page (page.id)}
+  {#each $pages as page (page.id)}
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
       <PageItem
         {page}
