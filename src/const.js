@@ -254,7 +254,11 @@ export const createPage = (id = getUniqueId(), title) => ({
     }
   ],
   dependencies: DEFAULTS.dependencies,
-  styles: DEFAULTS.styles,
+  styles: {
+    raw: '',
+    final: '',
+    tailwind: defaultStyles.tailwind
+  },
   wrapper: DEFAULTS.wrapper,
   fields: [],
   symbols: []
