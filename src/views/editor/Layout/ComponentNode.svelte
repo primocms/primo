@@ -10,9 +10,6 @@
     customElements.define('component-buttons', ComponentButtons); 
   }
 
-
-  const active = getContext('editable')
-
   const dispatch = createEventDispatcher()
 
   export let row
@@ -54,17 +51,15 @@
 
 
 <div class="primo-component" class:active out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
-  {#if active}
-    <component-buttons 
-      icon={$editorViewDev ? 'code' : 'edit'}
-      contentabove={contentAbove}
-      contentbelow={contentBelow}
-      on:edit
-      on:delete
-      on:addContentBelow
-      on:addContentAbove
-    ></component-buttons>
-  {/if}
+  <component-buttons 
+    icon={$editorViewDev ? 'code' : 'edit'}
+    contentabove={contentAbove}
+    contentbelow={contentBelow}
+    on:edit
+    on:delete
+    on:addContentBelow
+    on:addContentAbove
+  ></component-buttons>
   <div id="component-{row.id}">
     {@html row.value.final.html}
   </div>

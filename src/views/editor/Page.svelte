@@ -13,8 +13,6 @@
     wrapper as pageWrapper
   } from '../../stores/app/activePage'
 
-  setContext("editable", true);
-
   export let route : string
 	$: id.set(route) 
 
