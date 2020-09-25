@@ -17,14 +17,27 @@
   export let contentBelow = false
 
   let js
-  $: js = row.value.final.js
-  $: appendJS(js)
 
   let mounted = false
   onMount(() => {
     mounted = true
-    appendJS(js)
   })
+
+  $: jsLibraries = $dependencies ? $dependencies.libraries.filter(l => l.type === 'js') : []
+  $: {
+    (async () => {
+      if (jsLibraries.length > 0) {
+        await import('../../../libraries/systemjs/system.min.js')
+        await import('../../../libraries/systemjs/named-register.min.js')
+        await import('../../../libraries/systemjs/use-default.min.js')
+        await import('../../../libraries/systemjs/amd.min.js')
+      } 
+      if (row.value.final.js) {
+        appendJS(row.value.final.js)
+      }
+    })()
+  }
+
 
   function appendJS(js) {
 
@@ -50,7 +63,7 @@
 </script>
 
 
-<div class="primo-component" class:active out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
+<div class="primo-component" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   <component-buttons 
     icon={$editorViewDev ? 'code' : 'edit'}
     contentabove={contentAbove}
@@ -82,12 +95,12 @@
       @apply w-full;
     }
   }
-  .primo-component.active:hover {
+  .primo-component:hover {
     outline: 2px solid rgb(206,78,74);
     transition: outline 0.25s;
     z-index: 9;
   }
-  .primo-component.active:hover component-buttons {
+  .primo-component:hover component-buttons {
     @apply opacity-100; 
     user-select: initial;
     pointer-events: none;
