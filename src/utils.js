@@ -113,16 +113,6 @@ export async function convertFieldsToData(fields, typeToUpdate = "static") {
   return _.chain(parsedFields).keyBy("key").mapValues("value").value();
 }
 
-// async function hydrateComponentFields (node) {
-
-//   if (node.type === 'attachment' && node.attachment.contentType === 'custom-embed' && node.attachment.fields.length > 0) {
-//     let data = await convertFieldsToData(node.attachment.fields, 'all')
-//     node.attachment.content = await parseHandlebars(node.attachment.raw, data)
-//   }
-
-//   return Promise.resolve(node)
-// }
-
 export async function compileScss(scss) {
   let result = await ax.post("primo/scss", { scss });
   return result;

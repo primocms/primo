@@ -23,15 +23,15 @@
       <div class="buttons">
         {#each library.links as link}
           {#if link.site === 'repository'}
-            <a aria-label="{library.name} github" href={link.href} target="blank" rel="nofollow">
+            <a class="mr-1" aria-label="{library.name} github" href={link.href} target="blank" rel="nofollow">
               <i class="fab fa-github"></i>
             </a>
           {:else if link.site === 'homepage'}
-            <a aria-label="{library.name} homepage" href={link.href} target="blank" rel="nofollow">
+            <a class="mr-1" aria-label="{library.name} homepage" href={link.href} target="blank" rel="nofollow">
               <i class="fas fa-globe"></i>
             </a>
           {:else if link.site === 'npme'}
-            <a aria-label="{library.name} npm" href={link.href} target="blank" rel="nofollow">
+            <a class="mr-1" aria-label="{library.name} npm" href={link.href} target="blank" rel="nofollow">
               <i class="fab fa-npm"></i>
             </a>
           {/if}
