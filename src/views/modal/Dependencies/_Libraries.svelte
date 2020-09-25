@@ -47,8 +47,11 @@
     libraries = libraries.filter(l => l.name !== name)
   }
 
+  let searching = false
   async function searchForPackages() {
+    searching = true
     const {data} = await axios.get(`https://registry.npmjs.com/-/v1/search?text=${packageName}`)
+    searching = false
     searchResults = data.objects.map(d => d.package)
   }
 
@@ -101,7 +104,7 @@
 Add a library
 <form class="flex mt-2" on:submit|preventDefault={searchForPackages}>
   <input class="flex-1 bg-gray-100 p-2 focus:outline-none" type="text" placeholder="alpinejs" bind:value={packageName}>
-  <IconButton variants="px-4 bg-gray-900 text-gray-100" icon="search"/>
+  <IconButton variants="px-4 bg-gray-900 text-gray-100" disabled={searching} icon={searching ? "spinner" : "search"}/>
 </form>
 
 <ul class="list is-hoverable">

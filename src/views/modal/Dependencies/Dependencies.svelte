@@ -5,8 +5,6 @@
   import modal from '../../../stores/app/modal'
   import {dependencies} from '../../../stores/app/activePage'
 
-
-
   import ModalHeader from '../ModalHeader.svelte'
   import Libraries from './_Libraries.svelte'
 
