@@ -48,7 +48,7 @@
 	function getPage(route) {
 		let page
 		if (route.includes('site')) {
-			page = route.split('/')[1]
+			page = route.split('/')[2]
 		} else {
 			page = route
 		}
