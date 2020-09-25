@@ -4,7 +4,7 @@ import PageSections from './PageSections.svelte'
 import SitePages from './SitePages.svelte'
 import Styles from './Styles.svelte'
 import Fields from './Fields.svelte'
-import Wrapper from './Wrapper.svelte'
+import HTML from './HTML.svelte'
 import ReleaseNotes from './ReleaseNotes.svelte'
 import Dependencies from './Dependencies/Dependencies.svelte'
 
@@ -16,6 +16,6 @@ export {
   Dependencies,
   Styles,
   Fields,
-  Wrapper,
+  HTML,
   ReleaseNotes
 }

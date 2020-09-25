@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, onMount, onDestroy } from 'svelte'
   const dispatch = createEventDispatcher()
-  import _ from 'lodash'
+  import {some} from 'lodash'
   import {PrimaryButton} from '../../../components/buttons'
 
   import ModalHeader from '../ModalHeader.svelte'
@@ -11,9 +11,10 @@
 
   import {editorViewDev,userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
-  import site from '../../../stores/data/site'
-  import symbols from '../../../stores/data/site/symbols'
-  import content from '../../../stores/data/page/content'
+  // import site from '../../../stores/data/site'
+  import {symbols} from '../../../stores/data/draft'
+  import {content} from '../../../stores/app/activePage'
+  import {updateInstances} from '../../../stores/actions'
 
   export let button;
 
@@ -27,21 +28,26 @@
           title: `Edit ${symbol.title || 'Symbol'}`,
           icon: 'fas fa-clone',
           button: {
-            label: `Save ${symbol.title || 'Symbol'}`,
-            icon: 'fas fa-save',
+            label: `Draft`,
+            icon: 'fas fa-check',
             onclick: async (symbol) => {
               modal.show('COMPONENT_LIBRARY', {button})
-              const [newSymbols] = await Promise.all([
-                symbols.place(symbol),
-                content.updateInstances(symbol),
-                // updateInstancesInDomain(symbol), // TODO
-              ])
-              site.save({ symbols: newSymbols })
+              placeSymbol(symbol)
+              updateInstances(symbol)
             }
           }
         } 
       }
     )
+  }
+
+  async function placeSymbol(symbol) {
+    const exists = some($symbols, ['id',symbol.id])
+    if (exists) {
+      $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+    } else {
+      $symbols = [ ...$symbols, symbol ]
+    }
   }
 
   async function addSymbol() {
@@ -50,8 +56,7 @@
   }
 
   async function deleteSymbol(symbol) {
-    const newSymbols = symbols.remove(symbol.id)
-    site.save({ symbols: newSymbols })
+    $symbols = $symbols.filter(s => s.id !== symbol.id)
   }
 
   function addComponentToPage(symbol) {
@@ -64,11 +69,10 @@
   }
 
   function updateSymbol(symbol, value) {
-    symbols.place({
+    placeSymbol({
       ...symbol,
       ...value
     })
-    site.save({ symbols: $symbols })
   }
 
   function createInstance(symbol) {

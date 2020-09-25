@@ -26,7 +26,7 @@
 </script>
 
 {#if $modal.visible}
-  <div class="modal m-2 lg:m-0 mousetrap" transition:fade={{ duration: 100 }}>
+  <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
     <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
     <div class="modal-card {variants}">
       <div class="modal-card-body">

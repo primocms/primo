@@ -1,5 +1,6 @@
 <script>
   import {createEventDispatcher, onMount, onDestroy} from 'svelte'
+  import {writable} from 'svelte/store'
   const dispatch = createEventDispatcher()
   import _ from 'lodash'
   import {CodeMirror} from '../../components'
@@ -9,16 +10,15 @@
   import { compileScss, processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
 
-  import {domainInfo} from '../../stores/data'
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
-  import site from '../../stores/data/site'
-  import pageData from '../../stores/data/pageData'
-  import content from '../../stores/data/page/content'
+  import {content,id} from '../../stores/app/activePage'
   import modal from '../../stores/app/modal'
 
-  let pageStyles = _.cloneDeep($pageData.styles)
-  let siteStyles = _.cloneDeep($site.styles)
-  let styles = pageStyles
+  import {styles as pageStyles} from '../../stores/app/activePage'
+  import {styles as siteStyles, pages} from '../../stores/data/draft'
+
+  let styles = $pageStyles
+  $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles
 
   let pageHTML
   let siteHTML 
@@ -31,8 +31,8 @@
     }
   }
 
-  $: currentPage = buildPreview(siteStyles.final, pageStyles.final, $content) 
-  $: allPages = $site.pages.map(page => page.id === $pageData.id ? currentPage : buildPreview(siteStyles.final, page.styles.final, page.content))
+  $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
+  $: allPages = $pages.map(page => page.id === $id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
 
   let loading = false
 
@@ -57,9 +57,9 @@
     } 
   }
 
-  let rawStyles = pageStyles.raw;
-  let finalStyles = pageStyles.final; 
-  let moduleTailwindConfig = pageStyles.tailwind;
+  let rawStyles = $pageStyles.raw;
+  let finalStyles = $pageStyles.final; 
+  let moduleTailwindConfig = $pageStyles.tailwind;
 
   $: tailwindConfig = moduleTailwindConfig.replace('export default ','')
   $: combinedTailwindConfig = getCombinedTailwindConfig(tailwindConfig)
@@ -107,9 +107,9 @@
   $: showingPage = primaryTab === primaryTabs[0]
 
   $: if (showingPage) {
-    styles = pageStyles
+    styles = $pageStyles
   } else {
-    styles = siteStyles
+    styles = $siteStyles
   }
 
   const secondaryTabs = [
@@ -127,9 +127,9 @@
 
   function saveStyles() {
     if (showingPage) {
-      pageStyles = styles
+      $pageStyles = styles
     } else {
-      siteStyles = styles
+      $siteStyles = styles
     }
   }
 
@@ -141,11 +141,9 @@
   icon="fab fa-css3"
   title="CSS"
   button={{
-    label: `Save CSS`,
-    icon: 'fas fa-save',
+    label: `Draft`,
+    icon: 'fas fa-check',
     onclick: () => {
-      site.save({ styles: siteStyles })
-      site.saveCurrentPage({ styles: pageStyles })
       if (shouldReloadTailwind) {
         tailwind.saveSwappedInConfig()
       } else {
@@ -161,43 +159,47 @@
   <div class="flex flex-row flex-1">
     <div class="w-1/2 flex flex-col">
         <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
+        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} />
         {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
           <CodeMirror 
-            bind:value={pageStyles.raw} 
+            autofocus
+            bind:value={$pageStyles.raw} 
             on:change={_.debounce( async() => { 
-              pageStyles.final = await compileStyles(pageStyles.raw, pageStyles.tailwind) 
+              $pageStyles.final = await compileStyles($pageStyles.raw, $pageStyles.tailwind) 
             }, 1000 )}
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
           />
         {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
           <CodeMirror 
+            autofocus
             prefix="export default "
-            bind:value={pageStyles.tailwind} 
+            bind:value={$pageStyles.tailwind} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
-              pageStyles.final = await compileStyles(pageStyles.raw, pageStyles.tailwind) 
+              $pageStyles.final = await compileStyles($pageStyles.raw, $pageStyles.tailwind) 
             }, 1000 )}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'styles'}
           <CodeMirror 
-            bind:value={siteStyles.raw} 
+            autofocus
+            bind:value={$siteStyles.raw} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
-              siteStyles.final = await compileStyles(siteStyles.raw, siteStyles.tailwind) 
+              $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
             }, 1000 )}
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
           <CodeMirror 
+            autofocus
             prefix="export default "
-            bind:value={siteStyles.tailwind} 
+            bind:value={$siteStyles.tailwind} 
             on:change={_.debounce( async() => { 
-              siteStyles.final = await compileStyles(siteStyles.raw, siteStyles.tailwind) 
+              $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
             }, 1000 )}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"

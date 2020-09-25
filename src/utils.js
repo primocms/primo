@@ -5,12 +5,11 @@ import { get } from "svelte/store";
 import ShortUniqueId from "short-unique-id";
 import objectPath from "object-path";
 
-import domainInfo from "./stores/data/domainInfo";
-import site from "./stores/data/site";
-import pageData from "./stores/data/pageData";
+import {id, dependencies as pageDependencies, wrapper as pageWrapper} from './stores/app/activePage'
+import user from './stores/data/user'
 
 const functionsServer = (endpoint) =>
-  get(domainInfo).onDev
+  window.location.hostname.includes('localhost')
     ? `http://localhost:9000/primo-d4041/us-central1/${endpoint}`
     : `https://us-central1-primo-d4041.cloudfunctions.net/${endpoint}`;
 
@@ -113,16 +112,6 @@ export async function convertFieldsToData(fields, typeToUpdate = "static") {
 
   return _.chain(parsedFields).keyBy("key").mapValues("value").value();
 }
-
-// async function hydrateComponentFields (node) {
-
-//   if (node.type === 'attachment' && node.attachment.contentType === 'custom-embed' && node.attachment.fields.length > 0) {
-//     let data = await convertFieldsToData(node.attachment.fields, 'all')
-//     node.attachment.content = await parseHandlebars(node.attachment.raw, data)
-//   }
-
-//   return Promise.resolve(node)
-// }
 
 export async function compileScss(scss) {
   let result = await ax.post("primo/scss", { scss });
@@ -228,11 +217,11 @@ const boilerplate = async (html) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" type="text/css" href="./styles.css" />
       <link rel="stylesheet" type="text/css" href="./${
-        get(domainInfo).page || "index"
+        id || "index"
       }.css" />
-      <script src="./${get(domainInfo).page || "index"}.js"></script>
+      <script src="./${id || "index"}.js"></script>
       ${
-        get(pageData).dependencies.libraries.length > 0
+        get(pageDependencies).libraries.length > 0
           ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.1/system.min.js" integrity="sha256-15j2fw0zp8UuYXmubFHW7ScK/xr5NhxkxmJcp7T3Lrc=" crossorigin="anonymous"></script>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/use-default.min.js" integrity="sha256-uVDULWwA/sIHxnO31dK8ThAuK46MrPmrVn+JXlMXc5A=" crossorigin="anonymous"></script>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/amd.min.js" integrity="sha256-7vS4pPsg7zx1oTAJ1zQIr2lDg/q8anzUCcz6nxuaKhU=" crossorigin="anonymous"></script>
@@ -248,7 +237,7 @@ const boilerplate = async (html) => {
           : ``
       }
       ` +
-    `${get(pageData).wrapper.head.final}
+    `${get(pageWrapper).head.final}
     </head>
 
     <body data-instant-intensity="all" class="primo-page">   
@@ -359,17 +348,6 @@ export async function hydrateComponent(component) {
   const finalHTML = await parseHandlebars(value.raw.html, data);
   component.value.final.html = finalHTML;
   return component;
-}
-
-export function getAllFields(component = null) {
-  const siteFields = _.cloneDeep(get(site).fields);
-  const pageFields = _.cloneDeep(get(pageData).fields);
-  let componentFields = [];
-  if (component) {
-    componentFields = component.value.raw.fields;
-  }
-  const allFields = _.unionBy(componentFields, pageFields, siteFields, "key");
-  return allFields;
 }
 
 export function duplicatePage(page, title, url) {

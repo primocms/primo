@@ -4,7 +4,9 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   import modal from '../../stores/app/modal'
-  import content from '../../stores/data/page/content'
+  // import content from '../../stores/data/page/content'
+  import {content} from '../../stores/app/activePage'
+  import {insertSection} from '../../stores/actions'
   import ModalHeader from './ModalHeader.svelte'
 
   let fullwidth = false
@@ -34,7 +36,7 @@
   ]
 
   function selectSection(columns) {
-    content.insertSection({
+    insertSection({
       fullwidth,
       gapless,
       columns

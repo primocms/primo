@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { slide, fade } from 'svelte/transition'
   import _ from 'lodash'
   import { createEventDispatcher, onMount } from 'svelte'
@@ -10,13 +10,16 @@
   import ModalHeader from './ModalHeader.svelte'
 
   import modal from '../../stores/app/modal'
-  import site from '../../stores/data/site'
-  import pageData from '../../stores/data/pageData'
+  import {wrapper as pageHTML} from '../../stores/app/activePage'
+  // import pageHTML from '../../stores/data/page/wrapper'
+  // import siteHTML from '../../stores/data/site/wrapper'
+  // import pageFields from '../../stores/data/page/fields'
+  // import siteFields from '../../stores/data/site/fields'
+  import {fields as pageFields} from '../../stores/app/activePage'
+  import {wrapper as siteHTML, fields as siteFields} from '../../stores/data/draft'
 
-  let pageWrapper = _.cloneDeep($pageData.wrapper)
-  let siteWrapper = _.cloneDeep($site.wrapper)
-
-  let wrapper = pageWrapper
+  let activeHTML = $pageHTML
+  $: activeHTML = activeTab.id === 'page' ? $pageHTML : $siteHTML
 
   const tabs = [
     {
@@ -33,28 +36,29 @@
 
   let activeTab = tabs[0]
 
-  let showingPage = true
-  $: showingPage = activeTab === tabs[0]
-
-  $: if (showingPage) {
-    wrapper = pageWrapper
-  } else {
-    wrapper = siteWrapper
-  }
-
-  function getAllFields() {
-    const siteFields = _.cloneDeep($site.fields)
-    const pageFields = _.cloneDeep($pageData.fields)
-    const allFields = _.unionBy(pageFields, siteFields, "key");
-    return allFields
-  }
-
   async function updateHtmlWithFieldData(rawHTML) {
     const allFields = getAllFields()
     const data = await convertFieldsToData(allFields, 'all')
     const finalHTML = await parseHandlebars(rawHTML, data)
     return finalHTML
+
+    function getAllFields() {
+      const allFields = _.unionBy($pageFields, $siteFields, "key");
+      return allFields
+    }
   }
+
+  async function saveFinalHTML() {
+    if (activeTab['id'] === 'page') {
+      $pageHTML.head.raw = activeHTML.head.raw
+      $pageHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
+    } else {
+      $siteHTML.head.raw = activeHTML.head.raw
+      $siteHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
+    }
+  }
+
+
 
 </script>
 
@@ -62,14 +66,9 @@
   icon="fab fa-html5"
   title="HTML"
   button={{
-    label: `Save`,
-    icon: 'fas fa-save',
-    onclick: () => {
-      site.saveCurrentPage({ wrapper: pageWrapper })
-      site.save({ wrapper: siteWrapper })
-      pageData.save('wrapper', pageWrapper)
-      modal.hide()
-    }
+    label: `Draft`,
+    icon: 'fas fa-check',
+    onclick: () => modal.hide()
   }}
   variants="mb-4"
 />
@@ -79,10 +78,8 @@
   <div class="flex-1">
     <span class="mb-1 inline-block font-semibold text-gray-700">{'<head>'}</span> 
     <CodeMirror 
-      bind:value={wrapper.head.raw} 
-      on:change={_.debounce( async() => { 
-        wrapper.head.final = await updateHtmlWithFieldData(wrapper.head.raw)
-      }, 1000 )}
+      bind:value={activeHTML.head.raw} 
+      on:change={saveFinalHTML}
       style="height:10rem" 
       mode={{
         name: 'handlebars',
@@ -92,10 +89,8 @@
 
     <span class="mb-1 mt-4 inline-block font-semibold text-gray-700">{'Before </body>'}</span> 
     <CodeMirror 
-      bind:value={wrapper.below.raw} 
-      on:change={_.debounce( async() => { 
-        wrapper.below.final = await updateHtmlWithFieldData(wrapper.below.raw)
-      }, 1000 )}
+      bind:value={activeHTML.below.raw} 
+      on:change={saveFinalHTML}
       style="height:15rem" 
       mode={{
         name: 'handlebars',
@@ -103,13 +98,4 @@
       }}
     />
   </div>
-  <!-- <div class="flex justify-end py-2">
-    <SaveButton 
-      on:click={() => {
-        site.saveCurrentPage({ wrapper: pageWrapper })
-        site.save({ wrapper: siteWrapper })
-        pageData.save('wrapper', pageWrapper)
-        modal.hide()
-      }}>Save HTML</SaveButton>
-  </div> -->
 </div>

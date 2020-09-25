@@ -3,8 +3,8 @@ import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
 
-import site from './site'
-import pageData from './pageData'
+import { styles as siteStyles } from './draft'
+import {styles as pageStyles} from '../app/activePage'
 
 const store = writable(storeLib.get('tailwind'))
 
@@ -39,7 +39,7 @@ export default {
     let siteTailwindObject = {}
     let pageTailwindObject = {}
     try {
-      siteTailwindObject = new Function(`return ${get(site).styles.tailwind}`)() // convert string object to literal object
+      siteTailwindObject = new Function(`return ${get(siteStyles).tailwind}`)() // convert string object to literal object
       pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
       return _.merge(siteTailwindObject, pageTailwindObject)
     } catch(e) {
@@ -52,7 +52,7 @@ export default {
 let tailwindRetrievalAttempts = 0
 async function hydrateTailwind() {
   loadingTailwind.set(true)
-  const config = getCombinedTailwindConfig(get(pageData).styles.tailwind)
+  const config = getCombinedTailwindConfig(get(pageStyles).tailwind)
   
   // This is my hacky attempt (works tho) to disregard invalid tailwind styles
   // when hydrateTailwind() gets called repeatedly (as it does when the app loads)
@@ -103,7 +103,7 @@ export function getCombinedTailwindConfig(pageTailwindConfig) {
   let siteTailwindObject
   let pageTailwindObject
   try {
-    const siteTW = get(site).styles.tailwind
+    const siteTW = get(siteStyles).tailwind
     siteTailwindObject = new Function(`return ${siteTW}`)() // convert string object to literal object
     pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
     return _.merge(siteTailwindObject, pageTailwindObject)

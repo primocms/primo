@@ -1,29 +1,23 @@
 <script lang="ts">
-  import _ from "lodash";
-  import { setContext } from "svelte";
-  import Editor from "./Editor.svelte";
-  import { wrapInStyleTags } from "../../utils";
+  import _ from 'lodash'
+  import {setContext} from 'svelte'
+  import Editor from './Editor.svelte'
+  import { wrapInStyleTags } from '../../utils'
 
-  import { user } from "../../stores/data";
-  import tailwind from "../../stores/data/tailwind";
-  import site from "../../stores/data/site";
-  import pageDataStore from "../../stores/data/pageData";
-  import { pageId as pageIdStore } from "../../stores/data/page";
+  import tailwind from '../../stores/data/tailwind'
+  import {styles as siteStyles} from '../../stores/data/draft'
+  import {
+    id, 
+    styles as pageStyles, 
+    dependencies as pageDependencies,
+    wrapper as pageWrapper
+  } from '../../stores/app/activePage'
 
-  setContext("editable", true);
-
-  export let pageId: string;
-  $: pageId = pageId === "index.html" ? "index" : pageId; // pageId has .html on desktop
-  $: pageIdStore.set(pageId);
-
-  let siteStyles: string;
-  $: siteStyles = wrapInStyleTags($site.styles.final, "site-styles");
-
-  let pageStyles: string;
-  $: pageStyles = wrapInStyleTags($pageDataStore.styles.final, "page-styles");
+  export let route : string
+	$: id.set(route) 
 
   let libraries: Array<any>;
-  $: libraries = $pageDataStore.dependencies.libraries;
+  $: libraries = $pageDependencies.libraries;
 
   let customScripts: Array<any> = [];
 
@@ -32,10 +26,6 @@
 
   let jsLibraries: Array<any>;
   $: jsLibraries = libraries.filter((l) => l.type === "js");
-
-  function unlockPage() {
-    user.set({ canEditPage: true });
-  }
 
   function containsField(row, fieldType) {
     return _.some(row.value.raw.fields, ["type", fieldType]);
@@ -46,7 +36,7 @@
   $: importMap = JSON.stringify({
     imports: _.mapValues(
       _.keyBy(
-        libraries.filter((l) => l.src.slice(-5).includes(".js")),
+        jsLibraries,
         "name"
       ),
       "src"
@@ -59,6 +49,7 @@
       systemJsNode.innerHTML = importMap;
     }
   }
+
 </script>
 
 <style>
@@ -81,44 +72,19 @@
 </style>
 
 <svelte:head>
-  {@html $pageDataStore.wrapper.head.final}
+  {@html $pageWrapper.head.final}
   <link
     href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
     rel="stylesheet"
     type="text/css" />
   {@html wrapInStyleTags($tailwind, 'tailwind')}
-  {@html siteStyles}
-  {@html pageStyles}
-
-  {#each customScripts as { src }}
-    <script {src}>
-    </script>
-  {/each}
+  {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
+  {@html wrapInStyleTags($pageStyles.final, "page-styles")}
 
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />
   {/each}
   {#if jsLibraries.length > 0}
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.1/system.min.js"
-      integrity="sha256-15j2fw0zp8UuYXmubFHW7ScK/xr5NhxkxmJcp7T3Lrc="
-      crossorigin="anonymous">
-    </script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/named-register.min.js"
-      integrity="sha256-ezV7DuHnj9ggFddRE32dDuLSGesXoT2ZWY8g+mEknMM="
-      crossorigin="anonymous">
-    </script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/use-default.min.js"
-      integrity="sha256-uVDULWwA/sIHxnO31dK8ThAuK46MrPmrVn+JXlMXc5A="
-      crossorigin="anonymous">
-    </script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/amd.min.js"
-      integrity="sha256-7vS4pPsg7zx1oTAJ1zQIr2lDg/q8anzUCcz6nxuaKhU="
-      crossorigin="anonymous">
-    </script>
     <script type="systemjs-importmap" bind:this={systemJsNode}>
     </script>
   {/if}

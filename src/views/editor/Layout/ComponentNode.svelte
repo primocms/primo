@@ -2,18 +2,13 @@
   import {createEventDispatcher, onMount, getContext} from 'svelte'
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../pageUtils.js'
-  import {dependencies} from '../../../stores/data'
+  import {dependencies} from '../../../stores/app/activePage'
   import {editorViewDev} from '../../../stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
   if (!customElements.get('component-buttons')) { 
     customElements.define('component-buttons', ComponentButtons); 
   }
-
-
-  // import type {Component} from './LayoutTypes'
-
-  const active = getContext('editable')
 
   const dispatch = createEventDispatcher()
 
@@ -22,14 +17,27 @@
   export let contentBelow = false
 
   let js
-  $: js = row.value.final.js
-  $: appendJS(js)
 
   let mounted = false
   onMount(() => {
     mounted = true
-    appendJS(js)
   })
+
+  $: jsLibraries = $dependencies ? $dependencies.libraries.filter(l => l.type === 'js') : []
+  $: {
+    (async () => {
+      if (jsLibraries.length > 0) {
+        await import('../../../libraries/systemjs/system.min.js')
+        await import('../../../libraries/systemjs/named-register.min.js')
+        await import('../../../libraries/systemjs/use-default.min.js')
+        await import('../../../libraries/systemjs/amd.min.js')
+      } 
+      if (row.value.final.js) {
+        appendJS(row.value.final.js)
+      }
+    })()
+  }
+
 
   function appendJS(js) {
 
@@ -55,18 +63,16 @@
 </script>
 
 
-<div class="primo-component" class:active out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
-  {#if active}
-    <component-buttons 
-      icon={$editorViewDev ? 'code' : 'edit'}
-      contentabove={contentAbove}
-      contentbelow={contentBelow}
-      on:edit
-      on:delete
-      on:addContentBelow
-      on:addContentAbove
-    ></component-buttons>
-  {/if}
+<div class="primo-component" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
+  <component-buttons 
+    icon={$editorViewDev ? 'code' : 'edit'}
+    contentabove={contentAbove}
+    contentbelow={contentBelow}
+    on:edit
+    on:delete
+    on:addContentBelow
+    on:addContentAbove
+  ></component-buttons>
   <div id="component-{row.id}">
     {@html row.value.final.html}
   </div>
@@ -82,18 +88,19 @@
     position: relative;
     outline: 2px solid transparent;
     transition: outline 0.2s;
+    /* outline-offset: -2px; */
     @apply w-full;
 
     & > div {
       @apply w-full;
     }
   }
-  .primo-component.active:hover {
+  .primo-component:hover {
     outline: 2px solid rgb(206,78,74);
     transition: outline 0.25s;
     z-index: 9;
   }
-  .primo-component.active:hover component-buttons {
+  .primo-component:hover component-buttons {
     @apply opacity-100; 
     user-select: initial;
     pointer-events: none;

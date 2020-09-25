@@ -10,10 +10,7 @@ let app
 
 if (!preview) {
   app = new App({
-    target: document.body,
-    props: {
-      subdomain,
-    },
+    target: document.body
   })
 } else if (preview === 'single') {
   const previewId = params.get('page')

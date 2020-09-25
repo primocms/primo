@@ -2,6 +2,7 @@
   import _ from 'lodash'
   import pluralize from 'pluralize'
   import {createEventDispatcher} from 'svelte'
+  import {writable} from 'svelte/store'
   import {fade} from 'svelte/transition'
   const dispatch = createEventDispatcher()
   import {PrimaryButton,SaveButton} from '../../components/buttons'
@@ -15,22 +16,20 @@
 
   import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
-  import site from '../../stores/data/site'
-  import pageData from '../../stores/data/pageData'
   import {editorViewDev,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
-  import content from '../../stores/data/page/content'
+  import {fields as pageFields} from '../../stores/app/activePage'
+  import {fields as siteFields, pages} from '../../stores/data/draft'
+  import {id} from '../../stores/app/activePage'
+  import {hydrateComponents} from '../../stores/actions'
 
-  let pageFields = _.cloneDeep($pageData.fields) || []
-  let siteFields = _.cloneDeep($site.fields) || []
-
-  let fields = pageFields 
+  let fields = $pageFields 
 
   function saveFields(fields) {
     if (showingPage) {
-      pageFields = fields
+      $pageFields = fields
     } else {
-      siteFields = fields
+      $siteFields = fields
     }
   }
 
@@ -141,18 +140,15 @@
   $: showingPage = activeTab === tabs[0]
 
   $: if (showingPage) {
-    fields = pageFields
+    fields = $pageFields
   } else {
-    fields = siteFields
+    fields = $siteFields
   }
 
   function applyFields() {
-    site.saveCurrentPage({ fields: pageFields })
-    site.save({ fields: siteFields })
-    pageData.save('fields', pageFields)
-    pageData.hydrateWrapper()
-    content.hydrateComponents()
-    site.pages.hydrateComponents()
+    // content.hydrateComponents()
+    // site.pages.hydrateComponents()
+    hydrateComponents()
     modal.hide()
   }
 
@@ -164,7 +160,6 @@
       return null
       console.warn(`Field type '${field.type}' no longer exists, removing '${field.label}' field`)
     }
-    
   }
 
 </script>
@@ -173,8 +168,8 @@
   icon="fas fa-database"
   title={$editorViewDev ? 'Fields' : 'Content'}
   button={{
-    label: `Save`,
-    icon: 'fas fa-save',
+    label: `Draft`,
+    icon: 'fas fa-check',
     onclick: applyFields
   }}
   variants="mb-4"

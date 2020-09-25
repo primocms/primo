@@ -15,7 +15,7 @@
   <div class="tabs {variants}" in:fade={{ duration: 200 }}>
     <ul>
       {#each tabs as tab}
-        <li style={!variants.includes('secondary') ? tabStyles(activeTab === tab) : ''} class:is-active={activeTab === tab}>
+        <li style={tabStyles(activeTab === tab)} class:is-active={activeTab === tab}>
           <button on:click={() => activeTab = tab} id={ tab.id ? `tab-${tab.id}` : null}>
             {#if tab.icon}<i class="fas fa-{tab.icon}"></i>{/if}
             { typeof tab === 'string' ? tab : tab.label }

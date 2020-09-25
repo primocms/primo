@@ -1,18 +1,20 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
-  const dispatch = createEventDispatcher();
-  import { navigate } from "svelte-routing";
-  import { buildPagePreview, wrapInStyleTags } from "../../../utils";
-  import tailwind from "../../../stores/data/tailwind";
-  import site from "../../../stores/data/site";
-  import modal from "../../../stores/app/modal";
+  import {onMount, createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
+
+  import { navigate } from 'svelte-routing';
+  import {buildPagePreview,wrapInStyleTags} from '../../../utils'
+  import tailwind from '../../../stores/data/tailwind'
+  // import site from '../../../stores/data/site'
+  import {styles as siteStyles} from '../../../stores/data/draft'
+  import modal from '../../../stores/app/modal'
 
   export let page;
   export let active = false;
 
   $: preview =
     wrapInStyleTags($tailwind) +
-    wrapInStyleTags($site.styles.final) +
+    wrapInStyleTags($siteStyles.final) +
     wrapInStyleTags(page.styles.final) +
     buildPagePreview(page.content);
 
@@ -31,9 +33,14 @@
   onMount(resizePreview);
 
   function openPage(e) {
-    e.preventDefault();
-    navigate(`/${page.id === "index" ? "" : page.id}`);
-    modal.hide();
+    e.preventDefault()
+    if (window.location.pathname.includes('site')) {
+      const [ site ] = window.location.pathname.split('/').slice(2)
+      navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`) 
+    } else {
+      navigate(`/${page.id === 'index' ? '' : page.id}`) 
+    }
+    modal.hide()
   }
 </script>
 
@@ -48,7 +55,7 @@
     @apply text-blue-800;
   }
   button.page-container.active {
-    @apply cursor-default opacity-50;
+    @apply cursor-default pointer-events-none opacity-50;
     &:after {
       @apply opacity-50;
     }

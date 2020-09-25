@@ -23,16 +23,16 @@
       <div class="buttons">
         {#each library.links as link}
           {#if link.site === 'repository'}
-            <a aria-label="{library.name} github" href={link.href} target="blank" rel="nofollow">
-              <i class="fab fas-github"></i>
+            <a class="mr-1" aria-label="{library.name} github" href={link.href} target="blank" rel="nofollow">
+              <i class="fab fa-github"></i>
             </a>
           {:else if link.site === 'homepage'}
-            <a aria-label="{library.name} homepage" href={link.href} target="blank" rel="nofollow">
-              <i class="fa fas-globe"></i>
+            <a class="mr-1" aria-label="{library.name} homepage" href={link.href} target="blank" rel="nofollow">
+              <i class="fas fa-globe"></i>
             </a>
           {:else if link.site === 'npme'}
-            <a aria-label="{library.name} npm" href={link.href} target="blank" rel="nofollow">
-              <i class="fab fas-npm"></i>
+            <a class="mr-1" aria-label="{library.name} npm" href={link.href} target="blank" rel="nofollow">
+              <i class="fab fa-npm"></i>
             </a>
           {/if}
         {/each}
@@ -58,6 +58,6 @@
     font-weight: 500;
   }
   .list-item {
-    @apply flex justify-between items-center p-4 shadow;
+    @apply flex justify-between items-center px-4 py-2 shadow;
   }
 </style>

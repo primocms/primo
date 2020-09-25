@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import {getAllFields} from '../../../utils'
+import {get} from 'svelte/store'
 
 export async function hydrateAllComponents(content) {
   return await Promise.all(

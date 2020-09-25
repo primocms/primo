@@ -1,4 +1,5 @@
 <script>
+  import _ from 'lodash'
   import cloneDeep from "lodash/cloneDeep";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
@@ -8,19 +9,11 @@
   import { Card } from "../../components/misc";
   import PageItem from "./PageList/PageItem.svelte";
   import ModalHeader from "./ModalHeader.svelte";
+  import {getUniqueId} from '../../utils'
 
   import { createPage } from "../../const";
-  import site from "../../stores/data/site";
-  import pageData from "../../stores/data/pageData";
-
-  function getUniqueId() {
-    return new ShortUniqueId().randomUUID(5).toLowerCase();
-  }
-
-  let pages = [];
-  $: {
-    pages = pages.map((p) => ({ key: getUniqueId(), ...p })); // Add keys for templating (if one doesn't exist)
-  }
+  import {pages} from "../../stores/data/draft";
+  import {id} from '../../stores/app/activePage'
 
   async function submitForm(form) {
     const inputs = Object.values(form.target);
@@ -28,19 +21,19 @@
     const isEmpty = inputs[2].classList.contains("selected");
     const newPage = isEmpty
       ? createPage(url, title)
-      : duplicatePage($pageData, title, url);
-    site.pages.add(newPage);
+      : duplicatePage(title, url);
+    $pages = [ ...$pages, newPage ]
     creatingPage = false;
     pageUrl = "";
   }
 
   async function deletePage(pageId) {
-    site.pages.remove(pageId);
+    $pages = $pages.filter(p => p.id !== pageId)
   }
 
-  function duplicatePage(page, title, url) {
-    const newPage = cloneDeep(page);
-    const [newContent, IDmap] = scrambleIds(page.content);
+  function duplicatePage(title, url) {
+    const newPage = _.cloneDeep(_.find($pages, ['id', $id]))
+    const [newContent, IDmap] = scrambleIds(newPage.content);
     newPage.content = newContent;
     newPage.title = title;
     newPage.id = url;
@@ -120,9 +113,6 @@
       return [newContent, IDs];
     }
 
-    function getUniqueId() {
-      return new ShortUniqueId().randomUUID(5).toLowerCase();
-    }
   }
 
   let creatingPage = false;
@@ -160,11 +150,11 @@
 <ModalHeader icon="fas fa-th-large" title="Pages" />
 
 <ul class="grid grid-cols-2 gap-4 mb-4">
-  {#each $site.pages as page (page.id)}
+  {#each $pages as page (page.id)}
     <li transition:fade={{ duration: 200 }} id="page-{page.id}">
       <PageItem
         {page}
-        active={$pageData.id === page.id}
+        active={$id === page.id}
         on:delete={() => deletePage(page.id)} />
     </li>
   {/each}

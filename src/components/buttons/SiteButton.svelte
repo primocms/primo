@@ -6,7 +6,6 @@
   import {buildPagePreview,wrapInStyleTags} from '../../utils'
   import siteStore from '../../stores/data/site'
   import tailwind from '../../stores/data/tailwind'
-  import pageData from '../../stores/data/pageData'
   import {pageId} from '../../stores/data/page'
 
   export let site
