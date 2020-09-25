@@ -3,6 +3,7 @@ import ComponentPreview from './src/Preview.svelte'
 import MultiPreview from './src/MultiPreview.svelte'
 import SinglePreview from './src/SinglePreview.svelte'
 
+import {site} from './src/stores/data/draft'
 import dropdown from './src/stores/app/dropdown'
 import fieldTypes from './src/stores/app/fieldTypes'
 import modal from './src/stores/app/modal'
@@ -12,6 +13,7 @@ import * as utils from './src/utils'
 import * as components from './src/components'
 
 export {
+  site,
   ComponentPreview,
   MultiPreview,
   SinglePreview,

@@ -3,8 +3,17 @@ import {get} from 'svelte/store'
 import {getAllFields} from './helpers'
 import {convertFieldsToData, parseHandlebars, hydrateAllComponents, getUniqueId} from '../utils'
 import {id,content} from './app/activePage'
-import {pages} from './data/draft'
 import {focusedNode} from './app/editor'
+import {pages, dependencies, styles, wrapper, fields, symbols} from './data/draft'
+
+export async function hydrateSite(data) {
+  pages.set(data.pages)
+  dependencies.set(data.dependencies)
+  styles.set(data.styles)
+  wrapper.set(data.wrapper)
+  fields.set(data.fields)
+  symbols.set(data.symbols)
+}
 
 export async function updateInstances(symbol) {
   const updatedPages = await Promise.all(
@@ -89,7 +98,6 @@ export async function hydrateComponents() {
   content.set(activePageContent)
   pages.set(updatedPages)
 }
-
 
 export function insertSection(section, position) {
   const focusedSection = get(focusedNode).path.section;

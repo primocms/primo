@@ -15,7 +15,8 @@
 
 	import {unsaved} from './stores/app/misc'
 	import saved from './stores/data/saved'
-	import {pages} from './stores/data/draft'
+	import {pages, site} from './stores/data/draft'
+	import {hydrateSite} from './stores/actions'
 
 	export let data
 	export let functions
@@ -28,7 +29,7 @@
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	$: saved.hydrate(data)
+	$: hydrateSite(data)
 
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
