@@ -36,7 +36,7 @@
   $: importMap = JSON.stringify({
     imports: _.mapValues(
       _.keyBy(
-        libraries.filter((l) => l.src.slice(-5).includes(".js")),
+        jsLibraries,
         "name"
       ),
       "src"
