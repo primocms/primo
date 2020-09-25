@@ -34,6 +34,7 @@
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
 		const currentPage = find(pages, ['id', id])
+		console.log(currentPage, id, pages)
 		if (currentPage) {
 			content.set(currentPage.content)
 			styles.set(currentPage.styles)
@@ -46,17 +47,17 @@
 	}
 
 	function getPage(route) {
+		console.log(route)
 		let page
-		if (route.includes('site')) {
-			page = route.split('/')[2]
+		if (window.location.pathname.includes('/site/')) {
+			page = route.split('/')[1] || 'index'
 		} else {
 			page = route
 		}
-		return page ? page : 'index'
+		return page
 	}
 
 	function saveSite() {
-		console.log('saved', saved.get())
 		$unsaved = false
 		dispatch('save', saved.get())
 	}
@@ -64,8 +65,8 @@
 </script>
 
 <Router>
-	<Route path="/*route" let:params>
-		<Page route={getPage(params.route)} on:save={saveSite} on:build on:signOut />
+	<Route path="*page" let:params>
+		<Page route={getPage(params.page)} on:save={saveSite} on:build on:signOut />
 	</Route>
 </Router>
 
