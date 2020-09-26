@@ -50,7 +50,7 @@
 		console.log(route)
 		let page
 		if (window.location.pathname.includes('/site/')) {
-			page = route.split('/')[1] || 'index'
+			page = route.split('/')[2] || 'index'
 		} else {
 			page = route
 		}
