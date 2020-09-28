@@ -21,6 +21,9 @@ export const defaultStyles = {
   h2 {
     @apply text-2xl font-medium;
   }
+  ol {
+    @apply list-decimal;
+  }
   ul {
     @apply list-disc list-inside;
     p {
@@ -67,6 +70,10 @@ export const defaultStyles = {
 .primo-content h2 {
     font-size: 1.5rem;
     font-weight: 500;
+  }
+
+.primo-content ol {
+    list-style-type: decimal;
   }
 
 .primo-content ul {
