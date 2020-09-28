@@ -192,9 +192,10 @@ export async function sendSiteInvitation(domain, email, role) {
 }
 
 export async function processStyles(css, html, options = {}) {
-  const { processPostCSS } = getContext("functions");
+  // const { processPostCSS } = getContext("functions");
   try {
-    const result = await processPostCSS({ css, html, options });
+    // const result = await processPostCSS({ css, html, options });
+    const result = await axios.post(window.location.hostname.includes('localhost') ? 'http://localhost:3000/postcss' : 'https://primo-functions.herokuapp.com/postcss', { css, html, options }).catch(e => console.error('Could not process PostCSS', e))
     if (result.error) {
       console.error(result.error);
       return "";
