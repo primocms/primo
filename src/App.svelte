@@ -47,10 +47,10 @@
 	}
 
 	function getPage(route) {
-		console.log(route)
 		let page
 		if (window.location.pathname.includes('/site/')) {
-			page = route.split('/')[2] || 'index'
+			let splitRoute = route.split('/')
+			page = splitRoute.length === 2 ? 'index' : splitRoute[splitRoute.length-1]
 		} else {
 			page = route
 		}
