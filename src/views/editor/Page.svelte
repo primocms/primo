@@ -17,7 +17,7 @@
 	$: id.set(route) 
 
   let libraries: Array<any>;
-  $: libraries = $pageDependencies.libraries;
+  $: libraries = $pageDependencies ? $pageDependencies.libraries : [];
 
   let customScripts: Array<any> = [];
 

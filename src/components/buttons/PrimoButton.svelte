@@ -49,6 +49,23 @@
     &:hover, &:focus {
       @apply bg-gray-800 transition-colors duration-200;
     }
+
+    &.chevron {
+      @apply relative;
+      &:before, &:after {
+        content: " ";
+        @apply absolute h-0 w-0 border-solid border-primored;
+        bottom: -21px;
+        pointer-events: none;
+        left: 21px;
+        border-top-color: transparent;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        border-width: 7px;
+        margin-left: -7px;
+      }
+    }
+
   }
 
   .dropdown-heading {
@@ -60,20 +77,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply absolute bg-primored shadow-xl rounded p-4 opacity-0 transition-opacity duration-100 pointer-events-none;
-
-    &:before, &:after {
-      content: " ";
-      @apply absolute h-0 w-0 border-solid border-primored;
-      top: -14px;
-      pointer-events: none;
-      left: 21px;
-      border-top-color: transparent;
-      border-left-color: transparent;
-      border-right-color: transparent;
-      border-width: 7px;
-      margin-left: -7px;
-    }
+    @apply overflow-scroll absolute bg-primored shadow-xl rounded p-4 opacity-0 transition-opacity duration-100 pointer-events-none;
 
     ul {
       @apply grid grid-cols-2 gap-2 mt-2 pb-4;
