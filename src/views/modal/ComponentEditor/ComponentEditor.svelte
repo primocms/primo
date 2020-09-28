@@ -295,7 +295,6 @@
     faker = await import("faker");
   });
 
-  $: console.log(header);
 </script>
 
 <style>
