@@ -22,8 +22,24 @@
   import {fields as siteFields, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'
   import {hydrateComponents} from '../../stores/actions'
+  import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte'
+  import GroupField from '../../components/FieldTypes/GroupField.svelte'
 
   let fields = $pageFields 
+
+  const allFieldTypes = [
+    {
+      id: 'repeater',
+      label: 'Repeater',
+      component: RepeaterField
+    },
+    {
+      id: 'group',
+      label: 'Group',
+      component: GroupField
+    },
+    ...$fieldTypes
+  ]
 
   function saveFields(fields) {
     if (showingPage) {
@@ -116,8 +132,6 @@
     saveFields(fields)
   }
 
-  const subFieldTypes:Array<FieldType> = $fieldTypes.filter(field => !['repeater','group','api','js'].includes(field.id))
-
   //// 
   let disabled = false
   function updateHtmlWithFieldData(type) {
@@ -153,7 +167,7 @@
   }
 
   function getComponent(field) {
-    const fieldType =  _.find($fieldTypes, ['id', field.type])
+    const fieldType =  _.find(allFieldTypes, ['id', field.type])
     if (fieldType) {
       return fieldType.component
     } else {
@@ -183,7 +197,7 @@
       <Card variants="field-item bg-white shadow-sm mb-2">
         <EditField on:delete={() => deleteField(field.id)} {disabled}>
           <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
-            {#each $fieldTypes as field}
+            {#each allFieldTypes as field}
               <option value={field.id}>{ field.label }</option>
             {/each}
           </select>
@@ -193,9 +207,9 @@
         {#if field.type === 'group'}
           {#if field.fields}
             {#each field.fields as subfield}
-              <EditField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+              <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                 <select bind:value={subfield.type} slot="type" {disabled}>
-                  {#each subFieldTypes as field}
+                  {#each $fieldTypes as field}
                     <option value={field.id}>{ field.label }</option>
                   {/each}
                 </select>
@@ -208,9 +222,9 @@
         {:else if field.type === 'repeater'}
           {#if field.fields}
             {#each field.fields as subfield}
-              <EditField fieldTypes={subFieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+              <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
                 <select bind:value={subfield.type} slot="type" {disabled}>
-                  {#each subFieldTypes as field}
+                  {#each $fieldTypes as field}
                     <option value={field.id}>{ field.label }</option>
                   {/each}
                 </select>
