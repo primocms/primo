@@ -30,6 +30,7 @@
   import modal from "../../../stores/app/modal";
   import { createComponent } from "../../../const";
   import {updateInstances} from '../../../stores/actions'
+  import {getAllFields} from '../../../stores/helpers'
 
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
@@ -65,11 +66,6 @@
     localComponent.value.final[property] = value;
   }
 
-  function getAllFields() {
-    const allFields = _.unionBy(fields, $pageFields, $siteFields, "key");
-    return allFields;
-  }
-
   const allFieldTypes = [
     {
       id: 'repeater',
@@ -93,8 +89,9 @@
   $: compileHtml(rawHTML);
   async function compileHtml(html: string): Promise<void> {
     loading = true;
-    saveRawValue("html", html);
-    const allFields = getAllFields();
+    let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html
+    saveRawValue("html", formattedHTML);
+    const allFields = await getAllFields(component);
     const data = await convertFieldsToData(allFields, "all");
     const processedHTML = await parseHandlebars(rawHTML, data);
     finalHTML = processedHTML;
@@ -291,9 +288,22 @@
   let disabled: boolean = !!localComponent.symbolID;
 
   let faker;
+  let prettier;
+  let prettierHTML
   onMount(async () => {
+    prettier = await import("prettier/standalone");
+    prettierHTML = await import("prettier/parser-html");
     faker = await import("faker");
   });
+
+  function getFieldComponent(field) {
+    const fieldType = _.find(allFieldTypes, ['id', field.type])
+    if (fieldType && fieldType.component) {
+      return fieldType.component
+    } else {
+      return null
+    }
+  }
 
 </script>
 
@@ -524,14 +534,14 @@
       {:else}
         <div class="pt-8">
           {#each fields as field}
-            {#if field.label && field.key}
+            {#if field.label && field.key && getFieldComponent(field)}
               <div class="field-item mb-2 shadow" id="field-{field.key}">
                 <svelte:component
-                  this={_.find(allFieldTypes, ['id', field.type]).component}
+                  this={getFieldComponent(field)}
                   {field}
                   on:input={() => updateHtmlWithFieldData('static')} />
               </div>
-            {:else}
+            {:else if getFieldComponent(field)}
               <span>This field needs a label and key in order to be valid</span>
             {/if}
           {:else}

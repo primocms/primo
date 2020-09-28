@@ -63,6 +63,7 @@
     "mousetrap": "^1.6.5",
     "object-path": "^0.11.4",
     "pluralize": "^8.0.0",
+    "prettier": "^2.1.2",
     "primo-app": "^1.0.7",
     "prosemirror-commands": "^1.1.4",
     "prosemirror-history": "^1.1.3",

@@ -7,6 +7,7 @@ import objectPath from "object-path";
 
 import {id, dependencies as pageDependencies, wrapper as pageWrapper} from './stores/app/activePage'
 import user from './stores/data/user'
+import {getAllFields} from './stores/helpers'
 
 const functionsServer = (endpoint) =>
   window.location.hostname.includes('localhost')
