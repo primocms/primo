@@ -34,7 +34,6 @@
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
 		const currentPage = find(pages, ['id', id])
-		console.log(currentPage, id, pages)
 		if (currentPage) {
 			content.set(currentPage.content)
 			styles.set(currentPage.styles)

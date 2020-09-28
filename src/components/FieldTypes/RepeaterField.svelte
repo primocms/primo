@@ -56,8 +56,6 @@
     dispatch('input')
   }
 
-  $: console.log(fieldValues)
-
 </script>
 
 <Card variants="pb-4" id="repeater-{field.key}">

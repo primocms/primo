@@ -49,7 +49,4 @@
 		processPostCSS
 	}}
 	on:save={({detail:data}) => saveData(data)} 
-	on:change={({detail:content}) => {
-		console.log(content)
-	}} 
 />
