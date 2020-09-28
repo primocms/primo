@@ -91,7 +91,7 @@
     loading = true;
     let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html
     saveRawValue("html", formattedHTML);
-    const allFields = await getAllFields(component);
+    const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
     const processedHTML = await parseHandlebars(rawHTML, data);
     finalHTML = processedHTML;
@@ -140,7 +140,7 @@
 
   async function updateHtmlWithFieldData(typeToUpdate: string): Promise<void> {
     loading = true;
-    const allFields: Fields = getAllFields();
+    const allFields: Fields = getAllFields(localComponent);
     let data = await convertFieldsToData(allFields, typeToUpdate);
     finalHTML = await parseHandlebars(rawHTML, data);
     saveFinalValue("html", finalHTML);
@@ -307,73 +307,6 @@
 
 </script>
 
-<style>
-  .field-item {
-    @apply p-4;
-    @apply shadow;
-    @apply mb-2;
-    @apply bg-white;
-  }
-  .field-button {
-    @apply w-full;
-    @apply bg-gray-800;
-    @apply text-gray-300;
-    @apply py-2;
-    @apply rounded;
-    @apply font-medium;
-    @apply transition-colors;
-    @apply duration-100;
-
-    &:hover {
-      @apply bg-gray-900;
-    }
-    &[disabled] {
-      @apply bg-gray-500;
-      @apply cursor-not-allowed;
-    }
-  }
-  .field-button.subfield-button {
-    width: calc(100% - 1rem);
-    @apply ml-4;
-    @apply mb-2;
-    @apply mt-2;
-    @apply text-sm;
-    @apply py-1;
-    @apply bg-gray-100;
-    @apply text-gray-700;
-    @apply transition-colors;
-    @apply duration-100;
-    @apply outline-none;
-
-    &:hover {
-      @apply bg-gray-300;
-    }
-    &:focus {
-      @apply bg-gray-200;
-    }
-  }
-
-  input {
-    &:focus {
-      @apply outline-none;
-    }
-  }
-
-  select {
-    outline-offset: 3px;
-    outline-color: rgb(248, 68, 73);
-    padding: 0.5rem;
-    border-right-width: 0.5rem;
-    @apply p-2;
-    @apply border-transparent;
-    @apply text-sm;
-    @apply font-semibold;
-  }
-
-  @import "../../../node_modules/bulma/sass/utilities/_all.sass";
-  @import "../../../node_modules/bulma/sass/form/_all.sass";
-</style>
-
 <ModalHeader
   {...header}
   button={{ ...header.button, onclick: () => header.button.onclick(localComponent) }} />
@@ -436,13 +369,7 @@
                     {disabled}
                     on:input={() => updateHtmlWithFieldData('static')} />
                 </EditField>
-                {#if field.type === 'js'}
-                  <CodeMirror
-                    {disabled}
-                    style="height:25vh"
-                    bind:value={field.code}
-                    on:change={() => updateHtmlWithFieldData('js')} />
-                {:else if field.type === 'group'}
+                {#if field.type === 'group'}
                   {#if field.fields}
                     {#each field.fields as subfield}
                       <EditField
@@ -514,12 +441,7 @@
                     class="field-button subfield-button"
                     on:click={() => addSubField(field.id)}
                     {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
-                {:else if field.type === 'message'}
-                  <textarea
-                    {disabled}
-                    rows="3"
-                    bind:value={field.value}
-                    class="w-full border border-solid border-gray-200 rounded" />
+
                 {/if}
               </Card>
             {/each}
@@ -568,3 +490,70 @@
       includeParentStyles />
   </div>
 </div>
+
+<style>
+  .field-item {
+    @apply p-4;
+    @apply shadow;
+    @apply mb-2;
+    @apply bg-white;
+  }
+  .field-button {
+    @apply w-full;
+    @apply bg-gray-800;
+    @apply text-gray-300;
+    @apply py-2;
+    @apply rounded;
+    @apply font-medium;
+    @apply transition-colors;
+    @apply duration-100;
+
+    &:hover {
+      @apply bg-gray-900;
+    }
+    &[disabled] {
+      @apply bg-gray-500;
+      @apply cursor-not-allowed;
+    }
+  }
+  .field-button.subfield-button {
+    width: calc(100% - 1rem);
+    @apply ml-4;
+    @apply mb-2;
+    @apply mt-2;
+    @apply text-sm;
+    @apply py-1;
+    @apply bg-gray-100;
+    @apply text-gray-700;
+    @apply transition-colors;
+    @apply duration-100;
+    @apply outline-none;
+
+    &:hover {
+      @apply bg-gray-300;
+    }
+    &:focus {
+      @apply bg-gray-200;
+    }
+  }
+
+  input {
+    &:focus {
+      @apply outline-none;
+    }
+  }
+
+  select {
+    outline-offset: 3px;
+    outline-color: rgb(248, 68, 73);
+    padding: 0.5rem;
+    border-right-width: 0.5rem;
+    @apply p-2;
+    @apply border-transparent;
+    @apply text-sm;
+    @apply font-semibold;
+  }
+
+  @import "../../../node_modules/bulma/sass/utilities/_all.sass";
+  @import "../../../node_modules/bulma/sass/form/_all.sass";
+</style>
