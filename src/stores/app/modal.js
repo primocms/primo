@@ -111,7 +111,6 @@ export default {
   show: (type, componentProps = {}, modalOptions = {}) => {
     const typeToShow = getModalType(type, componentProps, modalOptions)
     modal_startup()
-    console.log('show', type)
     push(`${get(location)}?m=${typeToShow.route}`) // accessed by App.svelte
     store.update(s => ({ 
       ...initialState, 

@@ -31,7 +31,8 @@
 	export let saving = false
 	$: $savingStore = saving
 
-	setContext('functions', functions)
+	// setContext('functions', functions)
+	tailwind.setInitial()
 
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
@@ -50,8 +51,6 @@
 			dependencies.set(currentPage.dependencies)
 			wrapper.set(currentPage.wrapper)
 		}
-
-		tailwind.setInitial()
 	}
 
 	$: activeModal = getActiveModal($querystring)

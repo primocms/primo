@@ -2,6 +2,7 @@ import {getContext} from 'svelte'
 import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
+import axios from 'axios'
 
 import { styles as siteStyles } from './draft'
 import {styles as pageStyles} from '../app/activePage'
@@ -24,7 +25,7 @@ export default {
     await hydrateTailwind()
   },
   swapInConfig: _.debounce(async (tempConfig, callback) => {
-    const tw = await getTailwind(tempConfig)
+    const tw = await getTailwindStyles(tempConfig)
     callback()
     setLocalStorage(tw)
   }, 1000),
@@ -58,7 +59,7 @@ async function hydrateTailwind() {
   // when hydrateTailwind() gets called repeatedly (as it does when the app loads)
   tailwindRetrievalAttempts++
   const currentAttempt = tailwindRetrievalAttempts
-  const tw = await getTailwind(config)
+  const tw = await getTailwindStyles(config)
   if (currentAttempt === tailwindRetrievalAttempts) {
     loadingTailwind.set(false)
     store.set(tw)
@@ -67,9 +68,9 @@ async function hydrateTailwind() {
 }
 
 async function processStyles(css, html, options = {}) {
-  const {processPostCSS} = getContext('functions')
   try {
-    const result = await processPostCSS({css, html, options})
+    // const result = await processPostCSS({css, html, options})
+    const {data:result} = await axios.post(window.location.hostname.includes('localhost') ? 'http://localhost:3000/postcss' : 'https://primo-functions.herokuapp.com/postcss', { css, html, options }).catch(e => console.error('Could not process PostCSS', e))
     if (result.error) {
       console.error(result.error)
       return '';
@@ -81,7 +82,7 @@ async function processStyles(css, html, options = {}) {
   }
 }
 
-async function getTailwind(tailwindConfig) {
+async function getTailwindStyles(tailwindConfig) {
   const tw = await processStyles('','',{
     tailwindConfig: JSON.stringify(tailwindConfig), 
     includeBase: true,
@@ -99,13 +100,12 @@ function setLocalStorage(tw) {
 
 
 // HELPERS
-export function getCombinedTailwindConfig(pageTailwindConfig) {
+export function getCombinedTailwindConfig(pageTW, siteTW) {
   let siteTailwindObject
   let pageTailwindObject
   try {
-    const siteTW = get(siteStyles).tailwind
     siteTailwindObject = new Function(`return ${siteTW}`)() // convert string object to literal object
-    pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
+    pageTailwindObject = new Function(`return ${pageTW}`)()
     return _.merge(siteTailwindObject, pageTailwindObject)
   } catch(e) {
     console.error(e)

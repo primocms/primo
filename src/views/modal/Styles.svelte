@@ -62,7 +62,7 @@
   let moduleTailwindConfig = $pageStyles.tailwind;
 
   $: tailwindConfig = moduleTailwindConfig.replace('export default ','')
-  $: combinedTailwindConfig = getCombinedTailwindConfig(tailwindConfig)
+  $: combinedTailwindConfig = getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind)
 
   let tailwindConfigChanged = false
   let gettingTailwind = false
@@ -73,6 +73,7 @@
       tailwind.swapInConfig(combinedTailwindConfig, () => {
         loading = false
         gettingTailwind = false 
+        tailwindConfigChanged = false
       })
     }
   }
@@ -144,13 +145,10 @@
     label: `Draft`,
     icon: 'fas fa-check',
     onclick: () => {
-      if (shouldReloadTailwind) {
-        tailwind.saveSwappedInConfig()
-      } else {
-        tailwind.swapOutConfig()
-      }
+      tailwind.saveSwappedInConfig()
       modal.hide()
-    }
+    },
+    loading
   }}
   variants="mb-4"
 />
@@ -159,7 +157,7 @@
   <div class="flex flex-row flex-1">
     <div class="w-1/2 flex flex-col">
         <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} />
+        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
         {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
           <CodeMirror 
             autofocus
@@ -187,7 +185,6 @@
             autofocus
             bind:value={$siteStyles.raw} 
             on:change={_.debounce( async() => { 
-              tailwindConfigChanged = true
               $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
             }, 1000 )}
             mode="css" 
@@ -199,6 +196,7 @@
             prefix="export default "
             bind:value={$siteStyles.tailwind} 
             on:change={_.debounce( async() => { 
+              tailwindConfigChanged = true
               $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
             }, 1000 )}
             mode="javascript" 

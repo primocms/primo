@@ -2,7 +2,7 @@
   import {onMount,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
 
-  // import 'codemirror/lib/codemirror.css'
+  import CodeMirror from 'codemirror/lib/codemirror'
 
   const dispatch = createEventDispatcher()
 
@@ -20,14 +20,9 @@
 
   var Editor
 
-  let CodeMirror
   async function mountCodeMirror() {
-    CodeMirror = (await import('codemirror/lib/codemirror.js')).default
-
-    const {default:emmet} = await import('@emmetio/codemirror-plugin')
-    emmet(CodeMirror);
-
-    const res = await Promise.all([
+    // CodeMirror = (await import('codemirror/lib/codemirror.js')).default
+    await Promise.all([
       import('codemirror/mode/javascript/javascript.js'),
       import('codemirror/mode/handlebars/handlebars.js'),
       import('codemirror/mode/xml/xml.js'),
@@ -39,7 +34,9 @@
       import('codemirror/keymap/sublime.js')
     ])
 
-    
+    const {default:emmet} = await import('@emmetio/codemirror-plugin')
+    emmet(CodeMirror);
+
   }
 
   onMount(async () => {
@@ -82,8 +79,10 @@
     function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
 
     // set editor height (can't figure out how to set it without to not overflow the modal height)
-    Editor.setSize(null, editorNode.clientHeight)
-    setTimeout(() => {editorNode.firstChild.classList.add('fadein')}, 100) // so the fade works
+    if (editorNode) {
+      Editor.setSize(null, editorNode.clientHeight)
+      setTimeout(() => {editorNode.firstChild.classList.add('fadein')}, 100) // so the fade works
+    } 
   })
 
   $: {
