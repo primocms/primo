@@ -37,6 +37,7 @@
 	$: $userRole = role
 
 	$: hydrateSite(data)
+	$: dispatch('save', $site)
 
 	$: $pageId = $location.substr(1) || 'index'
 	$: setPageContent($pageId, $pages)
@@ -52,8 +53,6 @@
 
 		tailwind.setInitial()
 	}
-
-	$: dispatch('save', $site)
 
 	$: setActiveModal($querystring)
 	function setActiveModal(query) {
