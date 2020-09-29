@@ -3,19 +3,6 @@
 import {writable,get} from 'svelte/store'
 import Mousetrap from 'mousetrap'
 import {location,push} from 'svelte-spa-router'
-// import {modalTypes} from './modalTypes'
-
-// const modalTypes = [
-//   'COMPONENT_EDITOR',
-//   'COMPONENT_LIBRARY',
-//   'PAGE_SECTIONS',
-//   'SITE_PAGES',
-//   'FIELDS',
-//   'DEPENDENCIES',
-//   'STYLES',
-//   'WRAPPER',
-//   'RELEASE_NOTES'
-// ]
 
 const initialState = {
   component: null,
@@ -127,8 +114,7 @@ export default {
     push(`${get(location)}?m=${typeToShow.route}`) // accessed by App.svelte
     store.update(s => ({ 
       ...s, 
-      ...typeToShow,
-      visible: true 
+      ...typeToShow
     }))
   },
   hide: (nav = null) => {

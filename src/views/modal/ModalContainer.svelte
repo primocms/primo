@@ -8,6 +8,8 @@
 	import {push, location} from 'svelte-spa-router'
   import ModalHeader from './ModalHeader.svelte'
 
+  export let visible
+
   Mousetrap.bind(['esc'], () => {
     modal.hide()
   })
@@ -26,12 +28,11 @@
 
 </script>
 
-{#if $modal.visible}
+{#if visible}
   <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
     <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
     <div class="modal-card {variants}">
       <div class="modal-card-body">
-        <!-- <svelte:component this={$modal.component} { ...$modal.componentProps } /> -->
         <slot></slot>
       </div>
     </div>

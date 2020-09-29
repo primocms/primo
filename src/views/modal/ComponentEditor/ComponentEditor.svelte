@@ -88,8 +88,8 @@
   $: compileHtml(rawHTML);
   async function compileHtml(html: string): Promise<void> {
     loading = true;
-    let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html
-    saveRawValue("html", formattedHTML);
+    // let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html // TODO: format on save
+    saveRawValue("html", html);
     const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
     const processedHTML = await parseHandlebars(rawHTML, data);

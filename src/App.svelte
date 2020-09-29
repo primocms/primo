@@ -54,10 +54,10 @@
 		tailwind.setInitial()
 	}
 
-	$: setActiveModal($querystring)
-	function setActiveModal(query) {
+	$: activeModal = getActiveModal($querystring)
+	function getActiveModal(query) {
 		const { m:type } = queryParser.parse(query)
-		activeModal = {
+		return {
 			'pages' : modals.SitePages,
 			'component' : modals.ComponentEditor,
 			'symbols' : modals.SymbolLibrary,
@@ -69,12 +69,11 @@
 			'release-notes' : modals.ReleaseNotes,
 		}[type] || null
 	}
-	let activeModal = null
 
 </script>
 
 <Router routes={{ '/:page?': Page }} />
 
-<Modal>
+<Modal visible={!!activeModal}>
 	<svelte:component this={activeModal} {...$modal.componentProps} />
 </Modal>
