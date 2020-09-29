@@ -57,7 +57,7 @@
 	$: activeModal = getActiveModal($querystring)
 	function getActiveModal(query) {
 		const { m:type } = queryParser.parse(query)
-		return {
+		return type ? {
 			'pages' : modals.SitePages,
 			'component' : modals.ComponentEditor,
 			'symbols' : modals.SymbolLibrary,
@@ -67,7 +67,7 @@
 			'html' : modals.HTML,
 			'css' : modals.CSS,
 			'release-notes' : modals.ReleaseNotes,
-		}[type] || null
+		}[type] || $modal.component : null
 	}
 
 </script>
