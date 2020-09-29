@@ -2,7 +2,9 @@
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import { navigate } from 'svelte-routing';
+  // import { navigate } from 'svelte-routing';
+	import {push} from 'svelte-spa-router'
+
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
   import tailwind from '../../../stores/data/tailwind'
   // import site from '../../../stores/data/site'
@@ -36,13 +38,48 @@
     e.preventDefault()
     if (window.location.pathname.includes('site')) {
       const [ site ] = window.location.pathname.split('/').slice(2)
-      navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`) 
+      // navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`) 
     } else {
-      navigate(`/${page.id === 'index' ? '' : page.id}`) 
+      // navigate(`/${page.id === 'index' ? '' : page.id}`) 
     }
-    modal.hide()
+    modal.hide(page.id === 'index' ? '' : page.id)
   }
 </script>
+
+<svelte:window on:resize={resizePreview} />
+<div class="shadow-xl rounded">
+  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
+    <div>
+      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
+    </div>
+    <div class="flex justify-end">
+      {#if page.id !== 'index'}
+        <button
+          title="Delete page"
+          on:click={() => dispatch('delete')}
+          class="delete-page text-xs text-red-500 hover:text-red-600">
+          <i class="fas fa-trash" />
+        </button>
+      {/if}
+    </div>
+  </div>
+  <button
+    class="page-container"
+    on:click={openPage}
+    class:active
+    bind:this={container}
+    aria-label="Go to /{page.id}">
+    <iframe
+      bind:this={iframe}
+      style="transform: scale({scale})"
+      class:fadein={iframeLoaded}
+      title="page preview"
+      srcdoc={preview}
+      on:load={() => {
+        iframeLoaded = true;
+      }} />
+  </button>
+</div>
 
 <style>
   .page-title {
@@ -84,38 +121,3 @@
     @apply opacity-100;
   }
 </style>
-
-<svelte:window on:resize={resizePreview} />
-<div class="shadow-xl rounded">
-  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
-    <div>
-      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
-    </div>
-    <div class="flex justify-end">
-      {#if page.id !== 'index'}
-        <button
-          title="Delete page"
-          on:click={() => dispatch('delete')}
-          class="delete-page text-xs text-red-500 hover:text-red-600">
-          <i class="fas fa-trash" />
-        </button>
-      {/if}
-    </div>
-  </div>
-  <button
-    class="page-container"
-    on:click={openPage}
-    class:active
-    bind:this={container}
-    aria-label="Go to /{page.id}">
-    <iframe
-      bind:this={iframe}
-      style="transform: scale({scale})"
-      class:fadein={iframeLoaded}
-      title="page preview"
-      srcdoc={preview}
-      on:load={() => {
-        iframeLoaded = true;
-      }} />
-  </button>
-</div>

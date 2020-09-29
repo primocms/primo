@@ -32,7 +32,6 @@
   import {updateInstances} from '../../../stores/actions'
   import {getAllFields} from '../../../stores/helpers'
 
-
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
   const quickDebounce = createDebouncer(500);
@@ -89,8 +88,8 @@
   $: compileHtml(rawHTML);
   async function compileHtml(html: string): Promise<void> {
     loading = true;
-    let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html
-    saveRawValue("html", formattedHTML);
+    // let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html // TODO: format on save
+    saveRawValue("html", html);
     const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
     const processedHTML = await parseHandlebars(rawHTML, data);
@@ -170,9 +169,11 @@
           icon: "fas fa-check",
           label: `Draft`,
           onclick: async (symbol) => {
+            console.log({symbol})
             loading = true;
             $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
             updateInstances(symbol);
+            console.log({$content})
             modal.hide();
           },
         },
@@ -260,12 +261,11 @@
   }
 
   function getFakeValue(type) {
-    if (!faker) return "";
     return (
       {
-        text: faker.lorem.sentence(),
-        content: faker.lorem.paragraph(),
-        image: faker.image.unsplash.image(),
+        text: '',
+        content: '',
+        image: 'https://source.unsplash.com/900x600',
       }[type] || ""
     );
   }
@@ -287,13 +287,11 @@
 
   let disabled: boolean = !!localComponent.symbolID;
 
-  let faker;
   let prettier;
   let prettierHTML
   onMount(async () => {
     prettier = await import("prettier/standalone");
     prettierHTML = await import("prettier/parser-html");
-    faker = await import("faker");
   });
 
   function getFieldComponent(field) {

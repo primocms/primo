@@ -3,6 +3,7 @@
   const dispatch = createEventDispatcher()
   import {some} from 'lodash'
   import {PrimaryButton} from '../../../components/buttons'
+  import {pop} from 'svelte-spa-router'
 
   import ModalHeader from '../ModalHeader.svelte'
   import Container from './ComponentContainer.svelte'
@@ -30,10 +31,10 @@
           button: {
             label: `Draft`,
             icon: 'fas fa-check',
-            onclick: async (symbol) => {
-              modal.show('COMPONENT_LIBRARY', {button})
+            onclick: (symbol) => {
               placeSymbol(symbol)
               updateInstances(symbol)
+              pop()
             }
           }
         } 

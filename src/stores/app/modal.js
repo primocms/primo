@@ -1,11 +1,10 @@
 'use strict'
 
 import {writable,get} from 'svelte/store'
-import {ComponentEditor,SymbolLibrary,PageSections,ReleaseNotes,SitePages,Styles,Fields,Dependencies,HTML} from '../../views/modal'
 import Mousetrap from 'mousetrap'
+import {location,push} from 'svelte-spa-router'
 
 const initialState = {
-  visible: false,
   component: null,
   componentProps: {},
   header: {
@@ -15,6 +14,86 @@ const initialState = {
   variants: '',
   disableClose: false,
   showSwitch: false
+}
+
+const modalTypes = {
+  'COMPONENT_EDITOR' : {
+    route: 'component',
+    header: {
+      title: 'Create Component',
+      icon: 'fas fa-code'
+    },
+    variants: 'fullscreen',
+    showSwitch: true
+  },
+  'COMPONENT_LIBRARY' : {
+    route: 'symbols',
+    header: {
+      title: 'Symbol Library',
+      icon: 'fas fa-clone'
+    },
+    variants: 'fullscreen',
+    showSwitch: true 
+  },
+  'PAGE_SECTIONS' : {
+    route: 'sections',
+    header: {
+      title: 'Add Page Section',
+      icon: 'fas fa-columns'
+    },
+    variants: 'max-w-lg',
+    showSwitch: false
+  },
+  'SITE_PAGES' : {
+    route: 'pages',
+    header: {
+      title: 'Pages',
+      icon: 'fas fa-th-large'
+    },
+    variants: 'max-w-md'
+  },
+  'FIELDS' : {
+    route: 'fields',
+    // header: {
+    //   title: 'Page Data',
+    //   icon: 'fas fa-database'
+    // },
+    variants: 'max-w-3xl',
+    showSwitch: true 
+  },
+  'DEPENDENCIES' : {
+    route: 'dependencies',
+    header: {
+      title: 'Dependencies',
+      icon: 'fas fa-cube'
+    },
+    variants: 'max-w-xl',
+    showSwitch: false
+  },
+  'STYLES' : {
+    route: 'css',
+    header: {
+      title: 'CSS',
+      icon: 'fab fa-css3'
+    },
+    variants: 'fullscreen'
+  },
+  'WRAPPER' : {
+    route: 'html',
+    header: {
+      title: 'HTML',
+      icon: 'fab fa-html5'
+    },
+    variants: 'max-w-2xl'
+  },
+  'RELEASE_NOTES' : {
+    route: 'release-notes',
+    header: {
+      title: 'Release Notes',
+      icon: 'fas fa-book-open'
+    },
+    // variants: 'fullscreen'
+  },
 }
 
 const store = writable(initialState)
@@ -28,100 +107,20 @@ const modal_cleanup = () => {
   Mousetrap.unbind('backspace')
 }
 
-const modalTypes = {
-  'COMPONENT_EDITOR' : {
-    component: ComponentEditor,
-    header: {
-      title: 'Create Component',
-      icon: 'fas fa-code'
-    },
-    variants: 'fullscreen',
-    showSwitch: true
-  },
-  'COMPONENT_LIBRARY' : {
-    component: SymbolLibrary,
-    header: {
-      title: 'Symbol Library',
-      icon: 'fas fa-clone'
-    },
-    variants: 'fullscreen',
-    showSwitch: true 
-  },
-  'PAGE_SECTIONS' : {
-    component: PageSections,
-    header: {
-      title: 'Add Page Section',
-      icon: 'fas fa-columns'
-    },
-    variants: 'max-w-lg',
-    showSwitch: false
-  },
-  'SITE_PAGES' : {
-    component: SitePages,
-    header: {
-      title: 'Pages',
-      icon: 'fas fa-th-large'
-    },
-    variants: 'max-w-md'
-  },
-  'FIELDS' : {
-    component: Fields,
-    // header: {
-    //   title: 'Page Data',
-    //   icon: 'fas fa-database'
-    // },
-    variants: 'max-w-3xl',
-    showSwitch: true 
-  },
-  'DEPENDENCIES' : {
-    component: Dependencies,
-    header: {
-      title: 'Dependencies',
-      icon: 'fas fa-cube'
-    },
-    variants: 'max-w-xl',
-    showSwitch: false
-  },
-  'STYLES' : {
-    component: Styles,
-    header: {
-      title: 'CSS',
-      icon: 'fab fa-css3'
-    },
-    variants: 'fullscreen'
-  },
-  'WRAPPER' : {
-    component: HTML,
-    header: {
-      title: 'HTML',
-      icon: 'fab fa-html5'
-    },
-    variants: 'max-w-2xl'
-  },
-  'RELEASE_NOTES' : {
-    component: ReleaseNotes,
-    header: {
-      title: 'Release Notes',
-      icon: 'fas fa-book-open'
-    },
-    // variants: 'fullscreen'
-  },
-}
-
 export default {
-  show: (type, props = {}, modalOptions = {}) => {
-    const typeToShow = getModalType(type, props, modalOptions)
+  show: (type, componentProps = {}, modalOptions = {}) => {
+    const typeToShow = getModalType(type, componentProps, modalOptions)
     modal_startup()
+    push(`${get(location)}?m=${typeToShow.route}`) // accessed by App.svelte
     store.update(s => ({ 
       ...s, 
-      ...typeToShow,
-      ...modalOptions,
-      visible: true 
+      ...typeToShow
     }))
   },
-  hide: () => {
+  hide: (nav = null) => {
     modal_cleanup()
     store.update(s => ({...initialState}) )
+    push(nav === null ? get(location) : `/${nav}`)
   },
   register: (modal) => {
     if (Array.isArray(modal)) {
@@ -146,9 +145,9 @@ export default {
   subscribe: store.subscribe
 }
 
-function getModalType(type, props, modalOptions) {
+function getModalType(type, componentProps = {}, modalOptions = {}) {
   return {
-    componentProps: props,
+    componentProps,
     ...modalTypes[type],
     ...modalOptions
   } || console.error('Invalid modal type:', type)
