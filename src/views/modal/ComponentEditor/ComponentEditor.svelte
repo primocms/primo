@@ -261,12 +261,11 @@
   }
 
   function getFakeValue(type) {
-    if (!faker) return "";
     return (
       {
-        text: faker.lorem.sentence(),
-        content: faker.lorem.paragraph(),
-        image: faker.image.unsplash.image(),
+        text: ''
+        content: '',
+        image: 'https://source.unsplash.com/900x600',
       }[type] || ""
     );
   }
@@ -288,13 +287,11 @@
 
   let disabled: boolean = !!localComponent.symbolID;
 
-  let faker;
   let prettier;
   let prettierHTML
   onMount(async () => {
     prettier = await import("prettier/standalone");
     prettierHTML = await import("prettier/parser-html");
-    faker = await import("faker");
   });
 
   function getFieldComponent(field) {
