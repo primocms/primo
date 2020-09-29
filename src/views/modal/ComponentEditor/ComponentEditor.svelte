@@ -263,7 +263,7 @@
   function getFakeValue(type) {
     return (
       {
-        text: ''
+        text: '',
         content: '',
         image: 'https://source.unsplash.com/900x600',
       }[type] || ""
