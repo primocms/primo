@@ -12,9 +12,8 @@
     dependencies as pageDependencies,
     wrapper as pageWrapper
   } from '../../stores/app/activePage'
-
-  export let route : string
-	$: id.set(route) 
+  import {unsaved} from '../../stores/app/misc'
+  import site from '../../stores/data/site'
 
   let libraries: Array<any>;
   $: libraries = $pageDependencies ? $pageDependencies.libraries : [];
@@ -50,26 +49,12 @@
     }
   }
 
+  function savePage() {
+    $unsaved = false
+    site.save()
+  }
+
 </script>
-
-<style>
-  #loading {
-    @apply fixed font-medium rounded-full bg-primored py-1 px-3 shadow-lg;
-    left: 0.5rem;
-    bottom: 0.5rem;
-    z-index: 99999999999;
-  }
-
-  #primo-symbol {
-    width: 3rem;
-    height: 2rem;
-  }
-
-  /* remove random annoying Monaco alert that sometimes shows up at the bottom of the page */
-  :global(.monaco-alert) {
-    display: none !important;
-  }
-</style>
 
 <svelte:head>
   {@html $pageWrapper.head.final}
@@ -90,7 +75,7 @@
   {/if}
 </svelte:head>
 
-<Editor on:change on:save on:build on:signOut />
+<Editor on:change on:save={savePage} on:build on:signOut />
 
 <!-- {#if $loadingTailwind}
   <div class="flex" id="loading" transition:fade={{ duration: 200 }}>
@@ -98,3 +83,22 @@
     <Spinner variants="text-white" size="xs"/>
   </div>
 {/if} -->
+
+<style>
+  #loading {
+    @apply fixed font-medium rounded-full bg-primored py-1 px-3 shadow-lg;
+    left: 0.5rem;
+    bottom: 0.5rem;
+    z-index: 99999999999;
+  }
+
+  #primo-symbol {
+    width: 3rem;
+    height: 2rem;
+  }
+
+  /* remove random annoying Monaco alert that sometimes shows up at the bottom of the page */
+  :global(.monaco-alert) {
+    display: none !important;
+  }
+</style>

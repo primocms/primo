@@ -1,9 +1,16 @@
 <script lang="ts">
-	import find from 'lodash/find'
-  import { Router, Route } from "svelte-routing";
+	import {find} from 'lodash'
+  // import { Router, Route, navigate } from "svelte-routing";
+	import queryParser from "query-string";
+
+	import Router, {location,querystring} from 'svelte-spa-router'
+	import {wrap} from 'svelte-spa-router/wrap'
+
 	import { createEventDispatcher, setContext } from 'svelte'
 	import Page from './views/editor/Page.svelte'
   import Modal from './views/modal/ModalContainer.svelte'
+	import modal from './stores/app/modal'
+	import * as modals from './views/modal'
 
 	const dispatch = createEventDispatcher()
 
@@ -14,8 +21,8 @@
 	import {saving as savingStore} from './stores/app/misc'
 
 	import {unsaved} from './stores/app/misc'
-	import saved from './stores/data/saved'
-	import {pages, site} from './stores/data/draft'
+	import site from './stores/data/site'
+	import {pages} from './stores/data/draft'
 	import {hydrateSite} from './stores/actions'
 
 	export let data
@@ -31,6 +38,7 @@
 
 	$: hydrateSite(data)
 
+	$: $pageId = $location.substr(1) || 'index'
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
 		const currentPage = find(pages, ['id', id])
@@ -45,28 +53,29 @@
 		tailwind.setInitial()
 	}
 
-	function getPage(route) {
-		let page
-		if (window.location.pathname.includes('/site/')) {
-			let splitRoute = route.split('/')
-			page = splitRoute.length === 2 ? 'index' : splitRoute[splitRoute.length-1]
-		} else {
-			page = route
-		}
-		return page
-	}
+	$: dispatch('save', $site)
 
-	function saveSite() {
-		$unsaved = false
-		dispatch('save', saved.get())
+	$: setActiveModal($querystring)
+	function setActiveModal(query) {
+		const { m:type } = queryParser.parse(query)
+		activeModal = {
+			'pages' : modals.SitePages,
+			'component' : modals.ComponentEditor,
+			'symbols' : modals.SymbolLibrary,
+			'sections' : modals.PageSections,
+			'fields' : modals.Fields,
+			'dependencies' : modals.Dependencies,
+			'html' : modals.HTML,
+			'css' : modals.CSS,
+			'release-notes' : modals.ReleaseNotes,
+		}[type] || null
 	}
+	let activeModal = null
 
 </script>
 
-<Router>
-	<Route path="*page" let:params>
-		<Page route={getPage(params.page)} on:save={saveSite} on:build on:signOut />
-	</Route>
-</Router>
+<Router routes={{ '/:page?': Page }} />
 
-<Modal />
+<Modal>
+	<svelte:component this={activeModal} {...$modal.componentProps} />
+</Modal>

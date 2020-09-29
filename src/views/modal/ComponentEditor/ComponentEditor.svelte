@@ -32,7 +32,6 @@
   import {updateInstances} from '../../../stores/actions'
   import {getAllFields} from '../../../stores/helpers'
 
-
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
   const quickDebounce = createDebouncer(500);
@@ -170,9 +169,11 @@
           icon: "fas fa-check",
           label: `Draft`,
           onclick: async (symbol) => {
+            console.log({symbol})
             loading = true;
             $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
             updateInstances(symbol);
+            console.log({$content})
             modal.hide();
           },
         },

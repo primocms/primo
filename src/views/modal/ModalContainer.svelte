@@ -5,7 +5,8 @@
   import {editorViewDev,userRole} from '../../stores/app'
   import {Spinner} from '../../components/misc'
   const dispatch = createEventDispatcher()
-
+	import {push, location} from 'svelte-spa-router'
+  import ModalHeader from './ModalHeader.svelte'
 
   Mousetrap.bind(['esc'], () => {
     modal.hide()
@@ -30,7 +31,8 @@
     <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
     <div class="modal-card {variants}">
       <div class="modal-card-body">
-        <svelte:component this={$modal.component} { ...$modal.componentProps } />
+        <!-- <svelte:component this={$modal.component} { ...$modal.componentProps } /> -->
+        <slot></slot>
       </div>
     </div>
   </div>
