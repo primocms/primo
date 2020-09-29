@@ -114,14 +114,14 @@ export default {
     console.log('show', type)
     push(`${get(location)}?m=${typeToShow.route}`) // accessed by App.svelte
     store.update(s => ({ 
-      ...s, 
+      ...initialState, 
       ...typeToShow
     }))
   },
   hide: (nav = null) => {
     modal_cleanup()
-    store.update(s => ({...initialState}) )
     push(nav === null ? get(location) : `/${nav}`)
+    // store.update(s => ({...initialState}) )
   },
   register: (modal) => {
     if (Array.isArray(modal)) {
@@ -135,10 +135,10 @@ export default {
     function createModal(modal) {
       const { id, component, componentProps={}, options={} } = modal
       modalTypes[id] = {
+        ...options,
         component,
         header: options.header,
         variants: options.width ? `max-w-${options.width}` : '',
-        ...options,
         componentProps
       }
     }
