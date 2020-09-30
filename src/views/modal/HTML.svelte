@@ -52,9 +52,13 @@
     if (activeTab['id'] === 'page') {
       $pageHTML.head.raw = activeHTML.head.raw
       $pageHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
+      $pageHTML.below.raw = activeHTML.below.raw
+      $pageHTML.below.final = await updateHtmlWithFieldData(activeHTML.below.raw)
     } else {
       $siteHTML.head.raw = activeHTML.head.raw
       $siteHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
+      $siteHTML.below.raw = activeHTML.below.raw
+      $siteHTML.below.final = await updateHtmlWithFieldData(activeHTML.below.raw)
     }
   }
 
