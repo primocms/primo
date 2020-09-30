@@ -17,9 +17,8 @@ export default {
     const tw = storeLib.get('tailwind')
     if (typeof tw === 'string') {
       store.set(tw)
-    } else if (!tw)  {
-      await hydrateTailwind()
-    }
+    } 
+    await hydrateTailwind()
   },
   reload: async () => {
     await hydrateTailwind()
@@ -35,25 +34,13 @@ export default {
   saveSwappedInConfig: () => {
     const tw = storeLib.get('tailwind')
     store.set(tw)
-  },
-  getCombinedConfig: (pageTailwindConfig) => {
-    let siteTailwindObject = {}
-    let pageTailwindObject = {}
-    try {
-      siteTailwindObject = new Function(`return ${get(siteStyles).tailwind}`)() // convert string object to literal object
-      pageTailwindObject = new Function(`return ${pageTailwindConfig}`)()
-      return _.merge(siteTailwindObject, pageTailwindObject)
-    } catch(e) {
-      console.error(e)
-      return {}
-    }
   }
 }
 
 let tailwindRetrievalAttempts = 0
 async function hydrateTailwind() {
   loadingTailwind.set(true)
-  const config = getCombinedTailwindConfig(get(pageStyles).tailwind)
+  const config = getCombinedTailwindConfig(get(pageStyles).tailwind, get(siteStyles).tailwind)
   
   // This is my hacky attempt (works tho) to disregard invalid tailwind styles
   // when hydrateTailwind() gets called repeatedly (as it does when the app loads)

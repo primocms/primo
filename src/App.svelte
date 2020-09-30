@@ -32,12 +32,15 @@
 	$: $savingStore = saving
 
 	// setContext('functions', functions)
-	tailwind.setInitial()
 
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role
 
-	$: hydrateSite(data)
+	$: {
+		hydrateSite(data)
+		tailwind.setInitial()
+	}
+
 	$: dispatch('save', $site)
 
 	$: $pageId = $location.substr(1) || 'index'
