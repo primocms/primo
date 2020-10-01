@@ -3,6 +3,7 @@ import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
 import axios from 'axios'
+import {processStyles} from '../../utils'
 
 import { styles as siteStyles } from './draft'
 import {styles as pageStyles} from '../app/activePage'
@@ -52,21 +53,6 @@ async function hydrateTailwind() {
     store.set(tw)
     setLocalStorage(tw)
   } 
-}
-
-async function processStyles(css, html, options = {}) {
-  try {
-    // const result = await processPostCSS({css, html, options})
-    const {data:result} = await axios.post(window.location.hostname.includes('localhost') ? 'http://localhost:3000/postcss' : 'https://primo-functions.herokuapp.com/postcss', { css, html, options }).catch(e => console.error('Could not process PostCSS', e))
-    if (result.error) {
-      console.error(result.error)
-      return '';
-    } else {
-      return result;
-    }
-  } catch(e) {
-    console.error(e)
-  }
 }
 
 async function getTailwindStyles(tailwindConfig) {
