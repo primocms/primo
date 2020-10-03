@@ -3,6 +3,7 @@ import ComponentPreview from './src/Preview.svelte'
 import MultiPreview from './src/MultiPreview.svelte'
 import SinglePreview from './src/SinglePreview.svelte'
 
+import {unsaved} from './src/stores/app/misc'
 import {site} from './src/stores/data/draft'
 import dropdown from './src/stores/app/dropdown'
 import fieldTypes from './src/stores/app/fieldTypes'
@@ -11,6 +12,10 @@ import { DEFAULTS, createPage, createSite } from './src/const'
 
 import * as utils from './src/utils'
 import * as components from './src/components'
+
+const stores = {
+  unsaved
+}
 
 export {
   site,
@@ -24,6 +29,7 @@ export {
   createPage,
   createSite,
   fieldTypes,
-  dropdown
+  dropdown,
+  stores
 }
 export default Primo

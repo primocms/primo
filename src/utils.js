@@ -114,11 +114,6 @@ export async function convertFieldsToData(fields, typeToUpdate = "static") {
   return _.chain(parsedFields).keyBy("key").mapValues("value").value();
 }
 
-export async function compileScss(scss) {
-  let result = await ax.post("primo/scss", { scss });
-  return result;
-}
-
 export async function notify(params, appName = "firebase") {
   ax.post("primo/notify", {
     appName,

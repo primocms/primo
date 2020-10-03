@@ -7,7 +7,7 @@
   import {Tabs} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
   import {SaveButton} from '../../components/buttons'
-  import { compileScss, processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../../utils'
+  import { processStyles, wrapInStyleTags, buildSiteHTML,buildPagePreview,  getComponentCSS } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
 
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
