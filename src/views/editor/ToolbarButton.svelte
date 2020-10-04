@@ -173,7 +173,7 @@
 
 
   button[disabled] {
-    @apply text-gray-700 bg-codeblack cursor-not-allowed transition-colors duration-200;
+    @apply text-gray-700 bg-codeblack cursor-default transition-colors duration-200;
   }
 
   button.outlined {
