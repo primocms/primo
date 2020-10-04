@@ -42,8 +42,15 @@ export async function parseHandlebars(code, data) {
   if (!Handlebars) {
     Handlebars = await import("handlebars/dist/handlebars.min.js");
   }
-  const template = Handlebars.compile(code);
-  return template(data);
+  let res 
+  try {
+    const template = Handlebars.compile(code);
+    res = template(data);
+  } catch(e) {
+    const error = e.toString().replace(/\n/g, "<br />")
+    res = `<pre class="flex justify-start p-8 items-center bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${error}</pre>`
+  }
+  return res
 }
 
 export async function convertFieldsToData(fields, typeToUpdate = "static") {
