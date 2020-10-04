@@ -1,7 +1,12 @@
+<script context="module">
+  import { writable } from 'svelte/store'
+  const originalButton = writable(null)
+</script>
+
 <script>
   import { createEventDispatcher, onMount, onDestroy } from 'svelte'
   const dispatch = createEventDispatcher()
-  import {some} from 'lodash'
+  import {some,cloneDeep} from 'lodash'
   import {PrimaryButton} from '../../../components/buttons'
   import {pop} from 'svelte-spa-router'
 
@@ -12,12 +17,13 @@
 
   import {editorViewDev,userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
-  // import site from '../../../stores/data/site'
   import {symbols} from '../../../stores/data/draft'
   import {content} from '../../../stores/app/activePage'
   import {updateInstances} from '../../../stores/actions'
 
   export let button;
+ 
+  if (button) originalButton.set(button) // save the button originally passed in so it doesn't get lost when editing the symbol
 
   let componentBeingEdited = null
   function editSymbol(symbol) {
@@ -29,7 +35,7 @@
           title: `Edit ${symbol.title || 'Symbol'}`,
           icon: 'fas fa-clone',
           button: {
-            label: `Draft`,
+            label: `Draft Symbol`,
             icon: 'fas fa-check',
             onclick: (symbol) => {
               placeSymbol(symbol)
@@ -62,7 +68,7 @@
 
   function addComponentToPage(symbol) {
     const instance = createInstance(symbol)
-    button.onclick(instance)
+    button ? button.onclick(instance) : $originalButton.onclick(instance)
   }
 
   function getID(symbol) {
