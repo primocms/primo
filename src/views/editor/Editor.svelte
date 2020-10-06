@@ -226,7 +226,7 @@
   $: toolbarButtons = $editorViewDev ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
-  $: if ($unsaved) {
+  $: if ($unsaved && window.location.hostname !== 'localhost') {
     window.onbeforeunload = function(e){
       e.returnValue = '';
     };

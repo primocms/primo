@@ -90,9 +90,15 @@
     <iframe class:scaled={view === 'large'} on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
   </div>
   <div class="footer-buttons">
-    {#if view}
+    {#if view === 'small'}
       <button class="switch-view" on:click={changeView}>
-        change view
+        <i class="fas fa-compress-arrows-alt"></i>
+        <span>Contained view</span>
+      </button>
+    {:else if view === 'large'}
+      <button class="switch-view" on:click={changeView}>
+        <i class="fas fa-expand-arrows-alt"></i>
+        <span>Fullwidth view</span>
       </button>
     {/if}
     <a target="blank" class="separate-tab" href="/preview.html?preview={multiple ? 'multiple' : 'single' }">

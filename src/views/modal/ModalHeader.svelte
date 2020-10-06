@@ -50,9 +50,9 @@
     {#if button}
       <button class="button primary" disabled={button.loading} on:click={button.onclick}>
         {#if button.icon}
-          <i class="{button.loading ? 'fas fa-spinner' : button.icon} mr-1"></i>
+          <i class="{button.loading ? 'fas fa-spinner' : button.icon}"></i>
         {/if}
-        <span class="hidden lg:inline-block">
+        <span class="hidden lg:inline-block ml-1">
           {button.label}
         </span>
       </button>

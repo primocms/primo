@@ -309,7 +309,7 @@
   {...header}
   button={{ ...header.button, onclick: () => header.button.onclick(localComponent) }} />
 
-<div class="flex flex-1 flex-wrap">
+<div class="flex flex-col lg:flex-row flex-1 flex-wrap">
   <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
     <div class="flex flex-col h-full">
       {#if $editorViewDev}
@@ -476,7 +476,7 @@
       {/if}
     </div>
   </div>
-  <div class="w-full lg:w-1/2">
+  <div class="flex-1 w-full lg:w-1/2">
     <CodePreview
       view="small"
       {loading}

@@ -64,6 +64,7 @@
         'Esc': 'emmetResetAbbreviation',
         'Enter': 'emmetInsertLineBreak'
       },
+      viewportMargin: Infinity,
       emmet: {
         previewOpenTag: false
       }
@@ -80,7 +81,6 @@
 
     // set editor height (can't figure out how to set it without to not overflow the modal height)
     if (editorNode) {
-      Editor.setSize(null, editorNode.clientHeight)
       setTimeout(() => {editorNode.firstChild.classList.add('fadein')}, 100) // so the fade works
     } 
   })
@@ -93,9 +93,6 @@
       }
       // make `disabled` dynamic
       Editor.setOption('readOnly', disabled)
-      if (editorNode) {
-        Editor.setSize(null, editorNode.clientHeight)
-      }
     }
   } 
 
@@ -110,7 +107,7 @@
 />
 
 <div class="codemirror-container" style="{style}">
-  <div in:fade={{ duration: 200 }} bind:this={editorNode}></div>
+  <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:200px"></div>
   {#if docs}
     <a target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
       <i class="fas fa-external-link-alt mr-1"></i>
@@ -128,7 +125,7 @@
     font-family: monospace;
     color: black;
     direction: ltr;
-    @apply w-full opacity-0 transition-opacity duration-100;
+    @apply h-auto w-full opacity-0 transition-opacity duration-100;
 
     &.fadein {
       @apply opacity-100;
@@ -483,7 +480,6 @@
     @apply flex flex-1 w-full;
   }
   .CodeMirror {
-    height: 0;
     font-size: 16px;
     font-family: -apple-system,BlinkMacSystemFont,Segoe WPC,Segoe UI,HelveticaNeue-Light,Ubuntu,Droid Sans,sans-serif !important;
   }
