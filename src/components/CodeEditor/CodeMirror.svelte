@@ -107,7 +107,7 @@
 />
 
 <div class="codemirror-container" style="{style}">
-  <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:200px"></div>
+  <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:100px"></div>
   {#if docs}
     <a target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
       <i class="fas fa-external-link-alt mr-1"></i>
