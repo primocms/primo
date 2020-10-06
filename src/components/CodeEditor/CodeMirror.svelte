@@ -94,6 +94,9 @@
       // make `disabled` dynamic
       Editor.setOption('readOnly', disabled)
     }
+    if (editorNode) {
+      Editor.setSize(null, editorNode.clientHeight)
+    }
   } 
 
   let editorNode

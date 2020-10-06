@@ -226,7 +226,7 @@
   $: toolbarButtons = $editorViewDev ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
-  $: if ($unsaved && !window.location.hostname.includes('localhost') && !window.location.hostname === 'primo.af') {
+  $: if ($unsaved) {
     window.onbeforeunload = function(e){
       e.returnValue = '';
     };
