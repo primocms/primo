@@ -23,6 +23,7 @@
 <div class="field" class:is-horizontal={leftlabel}>
   {#if leftlabel}
     <div class="field-label is-normal">
+      <!-- svelte-ignore a11y-label-has-associated-control -->
       <label class="label" {title}>
         {leftlabel}
         {#if info}

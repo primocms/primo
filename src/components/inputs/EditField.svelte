@@ -17,10 +17,12 @@
   <div class="rounded-sm border border-gray-100 flex items-center px-2">
     <slot name="type"></slot>
   </div>
+  <!-- svelte-ignore a11y-label-has-associated-control -->
   <label class="flex flex-col flex-1">
     <span class="font-semibold text-xs">Label</span>
     <slot name="label"></slot>
   </label>
+  <!-- svelte-ignore a11y-label-has-associated-control -->
   <div class="field">
     <label class="flex flex-col flex-1">
       <span class="font-semibold text-xs">ID</span>
