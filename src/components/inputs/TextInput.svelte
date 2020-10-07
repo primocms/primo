@@ -13,6 +13,7 @@
   // Note: Svelte seems to have some issues with two-way binding, so if this is acting up it's probably that
 </script>
 
+<!-- svelte-ignore a11y-label-has-associated-control -->
 <label class="flex flex-col items-start {variants}" {id}>
   {#if label}
      <span class="text-base mb-1 text-gray-900 font-semibold">{label}</span>
