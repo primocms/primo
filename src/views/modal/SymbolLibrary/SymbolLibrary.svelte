@@ -19,7 +19,7 @@
   import modal from '../../../stores/app/modal'
   import {symbols} from '../../../stores/data/draft'
   import {content} from '../../../stores/app/activePage'
-  import {updateInstances} from '../../../stores/actions'
+  import {updateInstances, symbols as actions } from '../../../stores/actions'
 
   export let button;
  
@@ -40,6 +40,7 @@
             onclick: (symbol) => {
               placeSymbol(symbol)
               updateInstances(symbol)
+              actions.update(symbol)
               pop()
             }
           }
@@ -51,9 +52,12 @@
   async function placeSymbol(symbol) {
     const exists = some($symbols, ['id',symbol.id])
     if (exists) {
-      $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+      // $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+      actions.update(symbol)
     } else {
-      $symbols = [ ...$symbols, symbol ]
+      // $symbols = [ ...$symbols, symbol ]
+      // addSymbolToLibrary(symbol)
+      actions.add(symbol)
     }
   }
 
@@ -63,7 +67,8 @@
   }
 
   async function deleteSymbol(symbol) {
-    $symbols = $symbols.filter(s => s.id !== symbol.id)
+    // $symbols = $symbols.filter(s => s.id !== symbol.id)
+    actions.delete(symbol)
   }
 
   function addComponentToPage(symbol) {

@@ -4,7 +4,8 @@ import {getAllFields} from './helpers'
 import {convertFieldsToData, parseHandlebars, hydrateAllComponents, getUniqueId} from '../utils'
 import {id,content} from './app/activePage'
 import {focusedNode} from './app/editor'
-import {pages, dependencies, styles, wrapper, fields, symbols} from './data/draft'
+import {pages, dependencies, styles, wrapper, fields} from './data/draft'
+import * as stores from './data/draft'
 
 export async function hydrateSite(data) {
   pages.set(data.pages)
@@ -12,7 +13,7 @@ export async function hydrateSite(data) {
   styles.set(data.styles)
   wrapper.set(data.wrapper)
   fields.set(data.fields)
-  symbols.set(data.symbols)
+  stores.symbols.set(data.symbols)
 }
 
 export async function updateInstances(symbol) {
@@ -151,4 +152,21 @@ export function insertSection(section, position) {
     };
   }
 
+}
+
+// experimenting with exporting objects to make things cleaner
+export const symbols = {
+  create: (symbol) => {
+    stores.symbols.update(s => [ ...s, _.cloneDeep(symbol) ])
+  },
+  update: (toUpdate) => {
+    stores.symbols.update(symbols => {
+      return symbols.map(s => s.id === toUpdate.id ? toUpdate : s)
+    })
+  },
+  delete: (toDelete) => {
+    stores.symbols.update(symbols => {
+      return symbols.filter(s => s.id !== toDelete.id)
+    })
+  }
 }

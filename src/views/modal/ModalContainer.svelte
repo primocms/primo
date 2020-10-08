@@ -82,8 +82,8 @@
   }
 
   .fullscreen {
-    width: calc(100vw - 3rem) !important;
-    height: calc(100vh - 3rem) !important;
+    width: calc(100vw - 1.5rem) !important;
+    height: calc(100vh - 1.5rem) !important;
     position: absolute !important;
     left: 1.5rem !important;
     right: 1.5rem !important;

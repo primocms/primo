@@ -36,6 +36,7 @@
     </p>
   </div>
   <div class="flex-1 flex justify-end">
+    <slot></slot>
     {#if $userRole === 'developer' && $modal.showSwitch}
       <button on:click={() => $editorViewDev = !$editorViewDev} class="button switch" class:to-cms={$editorViewDev} class:to-ide={!$editorViewDev}>
         {#if $editorViewDev}

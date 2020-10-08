@@ -24,13 +24,13 @@
   import { styles as siteStyles, fields as siteFields } from "../../../stores/data/draft";
   import {fields as pageFields, dependencies as pageDependencies} from "../../../stores/app/activePage"
   import {content} from "../../../stores/app/activePage"
-  import {symbols} from "../../../stores/data/draft";
+  // import {symbols} from "../../../stores/data/draft";
   import { editorViewDev } from "../../../stores/app";
   import fieldTypes from "../../../stores/app/fieldTypes";
   import modal from "../../../stores/app/modal";
   import { createComponent } from "../../../const";
-  import {updateInstances} from '../../../stores/actions'
-  import {getAllFields} from '../../../stores/helpers'
+  import {updateInstances,symbols} from '../../../stores/actions'
+  import {getAllFields,getSymbol} from '../../../stores/helpers'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
@@ -151,6 +151,16 @@
     ]);
   }
 
+  $: console.log({localComponent})
+  let isSingleUse:boolean = false
+  function convertToSymbol() {
+    const newSymbol = { ...localComponent, id: getUniqueId() }
+    symbols.create(newSymbol)
+    localComponent.symbolID = newSymbol.id
+    header.button.onclick(localComponent)
+    loadSymbol()
+  }
+
   function separateFromSymbol(): void {
     localComponent.symbolID = null;
     disabled = false;
@@ -158,8 +168,8 @@
 
   async function loadSymbol(): Promise<void> {
     disabled = false;
-    const symbol: Component = _.find($symbols, ['id', localComponent.symbolID]);
-    localComponent = _.cloneDeep(symbol);
+    const symbol: Component = getSymbol(localComponent.symbolID)
+    localComponent = _.cloneDeep(symbol)
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
       header: {
@@ -169,11 +179,9 @@
           icon: "fas fa-check",
           label: `Draft`,
           onclick: async (symbol) => {
-            console.log({symbol})
             loading = true;
-            $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
+            symbols.update(symbol)
             updateInstances(symbol);
-            console.log({$content})
             modal.hide();
           },
         },
@@ -285,7 +293,8 @@
 
   let activeTab = tabs[0];
 
-  let disabled: boolean = !!localComponent.symbolID;
+  let disabled:boolean = false
+  $: disabled = !!localComponent.symbolID;
 
   let prettier;
   let prettierHTML
@@ -307,7 +316,14 @@
 
 <ModalHeader
   {...header}
-  button={{ ...header.button, onclick: () => header.button.onclick(localComponent) }} />
+  button={{ ...header.button, onclick: () => header.button.onclick(localComponent) }}>
+  {#if isSingleUse}
+    <button class="convert" on:click={convertToSymbol}>
+      <i class="fas fa-clone"></i>
+      <span>Convert to Symbol</span>
+    </button>
+  {/if}
+</ModalHeader>
 
 <div class="flex flex-col lg:flex-row flex-1 flex-wrap">
   <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
@@ -490,6 +506,13 @@
 </div>
 
 <style>
+  button.convert {
+    @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
+    outline-color: rgb(248,68,73);
+    &:hover {
+      @apply bg-red-700 text-white;
+    }
+  }
   .field-item {
     @apply p-4;
     @apply shadow;
