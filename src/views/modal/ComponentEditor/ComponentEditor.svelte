@@ -151,8 +151,8 @@
     ]);
   }
 
-  $: console.log({localComponent})
   let isSingleUse:boolean = false
+  $: isSingleUse = localComponent.symbolID === null
   function convertToSymbol() {
     const newSymbol = { ...localComponent, id: getUniqueId() }
     symbols.create(newSymbol)
