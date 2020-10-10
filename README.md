@@ -59,4 +59,4 @@ This repo is for the core primo editor used by [primo-desktop](https://github.co
 * Write integration tests (w/ Cypress)
 * Refactoring
 
-If that's not enough to go off of or you get stuck somewhere, somebody in the [Discord](https://discord.gg/kPsAsq) will be happy to point you in the right direction.
+If that's not enough to go off of or you get stuck somewhere, somebody in the [Discord](https://discord.gg/vzSFTS9) will be happy to point you in the right direction.
