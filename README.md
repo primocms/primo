@@ -48,10 +48,11 @@ Whether you're a junior or senior developer, writer, or just a web development e
 This repo is for the core primo editor used by [primo-desktop](https://github.com/primo-app/primo-desktop) and [primo cloud](https://primocloud.io) (and by the self-hosted version of primo in the future). If you want to run primo locally for development:
 
 1. `git clone git@github.com:primo-app/primo.git`
-2. `cd primo/example`
-3. `npm install`
-4. `npm run dev`
-5. Go to [http://localhost:5000](http://localhost:5000)
+1. `npm install`
+1. `cd primo/example`
+1. `npm install`
+1. `npm run dev`
+1. Go to [http://localhost:5000](http://localhost:5000)
 
 ### How you can help
 
