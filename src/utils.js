@@ -157,65 +157,6 @@ export async function processStyles(css, html, options = {}) {
   }
 }
 
-const boilerplate = async (html) => {
-  return (
-    `
-    <!doctype html>
-
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" type="text/css" href="./styles.css" />
-      <link rel="stylesheet" type="text/css" href="./${
-        id || "index"
-      }.css" />
-      <script src="./${id || "index"}.js"></script>
-      ${
-        get(pageDependencies).libraries.length > 0
-          ? `<script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.1/system.min.js" integrity="sha256-15j2fw0zp8UuYXmubFHW7ScK/xr5NhxkxmJcp7T3Lrc=" crossorigin="anonymous"></script>
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/use-default.min.js" integrity="sha256-uVDULWwA/sIHxnO31dK8ThAuK46MrPmrVn+JXlMXc5A=" crossorigin="anonymous"></script>
-          <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.3.2/extras/amd.min.js" integrity="sha256-7vS4pPsg7zx1oTAJ1zQIr2lDg/q8anzUCcz6nxuaKhU=" crossorigin="anonymous"></script>
-          <script type="systemjs-importmap">${JSON.stringify({
-            imports: _.mapValues(
-              _.keyBy(
-                libraries.filter((l) => l.src.slice(-5).includes(".js")),
-                "name"
-              ),
-              "src"
-            ),
-          })}</script>`
-          : ``
-      }
-      ` +
-    `${get(pageWrapper).head.final}
-    </head>
-
-    <body data-instant-intensity="all" class="primo-page">   
-      ${html}
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.js" integrity="sha256-DdSiNPR71ROAVMqT6NiHagLAtZv9EHeByYuVxygZM5g=" crossorigin="anonymous"></script>
-    </body>
-    </html>
-  `
-  );
-};
-
-export function getComponentCSS(content) {
-  return _.flattenDeep(
-    content.map((section) =>
-      section.columns.map((column) =>
-        column.rows
-          .filter((r) => r.type === "component")
-          .map((row) => row.value.final.css)
-      )
-    )
-  ).join("\n\n");
-}
-
-export function buildSiteHTML(pages) {
-  const siteHTML = pages.map((p) => buildPagePreview(p.content));
-  return siteHTML;
-}
 
 export function buildPagePreview(content) {
   let html = "";
@@ -247,30 +188,6 @@ export function buildPagePreview(content) {
   // html += get(site).styles // TODO
 
   return html;
-}
-
-export async function buildPageCSS(content, HTML, rawCSS, tailwindConfig) {
-  const components = _.flatMapDeep(content, (section) =>
-    section.columns.map((column) =>
-      column.rows.filter((row) => row.type === "component")
-    )
-  );
-  const componentStyles = components
-    .map(
-      (component) => `#component-${component.id} {${component.value.raw.css}}`
-    )
-    .join("\n");
-
-  const allStyles = rawCSS + componentStyles;
-
-  const pageStyles = await processStyles(allStyles, HTML, {
-    includeBase: true,
-    includeTailwind: true,
-    purge: true,
-    tailwindConfig,
-  });
-
-  return pageStyles;
 }
 
 export async function hydrateAllComponents(content) {
