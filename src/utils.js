@@ -8,34 +8,7 @@ import objectPath from "object-path";
 import {id, dependencies as pageDependencies, wrapper as pageWrapper} from './stores/app/activePage'
 import user from './stores/data/user'
 import {getAllFields} from './stores/helpers'
-
-const functionsServer = (endpoint) =>
-  window.location.hostname.includes('localhost')
-    ? `http://localhost:9000/primo-d4041/us-central1/${endpoint}`
-    : `https://us-central1-primo-d4041.cloudfunctions.net/${endpoint}`;
-
-export const ax = {
-  async post(endpoint, params, onError = () => {}) {
-    // console.log('post:', functionsServer(endpoint), params)
-    try {
-      let { data } = await axios.post(functionsServer(endpoint), params);
-      return data;
-    } catch (e) {
-      console.error(e);
-      onError(e);
-      return {};
-    }
-  },
-  async get(endpoint) {
-    // console.log('get:', functionsServer(endpoint))
-    try {
-      return await axios.get(functionsServer(endpoint));
-    } catch (e) {
-      console.error(e);
-      return e;
-    }
-  },
-};
+import {functions} from './functions'
 
 let Handlebars;
 export async function parseHandlebars(code, data) {
@@ -121,13 +94,6 @@ export async function convertFieldsToData(fields, typeToUpdate = "static") {
   return _.chain(parsedFields).keyBy("key").mapValues("value").value();
 }
 
-export async function notify(params, appName = "firebase") {
-  ax.post("primo/notify", {
-    appName,
-    params,
-  });
-}
-
 export function scrambleIds(content) {
   let IDs = [];
   const newContent = content.map((section) => {
@@ -177,26 +143,9 @@ export function wrapInStyleTags(css, id = null) {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
 }
 
-export async function checkIfUserHasSubdomain(email, subdomain) {
-  if (email && subdomain) {
-    const res = await ax.post("firestore/subdomain-has-user", {
-      email,
-      subdomain,
-    });
-    return res;
-  } else {
-    return false;
-  }
-}
-
-export async function sendSiteInvitation(domain, email, role) {
-  const res = await ax.post("primo/send-invite", { domain, email, role });
-  return res;
-}
-
 export async function processStyles(css, html, options = {}) {
   try {
-    const result = await ax.post('postcss', { css, html, options })
+    const result = await functions.processPostCSS({css, html, options})
     if (result.error) {
       console.error(result.error);
       return "";

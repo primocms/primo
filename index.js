@@ -3,6 +3,7 @@ import ComponentPreview from './src/Preview.svelte'
 import MultiPreview from './src/MultiPreview.svelte'
 import SinglePreview from './src/SinglePreview.svelte'
 
+import functions from './src/functions'
 import {unsaved} from './src/stores/app/misc'
 import {site} from './src/stores/data/draft'
 import dropdown from './src/stores/app/dropdown'
@@ -30,6 +31,7 @@ export {
   createSite,
   fieldTypes,
   dropdown,
-  stores
+  stores,
+  functions
 }
 export default Primo

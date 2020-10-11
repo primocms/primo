@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {find} from 'lodash'
-  // import { Router, Route, navigate } from "svelte-routing";
 	import queryParser from "query-string";
 
 	import Router, {location,querystring} from 'svelte-spa-router'
