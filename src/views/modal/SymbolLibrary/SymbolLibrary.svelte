@@ -57,7 +57,7 @@
     } else {
       // $symbols = [ ...$symbols, symbol ]
       // addSymbolToLibrary(symbol)
-      actions.add(symbol)
+      actions.create(symbol)
     }
   }
 
