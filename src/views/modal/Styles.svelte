@@ -7,8 +7,9 @@
   import {Tabs} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
   import {SaveButton} from '../../components/buttons'
-  import { processStyles, wrapInStyleTags,buildPagePreview } from '../../utils'
+  import { wrapInStyleTags,buildPagePreview } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
+  import {processors} from '../../component'
 
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
   import {content,id} from '../../stores/app/activePage'
@@ -38,14 +39,14 @@
 
   async function compileStyles(rawStyles, tailwindConfig) {
     loading = true
-    const result = await processStyles(
+    const result = await processors.css(
       rawStyles, 
-      '',
       {
         tailwindConfig, 
         includeBase: false,
         includeTailwind: false,
-        purge: false
+        purge: false,
+        html: ''
       }
     );
     if (!result.error) {

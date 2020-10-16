@@ -28,68 +28,23 @@ export async function parseHandlebars(code, data) {
 
 export async function convertFieldsToData(fields, typeToUpdate = "static") {
   let literalValueFields = fields
-    .filter((f) => f.type !== "js")
     .map((f) => ({
       key: f.key,
       value: f.type === "number" ? parseInt(f.value) : f.value,
     }))
     .reduce((obj, item) => ((obj[item.key] = item.value), obj), {});
 
-  var parsedFields = await Promise.all(
-    fields.map(async (field) => {
-      if (
-        field.type === "api" &&
-        (typeToUpdate === "api" || typeToUpdate === "all")
-      ) {
-        let data;
-        try {
-          let res = await axios.get(field.endpoint);
-          data = res.data;
-        } catch (e) {
-          console.error(e);
-        }
-        // const { data } = await axios.get(field.endpoint)
-        const finalData =
-          typeof data === "object" && field.endpointPath
-            ? objectPath.get(data, field.endpointPath || JSON.stringify(data))
-            : data;
-        field.value = finalData;
-
-        console.log({
-          ["API Endpoint Accessed"]: field.endpoint,
-          ["Endpoint Path"]: field.endpointPath,
-          ["Raw data"]: data,
-          ["Final result"]: finalData,
-        });
-      } else if (
-        field.type === "js" &&
-        (typeToUpdate === "js" || typeToUpdate === "all")
-      ) {
-        let data;
-
-        try {
-          data = Function("fields", field.code)(literalValueFields);
-        } catch (e) {
-          console.error(e);
-        }
-
-        literalValueFields = {
-          ...literalValueFields,
-          [field.key]: data,
-        };
-
-        field.value = data;
-      } else if (field.type === "group") {
-        if (field.fields) {
-          field.value = _.chain(field.fields)
-            .keyBy("key")
-            .mapValues("value")
-            .value();
-        }
+  const parsedFields = fields.map(async (field) => {
+    if (field.type === "group") {
+      if (field.fields) {
+        field.value = _.chain(field.fields)
+          .keyBy("key")
+          .mapValues("value")
+          .value();
       }
-      return field;
-    })
-  );
+    }
+    return field;
+  })
 
   return _.chain(parsedFields).keyBy("key").mapValues("value").value();
 }
@@ -141,20 +96,6 @@ export function getComponentPreviewCode(component, parentStyles) {
 
 export function wrapInStyleTags(css, id = null) {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
-}
-
-export async function processStyles(css, html, options = {}) {
-  try {
-    const result = await functions.processPostCSS({css, html, options})
-    if (result.error) {
-      console.error(result.error);
-      return "";
-    } else {
-      return result;
-    }
-  } catch (e) {
-    console.error(e);
-  }
 }
 
 

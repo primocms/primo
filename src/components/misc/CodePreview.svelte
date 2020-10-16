@@ -93,12 +93,12 @@
     {#if view === 'small'}
       <button class="switch-view" on:click={changeView}>
         <i class="fas fa-compress-arrows-alt"></i>
-        <span>Contained view</span>
+        <span>Fullwidth view</span>
       </button>
     {:else if view === 'large'}
       <button class="switch-view" on:click={changeView}>
         <i class="fas fa-expand-arrows-alt"></i>
-        <span>Fullwidth view</span>
+        <span>Contained view</span>
       </button>
     {/if}
     <a target="blank" class="separate-tab" href="/preview.html?preview={multiple ? 'multiple' : 'single' }">

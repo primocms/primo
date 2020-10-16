@@ -17,7 +17,6 @@
   import {
     parseHandlebars,
     convertFieldsToData,
-    processStyles,
     createDebouncer,
   } from "../../../utils";
 
@@ -31,6 +30,7 @@
   import { createComponent } from "../../../const";
   import {updateInstances,symbols} from '../../../stores/actions'
   import {getAllFields,getSymbol} from '../../../stores/helpers'
+  import {processors} from '../../../component'
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
@@ -92,8 +92,7 @@
     saveRawValue("html", html);
     const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
-    const processedHTML = await parseHandlebars(rawHTML, data);
-    finalHTML = processedHTML;
+    finalHTML = await processors.html(rawHTML, data)
     quickDebounce([
       () => {
         loading = false;
@@ -113,13 +112,11 @@
     saveRawValue("css", css);
     loading = true;
     const encapsulatedCss: string = `#component-${localComponent.id} {${css}}`;
-    const result: string = await processStyles(
-      encapsulatedCss,
-      localComponent.value.final.html,
-      {
-        tailwindConfig: $siteStyles.tailwind,
-      }
-    );
+    const result: string = await processors.css(encapsulatedCss, {
+      html: localComponent.value.final.html,
+      tailwind: $siteStyles.tailwind
+    })
+
     if (result) {
       finalCSS = result;
       saveFinalValue("css", finalCSS);

@@ -3,7 +3,7 @@ import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
 import storeLib from '../../libraries/store.js'
 import axios from 'axios'
-import {processStyles} from '../../utils'
+import {processors} from '../../component'
 
 import { styles as siteStyles } from './draft'
 import {styles as pageStyles} from '../app/activePage'
@@ -56,7 +56,8 @@ async function hydrateTailwind() {
 }
 
 async function getTailwindStyles(tailwindConfig) {
-  const tw = await processStyles('','',{
+  const tw = await processors.css('',{
+    html: '',
     tailwindConfig: JSON.stringify(tailwindConfig), 
     includeBase: true,
     includeTailwind: true,
