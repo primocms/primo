@@ -60,6 +60,7 @@
     "firebase": "^7.16.1",
     "handlebars": "^4.7.6",
     "lodash": "^4.17.20",
+    "lodash.clonedeep": "^4.5.0",
     "mousetrap": "^1.6.5",
     "object-path": "^0.11.4",
     "pluralize": "^8.0.0",

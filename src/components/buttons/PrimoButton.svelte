@@ -43,9 +43,7 @@
     padding: 0.35rem;
     @apply block h-full bg-codeblack transition-colors duration-100 w-10 bg-no-repeat bg-center outline-none;
     background-size: 2rem;
-    &.bg-primored {
-      @apply bg-primored;
-    }
+
     &:hover, &:focus {
       @apply bg-gray-800 transition-colors duration-200;
     }

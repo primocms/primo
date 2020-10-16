@@ -25,12 +25,9 @@
 	import {hydrateSite} from './stores/actions'
 
 	export let data
-	export let functions
 	export let role = 'developer'
 	export let saving = false
 	$: $savingStore = saving
-
-	// setContext('functions', functions)
 
 	$: $editorViewDev = (role === 'developer') ? true : false
 	$: $userRole = role

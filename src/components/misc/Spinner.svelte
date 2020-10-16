@@ -11,13 +11,6 @@
 
 <style>
   /* Workaround to apply styles before all the TW styles load */
-  .text-xs {
-    @apply text-xs;
-  }
-
-  .text-white {
-    @apply text-white;
-  }
 
   .spinner {
     min-height: 1rem;
