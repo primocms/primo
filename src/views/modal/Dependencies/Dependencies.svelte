@@ -1,5 +1,4 @@
 <script>
-  import {cloneDeep,find} from 'lodash'
   import {writable} from 'svelte/store'
 
   import modal from '../../../stores/app/modal'

@@ -6,7 +6,7 @@
 <script>
   import { createEventDispatcher, onMount, onDestroy } from 'svelte'
   const dispatch = createEventDispatcher()
-  import {some,cloneDeep} from 'lodash'
+  import _ from 'lodash'
   import {PrimaryButton} from '../../../components/buttons'
   import {pop} from 'svelte-spa-router'
 
@@ -50,7 +50,7 @@
   }
 
   async function placeSymbol(symbol) {
-    const exists = some($symbols, ['id',symbol.id])
+    const exists = _.some($symbols, ['id',symbol.id])
     if (exists) {
       // $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
       actions.update(symbol)

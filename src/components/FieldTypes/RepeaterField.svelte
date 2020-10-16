@@ -1,5 +1,5 @@
 <script>
-  import {find,findIndex} from 'lodash'
+  import _ from 'lodash'
   import pluralize from 'pluralize'
   import {fade} from 'svelte/transition'
   import {createEventDispatcher} from 'svelte'
@@ -79,7 +79,7 @@
       </div>
       {#each fieldValue as subfield}
         <div class="repeater-item-field" id="repeater-{field.key}-{i}-{subfield.key}">
-          <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
+          <svelte:component this={_.find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
         </div>
       {/each}
     </div>

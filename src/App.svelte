@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {find} from 'lodash'
+	import _ from 'lodash'
 	import queryParser from "query-string";
 
 	import Router, {location,querystring} from 'svelte-spa-router'
@@ -42,7 +42,7 @@
 	$: $pageId = $location.substr(1) || 'index'
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
-		const currentPage = find(pages, ['id', id])
+		const currentPage = _.find(pages, ['id', id])
 		if (currentPage) {
 			content.set(currentPage.content)
 			styles.set(currentPage.styles)

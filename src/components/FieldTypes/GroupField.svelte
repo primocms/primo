@@ -1,5 +1,5 @@
 <script>
-  import {find} from 'lodash'
+  import _ from 'lodash'
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher() 
 
@@ -13,7 +13,7 @@
 <Card title={field.label}>
   {#each field.fields as subfield}
     <div class="group-item">
-      <svelte:component this={find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input />
+      <svelte:component this={_.find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input />
     </div>
   {/each}
 </Card>

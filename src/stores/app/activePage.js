@@ -1,4 +1,3 @@
-import {find} from 'lodash'
 import {writable,get} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS, createPage} from '../../const'
