@@ -26,7 +26,7 @@ export async function parseHandlebars(code, data) {
   return res
 }
 
-export async function convertFieldsToData(fields, typeToUpdate = "static") {
+export async function convertFieldsToData(fields) {
   let literalValueFields = fields
     .map((f) => ({
       key: f.key,
@@ -34,7 +34,7 @@ export async function convertFieldsToData(fields, typeToUpdate = "static") {
     }))
     .reduce((obj, item) => ((obj[item.key] = item.value), obj), {});
 
-  const parsedFields = fields.map(async (field) => {
+  const parsedFields = fields.map((field) => {
     if (field.type === "group") {
       if (field.fields) {
         field.value = _.chain(field.fields)

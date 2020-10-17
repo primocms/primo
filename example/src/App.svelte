@@ -1,16 +1,16 @@
 <script>
 	import axios from 'axios/dist/axios'
 	import _ from 'lodash'
-	import Primo, {modal, createSite, fieldTypes} from '../../index'
+	import Primo, {modal, createSite, fieldTypes,registerProcessors} from '../../index'
 	import PrimoFields from '@primo-app/field-types'
 	import Build from './extensions/Build.svelte'
+	import {handlebars,postCSS} from './extensions/processors'
 
   import { domainInfo } from './stores'
 	
-	async function processPostCSS(args) {
-		const {data:styles} = await axios.post('http://localhost:3000/postcss', args)
-		return styles
-	}
+	registerProcessors({
+		html: async (raw, fields) => await handlebars(raw, fields)
+	})
 
 	let data = JSON.parse(window.localStorage.getItem('site')) || createSite()
 
@@ -45,8 +45,5 @@
 <Primo 
 	{data}
 	{role}
-	functions={{
-		processPostCSS
-	}}
 	on:save={({detail:data}) => saveData(data)} 
 />
