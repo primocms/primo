@@ -1,13 +1,11 @@
 import {writable} from 'svelte/store'
-import ContentField from '../../components/FieldTypes/ContentField.svelte'
-// import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte'
-// import GroupField from '../../components/FieldTypes/GroupField.svelte'
+import TextField from '../../components/FieldTypes/ContentField.svelte'
 
 const fieldTypes = writable([
   {
     id: 'text',
     label: 'Text',
-    component: ContentField
+    component: TextField
   }
 ])
 
