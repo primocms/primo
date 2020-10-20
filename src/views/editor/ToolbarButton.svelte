@@ -13,6 +13,7 @@
   export let onclick = null
   export let variant = ''
   export let loading = false
+  export let active = false
   export let buttons = null
   export let type = null
   export let tooltipStyle = ''
@@ -34,6 +35,7 @@
     aria-label={title}
     class="{ buttonStyles } {variant}"
     class:primo={type === 'primo'}
+    class:active
     class:has-subbuttons={buttons}
     in:fade={{duration:200}}
     {disabled}
@@ -194,6 +196,40 @@
 
   button.primored:hover, button.primored:focus {
     @apply bg-gray-800;
+  }
+
+  button i.fa-hammer {
+    transition: transform 0.2s;
+    transform: rotate(0);
+    transform-origin: left;
+  }
+
+  button:hover i.fa-hammer {
+    transition: transform 0.2s;
+    transform: rotate(-20deg);
+  }
+
+  button.active i.fa-hammer {
+    animation-name: hammer;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease;
+    will-change: transform;
+  }
+
+  @keyframes hammer {
+    0% {
+      transform: rotate(0deg);
+    }
+    20% {
+      transform: rotate(-20deg);
+    }
+    50% {
+      transform: rotate(45deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
   }
 
   i.fa-spinner {

@@ -341,7 +341,7 @@
 <Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
   <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!$unsaved} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
   {#if $switchEnabled}
-    <ToolbarButton type="primo" icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
+    <ToolbarButton type="primo" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
   {:else}
     <ToolbarButton type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
   {/if}

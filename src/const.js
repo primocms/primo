@@ -294,9 +294,9 @@ export const createPage = (id = getUniqueId(), title) => ({
   symbols: []
 })
 
-export const createSite = (id = getUniqueId()) => ({
+export const createSite = (id = getUniqueId(), label = '') => ({
   id,
-  label: '',
+  label,
   pages: [ createPage('index', 'Home Page') ],
   dependencies: DEFAULTS.dependencies,
   styles: DEFAULTS.styles,
