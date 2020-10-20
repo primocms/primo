@@ -151,7 +151,7 @@ export const createComponent = () => ({
 })
 
 export const createSymbol = () => ({
-  type: 'component',
+  type: 'symbol',
   id: getUniqueId(),
   value: {
     raw: {

@@ -15,7 +15,6 @@
   import GroupField from '../../../components/FieldTypes/GroupField.svelte'
 
   import {
-    parseHandlebars,
     convertFieldsToData,
     createDebouncer,
   } from "../../../utils";
@@ -24,7 +23,7 @@
   import {fields as pageFields, dependencies as pageDependencies} from "../../../stores/app/activePage"
   import {content} from "../../../stores/app/activePage"
   // import {symbols} from "../../../stores/data/draft";
-  import { editorViewDev } from "../../../stores/app";
+  import { switchEnabled } from "../../../stores/app";
   import fieldTypes from "../../../stores/app/fieldTypes";
   import modal from "../../../stores/app/modal";
   import { createComponent } from "../../../const";
@@ -88,7 +87,6 @@
   $: compileHtml(rawHTML);
   async function compileHtml(html: string): Promise<void> {
     loading = true;
-    // let formattedHTML = prettier ? prettier.format(html, {parser: "html", plugins: [prettierHTML]}) : html // TODO: format on save
     saveRawValue("html", html);
     const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
@@ -138,7 +136,7 @@
     loading = true;
     const allFields: Fields = getAllFields(localComponent);
     let data = await convertFieldsToData(allFields, typeToUpdate);
-    finalHTML = await parseHandlebars(rawHTML, data);
+    finalHTML = await processors.html(rawHTML, data);
     saveFinalValue("html", finalHTML);
     refreshFields();
     quickDebounce([
@@ -149,9 +147,14 @@
   }
 
   let isSingleUse:boolean = false
-  $: isSingleUse = localComponent.symbolID === null
+  $: isSingleUse = localComponent.type === 'component' && localComponent.symbolID === null 
   function convertToSymbol() {
-    const newSymbol = { ...localComponent, id: getUniqueId() }
+    const newSymbol = { 
+      ...localComponent, 
+      id: getUniqueId(),
+      type: 'symbol'
+    }
+    delete newSymbol.symbolID
     symbols.create(newSymbol)
     localComponent.symbolID = newSymbol.id
     header.button.onclick(localComponent)
@@ -293,13 +296,6 @@
   let disabled:boolean = false
   $: disabled = !!localComponent.symbolID;
 
-  let prettier;
-  let prettierHTML
-  onMount(async () => {
-    prettier = await import("prettier/standalone");
-    prettierHTML = await import("prettier/parser-html");
-  });
-
   function getFieldComponent(field) {
     const fieldType = _.find(allFieldTypes, ['id', field.type])
     if (fieldType && fieldType.component) {
@@ -325,7 +321,7 @@
 <div class="flex flex-col lg:flex-row flex-1 flex-wrap">
   <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
     <div class="flex flex-col h-full">
-      {#if $editorViewDev}
+      {#if $switchEnabled}
         <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />
         {#if disabled}
           <p class="mb-2 text-xs text-gray-700">

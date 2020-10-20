@@ -39,7 +39,7 @@
 
 </script>
 
-<div id="editor-{row.id}" class="primo-content mousetrap" bind:this={editor}></div>
+<div class="primo-content mousetrap" bind:this={editor} id="content-{row.id}"></div>
 
 <style global>
   .primo-content {

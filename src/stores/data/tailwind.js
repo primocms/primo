@@ -58,7 +58,7 @@ async function hydrateTailwind() {
 async function getTailwindStyles(tailwindConfig) {
   const tw = await processors.css('',{
     html: '',
-    tailwindConfig: JSON.stringify(tailwindConfig), 
+    tailwind: JSON.stringify(tailwindConfig), 
     includeBase: true,
     includeTailwind: true,
     purge: false
