@@ -9,7 +9,7 @@
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '../../components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {editorViewDev,userRole,hideReleaseNotes} from '../../stores/app'
+  import {switchEnabled,userRole,hideReleaseNotes} from '../../stores/app'
   import modal from '../../stores/app/modal'
 
   const dispatch = createEventDispatcher()
@@ -57,9 +57,9 @@
           {/each}
           {#if $userRole === 'developer'}
             <ToolbarButton  
-              title="Switch to {$editorViewDev ? 'CMS' : 'IDE'}"
+              title="Switch to {$switchEnabled ? 'CMS' : 'IDE'}"
               tooltipVariants="w-24"
-              icon={$editorViewDev ? 'edit' : 'code'}
+              icon={$switchEnabled ? 'edit' : 'code'}
               onclick={() => dispatch('toggleView')}
               tooltipStyle="width:7rem"
             />

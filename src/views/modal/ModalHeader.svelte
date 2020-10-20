@@ -3,7 +3,7 @@
   const dispatch = createEventDispatcher()
 
   import modal from '../../stores/app/modal'
-  import {editorViewDev,userRole} from '../../stores/app/misc'
+  import {switchEnabled,userRole} from '../../stores/app/misc'
 
   export let variants:string = ''
   export let icon:string = ''
@@ -38,8 +38,8 @@
   <div class="flex-1 flex justify-end">
     <slot></slot>
     {#if $userRole === 'developer' && $modal.showSwitch}
-      <button on:click={() => $editorViewDev = !$editorViewDev} class="button switch" class:to-cms={$editorViewDev} class:to-ide={!$editorViewDev}>
-        {#if $editorViewDev}
+      <button on:click={() => $switchEnabled = !$switchEnabled} class="button switch" class:to-cms={$switchEnabled} class:to-ide={!$switchEnabled}>
+        {#if $switchEnabled}
           <i class="fas fa-edit"></i>
           <span class="hidden lg:inline-block">Switch to CMS</span>
         {:else}

@@ -3,7 +3,7 @@
   import {fade} from 'svelte/transition'
   import {getStyles,appendHtml} from '../pageUtils.js'
   import {dependencies} from '../../../stores/app/activePage'
-  import {editorViewDev} from '../../../stores/app'
+  import {switchEnabled} from '../../../stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
   if (!customElements.get('component-buttons')) { 
@@ -65,7 +65,7 @@
 
 <div class="primo-component" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   <component-buttons 
-    icon={$editorViewDev ? 'code' : 'edit'}
+    icon={$switchEnabled ? 'code' : 'edit'}
     contentabove={contentAbove}
     contentbelow={contentBelow}
     on:edit
@@ -73,7 +73,7 @@
     on:addContentBelow
     on:addContentAbove
   ></component-buttons>
-  <div id="component-{row.id}">
+  <div id="component-{row.id}" class={ row.symbolID ? `symbol-${row.symbolID}` : ''}>
     {@html row.value.final.html}
   </div>
   <div primo-css>

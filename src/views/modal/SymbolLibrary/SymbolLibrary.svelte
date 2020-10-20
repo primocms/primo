@@ -15,7 +15,7 @@
   import {createSymbol} from '../../../const'
   import { wrapInStyleTags, getUniqueId } from '../../../utils'
 
-  import {editorViewDev,userRole} from '../../../stores/app'
+  import {switchEnabled,userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
   import {symbols} from '../../../stores/data/draft'
   import {content} from '../../../stores/app/activePage'
@@ -112,7 +112,7 @@
   variants="mb-4"
 />
 
-{#if $editorViewDev}
+{#if $switchEnabled}
   <PrimaryButton on:click={addSymbol} variants="mb-4">
     <i class="fas fa-plus mr-1"></i>
     <span>Create New Symbol</span>

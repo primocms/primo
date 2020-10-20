@@ -16,7 +16,7 @@
 	import tailwind from './stores/data/tailwind'
 	import {id as pageId} from './stores/app/activePage'
 	import {content, styles, fields, dependencies, wrapper} from './stores/app/activePage'
-  import {editorViewDev, userRole} from './stores/app'
+  import {switchEnabled, userRole} from './stores/app'
 	import {saving as savingStore} from './stores/app/misc'
 
 	import {unsaved} from './stores/app/misc'
@@ -29,7 +29,7 @@
 	export let saving = false
 	$: $savingStore = saving
 
-	$: $editorViewDev = (role === 'developer') ? true : false
+	$: $switchEnabled = (role === 'developer') ? true : false
 	$: $userRole = role
 
 	$: {

@@ -16,7 +16,7 @@
 
   import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
-  import {editorViewDev,userRole} from '../../stores/app'
+  import {switchEnabled,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
   import {fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields, pages} from '../../stores/data/draft'
@@ -180,7 +180,7 @@
 
 <ModalHeader 
   icon="fas fa-database"
-  title={$editorViewDev ? 'Fields' : 'Content'}
+  title={$switchEnabled ? 'Fields' : 'Content'}
   button={{
     label: `Draft`,
     icon: 'fas fa-check',
@@ -192,7 +192,7 @@
 <Tabs {tabs} bind:activeTab />
 
 <div class="flex flex-col p-2 bg-gray-100">
-  {#if $editorViewDev}
+  {#if $switchEnabled}
     {#each fields as field (field.id)}
       <Card variants="field-item bg-white shadow-sm mb-2">
         <EditField on:delete={() => deleteField(field.id)} {disabled}>

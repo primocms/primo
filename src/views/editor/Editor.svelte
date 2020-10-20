@@ -11,7 +11,7 @@
   import Doc from './Doc.svelte'
 
   // import site from '../../stores/data/site'
-  import {focusedNode,editorViewDev} from '../../stores/app'
+  import {focusedNode,switchEnabled} from '../../stores/app'
   import {saving,unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
 
@@ -223,7 +223,7 @@
   }
 
   let toolbarButtons:Array<ButtonGroup>
-  $: toolbarButtons = $editorViewDev ? developerButtons : editorButtons
+  $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
   $: if ($unsaved && window.location.hostname !== 'localhost' && !'https://primocloud.io/site/landingpage-demo--source'.includes('landingpage-demo')) {
@@ -338,9 +338,9 @@
 
 </script>
 
-<Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => editorViewDev.set(!$editorViewDev)}>
+<Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
   <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!$unsaved} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
-  {#if $editorViewDev}
+  {#if $switchEnabled}
     <ToolbarButton type="primo" icon="fas fa-hammer" on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
   {:else}
     <ToolbarButton type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>

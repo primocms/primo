@@ -1,10 +1,10 @@
 import {focusedNode} from './editor.js'
-import {onDashboard,editorViewDev,userRole,hideReleaseNotes} from './misc.js'
+import {onDashboard,switchEnabled,userRole,hideReleaseNotes} from './misc.js'
 import modal from './modal.js'
 
 export {
   userRole,
-  editorViewDev,
+  switchEnabled,
   onDashboard,
   focusedNode, 
   modal,

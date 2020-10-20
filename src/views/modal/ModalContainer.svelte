@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import modal from '../../stores/app/modal'
-  import {editorViewDev,userRole} from '../../stores/app'
+  import {switchEnabled,userRole} from '../../stores/app'
   import {Spinner} from '../../components/misc'
   const dispatch = createEventDispatcher()
 	import {push, location} from 'svelte-spa-router'
@@ -23,7 +23,7 @@
   $: variants = $modal.variants || 'max-w-md'
 
   function switchView() {
-    $editorViewDev = !$editorViewDev
+    $switchEnabled = !$switchEnabled
   }
 
 </script>
