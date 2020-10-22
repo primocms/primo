@@ -117,7 +117,7 @@ export function buildPagePreview(content) {
               `\t\t\t\t<script>${row.value.final.js}</script>\n` +
               `\t\t\t\t<style>${row.value.final.css}</style>\n` +
               `\t\t\t</div>\n`
-            : `\t\t\t<div class="primo-content" id="content-${row.id}>\n` +
+            : `\t\t\t<div class="primo-content" id="content-${row.id}">\n` +
               `\t\t\t\t${row.value.html}\n` +
               `\t\t\t</div>\n`;
       });
