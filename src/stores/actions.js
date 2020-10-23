@@ -110,20 +110,25 @@ export function insertSection(section, position) {
       rows: [createContentRow()],
     })),
   });
-
-  if (!focusedSection) {
-    // store.update((content) => [...content, newSection]);
-    content.set([...content, newSection]);
+  if (!focusedSection) {  // no section is focused
+    content.set([...content, newSection]); // add it to the end
   } else {
     const indexOfFocusedSection = _.findIndex(get(content), [
       "id",
       focusedSection.id,
     ]);
-    const contentWithNewSection = [
-      ...get(content).slice(0, indexOfFocusedSection + 1),
-      newSection,
-      ...get(content).slice(indexOfFocusedSection + 1),
-    ];
+    let contentWithNewSection 
+    if (indexOfFocusedSection === 0) {
+      contentWithNewSection = [
+        newSection,
+        ...get(content)
+      ];
+    } else {
+      contentWithNewSection = [
+        ...get(content),
+        newSection
+      ];
+    }
     content.set(contentWithNewSection);
   }
 
