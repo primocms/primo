@@ -1,6 +1,6 @@
 {
   "name": "primo-app-example",
-  "version": "0.2.1",
+  "version": "0.2.38",
   "scripts": {
     "build": "rollup -c",
     "dev": "concurrently --kill-others \"rollup -c -w\" \"npx cypress open\"",
