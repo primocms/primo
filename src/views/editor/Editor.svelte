@@ -187,11 +187,6 @@
     ],
     [
       {
-        title: 'Dependencies',
-        icon: 'cube',
-        onclick: () => modal.show('DEPENDENCIES'),
-      },
-      {
         title: 'HTML',
         icon: 'fab fa-html5',
         onclick: () => modal.show('WRAPPER'),

@@ -30,25 +30,6 @@
     return _.some(row.value.raw.fields, ["type", fieldType]);
   }
 
-  // This is how we use SystemJS to get modules working inside components
-  let importMap: string;
-  $: importMap = JSON.stringify({
-    imports: _.mapValues(
-      _.keyBy(
-        jsLibraries,
-        "name"
-      ),
-      "src"
-    ),
-  });
-
-  let systemJsNode;
-  $: {
-    if (systemJsNode) {
-      systemJsNode.innerHTML = importMap;
-    }
-  }
-
   function savePage() {
     $unsaved = false
     site.save()
@@ -69,10 +50,6 @@
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />
   {/each}
-  {#if jsLibraries.length > 0}
-    <script type="systemjs-importmap" bind:this={systemJsNode}>
-    </script>
-  {/if}
 </svelte:head>
 
 <Editor on:change on:save={savePage} on:build on:signOut />

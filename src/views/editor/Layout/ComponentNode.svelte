@@ -23,36 +23,21 @@
     mounted = true
   })
 
-  $: jsLibraries = $dependencies ? $dependencies.libraries.filter(l => l.type === 'js') : []
   $: {
-    (async () => {
-      if (jsLibraries.length > 0) {
-        await import('../../../libraries/systemjs/system.min.js')
-        await import('../../../libraries/systemjs/named-register.min.js')
-        await import('../../../libraries/systemjs/use-default.min.js')
-        await import('../../../libraries/systemjs/amd.min.js')
-      } 
-      if (row.value.final.js) {
-        appendJS(row.value.final.js)
-      }
-    })()
+    if (row.value.final.js) {
+      appendJS(row.value.final.js)
+    }
   }
 
 
   function appendJS(js) {
 
-    const libraryNames = $dependencies.libraries.map(l => l.name)
-    const systemJsLibraries = libraryNames.map(name => `System.import('${name}')`).join(',')
-
-    // TODO: Parse the component's JS to replace es6 import statements with SystemJS import statements
+    // TODO: Regex the import so that "import vue from 'vue'" translates to "import vue from 'https://cdn.skypack.dev/vue';"
     if (mounted) {
       appendHtml(
         `#component-${row.id} ~ [primo-js]`, 
         'script', 
-        libraryNames.length > 0 ? `Promise.all([${systemJsLibraries}]).then(modules => {
-          const [${libraryNames.join(',')}] = modules;
-          ${js}
-        })` : js,
+        js,
         {
           type: 'module'
         }

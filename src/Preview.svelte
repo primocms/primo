@@ -26,43 +26,21 @@
   store.on('tailwind', ({ newValue:tailwind }) => {
     tailwindStyles = tailwind
   })
-  
-  $: importMap = JSON.stringify({
-    "imports": _.mapValues(_.keyBy(jsLibraries, 'name'), 'src')
-  })
-  
-  let systemJsNode
-  $: {
-    if (systemJsNode) {
-      systemJsNode.innerHTML = importMap
-    }
-  }
 
   async function setPageJs(js) {
-    const libraryNames = jsLibraries.map(l => l.name)
-    const systemJsLibraries = libraryNames.map(name => `System.import('${name}')`).join(',')
     appendHtml(
       `[primo-js]`, 
       'script', 
-      jsLibraries.length > 0 ? `Promise.all([${systemJsLibraries}]).then(modules => {
-        const [${libraryNames.join(',')}] = modules;
-        ${js}
-      })` : js,
+      js,
       {
         type: 'module'
       }
     )
   }
 
-  if (jsLibraries.length > 0) {
-    (async () => {
-      await import('./libraries/systemjs/system.min.js')
-      await import('./libraries/systemjs/named-register.min.js')
-      await import('./libraries/systemjs/use-default.min.js')
-      await import('./libraries/systemjs/amd.min.js')
-      setPageJs(js)
-    })()
-  }
+  onMount(() => {
+    setPageJs(js)
+  })
 
 </script>
 
@@ -72,9 +50,6 @@
   {#each cssLibraries as library}
     <link href="${library.src}" rel="stylesheet" />
   {/each}
-  {#if jsLibraries.length > 0 }
-    <script type="systemjs-importmap" bind:this={systemJsNode}></script>
-  {/if}
   {@html wrapInStyleTags(tailwindStyles)}
   {@html previewCSS}
 </svelte:head>
