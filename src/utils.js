@@ -90,8 +90,8 @@ export function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
 
-export function getComponentPreviewCode(component, parentStyles) {
-  return `<div id="component-${component.id}">${component.value.final.html}</div><style>${parentStyles}${component.value.final.css}</style><script>${component.value.final.js}</script>`;
+export function createSymbolPreview({ id, wrapper, html, css, js }) {
+  return `<head>${wrapper.head.final}</head><div id="component-${id}">${html}</div><style>${css}</style><script>${js}</script>${wrapper.below.final}`;
 }
 
 export function wrapInStyleTags(css, id = null) {

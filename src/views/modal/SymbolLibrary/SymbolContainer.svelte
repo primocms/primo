@@ -3,34 +3,34 @@
   import {fade} from 'svelte/transition'
   import { createEventDispatcher, onMount } from 'svelte';
   const dispatch = createEventDispatcher();
-  import {getComponentPreviewCode} from '../../../utils'
+  import {createSymbolPreview} from '../../../utils'
 
   import tailwind from '../../../stores/data/tailwind'
-  import {styles as siteStyles} from '../../../stores/data/draft'
+  import {styles as siteStyles, wrapper} from '../../../stores/data/draft'
   import {styles as pageStyles} from '../../../stores/app/activePage'
   let styles = $siteStyles
 
-  export let component;
-  export let title = component.title || '';
+  export let symbol;
+  export let title = symbol.title || '';
 
   let editingTitle = false
   let titleInput
 
   function changeTitle() {
     editingTitle = false
-    if (title !== component.title) {
+    if (title !== symbol.title) {
       dispatch('update', { title })
     }
   }
 
   function saveComponentHeight(newIframeHeight) {
-    if (newIframeHeight !== component.height) {
+    if (newIframeHeight !== symbol.height) {
       dispatch('update', { height })
     }
   }
 
   let iframe
-  let iframeHeight = component.height || 250
+  let iframeHeight = symbol.height || 250
 
   onMount(() => {
     iframe.onload = () => {
@@ -40,13 +40,22 @@
   })
 
   const parentStyles = $tailwind + $siteStyles.final + $pageStyles.final
-  const previewCode = getComponentPreviewCode(component, parentStyles) 
+  // const previewCode = createSymbolPreview(symbol, parentStyles) 
+  const previewCode = createSymbolPreview({
+    id: symbol.id,
+    html: symbol.value.final.html,
+    wrapper: $wrapper,
+    js: symbol.value.final.js,
+    css: parentStyles + symbol.value.final.css
+  });
+
+  console.log($wrapper)
 
   let iframeLoaded = false
 
 </script>
 
-<article class="message component-wrapper mt-2" in:fade={{ delay: 250, duration: 200 }} id="symbol-{component.id}">
+<article class="message component-wrapper mt-2" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
   <form on:submit|preventDefault={changeTitle}>
     <input type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
   </form>

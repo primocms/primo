@@ -11,7 +11,7 @@
   import {pop} from 'svelte-spa-router'
 
   import ModalHeader from '../ModalHeader.svelte'
-  import Container from './ComponentContainer.svelte'
+  import Container from './SymbolContainer.svelte'
   import {createSymbol} from '../../../const'
   import { wrapInStyleTags, getUniqueId } from '../../../utils'
 
@@ -52,11 +52,8 @@
   async function placeSymbol(symbol) {
     const exists = _.some($symbols, ['id',symbol.id])
     if (exists) {
-      // $symbols =  $symbols.map(s => s.id === symbol.id ? symbol : s)
       actions.update(symbol)
     } else {
-      // $symbols = [ ...$symbols, symbol ]
-      // addSymbolToLibrary(symbol)
       actions.create(symbol)
     }
   }
@@ -67,7 +64,6 @@
   }
 
   async function deleteSymbol(symbol) {
-    // $symbols = $symbols.filter(s => s.id !== symbol.id)
     actions.delete(symbol)
   }
 
@@ -133,6 +129,6 @@
     on:edit={() => editSymbol(symbol)}
     on:delete={() => deleteSymbol(symbol)}
     on:select={() => addComponentToPage(symbol)}
-    component={symbol}
+    {symbol}
   />
 {/each}
