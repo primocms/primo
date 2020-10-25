@@ -16,24 +16,16 @@
   export let contentAbove = false
   export let contentBelow = false
 
-  let js
-
   let mounted = false
   onMount(() => {
     mounted = true
   })
 
-  $: {
-    if (row.value.final.js) {
-      appendJS(row.value.final.js)
-    }
-  }
+  $: appendJS(mounted, row.value.final.js)
 
-
-  function appendJS(js) {
-
-    // TODO: Regex the import so that "import vue from 'vue'" translates to "import vue from 'https://cdn.skypack.dev/vue';"
-    if (mounted) {
+  function appendJS(mounted, js) {
+    console.log('Appending JS', { mounted, js })
+    if (mounted && js) {
       appendHtml(
         `#component-${row.id} ~ [primo-js]`, 
         'script', 
