@@ -126,8 +126,8 @@
   let finalJS: string = localComponent.value.final.js;
   $: compileJs(rawJS);
   async function compileJs(js: string): Promise<void> {
-    // this is where we can introduce TS/Babel later
-    finalJS = js;
+    // turn `import _ from 'lodash'` into `import _ from 'https://cdn.skypack.dev/lodash';
+    finalJS = js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`);
     saveRawValue("js", js);
     saveFinalValue("js", finalJS);
   }
