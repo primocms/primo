@@ -91,7 +91,7 @@ export function getUniqueId() {
 }
 
 export function createSymbolPreview({ id, wrapper, html, css, js }) {
-  return `<head>${wrapper.head.final}</head><div id="component-${id}">${html}</div><style>${css}</style><script>${js}</script>${wrapper.below.final}`;
+  return `<head>${wrapper.head.final}</head><div id="component-${id}">${html}</div><style>${css}</style><script type="module">${js}</script>${wrapper.below.final}`;
 }
 
 export function wrapInStyleTags(css, id = null) {
