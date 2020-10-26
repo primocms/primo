@@ -18,9 +18,17 @@
   export let docs = null
   export let autofocus = false
 
+  mode = {
+    'css' : 'text/x-scss',
+    'html' : {
+      name: 'handlebars',
+      base: 'text/html'
+    }
+  }[mode] || mode
+
   var Editor
 
-  async function mountCodeMirror() {
+  async function importCodeMirrorAddons() {
     // CodeMirror = (await import('codemirror/lib/codemirror.js')).default
     await Promise.all([
       import('codemirror/mode/javascript/javascript.js'),
@@ -29,6 +37,7 @@
       import('codemirror/mode/css/css.js'),
       import('codemirror/addon/selection/active-line.js'),
       import('codemirror/addon/comment/comment.js'),
+      import('codemirror/addon/search/match-highlighter.js'),
       import('codemirror/addon/fold/foldcode.js'),
       import('codemirror/addon/fold/xml-fold.js'),
       import('codemirror/keymap/sublime.js')
@@ -41,7 +50,7 @@
 
   onMount(async () => {
 
-    await mountCodeMirror()
+    await importCodeMirrorAddons()
 
     Editor = CodeMirror(editorNode, {
       // passed values
@@ -67,7 +76,9 @@
       viewportMargin: Infinity,
       emmet: {
         previewOpenTag: false
-      }
+      },
+      highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
+      matchBrackets: true
     });
     setTimeout(() => {Editor.refresh()}, 500) // needs this for some reason
 
@@ -117,6 +128,9 @@
 </div>
 
 <style global>
+
+  /* Match highlithgt */
+  .cm-matchhighlight {@apply bg-red-900;}
 
   /* BASICS */
 

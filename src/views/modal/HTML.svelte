@@ -85,10 +85,7 @@
       bind:value={activeHTML.head.raw} 
       on:change={saveFinalHTML}
       style="height:10rem" 
-      mode={{
-        name: 'handlebars',
-        base: 'text/html'
-      }}
+      mode="html"
     />
 
     <span class="mb-1 mt-4 inline-block font-semibold text-gray-700">{'Before </body>'}</span> 
@@ -96,10 +93,7 @@
       bind:value={activeHTML.below.raw} 
       on:change={saveFinalHTML}
       style="height:15rem" 
-      mode={{
-        name: 'handlebars',
-        base: 'text/html'
-      }}
+      mode="html"
     />
   </div>
 </div>

@@ -24,7 +24,6 @@
   $: appendJS(mounted, row.value.final.js)
 
   function appendJS(mounted, js) {
-    console.log('Appending JS', { mounted, js })
     if (mounted && js) {
       appendHtml(
         `#component-${row.id} ~ [primo-js]`, 

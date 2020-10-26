@@ -73,7 +73,7 @@
     <CodeMirror
       autofocus
       bind:value={html}
-      mode={{ name: 'handlebars', base: 'text/html' }}
+      mode="html"
       {disabled}
       on:change={({ detail }) => dispatch('htmlChange')}
       on:save={() => dispatch('save')}
@@ -82,7 +82,7 @@
     <CodeMirror
       autofocus
       bind:value={css}
-      mode={'css'}
+      mode="css"
       {disabled}
       on:change={({ detail }) => dispatch('cssChange')}
       on:save={() => dispatch('save')} />
@@ -90,7 +90,7 @@
     <CodeMirror
       autofocus
       bind:value={js}
-      mode={'javascript'}
+      mode="javascript"
       {disabled}
       on:change={({ detail }) => dispatch('jsChange')}
       on:save={() => dispatch('save')} />
