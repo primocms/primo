@@ -35,9 +35,9 @@
       import('codemirror/mode/handlebars/handlebars.js'),
       import('codemirror/mode/xml/xml.js'),
       import('codemirror/mode/css/css.js'),
+      import('codemirror/addon/edit/closetag.js'),
       import('codemirror/addon/selection/active-line.js'),
       import('codemirror/addon/comment/comment.js'),
-      import('codemirror/addon/search/match-highlighter.js'),
       import('codemirror/addon/fold/foldcode.js'),
       import('codemirror/addon/fold/xml-fold.js'),
       import('codemirror/keymap/sublime.js')
@@ -74,11 +74,12 @@
         'Enter': 'emmetInsertLineBreak'
       },
       viewportMargin: Infinity,
-      emmet: {
-        previewOpenTag: false
-      },
-      highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
-      matchBrackets: true
+      ... typeof mode === 'string' && mode.includes('css') ? {} : {
+        emmet: {
+          previewOpenTag: false
+        },
+      }, // don't run emmet on CSS (because it shows that ugly box)
+      autoCloseTags: true
     });
     setTimeout(() => {Editor.refresh()}, 500) // needs this for some reason
 
@@ -128,9 +129,6 @@
 </div>
 
 <style global>
-
-  /* Match highlithgt */
-  .cm-matchhighlight {@apply bg-red-900;}
 
   /* BASICS */
 
