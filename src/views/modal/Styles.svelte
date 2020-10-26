@@ -172,7 +172,7 @@
         {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
           <CodeMirror 
             autofocus
-            prefix="export default "
+            prefix="module.exports = "
             bind:value={$pageStyles.tailwind} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
@@ -194,7 +194,7 @@
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
           <CodeMirror 
             autofocus
-            prefix="export default "
+            prefix="module.exports = "
             bind:value={$siteStyles.tailwind} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true

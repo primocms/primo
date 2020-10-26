@@ -32,6 +32,7 @@
     "@primo-app/field-types": "^1.0.3",
     "@tailwindcss/ui": "^0.5.0",
     "firebase": "^7.19.1",
-    "primo-app": "^1.0.96"
+    "primo-app": "^1.0.96",
+    "promise-worker": "^2.0.1"
   }
 }
