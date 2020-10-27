@@ -90,19 +90,21 @@
     saveRawValue("html", html);
     const allFields = await getAllFields(localComponent);
     const data = await convertFieldsToData(allFields, "all");
-    finalHTML = await processors.html(rawHTML, data)
-    quickDebounce([
-      () => {
-        loading = false;
-      },
-    ]);
+    const res = await processors.html(rawHTML, data)
+    if (res.error) {
+      disableSave = true
+      res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
+    } else {
+      disableSave = false
+      finalHTML = res
+    }
     saveFinalValue("html", finalHTML);
   }
 
   let rawCSS: string = localComponent.value.raw.css;
   let finalCSS: string = localComponent.value.final.css;
   // $: compileCss(rawCSS)
-  $: slowDebounce([compileCss, rawCSS]);
+  $: quickDebounce([compileCss, rawCSS]);
   $: ((css) => {
     loading = true;
   })(rawCSS);
@@ -115,7 +117,12 @@
       tailwind: $siteStyles.tailwind
     })
 
-    if (result) {
+    if (result.error) {
+      disableSave = true
+      finalHTML = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${result.error}</pre>`
+    } else if (result) {
+      disableSave = false
+      finalHTML = localComponent.value.final.html
       finalCSS = result;
       saveFinalValue("css", finalCSS);
     }
@@ -295,6 +302,7 @@
 
   let disabled:boolean = false
   $: disabled = !!localComponent.symbolID;
+  let disableSave = false
 
   function getFieldComponent(field) {
     const fieldType = _.find(allFieldTypes, ['id', field.type])
@@ -309,7 +317,11 @@
 
 <ModalHeader
   {...header}
-  button={{ ...header.button, onclick: () => header.button.onclick(localComponent) }}>
+  button={{ 
+    ...header.button, 
+    onclick: () => header.button.onclick(localComponent) ,
+    disabled: disableSave
+  }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone"></i>

@@ -13,10 +13,6 @@ export async function html(code, data) {
     data
   })
 
-  if (res.error) {
-    res = `<pre class="flex justify-start p-8 items-center bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
-  }
-
   return res
 }
 
