@@ -155,11 +155,11 @@
     [
       {
         id: 'single-use-component',
-        title: 'Single-use Component',
+        title: 'Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
           header: {
-            title: 'Create Single-Use Component',
+            title: 'Create Component',
             icon: 'fas fa-code',
             button: {
               icon: 'fas fa-plus',
