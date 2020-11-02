@@ -20,7 +20,7 @@
   } from "../../../utils";
 
   import { styles as siteStyles, fields as siteFields } from "../../../stores/data/draft";
-  import {fields as pageFields, dependencies as pageDependencies} from "../../../stores/app/activePage"
+  import {fields as pageFields, styles as pageStyles, dependencies as pageDependencies} from "../../../stores/app/activePage"
   import {content} from "../../../stores/app/activePage"
   // import {symbols} from "../../../stores/data/draft";
   import { switchEnabled } from "../../../stores/app";
@@ -78,19 +78,17 @@
     ...$fieldTypes
   ]
 
-  let loading: boolean = false;
+  let loading:boolean = false;
 
-  let fields: Fields = localComponent.value.raw.fields;
+  let fields:Fields = localComponent.value.raw.fields;
 
-  let rawHTML: string = localComponent.value.raw.html;
-  let finalHTML: string = localComponent.value.final.html;
+  let rawHTML:string = localComponent.value.raw.html;
+  let finalHTML:string = localComponent.value.final.html;
   $: compileHtml(rawHTML);
   async function compileHtml(html: string): Promise<void> {
     loading = true;
     saveRawValue("html", html);
-    const allFields = await getAllFields(localComponent);
-    const data = await convertFieldsToData(allFields, "all");
-    const res = await processors.html(rawHTML, data)
+    const res = await processors.html(rawHTML, componentData)
     if (res.error) {
       disableSave = true
       res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
@@ -99,10 +97,13 @@
       finalHTML = res
     }
     saveFinalValue("html", finalHTML);
+    if(finalJS) {
+      finalJS = `${finalJS} // ${getUniqueId()}` // force preview to reload so JS evaluates over new DOM
+    }
   }
 
-  let rawCSS: string = localComponent.value.raw.css;
-  let finalCSS: string = localComponent.value.final.css;
+  let rawCSS:string = localComponent.value.raw.css;
+  let finalCSS:string = localComponent.value.final.css;
   // $: compileCss(rawCSS)
   $: quickDebounce([compileCss, rawCSS]);
   $: ((css) => {
@@ -111,8 +112,9 @@
   async function compileCss(css: string): Promise<void> {
     saveRawValue("css", css);
     loading = true;
-    const encapsulatedCss: string = `#component-${localComponent.id} {${css}}`;
-    const result: string = await processors.css(encapsulatedCss, {
+    const encapsulatedCss:string = `#component-${localComponent.id} {${css}}`;
+    const withParentStyles:string = $siteStyles.raw + $pageStyles.raw + encapsulatedCss
+    const result:string = await processors.css(encapsulatedCss, {
       html: localComponent.value.final.html,
       tailwind: $siteStyles.tailwind
     })
@@ -133,19 +135,36 @@
   let finalJS: string = localComponent.value.final.js;
   $: compileJs(rawJS);
   async function compileJs(js: string): Promise<void> {
-    // turn `import _ from 'lodash'` into `import _ from 'https://cdn.skypack.dev/lodash';
-    finalJS = js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`);
+    finalJS = js ? `
+      const primo = {
+        id: '${localComponent.id}',
+        data: ${JSON.stringify(getData(fields))},
+        fields: ${JSON.stringify(getAllFields(fields))}
+      }
+      // turn [import _ from 'lodash'] into [import _ from 'https://cdn.skypack.dev/lodash'];
+      ${js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)} 
+    `: ``;
     saveRawValue("js", js);
     saveFinalValue("js", finalJS);
   }
 
-  async function updateHtmlWithFieldData(typeToUpdate: string): Promise<void> {
+  let componentData = getData(fields)
+  $: componentData = getData(fields)
+  function getData(fields) {
+    const allFields: Fields = getAllFields(fields);
+    const data = convertFieldsToData(allFields);
+    return {
+      ...data,
+      id: component.id
+    }
+  }
+
+  async function updateHtmlWithFieldData(): Promise<void> {
     loading = true;
-    const allFields: Fields = getAllFields(localComponent);
-    let data = await convertFieldsToData(allFields, typeToUpdate);
-    finalHTML = await processors.html(rawHTML, data);
+    finalHTML = await processors.html(rawHTML, getData(fields));
     saveFinalValue("html", finalHTML);
     refreshFields();
+    if (rawJS) compileJs(rawJS) // re-run js with new field values
     quickDebounce([
       () => {
         loading = false;
@@ -233,7 +252,7 @@
             ]
           : field.fields,
     }));
-    updateHtmlWithFieldData("static");
+    updateHtmlWithFieldData();
     saveRawValue("fields", fields);
   }
 
@@ -248,18 +267,18 @@
             ),
           }
     );
-    updateHtmlWithFieldData("static");
+    updateHtmlWithFieldData();
     saveRawValue("fields", fields);
   }
 
   function deleteField(id: string): void {
     fields = fields.filter((field) => field.id !== id);
-    updateHtmlWithFieldData("static");
+    updateHtmlWithFieldData();
     saveRawValue("fields", fields);
   }
 
-  function refreshFields(): void {
-    fields = fields.filter((f) => true);
+  function refreshFields(): void { // necessary to re-render field values in preview (since we're mutating `field`)
+    fields = fields.filter(Boolean);
     saveRawValue("fields", fields);
   }
 
@@ -272,7 +291,7 @@
           }
         : f
     );
-    updateHtmlWithFieldData("static");
+    updateHtmlWithFieldData();
   }
 
   function getFakeValue(type) {
@@ -280,7 +299,10 @@
       {
         text: '',
         content: '',
-        image: 'https://source.unsplash.com/900x600',
+        image: {
+          url: 'https://source.unsplash.com/900x600',
+          alt: ''
+        },
       }[type] || ""
     );
   }
@@ -386,7 +408,7 @@
                     bind:value={field.key}
                     slot="key"
                     {disabled}
-                    on:input={() => updateHtmlWithFieldData('static')} />
+                    on:input={updateHtmlWithFieldData} />
                 </EditField>
                 {#if field.type === 'group'}
                   {#if field.fields}
@@ -480,7 +502,7 @@
                 <svelte:component
                   this={getFieldComponent(field)}
                   {field}
-                  on:input={() => updateHtmlWithFieldData('static')} />
+                  on:input={updateHtmlWithFieldData} />
               </div>
             {:else if getFieldComponent(field)}
               <span>This field needs a label and key in order to be valid</span>
