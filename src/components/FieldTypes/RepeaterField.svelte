@@ -31,8 +31,10 @@
     const withoutItem = fieldValues.filter((_, i) => i !== indexOfItem)
     if (direction === 'up') {
       fieldValues = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
-    } else {
+    } else if (direction === 'down') {
       fieldValues = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
+    } else {
+      console.error('Direction must be up or down')
     }
   }
 

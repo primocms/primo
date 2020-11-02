@@ -42,7 +42,7 @@ export async function updateInstances(symbol) {
                       mergedFields[newFieldIndex]['value'] = field.value
                     })
 
-                    const allFields = getAllFields(row)
+                    const allFields = getAllFields(row.value.raw.fields)
                     const data = await convertFieldsToData(allFields, 'all')
 
                     const symbolRawHTML = symbol.value.raw.html

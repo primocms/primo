@@ -10,6 +10,7 @@
   import ModalHeader from './ModalHeader.svelte'
 
   import modal from '../../stores/app/modal'
+  import {getAllFields} from '../../stores/helpers'
   import {wrapper as pageHTML} from '../../stores/app/activePage'
   // import pageHTML from '../../stores/data/page/wrapper'
   // import siteHTML from '../../stores/data/site/wrapper'
@@ -41,11 +42,6 @@
     const data = await convertFieldsToData(allFields, 'all')
     const finalHTML = await parseHandlebars(rawHTML, data)
     return finalHTML
-
-    function getAllFields() {
-      const allFields = _.unionBy($pageFields, $siteFields, "key");
-      return allFields
-    }
   }
 
   async function saveFinalHTML() {

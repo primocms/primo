@@ -4,11 +4,7 @@ import { fields as siteFields } from './data/draft'
 import { fields as pageFields } from './app/activePage'
 import {symbols} from './data/draft'
 
-export function getAllFields(component = null) {
-  let componentFields = []
-  if (component) {
-    componentFields = component.value.raw.fields;
-  }
+export function getAllFields(componentFields = []) {
   const allFields = _.unionBy(componentFields, get(pageFields), get(siteFields), "key");
   return allFields
 }

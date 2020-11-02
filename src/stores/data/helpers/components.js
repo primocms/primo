@@ -21,7 +21,7 @@ export async function hydrateAllComponents(content) {
 
 export async function hydrateComponent(component) {
   const {value} = component
-  const fields = getAllFields(component)
+  const fields = getAllFields(component.value.raw.fields)
   const data = await convertFieldsToData(fields, 'all')
   const finalHTML = await parseHandlebars(value.raw.html, data)
   component.value.final.html = finalHTML
@@ -125,7 +125,7 @@ export async function updateInstancesInContent(symbol, content) {
                 mergedFields[newFieldIndex]['value'] = field.value
               })
 
-              const allFields = getAllFields(row)
+              const allFields = getAllFields(row.value.raw.fields)
               const data = await convertFieldsToData(allFields, 'all')
 
               const symbolRawHTML = symbol.value.raw.html

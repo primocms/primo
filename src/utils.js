@@ -26,7 +26,7 @@ export async function parseHandlebars(code, data) {
   return res
 }
 
-export async function convertFieldsToData(fields) {
+export function convertFieldsToData(fields) {
   let literalValueFields = fields
     .map((f) => ({
       key: f.key,
@@ -152,7 +152,7 @@ export async function hydrateAllComponents(content) {
 
 export async function hydrateComponent(component) {
   const { value } = component;
-  const fields = getAllFields(component);
+  const fields = getAllFields(component.value.raw.fields);
   const data = await convertFieldsToData(fields, "all");
   const finalHTML = await parseHandlebars(value.raw.html, data);
   component.value.final.html = finalHTML;
