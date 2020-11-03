@@ -1,3 +1,8 @@
+<script context="module">
+  import {writable} from 'svelte/store'
+  const preview = writable({})
+</script>
+
 <script>
   import {IconButton} from '../../../components/buttons'
   import {fade} from 'svelte/transition'
@@ -31,31 +36,44 @@
 
   let iframe
   let iframeHeight = symbol.height || 250
+  $: containerHeight = iframeHeight / 3
 
   onMount(() => {
     iframe.onload = () => {
       iframeHeight = iframe.contentWindow.document.body.scrollHeight
       // saveComponentHeight(iframeHeight)
     }
+    const parentStyles = $tailwind + $siteStyles.final + $pageStyles.final
+    const previewCode = createSymbolPreview({
+      id: symbol.id,
+      html: symbol.value.final.html,
+      wrapper: $wrapper,
+      js: symbol.value.final.js,
+      css: parentStyles + symbol.value.final.css
+    });
+    preview.update(p => ({
+      ...p,
+      [symbol.id]: previewCode
+    }))
+
   })
-
-  const parentStyles = $tailwind + $siteStyles.final + $pageStyles.final
-  // const previewCode = createSymbolPreview(symbol, parentStyles) 
-  const previewCode = createSymbolPreview({
-    id: symbol.id,
-    html: symbol.value.final.html,
-    wrapper: $wrapper,
-    js: symbol.value.final.js,
-    css: parentStyles + symbol.value.final.css
-  });
-
-  console.log($wrapper)
 
   let iframeLoaded = false
 
+  let scale
+  let iframeContainer
+  function resizePreview() {
+    const { clientWidth: parentWidth } = iframeContainer;
+    const { clientWidth: childWidth } = iframe;
+    scale = parentWidth / childWidth;
+  }
+
+  onMount(resizePreview)
+
 </script>
 
-<article class="message component-wrapper mt-2" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
+<svelte:window on:resize={resizePreview} />
+<div class="component-wrapper" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
   <form on:submit|preventDefault={changeTitle}>
     <input type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
   </form>
@@ -65,34 +83,40 @@
       <span>{title}</span>
     </p>
     <div class="buttons">
-      <IconButton label="Delete" icon="trash" on:click={() => dispatch('delete')} />  
-      <IconButton label="Edit" icon="edit" on:click={() => dispatch('edit')} />  
-      <IconButton label="Add" variants="is-main" icon="plus-circle" on:click={() => dispatch('select')} />  
+      <IconButton label="Delete" variants="text-xs" icon="trash" on:click={() => dispatch('delete')} />  
+      <IconButton label="Edit" variants="text-xs" icon="edit" on:click={() => dispatch('edit')} />  
+      <IconButton label="Add" variants="is-main text-xs" icon="plus-circle" on:click={() => dispatch('select')} />  
     </div>
   </div>
-  <div class="message-body">
-    <iframe on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} class="w-full shadow-lg" style="height:{iframeHeight}px" bind:this={iframe} title="component preview" srcdoc={previewCode}></iframe>
+  <div bind:this={iframeContainer}>
+    <iframe on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} style="transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={$preview[symbol.id]}></iframe>
   </div>
-</article>
+</div>
 
 <style> 
+  .component-wrapper {
+    @apply relative shadow;
+    height: 30vh;
+    overflow: hidden;
+  }
   .buttons {
     @apply flex justify-end;
   }
   iframe {
     @apply w-full opacity-0 transition-opacity duration-200;
+    /* transform: scale(0.333); */
+    width: 50vw;
+    height: 100vh;
+    transform-origin: top left;
   }
   .fadein {
     @apply opacity-100;
   }
-  .component-wrapper {
-    @apply relative shadow-xl mb-8;
-  }
   .message-header {
-    @apply flex justify-between items-center bg-gray-100 p-2;
+    @apply flex justify-between items-center bg-gray-100 p-1;
   }
   .component-label {
-    @apply flex items-center flex-1 font-bold text-gray-800 pl-2;
+    @apply flex items-center flex-1 text-sm font-semibold text-gray-800 pl-2;
     min-width: 3rem;
     height: 1.5rem;
   }

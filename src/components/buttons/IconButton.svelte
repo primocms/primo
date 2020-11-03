@@ -70,21 +70,21 @@
     @apply ml-1;
   }
   .button {
-    @apply bg-codeblack px-2 py-1 mr-1 text-gray-100 text-sm rounded transition-colors duration-100;
+    @apply bg-gray-100 px-2 py-1 mr-1 text-gray-600 text-sm rounded transition-colors duration-100;
 
     &:last-child {
       @apply mr-0;
     }
 
     &:hover {
-      @apply bg-gray-800;
+      @apply bg-gray-200;
     }
 
     &.is-main {
-      @apply bg-primored;
+      @apply bg-primored text-white;
 
       &:hover {
-        @apply bg-gray-800;
+        @apply bg-red-700;
       }
     }
   }

@@ -123,12 +123,14 @@
   </p>
 {/if}
 
-{#each $symbols as symbol (getID(symbol))}
-  <Container 
-    on:update={({detail}) => updateSymbol(symbol, detail)}
-    on:edit={() => editSymbol(symbol)}
-    on:delete={() => deleteSymbol(symbol)}
-    on:select={() => addComponentToPage(symbol)}
-    {symbol}
-  />
-{/each}
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+  {#each $symbols as symbol (getID(symbol))}
+    <Container
+      on:update={({detail}) => updateSymbol(symbol, detail)}
+      on:edit={() => editSymbol(symbol)}
+      on:delete={() => deleteSymbol(symbol)}
+      on:select={() => addComponentToPage(symbol)}
+      {symbol}
+    />
+  {/each}
+</div>
