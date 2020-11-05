@@ -335,6 +335,21 @@
     }
   }
 
+
+  function moveEditField({ i:indexOfItem, direction }) {
+    const item = fields[indexOfItem]
+    const withoutItem = fields.filter((_, i) => i !== indexOfItem)
+    if (direction === 'up') {
+      fields = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
+    } else if (direction === 'down') {
+      fields = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
+    } else {
+      console.error('Direction must be up or down')
+    }
+  }
+
+  $: console.log(fields)
+
 </script>
 
 <ModalHeader
@@ -381,9 +396,15 @@
             on:save={() => header.button.onclick(localComponent)} />
         {:else if activeTab === tabs[1]}
           <div class="flex flex-col">
-            {#each fields as field, i}
+            {#each fields as field, i (field.id)}
               <Card id="field-{i}" variants="field-item">
-                <EditField on:delete={() => deleteField(field.id)} {disabled}>
+                <EditField 
+                  on:delete={() => deleteField(field.id)} 
+                  isFirst={i === 0}
+                  isLast={i === (fields.length-1)}
+                  {disabled} 
+                  on:move={({ detail:direction }) => moveEditField({ i, direction })}
+                >
                   <select
                     bind:value={field.type}
                     slot="type"

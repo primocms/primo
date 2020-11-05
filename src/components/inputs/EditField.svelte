@@ -7,8 +7,14 @@
 
   export let variants:string = 'text-sm'
   export let disabled:boolean = false
+  export let isFirst:boolean = false
+  export let isLast:boolean = false
 
   const dispatch = createEventDispatcher();
+
+  function moveItem(direction) {
+    dispatch('move', direction)
+  }
 
 </script>
 
@@ -29,14 +35,25 @@
       <slot name="key"></slot>
     </label>
   </div>
-  <button on:click={() => dispatch('delete')} {disabled} class="px-4 py-2 text-red-500 transition-colors duration-100 hover:bg-gray-200 focus:bg-gray-100 rounded-sm" title="delete field">
-    <i class="fas fa-trash"></i>
-  </button>
+  <div class="py-1 px-2 text-gray-600 bg-gray-100 z-10 rounded flex items-center justify-end">
+    <button class="mr-1" disabled={isFirst} title="Move up" on:click={() => moveItem('up')}>
+      <i class="fas fa-arrow-up"></i>
+    </button>
+    <button class="mr-2" disabled={isLast} title="Move down" on:click={() => moveItem('down')}>
+      <i class="fas fa-arrow-down"></i>
+    </button>
+    <button on:click={() => dispatch('delete')} {disabled} class="text-red-500 transition-colors duration-100 hover:bg-gray-200 focus:bg-gray-100 rounded-sm" title="delete field">
+      <i class="fas fa-trash"></i>
+    </button>
+  </div>
 </div>
 
 <style>
   .field-container {
     @apply grid p-2 gap-8;
-    grid-template-columns: auto 1fr 1fr auto;
+    grid-template-columns: auto 1fr 1fr 1fr;
+  }
+  button[disabled] {
+    @apply text-gray-300 cursor-default;
   }
 </style>
