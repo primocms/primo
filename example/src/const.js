@@ -13,7 +13,7 @@ export const tailwindConfig = `{\n
 // TODO: Make these defaut site styles instead
 export const pageStyles = `\
 /* Default content styles */
-.primo-content {
+.primo-copy {
   @apply text-lg;
   h1 {
     @apply text-3xl font-medium;

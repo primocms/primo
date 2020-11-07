@@ -15,7 +15,7 @@
           {#if row.type === 'component'}
             <ComponentNode {row} />
           {:else}
-            <div class="primo-content">
+            <div class="primo-copy">
               {@html row.value.html}
             </div>
           {/if}

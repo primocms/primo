@@ -3,7 +3,8 @@ import ShortUniqueId from 'short-unique-id';
 export const tailwindConfig = `{
   theme: {
     container: {
-      center: true
+      center: true,
+      padding: '2rem'
     }
   },
   variants: {}
@@ -13,7 +14,7 @@ export const tailwindConfig = `{
 export const defaultStyles = {
   raw: `\
 /* Default content styles */\n
-.primo-content {
+.primo-copy {
   @apply text-lg text-gray-700;
   h1 {
     @apply text-3xl font-medium;
@@ -55,54 +56,54 @@ export const defaultStyles = {
   final: `\
 /* Default content styles */
 
-.primo-content {
+.primo-copy {
   font-size: 1.125rem;
   --text-opacity: 1;
   color: #374151;
   color: rgba(55, 65, 81, var(--text-opacity));
 }
 
-.primo-content h1 {
+.primo-copy h1 {
     font-size: 1.875rem;
     font-weight: 500;
   }
 
-.primo-content h2 {
+.primo-copy h2 {
     font-size: 1.5rem;
     font-weight: 500;
   }
 
-.primo-content ol {
+.primo-copy ol {
     list-style-type: decimal;
   }
 
-.primo-content ul {
+.primo-copy ul {
     list-style-type: disc;
     list-style-position: inside;
   }
 
-.primo-content ul p {
+.primo-copy ul p {
       display: inline;
     }
 
-.primo-content ol {
+.primo-copy ol {
     list-style-type: decimal;
     list-style-position: inside;
   }
 
-.primo-content a {
+.primo-copy a {
     --text-opacity: 1;
     color: #1c64f2;
     color: rgba(28, 100, 242, var(--text-opacity));
     text-decoration: underline;
   }
 
-.primo-content blockquote {
+.primo-copy blockquote {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 1.5rem;
   }
 
-.primo-content mark {
+.primo-copy mark {
     --text-opacity: 1;
     color: #161e2e;
     color: rgba(22, 30, 46, var(--text-opacity));
@@ -112,11 +113,11 @@ export const defaultStyles = {
   }
 
 @media (min-width: 1024px) {
-  .primo-content h1 {
+  .primo-copy h1 {
     font-size: 3rem;
   }
 
-  .primo-content h2 {
+  .primo-copy h2 {
     font-size: 2.25rem;
   }
 }

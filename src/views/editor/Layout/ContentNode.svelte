@@ -39,14 +39,14 @@
 
 </script>
 
-<div class="primo-content mousetrap" bind:this={editor} id="content-{row.id}"></div>
+<div class="primo-copy mousetrap" bind:this={editor} id="content-{row.id}"></div>
 
 <style global>
-  .primo-content {
+  .primo-copy {
     outline: none;
     caret-color: rgb(248,68,73);
   }
-  .primo-content li p {
+  .primo-copy li p {
     display: inline-block;
   }
   .ProseMirror {
