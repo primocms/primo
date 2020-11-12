@@ -51,7 +51,7 @@
 <style>
   .field-container {
     @apply grid p-2 gap-8;
-    grid-template-columns: auto 1fr 1fr 1fr;
+    grid-template-columns: auto 1fr 1fr auto;
   }
   button[disabled] {
     @apply text-gray-300 cursor-default;

@@ -6,6 +6,7 @@ import {id,content} from './app/activePage'
 import {focusedNode} from './app/editor'
 import {pages, dependencies, styles, wrapper, fields} from './data/draft'
 import * as stores from './data/draft'
+import {processors} from '../component'
 
 export async function hydrateSite(data) {
   pages.set(data.pages)
@@ -46,10 +47,20 @@ export async function updateInstances(symbol) {
                     const data = await convertFieldsToData(allFields, 'all')
 
                     const symbolRawHTML = symbol.value.raw.html
-                    const instanceFinalHTML = await parseHandlebars(symbolRawHTML, data)
+                    const instanceFinalHTML = await processors.html(symbolRawHTML, { ...data, id: row.id })  // add instance ID 
 
                     const symbolFinalCSS = symbol.value.final.css
-                    const instanceFinalCSS = symbolFinalCSS.replace(RegExp(`${symbol.id}`, 'g'),`${row.id}`)
+                    const instanceFinalCSS = symbolFinalCSS.replace(RegExp(symbol.id, 'g'),row.id)
+
+                    const jsWithSkypack = symbol.value.raw.js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)
+                    const jsWithNewID = jsWithSkypack.replace(RegExp(symbol.id, 'g'),row.id)
+                    const instanceFinalJS = `\
+                      const primo = {
+                        id: '${row.id}',
+                        data: ${JSON.stringify(data)},
+                        fields: ${JSON.stringify(allFields)}
+                      }
+                    ${jsWithNewID}`
 
                     const updatedComponent = {
                       ...row,
@@ -66,7 +77,7 @@ export async function updateInstances(symbol) {
                           ...symbol.value.final,
                           css: instanceFinalCSS,
                           html: instanceFinalHTML,
-                          js: symbol.value.final.js
+                          js: instanceFinalJS
                         }
                       }
                     }

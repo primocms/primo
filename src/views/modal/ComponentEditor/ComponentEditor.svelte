@@ -348,8 +348,6 @@
     }
   }
 
-  $: console.log(fields)
-
 </script>
 
 <ModalHeader
