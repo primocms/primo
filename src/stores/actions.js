@@ -122,7 +122,7 @@ export function insertSection(section, position) {
     })),
   });
   if (!focusedSection) {  // no section is focused
-    content.set([...content, newSection]); // add it to the end
+    content.set([...get(content), newSection]); // add it to the end
   } else {
     const indexOfFocusedSection = _.findIndex(get(content), [
       "id",
