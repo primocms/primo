@@ -114,7 +114,7 @@
 
 <style>
   iframe {
-    @apply opacity-0 w-full transition-opacity duration-100;
+    @apply opacity-0 w-full transition-opacity duration-100 border-0;
   }
   iframe.scaled {
     width: 100vw;

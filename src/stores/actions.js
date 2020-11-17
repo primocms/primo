@@ -111,31 +111,28 @@ export async function hydrateComponents() {
   pages.set(updatedPages)
 }
 
-export function insertSection(section, position) {
-  const focusedSection = get(focusedNode).path.section;
+export function insertSection(section) {
+  const { id, position, selection, path } = get(focusedNode)
+  const focusedSection = path.section
   const newSection = createSection({
     width: section.fullwidth ? "fullwidth" : "contained",
     columns: section.columns.map((c) => ({
       id: getUniqueId(),
       size: c,
-      rows: [createContentRow()],
+      rows: [createContentRow()]
     })),
   });
   if (!focusedSection) {  // no section is focused
     content.set([...get(content), newSection]); // add it to the end
   } else {
-    const indexOfFocusedSection = _.findIndex(get(content), [
-      "id",
-      focusedSection.id,
-    ]);
     let contentWithNewSection 
-    if (indexOfFocusedSection === 0) {
-      contentWithNewSection = [
-        newSection,
+    if (position === 0 && selection === 1) { // the first row in a section and first selection is focused
+      contentWithNewSection = [ // add it to the top
+        newSection, 
         ...get(content)
       ];
     } else {
-      contentWithNewSection = [
+      contentWithNewSection = [ // add it to the bottom
         ...get(content),
         newSection
       ];
