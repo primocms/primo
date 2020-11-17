@@ -13,7 +13,8 @@ const initialState = {
   },
   variants: '',
   disableClose: false,
-  showSwitch: false
+  showSwitch: false,
+  noPadding: false
 }
 
 const modalTypes = {

@@ -32,7 +32,7 @@
   <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
     <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
     <div class="modal-card {variants}">
-      <div class="modal-card-body">
+      <div class="modal-card-body" class:p-3={!$modal.noPadding}>
         <slot></slot>
       </div>
     </div>
@@ -70,7 +70,7 @@
   }
 
   .modal-card-body {
-    @apply bg-white flex-1 p-3 flex flex-col;
+    @apply bg-white flex-1 flex flex-col;
   }
 
   .modal-card-foot {
@@ -82,8 +82,8 @@
   }
 
   .fullscreen {
-    width: calc(100vw - 1.5rem) !important;
-    height: calc(100vh - 1.5rem) !important;
+    width: calc(100vw - 3rem) !important;
+    height: calc(100vh - 3rem) !important;
     position: absolute !important;
     left: 1.5rem !important;
     right: 1.5rem !important;
