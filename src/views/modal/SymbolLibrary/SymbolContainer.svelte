@@ -83,6 +83,7 @@
       <span>{title}</span>
     </p>
     <div class="buttons">
+      <IconButton variants="text-xs" icon="copy" on:click={() => dispatch('copy')} />  
       <IconButton label="Delete" variants="text-xs" icon="trash" on:click={() => dispatch('delete')} />  
       <IconButton label="Edit" variants="text-xs" icon="edit" on:click={() => dispatch('edit')} />  
       <IconButton label="Add" variants="is-main text-xs" icon="plus-circle" on:click={() => dispatch('select')} />  

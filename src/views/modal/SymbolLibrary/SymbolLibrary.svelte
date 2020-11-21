@@ -100,6 +100,37 @@
     }
   }
 
+  async function copySymbol(symbol) {
+    if (!navigator.clipboard) {
+      alert('Unable to copy Symbol because your browser does not support copying');
+      return
+    }
+
+    const currentlyCopied = await navigator.clipboard.readText()
+    let symbolsToCopy = [] 
+
+    try {
+      const copiedSymbols = JSON.parse(currentlyCopied)
+      if (Array.isArray(copiedSymbols) && copiedSymbols[0] && copiedSymbols[0]['type']) { // make sure it's a symbol list
+        symbolsToCopy = [ ...copiedSymbols, symbol ]
+      } else throw Error
+    } catch(e) {
+      symbolsToCopy = [ symbol ]
+    }
+
+    const jsonSymbols = JSON.stringify(symbolsToCopy)
+    await navigator.clipboard.writeText(jsonSymbols)
+
+  };
+
+  async function pasteSymbol() {
+    const json = await navigator.clipboard.readText()
+    const symbols = JSON.parse(json)
+    symbols.forEach(symbol => {
+      placeSymbol(symbol)
+    })
+  }
+
 </script>
 
 <ModalHeader 
@@ -109,10 +140,16 @@
 />
 
 {#if $switchEnabled}
-  <PrimaryButton on:click={addSymbol} variants="mb-4">
-    <i class="fas fa-plus mr-1"></i>
-    <span>Create New Symbol</span>
-  </PrimaryButton>
+  <div class="buttons grid gap-2">
+    <PrimaryButton on:click={addSymbol} variants="mb-4">
+      <i class="fas fa-plus mr-1"></i>
+      <span>Create New Symbol</span>
+    </PrimaryButton>
+    <PrimaryButton on:click={pasteSymbol} variants="mb-4">
+      <i class="fas fa-paste mr-1"></i>
+      <span>Paste Symbols</span>
+    </PrimaryButton>
+  </div>
 {:else if $symbols.length === 0}
   <p class="p-48 text-center">
     {#if $userRole === 'developer'}
@@ -126,6 +163,7 @@
 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
   {#each $symbols as symbol (getID(symbol))}
     <Container
+      on:copy={() => copySymbol(symbol)}
       on:update={({detail}) => updateSymbol(symbol, detail)}
       on:edit={() => editSymbol(symbol)}
       on:delete={() => deleteSymbol(symbol)}
@@ -134,3 +172,10 @@
     />
   {/each}
 </div>
+
+
+<style>
+  .buttons {
+    grid-template-columns: 3fr 1fr;
+  }
+</style>
