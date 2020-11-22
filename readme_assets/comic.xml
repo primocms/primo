@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="http://cmx.io/v/0.1/cmx.css">
+<script src="http://cmx.io/v/0.1/cmx.js" charset="utf-8"></script>
+<style>.cmx-user-scene4 .cmx-text-border .cmx-path {stroke: orange}</style>
+<body>
+  <div style="max-width:900px; -webkit-transform:rotate(0deg)">
+
+    <scene id="scene1">
+      <actor t="translate(71,19) rotate(-2)" pose="-11,9|-5,117|-11,99|-11,89|-11,79|-11,59|-16,34|-21,9|-6,34|-1,9|-18,79|-18,59|-6,79|-1,59">
+        <bubble t="translate(9,11)" pose="0,0|-20,10|-81,49|-27,57|-34,110|-65,127">
+          <tspan x="0" y="-1.5em">Can you make me a</tspan>
+          <tspan x="0" y="0em">a simple website?</tspan>
+        </bubble>
+      </actor>
+      <actor t="translate(159,15)" pose="28,1|30,109|28,91|28,81|28,71|28,51|18,31|18,1|33,26|38,1|23,71|18,51|38,71|38,51">
+        <bubble t="translate(-2,-9)" pose="0,0|-14,24|-36,69|28,24|9,68|-74,94">
+          <tspan x="0" y="0em">sure, I'll just</tspan>
+          <tspan x="0" y="1em">need a few days</tspan>
+        </bubble>
+      </actor>
+    </scene>
+
+    <scene id="scene2">
+      <actor t="translate(71,19) rotate(-2)" pose="-11,9|-5,117|-11,99|-11,89|-11,79|-11,59|-16,34|-21,9|-6,34|-1,9|-18,79|-18,59|-6,79|17,82">
+        <bubble t="translate(9,11)" pose="0,0|-20,10|-81,49|-32,51|-39,111|-64,126">
+          <tspan x="0" y="-1.5em">Oh and I want to</tspan>
+          <tspan x="0" y="0em">update it on occasion</tspan>
+        </bubble>
+      </actor>
+      <actor t="translate(159,15)" pose="28,1|30,109|28,91|28,81|28,71|28,51|18,31|13,1|33,26|38,1|23,71|18,51|38,71|38,51">
+        <bubble t="translate(-2,-9)" pose="0,0|7,33|14,66|-70,38|-59,70|-125,109">
+          <tspan x="0" y="1em">I'll need three months</tspan>
+          <tspan x="0" y="2em">and some xanax</tspan>
+        </bubble>
+      </actor>
+      <label t="translate(180,0)" pose="0,-10|12,-7">
+        <tspan x="0" y="0em" fill="red">primo.af</tspan>
+      </label>
+    </scene>
+
+
+
+  </div></body>
