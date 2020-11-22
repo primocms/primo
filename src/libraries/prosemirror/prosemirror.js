@@ -121,7 +121,7 @@ class MenuView {
       e.preventDefault()
       const focusedEditor = get(focusedNode)
       const focusedEditorId = focusedEditor ? focusedEditor.id : null
-      const givenEditorId = editorView.dom.id.replace('editor-','')
+      const givenEditorId = editorView.dom.id.replace('copy-','')
       const givenEditorFocused = focusedEditorId === givenEditorId
     
       if (givenEditorFocused) editorView.focus()
