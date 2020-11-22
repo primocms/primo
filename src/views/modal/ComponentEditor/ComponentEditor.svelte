@@ -516,7 +516,7 @@
       {:else}
         <div class="pt-8">
           {#each fields as field}
-            {#if field.label && field.key && getFieldComponent(field)}
+            {#if field.key && getFieldComponent(field)}
               <div class="field-item mb-2 shadow" id="field-{field.key}">
                 <svelte:component
                   this={getFieldComponent(field)}
@@ -524,7 +524,7 @@
                   on:input={updateHtmlWithFieldData} />
               </div>
             {:else if getFieldComponent(field)}
-              <span>This field needs a label and key in order to be valid</span>
+              <span>This field needs a key in order to be valid</span>
             {/if}
           {:else}
             <p
