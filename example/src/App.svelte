@@ -2,12 +2,11 @@
 	import axios from 'axios/dist/axios'
 	import _ from 'lodash'
 	import Primo, {modal, createSite, fieldTypes,registerProcessors} from '../../index'
-	import PrimoFields from '@primo-app/field-types'
+	import PrimoFields from '../../src/field-types'
 	import Build from './extensions/Build.svelte'
 	import {html,css} from './extensions/processors'
 
   import { domainInfo } from './stores'
-
 
 	registerProcessors({
 		html: async (raw, fields) => await html(raw, fields),

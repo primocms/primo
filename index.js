@@ -11,6 +11,7 @@ import fieldTypes from './src/stores/app/fieldTypes'
 import modal from './src/stores/app/modal'
 import {registerProcessors} from './src/component'
 import { DEFAULTS, createPage, createSite } from './src/const'
+import PrimoFieldTypes from './src/field-types'
 
 import * as utils from './src/utils'
 import * as components from './src/components'
@@ -31,6 +32,7 @@ export {
   createPage,
   createSite,
   fieldTypes,
+  PrimoFieldTypes,
   dropdown,
   stores,
   registerProcessors
