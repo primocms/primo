@@ -12,8 +12,10 @@
 
   // import site from '../../stores/data/site'
   import {focusedNode,switchEnabled} from '../../stores/app'
+  import {undone} from '../../stores/data/draft'
   import {saving,unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
+  import {undoSiteChange,redoSiteChange} from '../../stores/actions'
 
   import {id, content} from '../../stores/app/activePage'
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
@@ -334,6 +336,10 @@
 </script>
 
 <Toolbar on:signOut buttons={toolbarButtons} let:showKeyHint={showKeyHint} on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
+  <ToolbarButton id="undo" title="Undo" icon="undo-alt" on:click={undoSiteChange} buttonStyles="mr-1 bg-gray-600" />
+  {#if $undone.length > 0}
+    <ToolbarButton id="redo" title="Redo" icon="redo-alt" on:click={redoSiteChange} buttonStyles="mr-1 bg-gray-600" />
+  {/if}
   <ToolbarButton id="save" title="Save" icon="save" key="s" {showKeyHint} loading={$saving} on:click={savePage} disabled={!$unsaved} variant="outlined" buttonStyles="mr-1 bg-gray-600" />
   {#if $switchEnabled}
     <ToolbarButton type="primo" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />

@@ -6,6 +6,7 @@ import {id,content} from './app/activePage'
 import {focusedNode} from './app/editor'
 import {pages, dependencies, styles, wrapper, fields} from './data/draft'
 import * as stores from './data/draft'
+import {timeline,undone} from './data/draft'
 import {processors} from '../component'
 
 export async function hydrateSite(data) {
@@ -165,6 +166,28 @@ export function insertSection(section) {
     };
   }
 
+}
+
+export function undoSiteChange() {
+  const state = get(timeline)
+
+  // Set timeline back
+  const timelineWithoutLastChange = state.slice(0, state.length - 1)
+  timeline.set(timelineWithoutLastChange)
+
+  // Save removed states
+  undone.update(u => ([ ...state.slice(state.length - 1), ...u ]))
+
+  // Set Site
+  const siteWithoutLastChange = _.last(timelineWithoutLastChange)
+
+  hydrateSite(siteWithoutLastChange)
+}
+
+export function redoSiteChange() {
+  const restoredState = [ ...get(timeline), ...get(undone) ]
+  timeline.set(restoredState)
+  hydrateSite(restoredState[restoredState.length-1])
 }
 
 // experimenting with exporting objects to make things cleaner
