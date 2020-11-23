@@ -112,7 +112,7 @@
     const symbolsToCopy = [ ...copiedSymbols, symbol ]
 
     const jsonSymbols = JSON.stringify(symbolsToCopy)
-    const compressedSymbols = LZ.compressToUTF16(jsonSymbols)
+    const compressedSymbols = LZ.compressToBase64(jsonSymbols)
     await navigator.clipboard.writeText(compressedSymbols)
   };
 
@@ -126,7 +126,7 @@
 
   function parseCopiedSymbols(compressedSymbols) {
     try {
-      const json = LZ.decompressFromUTF16(compressedSymbols)
+      const json = LZ.decompressFromBase64(compressedSymbols)
       const symbols = JSON.parse(json)
       if (Array.isArray(symbols)) {
         return symbols
