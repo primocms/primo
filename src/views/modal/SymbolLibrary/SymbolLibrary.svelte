@@ -100,6 +100,7 @@
     }
   }
 
+  let LZ
   async function copySymbol(symbol) {
     if (!navigator.clipboard) {
       alert('Unable to copy Symbol because your browser does not support copying');
@@ -107,29 +108,42 @@
     }
 
     const currentlyCopied = await navigator.clipboard.readText()
-    let symbolsToCopy = [] 
-
-    try {
-      const copiedSymbols = JSON.parse(currentlyCopied)
-      if (Array.isArray(copiedSymbols) && copiedSymbols[0] && copiedSymbols[0]['type']) { // make sure it's a symbol list
-        symbolsToCopy = [ ...copiedSymbols, symbol ]
-      } else throw Error
-    } catch(e) {
-      symbolsToCopy = [ symbol ]
-    }
+    const copiedSymbols = parseCopiedSymbols(currentlyCopied)
+    const symbolsToCopy = [ ...copiedSymbols, symbol ]
 
     const jsonSymbols = JSON.stringify(symbolsToCopy)
-    await navigator.clipboard.writeText(jsonSymbols)
-
+    const compressedSymbols = LZ.compressToUTF16(jsonSymbols)
+    await navigator.clipboard.writeText(compressedSymbols)
   };
 
   async function pasteSymbol() {
-    const json = await navigator.clipboard.readText()
-    const symbols = JSON.parse(json)
+    const compressedSymbols = await navigator.clipboard.readText()
+    const symbols = parseCopiedSymbols(compressedSymbols)
     symbols.forEach(symbol => {
       placeSymbol(symbol)
     })
   }
+
+  function parseCopiedSymbols(compressedSymbols) {
+    try {
+      const json = LZ.decompressFromUTF16(compressedSymbols)
+      const symbols = JSON.parse(json)
+      if (Array.isArray(symbols)) {
+        return symbols
+      } else {
+        throw Error
+      }
+    } catch(e) {
+      console.error(e)
+      return []
+    }
+  }
+
+  onMount(async () => {
+    if (!LZ) {
+      LZ = (await import('lz-string')).default
+    } 
+  })
 
 </script>
 
