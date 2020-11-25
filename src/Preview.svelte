@@ -1,30 +1,28 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import _ from 'lodash'
+  import { get } from 'idb-keyval';
   import { fade } from 'svelte/transition'
-  import {WebDeveloper} from './components/svg';
   import {wrapInStyleTags} from './utils'
-  import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './views/editor/pageUtils.js'
-  import store from './libraries/store.js'
+  import {appendHtml} from './views/editor/pageUtils.js'
 
-  let tailwindStyles = store.get('tailwind')
+  let id = ''
+  let html = ''
+  let css = ''
+  let js = ''
 
-  const { dependencies, id, html, css, js } = store.get('preview')
+  var BC = new BroadcastChannel('preview');
+  BC.onmessage = ({data}) => {
+    id = data.id
+    html = data.html 
+    css = data.css 
+    js = data.js
+  }
 
-  let componentId = id || null
-  let previewHTML = html
-  let previewCSS = wrapInStyleTags(css)
-
-  let cssLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'css') : []
-  let jsLibraries = dependencies ? dependencies.libraries.filter(l => l.type === 'js') : []
-
-  store.on('preview', ({ newValue:value }) => {
-    previewHTML = value.html
-    previewCSS = wrapInStyleTags(value.css)
-  })
-
-  store.on('tailwind', ({ newValue:tailwind }) => {
-    tailwindStyles = tailwind
+  let tailwindStyles = ''
+  get('tailwind').then(t => {
+    tailwindStyles = t
+    BC.postMessage('ready')
   })
 
   async function setPageJs(js) {
@@ -38,25 +36,20 @@
     )
   }
 
-  onMount(() => {
-    setPageJs(js)
-  })
+  let mounted = false
+  onMount(() => mounted = true)
+  $: mounted && setPageJs(js)
 
 </script>
 
 <svelte:head>
-  <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" type="text/css">
-  {@html getPageLibraries(cssLibraries)}
-  {#each cssLibraries as library}
-    <link href="${library.src}" rel="stylesheet" />
-  {/each}
   {@html wrapInStyleTags(tailwindStyles)}
-  {@html previewCSS}
+  {@html wrapInStyleTags(css)}
 </svelte:head>
 
-{#if previewHTML}
-  <div class="primo-page" in:fade={{ duration: 100 }} id="component-{componentId}">
-    {@html previewHTML}
+{#if html}
+  <div class="primo-page" in:fade={{ duration: 100 }} id="component-{id}">
+    {@html html}
   </div>
 {:else}
   <div id="primo-empty-state" in:fade={{ duration: 100 }}></div>
@@ -69,15 +62,4 @@
     @apply w-full h-full;
   }
   
-  #primo-empty-state {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    padding: 4rem;
-    box-sizing: border-box;
-  }
-
 </style>

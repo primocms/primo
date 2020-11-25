@@ -546,7 +546,7 @@
       {loading}
       id={localComponent.id}
       html={finalHTML}
-      css={finalCSS}
+      css={$siteStyles.final + $pageStyles.final + finalCSS}
       js={finalJS}
       includeParentStyles />
   </div>

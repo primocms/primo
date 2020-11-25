@@ -1,24 +1,31 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
-  import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './views/editor/pageUtils.js'
-  import store from './libraries/store.js'
 
   let pages = []
 
-  var bc = new BroadcastChannel('preview');
+  const BC = new BroadcastChannel('preview');
+  let ready = false
 
-  bc.postMessage('ready')
-
-  bc.onmessage = ({data}) => {
+  BC.onmessage = ({data}) => {
     pages = data
-    data.forEach((page, i) => {
-      setIframeHeight(i)
-      store.set(`preview-${i}`, {
-        html: page.html,
-        css: page.css
-      }) 
-    })
   }
+  BC.postMessage('ready')
+
+  $: {
+    const LastPreviewBC = new BroadcastChannel(`preview-${pages.length-1}`);
+    LastPreviewBC.onmessage = () => {
+      ready = true
+    }
+  }
+
+  $: ready && pages.forEach((page, i) => {
+    const SingleBC = new BroadcastChannel(`preview-${i}`);
+    SingleBC.postMessage({
+      html: page.html,
+      css: page.css
+    }) 
+    setTimeout(() => {setIframeHeight(i)}, 500)
+  })
 
   function setIframeHeight(i) {
     const iframe = iframes[i]

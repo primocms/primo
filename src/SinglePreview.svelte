@@ -1,39 +1,42 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import _ from 'lodash'
+  import { get } from 'idb-keyval';
   import { fade } from 'svelte/transition'
-  import {WebDeveloper} from './components/svg';
   import {wrapInStyleTags} from './utils'
-  import {getHeadStyles,getPageLibraries,setHeadScript,setPageJsLibraries,appendHtml,setCustomScripts} from './views/editor/pageUtils.js'
-  import store from './libraries/store.js'
-
+  
   export let previewId
 
-  const { dependencies, id, html, css, js } = store.get(`preview-${previewId}`) || {}
+  var BC = new BroadcastChannel(`preview-${previewId}`);
 
-  let previewHTML = html
-  let previewCSS = wrapInStyleTags(css)
+  let id = '' 
+  let html = '' 
+  let css = '' 
+  let js = ''
 
-  store.on(`preview-${previewId}`, ({ newValue:value }) => {
-    previewCSS = wrapInStyleTags(value.css)
-    previewHTML = value.html
-  })
+  BC.onmessage = ({data}) => {
+    id = data.id
+    html = data.html 
+    css = data.css 
+    js = data.js
+  }
 
-  let tailwindStyles = store.get('tailwind')
+  let tailwindStyles = ''
 
-  store.on(`tailwind`, ({ newValue:value }) => {
-    tailwindStyles = value
+  get('tailwind').then(t => {
+    tailwindStyles = t
+    BC.postMessage('ready')
   })
 
 </script>
 
 <svelte:head>
   {@html wrapInStyleTags(tailwindStyles)}
-  {@html previewCSS}
+  {@html wrapInStyleTags(css)}
 </svelte:head>
 
 <div class="primo-page" in:fade={{ duration: 100 }}>
-  {@html previewHTML}
+  {@html html}
 </div>
 
 <style global>

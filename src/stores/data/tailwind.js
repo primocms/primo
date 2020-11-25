@@ -1,21 +1,24 @@
 import {getContext} from 'svelte'
 import { writable, derived, get } from 'svelte/store';
 import _ from 'lodash'
-import storeLib from '../../libraries/store.js'
+import { set, get as getIDB } from 'idb-keyval';
 import axios from 'axios'
 import {processors} from '../../component'
 
 import { styles as siteStyles } from './draft'
 import {styles as pageStyles} from '../app/activePage'
 
-const store = writable(storeLib.get('tailwind'))
+const store = writable('')
+getIDB('tailwind').then(t => {
+  store.set(t)
+})
 
 export const loadingTailwind = writable(false)
 
 export default {
   subscribe: store.subscribe,
   setInitial: async () => {
-    const tw = storeLib.get('tailwind')
+    const tw = await getIDB('tailwind')
     if (typeof tw === 'string') {
       store.set(tw)
     } 
@@ -33,8 +36,8 @@ export default {
   swapOutConfig: () => {
     setLocalStorage(get(store))
   },
-  saveSwappedInConfig: () => {
-    const tw = storeLib.get('tailwind')
+  saveSwappedInConfig: async () => {
+    const tw = await getIDB('tailwind')
     store.set(tw)
   }
 }
@@ -61,7 +64,7 @@ async function getTailwindStyles(tailwind) {
 
 function setLocalStorage(tw) {
   if (tw) {
-    storeLib.set('tailwind', tw)  
+    set('tailwind', tw);
   }
 }
 

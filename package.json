@@ -59,6 +59,7 @@
     "faker": "^5.1.0",
     "firebase": "^7.16.1",
     "handlebars": "^4.7.6",
+    "idb-keyval": "^3.2.0",
     "lodash": "^4.17.20",
     "lodash.clonedeep": "^4.5.0",
     "lz-string": "^1.4.4",

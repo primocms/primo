@@ -1,41 +1,26 @@
 <script>
   import {onMount} from 'svelte'
-  import store from 'store2'
-  import {styles as siteStyles} from '../../stores/data/draft'
-  import {styles as pageStyles} from '../../stores/app/activePage'
+  import { styles as siteStyles } from "../../stores/data/draft";
+  import { styles as pageStyles } from "../../stores/app/activePage"
 
   export let multiple = false
   export let pages = null
-  export let id = null
+  export let id = ''
   export let html = ''
   export let css = ''
   export let js = ''
-  export let dependencies = null
-  export let loading = false;
-  export let view = null
+  export let view = 'small'
+  export let loading = false
 
-  export let includeParentStyles = false
-
-  $: if (includeParentStyles) {
-    css = $siteStyles.final + $pageStyles.final + css
-  }
-
-  var bc = new BroadcastChannel('preview');
+  const BC = new BroadcastChannel('preview');
 
   let ready = false
-  bc.onmessage = () => {
+  BC.onmessage = ({data}) => {
     ready = true
   }
 
-  $: multiple && ready && bc.postMessage(pages)
-
-  $: store.set('preview', { 
-    id,
-    html,
-    css,
-    js,
-    dependencies
-  })
+  $: !multiple && ready && BC.postMessage({ id, html, css, js })
+  $: multiple && ready && BC.postMessage(pages)
 
   let iframe
 
@@ -87,7 +72,7 @@
 
 <div class="h-full flex flex-col lg:pl-2 lg:pt-2">
   <div class="preview-container flex-1" class:loading bind:this={container}>
-    <iframe class:scaled={view === 'large'} on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
+    <iframe class:scaled={view === 'large'} on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
   </div>
   <div class="footer-buttons">
     {#if view === 'small'}
@@ -101,7 +86,7 @@
         <span>Contained view</span>
       </button>
     {/if}
-    <a target="blank" class="separate-tab" href="/preview.html?preview={multiple ? 'multiple' : 'single' }">
+    <a target="blank" class="separate-tab" href="/preview.html">
       <span>preview in separate tab</span>
       <span class="icon ml-1">
         <i class="fas fa-external-link-alt"></i>
