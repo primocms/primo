@@ -100,6 +100,9 @@
     if(finalJS) {
       finalJS = `${finalJS} // ${getUniqueId()}` // force preview to reload so JS evaluates over new DOM
     }
+    quickDebounce([() => {
+      loading = false
+    }, null])
   }
 
   let rawCSS:string = localComponent.value.raw.css;
@@ -113,7 +116,6 @@
     saveRawValue("css", css);
     loading = true;
     const encapsulatedCss:string = `#component-${localComponent.id} {${css}}`;
-    const withParentStyles:string = $siteStyles.raw + $pageStyles.raw + encapsulatedCss
     const result:string = await processors.css(encapsulatedCss, {
       html: localComponent.value.final.html,
       tailwind: $siteStyles.tailwind
@@ -546,7 +548,6 @@
       html={finalHTML}
       css={finalCSS}
       js={finalJS}
-      dependencies={$pageDependencies}
       includeParentStyles />
   </div>
 </div>
@@ -560,20 +561,10 @@
     }
   }
   .field-item {
-    @apply p-4;
-    @apply shadow;
-    @apply mb-2;
-    @apply bg-white;
+    @apply p-4 shadow mb-2 bg-white;
   }
   .field-button {
-    @apply w-full;
-    @apply bg-gray-800;
-    @apply text-gray-300;
-    @apply py-2;
-    @apply rounded;
-    @apply font-medium;
-    @apply transition-colors;
-    @apply duration-100;
+    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-100;
 
     &:hover {
       @apply bg-gray-900;
@@ -585,16 +576,7 @@
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply ml-4;
-    @apply mb-2;
-    @apply mt-2;
-    @apply text-sm;
-    @apply py-1;
-    @apply bg-gray-100;
-    @apply text-gray-700;
-    @apply transition-colors;
-    @apply duration-100;
-    @apply outline-none;
+    @apply ml-4 mb-2 mt-2 text-sm py-1 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
 
     &:hover {
       @apply bg-gray-300;
@@ -615,10 +597,7 @@
     outline-color: rgb(248, 68, 73);
     padding: 0.5rem;
     border-right-width: 0.5rem;
-    @apply p-2;
-    @apply border-transparent;
-    @apply text-sm;
-    @apply font-semibold;
+    @apply p-2 border-transparent text-sm font-semibold;
   }
 
   @import "../../../node_modules/bulma/sass/utilities/_all.sass";
