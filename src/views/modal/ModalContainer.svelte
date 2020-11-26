@@ -82,13 +82,13 @@
   }
 
   .fullscreen {
-    width: calc(100vw - 3rem) !important;
-    height: calc(100vh - 3rem) !important;
+    width: calc(100vw - 1rem) !important;
+    height: calc(100vh - 1rem) !important;
     position: absolute !important;
-    left: 1.5rem !important;
-    right: 1.5rem !important;
-    top: 1.5rem !important;
-    bottom: 1.5rem !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: 0.5rem !important;
+    bottom: 0.5rem !important;
     max-height: initial !important;
   }
 
