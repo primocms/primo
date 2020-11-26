@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import _ from 'lodash'
-  import { get } from 'idb-keyval';
+  import { get, set } from 'idb-keyval';
   import { fade } from 'svelte/transition'
   import {wrapInStyleTags} from './utils'
   import {appendHtml} from './views/editor/pageUtils.js'
@@ -10,6 +10,14 @@
   let html = ''
   let css = ''
   let js = ''
+
+  get('preview').then(data => {
+    id = data.id
+    html = data.html 
+    css = data.css 
+    js = data.js
+  })
+  $: set('preview', { id, html, css, js })
 
   var BC = new BroadcastChannel('preview');
   BC.onmessage = ({data}) => {
