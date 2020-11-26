@@ -193,7 +193,7 @@ export function redoSiteChange() {
 // experimenting with exporting objects to make things cleaner
 export const symbols = {
   create: (symbol) => {
-    stores.symbols.update(s => [ ...s, _.cloneDeep(symbol) ])
+    stores.symbols.update(s => [ _.cloneDeep(symbol), ...s ])
   },
   update: (toUpdate) => {
     stores.symbols.update(symbols => {
