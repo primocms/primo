@@ -9,11 +9,14 @@
   export let icon:string = ''
   export let title:string = ''
   export let button:{ label:string, icon:string, onclick: any, loading?: boolean } = null
+  export let warn = () => true
   export let onclose = () => {}
 
   function closeModal() {
-    onclose()
-    modal.hide()
+    if (warn()) {
+      onclose()
+      modal.hide()
+    }
   }
 </script>
 
