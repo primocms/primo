@@ -125,7 +125,8 @@ export const defaultStyles = {
   tailwind: `{
   theme: {
     container: {
-      center: true
+      center: true,
+      padding: '2rem'
     }
   },
   variants: {}
