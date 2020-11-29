@@ -1,5 +1,5 @@
 <script>
-  import {onMount} from 'svelte'
+  import {onMount,onDestroy} from 'svelte'
   import { styles as siteStyles } from "../../stores/data/draft";
   import { styles as pageStyles } from "../../stores/app/activePage"
 
@@ -67,6 +67,9 @@
   }
 
   onMount(resizePreview)
+  onDestroy(() => {
+    BC.postMessage({ html: '', css: '', js: '' })
+  })
 
 </script>
 
