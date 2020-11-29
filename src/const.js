@@ -221,10 +221,6 @@ export const DEFAULTS = {
         ]
       }
     ],
-    dependencies: {
-      headEmbed: '',
-      libraries: []
-    },
     styles: {
       raw: '',
       final: '',
@@ -253,10 +249,6 @@ export const DEFAULTS = {
     }
   },
   styles: defaultStyles,
-  dependencies: {
-    headEmbed: '',
-    libraries: []
-  },
   fields: [],
   symbols: []
 }
@@ -285,22 +277,19 @@ export const createPage = (id = getUniqueId(), title) => ({
       ]
     }
   ],
-  dependencies: DEFAULTS.dependencies,
   styles: {
     raw: '',
     final: '',
     tailwind: defaultStyles.tailwind
   },
   wrapper: DEFAULTS.wrapper,
-  fields: [],
-  symbols: []
+  fields: []
 })
 
 export const createSite = (id = getUniqueId(), label = '') => ({
   id,
   label,
   pages: [ createPage('index', 'Home Page') ],
-  dependencies: DEFAULTS.dependencies,
   styles: DEFAULTS.styles,
   wrapper: DEFAULTS.wrapper,
   fields: [],
