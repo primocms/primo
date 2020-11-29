@@ -2,25 +2,23 @@
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import marked from 'marked'
-  import TurndownService from 'turndown'
-  const turndown = new TurndownService()
+  import showdown from 'showdown'
+  const converter = new showdown.Converter();
 
   export let field
 
   function parseContent() {
-    const markdown = marked(unparsed)
-    field.value = markdown
+    const html = converter.makeHtml(markdown);
+    field.value = html
     dispatch('input')
   }
 
-  $: console.log(field.value)
-  let unparsed = typeof field.value === 'string' ? turndown.turndown(field.value) : ''
+  let markdown = typeof field.value === 'string' ? converter.makeMarkdown(field.value) : ''
 </script>
 
 <label class="label" for={field.id}>
   <span>{ field.label }</span>
-  <textarea id={field.id} rows="8" bind:value={unparsed} on:input={parseContent}></textarea>
+  <textarea id={field.id} rows="8" bind:value={markdown} on:input={parseContent}></textarea>
 </label>
 
 <style>
