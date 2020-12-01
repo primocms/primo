@@ -223,7 +223,7 @@
   $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons
 
   // Show 'are you sure you want to leave prompt' when closing window 
-  $: if ($unsaved && window.location.hostname !== 'localhost' && !'https://primocloud.io/site/landingpage-demo--source'.includes('landingpage-demo')) {
+  $: if ($unsaved && window.location.hostname !== 'localhost') {
     window.onbeforeunload = function(e){
       e.returnValue = '';
     };
