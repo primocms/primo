@@ -2,6 +2,7 @@
   import {onMount,onDestroy} from 'svelte'
   import { styles as siteStyles } from "../../stores/data/draft";
   import { styles as pageStyles } from "../../stores/app/activePage"
+  import { set } from 'idb-keyval';
 
   export let multiple = false
   export let pages = null
@@ -68,7 +69,7 @@
 
   onMount(resizePreview)
   onDestroy(() => {
-    BC.postMessage({ html: '', css: '', js: '' })
+    set('preview', { html: '', css: '', js: '' })
   })
 
 </script>
