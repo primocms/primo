@@ -51,7 +51,7 @@
         {/if}
       </button>
     {/if}
-    {#if button.onclick}
+    {#if button && button.onclick}
       <button class="button primary" disabled={button.loading || button.disabled} on:click={button.onclick}>
         {#if button.icon}
           <i class="{button.loading ? 'fas fa-spinner' : button.icon}"></i>
