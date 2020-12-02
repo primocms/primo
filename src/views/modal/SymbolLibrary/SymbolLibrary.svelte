@@ -151,6 +151,11 @@
   icon="fas fa-clone"
   title="Add Symbol"
   variants="mb-4"
+  button={{ 
+    label: 'Public Library',
+    icon: 'fas fa-external-link-alt',
+    href: 'https://primo.af/library.html'
+  }}
 />
 
 {#if $switchEnabled}

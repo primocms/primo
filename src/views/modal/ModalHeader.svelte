@@ -8,7 +8,7 @@
   export let variants:string = ''
   export let icon:string = ''
   export let title:string = ''
-  export let button:{ label:string, icon:string, onclick: any, loading?: boolean } = null
+  export let button:{ label:string, icon:string, href:string, onclick: any, loading?: boolean } = null
   export let warn = () => true
   export let onclose = () => {}
 
@@ -51,7 +51,7 @@
         {/if}
       </button>
     {/if}
-    {#if button}
+    {#if button.onclick}
       <button class="button primary" disabled={button.loading || button.disabled} on:click={button.onclick}>
         {#if button.icon}
           <i class="{button.loading ? 'fas fa-spinner' : button.icon}"></i>
@@ -60,6 +60,15 @@
           {button.label}
         </span>
       </button>
+    {:else}
+      <a class="button primary" disabled={button.loading || button.disabled} href={button.href} target="blank">
+        {#if button.icon}
+          <i class="{button.loading ? 'fas fa-spinner' : button.icon}"></i>
+        {/if}
+        <span class="hidden lg:inline-block ml-1">
+          {button.label}
+        </span>
+      </a>
     {/if}
   </div>
 </header>

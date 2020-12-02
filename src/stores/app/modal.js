@@ -11,6 +11,7 @@ const initialState = {
     title: '',
     icon: null
   },
+  footer: null,
   variants: '',
   disableClose: false,
   showSwitch: false,

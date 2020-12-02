@@ -35,6 +35,9 @@
       <div class="modal-card-body" class:p-3={!$modal.noPadding}>
         <slot></slot>
       </div>
+      {#if $modal.footer}
+        <svelte:component this={$modal.footer} />
+      {/if}
     </div>
   </div>
 {/if}
