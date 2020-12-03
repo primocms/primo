@@ -47,7 +47,7 @@
       {#if key}
         <span class="key-hint" class:active={showKeyHint} aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
-      <i class={ !loading ? icon : 'fas fa-spinner'} />
+      <i class="{ !loading ? icon : 'fas fa-spinner'} w-4" />
     {:else} 
       <slot></slot>
     {/if}

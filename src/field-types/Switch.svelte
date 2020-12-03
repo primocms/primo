@@ -1,6 +1,6 @@
 <script>
   import {createEventDispatcher} from 'svelte'
-  const dispatch = createEventDispatcher();s
+  const dispatch = createEventDispatcher();
   export let field
 </script>
 
