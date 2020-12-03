@@ -60,7 +60,8 @@
           {button.label}
         </span>
       </button>
-    {:else}
+    {:else if button && button.href}
+       <!-- else if content here -->
       <a class="button primary" disabled={button.loading || button.disabled} href={button.href} target="blank">
         {#if button.icon}
           <i class="{button.loading ? 'fas fa-spinner' : button.icon}"></i>
