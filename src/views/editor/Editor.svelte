@@ -141,7 +141,7 @@
   const developerButtons = [
     [
       {
-        id: 'pages',
+        id: 'toolbar--pages',
         title: 'Pages',
         icon: 'th-large',
         onclick: () => modal.show('SITE_PAGES') 
@@ -149,6 +149,7 @@
     ],
     [
       {
+        id: 'toolbar--formatting',
         title: 'Content',
         icon: 'heading',
         buttons: _.flatten(editorialButtons)
@@ -156,7 +157,7 @@
     ],
     [
       {
-        id: 'single-use-component',
+        id: 'toolbar--component',
         title: 'Component',
         icon: 'code',
         onclick: () => modal.show('COMPONENT_EDITOR', {
@@ -173,7 +174,7 @@
       },
       {
         title: 'Symbol',
-        id: 'symbol-library',
+        id: 'toolbar--symbols',
         icon: 'clone',
         onclick: () => modal.show('COMPONENT_LIBRARY', {
           button: {
@@ -182,6 +183,7 @@
         }) 
       },
       {
+        id: 'toolbar--sections',
         title: 'Section',
         icon: 'columns',
         onclick: () => modal.show('PAGE_SECTIONS') 
@@ -189,12 +191,13 @@
     ],
     [
       {
+        id: 'toolbar--html',
         title: 'HTML',
         icon: 'fab fa-html5',
         onclick: () => modal.show('WRAPPER'),
       },
       {
-        id: 'site-styles',
+        id: 'toolbar--css',
         title: 'CSS',
         icon: 'fab fa-css3',
         onclick: () => modal.show('STYLES')
@@ -202,7 +205,7 @@
     ],
     [
       {
-        id: 'fields',
+        id: 'toolbar--fields',
         title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS')
