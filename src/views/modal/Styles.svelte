@@ -7,9 +7,11 @@
   import {Tabs} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
   import {SaveButton} from '../../components/buttons'
-  import { wrapInStyleTags,buildPagePreview } from '../../utils'
+  import { wrapInStyleTags,buildPagePreview, createDebouncer } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
   import {processors} from '../../component'
+
+  const quickDebounce = createDebouncer(500);
 
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
   import {content,id} from '../../stores/app/activePage'
@@ -24,39 +26,19 @@
   let pageHTML
   let siteHTML 
 
-  function buildPreview(siteCSS, pageCSS, content) {
+  function buildPreview(twCSS, siteCSS, pageCSS, content) {
     return {
-      html: wrapInStyleTags(siteCSS)
+      html: wrapInStyleTags(twCSS)
+        + wrapInStyleTags(siteCSS)
         + wrapInStyleTags(pageCSS) 
         + buildPagePreview(content)
     }
   }
 
-  $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
-  $: allPages = $pages.map(page => page.id === $id ? currentPage : buildPreview($siteStyles.final, page.styles.final, page.content))
+  $: currentPage = buildPreview($tailwind, $siteStyles.final, $pageStyles.final, $content) 
+  $: allPages = $pages.map(page => page.id === $id ? currentPage : buildPreview($tailwind, $siteStyles.final, page.styles.final, page.content))
 
   let loading = false
-
-  async function compileStyles(rawStyles, tailwindConfig) {
-    loading = true
-    const result = await processors.css(
-      rawStyles, 
-      {
-        tailwindConfig, 
-        includeBase: false,
-        includeTailwind: false,
-        purge: false,
-        html: ''
-      }
-    );
-    if (!result.error) {
-      // finalStyles = result
-      if (!gettingTailwind) {
-        loading = false
-      } 
-      return result
-    } 
-  }
 
   let rawStyles = $pageStyles.raw;
   let finalStyles = $pageStyles.final; 
@@ -137,6 +119,28 @@
 
   let view = 'large'
 
+  $: quickDebounce([compileStyles, primaryTab.id === 'page' ? $pageStyles : $siteStyles]); 
+  async function compileStyles(styles) {
+    console.log('bounced')
+    loading = true
+    const result = await processors.css(
+      styles.raw, 
+      {
+        tailwindConfig: styles.tailwind, 
+        includeBase: false,
+        includeTailwind: false,
+        purge: false,
+        html: ''
+      }
+    );
+    if (!result.error) {
+      styles.final = result
+      if (!gettingTailwind) {
+        loading = false
+      } 
+    } 
+  }
+
 </script>
 
 <ModalHeader 
@@ -146,7 +150,7 @@
     label: `Draft`,
     icon: 'fas fa-check',
     onclick: () => {
-      tailwind.saveSwappedInConfig()
+      // tailwind.saveSwappedInConfig() TODO
       modal.hide()
     },
     loading
@@ -163,9 +167,6 @@
           <CodeMirror 
             autofocus
             bind:value={$pageStyles.raw} 
-            on:change={_.debounce( async() => { 
-              $pageStyles.final = await compileStyles($pageStyles.raw, $pageStyles.tailwind) 
-            }, 1000 )}
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
           />
@@ -176,7 +177,6 @@
             bind:value={$pageStyles.tailwind} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
-              $pageStyles.final = await compileStyles($pageStyles.raw, $pageStyles.tailwind) 
             }, 1000 )}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
@@ -185,9 +185,6 @@
           <CodeMirror 
             autofocus
             bind:value={$siteStyles.raw} 
-            on:change={_.debounce( async() => { 
-              $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
-            }, 1000 )}
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
           />
@@ -198,7 +195,6 @@
             bind:value={$siteStyles.tailwind} 
             on:change={_.debounce( async() => { 
               tailwindConfigChanged = true
-              $siteStyles.final = await compileStyles($siteStyles.raw, $siteStyles.tailwind) 
             }, 1000 )}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"

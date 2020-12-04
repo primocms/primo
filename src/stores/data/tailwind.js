@@ -22,7 +22,6 @@ export default {
     if (typeof tw === 'string') {
       store.set(tw)
     } 
-
     await hydrateTailwind()
   },
   reload: async () => {
@@ -32,6 +31,7 @@ export default {
     const tw = await getTailwindStyles(tempConfig)
     callback()
     setLocalStorage(tw)
+    store.set(tw)
   }, 1000),
   swapOutConfig: () => {
     setLocalStorage(get(store))
