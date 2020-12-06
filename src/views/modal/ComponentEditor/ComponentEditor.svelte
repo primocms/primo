@@ -551,8 +551,7 @@
       id={localComponent.id}
       html={finalHTML}
       css={$siteStyles.final + $pageStyles.final + finalCSS}
-      js={finalJS}
-      includeParentStyles />
+      js={finalJS} />
   </div>
 </div>
 

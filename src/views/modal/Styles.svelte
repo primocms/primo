@@ -20,9 +20,6 @@
   import {styles as pageStyles} from '../../stores/app/activePage'
   import {styles as siteStyles, pages} from '../../stores/data/draft'
 
-  let styles = $pageStyles
-  $: styles = primaryTab.id === 'page' ? $pageStyles : $siteStyles
-
   let pageHTML
   let siteHTML 
 
@@ -36,7 +33,12 @@
   }
 
   $: currentPage = buildPreview($tailwind, $siteStyles.final, $pageStyles.final, $content) 
-  $: allPages = $pages.map(page => page.id === $id ? currentPage : buildPreview($tailwind, $siteStyles.final, page.styles.final, page.content))
+  let allPages = []
+  $: quickDebounce[buildSitePreview, $tailwind + $siteStyles.final] 
+  function buildSitePreview(parentStyles) {
+    console.log('site preview')
+    allPages = $pages.map(page => buildPreview(parentStyles + page.styles.final, page.content))
+  }
 
   let loading = false
 
@@ -45,30 +47,10 @@
   let moduleTailwindConfig = $pageStyles.tailwind;
 
   $: tailwindConfig = moduleTailwindConfig.replace('export default ','')
-  $: combinedTailwindConfig = getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind)
 
   let tailwindConfigChanged = false
-  let gettingTailwind = false
-  $: {
-    if (tailwindConfigChanged) {
-      loading = true
-      gettingTailwind = true
-      tailwind.swapInConfig(combinedTailwindConfig, () => {
-        loading = false
-        gettingTailwind = false 
-        tailwindConfigChanged = false
-      })
-    }
-  }
 
   const cachedTailwindConfig = moduleTailwindConfig.replace('export default ','')
-  let shouldReloadTailwind = false
-
-  $: {
-    if (tailwindConfig !== cachedTailwindConfig) {
-      shouldReloadTailwind = true
-    }
-  }
 
   $: cssSize = (new Blob([finalStyles]).size / 1000).toFixed(1)
 
@@ -90,12 +72,6 @@
   let showingPage = true
   $: showingPage = primaryTab === primaryTabs[0]
 
-  $: if (showingPage) {
-    styles = $pageStyles
-  } else {
-    styles = $siteStyles
-  }
-
   const secondaryTabs = [
     {
       id: 'styles',
@@ -109,19 +85,10 @@
 
   let secondaryTab = secondaryTabs[0]
 
-  function saveStyles() {
-    if (showingPage) {
-      $pageStyles = styles
-    } else {
-      $siteStyles = styles
-    }
-  }
-
   let view = 'large'
 
   $: quickDebounce([compileStyles, primaryTab.id === 'page' ? $pageStyles : $siteStyles]); 
   async function compileStyles(styles) {
-    console.log('bounced')
     loading = true
     const result = await processors.css(
       styles.raw, 
@@ -133,11 +100,15 @@
         html: ''
       }
     );
+    loading = false
     if (!result.error) {
       styles.final = result
-      if (!gettingTailwind) {
-        loading = false
-      } 
+      if (tailwindConfigChanged) {
+        const combinedTailwindConfig = getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind)
+        tailwind.swapInConfig(combinedTailwindConfig, () => {
+          tailwindConfigChanged = false
+        })
+      }
     } 
   }
 
@@ -175,9 +146,7 @@
             autofocus
             prefix="module.exports = "
             bind:value={$pageStyles.tailwind} 
-            on:change={_.debounce( async() => { 
-              tailwindConfigChanged = true
-            }, 1000 )}
+            on:change={() => tailwindConfigChanged = true}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
@@ -193,9 +162,7 @@
             autofocus
             prefix="module.exports = "
             bind:value={$siteStyles.tailwind} 
-            on:change={_.debounce( async() => { 
-              tailwindConfigChanged = true
-            }, 1000 )}
+            on:change={() => tailwindConfigChanged = true}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
@@ -217,29 +184,4 @@
 
     </div>
   </div>
-  <!-- <div class="flex justify-end py-2">
-    <SaveButton {loading} on:click={() => {
-      site.save({ styles: siteStyles })
-      site.saveCurrentPage({ styles: pageStyles })
-      if (shouldReloadTailwind) {
-        tailwind.saveSwappedInConfig()
-      } else {
-        tailwind.swapOutConfig()
-      }
-      modal.hide()
-    }}>Save</SaveButton>
-  </div> -->
 </div>
-
-
-<!-- 
-<br>
-CSS Output ({cssSize} KB)
-<CodeEditor 
-  disabled={true}
-  bind:value={finalStyles} 
-  mode="css" 
-  monacoOptions={{
-    wordWrap: "on"
-  }}
-/> -->

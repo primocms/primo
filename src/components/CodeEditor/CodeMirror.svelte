@@ -92,9 +92,11 @@
     function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
 
     // set editor height (can't figure out how to set it without to not overflow the modal height)
-    if (editorNode) {
-      setTimeout(() => {editorNode.firstChild.classList.add('fadein')}, 100) // so the fade works
-    } 
+    setTimeout(() => {
+      if (editorNode) {
+        editorNode.firstChild.classList.add('fadein')
+      } 
+    }, 100) // so the fade works
   })
 
   $: {
