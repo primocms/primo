@@ -353,13 +353,17 @@
 
   let ogPreviewWidth
   let newPreviewWidth
+  let containerWidth
+  let editorWidth
   let resizingPreview = false
   function resizePreview(x) {
     if (!resizingPreview) {
       resizingPreview = true
       newPreviewWidth = ogPreviewWidth
+      editorWidth = newPreviewWidth
     } 
     newPreviewWidth = newPreviewWidth - x
+    editorWidth = containerWidth - newPreviewWidth - 16
   } 
 
 </script>
@@ -383,8 +387,8 @@
   {/if}
 </ModalHeader>
 
-<div class="flex flex-col lg:flex-row flex-1 flex-wrap">
-  <div class="mb-4 lg:mb-0 flex-1">
+<div class="flex flex-col lg:flex-row flex-1 flex-wrap" bind:clientWidth={containerWidth}>
+  <div class="mb-4 lg:mb-0 w-1/2" style="width:{editorWidth}px">
     <div class="flex flex-col h-full">
       {#if $switchEnabled}
         <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />

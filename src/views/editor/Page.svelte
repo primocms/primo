@@ -43,10 +43,6 @@
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
   {@html wrapInStyleTags($pageStyles.final, "page-styles")}
-
-  {#each cssLibraries as library}
-    <link href="${library.src}" rel="stylesheet" />
-  {/each}
 </svelte:head>
 
 <Editor on:change on:save={savePage} on:build on:signOut />
