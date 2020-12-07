@@ -67,9 +67,13 @@
     }, 100)
   }
 
-  onMount(resizePreview)
+  let interval
+  onMount(() => {
+    interval = setInterval(resizePreview, 500); // TODO: Do this better
+  })
   onDestroy(() => {
     set('preview', { html: '', css: '', js: '' })
+    clearInterval(interval)
   })
 
 </script>

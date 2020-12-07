@@ -577,6 +577,9 @@
 </div>
 
 <style>
+  .w-1\/2 {
+    width: calc(50% - 8px);
+  }
   button.convert {
     @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
     outline-color: rgb(248,68,73);
