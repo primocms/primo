@@ -67,27 +67,31 @@
     }, 100)
   }
 
-  onMount(resizePreview)
+  let interval
+  onMount(() => {
+    interval = setInterval(resizePreview, 500); // TODO: Do this better
+  })
   onDestroy(() => {
     set('preview', { html: '', css: '', js: '' })
+    clearInterval(interval)
   })
 
 </script>
 
-<div class="h-full flex flex-col lg:pl-2 lg:pt-2">
+<div class="h-full flex flex-col lg:pt-2">
   <div class="preview-container flex-1" class:loading bind:this={container}>
     <iframe class:scaled={view === 'large'} on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
   </div>
   <div class="footer-buttons">
     {#if view === 'small'}
       <button class="switch-view" on:click={changeView}>
-        <i class="fas fa-compress-arrows-alt"></i>
-        <span>Fullwidth view</span>
+        <i class="fas fa-expand-arrows-alt"></i>
+        <span>window view</span>
       </button>
     {:else if view === 'large'}
       <button class="switch-view" on:click={changeView}>
-        <i class="fas fa-expand-arrows-alt"></i>
-        <span>Contained view</span>
+        <i class="fas fa-compress-arrows-alt"></i>
+        <span>contained view</span>
       </button>
     {/if}
     <a target="blank" class="separate-tab" href="/preview.html">
@@ -124,21 +128,16 @@
     }
   }
   .footer-buttons  {
-    @apply flex;
+    @apply flex flex-wrap;
 
     a, button {
       border-top-left-radius: 0;
       border-top-right-radius: 0;
-      @apply outline-none w-full bg-gray-200 text-gray-600 text-xs py-2 block text-center transition-colors duration-500;
+      min-width: 12rem;
+      @apply flex-1 outline-none bg-gray-200 border-gray-300 border text-gray-600 text-xs py-2 block text-center transition-colors duration-100;
       &:hover {
-        @apply bg-gray-400;
+        @apply bg-gray-300;
       }
     }
-  }
-  .switch-view {
-    @apply border-r border-gray-400;
-  }
-  .separate-tab {
-    @apply border-l border-gray-400;
   }
 </style>

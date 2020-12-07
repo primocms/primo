@@ -3,6 +3,7 @@
   import ShortUniqueId from "short-unique-id";
   import { onMount } from "svelte";
 
+  import Resizer from './Resizer.svelte'
   import ModalHeader from "../ModalHeader.svelte";
   import { EditField } from "../../../components/inputs";
   import { PrimaryButton } from "../../../components/buttons";
@@ -350,6 +351,21 @@
     }
   }
 
+  let ogPreviewWidth
+  let newPreviewWidth
+  let containerWidth
+  let editorWidth
+  let resizingPreview = false
+  function resizePreview(x) {
+    if (!resizingPreview) {
+      resizingPreview = true
+      newPreviewWidth = ogPreviewWidth
+      editorWidth = newPreviewWidth
+    } 
+    newPreviewWidth = newPreviewWidth - x
+    editorWidth = containerWidth - newPreviewWidth - 16
+  } 
+
 </script>
 
 <ModalHeader
@@ -371,8 +387,8 @@
   {/if}
 </ModalHeader>
 
-<div class="flex flex-col lg:flex-row flex-1 flex-wrap">
-  <div class="w-full mb-4 lg:mb-0 lg:w-1/2">
+<div class="flex flex-col lg:flex-row flex-1 flex-wrap" bind:clientWidth={containerWidth}>
+  <div class="mb-4 lg:mb-0 w-1/2" style="width:{editorWidth}px">
     <div class="flex flex-col h-full">
       {#if $switchEnabled}
         <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />
@@ -544,7 +560,12 @@
       {/if}
     </div>
   </div>
-  <div class="flex-1 w-full lg:w-1/2">
+  <Resizer 
+    {ogPreviewWidth} 
+    on:resize={({detail}) => resizePreview(detail)}
+    on:release={() => resizingPreview = false}
+  />
+  <div class="w-1/2" class:pointer-events-none={resizingPreview} bind:clientWidth={ogPreviewWidth} style="width:{newPreviewWidth}px">
     <CodePreview
       view="small"
       {loading}
@@ -556,6 +577,9 @@
 </div>
 
 <style>
+  .w-1\/2 {
+    width: calc(50% - 8px);
+  }
   button.convert {
     @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
     outline-color: rgb(248,68,73);
