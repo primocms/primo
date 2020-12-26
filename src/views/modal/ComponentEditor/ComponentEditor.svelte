@@ -371,8 +371,10 @@
 <ModalHeader
   {...header}
   warn={() => {
-    const proceed = window.confirm('Undrafted changes will be lost. Continue?')
-    return proceed
+    if (!_.isEqual(localComponent, component)) {
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
+      return proceed
+    } else return true
   }}
   button={{ 
     ...header.button, 
