@@ -582,4 +582,8 @@
     }
   }
 
+  .emmet-abbreviation-preview-error {
+    @apply hidden;
+  }
+
 </style>
