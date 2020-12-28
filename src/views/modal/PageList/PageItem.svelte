@@ -32,7 +32,9 @@
     scale = parentWidth / childWidth;
   }
 
-  onMount(resizePreview);
+  $: if (iframe) {
+    resizePreview()
+  } 
 
   function openPage(e) {
     e.preventDefault()
@@ -44,6 +46,14 @@
     }
     modal.hide(page.id === 'index' ? '' : page.id)
   }
+
+
+  let shouldLoadIframe = false
+  onMount(() => {
+    window.requestIdleCallback(() => {
+      shouldLoadIframe = true
+    })
+  })
 </script>
 
 <svelte:window on:resize={resizePreview} />
@@ -69,7 +79,8 @@
     class:active
     bind:this={container}
     aria-label="Go to /{page.id}">
-    <iframe
+    {#if shouldLoadIframe}
+      <iframe
       bind:this={iframe}
       style="transform: scale({scale})"
       class:fadein={iframeLoaded}
@@ -77,7 +88,8 @@
       srcdoc={preview}
       on:load={() => {
         iframeLoaded = true;
-      }} />
+      }} /> 
+    {/if}
   </button>
 </div>
 
