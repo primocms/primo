@@ -42,7 +42,6 @@
   {@html $pageWrapper.head.final}
   {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
   {@html wrapInStyleTags($pageStyles.final, "page-styles")}
-  <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
 </svelte:head>
 
 <Editor on:change on:save={savePage} on:build on:signOut />
