@@ -39,6 +39,7 @@
 
 
 <svelte:head>
+  {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html $pageWrapper.head.final}
   {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
   {@html wrapInStyleTags($pageStyles.final, "page-styles")}
