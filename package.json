@@ -84,6 +84,7 @@
     "showdown": "^1.9.1",
     "sirv": "^1.0.1",
     "store2": "^2.11.2",
+    "svelte-masonry": "0.0.17",
     "svelte-routing": "^1.4.2",
     "svelte-spa-router": "^3.0.2",
     "turndown": "^7.0.0"
