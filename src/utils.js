@@ -89,9 +89,34 @@ export function createDebouncer(time) {
 export function getUniqueId() {
   return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
+ 
+export function createSymbolPreview({ id, wrapper, html, css, js, tailwind }) {
+  const twConfig = JSON.stringify({
+    mode: 'silent',
+    theme: tailwind.theme
+  })
 
-export function createSymbolPreview({ id, wrapper, html, css, js }) {
-  return `<head>${wrapper.head.final}</head><div id="component-${id}">${html}</div><style>${css}</style><script type="module">${js}</script>${wrapper.below.final}`;
+  if (wrapper) {
+    return `<html hidden>
+      <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+      <script type="twind-config">
+        ${twConfig}
+      </script>
+      <head>${wrapper.head.final}</head>
+      <div id="component-${id}">${html}</div>
+      <style>${css}</style>
+      <script type="module">${js}</script>
+      ${wrapper.below.final}`;
+  } else {
+    return `<html hidden>
+      <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+      <script type="twind-config">
+        ${twConfig}
+      </script>
+      <div id="component-${id}">${html}</div>
+      <style>${css}</style>
+      <script type="module">${js}</script>`;
+  }
 }
 
 export function wrapInStyleTags(css, id = null) {
@@ -125,6 +150,8 @@ export function buildPagePreview(content) {
     });
     html += `\t</div>\n` + `</section>\n`;
   });
+
+  html += `<script type="module" src="https://cdn.skypack.dev/twind/shim"></script>`
 
   // html += get(site).styles // TODO
 

@@ -15,7 +15,6 @@
   export let active = false;
 
   $: preview =
-    wrapInStyleTags($tailwind) +
     wrapInStyleTags($siteStyles.final) +
     wrapInStyleTags(page.styles.final) +
     buildPagePreview(page.content);
