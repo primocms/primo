@@ -8,7 +8,6 @@
   import _ from 'lodash'
   import {pop} from 'svelte-spa-router'
   import { Tabs } from "../../../components/misc";
-  import PublicLibrary from './PublicLibrary/PublicLibrary.svelte'
   import axios from 'axios'
 
   import ModalHeader from '../ModalHeader.svelte'
