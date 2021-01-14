@@ -100,7 +100,6 @@
 
   let LZ
   async function copySymbol(symbol) {
-    console.log({symbol})
     if (!navigator.clipboard) {
       alert('Unable to copy Symbol because your browser does not support copying');
       return
@@ -116,9 +115,7 @@
 
   async function pasteSymbol() {
     const compressedSymbols = await navigator.clipboard.readText()
-    console.log({compressedSymbols})
     const symbols = parseCopiedSymbols(compressedSymbols)
-    console.log({symbols})
     symbols.forEach(symbol => {
       placeSymbol({
         ...symbol,
@@ -132,9 +129,7 @@
     let symbols
     try {
       const json = LZ.decompressFromBase64(compressedSymbols)
-      console.log({ json })
       const parsedSymbols = JSON.parse(json)
-      console.log(parsedSymbols)
       if (Array.isArray(parsedSymbols)) {
         return parsedSymbols
       } else {
