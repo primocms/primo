@@ -19,16 +19,16 @@
 
   import {styles as pageStyles} from '../../stores/app/activePage'
   import {styles as siteStyles, pages} from '../../stores/data/draft'
+import { getTailwindConfig } from '../../stores/helpers';
 
   let pageHTML
   let siteHTML 
 
   function buildPreview(twCSS, siteCSS, pageCSS, content) {
     return {
-      html: wrapInStyleTags(twCSS)
-        + wrapInStyleTags(siteCSS)
+      html: wrapInStyleTags(siteCSS)
         + wrapInStyleTags(pageCSS) 
-        + buildPagePreview(content)
+        + buildPagePreview(content, getTailwindConfig())
     }
   }
 

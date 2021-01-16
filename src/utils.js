@@ -124,7 +124,7 @@ export function wrapInStyleTags(css, id = null) {
 }
 
 
-export function buildPagePreview(content) {
+export function buildPagePreview(content, tailwind) {
   let html = "";
   content.forEach((section) => {
     html +=
@@ -151,11 +151,19 @@ export function buildPagePreview(content) {
     html += `\t</div>\n` + `</section>\n`;
   });
 
-  html += `<script type="module" src="https://cdn.skypack.dev/twind/shim"></script>`
+  const twConfig = JSON.stringify({
+    mode: 'silent',
+    theme: tailwind.theme
+  })
+
+  html += `<script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  <script type="twind-config">
+    ${twConfig}
+  </script>`
 
   // html += get(site).styles // TODO
 
-  return html;
+  return `<html hidden>${html}</html>`;
 }
 
 export async function hydrateAllComponents(content) {

@@ -10,6 +10,7 @@
   // import site from '../../../stores/data/site'
   import {styles as siteStyles} from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
+  import {getTailwindConfig} from '../../../stores/helpers'
 
   export let page;
   export let active = false;
@@ -17,7 +18,7 @@
   $: preview =
     wrapInStyleTags($siteStyles.final) +
     wrapInStyleTags(page.styles.final) +
-    buildPagePreview(page.content);
+    buildPagePreview(page.content, getTailwindConfig());
 
   let iframeLoaded = false;
 
