@@ -39,10 +39,8 @@
   {@html html}
 </div>
 
-<style global>
-
+<style>
   .primo-page {
     @apply w-full h-full;
   }
-  
 </style>

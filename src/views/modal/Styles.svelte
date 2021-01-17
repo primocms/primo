@@ -19,12 +19,9 @@
 
   import {styles as pageStyles} from '../../stores/app/activePage'
   import {styles as siteStyles, pages} from '../../stores/data/draft'
-import { getTailwindConfig } from '../../stores/helpers';
+  import { getTailwindConfig } from '../../stores/helpers';
 
-  let pageHTML
-  let siteHTML 
-
-  function buildPreview(twCSS, siteCSS, pageCSS, content) {
+  function buildPreview(siteCSS, pageCSS, content) {
     return {
       html: wrapInStyleTags(siteCSS)
         + wrapInStyleTags(pageCSS) 
@@ -32,27 +29,19 @@ import { getTailwindConfig } from '../../stores/helpers';
     }
   }
 
-  $: currentPage = buildPreview($tailwind, $siteStyles.final, $pageStyles.final, $content) 
+  $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
   let allPages = []
-  $: quickDebounce[buildSitePreview, $tailwind + $siteStyles.final] 
-  function buildSitePreview(parentStyles) {
-    console.log('site preview')
-    allPages = $pages.map(page => buildPreview(parentStyles + page.styles.final, page.content))
+  $: buildSitePreview($siteStyles)
+  function buildSitePreview(_) {
+    allPages = $pages.map(page => buildPreview($siteStyles.final, page.styles.final, page.content))
   }
 
   let loading = false
 
-  let rawStyles = $pageStyles.raw;
-  let finalStyles = $pageStyles.final; 
-  let moduleTailwindConfig = $pageStyles.tailwind;
-
-  $: tailwindConfig = moduleTailwindConfig.replace('export default ','')
 
   let tailwindConfigChanged = false
 
-  const cachedTailwindConfig = moduleTailwindConfig.replace('export default ','')
 
-  $: cssSize = (new Blob([finalStyles]).size / 1000).toFixed(1)
 
   const primaryTabs = [
     {

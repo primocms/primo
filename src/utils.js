@@ -139,7 +139,7 @@ export function buildPagePreview(content, tailwind) {
           row.type === "component"
             ? `\t\t\t<div class="primo-component">\n` +
               `\t\t\t\t<div id="component-${row.id}" class="w-full">${row.value.final.html}</div>\n` +
-              `\t\t\t\t<script>${row.value.final.js}</script>\n` +
+              `\t\t\t\t<script type="module">${row.value.final.js}</script>\n` +
               `\t\t\t\t<style>${row.value.final.css}</style>\n` +
               `\t\t\t</div>\n`
             : `\t\t\t<div class="primo-copy" id="copy-${row.id}">\n` +
