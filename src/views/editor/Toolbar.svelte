@@ -96,7 +96,7 @@
   }
 
   .button-group {
-    @apply flex my-1 mx-2 flex-row border border-solid border-gray-800 rounded-sm mr-2;
+    @apply flex my-1 mx-2 flex-row rounded-sm mr-2;
   }
 
   .container {
@@ -118,7 +118,9 @@
     z-index: 999;
     transition: top 1;
     will-change: top;
-    @apply bg-codeblack p-2;
+    @apply bg-codeblack p-2 shadow-xl;
+    backdrop-filter: blur(10px);
+    --bg-opacity: 0.9;
 
     &.mounted {
       top: 0;

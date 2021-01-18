@@ -39,7 +39,7 @@
 </script>
 
 
-<div class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}"  out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
+<div class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   <component-buttons 
     icon={$switchEnabled ? 'code' : 'edit'}
     contentabove={contentAbove}
@@ -64,7 +64,6 @@
     position: relative;
     outline: 2px solid transparent;
     transition: outline 0.2s;
-    /* outline-offset: -2px; */
     @apply w-full;
 
     & > div {

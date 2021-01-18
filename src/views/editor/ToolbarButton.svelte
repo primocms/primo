@@ -160,7 +160,7 @@
   }
 
   button {
-    @apply bg-codeblack text-white font-bold py-2 px-3 rounded-sm transition-colors outline-none relative;
+    @apply bg-codeblack text-white font-bold py-2 px-3 transition-colors outline-none relative;
 
     &:hover, &:focus {
       @apply bg-gray-800 transition-colors duration-200;
