@@ -26,7 +26,7 @@
   function appendJS(mounted, js) {
     if (mounted && js) {
       appendHtml(
-        `#component-${row.id} ~ [primo-js]`, 
+        `#component-${row.id} > [primo-js]`, 
         'script', 
         js,
         {
@@ -39,7 +39,7 @@
 </script>
 
 
-<div class="primo-component" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
+<div class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}"  out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   <component-buttons 
     icon={$switchEnabled ? 'code' : 'edit'}
     contentabove={contentAbove}
@@ -49,7 +49,7 @@
     on:addContentBelow
     on:addContentAbove
   ></component-buttons>
-  <div id="component-{row.id}" class={ row.symbolID ? `symbol-${row.symbolID}` : ''}>
+  <div>
     {@html row.value.final.html}
   </div>
   <div primo-css>

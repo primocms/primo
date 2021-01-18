@@ -18,6 +18,11 @@ export function getTailwindConfig() {
   const { tailwind:pageTW } = get(pageStyles)
   const { tailwind:siteTW } = get(siteStyles)
   const combined = getCombinedTailwindConfig(pageTW, siteTW)
-  const asObj = new Function(`return ${combined}`)()
+  let asObj = {}
+  try {
+    asObj = new Function(`return ${combined}`)()
+  } catch(e) {
+    console.warn(e)
+  }
   return asObj
 }
