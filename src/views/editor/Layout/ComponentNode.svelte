@@ -36,11 +36,42 @@
     }
   }
 
+  let hovering = false
+  let sticky = false
+  const toolbarHeight = 56
+
+  function handlePositioning() {
+    if (buttons) {
+      const node = buttons
+      const { top } = node.getBoundingClientRect();
+      const { top:parentTop, left:parentLeft } = node.parentNode.getBoundingClientRect();
+      console.log(top, parentTop)
+      if (!sticky && top < toolbarHeight && hovering) { 
+        node.style.position = 'fixed'
+        node.style.top = `${toolbarHeight}px`
+        node.style.left = `${parentLeft}px`
+        sticky = true
+      } else if (parentTop > toolbarHeight || !hovering && sticky) {
+        node.style.position = 'absolute'
+        node.style.top = '0px'
+        node.style.left = '0px'
+        sticky = false
+      }
+    }
+  }
+
+  let buttons 
+  function handleMouseEnter() {
+    hovering = true
+    handlePositioning()
+  }
+
 </script>
 
-
-<div class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
+<svelte:window on:scroll={handlePositioning}/>
+<div on:mouseenter={handleMouseEnter} on:mouseleave={() => hovering = false} class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
   <component-buttons 
+    bind:this={buttons}
     icon={$switchEnabled ? 'code' : 'edit'}
     contentabove={contentAbove}
     contentbelow={contentBelow}
@@ -62,8 +93,10 @@
 <style>
   .primo-component {
     position: relative;
-    outline: 2px solid transparent;
-    transition: outline 0.2s;
+    outline: 5px solid transparent;
+    outline-offset: -5px;
+    transition: outline-color 0.2s;
+    outline-color: transparent;
     @apply w-full;
 
     & > div {
@@ -71,8 +104,8 @@
     }
   }
   .primo-component:hover {
-    outline: 2px solid rgb(206,78,74);
-    transition: outline 0.25s;
+    outline-color: rgb(206,78,74);
+    transition: outline-color 0.2s;
     z-index: 9;
   }
   .primo-component:hover component-buttons {
