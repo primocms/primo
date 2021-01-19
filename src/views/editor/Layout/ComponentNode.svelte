@@ -45,7 +45,6 @@
       const node = buttons
       const { top } = node.getBoundingClientRect();
       const { top:parentTop, left:parentLeft } = node.parentNode.getBoundingClientRect();
-      console.log(top, parentTop)
       if (!sticky && top < toolbarHeight && hovering) { 
         node.style.position = 'fixed'
         node.style.top = `${toolbarHeight}px`
