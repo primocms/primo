@@ -14,8 +14,8 @@
   "author": "Mateo Morris",
   "license": "ISC",
   "scripts": {
-    "postinstall": "cd example && npm install && cd ..",
-    "dev": "cd example && npm run dev"
+    "postinstall": "cd container && npm install && cd ..",
+    "dev": "cd container && npm run dev"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
