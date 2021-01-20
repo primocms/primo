@@ -225,7 +225,7 @@
   }
 </script>
 
-<div class="primo-page" style="border-top: 56px solid black">
+<div class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
   {#each content as section, i (section.id)}
     <Section {section}>
       {#each section.columns as column, i (column.id)}

@@ -100,7 +100,14 @@ export async function updateInstances(symbol) {
 export async function hydrateComponents() {
   const updatedPages = await Promise.all(
     get(pages).map(async (page) => {
-      const updatedContent = await hydrateAllComponents(page.content);
+      const updatedContent = await hydrateAllComponents(page.content, async (component) => {
+        const allFields = getAllFields(component.value.raw.fields);
+        const data = await convertFieldsToData(allFields, "all");
+        const finalHTML = await parseHandlebars(component.value.raw.html, data);
+        const updatedComponent = _.cloneDeep(component)
+        updatedComponent.value.final.html = finalHTML
+        return updatedComponent
+      });
       return {
         ...page,
         content: updatedContent,
@@ -204,5 +211,20 @@ export const symbols = {
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
     })
+  },
+  hydrate: async () => {
+    const existingSymbols = get(stores.symbols)
+    console.log({existingSymbols})
+    const updatedSymbols = await Promise.all(
+      existingSymbols.map(async (symbol) => {
+        const allFields = getAllFields(symbol.value.raw.fields);
+        const data = await convertFieldsToData(allFields, "all");
+        const finalHTML = await parseHandlebars(symbol.value.raw.html, data);
+        const updatedSymbol = _.cloneDeep(symbol)
+        updatedSymbol.value.final.html = finalHTML
+        return updatedSymbol
+      })
+    );
+    stores.symbols.set(updatedSymbols)
   }
 }

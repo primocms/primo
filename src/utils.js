@@ -166,7 +166,7 @@ export function buildPagePreview(content, tailwind) {
   return `<html hidden>${html}</html>`;
 }
 
-export async function hydrateAllComponents(content) {
+export async function hydrateAllComponents(content, hydrateComponent = () => {}) {
   return await Promise.all(
     content.map(async (section) => ({
       ...section,
@@ -176,7 +176,7 @@ export async function hydrateAllComponents(content) {
           rows: await Promise.all(
             column.rows.map(async (row) => {
               if (row.type === "content") return row;
-              else return hydrateComponent(row);
+              else return await hydrateComponent(row)
             })
           ),
         }))

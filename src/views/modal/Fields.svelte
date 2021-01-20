@@ -21,7 +21,7 @@
   import {fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields, pages} from '../../stores/data/draft'
   import {id} from '../../stores/app/activePage'
-  import {hydrateComponents} from '../../stores/actions'
+  import {hydrateComponents, symbols} from '../../stores/actions'
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte'
   import GroupField from '../../components/FieldTypes/GroupField.svelte'
 
@@ -160,9 +160,8 @@
   }
 
   function applyFields() {
-    // content.hydrateComponents()
-    // site.pages.hydrateComponents()
     hydrateComponents()
+    symbols.hydrate()
     modal.hide()
   }
 
