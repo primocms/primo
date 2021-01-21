@@ -1,5 +1,5 @@
 node_modules
-example/node_modules
-example/public/build/
-example/public/preview/
+container/node_modules
+container/public/build/
+container/public/preview/
 .vscode

@@ -28,11 +28,9 @@ Whether you're a junior or senior developer, writer, or just a web development e
 If you want to run primo locally (for development or testing):
 
 1. `git clone https://github.com/primo-app/primo.git`
-2. `npm install`
-3. `cd primo/example`
-4. `npm install`
-5. `npm run dev`
-6. Go to [http://localhost:5000](http://localhost:5000)
+2. `cd primo && npm install`
+3. `npm run dev`
+4. Open [http://localhost:5000](http://localhost:5000) in your browser
 
 ### How you can help
 
