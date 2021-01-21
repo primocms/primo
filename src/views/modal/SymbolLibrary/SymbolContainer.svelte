@@ -4,14 +4,12 @@
 </script>
 
 <script>
-  import {IconButton} from '../../../components/buttons'
   import {Spinner} from '../../../components/misc'
   import {fade} from 'svelte/transition'
   import { createEventDispatcher, onMount } from 'svelte';
   const dispatch = createEventDispatcher();
   import {createSymbolPreview} from '../../../utils'
 
-  import tailwind from '../../../stores/data/tailwind'
   import {styles as siteStyles, wrapper} from '../../../stores/data/draft'
   import {styles as pageStyles} from '../../../stores/app/activePage'
   import { getTailwindConfig } from '../../../stores/helpers';

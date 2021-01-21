@@ -74,13 +74,6 @@
     return symbol.id+symbol.value.final.html+symbol.value.final.css
   }
 
-  function updateSymbol(symbol, value) {
-    placeSymbol({
-      ...symbol,
-      ...value
-    })
-  }
-
   function createInstance(symbol) {
     const instanceID = getUniqueId()
     const instanceFinalCSS = symbol.value.final.css.replace(RegExp(`${symbol.id}`, 'g'),`${instanceID}`)
@@ -126,7 +119,6 @@
   }
 
   function parseCopiedSymbols(compressedSymbols) {
-    let symbols
     try {
       const json = LZ.decompressFromBase64(compressedSymbols)
       const parsedSymbols = JSON.parse(json)
@@ -139,7 +131,6 @@
       console.log(e)
       return []
     }
-    return symbols
   }
 
   onMount(async () => {
@@ -197,6 +188,7 @@
     </div>
     {#each $symbols as symbol (getID(symbol))}
       <Container
+        titleEditable
         {symbol}
         on:copy={() => copySymbol(symbol)}
         buttons={[
