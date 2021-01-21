@@ -1,5 +1,5 @@
 {
-  "name": "primo-app-example",
+  "name": "@primo-app/primo.dev",
   "version": "0.2.39",
   "scripts": {
     "build": "rollup -c",
