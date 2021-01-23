@@ -12,8 +12,7 @@ export const symbols = writable([])
 // conveniently get the entire site
 export const site = derived(
   [ pages, dependencies, styles, wrapper, fields, symbols ], 
-  (res) => {
-  const [pages, dependencies, styles, wrapper, fields, symbols] = res
+  ([pages, dependencies, styles, wrapper, fields, symbols]) => {
   return {
     // ...createSite(),
     pages,
