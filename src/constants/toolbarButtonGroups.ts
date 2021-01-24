@@ -1,5 +1,5 @@
 import {flatten} from "lodash"
-import modal from '../../../stores/app/modal'
+import modal from '../stores/app/modal'
 
 export const makeEditorialButtons = () => [
     [ 

@@ -16,11 +16,9 @@
   import {saving,unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
   import {undoSiteChange,redoSiteChange} from '../../stores/actions'
-
   import {id, content} from '../../stores/app/activePage'
+  import {makeDeveloperButtons, makeEditorButtons, makeEditorialButtons} from '../../constants'
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
-
-  import {makeDeveloperButtons, makeEditorButtons, makeEditorialButtons} from './Layout/makeButtonGroups'
 
   let unlockingPage:boolean = false
 
