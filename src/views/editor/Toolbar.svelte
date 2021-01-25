@@ -118,7 +118,7 @@
     z-index: 999;
     transition: top 1;
     will-change: top;
-    @apply bg-codeblack p-2 shadow-xl;
+    @apply bg-codeblack p-2;
     backdrop-filter: blur(10px);
     --bg-opacity: 0.9;
 
