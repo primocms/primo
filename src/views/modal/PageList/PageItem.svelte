@@ -2,18 +2,15 @@
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  // import { navigate } from 'svelte-routing';
-	import {push} from 'svelte-spa-router'
-
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
-  import tailwind from '../../../stores/data/tailwind'
-  // import site from '../../../stores/data/site'
   import {styles as siteStyles} from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
   import {getTailwindConfig} from '../../../stores/helpers'
 
   export let page;
   export let active = false;
+  export let disableAdd = false
+  export let parent = null
 
   $: preview =
     wrapInStyleTags($siteStyles.final) +
@@ -38,13 +35,15 @@
 
   function openPage(e) {
     e.preventDefault()
-    if (window.location.pathname.includes('site')) {
-      const [ site ] = window.location.pathname.split('/').slice(2)
-      // navigate(`/site/${site}/${page.id === 'index' ? '' : page.id}`) 
+    let path 
+    if (page.id === 'index') {
+      path = ''
+    } else if (parent) {
+      path = `${parent}/${page.id}`
     } else {
-      // navigate(`/${page.id === 'index' ? '' : page.id}`) 
+      path = page.id
     }
-    modal.hide(page.id === 'index' ? '' : page.id)
+    modal.hide(path)
   }
 
 
@@ -54,31 +53,49 @@
       shouldLoadIframe = true
     })
   })
+
+  const path = parent ? `${parent}/${page.id}` : page.id
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="shadow-xl rounded">
-  <div class="w-full flex justify-between px-3 py-2 border-b border-gray-100">
+<div class="shadow-lg rounded">
+  <div class="text-gray-700 w-full flex justify-between px-3 py-2 border-b border-gray-100">
     <div>
-      <span class="text-xs font-semibold text-gray-700">{page.title}</span>
+      <span class="text-xs font-semibold">{page.title}</span>
     </div>
     <div class="flex justify-end">
+      {#if page.pages && !disableAdd}
+        <button
+          title="Show sub-pages"
+          on:click={() => dispatch('list')}
+          class="p-1 text-xs">
+          <i class="fas fa-th-large" />
+        </button>
+      {:else if page.id !== 'index' && !disableAdd}
+        <button
+          title="Add sub-page"
+          on:click={() => dispatch('add')}
+          class="p-1 text-xs">
+          <i class="fas fa-plus" />
+        </button>
+      {/if}
       {#if page.id !== 'index'}
         <button
           title="Delete page"
           on:click={() => dispatch('delete')}
-          class="delete-page text-xs text-red-500 hover:text-red-600">
+          class="ml-1 p-1 delete-page text-xs text-red-500 hover:text-red-600">
           <i class="fas fa-trash" />
         </button>
       {/if}
     </div>
   </div>
-  <button
+  <a
     class="page-container"
+    href="/{path}"
     on:click={openPage}
     class:active
     bind:this={container}
-    aria-label="Go to /{page.id}">
+    aria-label="Go to /{path}">
     {#if shouldLoadIframe}
       <iframe
       bind:this={iframe}
@@ -90,7 +107,7 @@
         iframeLoaded = true;
       }} /> 
     {/if}
-  </button>
+  </a>
 </div>
 
 <style>
@@ -103,14 +120,14 @@
   a.page-title:hover {
     @apply text-blue-800;
   }
-  button.page-container.active {
+  a.page-container.active {
     @apply cursor-default pointer-events-none opacity-50;
     &:after {
       @apply opacity-50;
     }
   }
-  button.page-container {
-    @apply block w-full relative overflow-hidden transition-colors duration-100;
+  a.page-container {
+    @apply cursor-pointer block w-full relative overflow-hidden transition-colors duration-100;
     height: 15vh;
 
     &:after {

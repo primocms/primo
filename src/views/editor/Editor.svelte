@@ -1,8 +1,7 @@
 <script lang="ts">
   import Mousetrap from 'mousetrap'
   import _ from 'lodash'
-  import { onMount, createEventDispatcher, getContext } from 'svelte'
-  import {writable} from 'svelte/store'
+  import { createEventDispatcher } from 'svelte'
 
   const dispatch = createEventDispatcher()
   
@@ -17,10 +16,8 @@
   import modal from '../../stores/app/modal'
   import {undoSiteChange,redoSiteChange} from '../../stores/actions'
 
-  import {id, content} from '../../stores/app/activePage'
-  import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
-
-  let unlockingPage:boolean = false
+  import {content} from '../../stores/app/activePage'
+  import type {ButtonGroup,Component} from './Layout/LayoutTypes'
 
   let updatingDatabase:boolean = false
 

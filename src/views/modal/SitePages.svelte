@@ -1,9 +1,7 @@
 <script>
   import _ from 'lodash'
-  import cloneDeep from "lodash/cloneDeep";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-  import ShortUniqueId from "short-unique-id";
   import { SelectOne, TextInput } from "../../components/inputs";
   import { PrimaryButton } from "../../components/buttons";
   import { Card } from "../../components/misc";
@@ -13,6 +11,7 @@
 
   import { createPage } from "../../const";
   import {pages} from "../../stores/data/draft";
+  import {pages as actions} from "../../stores/actions";
   import {id} from '../../stores/app/activePage'
 
   async function submitForm(form) {
@@ -22,13 +21,13 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
-    $pages = [ ...$pages, newPage ]
+    actions.add(newPage, currentPath)
     creatingPage = false;
     pageUrl = "";
   }
 
   async function deletePage(pageId) {
-    $pages = $pages.filter(p => p.id !== pageId)
+    actions.delete(pageId, currentPath)
   }
 
   function duplicatePage(title, url) {
@@ -117,9 +116,6 @@
 
   let creatingPage = false;
 
-  let pageBeingCreated;
-  let pageBeingDeleted;
-
   let mounted = false;
   onMount(async () => {
     mounted = true;
@@ -139,23 +135,74 @@
   }
 
   let pageUrl = "";
-</script>
 
-<style>
-  li {
-    @apply list-none;
+  function listPages(pageId) {
+    const {pages} = _.find(listedPages, ['id', pageId])
+    listedPages = pages
+    currentPath = [ ...currentPath, pageId ]
   }
-</style>
+
+  function addSubPage(pageId) {
+    currentPath = [ ...currentPath, pageId ]
+    listedPages = []
+    creatingPage = true;
+  }
+
+  let currentPath = []
+  $: listedPages = getListedPages(currentPath, $pages)
+  $: breadcrumbs = getBreadCrumbs(currentPath, $pages)
+
+  function getListedPages(path, pages) {
+    const [ rootPageId ] = path
+    if (rootPageId) {
+      const rootPage = _.find(pages, ['id', rootPageId])
+      return rootPage.pages || []
+    } else return pages
+  }
+
+  function getBreadCrumbs(path, pages) {
+    const [ rootPageId ] = path
+    if (rootPageId) {
+      const rootPage = _.find(pages, ['id', rootPageId])
+      return [
+        {
+          label: 'Site',
+          path: []
+        },
+        {
+          label: rootPage.title,
+          path
+        }
+      ]
+    } else return null
+  }
+
+</script>
 
 <ModalHeader icon="fas fa-th-large" title="Pages" />
 
+{#if breadcrumbs}
+  <div in:fade class="breadcrumbs flex text-sm p-2 font-bold text-gray-700">
+    {#each breadcrumbs as {label, path}, i }
+      <div class="breadcrumb" on:click={() => currentPath}>
+        <button on:click={() => currentPath = path} class:underline={breadcrumbs.length !== i+1} class="font-semibold">{label}</button>
+      </div>
+    {/each}
+  </div>
+{/if}
+
 <ul class="grid grid-cols-2 gap-4 mb-4">
-  {#each $pages as page (page.id)}
-    <li transition:fade={{ duration: 200 }} id="page-{page.id}">
+  {#each listedPages as page (page.id)}
+    <li in:fade={{ duration: 200 }} id="page-{page.id}">
       <PageItem
         {page}
+        parent={currentPath[0]}
+        disableAdd={breadcrumbs}
         active={$id === page.id}
-        on:delete={() => deletePage(page.id)} />
+        on:add={() => addSubPage(page.id)} 
+        on:delete={() => deletePage(page.id)} 
+        on:list={() => listPages(page.id)}
+      />
     </li>
   {/each}
 </ul>
@@ -193,3 +240,14 @@
     </form>
   </Card>
 {/if}
+
+
+<style>
+  .breadcrumb:not(:last-child):after {
+    content: '/';
+    @apply mx-2 no-underline;
+  }
+  li {
+    @apply list-none;
+  }
+</style>

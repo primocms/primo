@@ -1,9 +1,12 @@
+import _ from 'lodash'
 import {writable,get} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS, createPage} from '../../const'
 import {unsaved} from './misc'
 
 export const id = writable('index')
+
+// When a store in here is changed, updatePage is run to save those values to site.pages (as a draft)
 
 export const content = writable(DEFAULTS.content)
 content.subscribe(content => {
@@ -31,6 +34,27 @@ fields.subscribe(fields => {
 })
 
 function updatePage(prop) {
+	const [ root, child ] = get(id).split('/')
+  if (!child) {
+    const pageToUpdate = _.find(get(pages), ['id', root]) 
+    pages.update(
+      pages => pages.map(page => page.id === root ? ({
+        ...page,
+        ...prop
+      }) : page)
+    )
+  } else {
+    pages.update(
+      pages => pages.map(page => page.id === root ? ({
+        ...page,
+        pages: page.pages.map(page => page.id === child ? ({
+          ...page,
+          ...prop
+        }) : page)
+      }) : page)
+    )
+  }
+
   pages.update(pages => pages.map(page => page.id === get(id) ? ({
     ...page,
     ...prop

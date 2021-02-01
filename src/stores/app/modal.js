@@ -121,8 +121,8 @@ export default {
   },
   hide: (nav = null) => {
     modal_cleanup()
+    // when the address changes, App.svelte grabs the new page data
     push(nav === null ? get(location) : `/${nav}`)
-    // store.update(s => ({...initialState}) )
   },
   register: (modal) => {
     if (Array.isArray(modal)) {

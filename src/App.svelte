@@ -42,13 +42,21 @@
 	$: $pageId = $location.substr(1) || 'index'
 	$: setPageContent($pageId, $pages)
 	function setPageContent(id, pages) {
-		const currentPage = _.find(pages, ['id', id])
-		if (currentPage) {
-			content.set(currentPage.content)
-			styles.set(currentPage.styles)
-			fields.set(currentPage.fields)
-			dependencies.set(currentPage.dependencies)
-			wrapper.set(currentPage.wrapper)
+		const [ root, child ] = id.split('/')
+		const rootPage = _.find(pages, ['id', root])
+		if (!child && rootPage) {
+			setPageStore(rootPage)
+		} else if (rootPage) {
+			const childPage = _.find(rootPage.pages, ['id', child])
+			setPageStore(childPage)
+		}
+
+		function setPageStore(page) {
+			content.set(page.content)
+			styles.set(page.styles)
+			fields.set(page.fields)
+			dependencies.set(page.dependencies)
+			wrapper.set(page.wrapper)
 		}
 	}
 
@@ -70,7 +78,7 @@
 
 </script>
 
-<Router routes={{ '/:page?': Page }} />
+<Router routes={{ '/*page?': Page }} />
 
 <Modal visible={!!activeModal}>
 	<svelte:component this={activeModal} {...$modal.componentProps} />

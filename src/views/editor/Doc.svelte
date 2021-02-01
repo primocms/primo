@@ -1,10 +1,7 @@
 <script lang="ts">
   import _ from 'lodash'
-  import {fade} from 'svelte/transition'
-  import { onMount, createEventDispatcher } from 'svelte' 
-  import {writable} from 'svelte/store'
-  import {getUniqueId,wrapInStyleTags} from '../../utils'
-  import {getStyles,appendHtml} from './pageUtils.js'
+  import { createEventDispatcher } from 'svelte' 
+  import {getUniqueId} from '../../utils'
   import Section from './Layout/Section.svelte'
   import Column from './Layout/Column.svelte'
   import ContentNode from './Layout/ContentNode.svelte'
@@ -13,14 +10,10 @@
   import {wrapper as siteWrapper} from '../../stores/data/draft'
   import {wrapper as pageWrapper} from '../../stores/app/activePage'
   const dispatch = createEventDispatcher()
-  import {IconButton} from '../../components/misc'
-
-  import {id} from '../../stores/app/activePage'
-  import {pages} from '../../stores/data/draft'
 
   export let content
 
-  import type {Row,Column as ColumnType,Section as SectionType} from './Layout/LayoutTypes'
+  import type {Row,Section as SectionType} from './Layout/LayoutTypes'
 
   function hasContentAbove(rowIndex: number, rows: Array<Row>): boolean {
     const rowAbove:Row = rows[rowIndex-1]

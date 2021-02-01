@@ -4,13 +4,13 @@ import {getAllFields} from './helpers'
 import {convertFieldsToData, parseHandlebars, hydrateAllComponents, getUniqueId} from '../utils'
 import {id,content} from './app/activePage'
 import {focusedNode} from './app/editor'
-import {pages, dependencies, styles, wrapper, fields} from './data/draft'
+import {dependencies, styles, wrapper, fields} from './data/draft'
 import * as stores from './data/draft'
 import {timeline,undone} from './data/draft'
 import {processors} from '../component'
 
 export async function hydrateSite(data) {
-  pages.set(data.pages)
+  stores.pages.set(data.pages)
   dependencies.set(data.dependencies)
   styles.set(data.styles)
   wrapper.set(data.wrapper)
@@ -20,7 +20,7 @@ export async function hydrateSite(data) {
 
 export async function updateInstances(symbol) {
   const updatedPages = await Promise.all(
-    get(pages).map(async page => await ({
+    get(store.pages).map(async page => await ({
       ...page,
       content: await Promise.all(
         page.content.map(async section => {
@@ -99,7 +99,7 @@ export async function updateInstances(symbol) {
 
 export async function hydrateComponents() {
   const updatedPages = await Promise.all(
-    get(pages).map(async (page) => {
+    get(store.pages).map(async (page) => {
       const updatedContent = await hydrateAllComponents(page.content, async (component) => {
         const allFields = getAllFields(component.value.raw.fields);
         const data = await convertFieldsToData(allFields, "all");
@@ -226,5 +226,30 @@ export const symbols = {
       })
     );
     stores.symbols.set(updatedSymbols)
+  }
+}
+
+export const pages = {
+  add: (newpage, path) => {
+    const currentPages = get(stores.pages)
+    let newPages = _.cloneDeep(currentPages)
+    if (path.length > 0) {
+      const rootPage = _.find(newPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages ? [ ...rootPage.pages, newpage ] : [ newpage ]
+    } else {
+      newPages = [ ...newPages, newpage ]
+    }
+    stores.pages.set(newPages)
+  },
+  delete: (pageId, path) => {
+    const currentPages = get(stores.pages)
+    let newPages = _.cloneDeep(currentPages)
+    if (path.length > 0) {
+      const rootPage = _.find(newPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
+    } else {
+      newPages = newPages.filter(page => page.id !== pageId)
+    }
+    stores.pages.set(newPages)
   }
 }

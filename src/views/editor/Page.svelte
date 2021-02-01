@@ -1,6 +1,5 @@
 <script lang="ts">
   import _ from 'lodash'
-  import {setContext} from 'svelte'
   import Editor from './Editor.svelte'
   import { wrapInStyleTags } from '../../utils'
 
@@ -17,8 +16,6 @@
 
   let libraries: Array<any>;
   $: libraries = $pageDependencies ? $pageDependencies.libraries : [];
-
-  let customScripts: Array<any> = [];
 
   let cssLibraries: Array<any>;
   $: cssLibraries = libraries.filter((l) => l.type === "css");
@@ -47,13 +44,6 @@
 
 <Editor on:change on:save={savePage} on:build on:signOut />
 
-<!-- {#if $loadingTailwind}
-  <div class="flex" id="loading" transition:fade={{ duration: 200 }}>
-    <span class="text-white text-xs mr-2">Loading Tailwind styles</span>
-    <Spinner variants="text-white" size="xs"/>
-  </div>
-{/if} -->
-
 <style>
   #loading {
     @apply fixed font-medium rounded-full bg-primored py-1 px-3 shadow-lg;
@@ -65,10 +55,5 @@
   #primo-symbol {
     width: 3rem;
     height: 2rem;
-  }
-
-  /* remove random annoying Monaco alert that sometimes shows up at the bottom of the page */
-  :global(.monaco-alert) {
-    display: none !important;
   }
 </style>
