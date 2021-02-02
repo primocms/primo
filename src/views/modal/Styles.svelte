@@ -29,19 +29,20 @@
     }
   }
 
-  $: currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content) 
+  let currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content)
+
+  function refreshPagePreview() {
+    currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content)
+  }
+
   let allPages = []
-  $: buildSitePreview($siteStyles)
+  $: primaryTab.id === 'site' && buildSitePreview($siteStyles)
   function buildSitePreview(_) {
     allPages = $pages.map(page => buildPreview($siteStyles.final, page.styles.final, page.content))
   }
 
   let loading = false
-
-
   let tailwindConfigChanged = false
-
-
 
   const primaryTabs = [
     {
@@ -58,9 +59,6 @@
 
   let primaryTab = primaryTabs[0]
 
-  let showingPage = true
-  $: showingPage = primaryTab === primaryTabs[0]
-
   const secondaryTabs = [
     {
       id: 'styles',
@@ -76,8 +74,7 @@
 
   let view = 'large'
 
-  $: quickDebounce([compileStyles, primaryTab.id === 'page' ? $pageStyles : $siteStyles]); 
-  async function compileStyles(styles) {
+  async function compileStyles({ styles, onCompile }) {
     loading = true
     const result = await processors.css(
       styles.raw, 
@@ -91,7 +88,7 @@
     );
     loading = false
     if (!result.error) {
-      styles.final = result
+      onCompile(result)
       if (tailwindConfigChanged) {
         const combinedTailwindConfig = getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind)
         tailwind.swapInConfig(combinedTailwindConfig, () => {
@@ -129,6 +126,15 @@
             bind:value={$pageStyles.raw} 
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
+            on:change={() => {
+              quickDebounce([compileStyles, {
+                styles: $pageStyles,
+                onCompile: (css) => {
+                  $pageStyles.final = css
+                  refreshPagePreview()
+                }
+              }])
+            }}
           />
         {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
           <CodeMirror 
@@ -145,6 +151,15 @@
             bind:value={$siteStyles.raw} 
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
+            on:change={() => {
+              quickDebounce([compileStyles, {
+                styles: $siteStyles,
+                onCompile: (css) => {
+                  $siteStyles.final = css
+                  refreshPagePreview()
+                }
+              }])
+            }}
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
           <CodeMirror 
