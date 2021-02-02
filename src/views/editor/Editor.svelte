@@ -84,7 +84,7 @@
                 : { ...existingRow, ...updatedRow }; // allow row to be removed
             } else return existingRow;
           })
-          .filter((r) => r),
+          .filter(Boolean),
       })),
     }))
   }

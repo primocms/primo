@@ -20,7 +20,7 @@ export async function hydrateSite(data) {
 
 export async function updateInstances(symbol) {
   const updatedPages = await Promise.all(
-    get(store.pages).map(async page => await ({
+    get(stores.pages).map(async page => await ({
       ...page,
       content: await Promise.all(
         page.content.map(async section => {
@@ -30,6 +30,7 @@ export async function updateInstances(symbol) {
                 return {
                   ...column,
                   rows: await Promise.all(column.rows.map(async row => { 
+                    // ignore anything that isn't a component
                     if (row.type !== 'component' || row.symbolID !== symbol.id) return row
 
                     // Update row from Symbol's HTML, CSS, and JS & Instance's data
@@ -94,12 +95,12 @@ export async function updateInstances(symbol) {
   )
   const activePageContent = _.find(updatedPages, ['id', get(id)])['content']
   content.set(activePageContent)
-  pages.set(updatedPages)
+  stores.pages.set(updatedPages)
 }
 
 export async function hydrateComponents() {
   const updatedPages = await Promise.all(
-    get(store.pages).map(async (page) => {
+    get(stores.pages).map(async (page) => {
       const updatedContent = await hydrateAllComponents(page.content, async (component) => {
         const allFields = getAllFields(component.value.raw.fields);
         const data = await convertFieldsToData(allFields, "all");
@@ -116,7 +117,7 @@ export async function hydrateComponents() {
   );
   const activePageContent = _.find(updatedPages, ['id', get(id)])['content']
   content.set(activePageContent)
-  pages.set(updatedPages)
+  stores.pages.set(updatedPages)
 }
 
 export function insertSection(section) {
