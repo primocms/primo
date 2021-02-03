@@ -8,7 +8,6 @@
   import { EditField } from "../../../components/inputs";
   import { PrimaryButton } from "../../../components/buttons";
   import { Tabs } from "../../../components/misc";
-  import { CodeMirror } from "../../../components";
   import { Card } from "../../../components/misc";
   import FullCodeEditor from "./FullCodeEditor.svelte";
   import { CodePreview } from "../../../components/misc";

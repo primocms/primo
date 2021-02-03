@@ -1,9 +1,9 @@
 <script>
-  import {onMount,createEventDispatcher} from 'svelte'
+  import {onMount,onDestroy,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
 
   import CodeMirror from 'codemirror/lib/codemirror'
-
+  
   const dispatch = createEventDispatcher()
 
   export let prefix = ''
@@ -18,7 +18,32 @@
   export let docs = null
   export let autofocus = false
 
-  mode = {
+  window.requestIdleCallback(async () => {
+    value = await formatCode(value, mode)
+  })
+
+  async function formatCode(code, mode) {
+    const {default:prettier} = await import('prettier')
+    const plugin = await {
+      'html': import('prettier/parser-html'),
+      'css': import('prettier/parser-postcss'),
+      'javascript': import('prettier/parser-babel')
+    }[mode]
+
+    let formatted = code
+    try {
+      formatted = prettier.format(value, { 
+        parser: mode,  
+        plugins: [plugin]
+      })
+    } catch(e) {
+      console.warn(e)
+    }
+    return formatted
+  }
+
+
+  const languageMode = {
     'css' : 'text/x-scss',
     'html' : {
       name: 'handlebars',
@@ -55,7 +80,7 @@
     Editor = CodeMirror(editorNode, {
       // passed values
       value: prefix + value,
-      mode,
+      mode: languageMode,
       readOnly: disabled,
       ...CodeMirrorOptions,
       // set values
@@ -74,7 +99,7 @@
         'Enter': 'emmetInsertLineBreak'
       },
       viewportMargin: Infinity,
-      ... typeof mode === 'string' && mode.includes('css') ? {} : {
+      ... typeof languageMode === 'string' && languageMode.includes('css') ? {} : {
         emmet: {
           previewOpenTag: false
         },
