@@ -2,4 +2,4 @@ export {
     makeDeveloperButtons,
     makeEditorButtons,
     makeEditorialButtons
-} from './toolbarButtonGroups'
+} from './toolbarButtonGroups.js'
