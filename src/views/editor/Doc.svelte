@@ -1,7 +1,7 @@
 <script lang="ts">
   import _ from 'lodash'
   import { createEventDispatcher } from 'svelte' 
-  import {getUniqueId} from '../../utils'
+  import {getUniqueId,createDebouncer} from '../../utils'
   import Section from './Layout/Section.svelte'
   import Column from './Layout/Column.svelte'
   import ContentNode from './Layout/ContentNode.svelte'
@@ -14,6 +14,8 @@
   export let content
 
   import type {Row,Section as SectionType} from './Layout/LayoutTypes'
+
+  const slowDebounce = createDebouncer(1000);
 
   function hasContentAbove(rowIndex: number, rows: Array<Row>): boolean {
     const rowAbove:Row = rows[rowIndex-1]
@@ -255,9 +257,11 @@
                   })
                 }}
                 on:change={({detail:html}) => {
-                  saveRow({ id: row.id, value: {html} })
-                  focusedNode.updatePath({ section, column, row })
-                  dispatch('contentChanged')
+                  slowDebounce([() => {
+                    saveRow({ id: row.id, value: {html} })
+                    focusedNode.updatePath({ section, column, row })
+                    dispatch('contentChanged')
+                  }])
                 }}
                 on:blur={() => {}}
                 on:selectionChange={({detail:selection}) => {
