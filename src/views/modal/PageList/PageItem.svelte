@@ -35,15 +35,7 @@
 
   function openPage(e) {
     e.preventDefault()
-    let path 
-    if (page.id === 'index') {
-      path = ''
-    } else if (parent) {
-      path = `${parent}/${page.id}`
-    } else {
-      path = page.id
-    }
-    modal.hide(path)
+    modal.hide(page.id)
   }
 
 
@@ -54,7 +46,6 @@
     })
   })
 
-  const path = parent ? `${parent}/${page.id}` : page.id
 </script>
 
 <svelte:window on:resize={resizePreview} />
@@ -91,11 +82,11 @@
   </div>
   <a
     class="page-container"
-    href="/{path}"
+    href="/{page.id}"
     on:click={openPage}
     class:active
     bind:this={container}
-    aria-label="Go to /{path}">
+    aria-label="Go to /{page.id}">
     {#if shouldLoadIframe}
       <iframe
       bind:this={iframe}

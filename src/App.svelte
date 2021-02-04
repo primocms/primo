@@ -47,7 +47,7 @@
 		if (!child && rootPage) {
 			setPageStore(rootPage)
 		} else if (rootPage) {
-			const childPage = _.find(rootPage.pages, ['id', child])
+			const childPage = _.find(rootPage.pages, ['id', id])
 			setPageStore(childPage)
 		}
 

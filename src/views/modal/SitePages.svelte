@@ -17,8 +17,9 @@
 
   async function submitForm(form) {
     const inputs = Object.values(form.target);
-    const [title, url] = inputs.map((f) => f.value);
+    let [title, url] = inputs.map((f) => f.value);
     const isEmpty = inputs[2].classList.contains("selected");
+    url = `${currentPath[0]}/${url}` // prepend parent page to id (i.e. about/team)
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
