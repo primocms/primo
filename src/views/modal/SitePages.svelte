@@ -11,6 +11,7 @@
 
   import { createPage } from "../../const";
   import {pages} from "../../stores/data/draft";
+  import activePage from "../../stores/app/activePage";
   import {pages as actions} from "../../stores/actions";
   import {id} from '../../stores/app/activePage'
 
@@ -31,7 +32,7 @@
   }
 
   function duplicatePage(title, url) {
-    const newPage = _.cloneDeep(_.find($pages, ['id', $id]))
+    const newPage = _.cloneDeep($activePage) 
     const [newContent, IDmap] = scrambleIds(newPage.content);
     newPage.content = newContent;
     newPage.title = title;

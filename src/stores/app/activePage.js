@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import {writable,get} from 'svelte/store'
+import {writable,get,derived} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS, createPage} from '../../const'
 import {unsaved} from './misc'
@@ -61,3 +61,18 @@ function updatePage(prop) {
   }) : page))
   unsaved.set(true)
 }
+
+
+// conveniently get the entire site
+export default derived(
+  [ content, dependencies, styles, wrapper, fields ], 
+  ([content, dependencies, styles, wrapper, fields]) => {
+  return {
+    // ...createSite(),
+    content, 
+    dependencies, 
+    styles, 
+    wrapper, 
+    fields
+  }
+})
