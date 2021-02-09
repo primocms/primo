@@ -1,6 +1,7 @@
 <script>
   import {onMount,onDestroy} from 'svelte'
   import { set } from 'idb-keyval';
+  import { BroadcastChannel } from 'broadcast-channel';
 
   export let multiple = false
   export let pages = null

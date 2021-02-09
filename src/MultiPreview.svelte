@@ -1,5 +1,5 @@
 <script>
-  import { onMount, onDestroy } from 'svelte'
+  import { BroadcastChannel } from 'broadcast-channel';
 
   let pages = []
 

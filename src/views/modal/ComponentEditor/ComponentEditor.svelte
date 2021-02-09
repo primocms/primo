@@ -380,13 +380,13 @@
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone"></i>
-      <span>Convert to Symbol</span>
+      <span class="hidden md:inline">Convert to Symbol</span>
     </button>
   {/if}
 </ModalHeader>
 
-<div class="flex flex-col lg:flex-row flex-1 flex-wrap" bind:clientWidth={containerWidth}>
-  <div class="mb-4 lg:mb-0 w-1/2" style="width:{editorWidth}px">
+<div class="flex flex-1 flex-wrap" bind:clientWidth={containerWidth}>
+  <div class="mb-4 lg:mb-0 w-full md:w-1/2" style="width:{editorWidth}px">
     <div class="flex flex-col h-full">
       {#if $switchEnabled}
         <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />
@@ -563,7 +563,7 @@
     on:resize={({detail}) => resizePreview(detail)}
     on:release={() => resizingPreview = false}
   />
-  <div class="w-1/2" class:pointer-events-none={resizingPreview} bind:clientWidth={ogPreviewWidth} style="width:{newPreviewWidth}px">
+  <div class="w-full md:w-1/2" class:pointer-events-none={resizingPreview} bind:clientWidth={ogPreviewWidth} style="width:{newPreviewWidth}px">
     <CodePreview
       view="small"
       {loading}

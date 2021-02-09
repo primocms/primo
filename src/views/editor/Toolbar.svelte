@@ -3,14 +3,14 @@
 </svelte:head>
 
 <script lang="ts">
-  import { onMount, createEventDispatcher, getContext } from 'svelte'
-  import { fade, slide } from "svelte/transition";
+  import { onMount, createEventDispatcher } from 'svelte'
+  import { slide } from "svelte/transition";
   import Mousetrap from 'mousetrap'
   import ToolbarButton from "./ToolbarButton.svelte";
   import {PrimoButton,MobileNavButton} from '../../components/buttons'
   import type {ButtonGroup} from './Layout/LayoutTypes'
-  import {switchEnabled,userRole,hideReleaseNotes} from '../../stores/app'
-  import modal from '../../stores/app/modal'
+  import {switchEnabled,userRole} from '../../stores/app'
+  import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher()
   
@@ -96,7 +96,7 @@
   }
 
   .button-group {
-    @apply flex my-1 mx-2 flex-row rounded-sm mr-2;
+    @apply flex m-1 flex-row rounded-sm mr-2;
   }
 
   .container {

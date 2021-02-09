@@ -29,7 +29,7 @@
   
 </script>
 
-<div class="button-container">
+<div class="button-group button-container">
   <button
     {id}
     aria-label={title}

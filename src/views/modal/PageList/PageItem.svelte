@@ -2,10 +2,12 @@
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
+  import { navigate } from "svelte-routing";
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
   import {styles as siteStyles} from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
   import {getTailwindConfig} from '../../../stores/helpers'
+  import 'requestidlecallback-polyfill';
 
   export let page;
   export let active = false;
@@ -35,7 +37,24 @@
 
   function openPage(e) {
     e.preventDefault()
-    modal.hide(page.id)
+    modal.hide()
+
+    const [ _, user, repo, pageId ] = window.location.pathname.split('/')
+    const {hash} = window.location
+
+    if (user === 'try') {
+      console.log('try')
+      const url = `${window.location.origin}/try/${page.id === 'index' ? '' : page.id }/${hash}`
+      console.log({ user, repo, pageId, url })
+      console.log({url})
+      navigate(url)
+    } else {
+      console.log('normal')
+      const url = `${window.location.origin}/${user}/${repo}/${page.id === 'index' ? '' : page.id }/${hash}`
+      console.log({url})
+      navigate(url)
+    }
+
   }
 
 

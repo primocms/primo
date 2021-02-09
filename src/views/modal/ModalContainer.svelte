@@ -53,6 +53,7 @@
   }
 
   .modal {
+    -webkit-overflow-scrolling: touch;
     @apply flex flex-col items-center justify-center overflow-hidden fixed z-40 bottom-0 left-0 right-0 top-0;
   }
 
@@ -93,6 +94,7 @@
     top: 0.5rem !important;
     bottom: 0.5rem !important;
     max-height: initial !important;
+    @apply p-2;
   }
 
   .fullscreen .modal-card-body {

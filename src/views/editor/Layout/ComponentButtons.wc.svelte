@@ -60,7 +60,7 @@
 
   button {
     pointer-events: all;
-    @apply shadow-lg flex justify-center items-center px-2 h-6 bg-primored text-xs text-gray-100 transition-colors duration-200;
+    @apply shadow-lg flex justify-center items-center px-4 md:px-2 h-12 md:h-6 bg-primored text-xs font-semibold text-gray-100 transition-colors duration-200;
     margin-right: 1px !important;
     margin-bottom: 1px !important;
     outline: none !important;

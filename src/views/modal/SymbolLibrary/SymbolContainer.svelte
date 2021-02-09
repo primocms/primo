@@ -7,6 +7,8 @@
   import {Spinner} from '../../../components/misc'
   import {fade} from 'svelte/transition'
   import { createEventDispatcher, onMount } from 'svelte';
+  import 'requestidlecallback-polyfill';
+
   const dispatch = createEventDispatcher();
   import {createSymbolPreview} from '../../../utils'
 

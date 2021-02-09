@@ -3,7 +3,8 @@
   import {fade} from 'svelte/transition'
 
   import CodeMirror from 'codemirror/lib/codemirror'
-  
+  import 'requestidlecallback-polyfill';
+
   const dispatch = createEventDispatcher()
 
   export let prefix = ''
