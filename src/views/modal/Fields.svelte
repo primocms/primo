@@ -12,7 +12,7 @@
   import {Card} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
   import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../types/components'
-  import {getUniqueId} from '../../utils'
+  import {createUniqueID} from '../../utilities'
 
   import ModalHeader from './ModalHeader.svelte'
   import fieldTypes from '../../stores/app/fieldTypes'
@@ -53,7 +53,7 @@
     fields = [
       ...fields,
       {
-        id: getUniqueId(),
+        id: createUniqueID(),
         key: '',
         label: '',
         value: '',
@@ -70,7 +70,7 @@
       fields: field.id === id ? [
         ...field.fields,
         {
-          id: getUniqueId(),
+          id: createUniqueID(),
           key: '',
           label: '',
           value: '',
@@ -101,7 +101,7 @@
     const keys = repeaterField.fields.map(f => f.key)
     repeaterField.value = [
       ...repeaterField.value,
-      keys.reduce((a,b) => (a[b]='',a), { id: getUniqueId() }) // turn keys into value object
+      keys.reduce((a,b) => (a[b]='',a), { id: createUniqueID() }) // turn keys into value object
     ]
     refreshFields()
     updateHtmlWithFieldData('static')

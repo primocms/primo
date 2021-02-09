@@ -1,7 +1,9 @@
 <script lang="ts">
   import _ from 'lodash'
   import { createEventDispatcher } from 'svelte' 
-  import {getUniqueId,createDebouncer} from '../../utils'
+  import { links } from "svelte-routing";
+  import {createDebouncer} from '../../utils'
+  import {createUniqueID} from '../../utilities'
   import Section from './Layout/Section.svelte'
   import Column from './Layout/Column.svelte'
   import ContentNode from './Layout/ContentNode.svelte'
@@ -117,7 +119,7 @@
   }
 
   function insertComponent(component) {
-    const focusedNodeId = get(focusedNode).id;
+    const focusedNodeId = $focusedNode.id;
 
     if (focusedNodeId) {
       // a content node is selected on the page
@@ -151,8 +153,8 @@
     }
 
     function positionComponent(rows, newRow) {
-      const selectedNodePosition = get(focusedNode).position;
-      const selectedNodeSelection = get(focusedNode).selection;
+      const selectedNodePosition = $focusedNode.position;
+      const selectedNodeSelection = $focusedNode.selection;
 
       if (selectedNodePosition === 0) {
         // first row is selected
@@ -211,7 +213,7 @@
   // Constructors
   function ContentRow() {
     return {
-      id: getUniqueId(),
+      id: createUniqueID(),
       type: "content",
       value: {
         html: "",
@@ -220,7 +222,7 @@
   }
 </script>
 
-<div class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
+<div use:links class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
   {#each content as section, i (section.id)}
     <Section {section}>
       {#each section.columns as column, i (column.id)}

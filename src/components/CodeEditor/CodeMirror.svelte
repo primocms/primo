@@ -34,6 +34,7 @@
     try {
       formatted = prettier.format(value, { 
         parser: mode,  
+        jsxBracketSameLine: true,
         plugins: [plugin]
       })
     } catch(e) {

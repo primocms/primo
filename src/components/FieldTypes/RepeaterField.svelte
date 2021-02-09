@@ -5,7 +5,7 @@
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher() 
 
-  import {getUniqueId} from '../../utils'
+  import {createUniqueID} from '../../utilities'
   import {Card} from '../misc'
   import { EditField, GenericField, ImageField} from '../inputs'
   import fieldTypes from '../../stores/app/fieldTypes'
@@ -41,7 +41,7 @@
   function createSubfield() {
     return field.fields.map(subfield => ({
       ...subfield,
-      id: getUniqueId(),
+      id: createUniqueID(),
       value: ''
     }))
   }

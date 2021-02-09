@@ -7,7 +7,7 @@
   import { Card } from "../../components/misc";
   import PageItem from "./PageList/PageItem.svelte";
   import ModalHeader from "./ModalHeader.svelte";
-  import {getUniqueId} from '../../utils'
+  import {createUniqueID} from '../../utilities'
 
   import { createPage } from "../../const";
   import {pages} from "../../stores/data/draft";
@@ -88,19 +88,19 @@
     function scrambleIds(content) {
       let IDs = [];
       const newContent = content.map((section) => {
-        const newID = getUniqueId();
+        const newID = createUniqueID();
         IDs.push([section.id, newID]);
         return {
           ...section,
           id: newID,
           columns: section.columns.map((column) => {
-            const newID = getUniqueId();
+            const newID = createUniqueID();
             IDs.push([column.id, newID]);
             return {
               ...column,
               id: newID,
               rows: column.rows.map((row) => {
-                const newID = getUniqueId();
+                const newID = createUniqueID();
                 IDs.push([row.id, newID]);
                 return {
                   ...row,

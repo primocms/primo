@@ -1,8 +1,8 @@
 <script lang="ts">
   import _ from "lodash";
-  import ShortUniqueId from "short-unique-id";
   import { onMount } from "svelte";
 
+  import {createUniqueID} from '../../../utilities'
   import Resizer from './Resizer.svelte'
   import ModalHeader from "../ModalHeader.svelte";
   import { EditField } from "../../../components/inputs";
@@ -98,7 +98,7 @@
     }
     saveFinalValue("html", finalHTML);
     if(finalJS) {
-      finalJS = `${finalJS} // ${getUniqueId()}` // force preview to reload so JS evaluates over new DOM
+      finalJS = `${finalJS} // ${createUniqueID()}` // force preview to reload so JS evaluates over new DOM
     }
     quickDebounce([() => {
       loading = false
@@ -179,7 +179,7 @@
   function convertToSymbol() {
     const newSymbol = { 
       ...localComponent, 
-      id: getUniqueId(),
+      id: createUniqueID(),
       type: 'symbol'
     }
     delete newSymbol.symbolID
@@ -198,6 +198,7 @@
     disabled = false;
     const symbol: Component = getSymbol(localComponent.symbolID)
     localComponent = _.cloneDeep(symbol)
+    compileCss(symbol.value.raw.css) // workaround for styles breaking
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
       header: {
@@ -223,7 +224,7 @@
 
     function createField() {
       return {
-        id: getUniqueId(),
+        id: createUniqueID(),
         key: "",
         label: "",
         value: "",
@@ -231,10 +232,6 @@
         fields: [],
       };
     }
-  }
-
-  function getUniqueId() {
-    return new ShortUniqueId().randomUUID(5).toLowerCase();
   }
 
   function addSubField(id: string): void {
@@ -245,7 +242,7 @@
           ? [
               ...field.fields,
               {
-                id: getUniqueId(),
+                id: createUniqueID(),
                 key: "",
                 label: "",
                 value: "",

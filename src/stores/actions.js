@@ -1,7 +1,8 @@
 import _ from 'lodash'
 import {get} from 'svelte/store'
 import {getAllFields} from './helpers'
-import {convertFieldsToData, parseHandlebars, hydrateAllComponents, getUniqueId} from '../utils'
+import {convertFieldsToData, parseHandlebars, hydrateAllComponents} from '../utils'
+import {createUniqueID} from '../utilities'
 import {id,content} from './app/activePage'
 import {focusedNode} from './app/editor'
 import {dependencies, styles, wrapper, fields} from './data/draft'
@@ -126,7 +127,7 @@ export function insertSection(section) {
   const newSection = createSection({
     width: section.fullwidth ? "fullwidth" : "contained",
     columns: section.columns.map((c) => ({
-      id: getUniqueId(),
+      id: createUniqueID(),
       size: c,
       rows: [createContentRow()]
     })),
@@ -151,11 +152,11 @@ export function insertSection(section) {
 
   function createSection(options = {}) {
     return {
-      id: getUniqueId(),
+      id: createUniqueID(),
       width: "contained",
       columns: [
         {
-          id: getUniqueId(),
+          id: createUniqueID(),
           size: "",
           rows: [createContentRow()],
         },
@@ -166,7 +167,7 @@ export function insertSection(section) {
 
   function createContentRow() {
     return {
-      id: getUniqueId(),
+      id: createUniqueID(),
       type: "content",
       value: {
         html: "",

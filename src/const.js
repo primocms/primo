@@ -1,4 +1,4 @@
-import ShortUniqueId from 'short-unique-id';
+import {createUniqueID} from './utilities'
 
 export const tailwindConfig = `{
   theme: {
@@ -135,7 +135,7 @@ export const defaultStyles = {
 
 export const createComponent = () => ({
   type: 'component',
-  id: getUniqueId(),
+  id: createUniqueID(),
   symbolID: null,
   value: {
     raw: {
@@ -154,7 +154,7 @@ export const createComponent = () => ({
 
 export const createSymbol = () => ({
   type: 'symbol',
-  id: getUniqueId(),
+  id: createUniqueID(),
   value: {
     raw: {
       css: '',
@@ -169,10 +169,6 @@ export const createSymbol = () => ({
     }
   }
 })
-
-function getUniqueId() {
-  return new ShortUniqueId().randomUUID(5).toLowerCase();
-}
 
 export const DEFAULTS = {
   // site: createSite(),
@@ -202,15 +198,15 @@ export const DEFAULTS = {
     title: '',
     content: [
       {
-        id: getUniqueId(),
+        id: createUniqueID(),
         width: 'contained',
         columns: [
           {
-            id: getUniqueId(),
+            id: createUniqueID(),
             size: 'w-full',
             rows: [
               {
-                id: getUniqueId(),
+                id: createUniqueID(),
                 type: 'content',
                 value: {
                   html: '<p><br></p>'
@@ -253,20 +249,20 @@ export const DEFAULTS = {
   symbols: []
 }
 
-export const createPage = (id = getUniqueId(), title) => ({
+export const createPage = (id = createUniqueID(), title) => ({
   id,
   title,
   content: [
     {
-      id: getUniqueId(),
+      id: createUniqueID(),
       width: 'contained',
       columns: [
         {
-          id: getUniqueId(),
+          id: createUniqueID(),
           size: 'w-full',
           rows: [
             {
-              id: getUniqueId(),
+              id: createUniqueID(),
               type: 'content',
               value: {
                 html: '<p><br></p>'
@@ -286,7 +282,7 @@ export const createPage = (id = getUniqueId(), title) => ({
   fields: []
 })
 
-export const createSite = (id = getUniqueId(), label = '') => ({
+export const createSite = (id = createUniqueID(), label = '') => ({
   id,
   label,
   pages: [ createPage('index', 'Home Page') ],

@@ -1,10 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte'
   const dispatch = createEventDispatcher()
-
-  import { get } from 'svelte/store'
-  import {getUniqueId} from '../../utils.js'
-
   export let field
   
 </script>

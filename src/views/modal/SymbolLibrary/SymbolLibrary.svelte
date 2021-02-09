@@ -13,7 +13,7 @@
   import ModalHeader from '../ModalHeader.svelte'
   import Container from './SymbolContainer.svelte'
   import {createSymbol} from '../../../const'
-  import { getUniqueId } from '../../../utils'
+  import { createUniqueID } from '../../../utilities'
 
   import {userRole} from '../../../stores/app'
   import modal from '../../../stores/app/modal'
@@ -75,7 +75,7 @@
   }
 
   function createInstance(symbol) {
-    const instanceID = getUniqueId()
+    const instanceID = createUniqueID()
     const instanceFinalCSS = symbol.value.final.css.replace(RegExp(`${symbol.id}`, 'g'),`${instanceID}`)
     return {
       type: 'component',
@@ -112,7 +112,7 @@
     symbols.forEach(symbol => {
       placeSymbol({
         ...symbol,
-        id: getUniqueId()
+        id: createUniqueID()
       })
     })
     await navigator.clipboard.writeText(``)

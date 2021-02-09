@@ -2,8 +2,10 @@ import _ from "lodash";
 import axios from "axios";
 import { getContext } from "svelte";
 import { get } from "svelte/store";
-import ShortUniqueId from "short-unique-id";
+// import ShortUniqueId from "short-unique-id";
+import { customAlphabet } from 'nanoid'
 import objectPath from "object-path";
+import {createUniqueID} from './utilities'
 
 import {id, dependencies as pageDependencies, wrapper as pageWrapper} from './stores/app/activePage'
 import user from './stores/data/user'
@@ -52,19 +54,19 @@ export function convertFieldsToData(fields) {
 export function scrambleIds(content) {
   let IDs = [];
   const newContent = content.map((section) => {
-    const newID = getUniqueId();
+    const newID = createUniqueID();
     IDs.push([section.id, newID]);
     return {
       ...section,
       id: newID,
       columns: section.columns.map((column) => {
-        const newID = getUniqueId();
+        const newID = createUniqueID();
         IDs.push([column.id, newID]);
         return {
           ...column,
           id: newID,
           rows: column.rows.map((row) => {
-            const newID = getUniqueId();
+            const newID = createUniqueID();
             IDs.push([row.id, newID]);
             return {
               ...row,
@@ -84,10 +86,6 @@ export function createDebouncer(time) {
     const [fn, arg] = val;
     fn(arg);
   }, time);
-}
-
-export function getUniqueId() {
-  return new ShortUniqueId().randomUUID(5).toLowerCase();
 }
  
 export function createSymbolPreview({ id, wrapper, html, css, js, tailwind }) {
