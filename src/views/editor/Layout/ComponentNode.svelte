@@ -6,9 +6,9 @@
   import {switchEnabled} from '../../../stores/app'
   
   import ComponentButtons from './ComponentButtons.wc.svelte'
-  if (!customElements.get('component-buttons')) { 
-    customElements.define('component-buttons', ComponentButtons); 
-  }
+  // if (!customElements.get('component-buttons')) { 
+  //   customElements.define('component-buttons', ComponentButtons); 
+  // }
 
   const dispatch = createEventDispatcher()
 
@@ -69,7 +69,7 @@
 
 <svelte:window on:scroll={handlePositioning}/>
 <div on:mouseenter={handleMouseEnter} on:mouseleave={() => hovering = false} class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
-  <component-buttons 
+  <!-- <component-buttons 
     bind:this={buttons}
     icon={$switchEnabled ? 'code' : 'edit'}
     contentabove={contentAbove}
@@ -78,7 +78,19 @@
     on:delete
     on:addContentBelow
     on:addContentAbove
-  ></component-buttons>
+  ></component-buttons> -->
+  <div class="component-buttons">
+    <ComponentButtons 
+      bind:node={buttons}
+      icon={$switchEnabled ? 'code' : 'edit'}
+      contentabove={contentAbove}
+      contentbelow={contentBelow}
+      on:edit
+      on:delete
+      on:addContentBelow
+      on:addContentAbove
+    />
+  </div>
   <div>
     {@html row.value.final.html}
   </div>
@@ -107,12 +119,12 @@
     transition: outline-color 0.2s;
     z-index: 9;
   }
-  .primo-component:hover component-buttons {
+  .primo-component:hover .component-buttons {
     @apply opacity-100; 
     user-select: initial;
     pointer-events: none;
   }
-  component-buttons {
+  .component-buttons {
     @apply absolute opacity-0 top-0 left-0 transition-opacity duration-200;
     z-index: 100;
     user-select: none;

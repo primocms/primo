@@ -87,7 +87,7 @@
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="component-wrapper flex flex-col bg-primored text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
+<div class="component-wrapper flex flex-col border border-gray-900 bg-gray-900 text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
   <!-- <div class="message-header">
     <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>
       <i class="far fa-edit text-xs text-gray-500 cursor-pointer mr-2"></i>
@@ -130,7 +130,7 @@
   </div>
   <div class="bg-gray-100 flex-1 flex flex-col relative" bind:this={iframeContainer}>
     {#if !iframeLoaded}
-      <div class="loading bg-primored w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
+      <div class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
         <Spinner />
       </div>
     {/if}

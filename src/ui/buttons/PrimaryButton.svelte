@@ -20,7 +20,7 @@
 
 <style>
   .primary-button {
-    @apply w-full text-gray-300 bg-gray-800 py-2 rounded font-medium transition-colors duration-100;
+    @apply w-full text-gray-300 bg-gray-800 py-2 rounded-bl rounded-br font-medium transition-colors duration-100;
     &:hover {
       @apply bg-gray-900;
     }

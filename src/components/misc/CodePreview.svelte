@@ -19,7 +19,10 @@
     ready = true
   }
 
-  $: !multiple && ready && BC.postMessage({ id, html, css, js })
+  $: BC.postMessage({ id, html, css, js })
+  $: set('preview', { id, html, css, js })
+
+  $: !multiple && BC.postMessage({ id, html, css, js })
   $: multiple && ready && BC.postMessage(pages)
 
   let iframe
@@ -29,7 +32,7 @@
   $: if (cachedJs !== js) {
     clearTimeout(timeout)
     timeout = setTimeout(() => {
-      iframe.contentWindow.location.reload()
+      iframe && iframe.contentWindow.location.reload()
     }, 1000)
   }
 
@@ -78,8 +81,8 @@
 </script>
 
 <div class="h-full flex flex-col lg:pl-2">
-  <div class="preview-container flex-1" class:loading bind:this={container}>
-    <iframe class:scaled={view === 'large'} on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} title="Preview HTML" src="/preview.html?preview={multiple ? 'multiple' : 'single' }" class="bg-white w-full h-full" bind:this={iframe}></iframe>
+  <div class="preview-container flex-1 bg-black" class:loading bind:this={container}>
+    <iframe class:scaled={view === 'large'} on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} title="Preview HTML" src="/preview" class="bg-white w-full h-full" bind:this={iframe}></iframe>
   </div>
   <div class="footer-buttons">
     {#if view === 'small'}
@@ -117,7 +120,7 @@
   }
   .preview-container {
     will-change: border-color;
-    @apply border-4 border-solid transition-colors duration-500 overflow-hidden;
+    @apply border-4 border-gray-800 transition-colors duration-200 overflow-hidden;
     border-bottom: 0;
     &.loading {
       border-color: rgb(248,68,73);
@@ -133,9 +136,9 @@
       border-top-left-radius: 0;
       border-top-right-radius: 0;
       min-width: 12rem;
-      @apply flex-1 outline-none bg-gray-200 border-gray-300 border text-gray-600 text-xs py-2 block text-center transition-colors duration-100;
+      @apply flex-1 outline-none bg-gray-900 border-gray-800 border text-gray-200 text-xs py-2 block text-center transition-colors duration-100;
       &:hover {
-        @apply bg-gray-300;
+        @apply bg-gray-800;
       }
     }
   }

@@ -190,10 +190,10 @@
 
 <Tabs {tabs} bind:activeTab />
 
-<div class="flex flex-col p-2 bg-gray-100">
+<div class="flex flex-col p-2 text-gray-200">
   {#if $switchEnabled}
     {#each fields as field (field.id)}
-      <Card variants="field-item bg-white shadow-sm mb-2">
+      <Card variants="field-item bg-gray-900 shadow-sm mb-2">
         <EditField on:delete={() => deleteField(field.id)} {disabled}>
           <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
             {#each allFieldTypes as field}
@@ -245,7 +245,7 @@
         </div>
       {/if}
     {:else}
-      <p class="text-center h-full flex items-start p-24 justify-center text-lg text-gray-700 mt-3 bg-gray-100">
+      <p class="text-center h-full flex items-start p-24 justify-center text-lg mt-3">
         {#if $userRole === 'developer'}
           You'll need to create and integrate a field before you can edit content from here
         {:else}
@@ -258,7 +258,7 @@
 
 <style>
   .field-item {
-    @apply p-4 shadow mb-2 bg-white;
+    @apply p-4 shadow mb-2 bg-gray-900;
   }
   input, select {
     @apply outline-none;
@@ -274,12 +274,21 @@
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply ml-4 text-sm py-1 mb-2 mt-2 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
+    @apply rounded-sm ml-4 text-sm py-1 mb-2 mt-2 bg-gray-900 text-gray-200 transition-colors duration-100 outline-none;
     &:hover {
       @apply bg-gray-300;
     }
     &:focus {
       @apply bg-gray-200;
     }
+  }
+  input {
+    @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
+    &:focus {
+      @apply outline-none;
+    }
+  }
+  select {
+    @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
   }
 </style>

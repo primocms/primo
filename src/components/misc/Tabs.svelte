@@ -6,9 +6,9 @@
   export let tabs:Tabs
   export let activeTab:Tab
   export let variants:string = ''
-  export let activeColor:string = 'rgb(30,30,30)'
+  export let activeColor:string = 'rgb(248,68,73)'
 
-  const tabStyles = (active:boolean): string => active ? `border-color:${activeColor};color:${activeColor};` : `border-color:transparent;`
+  const tabStyles = (active:boolean): string => active ? `border-color:${activeColor};` : `border-color:transparent;`
 </script>
 
 {#if tabs.length > 1}
@@ -28,9 +28,13 @@
 
 
 <style>
+  .tabs {
+    @apply text-gray-300;
+  }
   .tabs:not(.secondary) {
     min-height: 2.5rem;
-    outline: 1px solid #eee;
+    /* outline: 1px solid #eee; */
+    @apply border border-gray-800 mb-1;
     ul {
       @apply flex justify-around;
     }
@@ -43,7 +47,7 @@
       /* border-top: 1px solid #eee !important; */
 
       &:not(:last-child) {
-        border-right: 1px solid #eee !important;
+        /* border-right: 1px solid #eee !important; */
       }
 
       /* &:first-child {

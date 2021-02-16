@@ -20,6 +20,6 @@
 
 <style>
   .group-item {
-    @apply bg-gray-100 mb-1 p-2;
+    @apply bg-gray-900 mb-1 p-2;
   }
 </style>

@@ -38,7 +38,7 @@
 
 <style>
   .card-body {
-    @apply rounded overflow-hidden px-1 pt-1;
+    @apply overflow-hidden border border-gray-900;
   }
   .card-footer {
     @apply pb-2 px-4 flex justify-end;

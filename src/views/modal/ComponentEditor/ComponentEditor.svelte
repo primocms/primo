@@ -88,7 +88,7 @@
   async function compileHtml(html: string): Promise<void> {
     loading = true;
     saveRawValue("html", html);
-    const res = await processors.html(rawHTML, componentData)
+    let res = await processors.html(rawHTML, componentData)
     if (res.error) {
       disableSave = true
       res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
@@ -116,7 +116,7 @@
     saveRawValue("css", css);
     loading = true;
     const encapsulatedCss:string = `#component-${localComponent.id} {${css}}`;
-    const result:string = await processors.css(encapsulatedCss, {
+    const result:any = await processors.css(encapsulatedCss, {
       html: localComponent.value.final.html,
       tailwind: $siteStyles.tailwind
     })
@@ -379,8 +379,8 @@
   }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
-      <i class="fas fa-clone"></i>
-      <span class="hidden md:inline">Convert to Symbol</span>
+      <i class="fas fa-clone mr-1"></i>
+      <span class="hidden md:inline text-gray-200 font-semibold">Convert to Symbol</span>
     </button>
   {/if}
 </ModalHeader>
@@ -389,9 +389,9 @@
   <div class="mb-4 lg:mb-0 w-full md:w-1/2" style="width:{editorWidth}px">
     <div class="flex flex-col h-full">
       {#if $switchEnabled}
-        <Tabs {tabs} bind:activeTab variants="mt-2 mb-1" />
+        <Tabs {tabs} bind:activeTab variants="mb-1" />
         {#if disabled}
-          <p class="mb-2 text-xs text-gray-700">
+          <p class="mb-2 text-xs text-gray-400">
             This component is tied to a <button
               class="underline"
               on:click={loadSymbol}
@@ -560,6 +560,7 @@
   </div>
   <Resizer 
     {ogPreviewWidth} 
+    left={editorWidth}
     on:resize={({detail}) => resizePreview(detail)}
     on:release={() => resizingPreview = false}
   />
@@ -575,9 +576,7 @@
 </div>
 
 <style>
-  .w-1\/2 {
-    width: calc(50% - 8px);
-  }
+
   button.convert {
     @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
     outline-color: rgb(248,68,73);
@@ -586,10 +585,10 @@
     }
   }
   .field-item {
-    @apply p-4 shadow mb-2 bg-white;
+    @apply p-4 shadow mb-2 bg-gray-900 text-gray-200;
   }
   .field-button {
-    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-100;
+    @apply w-full bg-gray-800 text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
 
     &:hover {
       @apply bg-gray-900;
@@ -601,10 +600,10 @@
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply ml-4 mb-2 mt-2 text-sm py-1 bg-gray-100 text-gray-700 transition-colors duration-100 outline-none;
+    @apply rounded-sm ml-4 mb-2 mt-2 text-sm py-1 bg-codeblack text-gray-200 transition-colors duration-100 outline-none;
 
     &:hover {
-      @apply bg-gray-300;
+      @apply bg-gray-900;
     }
     &:focus {
       @apply bg-gray-200;
@@ -612,19 +611,14 @@
   }
 
   input {
+    @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
     &:focus {
       @apply outline-none;
     }
   }
 
   select {
-    outline-offset: 3px;
-    outline-color: rgb(248, 68, 73);
-    padding: 0.5rem;
-    border-right-width: 0.5rem;
-    @apply p-2 border-transparent text-sm font-semibold;
+    @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
   }
 
-  @import "../../../node_modules/bulma/sass/utilities/_all.sass";
-  @import "../../../node_modules/bulma/sass/form/_all.sass";
 </style>

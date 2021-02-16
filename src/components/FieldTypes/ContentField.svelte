@@ -26,7 +26,6 @@
 
 <style>
   input {
-    outline-color: rgb(248,68,73);
-    @apply border-2 border-gray-100 p-2 ;
+    @apply bg-gray-800 p-2 ;
   }
 </style>

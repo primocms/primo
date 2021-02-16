@@ -9,14 +9,11 @@
 
   export let prefix = ''
   export let value = ''
-  export let mode = {
-    name: 'handlebars',
-    base: 'text/html'
-  }
+  export let mode = 'html'
   export let disabled = false
   export let style = ''
   export let CodeMirrorOptions = {}
-  export let docs = null
+  export let docs
   export let autofocus = false
 
   window.requestIdleCallback(async () => {

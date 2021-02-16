@@ -3,11 +3,11 @@ export const processors = {
     const final = raw
     return final
   },
-  css: async (raw) => {
+  css: async (raw, options) => {
     const final = raw
     return final
   },
-  js: async (raw) => {
+  js: async (raw, options) => {
     const final = raw
     return final
   }

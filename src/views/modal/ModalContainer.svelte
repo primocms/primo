@@ -2,11 +2,8 @@
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import modal from '../../stores/app/modal'
-  import {switchEnabled,userRole} from '../../stores/app'
-  import {Spinner} from '../../components/misc'
-  const dispatch = createEventDispatcher()
-	import {push, location} from 'svelte-spa-router'
-  import ModalHeader from './ModalHeader.svelte'
+  import {switchEnabled} from '../../stores/app'
+  import Mousetrap from 'mousetrap'
 
   export let visible
 
@@ -74,7 +71,7 @@
   }
 
   .modal-card-body {
-    @apply bg-white flex-1 flex flex-col;
+    @apply bg-black flex-1 flex flex-col rounded-md;
   }
 
   .modal-card-foot {

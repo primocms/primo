@@ -118,9 +118,8 @@
     z-index: 999;
     transition: top 1;
     will-change: top;
-    @apply bg-codeblack p-2;
+    @apply bg-codeblack p-2 bg-opacity-90;
     backdrop-filter: blur(10px);
-    --bg-opacity: 0.9;
 
     &.mounted {
       top: 0;
