@@ -1,5 +1,4 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import modal from '../../stores/app/modal'
   import {switchEnabled} from '../../stores/app'

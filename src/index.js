@@ -3,7 +3,7 @@ import ComponentPreview from './Preview.svelte'
 // import MultiPreview from './MultiPreview.svelte'
 // import SinglePreview from './SinglePreview.svelte'
 
-import functions from './functions'
+// import functions from './functions'
 import {unsaved} from './stores/app/misc'
 import {site} from './stores/data/draft'
 import dropdown from './stores/app/dropdown'
