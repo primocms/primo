@@ -43,9 +43,10 @@
   .switch {
     @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
     outline-color: rgb(248,68,73);
-    &:hover {
-      @apply bg-red-700 text-white;
-    }
+  }
+
+  .switch:hover {
+    @apply bg-red-700 text-white;
   }
 
   .modal {
