@@ -2,7 +2,7 @@
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  export let ogEditorWidth
+  export let left
 
   let preview
 
@@ -48,8 +48,14 @@
   }
 </script>
 
-<button class="hidden md:block w-4 h-full focus:outline-none" aria-label="resize preview" use:draggable style="cursor: ew-resize">
+<button style="left:{left}px" class="hidden md:block w-4 h-full absolute left-1/2 z-10 focus:outline-none" aria-label="resize preview" use:draggable>
   <svg class="h-4 w-4 text-gray-600 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
     <path d="M8 5h2v14H8zM14 5h2v14h-2z"></path>
   </svg>
 </button>
+
+<style>
+  button {
+    cursor: ew-resize;
+  }
+</style>

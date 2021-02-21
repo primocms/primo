@@ -8,7 +8,7 @@
   export let variants:string = ''
   export let icon:string = ''
   export let title:string = ''
-  export let button:{ label:string, icon:string, href:string, onclick: any, loading?: boolean } = null
+  export let button:{ label:string, icon:string, href?:string, onclick?: any, loading?: boolean, disabled?: boolean }
   export let warn = () => true
   export let onclose = () => {}
 
@@ -22,16 +22,16 @@
 
 <header class="modal-card-head {variants}">
   <div class="flex-1 flex justify-start">
-    <button id="modal-close" on:click={closeModal} type="button" class="inline-flex items-center justify-center rounded-md text-gray-400 p-2 hover:text-gray-500 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 focus:text-gray-500 transition duration-150 ease-in-out" aria-label="Close modal">
+    <button id="modal-close" on:click={closeModal} type="button" class="inline-flex items-center justify-center rounded-md text-gray-400 pr-2 hover:text-primored focus:outline-none focus:text-primored transition duration-150 ease-in-out" aria-label="Close modal">
       <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
     </button>
   </div>
   <div class="flex items-center justify-center py-2 px-4">
-    <p class="text-sm text-gray-700 mr-4">
+    <p class="text-sm mr-4">
       {#if icon}
-        <span class="icon">
+        <span class="icon mr-1">
           <i class={icon}></i>
         </span>
       {/if}
@@ -43,11 +43,11 @@
     {#if $userRole === 'developer' && $modal.showSwitch}
       <button on:click={() => $switchEnabled = !$switchEnabled} class="button switch" class:to-cms={$switchEnabled} class:to-ide={!$switchEnabled}>
         {#if $switchEnabled}
-          <i class="fas fa-edit"></i>
-          <span class="hidden lg:inline-block">Switch to CMS</span>
+          <i class="fas fa-edit mr-1"></i>
+          <span class="hidden lg:inline-block text-gray-100 font-semibold">Switch to CMS</span>
         {:else}
-          <i class="fas fa-code"></i>
-          <span class="hidden lg:inline-block">Switch to IDE</span>
+          <i class="fas fa-code mr-1"></i>
+          <span class="hidden lg:inline-block text-gray-100 font-semibold">Switch to IDE</span>
         {/if}
       </button>
     {/if}
@@ -81,7 +81,7 @@
     margin-right: -0.75rem;
   }
   .button {
-    @apply py-1 px-3 text-sm rounded transition-colors duration-200;
+    @apply py-1 px-3 text-sm rounded transition-colors duration-100;
   }
   .button.primary {
     @apply bg-primored text-white ml-2;
@@ -100,7 +100,7 @@
     @apply opacity-75 cursor-not-allowed transition-opacity duration-100 !important;
   }
   .modal-card-head {
-    @apply flex items-center justify-start relative bg-gray-100 text-gray-800 text-lg font-semibold py-1 px-3;
+    @apply flex items-center justify-start relative bg-black text-gray-100 text-lg font-semibold py-1 px-3;
   }
 
   i.fa-spinner {

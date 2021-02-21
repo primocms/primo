@@ -21,7 +21,6 @@
 
 </script>
 
-
 <svelte:head>
   {@html wrapInStyleTags($tailwind, 'tailwind')}
   {@html $pageWrapper.head.final}

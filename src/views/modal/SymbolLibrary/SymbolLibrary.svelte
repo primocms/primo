@@ -6,7 +6,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte'
   import _ from 'lodash'
-  import {pop} from 'svelte-spa-router'
+  // import {pop} from 'svelte-spa-router'
   import { Tabs } from "../../../components/misc";
   import axios from 'axios'
 
@@ -39,7 +39,7 @@
               placeSymbol(symbol)
               updateInstances(symbol)
               actions.update(symbol)
-              pop()
+              // pop() TODO
             }
           }
         } 
@@ -172,11 +172,11 @@
 
 <Tabs {tabs} bind:activeTab variants="mt-2 mb-4" />
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="mt-2 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
   {#if activeTab === tabs[0]}
-    <div class="library-buttons text-white bg-primored flex rounded overflow-hidden">
+    <div class="library-buttons text-white bg-gray-900 flex rounded overflow-hidden">
       {#if $userRole === 'developer'}
-        <button on:click={addSymbol} class="border-r border-red-600 flex-1 flex justify-center items-center hover:bg-red-600 transition-colors duration-100">
+        <button on:click={addSymbol} class="border-r border-gray-800 flex-1 flex justify-center items-center hover:bg-red-600 transition-colors duration-100">
           <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>      
           <span>Create</span>
         </button>

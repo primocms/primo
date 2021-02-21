@@ -2,7 +2,8 @@
   import {onMount, createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import { navigate } from "svelte-routing";
+  import {router} from 'tinro'
+  // import { navigate } from "svelte-routing";
   import {buildPagePreview,wrapInStyleTags} from '../../../utils'
   import {styles as siteStyles} from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
@@ -39,21 +40,22 @@
     e.preventDefault()
     modal.hide()
 
-    const [ _, user, repo, pageId ] = window.location.pathname.split('/')
-    const {hash} = window.location
+    const [ _, user, repo ] = $router.path.split('/')
 
-    if (user === 'try') {
-      console.log('try')
-      const url = `${window.location.origin}/try/${page.id === 'index' ? '' : page.id }/${hash}`
-      console.log({ user, repo, pageId, url })
-      console.log({url})
-      navigate(url)
-    } else {
-      console.log('normal')
-      const url = `${window.location.origin}/${user}/${repo}/${page.id === 'index' ? '' : page.id }/${hash}`
-      console.log({url})
-      navigate(url)
-    }
+    router.goto(`/${user}/${repo}/${page.id}`)
+
+    // if (user === 'try') {
+    //   console.log('try')
+    //   const url = `${window.location.origin}/try/${page.id === 'index' ? '' : page.id }/${hash}`
+    //   console.log({ user, repo, pageId, url })
+    //   console.log({url})
+    //   // navigate(url) // TODO
+    // } else {
+    //   console.log('normal')
+    //   const url = `${window.location.origin}/${user}/${repo}/${page.id === 'index' ? '' : page.id }/${hash}`
+    //   console.log({url})
+    //   // navigate(url) // TODO
+    // }
 
   }
 
@@ -68,8 +70,8 @@
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="shadow-lg rounded">
-  <div class="text-gray-700 w-full flex justify-between px-3 py-2 border-b border-gray-100">
+<div class="shadow-lg rounded border-gray-900">
+  <div class="text-gray-200 bg-gray-900 w-full flex justify-between px-3 py-2">
     <div>
       <span class="text-xs font-semibold">{page.title}</span>
     </div>
@@ -100,6 +102,7 @@
     </div>
   </div>
   <a
+    tinro-ignore
     class="page-container"
     href="/{page.id}"
     on:click={openPage}
@@ -137,7 +140,7 @@
     }
   }
   a.page-container {
-    @apply cursor-pointer block w-full relative overflow-hidden transition-colors duration-100;
+    @apply bg-white cursor-pointer block w-full relative overflow-hidden transition-colors duration-100;
     height: 15vh;
 
     &:after {

@@ -54,7 +54,7 @@
     @apply text-xl;
   }
   label.medium span {
-    @apply mb-2 text-sm;
+    @apply mb-1 text-sm;
   }
   label.medium input {
     @apply p-2;
@@ -62,6 +62,6 @@
 
   input {
     outline-color: rgb(248,68,73);
-    @apply bg-white border-2 border-gray-200;
+    @apply bg-gray-800 border-2 border-gray-900;
   }
 </style>

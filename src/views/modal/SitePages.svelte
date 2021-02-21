@@ -184,7 +184,7 @@
 <ModalHeader icon="fas fa-th-large" title="Pages" />
 
 {#if breadcrumbs}
-  <div in:fade class="breadcrumbs flex text-sm p-2 font-bold text-gray-700">
+  <div in:fade class="breadcrumbs flex text-sm p-2 font-bold text-gray-200">
     {#each breadcrumbs as {label, path}, i }
       <div class="breadcrumb" on:click={() => currentPath}>
         <button on:click={() => currentPath = path} class:underline={breadcrumbs.length !== i+1} class="font-semibold">{label}</button>

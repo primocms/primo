@@ -76,7 +76,7 @@
 <div class="flex flex-col">
   <Tabs {tabs} bind:activeTab variants="mb-4" />
   <div class="flex-1">
-    <span class="mb-1 inline-block font-semibold text-gray-700">{'<head>'}</span> 
+    <span class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span> 
     <CodeMirror 
       bind:value={activeHTML.head.raw} 
       on:change={saveFinalHTML}
@@ -84,7 +84,7 @@
       mode="html"
     />
 
-    <span class="mb-1 mt-4 inline-block font-semibold text-gray-700">{'Before </body>'}</span> 
+    <span class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span> 
     <CodeMirror 
       bind:value={activeHTML.below.raw} 
       on:change={saveFinalHTML}

@@ -36,7 +36,7 @@
   id="primo-toolbar"
   class:mounted>
   <div class="container">
-    <div class="logo">
+    <div class="logo md:hidden">
       <PrimoButton on:signOut />
       <MobileNavButton active={mobileNavOpen} on:click={() => mobileNavOpen = !mobileNavOpen} />
     </div>
@@ -80,13 +80,6 @@
 
 <style>
 
-  .release-notes {
-    @apply font-semibold px-4 ml-4 text-primored text-sm border-l border-gray-700 transition-colors duration-200;
-    &:hover {
-      @apply bg-gray-800 text-white border-transparent rounded;
-    }
-  }
-
   .logo {
     @apply flex justify-between items-center px-2;
   }
@@ -118,9 +111,8 @@
     z-index: 999;
     transition: top 1;
     will-change: top;
-    @apply bg-codeblack p-2;
+    @apply bg-codeblack p-2 bg-opacity-90;
     backdrop-filter: blur(10px);
-    --bg-opacity: 0.9;
 
     &.mounted {
       top: 0;

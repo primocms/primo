@@ -32,7 +32,7 @@
 <style>
   select {
     outline-color: rgb(248,68,73);
-    @apply bg-white p-2 border-2 border-gray-200;
+    @apply bg-gray-900 p-2 border-2 border-gray-200;
   }
 
   label {

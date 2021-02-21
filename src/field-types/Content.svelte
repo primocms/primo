@@ -30,7 +30,7 @@
     }
 
     textarea {
-      @apply p-2 border-2 border-gray-100;
+      @apply p-2 bg-gray-800;
       outline-color: rgb(248,68,73);
     }
   }

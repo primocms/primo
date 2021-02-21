@@ -124,30 +124,30 @@ export function wrapInStyleTags(css, id = null) {
 
 export function buildPagePreview(content, tailwind) {
   let html = "";
-  content.forEach((section) => {
-    html +=
-      `<div id="section-${section.id}">\n` +
-      `\t<div class="columns flex flex-wrap ${
-        section.width === "contained" ? "container" : ""
-      }">\n`;
-    section.columns.forEach((column) => {
-      html += `\t\t<div class="column ${column.size}" id="column-${column.id}">\n`;
-      column.rows.forEach((row) => {
-        html +=
-          row.type === "component"
-            ? `\t\t\t<div class="primo-component">\n` +
-              `\t\t\t\t<div id="component-${row.id}" class="w-full">${row.value.final.html}</div>\n` +
-              `\t\t\t\t<script type="module">${row.value.final.js}</script>\n` +
-              `\t\t\t\t<style>${row.value.final.css}</style>\n` +
-              `\t\t\t</div>\n`
-            : `\t\t\t<div class="primo-copy" id="copy-${row.id}">\n` +
-              `\t\t\t\t${row.value.html}\n` +
-              `\t\t\t</div>\n`;
-      });
-      html += `\t\t</div>\n`;
-    });
-    html += `\t</div>\n` + `</section>\n`;
-  });
+  html += content.map(section => `
+    <div id="section-${section.id}">
+      <div class="columns flex flex-wrap ${section.width === 'contained' ? 'container' : ''}">
+        ${section.columns.map(column => `
+          <div class="column ${column.size}" id="column-${column.id}">
+            ${column.rows.map(row => 
+              row.type === 'component' 
+              ? `
+                <div class="primo-component" id="component-${row.id}">
+                  <div>${row.value.final.html}</div>
+                  <script type="module">${row.value.final.js}</script>
+                </div>
+              ` 
+              : `
+                <div class="primo-copy" id="copy-${row.id}">
+                  ${row.value.html}
+                </div>
+              `
+            ).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('')
 
   const twConfig = JSON.stringify({
     mode: 'silent',

@@ -18,7 +18,7 @@
 
 <style>
   .primary-button {
-    @apply w-full bg-codeblack text-gray-300 py-2 rounded font-medium transition-colors duration-100;
+    @apply w-full bg-codeblack text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
     &:hover {
       @apply bg-gray-900 !important;
     }

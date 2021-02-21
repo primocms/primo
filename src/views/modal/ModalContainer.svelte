@@ -1,12 +1,8 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import modal from '../../stores/app/modal'
-  import {switchEnabled,userRole} from '../../stores/app'
-  import {Spinner} from '../../components/misc'
-  const dispatch = createEventDispatcher()
-	import {push, location} from 'svelte-spa-router'
-  import ModalHeader from './ModalHeader.svelte'
+  import {switchEnabled} from '../../stores/app'
+  import Mousetrap from 'mousetrap'
 
   export let visible
 
@@ -47,9 +43,10 @@
   .switch {
     @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
     outline-color: rgb(248,68,73);
-    &:hover {
-      @apply bg-red-700 text-white;
-    }
+  }
+
+  .switch:hover {
+    @apply bg-red-700 text-white;
   }
 
   .modal {
@@ -74,7 +71,7 @@
   }
 
   .modal-card-body {
-    @apply bg-white flex-1 flex flex-col;
+    @apply bg-black flex-1 flex flex-col rounded-md;
   }
 
   .modal-card-foot {

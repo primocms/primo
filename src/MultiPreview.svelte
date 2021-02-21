@@ -66,7 +66,7 @@
   }
 
   .preview-container {
-    outline: 0.25rem solid #edf2f7;
+    /* outline: 0.25rem solid #edf2f7; */
   }
 
   iframe {

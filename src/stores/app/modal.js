@@ -2,9 +2,11 @@
 
 import {writable,get} from 'svelte/store'
 import Mousetrap from 'mousetrap'
-import {location,push} from 'svelte-spa-router'
+// import {location,push} from 'svelte-spa-router'
+import {router} from 'tinro'
 
 const initialState = {
+  type: null,
   component: null,
   componentProps: {},
   header: {
@@ -113,16 +115,18 @@ export default {
   show: (type, componentProps = {}, modalOptions = {}) => {
     const typeToShow = getModalType(type, componentProps, modalOptions)
     modal_startup()
-    push(`${get(location)}?m=${typeToShow.route}`) // accessed by App.svelte
     store.update(s => ({ 
       ...initialState, 
-      ...typeToShow
+      ...typeToShow,
+      type,
     }))
   },
   hide: (nav = null) => {
     modal_cleanup()
-    // when the address changes, App.svelte grabs the new page data
-    push(nav === null ? get(location) : `/${nav}`)
+    store.update(s => ({ 
+      ...s,
+      type: null,
+    }))
   },
   register: (modal) => {
     if (Array.isArray(modal)) {

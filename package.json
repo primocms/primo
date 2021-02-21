@@ -1,9 +1,8 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.1.4",
+  "version": "1.1.9",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
-  "main": "index.js",
-  "svelte": "index.js",
+  "svelte": "src/index.js",
   "keywords": [
     "primo",
     "ide",
@@ -14,7 +13,6 @@
   "author": "Mateo Morris",
   "license": "ISC",
   "scripts": {
-    "postinstall": "cd container && npm install && cd ..",
     "dev": "cd container && npm run dev"
   },
   "devDependencies": {
@@ -46,7 +44,7 @@
     "rollup-plugin-svelte": "^5.0.3",
     "rollup-plugin-terser": "^5.1.2",
     "sass": "^1.26.8",
-    "svelte": "^3.26.0",
+    "svelte": "^3.32.3",
     "svelte-preprocess": "^3.9.10",
     "tslib": "^2.0.0",
     "typescript": "^3.9.7"
@@ -91,6 +89,7 @@
     "svelte-masonry": "0.0.17",
     "svelte-routing": "^1.5.0",
     "svelte-spa-router": "^3.0.2",
+    "tinro": "^0.5.12",
     "turndown": "^7.0.0"
   }
 }

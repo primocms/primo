@@ -1,7 +1,6 @@
 <script lang="ts">
   import _ from 'lodash'
   import { createEventDispatcher } from 'svelte' 
-  import { links } from "svelte-routing";
   import {createDebouncer} from '../../utils'
   import {createUniqueID} from '../../utilities'
   import Section from './Layout/Section.svelte'
@@ -13,7 +12,7 @@
   import {wrapper as pageWrapper} from '../../stores/app/activePage'
   const dispatch = createEventDispatcher()
 
-  export let content
+  export let content = []
 
   import type {Row,Section as SectionType} from './Layout/LayoutTypes'
 
@@ -222,7 +221,7 @@
   }
 </script>
 
-<div use:links class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
+<div class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
   {#each content as section, i (section.id)}
     <Section {section}>
       {#each section.columns as column, i (column.id)}

@@ -52,8 +52,8 @@
 />
 
 <div class="flex w-full">
-  <button on:click={() => fullwidth = !fullwidth} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={fullwidth}>Fullwidth</button>
-  <button on:click={() => gapless = !gapless} class="flex-1 py-2 bg-gray-200 text-gray-800 text-sm border border-gray-100 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={gapless}>Gapless</button>
+  <button on:click={() => fullwidth = !fullwidth} class="flex-1 py-2 bg-gray-900 text-gray-100 text-sm border border-gray-800 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={fullwidth}>Fullwidth</button>
+  <button on:click={() => gapless = !gapless} class="flex-1 py-2 bg-gray-900 text-gray-100 text-sm border border-gray-800 transition-colors duration-100 hover:bg-gray-300" type="checkbox" class:border-gray-500={gapless}>Gapless</button>
 </div>
 {#each sections as columns}
   <article class="my-2 shadow" transition:fade={{ delay: 250, duration: 200 }}>

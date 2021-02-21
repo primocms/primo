@@ -64,7 +64,7 @@
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
   {#each fieldValues as fieldValue, i} 
     <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
-      <div class="absolute top-0 right-0 py-1 px-2 text-gray-600 bg-gray-100 z-10 rounded">
+      <div class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded">
         {#if i !== 0}
           <button title="Move {field.label} up" on:click={() => moveRepeaterItem(i, 'up')}>
             <i class="fas fa-arrow-up"></i>
@@ -86,7 +86,7 @@
       {/each}
     </div>
   {/each}
-  <div class="p-2 bg-gray-100">
+  <div class="p-2 bg-gray-900">
     <button class="field-button" on:click={() => addRepeaterItem()}>
       <i class="fas fa-plus mr-1"></i>
       <span>Add {pluralize.singular(field.label)}</span>
@@ -97,14 +97,13 @@
 
 <style>
   .repeater-item {
-    @apply p-2 bg-gray-100 flex flex-col relative mb-2;
+    @apply p-2 bg-gray-900 flex flex-col relative mb-2;
     &:last-of-type {
       @apply mb-0;
     }
   }
   .repeater-item-field {
-    @apply border-b border-gray-100;
-
+    @apply mb-2;
     &:not(:first-child) {
       @apply pt-0;
     }

@@ -9,7 +9,7 @@
   import ToolbarButton from './ToolbarButton.svelte'
   import Doc from './Doc.svelte'
 
-  // import site from '../../stores/data/site'
+  import site from '../../stores/data/site'
   import {focusedNode,switchEnabled} from '../../stores/app'
   import {undone} from '../../stores/data/draft'
   import {saving,unsaved} from '../../stores/app/misc'
@@ -20,7 +20,6 @@
   import type {Button,ButtonGroup,Component} from './Layout/LayoutTypes'
 
   let unlockingPage:boolean = false
-
   let updatingDatabase:boolean = false
 
   // setup key-bindings
@@ -170,6 +169,7 @@
     <ToolbarButton type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
   {/if}
 </Toolbar>
+
 <Doc 
   bind:content={$content}
   on:contentChanged={() => {
@@ -192,4 +192,4 @@
       }
     })
   }}
-/>
+/>  
