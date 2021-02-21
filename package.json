@@ -13,7 +13,6 @@
   "author": "Mateo Morris",
   "license": "ISC",
   "scripts": {
-    "postinstall": "cd container && npm install && cd ..",
     "dev": "cd container && npm run dev"
   },
   "devDependencies": {
