@@ -26,73 +26,73 @@
     savePage()
   })
 
-  const editorialButtons = [
-    [ 
-      {
-        title: 'Heading', 
-        icon: 'heading', 
-        key: 'h',
-        id: 'h1'
-      },
-      {
-        title: 'Subheading', 
-        icon: 'heading heading2', 
-        id: 'h2'
-      },
-    ],
-    [
-      {
-        title: 'Bold', 
-        icon: 'bold', 
-        key: 'b',
-        id: 'bold'
-      },
-      {
-        title: 'Italic', 
-        icon: 'italic', 
-        key: 'i',
-        id: 'italic'
-      },
-      {
-        title: 'Highlight', 
-        icon: 'highlighter', 
-        key: 'l',
-        id: 'highlight'
-      }
-    ],
-    [
-      {
-        title: 'Link', 
-        icon: 'link', 
-        key: 'k',
-        id: 'link'
-      }
-    ],
-    [
-      {
-        title: 'CodeFormat', 
-        icon: 'code', 
-        id: 'code'
-      },
-      {
-        title: 'Quote', 
-        icon: 'quote-left',
-        id: 'blockquote'
-      }
-    ],
-    [
-      {
-        title: 'Unordered List', 
-        icon: 'list-ul', 
-        id: 'ul'
-      },
-      {
-        title: 'Ordered List', 
-        icon: 'list-ol', 
-        id: 'ol'
-      }
-    ],
-  ]
+  // const editorialButtons = [
+  //   [ 
+  //     {
+  //       title: 'Heading', 
+  //       icon: 'heading', 
+  //       key: 'h',
+  //       id: 'h1'
+  //     },
+  //     {
+  //       title: 'Subheading', 
+  //       icon: 'heading heading2', 
+  //       id: 'h2'
+  //     },
+  //   ],
+  //   [
+  //     {
+  //       title: 'Bold', 
+  //       icon: 'bold', 
+  //       key: 'b',
+  //       id: 'bold'
+  //     },
+  //     {
+  //       title: 'Italic', 
+  //       icon: 'italic', 
+  //       key: 'i',
+  //       id: 'italic'
+  //     },
+  //     {
+  //       title: 'Highlight', 
+  //       icon: 'highlighter', 
+  //       key: 'l',
+  //       id: 'highlight'
+  //     }
+  //   ],
+  //   [
+  //     {
+  //       title: 'Link', 
+  //       icon: 'link', 
+  //       key: 'k',
+  //       id: 'link'
+  //     }
+  //   ],
+  //   [
+  //     {
+  //       title: 'CodeFormat', 
+  //       icon: 'code', 
+  //       id: 'code'
+  //     },
+  //     {
+  //       title: 'Quote', 
+  //       icon: 'quote-left',
+  //       id: 'blockquote'
+  //     }
+  //   ],
+  //   [
+  //     {
+  //       title: 'Unordered List', 
+  //       icon: 'list-ul', 
+  //       id: 'ul'
+  //     },
+  //     {
+  //       title: 'Ordered List', 
+  //       icon: 'list-ol', 
+  //       id: 'ol'
+  //     }
+  //   ],
+  // ]
 
   const editorButtons = [
     [
@@ -103,13 +103,13 @@
         onclick: () => modal.show('SITE_PAGES') 
       }
     ],
-    [
-      {
-        title: 'Content',
-        icon: 'heading',
-        buttons: flatten(editorialButtons)
-      }
-    ],
+    // [
+    //   {
+    //     title: 'Content',
+    //     icon: 'heading',
+    //     buttons: flatten(editorialButtons)
+    //   }
+    // ],
     [
       {
         title: 'Content', 
@@ -128,14 +128,14 @@
         onclick: () => modal.show('SITE_PAGES') 
       }
     ],
-    [
-      {
-        id: 'toolbar--formatting',
-        title: 'Content',
-        icon: 'heading',
-        buttons: flatten(editorialButtons)
-      }
-    ],
+    // [
+    //   {
+    //     id: 'toolbar--formatting',
+    //     title: 'Content',
+    //     icon: 'heading',
+    //     buttons: flatten(editorialButtons)
+    //   }
+    // ],
     [
       {
         id: 'toolbar--html',
