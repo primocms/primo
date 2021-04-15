@@ -2,7 +2,6 @@
   import {writable} from 'svelte/store'
 
   import modal from '../../../stores/app/modal'
-  import {dependencies} from '../../../stores/app/activePage'
 
   import ModalHeader from '../ModalHeader.svelte'
   import Libraries from './_Libraries.svelte'
@@ -23,5 +22,5 @@
 />
 
 <div class="flex flex-col h-full">
-  <Libraries bind:libraries={$dependencies.libraries} />
+
 </div>

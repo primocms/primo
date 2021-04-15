@@ -1,14 +1,12 @@
-<script lang="ts">
-  import {onMount} from 'svelte'
+<script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
-  import {IconButton} from '../misc'
   import _ from 'lodash'
 
-  export let variants:string = 'text-sm'
-  export let disabled:boolean = false
-  export let isFirst:boolean = false
-  export let isLast:boolean = false
+  export let variants = 'text-sm'
+  export let disabled = false
+  export let isFirst = false
+  export let isLast = false
 
   const dispatch = createEventDispatcher();
 
@@ -42,7 +40,7 @@
     <button class="mr-2" disabled={isLast} title="Move down" on:click={() => moveItem('down')}>
       <i class="fas fa-arrow-down"></i>
     </button>
-    <button on:click={() => dispatch('delete')} {disabled} class="text-gray-500 transition-colors duration-100 hover:bg-gray-200 focus:bg-gray-100 rounded-sm" title="delete field">
+    <button on:click={() => dispatch('delete')} {disabled} class="text-gray-500 transition-colors duration-100 hover:text-gray-400 focus:text-gray-400 rounded-sm" title="delete field">
       <i class="fas fa-trash"></i>
     </button>
   </div>

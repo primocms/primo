@@ -1,44 +1,51 @@
 <script>
-  import {createEventDispatcher, onMount, onDestroy} from 'svelte'
-  import {writable} from 'svelte/store'
-  const dispatch = createEventDispatcher()
   import _ from 'lodash'
   import {CodeMirror} from '../../components'
   import {Tabs} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
-  import {SaveButton} from '../../components/buttons'
-  import { wrapInStyleTags,buildPagePreview, createDebouncer } from '../../utils'
+  import { wrapInStyleTags, createDebouncer } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
   import {processors} from '../../component'
 
   const quickDebounce = createDebouncer(500);
+  const slowDebounce = createDebouncer(1000)
 
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
-  import {content,id} from '../../stores/app/activePage'
+  import activePage, {content,id} from '../../stores/app/activePage'
   import modal from '../../stores/app/modal'
 
   import {styles as pageStyles} from '../../stores/app/activePage'
-  import {styles as siteStyles, pages} from '../../stores/data/draft'
-  import { getTailwindConfig } from '../../stores/helpers';
+  import {site, styles as siteStyles, pages} from '../../stores/data/draft'
+  import { buildPagePreview } from '../../stores/helpers';
 
   function buildPreview(siteCSS, pageCSS, content) {
-    return {
-      html: wrapInStyleTags(siteCSS)
-        + wrapInStyleTags(pageCSS) 
-        + buildPagePreview(content, getTailwindConfig())
-    }
+
   }
 
-  let currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content)
+  let refreshPreview
 
-  function refreshPagePreview() {
-    currentPage = buildPreview($siteStyles.final, $pageStyles.final, $content)
+  let pagePreview = {
+    html: ``,
+    css: ``,
+    js: ``,
+    tailwind: {}
+  }
+
+  getNewPagePreview()
+  async function getNewPagePreview() {
+    pagePreview = await buildPagePreview({
+      page: $activePage,
+      site: $site,
+      separate: true
+    })
   }
 
   let allPages = []
-  $: primaryTab.id === 'site' && buildSitePreview($siteStyles)
-  function buildSitePreview(_) {
-    allPages = $pages.map(page => buildPreview($siteStyles.final, page.styles.final, page.content))
+  buildSitePreview()
+  async function buildSitePreview() {
+    allPages = await Promise.all(
+      $pages.map(page => buildPagePreview({ page, site: $site, separate: true }))
+    )
   }
 
   let loading = false
@@ -75,15 +82,10 @@
   let view = 'large'
 
   async function compileStyles({ styles, onCompile }) {
-    loading = true
     const result = await processors.css(
       styles.raw, 
       {
-        tailwindConfig: styles.tailwind, 
-        includeBase: false,
-        includeTailwind: false,
-        purge: false,
-        html: ''
+        tailwind: styles.tailwind
       }
     );
     loading = false
@@ -127,11 +129,12 @@
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
             on:change={() => {
-              quickDebounce([compileStyles, {
+              loading = true
+              slowDebounce([compileStyles, {
                 styles: $pageStyles,
                 onCompile: (css) => {
                   $pageStyles.final = css
-                  refreshPagePreview()
+                  getNewPagePreview()
                 }
               }])
             }}
@@ -141,7 +144,13 @@
             autofocus
             prefix="module.exports = "
             bind:value={$pageStyles.tailwind} 
-            on:change={() => tailwindConfigChanged = true}
+            on:change={() => {
+              loading = true
+              quickDebounce([() => {
+                tailwindConfigChanged = true
+                getNewPagePreview()
+              }])
+            }}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
@@ -152,11 +161,12 @@
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
             on:change={() => {
+              loading = true
               quickDebounce([compileStyles, {
                 styles: $siteStyles,
                 onCompile: (css) => {
                   $siteStyles.final = css
-                  refreshPagePreview()
+                  buildSitePreview()
                 }
               }])
             }}
@@ -166,7 +176,17 @@
             autofocus
             prefix="module.exports = "
             bind:value={$siteStyles.tailwind} 
-            on:change={() => tailwindConfigChanged = true}
+            on:change={() => {
+              loading = true
+              tailwindConfigChanged = true
+              slowDebounce([compileStyles, {
+                styles: $siteStyles,
+                onCompile: (css) => {
+                  $siteStyles.final = css
+                  buildSitePreview()
+                }
+              }])
+            }}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
@@ -176,16 +196,25 @@
       {#if primaryTab.id === 'page'}
         <CodePreview 
           bind:view
-          html={currentPage.html}
+          bind:refreshPreview
+          html={pagePreview.html}
+          css={pagePreview.css}
+          js={pagePreview.js}
+          tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
         />
       {:else}
-        <CodePreview 
-          bind:view
-          multiple={true}
-          pages={allPages}
-        />
+        {#each allPages as page}
+          <CodePreview 
+            bind:view
+            bind:refreshPreview
+            html={page.html}
+            css={page.css}
+            js={page.js}
+            tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
+            hideControls={true}
+          />
+        {/each}
       {/if}
-
     </div>
   </div>
 </div>

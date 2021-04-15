@@ -1,17 +1,7 @@
-<script lang="ts">
-  
-  type button = {
-    label: string,
-    icon: string,
-    onClick?: () => void,
-    id?: string,
-    variants?: string,
-    href?: string
-  }
+<script>
+  export let button
 
-  export let button:button
-
-  let variants = button.variants || 'bg-red-500 text-red-100 hover:bg-red-600'
+  let variants = button.variants || 'bg-codeblack text-gray-100 hover:bg-primored'
 </script>
 
 {#if button.href}
@@ -20,7 +10,7 @@
     <span>{button.label}</span>
   </a>
 {:else}
-  <button class="dropdown-button {variants}" id={button.id} on:click={button.onClick}>
+  <button class="block px-4 py-2 rounded transition-colors duration-100 w-full text-xs text-center {variants}" id={button.id} on:click={button.onClick}>
     <i class="{button.icon} mr-1"></i>
     <span>{button.label}</span>
   </button>
@@ -28,7 +18,7 @@
 
 <style>
   .dropdown-button {
-    @apply block px-4 py-2 rounded transition-colors duration-100 w-full text-xs text-center;
+    @apply block px-4 py-2 mb-2 rounded transition-colors duration-100 w-full text-xs text-center;
     &:not(:last-child) {
       @apply mb-3;
     }

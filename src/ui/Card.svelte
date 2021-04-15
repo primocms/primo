@@ -1,10 +1,10 @@
-<script lang="ts">
+<script>
   import {fade} from 'svelte/transition'
 
-  export let id:string = null
-  export let title:string = null
-  export let image:string = null
-  export let variants:string = 'shadow-sm mb-2'
+  export let id = null
+  export let title = null
+  export let image = null
+  export let variants = 'shadow-sm mb-2'
 
 </script>
 

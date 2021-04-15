@@ -16,6 +16,7 @@ const initialState = {
   footer: null,
   variants: '',
   disableClose: false,
+  disabledBgClose: false,
   showSwitch: false,
   noPadding: false
 }
@@ -28,9 +29,10 @@ const modalTypes = {
       icon: 'fas fa-code'
     },
     variants: 'fullscreen',
-    showSwitch: true
+    showSwitch: true,
+    disabledBgClose: true
   },
-  'COMPONENT_LIBRARY' : {
+  'SYMBOL_LIBRARY' : {
     route: 'symbols',
     header: {
       title: 'Symbol Library',
@@ -38,15 +40,6 @@ const modalTypes = {
     },
     variants: 'fullscreen',
     showSwitch: true 
-  },
-  'PAGE_SECTIONS' : {
-    route: 'sections',
-    header: {
-      title: 'Add Page Section',
-      icon: 'fas fa-columns'
-    },
-    variants: 'max-w-lg',
-    showSwitch: false
   },
   'SITE_PAGES' : {
     route: 'pages',
@@ -65,15 +58,6 @@ const modalTypes = {
     variants: 'max-w-3xl',
     showSwitch: true 
   },
-  'DEPENDENCIES' : {
-    route: 'dependencies',
-    header: {
-      title: 'Dependencies',
-      icon: 'fas fa-cube'
-    },
-    variants: 'max-w-xl',
-    showSwitch: false
-  },
   'STYLES' : {
     route: 'css',
     header: {
@@ -89,14 +73,6 @@ const modalTypes = {
       icon: 'fab fa-html5'
     },
     variants: 'max-w-2xl'
-  },
-  'RELEASE_NOTES' : {
-    route: 'release-notes',
-    header: {
-      title: 'Release Notes',
-      icon: 'fas fa-book-open'
-    },
-    // variants: 'fullscreen'
   },
 }
 

@@ -1,11 +1,10 @@
 <script>
-  import {getContext, createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
   import dropdown from '../../stores/app/dropdown'
-  import PrimoLogo from '../../components/svg/PrimoLogo.svelte'
+  import {loadingSite} from '../../stores/app/misc'
+  import Spinner from '../../ui/misc/Spinner.svelte'
+  import PrimoLogo from '../svg/PrimoLogo.svelte'
   import DropdownButton from './DropdownButton.svelte'
-
-  const dispatch = createEventDispatcher()
 
   export let variants = ''
 
@@ -23,19 +22,27 @@
     aria-label="See all sites"
     on:click={() => showingDropdown = !showingDropdown}
     >
-    <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
+    {#if $loadingSite}
+      <Spinner />
+    {:else}
+      <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
+    {/if}
   </button>
 {/if}
 
-<div class="dropdown" class:fadein={showingDropdown}>
-  {#each $dropdown as button}
-    {#if button.component}
-      <svelte:component this={button.component} {...button.props} />
-    {:else}
-      <DropdownButton {button} />
-    {/if}
-  {/each}
-</div>
+{#if showingDropdown}
+  <ul xyz="fade stagger stagger-1" class="dropdown space-y-4 bg-codeblack bg-opacity-95">
+    {#each $dropdown as button}
+      <li class="xyz-in">
+        {#if button.component}
+          <svelte:component this={button.component} {...button.props} />
+        {:else}
+          <DropdownButton {button} />
+        {/if}
+      </li>
+    {/each}
+  </ul>
+{/if}
 
 <style>
 
@@ -43,17 +50,20 @@
     padding: 0.35rem;
     @apply block h-full bg-codeblack transition-colors duration-100 w-10 bg-no-repeat bg-center outline-none;
     background-size: 2rem;
+  }
 
-    &:hover, &:focus {
+  #primo-button:hover, #primo-button:focus {
       @apply bg-gray-800 transition-colors duration-200;
     }
 
-    &.chevron {
+    #primo-button.chevron {
       @apply relative;
-      &:before, &:after {
+    }
+
+    #primo-button.chevron:before, #primo-button.chevron:after {
         content: " ";
-        @apply absolute h-0 w-0 border-solid border-primored;
-        bottom: -21px;
+        @apply absolute h-0 w-0 border-solid border-codeblack;
+        bottom: -24px;
         pointer-events: none;
         left: 21px;
         border-top-color: transparent;
@@ -62,9 +72,6 @@
         border-width: 7px;
         margin-left: -7px;
       }
-    }
-
-  }
 
   .dropdown-heading {
     @apply uppercase text-gray-100 text-xs font-bold;
@@ -75,17 +82,7 @@
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply overflow-scroll absolute bg-primored shadow-xl rounded p-4 opacity-0 transition-opacity duration-100 pointer-events-none;
-
-    ul {
-      @apply grid grid-cols-2 gap-2 mt-2 pb-4;
-    }
-
-    &.fadein {
-      @apply opacity-100 pointer-events-auto;
-    }
+    @apply overflow-scroll absolute shadow-xl rounded p-4;
   }
-
-
 
 </style>

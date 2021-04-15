@@ -1,16 +1,16 @@
 import Primo from "./Primo.svelte";
-import ComponentPreview from './Preview.svelte'
-// import MultiPreview from './MultiPreview.svelte'
-// import SinglePreview from './SinglePreview.svelte'
+import ComponentPreview from './Preview/ComponentPreview.svelte'
+import SitePreview from './Preview/SitePreview.svelte'
 
-// import functions from './functions'
 import {unsaved} from './stores/app/misc'
 import {site} from './stores/data/draft'
+import savedSite from './stores/data/site'
 import dropdown from './stores/app/dropdown'
+import activePage from './stores/app/activePage'
 import fieldTypes from './stores/app/fieldTypes'
 import modal from './stores/app/modal'
 import {registerProcessors} from './component'
-import { DEFAULTS, createPage, createSite } from './const'
+import { DEFAULTS, createPage, createSite, createNewSite } from './const'
 import PrimoFieldTypes from './field-types'
 
 import * as utils from './utils'
@@ -21,16 +21,18 @@ const stores = {
 }
 
 export {
+  savedSite,
   site,
+  activePage,
   ComponentPreview,
-  // MultiPreview,
-  // SinglePreview,
+  SitePreview,
   modal,
   utils,
   components,
   DEFAULTS,
   createPage,
   createSite,
+  createNewSite,
   fieldTypes,
   PrimoFieldTypes,
   dropdown,

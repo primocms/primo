@@ -1,24 +1,26 @@
-<script lang="ts">
-  import {fade} from 'svelte/transition'
+<script>
+  import { fade } from 'svelte/transition'
 
-  import type {Tab,Tabs} from '../../types/components'
-
-  export let tabs:Tabs
-  export let activeTab:Tab
-  export let variants:string = ''
-  export let activeColor:string = 'rgb(248,68,73)'
-
-  const tabStyles = (active:boolean): string => active ? `border-color:${activeColor};` : `border-color:transparent;`
+  export let tabs
+  export let activeTab
+  export let variants = ''
+  export let activeColor = 'rgb(248,68,73)'
 </script>
 
 {#if tabs.length > 1}
   <div class="tabs {variants}" in:fade={{ duration: 200 }}>
-    <ul>
+    <ul xyz="fade stagger">
       {#each tabs as tab}
-        <li style={tabStyles(activeTab === tab)} class:is-active={activeTab === tab}>
-          <button on:click={() => activeTab = tab} id={ tab.id ? `tab-${tab.id}` : null}>
-            {#if tab.icon}<i class="fas fa-{tab.icon}"></i>{/if}
-            { typeof tab === 'string' ? tab : tab.label }
+        <li
+          class="xyz-in border-b-2 border-transparent"
+          class:is-active={activeTab === tab}
+        >
+          <button
+            on:click={() => (activeTab = tab)}
+            id={tab.id ? `tab-${tab.id}` : null}
+          >
+            {#if tab.icon}<i class="fas fa-{tab.icon}" />{/if}
+            {typeof tab === 'string' ? tab : tab.label}
           </button>
         </li>
       {/each}
@@ -26,79 +28,51 @@
   </div>
 {/if}
 
-
 <style>
   .tabs {
     @apply text-gray-300;
   }
   .tabs:not(.secondary) {
     min-height: 2.5rem;
-    /* outline: 1px solid #eee; */
     @apply border border-gray-800 mb-1;
-    ul {
-      @apply flex justify-around;
+  }
+  .tabs:not(.secondary) ul {
+    @apply flex justify-around;
+  }
+  .tabs:not(.secondary) li {
+    @apply flex-1 border-b-2 border-transparent;
+    &.is-active {
+      @apply border-primored;
     }
-    li {
-      @apply flex-1;
-      border-bottom-width: 3px;
-      border-bottom-style: solid;
-      border-color: transparent;
+  }
 
-      /* border-top: 1px solid #eee !important; */
+  .tabs:not(.secondary) li button {
+    @apply block w-full text-center py-2 outline-none font-medium;
+  }
 
-      &:not(:last-child) {
-        /* border-right: 1px solid #eee !important; */
-      }
-
-      /* &:first-child {
-        border-left: 1px solid #eee !important;
-      } */
-
-      button {
-        @apply block w-full text-center py-2 outline-none font-medium;
-
-        i {
-          @apply mr-2;
-        }
-      }
-
-    }
+  .tabs:not(.secondary) li button i {
+    @apply mr-2;
   }
 
   .tabs.secondary {
     height: 35px;
-
-    ul {
-      @apply flex justify-around;
-
-      li {
-        @apply flex-1 border-transparent text-xs font-bold;
-        border-top: 1px solid #eee;
-
-        button {
-          @apply w-full text-center py-2 outline-none text-xs font-bold;
-
-          /* i {
-            @apply mr-2;
-          } */
-        }
-
-        &.is-active {
-          @apply bg-codeblack text-white !important;
-          @apply border-codeblack !important;
-        }
-
-        &:first-child {
-          border-top-left-radius: 5px;
-          border-left: 1px solid #eee;
-          border-right: 1px solid #eee;
-        }
-        &:last-child {
-          border-top-right-radius: 5px;
-          border-left: 1px solid #eee;
-          border-right: 1px solid #eee;
-        }
-      }
-    }
   }
+
+  .tabs.secondary ul {
+    @apply flex justify-around;
+  }
+
+  .tabs.secondary li {
+    @apply flex-1 border-transparent text-xs font-bold;
+  }
+
+  .tabs.secondary li button {
+    @apply w-full text-center py-2 outline-none text-xs font-bold;
+  }
+
+  .tabs.secondary li.is-active {
+    @apply bg-codeblack text-white;
+    @apply border-codeblack;
+  }
+
 </style>

@@ -1,12 +1,11 @@
 <script>
-  import { onMount, onDestroy } from 'svelte'
-  import _ from 'lodash'
+  import { onMount } from 'svelte'
   import { get, set } from 'idb-keyval';
   import { BroadcastChannel } from 'broadcast-channel';
   import { fade } from 'svelte/transition'
-  import {wrapInStyleTags} from './utils'
-  import {appendHtml} from './views/editor/pageUtils.js'
-  import Spinner from './components/misc/Spinner.svelte'
+  import {wrapInStyleTags} from '../utils'
+  import {appendHtml} from '../views/editor/pageUtils.js'
+  import Spinner from '../components/misc/Spinner.svelte'
 
   let id = ''
   let html = ''
@@ -27,14 +26,12 @@
       html = data.html 
       css = data.css 
       js = data.js
-      set('preview', { id, html, css, js })
     }
   }
 
   let tailwindStyles = ''
   get('tailwind').then(t => {
     tailwindStyles = t
-    // BC.postMessage('ready')
   })
 
   async function setPageJs(js) {
@@ -54,15 +51,15 @@
 
 </script>
 
-<svelte:head>
-  {@html wrapInStyleTags(tailwindStyles)}
-  {@html wrapInStyleTags(css)}
-</svelte:head>
-
-
 {#if tailwindStyles}
-  <div class="primo-page" in:fade={{ duration: 100 }} id="component-{id}">
-    {@html html}
+  <div class="w-full h-full primo-page" in:fade={{ duration: 100 }} id="component-{id}">
+    {#if id}
+      <div id="component-{id}">
+        {@html html}
+      </div>
+    {:else}
+      {@html html}
+    {/if}
   </div>
 {:else}
   <div class="bg-black h-screen w-screen absolute top-0 left-0">
@@ -71,10 +68,7 @@
 {/if}
 <div primo-js></div>
 
-<style global>
-
-  .primo-page {
-    @apply w-full h-full;
-  }
-  
-</style>
+<svelte:head>
+  {@html wrapInStyleTags(tailwindStyles)}
+  {@html wrapInStyleTags(css)}
+</svelte:head>

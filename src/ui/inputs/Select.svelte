@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
 
   export let label
   export let value
@@ -6,7 +6,7 @@
   export let variants = ''
   export let options
   export let info = null
-  export let size:'small'|'medium'|'large' = 'medium'
+  export let size = 'medium'
 
 </script>
 

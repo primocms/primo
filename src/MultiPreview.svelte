@@ -46,7 +46,7 @@
   {#if pages}
     {#each pages as page, i}
       <div class="preview-container" style="height:{iframeHeights[i]}px">
-        <iframe bind:this={iframes[i]} class:fadein={iframeLoaded}  on:load={() => {iframeLoaded = true; setIframeHeight(i)}} title="Preview HTML" src="/preview.html?preview=single&page={i}"></iframe>
+        <iframe bind:this={iframes[i]} class:opacity-100={iframeLoaded} class="opacity-0 h-full w-full transition-opacity duration-100 border-0" on:load={() => {iframeLoaded = true; setIframeHeight(i)}} title="Preview HTML" src="/preview.html?preview=single&page={i}"></iframe>
       </div>
     {/each}
   {/if}
@@ -54,21 +54,6 @@
 
 
 <style>
-  iframe {
-    @apply opacity-0 h-full w-full transition-opacity duration-100 border-0;
-  }
-  iframe.scaled {
-    width: 100vw;
-    transform-origin: top left;
-  }
-  .fadein {
-    @apply opacity-100 duration-200;
-  }
-
-  .preview-container {
-    /* outline: 0.25rem solid #edf2f7; */
-  }
-
   iframe {
     width: 100%;
     height: 100%;

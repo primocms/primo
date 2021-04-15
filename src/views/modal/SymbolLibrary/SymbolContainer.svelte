@@ -1,8 +1,3 @@
-<script context="module">
-  import {writable} from 'svelte/store'
-  const preview = writable({})
-</script>
-
 <script>
   import {Spinner} from '../../../components/misc'
   import {fade} from 'svelte/transition'
@@ -15,6 +10,12 @@
   import {styles as siteStyles, wrapper} from '../../../stores/data/draft'
   import {styles as pageStyles} from '../../../stores/app/activePage'
   import { getTailwindConfig } from '../../../stores/helpers';
+  import {processors} from '../../../component'
+  import {getAllFields} from '../../../stores/helpers'
+  import components from '../../../stores/app/components'
+  import {
+    convertFieldsToData
+  } from "../../../utils";
 
   export let symbol;
   export let title = symbol.title || '';
@@ -31,32 +32,7 @@
     }
   }
 
-  function saveComponentHeight(newIframeHeight) {
-    if (newIframeHeight !== symbol.height) {
-      dispatch('update', { height })
-    }
-  }
-
   let iframe
-  let iframeHeight = symbol.height || 250
-
-  onMount(() => {
-    const parentStyles = $siteStyles.final + $pageStyles.final
-    const previewCode = createSymbolPreview({
-      id: symbol.id,
-      html: symbol.value.final.html,
-      wrapper: $wrapper,
-      js: symbol.value.final.js,
-      css: parentStyles + symbol.value.final.css,
-      tailwind: getTailwindConfig()
-    });
-    preview.update(p => ({
-      ...p,
-      [symbol.id]: previewCode
-    }))
-
-  })
-
   let iframeLoaded = false
 
   let scale
@@ -69,13 +45,9 @@
 
   $: if (iframe) {
     resizePreview()
-    iframe.onload = () => {
-      iframeHeight = iframe.contentWindow.document.body.scrollHeight
-      // saveComponentHeight(iframeHeight)
-    }
   } 
 
-  let shouldLoadIframe = false
+  let shouldLoadIframe = true
   onMount(() => {
     window.requestIdleCallback(() => {
       shouldLoadIframe = true
@@ -84,10 +56,79 @@
 
   let copied = false
 
+  let css
+  $: processCSS(symbol.value.css)
+  function processCSS(raw = '') {
+    if (!raw) return
+    const cachedCSS = $components[raw]
+    if (cachedCSS) {
+      css = cachedCSS
+    } else {
+      const tailwind = getTailwindConfig(true)
+      const encapsulatedCss = `#component-${symbol.id} {${raw}}`;
+      processors.css(encapsulatedCss, { tailwind }).then(res => {
+        css = res || '/**/'
+        $components[raw] = css
+      })
+    }
+  }
+
+  let html
+  $: processHTML(symbol.value.html)
+  function processHTML(raw = '') {
+    if (!raw) return 
+    const cachedHTML = $components[raw]
+    if (cachedHTML) {
+      html = cachedHTML
+    } else {
+      const allFields = getAllFields(symbol.value.fields);
+      const data = convertFieldsToData(allFields);
+      processors.html(raw, data).then(res => {
+        html = res
+        $components[raw] = html
+      })
+    }
+  }
+
+  let js
+  $: processJS(symbol.value.js)
+  function processJS(raw) {
+    if (!raw) {
+      js = `//` // set js to something to component renders
+    } else {
+      const allFields = getAllFields(symbol.value.fields)
+      const data = convertFieldsToData(allFields)
+      const finalJS = `
+        const primo = {
+          id: '${symbol.id}',
+          data: ${JSON.stringify(data)},
+          fields: ${JSON.stringify(allFields)}
+        }
+        ${raw.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)}`
+      js = finalJS
+    }
+  }
+
+  $: preview = buildPreview(html, css, js)
+  function buildPreview(html, css, js) {
+    if (!html && !js && !css) return ``
+    const parentStyles = $siteStyles.final + $pageStyles.final
+    const previewCode = createSymbolPreview({
+      id: symbol.id,
+      html,
+      wrapper: $wrapper,
+      js,
+      css: parentStyles + css,
+      tailwind: getTailwindConfig()
+    });
+
+    return previewCode
+  }
+
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="component-wrapper flex flex-col border border-gray-900 bg-gray-900 text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
+<div class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
   <!-- <div class="message-header">
     <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>
       <i class="far fa-edit text-xs text-gray-500 cursor-pointer mr-2"></i>
@@ -135,7 +176,7 @@
       </div>
     {/if}
     {#if shouldLoadIframe}
-      <iframe on:load={() => {iframeLoaded = true}} class:fadein={iframeLoaded} style="transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={$preview[symbol.id]}></iframe>
+      <iframe on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} style="transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={preview}></iframe>
     {/if}
     </div>
 </div>
@@ -145,11 +186,12 @@
     @apply relative shadow;
     height: 40vh;
     overflow: hidden;
+    content-visibility: auto;
   }
   button {
-    @apply transition-colors duration-100;
-    &:hover {@apply bg-red-700;}
+    @apply transition-colors duration-100 focus:outline-none focus:opacity-75;
   }
+  button:hover {@apply bg-primored;}
   .buttons {
     @apply flex justify-end;
   }
@@ -191,9 +233,4 @@
     margin-right: 5px;
     transition: margin-right 0.25s, width 0.25s;
   }
-  /* 
-  .component-wrapper:not(:last-child) {
-    margin-bottom: 1rem;
-  } */
-
 </style>

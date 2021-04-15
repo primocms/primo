@@ -1,14 +1,13 @@
-<script lang="ts">
-  import { fade } from 'svelte/transition';
+<script>
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
-  export let field:Field
+  export let field
 
-  export let disabled:boolean = false
-  export let title:null|string = null;
-  export let variants:string = ''
+  export let disabled = false
+  export let title = null;
+  export let variants = ''
 
 </script>
 

@@ -1,15 +1,3 @@
-export type Section = {
-  id: string
-  width: string
-  columns: Array<Column>
-}
-
-export type Column = {
-  id: string
-  size: string
-  rows: Array<Row>
-}
-
 export type Component = {
   id: string
   type: 'component'
@@ -36,7 +24,12 @@ export type Content = {
   }
 }
 
-export type Row = Content | Component
+export type Options = {
+  id: string
+  type: 'options'
+}
+
+export type Block = Content | Component | Options
 
 export type Button = {
   title: string

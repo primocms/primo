@@ -1,14 +1,11 @@
-<script lang="ts">
+<script>
   import _ from "lodash";
-  import { onMount } from "svelte";
-
   import {createUniqueID} from '../../../utilities'
   import Resizer from './Resizer.svelte'
   import ModalHeader from "../ModalHeader.svelte";
   import { EditField } from "../../../components/inputs";
   import { PrimaryButton } from "../../../components/buttons";
-  import { Tabs } from "../../../components/misc";
-  import { Card } from "../../../components/misc";
+  import { Tabs, Card } from "../../../components/misc";
   import FullCodeEditor from "./FullCodeEditor.svelte";
   import { CodePreview } from "../../../components/misc";
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte'
@@ -19,15 +16,14 @@
     createDebouncer,
   } from "../../../utils";
 
-  import { styles as siteStyles, fields as siteFields } from "../../../stores/data/draft";
-  import {fields as pageFields, styles as pageStyles, dependencies as pageDependencies} from "../../../stores/app/activePage"
-  import {content} from "../../../stores/app/activePage"
-  // import {symbols} from "../../../stores/data/draft";
+  import {getCombinedTailwindConfig} from "../../../stores/data/tailwind"
+  import { styles as siteStyles } from "../../../stores/data/draft";
+  import { styles as pageStyles} from "../../../stores/app/activePage"
   import { switchEnabled } from "../../../stores/app";
   import fieldTypes from "../../../stores/app/fieldTypes";
   import modal from "../../../stores/app/modal";
   import { createComponent } from "../../../const";
-  import {updateInstances,symbols} from '../../../stores/actions'
+  import {symbols} from '../../../stores/actions'
   import {getAllFields,getSymbol} from '../../../stores/helpers'
   import {processors} from '../../../component'
 
@@ -35,33 +31,28 @@
   const slowDebounce = createDebouncer(1000);
   const quickDebounce = createDebouncer(500);
 
-  import type {
-    Fields,
-    Component,
-    Property,
-    FieldType,
-  } from "../../../types/components";
-
-  //TODO: CreateComponent needs to have a type defined, where the prop  type is fixed to be "component"
-  export let component: Component = createComponent();
+  export let component = createComponent();
   export let header = {
     label: "Create Component",
     icon: "fas fa-code",
     button: {
       icon: "fas fa-plus",
       label: "Add to page",
-      onclick: (param: Component) => true,
+      onclick: () => {
+        console.warn('Component not going anywhere', component)
+      },
     },
   };
 
-  let localComponent: Component = _.cloneDeep(component);
+  let localComponent = _.cloneDeep(component);
 
-  function saveRawValue(property: Property, value: any): void {
-    localComponent.value.raw[property] = value;
+  function saveRawValue(property, value) {
+    // localComponent.value.raw[property] = value;
+    localComponent.value[property] = value;
   }
 
-  function saveFinalValue(property: Property, value: string): void {
-    localComponent.value.final[property] = value;
+  function saveFinalValue(property, value) {
+    // localComponent.value.final[property] = value;
   }
 
   const allFieldTypes = [
@@ -78,17 +69,17 @@
     ...$fieldTypes
   ]
 
-  let loading:boolean = false;
+  let loading = false;
 
-  let fields:Fields = localComponent.value.raw.fields;
+  let fields = localComponent.value.fields;
 
-  let rawHTML:string = localComponent.value.raw.html;
-  let finalHTML:string = localComponent.value.final.html;
+  let rawHTML = localComponent.value.html;
+  let finalHTML = ''
   $: compileHtml(rawHTML);
-  async function compileHtml(html: string): Promise<void> {
+  async function compileHtml(html) {
     loading = true;
     saveRawValue("html", html);
-    let res = await processors.html(rawHTML, componentData)
+    let res = await processors.html(html, componentData)
     if (res.error) {
       disableSave = true
       res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
@@ -96,54 +87,52 @@
       disableSave = false
       finalHTML = res
     }
-    saveFinalValue("html", finalHTML);
+    // saveFinalValue("html", finalHTML);
     if(finalJS) {
-      finalJS = `${finalJS} // ${createUniqueID()}` // force preview to reload so JS evaluates over new DOM
+      finalJS = `${finalJS} ` // force preview to reload so JS evaluates over new DOM
     }
     quickDebounce([() => {
       loading = false
     }, null])
   }
 
-  let rawCSS:string = localComponent.value.raw.css;
-  let finalCSS:string = localComponent.value.final.css;
-  // $: compileCss(rawCSS)
+  let rawCSS = localComponent.value.css;
+  let finalCSS = ''
   $: quickDebounce([compileCss, rawCSS]);
   $: ((css) => {
     loading = true;
   })(rawCSS);
-  async function compileCss(css: string): Promise<void> {
+  async function compileCss(css) {
     saveRawValue("css", css);
     loading = true;
-    const encapsulatedCss:string = `#component-${localComponent.id} {${css}}`;
-    const result:any = await processors.css(encapsulatedCss, {
-      html: localComponent.value.final.html,
+    const encapsulatedCss = `#component-${localComponent.id} {${css}}`;
+    const result = await processors.css(encapsulatedCss, {
+      html: finalHTML,
       tailwind: $siteStyles.tailwind
     })
 
     if (result.error) {
       disableSave = true
-      finalHTML = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${result.error}</pre>`
+      // finalHTML = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${result.error}</pre>`
     } else if (result) {
       disableSave = false
-      finalHTML = localComponent.value.final.html
+      // finalHTML = localComponent.value.final.html
       finalCSS = result;
-      saveFinalValue("css", finalCSS);
+      // saveFinalValue("css", finalCSS);
     }
     loading = false;
   }
 
-  let rawJS: string = localComponent.value.raw.js;
-  let finalJS: string = localComponent.value.final.js;
+  let rawJS = localComponent.value.js;
+  let finalJS = ''
   $: compileJs(rawJS);
-  async function compileJs(js: string): Promise<void> {
+  async function compileJs(js) {
     finalJS = js ? `
       const primo = {
         id: '${localComponent.id}',
         data: ${JSON.stringify(getData(fields))},
         fields: ${JSON.stringify(getAllFields(fields))}
       }
-      // turn [import _ from 'lodash'] into [import _ from 'https://cdn.skypack.dev/lodash'];
       ${js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)} 
     `: ``;
     saveRawValue("js", js);
@@ -153,7 +142,7 @@
   let componentData = getData(fields)
   $: componentData = getData(fields)
   function getData(fields) {
-    const allFields: Fields = getAllFields(fields);
+    const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
     return {
       ...data,
@@ -161,7 +150,7 @@
     }
   }
 
-  async function updateHtmlWithFieldData(): Promise<void> {
+  async function updateHtmlWithFieldData() {
     loading = true;
     finalHTML = await processors.html(rawHTML, getData(fields));
     saveFinalValue("html", finalHTML);
@@ -174,7 +163,7 @@
     ]);
   }
 
-  let isSingleUse:boolean = false
+  let isSingleUse = false
   $: isSingleUse = localComponent.type === 'component' && localComponent.symbolID === null 
   function convertToSymbol() {
     const newSymbol = { 
@@ -189,16 +178,16 @@
     loadSymbol()
   }
 
-  function separateFromSymbol(): void {
+  function separateFromSymbol() {
     localComponent.symbolID = null;
     disabled = false;
   }
 
-  async function loadSymbol(): Promise<void> {
+  async function loadSymbol() {
     disabled = false;
-    const symbol: Component = getSymbol(localComponent.symbolID)
+    const symbol = getSymbol(localComponent.symbolID)
     localComponent = _.cloneDeep(symbol)
-    compileCss(symbol.value.raw.css) // workaround for styles breaking
+    compileCss(symbol.value.css) // workaround for styles breaking
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
       header: {
@@ -210,7 +199,6 @@
           onclick: async (symbol) => {
             loading = true;
             symbols.update(symbol)
-            updateInstances(symbol);
             modal.hide();
           },
         },
@@ -218,7 +206,7 @@
     });
   }
 
-  function addNewField(): void {
+  function addNewField() {
     fields = [...fields, createField()];
     saveRawValue("fields", fields);
 
@@ -234,7 +222,7 @@
     }
   }
 
-  function addSubField(id: string): void {
+  function addSubField(id) {
     fields = fields.map((field) => ({
       ...field,
       fields:
@@ -255,7 +243,7 @@
     saveRawValue("fields", fields);
   }
 
-  function deleteSubfield(fieldId: string, subfieldId: string): void {
+  function deleteSubfield(fieldId, subfieldId) {
     fields = fields.map((field) =>
       field.id !== fieldId
         ? field
@@ -270,13 +258,13 @@
     saveRawValue("fields", fields);
   }
 
-  function deleteField(id: string): void {
+  function deleteField(id) {
     fields = fields.filter((field) => field.id !== id);
     updateHtmlWithFieldData();
     saveRawValue("fields", fields);
   }
 
-  function refreshFields(): void { // necessary to re-render field values in preview (since we're mutating `field`)
+  function refreshFields() { // necessary to re-render field values in preview (since we're mutating `field`)
     fields = fields.filter(Boolean);
     saveRawValue("fields", fields);
   }
@@ -321,7 +309,7 @@
 
   let activeTab = tabs[0];
 
-  let disabled:boolean = false
+  let disabled = false
   $: disabled = !!localComponent.symbolID;
   let disableSave = false
 
@@ -372,8 +360,8 @@
       return proceed
     } else return true
   }}
-  button={{ 
-    ...header.button, 
+  button={{  
+    ...header.button,
     onclick: () => header.button.onclick(localComponent) ,
     disabled: disableSave
   }}>
@@ -385,26 +373,39 @@
   {/if}
 </ModalHeader>
 
-<div class="flex flex-1 flex-wrap" bind:clientWidth={containerWidth}>
-  <div class="mb-4 lg:mb-0 w-full md:w-1/2" style="width:{editorWidth}px">
-    <div class="flex flex-col h-full">
+<div class="flex flex-1 flex-wrap overflow-hidden" bind:clientWidth={containerWidth} style="height: calc(100% - 2rem)">
+  <div class="mb-4 lg:mb-0 w-full h-full md:w-1/2 md:pr-2" style="width:{editorWidth}px">
+    <div class="flex flex-col h-full overflow-y-scroll">
       {#if $switchEnabled}
-        <Tabs {tabs} bind:activeTab variants="mb-1" />
-        {#if disabled}
-          <p class="mb-2 text-xs text-gray-400">
-            This component is tied to a <button
-              class="underline"
+        {#if !disabled}
+          <Tabs {tabs} bind:activeTab variants="mb-1" />
+        {/if}
+        {#if disabled && activeTab === tabs[0]}
+          <div class="grid md:grid-cols-2 gap-4">
+            <button
+              class="border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
               on:click={loadSymbol}
               id="edit-symbol"
-              title="Edit the Symbol">Symbol</button>. You won't be able to edit
-            it unless you <button
-              class="underline"
+              title="Edit the Symbol">
+              <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
+                <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
+              </svg>
+              <span>Edit Symbol</span>
+            </button>
+              <button
+              class="border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
               on:click={separateFromSymbol}
               title="Separate the component instance from its Symbol"
-              id="emancipate-symbol">emancipate it</button>.
-          </p>
-        {/if}
-        {#if activeTab === tabs[0]}
+              id="emancipate-symbol">
+              <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.5 2a3.5 3.5 0 101.665 6.58L8.585 10l-1.42 1.42a3.5 3.5 0 101.414 1.414l8.128-8.127a1 1 0 00-1.414-1.414L10 8.586l-1.42-1.42A3.5 3.5 0 005.5 2zM4 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 9a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
+                <path d="M12.828 11.414a1 1 0 00-1.414 1.414l3.879 3.88a1 1 0 001.414-1.415l-3.879-3.879z" />
+              </svg>
+              <span>Emancipate</span>
+            </button>
+          </div>
+        {:else if !disabled && activeTab === tabs[0]}
           <FullCodeEditor
             variants="flex-1"
             {disabled}
@@ -534,10 +535,10 @@
           </div>
         {/if}
       {:else}
-        <div class="pt-8">
+        <div class="gridgap-2 h-full">
           {#each fields as field}
             {#if field.key && getFieldComponent(field)}
-              <div class="field-item mb-2 shadow" id="field-{field.key}">
+              <div class="field-item shadow" class:repeater={field.key === 'repeater'}  id="field-{field.key}">
                 <svelte:component
                   this={getFieldComponent(field)}
                   {field}
@@ -549,7 +550,7 @@
           {:else}
             <p
               class="text-center h-full flex items-start p-24 justify-center
-                text-lg text-gray-700 mt-3 bg-gray-100">
+                text-lg text-gray-200 mt-3">
               You'll need to create and integrate a field before you can edit
               this component's content
             </p>
@@ -568,54 +569,56 @@
     <CodePreview
       view="small"
       {loading}
-      id={localComponent.id}
-      html={finalHTML}
+      html={`<div id="component-${localComponent.id}">${finalHTML}</div>`}
       css={$siteStyles.final + $pageStyles.final + finalCSS}
-      js={finalJS} />
+      js={finalJS} 
+      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
+      />
   </div>
 </div>
 
 <style>
+  .repeater {
+    @appy col-start-1 col-end-3;
+  }
 
   button.convert {
     @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
     outline-color: rgb(248,68,73);
-    &:hover {
+  }
+  button.convert:hover {
       @apply bg-red-700 text-white;
     }
-  }
   .field-item {
-    @apply p-4 shadow mb-2 bg-gray-900 text-gray-200;
+    @apply p-4 shadow bg-gray-900 text-gray-200;
   }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
-
-    &:hover {
+  }
+  .field-button:hover {
       @apply bg-gray-900;
     }
-    &[disabled] {
+    .field-button[disabled] {
       @apply bg-gray-500;
       @apply cursor-not-allowed;
     }
-  }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
     @apply rounded-sm ml-4 mb-2 mt-2 text-sm py-1 bg-codeblack text-gray-200 transition-colors duration-100 outline-none;
-
-    &:hover {
+  }
+  .field-button.subfield-button:hover {
       @apply bg-gray-900;
     }
-    &:focus {
-      @apply bg-gray-200;
+    .field-button.subfield-button:focus {
+      @apply bg-gray-800;
     }
-  }
 
   input {
     @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
-    &:focus {
+  }
+  input:focus {
       @apply outline-none;
     }
-  }
 
   select {
     @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;

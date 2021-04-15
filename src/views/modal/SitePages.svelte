@@ -1,31 +1,32 @@
 <script>
   import _ from 'lodash'
-  import { onMount } from "svelte";
   import { fade } from "svelte/transition";
   import { SelectOne, TextInput } from "../../components/inputs";
   import { PrimaryButton } from "../../components/buttons";
-  import { Card } from "../../components/misc";
   import PageItem from "./PageList/PageItem.svelte";
   import ModalHeader from "./ModalHeader.svelte";
   import {createUniqueID} from '../../utilities'
 
   import { createPage } from "../../const";
+  import { makeValidUrl } from "../../utils";
   import {pages} from "../../stores/data/draft";
   import activePage from "../../stores/app/activePage";
   import {pages as actions} from "../../stores/actions";
   import {id} from '../../stores/app/activePage'
 
   async function submitForm(form) {
-    const inputs = Object.values(form.target);
-    let [title, url] = inputs.map((f) => f.value);
-    const isEmpty = inputs[2].classList.contains("selected");
-    url = `${currentPath[0]}/${url}` // prepend parent page to id (i.e. about/team)
+    let title = pageLabel
+    let url = pageURL
+    const isEmpty = pageBase === 'Empty'
+    url = currentPath[0] ? `${currentPath[0]}/${url}` : url // prepend parent page to id (i.e. about/team)
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
     actions.add(newPage, currentPath)
     creatingPage = false;
-    pageUrl = "";
+    pageLabel = ''
+    pageURL = ''
+    pageBase = null
   }
 
   async function deletePage(pageId) {
@@ -50,65 +51,16 @@
       );
     });
 
-    // Replace all the old IDs in the components
-    IDmap.forEach(([oldID, newID]) => {
-      newPage.content = newPage.content.map((section) => ({
-        ...section,
-        columns: section.columns.map((column) => ({
-          ...column,
-          rows: column.rows.map((row) =>
-            row.type === "component"
-              ? {
-                  ...row,
-                  value: {
-                    ...row.value,
-                    raw: {
-                      ...row.value.raw,
-                      css: row.value.raw.css.replace(
-                        new RegExp(oldID, "g"),
-                        newID
-                      ),
-                    },
-                    final: {
-                      ...row.value.final,
-                      css: row.value.final.css.replace(
-                        new RegExp(oldID, "g"),
-                        newID
-                      ),
-                    },
-                  },
-                }
-              : row
-          ),
-        })),
-      }));
-    });
     return newPage;
 
     function scrambleIds(content) {
       let IDs = [];
-      const newContent = content.map((section) => {
+      const newContent = content.map((block) => {
         const newID = createUniqueID();
-        IDs.push([section.id, newID]);
+        IDs.push([block.id, newID]);
         return {
-          ...section,
+          ...block,
           id: newID,
-          columns: section.columns.map((column) => {
-            const newID = createUniqueID();
-            IDs.push([column.id, newID]);
-            return {
-              ...column,
-              id: newID,
-              rows: column.rows.map((row) => {
-                const newID = createUniqueID();
-                IDs.push([row.id, newID]);
-                return {
-                  ...row,
-                  id: newID,
-                };
-              }),
-            };
-          }),
         };
       });
       return [newContent, IDs];
@@ -118,25 +70,12 @@
 
   let creatingPage = false;
 
-  let mounted = false;
-  onMount(async () => {
-    mounted = true;
-  });
-
-  function validateUrl({ detail }) {
-    let validUrl;
-    if (detail) {
-      validUrl = detail
-        .replace(/\s+/g, "-")
-        .replace(/[^0-9a-z\-._]/gi, "")
-        .toLowerCase();
-    } else {
-      validUrl = "";
-    }
-    pageUrl = validUrl;
+  function validateUrl(url) {
+    pageURL = url
+      .replace(/\s+/g, "-")
+      .replace(/[^0-9a-z\-._]/gi, "")
+      .toLowerCase();
   }
-
-  let pageUrl = "";
 
   function listPages(pageId) {
     const {pages} = _.find(listedPages, ['id', pageId])
@@ -150,7 +89,7 @@
     creatingPage = true;
   }
 
-  let currentPath = []
+  let currentPath = $id.includes('/') ? [ $id.split('/')[0] ] : [] // load child route
   $: listedPages = getListedPages(currentPath, $pages)
   $: breadcrumbs = getBreadCrumbs(currentPath, $pages)
 
@@ -179,6 +118,16 @@
     } else return null
   }
 
+  let pageLabel = ''
+  let pageURL = ''
+  $: if (!pageLabelEdited) {
+    pageURL = makeValidUrl(pageLabel)
+  }
+  $: validateUrl(pageURL)
+  let pageLabelEdited = false
+  let pageBase
+  $: disablePageCreation = !pageLabel || !pageURL
+
 </script>
 
 <ModalHeader icon="fas fa-th-large" title="Pages" />
@@ -193,9 +142,9 @@
   </div>
 {/if}
 
-<ul class="grid grid-cols-2 gap-4 mb-4">
+<ul class="grid grid-cols-2 gap-4 mb-4" xyz="fade stagger stagger-1">
   {#each listedPages as page (page.id)}
-    <li in:fade={{ duration: 200 }} id="page-{page.id}">
+    <li in:fade={{ duration: 200 }} id="page-{page.id}" class="xyz-in">
       <PageItem
         {page}
         parent={currentPath[0]}
@@ -217,30 +166,32 @@
     New Page
   </PrimaryButton>
 {:else}
-  <Card variants="p-4 shadow">
+  <div class="p-4">
     <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
       <TextInput
+        bind:value={pageLabel}
         id="page-label"
         autofocus={true}
         variants="mb-4"
         label="Page Label"
         placeholder="About Us" />
       <TextInput
+        bind:value={pageURL}
         id="page-url"
         variants="mb-4"
         label="Page URL"
         prefix="/"
-        on:input={validateUrl}
-        bind:value={pageUrl}
+        on:input={() => pageLabelEdited = true}
         placeholder="about-us" />
       <SelectOne
+        bind:selection={pageBase}
         id="page-base"
         variants="mb-8"
-        label="Page Base"
+        label="Starting Point"
         options={['Empty', 'Duplicate']} />
-      <PrimaryButton id="create-page" type="submit">Create</PrimaryButton>
+      <PrimaryButton disabled={disablePageCreation} id="create-page" type="submit">Create</PrimaryButton>
     </form>
-  </Card>
+  </div>
 {/if}
 
 

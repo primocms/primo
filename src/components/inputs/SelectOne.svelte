@@ -5,7 +5,7 @@
   export let id = null
   export let label
   export let options
-  export let selection = options[0]
+  export let selection
   export let variants = ''
 
   $: dispatch('select', selection)
@@ -14,7 +14,7 @@
 </script>
 
 <div class={variants} {id}>
-  <span class="text-base text-gray-900 font-semibold">{label}</span>
+  <span class="text-base text-gray-100 font-semibold">{label}</span>
   <div class="toggle">
     {#each options as option}
       <button class:selected={selection === option} type="button" on:click={() => selection = option}>{option}</button>
@@ -30,6 +30,6 @@
     @apply flex-1 bg-gray-100 text-gray-700 py-2 font-medium transition-colors duration-200;
   }
   .toggle > button.selected {
-    @apply bg-gray-800 text-gray-100 transition-colors duration-200 outline-none;
+    @apply bg-primored text-gray-100 transition-colors duration-200 outline-none;
   }
 </style>

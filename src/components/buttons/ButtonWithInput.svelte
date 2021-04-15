@@ -19,16 +19,10 @@
     }}>
       <label class="flex items-center">
         <span class="text-base mr-2 text-gray-900">Email:</span>
-        <input autofocus bind:value={email} type="email" placeholder="johndoe@gmail.com" />
+        <input class="text-base bg-gray-200 text-gray-900 font-medium rounded-sm py-2 px-3" autofocus bind:value={email} type="email" placeholder="johndoe@gmail.com" />
       </label>
     </form>
   {:else}
     <div class="text-base font-medium">Invitation sent to {email}</div>
   {/if}
 {/if}
-
-<style>
-  input {
-    @apply text-base bg-gray-200 text-gray-900 font-medium rounded-sm py-2 px-3;
-  }
-</style>

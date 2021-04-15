@@ -1,6 +1,7 @@
 <script>
   import {onMount,onDestroy,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
+  import Mousetrap from 'mousetrap'
 
   import CodeMirror from 'codemirror/lib/codemirror'
   import 'requestidlecallback-polyfill';
@@ -15,10 +16,6 @@
   export let CodeMirrorOptions = {}
   export let docs
   export let autofocus = false
-
-  window.requestIdleCallback(async () => {
-    value = await formatCode(value, mode)
-  })
 
   async function formatCode(code, mode) {
     const {default:prettier} = await import('prettier')
@@ -67,8 +64,10 @@
       import('codemirror/keymap/sublime.js')
     ])
 
-    const {default:emmet} = await import('@emmetio/codemirror-plugin')
-    emmet(CodeMirror);
+    if (mode === 'html') {
+      const {default:emmet} = await import('@emmetio/codemirror-plugin')
+      emmet(CodeMirror);
+    }
 
   }
 
@@ -95,7 +94,16 @@
       extraKeys: {
         'Tab': 'emmetExpandAbbreviation',
         'Esc': 'emmetResetAbbreviation',
-        'Enter': 'emmetInsertLineBreak'
+        'Enter': 'emmetInsertLineBreak',
+        "Cmd-Enter": async () => {
+          value = await formatCode(value, mode)
+        },
+        "Cmd-S": async () => {
+          dispatch('save')
+        },
+        "Ctrl-S": async () => {
+          dispatch('save')
+        },
       },
       viewportMargin: Infinity,
       ... typeof languageMode === 'string' && languageMode.includes('css') ? {} : {
@@ -110,7 +118,7 @@
     Editor.on('change', () => {
       const newValue = Editor.doc.getValue()
       value = newValue.replace(prefix, '')
-      dispatch('change')
+      dispatch('change', value)
     })
     Editor.on("gutterClick", foldHTML);
     function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
@@ -144,7 +152,7 @@
   }}
 />
 
-<div class="codemirror-container" style="{style}">
+<div class="codemirror-container {mode}" style="{style}">
   <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:100px"></div>
   {#if docs}
     <a target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
@@ -156,6 +164,10 @@
 
 <style global>
 
+  .codemirror-container.css .emmet-abbreviation-preview {
+    display: none !important;
+  }
+
   /* BASICS */
 
   .CodeMirror {
@@ -164,11 +176,11 @@
     color: black;
     direction: ltr;
     @apply h-auto w-full opacity-0 transition-opacity duration-100;
+  }
 
-    &.fadein {
+  .CodeMirror.fadein {
       @apply opacity-100;
     }
-  }
 
   /* PADDING */
 
@@ -576,20 +588,20 @@
   .emmet-abbreviation-preview {
     z-index: 9;
     @apply bg-gray-900;
-    .CodeMirror {
+  }
+  .emmet-abbreviation-preview .CodeMirror {
       @apply shadow-lg bg-gray-900;
     }
-  }
 
   /* Pretty 'see more' button */
   .CodeMirror-foldmarker {
     @apply cursor-pointer rounded-full bg-primored text-white transition-colors duration-200;
     padding: 4px 6px;
     animation: fadein 0.2s;
-    &:hover {
+  }
+  .CodeMirror-foldmarker:hover {
       @apply bg-gray-700;
     }
-  }
 
   @keyframes fadein {
     from { opacity: 0; }
@@ -601,10 +613,10 @@
   .CodeMirror-linenumber.CodeMirror-gutter-elt {
     will-change: background, background-color;
     @apply bg-codeblack transition-colors duration-100 cursor-pointer;
-    &:hover {
+  }
+  .CodeMirror-linenumber.CodeMirror-gutter-elt:hover {
       @apply bg-primored text-white;
     }
-  }
 
   .emmet-abbreviation-preview-error {
     @apply hidden;

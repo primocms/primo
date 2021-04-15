@@ -70,13 +70,16 @@ function setLocalStorage(tw) {
 
 
 // HELPERS
-export function getCombinedTailwindConfig(pageTW, siteTW) {
+export function getCombinedTailwindConfig(pageTW, siteTW, asObj = false) {
   let siteTailwindObject
   let pageTailwindObject
   try {
     siteTailwindObject = new Function(`const require = (id) => id; return ${siteTW}`)() // convert string object to literal object
     pageTailwindObject = new Function(`const require = (id) => id; return ${pageTW}`)()
     const combined = _.merge(siteTailwindObject, pageTailwindObject)
+    if (asObj) {
+      return combined
+    } 
     const asString = JSON.stringify(combined)
     const withPlugins = asString.replace(`"@tailwindcss/ui"`,`require('@tailwindcss/ui')`)
     return withPlugins

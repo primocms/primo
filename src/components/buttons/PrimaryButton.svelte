@@ -19,11 +19,11 @@
 <style>
   .primary-button {
     @apply w-full bg-codeblack text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
-    &:hover {
-      @apply bg-gray-900 !important;
-    }
   }
+  .primary-button:hover {
+      @apply bg-gray-900;
+    }
   .primary-button[disabled] {
-    @apply bg-gray-600;
+    @apply bg-gray-600 cursor-not-allowed;
   }
 </style>

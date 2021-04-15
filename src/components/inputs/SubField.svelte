@@ -1,11 +1,10 @@
-<script lang="ts">
-  import {onMount} from 'svelte'
+<script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
   import {IconButton} from '../misc'
   import _ from 'lodash'
 
-  export let disabled:boolean = false
+  export let disabled = false
 
   const dispatch = createEventDispatcher();
 
@@ -48,16 +47,14 @@
   .input-group-label {
     @apply p-2 font-semibold;
   }
-  :global {
-    .input-group-input {
+  .input-group-input {
       @apply mr-4 flex-1 flex;
-      input {
+    }
+  :global(.input-group-input input) {
         @apply flex-1 outline-none border-b border-gray-200 transition-colors duration-200;
-        &:focus {
+      }
+      :global(.input-group-input input:focus) {
           @apply border-primored;
         }
-      }
-    }
-  }
 
 </style>

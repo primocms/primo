@@ -1,17 +1,8 @@
-<script lang="ts">  
+<script>  
   import _ from 'lodash'
-  import pluralize from 'pluralize'
-  import {createEventDispatcher} from 'svelte'
-  import {writable} from 'svelte/store'
-  import {fade} from 'svelte/transition'
-  const dispatch = createEventDispatcher()
-  import {PrimaryButton,SaveButton} from '../../components/buttons'
-  import {EditField, GenericField, ImageField} from '../../components/inputs'
-  import {IconButton,Tabs} from '../../components/misc'
-  import {CodeMirror} from '../../components'
+  import {EditField} from '../../components/inputs'
+  import {Tabs} from '../../components/misc'
   import {Card} from '../../components/misc'
-  import {CodePreview} from '../../components/misc'
-  import type {Subfield, Field, Fields, Component, Property, FieldType} from '../../types/components'
   import {createUniqueID} from '../../utilities'
 
   import ModalHeader from './ModalHeader.svelte'
@@ -19,9 +10,7 @@
   import {switchEnabled,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
   import {fields as pageFields} from '../../stores/app/activePage'
-  import {fields as siteFields, pages} from '../../stores/data/draft'
-  import {id} from '../../stores/app/activePage'
-  import {hydrateComponents, symbols} from '../../stores/actions'
+  import {fields as siteFields} from '../../stores/data/draft'
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte'
   import GroupField from '../../components/FieldTypes/GroupField.svelte'
 
@@ -49,7 +38,7 @@
     }
   }
 
-  function addField(): void {
+  function addField() {
     fields = [
       ...fields,
       {
@@ -64,7 +53,7 @@
     saveFields(fields)
   }
 
-  function addSubField(id:string): void {
+  function addSubField(id) {
     fields = fields.map(field => ({
       ...field,
       fields: field.id === id ? [
@@ -82,7 +71,7 @@
     updateHtmlWithFieldData('static')
   }
 
-  function deleteSubfield(fieldId:string, subfieldId:string): void {
+  function deleteSubfield(fieldId, subfieldId) {
     fields = fields.map(field => field.id !== fieldId ? field : {
       ...field,
       fields: field.fields.filter(subfield => subfield.id !== subfieldId)
@@ -91,13 +80,13 @@
     updateHtmlWithFieldData('static')
   }
 
-  function deleteField(id:string): void {
+  function deleteField(id) {
     fields = fields.filter(field => field.id !== id)
     updateHtmlWithFieldData('static')
     saveFields(fields)
   }
 
-  function addRepeaterItem(repeaterField:Field): void {
+  function addRepeaterItem(repeaterField) {
     const keys = repeaterField.fields.map(f => f.key)
     repeaterField.value = [
       ...repeaterField.value,
@@ -107,7 +96,7 @@
     updateHtmlWithFieldData('static')
   }
 
-  function removeRepeaterItem(fieldId:string, itemId:string): void {
+  function removeRepeaterItem(fieldId, itemId) {
     fields = fields.map(field => field.id !== fieldId ? field : ({
       ...field,
       value: Array.isArray(field.value) ? field.value.filter(item => item.id !== itemId) : field.value
@@ -116,18 +105,18 @@
     updateHtmlWithFieldData('static')
   }
 
-  function moveRepeaterItem(field, item, direction): void {
-    const indexOfItem:number = _.findIndex(field.value, ['id', item.id])
-    const withoutItem:Fields = field.value.filter(i => i.id !== item.id)
+  function moveRepeaterItem(field, item, direction) {
+    const indexOfItem = _.findIndex(field.value, ['id', item.id])
+    const withoutItems = field.value.filter(i => i.id !== item.id)
     if (direction === 'up') {
-      field.value = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
+      field.value = [...withoutItems.slice(0,indexOfItem-1), item, ...withoutItems.slice(indexOfItem-1)];
     } else {
-      field.value = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
+      field.value = [...withoutItems.slice(0, indexOfItem+1), item, ...withoutItems.slice(indexOfItem+1)];
     }
     refreshFields()
   }
 
-  function refreshFields(): void {
+  function refreshFields() {
     fields = fields.filter(f => true)
     saveFields(fields)
   }
@@ -160,8 +149,8 @@
   }
 
   function applyFields() {
-    hydrateComponents()
-    symbols.hydrate()
+    $pageFields = $pageFields // register store change in Doc.svelte
+    $siteFields = $siteFields // register store change in Doc.svelte
     modal.hide()
   }
 
@@ -170,8 +159,8 @@
     if (fieldType) {
       return fieldType.component
     } else {
-      return null
       console.warn(`Field type '${field.type}' no longer exists, removing '${field.label}' field`)
+      return null
     }
   }
 
@@ -265,29 +254,29 @@
   }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
-    &:hover {
+  }
+  .field-button:hover {
       @apply bg-gray-900;
     }
-    &[disabled] {
-      @apply bg-gray-500 cursor-not-allowed;
-    }
+  .field-button[disabled] {
+    @apply bg-gray-500 cursor-not-allowed;
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
     @apply rounded-sm ml-4 text-sm py-1 mb-2 mt-2 bg-gray-900 text-gray-200 transition-colors duration-100 outline-none;
-    &:hover {
+  }
+  .field-button.subfield-button:hover {
       @apply bg-gray-300;
     }
-    &:focus {
-      @apply bg-gray-200;
-    }
+  .field-button.subfield-button:focus {
+    @apply bg-gray-200;
   }
   input {
     @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
-    &:focus {
+  }
+  input:focus {
       @apply outline-none;
     }
-  }
   select {
     @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
   }

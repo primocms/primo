@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { fade, slide } from "svelte/transition";
+  import { fade } from "svelte/transition";
+  import {showKeyHint} from '../../stores/app/misc'
 
   const dispatch = createEventDispatcher();
 
@@ -18,8 +19,6 @@
   export let type = null
   export let tooltipStyle = ''
   export let tooltipVariants = ''
-
-  export let showKeyHint = false
 
   let subButtonsActive = false
 
@@ -45,7 +44,7 @@
     }}>
     {#if icon}
       {#if key}
-        <span class="key-hint" class:active={showKeyHint} aria-hidden>&#8984;{key.toUpperCase()}</span>
+        <span class="key-hint" class:active={$showKeyHint} aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
       <i class="{ !loading ? icon : 'fas fa-spinner'} w-4" />
     {:else} 
@@ -65,7 +64,7 @@
           class="sub-button"
         >
           {#if button.key}
-            <span class="key-hint" class:active={showKeyHint} aria-hidden>&#8984;{button.key.toUpperCase()}</span>
+            <span class="key-hint" class:active={$showKeyHint} aria-hidden>&#8984;{button.key.toUpperCase()}</span>
           {/if}
           <i class="fas fa-{button.icon}" aria-label={button.title}/>
         </button>
@@ -77,6 +76,12 @@
 </div>
 
 <style>
+  .button-group:after {
+    content: '';
+    @apply w-8 h-4 absolute;
+    bottom: -1rem;
+  }
+
   .primo {
     @apply bg-primored text-gray-100;
   }
@@ -87,46 +92,43 @@
 
   .key-hint.active {
     @apply opacity-100 transition-opacity duration-100;
-    & + i {
-      @apply opacity-0 transition-opacity duration-100;
-    } 
   }
 
+  .key-hint.active + i {
+      @apply opacity-0 transition-opacity duration-100;
+    } 
+
   .button-container {
-    @apply relative;
-    button {
-      @apply h-full;
-    }
+    @apply flex justify-center relative;
   }
 
   .tooltip.sub-buttons {
     @apply pointer-events-auto cursor-default p-0 bg-codeblack shadow flex;
     z-index: 999;
     left: 12rem;
-    &:before, &:after {
+  }
+
+  .tooltip.sub-buttons:before, .tooltip.sub-buttons:after {
       left: 5%;
       @apply border-codeblack;
       border-top-color: transparent;
       border-left-color: transparent;
       border-right-color: transparent;
     }
-    button {
-      &:hover, &:focus {
-        @apply bg-gray-700;
-      }
+    .tooltip.sub-buttons button:hover, .tooltip.sub-buttons button:focus {
+      @apply bg-gray-700;
     }
-  }
 
   .has-subbuttons {
-    &:hover, &:focus {
-      &:after {
-        content: '';
+
+  }
+
+  .has-subbuttons:hover .has-subbuttons:after, .has-subbuttons:focus .has-subbuttons:after {
+    content: '';
         @apply h-4 absolute left-0 cursor-default;
         bottom: -1rem;
         right: -1rem;
-      }
     }
-  }
 
   .tooltip {
     @apply absolute text-center text-gray-100 font-bold bg-gray-800 px-4 py-2 text-sm pointer-events-none invisible opacity-0 transition-opacity duration-200;
@@ -161,17 +163,18 @@
 
   button {
     @apply bg-codeblack text-white font-bold py-2 px-3 transition-colors outline-none relative;
+  }
 
-    &:hover, &:focus {
+  button:hover, button:focus {
       @apply bg-gray-800 transition-colors duration-200;
-      .key-hint {
+    }
+
+    button.key-hint {
         @apply opacity-100 transition-opacity duration-100;
       }
-      .key-hint + i {
+      button.key-hint + i {
         @apply opacity-0 transition-opacity duration-100;
       }
-    }
-  }
 
 
   button[disabled] {

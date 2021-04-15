@@ -1,10 +1,6 @@
-<script lang="ts">
-  import { slide, fade } from 'svelte/transition'
+<script>
   import _ from 'lodash'
-  import { createEventDispatcher, onMount } from 'svelte'
-  const dispatch = createEventDispatcher()
   import {Tabs} from '../../components/misc'
-  import {SaveButton} from '../../components/buttons'
   import {CodeMirror} from '../../components'
   import { parseHandlebars, convertFieldsToData } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
@@ -12,12 +8,7 @@
   import modal from '../../stores/app/modal'
   import {getAllFields} from '../../stores/helpers'
   import {wrapper as pageHTML} from '../../stores/app/activePage'
-  // import pageHTML from '../../stores/data/page/wrapper'
-  // import siteHTML from '../../stores/data/site/wrapper'
-  // import pageFields from '../../stores/data/page/fields'
-  // import siteFields from '../../stores/data/site/fields'
-  import {fields as pageFields} from '../../stores/app/activePage'
-  import {wrapper as siteHTML, fields as siteFields} from '../../stores/data/draft'
+  import {wrapper as siteHTML} from '../../stores/data/draft'
 
   let activeHTML = $pageHTML
   $: activeHTML = activeTab.id === 'page' ? $pageHTML : $siteHTML

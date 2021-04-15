@@ -15,7 +15,7 @@ export const defaultStyles = {
   raw: `\
 /* Default content styles */\n
 .primo-copy {
-  @apply text-lg text-gray-700;
+  @apply text-lg text-gray-700 container;
   h1 {
     @apply text-3xl font-medium;
   }
@@ -55,6 +55,44 @@ export const defaultStyles = {
 }`,
   final: `\
 /* Default content styles */
+
+.primo-copy {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 2rem;
+  padding-left: 2rem
+}
+
+@media (min-width: 640px) {
+  .primo-copy {
+    max-width: 640px
+  }
+}
+
+@media (min-width: 768px) {
+  .primo-copy {
+    max-width: 768px
+  }
+}
+
+@media (min-width: 1024px) {
+  .primo-copy {
+    max-width: 1024px
+  }
+}
+
+@media (min-width: 1280px) {
+  .primo-copy {
+    max-width: 1280px
+  }
+}
+
+@media (min-width: 1536px) {
+  .primo-copy {
+    max-width: 1536px
+  }
+}
 
 .primo-copy {
   font-size: 1.125rem;
@@ -138,17 +176,10 @@ export const createComponent = () => ({
   id: createUniqueID(),
   symbolID: null,
   value: {
-    raw: {
-      html: '',
-      css: '',
-      js: '',
-      fields: []
-    },
-    final: {
-      html: '',
-      css: '',
-      js: ''
-    }
+    html: '',
+    css: '',
+    js: '',
+    fields: []
   }
 })
 
@@ -156,41 +187,18 @@ export const createSymbol = () => ({
   type: 'symbol',
   id: createUniqueID(),
   value: {
-    raw: {
-      css: '',
-      html: '',
-      js: '',
-      fields: []
-    },
-    final: {
-      css: '',
-      html: '',
-      js: '',
-    }
+    css: '',
+    html: '',
+    js: '',
+    fields: []
   }
 })
 
 export const DEFAULTS = {
-  // site: createSite(),
   content: [
     {
-      id: '00000',
-      width: 'contained',
-      columns: [
-        {
-          id: '00000',
-          size: 'w-full',
-          rows: [
-            {
-              id: '00000',
-              type: 'content',
-              value: {
-                html: '<p><br></p>'
-              }
-            }
-          ]
-        }
-      ]
+      id: createUniqueID(),
+      type: 'options',
     }
   ],
   page: {
@@ -199,22 +207,7 @@ export const DEFAULTS = {
     content: [
       {
         id: createUniqueID(),
-        width: 'contained',
-        columns: [
-          {
-            id: createUniqueID(),
-            size: 'w-full',
-            rows: [
-              {
-                id: createUniqueID(),
-                type: 'content',
-                value: {
-                  html: '<p><br></p>'
-                }
-              }
-            ]
-          }
-        ]
+        type: 'options',
       }
     ],
     styles: {
@@ -255,22 +248,7 @@ export const createPage = (id = createUniqueID(), title) => ({
   content: [
     {
       id: createUniqueID(),
-      width: 'contained',
-      columns: [
-        {
-          id: createUniqueID(),
-          size: 'w-full',
-          rows: [
-            {
-              id: createUniqueID(),
-              type: 'content',
-              value: {
-                html: '<p><br></p>'
-              }
-            }
-          ]
-        }
-      ]
+      type: 'options',
     }
   ],
   styles: {
@@ -282,9 +260,18 @@ export const createPage = (id = createUniqueID(), title) => ({
   fields: []
 })
 
-export const createSite = (id = createUniqueID(), label = '') => ({
-  id,
-  label,
+export const createSite = (name) => ({
+  name,
+  pages: [ createPage('index', 'Home Page') ],
+  styles: DEFAULTS.styles,
+  wrapper: DEFAULTS.wrapper,
+  fields: [],
+  symbols: []
+})
+
+
+export const createNewSite = ({ id = '00000', name = 'website' }) => ({
+  name,
   pages: [ createPage('index', 'Home Page') ],
   styles: DEFAULTS.styles,
   wrapper: DEFAULTS.wrapper,

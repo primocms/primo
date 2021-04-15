@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { createSite } from '../../const'
 
-import {fields,styles,symbols,wrapper,pages} from './draft'
+import {fields,styles,symbols,wrapper,pages,id,name} from './draft'
 
 let site
 const {subscribe,set} = writable(createSite())
@@ -13,6 +13,8 @@ export default {
   save: () => {
     set({
       ...site,
+      id: get(id),
+      name: get(name),
       fields: get(fields),
       styles: get(styles),
       symbols: get(symbols),
@@ -22,6 +24,8 @@ export default {
   },
   get: () => ({
     ...site,
+    id: get(id),
+    name: get(name),
     fields: get(fields),
     styles: get(styles),
     symbols: get(symbols),
@@ -29,6 +33,8 @@ export default {
     pages: get(pages)
   }),
   hydrate: (site) => {
+    id.set(site.id)
+    name.set(site.name)
     fields.set(site.fields)
     styles.set(site.styles)
     symbols.set(site.symbols)

@@ -9,14 +9,9 @@ export const id = writable('index')
 // When a store in here is changed, updatePage is run to save those values to site.pages (as a draft)
 
 export const content = writable(DEFAULTS.content)
-content.subscribe(content => {
-  updatePage({ content })
-})
-
-export const dependencies = writable(DEFAULTS.dependencies)
-dependencies.subscribe(dependencies => {
-  updatePage({ dependencies })
-})
+// content.subscribe(content => {
+//   updatePage({ content })
+// })
 
 export const styles = writable(DEFAULTS.styles)
 styles.subscribe(styles => {
@@ -47,7 +42,7 @@ function updatePage(prop) {
     pages.update(
       pages => pages.map(page => page.id === root ? ({
         ...page,
-        pages: page.pages.map(page => page.id === child ? ({
+        pages: page.pages.map(page => page.id === get(id) ? ({
           ...page,
           ...prop
         }) : page)
@@ -65,12 +60,11 @@ function updatePage(prop) {
 
 // conveniently get the entire site
 export default derived(
-  [ content, dependencies, styles, wrapper, fields ], 
-  ([content, dependencies, styles, wrapper, fields]) => {
+  [ content, styles, wrapper, fields ], 
+  ([content, styles, wrapper, fields]) => {
   return {
     // ...createSite(),
     content, 
-    dependencies, 
     styles, 
     wrapper, 
     fields

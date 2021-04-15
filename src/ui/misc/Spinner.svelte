@@ -1,42 +1,36 @@
 <script>
   import {fade} from 'svelte/transition'
-
-  export let size = '2xl'
-  export let variants = ''
 </script>
 
-<div class="spinner text-{size} {variants}" in:fade={{ duration: 200 }}>
-  <i class="fas fa-spinner"></i>
-</div>
+<div class="spinner" in:fade>Loading...</div>
 
 <style>
-
+  .spinner,
+  .spinner:after {
+    border-radius: 50%;
+    width: 10em;
+    height: 10em;
+  }
   .spinner {
-    min-height: 1rem;
-    min-width: 1rem;
-    @apply flex justify-center items-center;
-  }
-
-  .spinner.text-xs > .fa-spinner{
-    height: 12px;
-    width: 12px;
-  }
-
-  i.fa-spinner {
-    animation-name: spin;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
+    font-size: 3px;
+    position: relative;
+    text-indent: -9999em;
+    border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-left: 1.1em solid #ffffff;
     will-change: transform;
+    transform: translateZ(0);
+    animation: load8 1.1s infinite linear;
   }
-
-  @keyframes spin {
-    from {
+  @keyframes load8 {
+    0% {
+      -webkit-transform: rotate(0deg);
       transform: rotate(0deg);
     }
-    to {
+    100% {
+      -webkit-transform: rotate(360deg);
       transform: rotate(360deg);
     }
   }
-
 </style>

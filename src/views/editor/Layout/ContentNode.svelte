@@ -1,20 +1,14 @@
-<script lang="ts">
+<script>
   import {onMount,createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
-
-  import {fade} from 'svelte/transition'
-
   import {createEditor} from '../../../libraries/prosemirror/prosemirror.js'
   import {focusedNode} from '../../../stores/app'
-  import type {Content} from './LayoutTypes'
-
-  export let row:Content
-
+  import BlockButtons from './BlockButtons.svelte'
+  export let block
   let editor
   let prosemirror
-
   onMount(() => {
-    prosemirror = createEditor({ mount: editor }, row.value.html, {
+    prosemirror = createEditor({ mount: editor }, block.value.html, {
       onchange: (html) => {
         dispatch('change',editor.innerHTML)
       },
@@ -36,18 +30,16 @@
     })
     prosemirror.view.focus()
   })
-
 </script>
 
-<div class="primo-copy mousetrap" bind:this={editor} id="copy-{row.id}"></div>
+<div class="primo-copy mousetrap" id="copy-{block.id}" bind:this={editor}>
+  <BlockButtons />
+</div>
 
 <style global>
   .primo-copy {
     outline: none;
     caret-color: rgb(248,68,73);
-  }
-  .primo-copy li p {
-    display: inline-block;
   }
   .ProseMirror {
     white-space: pre-wrap;

@@ -1,13 +1,14 @@
-<script lang="ts">
+<script>
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
   export let label
   export let value
-  export let type:string = 'text'
-  export let disabled:boolean = false
-  export let variants:string = ''
-  export let size:'small'|'medium'|'large' = 'medium'
+  export let type = 'text'
+  export let disabled = false
+  export let variants = ''
+  export let size = 'medium'
+  export let autofocus = false
 
   function onInput({target}) {
     const {value:inputValue} = target
@@ -29,6 +30,7 @@
     {value}
     {type}
     {disabled}
+    autofocus={autofocus}
     {...$$restProps}
     on:input={onInput} 
   >

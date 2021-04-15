@@ -1,5 +1,4 @@
 import { get } from 'svelte/store'
-import { convertFieldsToData, parseHandlebars } from '../../utils'
 
 
 export function setHeadScript(js) {

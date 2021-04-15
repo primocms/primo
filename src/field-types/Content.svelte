@@ -24,14 +24,14 @@
 <style>
   .label {
     @apply flex flex-col mb-2 font-medium;
+  }
 
-    span {
+  .label span {
       @apply mb-2;
     }
 
-    textarea {
-      @apply p-2 bg-gray-800;
-      outline-color: rgb(248,68,73);
-    }
+  .label textarea {
+    @apply p-2 bg-gray-800;
+    outline-color: rgb(248,68,73);
   }
 </style>

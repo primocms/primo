@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import _ from 'lodash'
   import Editor from './Editor.svelte'
   import { wrapInStyleTags } from '../../utils'
@@ -8,7 +8,6 @@
   import {
     id, 
     styles as pageStyles, 
-    dependencies as pageDependencies,
     wrapper as pageWrapper
   } from '../../stores/app/activePage'
   import {unsaved} from '../../stores/app/misc'

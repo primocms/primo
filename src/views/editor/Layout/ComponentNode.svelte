@@ -1,132 +1,105 @@
 <script>
-  import {createEventDispatcher, onMount, getContext} from 'svelte'
+  import {cloneDeep} from 'lodash'
+  import {onMount} from 'svelte'
   import {fade} from 'svelte/transition'
+	import { router } from 'tinro';
   import {getStyles,appendHtml} from '../pageUtils.js'
-  import {dependencies} from '../../../stores/app/activePage'
-  import {switchEnabled} from '../../../stores/app'
-  
-  import ComponentButtons from './ComponentButtons.wc.svelte'
-  // if (!customElements.get('component-buttons')) { 
-  //   customElements.define('component-buttons', ComponentButtons); 
-  // }
+  import {processors} from '../../../component'
+  import {getAllFields,getTailwindConfig} from '../../../stores/helpers'
+  import components from '../../../stores/app/components'
+  import {
+    convertFieldsToData
+  } from "../../../utils";
 
-  const dispatch = createEventDispatcher()
-
-  export let row
-  export let contentAbove = false
-  export let contentBelow = false
+  export let block
 
   let mounted = false
-  onMount(() => {
-    mounted = true
-  })
+  onMount(() => mounted = true)
 
-  $: appendJS(mounted, row.value.final.js)
-
-  function appendJS(mounted, js) {
+  $: appendJS(block.value.js, mounted)
+  function appendJS(js, mounted) {
     if (mounted && js) {
+      const allFields = getAllFields(block.value.fields)
+      const data = convertFieldsToData(allFields)
+      const finalJS = `
+        const primo = {
+          id: '${block.id}',
+          data: ${JSON.stringify(data)},
+          fields: ${JSON.stringify(allFields)}
+        }
+        ${js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)}`
       appendHtml(
-        `#component-${row.id} > [primo-js]`, 
+        `#component-${block.id} > [primo-js]`, 
         'script', 
-        js,
+        finalJS,
         {
           type: 'module'
         }
       )
+      $components[js] = finalJS
     }
   }
 
-  let hovering = false
-  let sticky = false
-  const toolbarHeight = 56
 
-  function handlePositioning() {
-    if (buttons) {
-      const node = buttons
-      const { top } = node.getBoundingClientRect();
-      const { top:parentTop, left:parentLeft } = node.parentNode.getBoundingClientRect();
-      if (!sticky && top < toolbarHeight && hovering) { 
-        node.style.position = 'fixed'
-        node.style.top = `${toolbarHeight}px`
-        node.style.left = `${parentLeft}px`
-        sticky = true
-      } else if (parentTop > toolbarHeight || !hovering && sticky) {
-        node.style.position = 'absolute'
-        node.style.top = '0px'
-        node.style.left = '0px'
-        sticky = false
-      }
+  let html = ''
+  $: processHTML(block.value.html)
+  function processHTML(raw = '') {
+    const cacheKey = raw + JSON.stringify(block.value.fields) // to avoid getting html cached with irrelevant data
+    const cachedHTML = $components[cacheKey]
+    if (!block.symbolID && cachedHTML) {
+      html = cachedHTML
+    } else {
+      const allFields = getAllFields(block.value.fields);
+      const data = convertFieldsToData(allFields);
+      processors.html(raw, data).then(res => {
+        html = res
+        $components[cacheKey] = html
+      })
     }
   }
 
-  let buttons 
-  function handleMouseEnter() {
-    hovering = true
-    handlePositioning()
+  let css = ''
+  $: processCSS(block.value.css)
+  function processCSS(raw = '') {
+    const cacheKey = block.id + raw // to avoid getting html cached with irrelevant data
+    const cachedCSS = $components[cacheKey]
+    if (cachedCSS) {
+      css = cachedCSS
+    } else if (raw) {
+      const tailwind = getTailwindConfig(true)
+      const encapsulatedCss = `#component-${block.id} {${raw}}`;
+      processors.css(encapsulatedCss, { tailwind }).then(res => {
+        css = res
+        $components[cacheKey] = css
+      })
+    } else {
+      css = ``
+    }
   }
 
 </script>
 
-<svelte:window on:scroll={handlePositioning}/>
-<div on:mouseenter={handleMouseEnter} on:mouseleave={() => hovering = false} class="primo-component {row.symbolID ? `symbol-${row.symbolID}` : ''}" id="component-{row.id}" out:fade={{duration:200}} in:fade={{delay:250,duration:200}}>
-  <!-- <component-buttons 
-    bind:this={buttons}
-    icon={$switchEnabled ? 'code' : 'edit'}
-    contentabove={contentAbove}
-    contentbelow={contentBelow}
-    on:edit
-    on:delete
-    on:addContentBelow
-    on:addContentAbove
-  ></component-buttons> -->
-  <div class="component-buttons">
-    <ComponentButtons 
-      bind:node={buttons}
-      icon={$switchEnabled ? 'code' : 'edit'}
-      contentabove={contentAbove}
-      contentbelow={contentBelow}
-      on:edit
-      on:delete
-      on:addContentBelow
-      on:addContentAbove
-    />
-  </div>
+<div class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}" id="component-{block.id}" transition:fade={{duration:100}}>
   <div>
-    {@html row.value.final.html}
+    {@html html}
   </div>
   <div primo-css>
-    {@html getStyles(row.value.final.css)} 
+    {@html getStyles(css)} 
   </div>
   <div primo-js></div>
 </div>
 
 
 <style>
-  .primo-component {
+  .component {
     position: relative;
     outline: 5px solid transparent;
     outline-offset: -5px;
     transition: outline-color 0.2s;
     outline-color: transparent;
     @apply w-full;
-
-    & > div {
+  }
+  .component > div {
       @apply w-full;
     }
-  }
-  .primo-component:hover {
-    outline-color: rgb(206,78,74);
-    transition: outline-color 0.2s;
-    z-index: 9;
-  }
-  .primo-component:hover .component-buttons {
-    @apply opacity-100; 
-    user-select: initial;
-    pointer-events: none;
-  }
-  .component-buttons {
-    @apply absolute opacity-0 top-0 left-0 transition-opacity duration-200;
-    z-index: 100;
-    user-select: none;
-  }
 </style>

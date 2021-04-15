@@ -62,59 +62,61 @@
 
 <Card variants="pb-4" id="repeater-{field.key}">
   <header class="w-full py-1 font-bold text-sm">{field.label}</header>
-  {#each fieldValues as fieldValue, i} 
-    <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
-      <div class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded">
-        {#if i !== 0}
-          <button title="Move {field.label} up" on:click={() => moveRepeaterItem(i, 'up')}>
-            <i class="fas fa-arrow-up"></i>
+  <div class="grid grid-cols-2 gap-2">
+    {#each fieldValues as fieldValue, i} 
+      <div class="repeater-item" id="repeater-{field.key}-{i}" in:fade={{duration:100}}>
+        <div class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded">
+          {#if i !== 0}
+            <button title="Move {field.label} up" on:click={() => moveRepeaterItem(i, 'up')}>
+              <i class="fas fa-arrow-up"></i>
+            </button>
+          {/if}
+          {#if i !== fieldValues.length-1}
+            <button class="mr-2" title="Move {field.label} down" on:click={() => moveRepeaterItem(i, 'down')}>
+              <i class="fas fa-arrow-down"></i>
+            </button>
+          {/if}
+          <button class="text-red-400 hover:text-red-500" title="Delete {field.label} item" on:click={() => removeRepeaterItem(i)}>
+            <i class="fas fa-trash"></i>
           </button>
-        {/if}
-        {#if i !== fieldValues.length-1}
-          <button class="mr-2" title="Move {field.label} down" on:click={() => moveRepeaterItem(i, 'down')}>
-            <i class="fas fa-arrow-down"></i>
-          </button>
-        {/if}
-        <button class="text-red-400 hover:text-red-500" title="Delete {field.label} item" on:click={() => removeRepeaterItem(i)}>
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-      {#each fieldValue as subfield}
-        <div class="repeater-item-field" id="repeater-{field.key}-{i}-{subfield.key}">
-          <svelte:component this={_.find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
         </div>
-      {/each}
+        {#each fieldValue as subfield}
+          <div class="repeater-item-field" id="repeater-{field.key}-{i}-{subfield.key}">
+            <svelte:component this={_.find($fieldTypes, ['id', subfield.type]).component} field={subfield} on:input={onInput} />
+          </div>
+        {/each}
+      </div>
+    {/each}
+    <div class="p-2 bg-gray-900">
+      <button class="field-button" on:click={() => addRepeaterItem()}>
+        <i class="fas fa-plus mr-1"></i>
+        <span>Add {pluralize.singular(field.label)}</span>
+      </button>
     </div>
-  {/each}
-  <div class="p-2 bg-gray-900">
-    <button class="field-button" on:click={() => addRepeaterItem()}>
-      <i class="fas fa-plus mr-1"></i>
-      <span>Add {pluralize.singular(field.label)}</span>
-    </button>
   </div>
 </Card>
 
 
 <style>
   .repeater-item {
-    @apply p-2 bg-gray-900 flex flex-col relative mb-2;
-    &:last-of-type {
+    @apply p-2 bg-gray-900 flex flex-col relative;
+  }
+  .repeater-item:last-of-type {
       @apply mb-0;
     }
-  }
   .repeater-item-field {
     @apply mb-2;
-    &:not(:first-child) {
+  }
+  .repeater-item-field:not(:first-child) {
       @apply pt-0;
     }
-  }
   .field-button {
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
-    &:hover {
+  }
+  .field-button:hover {
       @apply bg-gray-900;
     }
-    &[disabled] {
+    .field-button[disabled] {
       @apply bg-gray-500 cursor-not-allowed;
     }
-  }
 </style>

@@ -26,7 +26,7 @@
 
 {#if visible}
   <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
-    <div class="modal-background" on:click={$modal.disableClose ? () => {} : closeModal}></div>
+    <div class="modal-background" class:hovered={!$modal.disabledBgClose} on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()}></div>
     <div class="modal-card {variants}">
       <div class="modal-card-body" class:p-3={!$modal.noPadding}>
         <slot></slot>
@@ -55,12 +55,15 @@
   }
 
   .modal-background {
-    @apply bottom-0 left-0 right-0 top-0 absolute;
-    background-color: rgba(10,10,10,.86);
+    @apply bottom-0 left-0 right-0 top-0 absolute bg-black bg-opacity-95;
+
+    &.hovered {
+      @apply hover:opacity-90 transition-opacity duration-100 cursor-pointer;
+    }
   }
 
   .modal-card {
-    @apply flex flex-col w-full overflow-scroll my-0 mx-auto relative rounded;
+    @apply flex flex-col w-full overflow-hidden my-0 mx-auto relative rounded;
     position: relative;
     /* max-width: calc(100vw - 2rem); */
     max-height: calc(100vh - 2rem);
@@ -71,7 +74,7 @@
   }
 
   .modal-card-body {
-    @apply bg-black flex-1 flex flex-col rounded-md;
+    @apply bg-black flex-1 flex flex-col rounded-md overflow-y-scroll;
   }
 
   .modal-card-foot {
@@ -91,7 +94,6 @@
     top: 0.5rem !important;
     bottom: 0.5rem !important;
     max-height: initial !important;
-    @apply p-2;
   }
 
   .fullscreen .modal-card-body {

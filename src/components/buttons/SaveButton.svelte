@@ -21,12 +21,13 @@
 <style>
   .save-button {
     @apply bg-primored text-white py-2 px-4 rounded font-semibold transition-colors duration-200;
-    &:hover {
+  }
+
+  .save-button:hover {
       @apply bg-red-700;
     }
 
-    &.disabled {
+    .save-button.disabled {
       @apply bg-gray-600 text-gray-900;
     }
-  }
 </style>
