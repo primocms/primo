@@ -4,7 +4,7 @@
 
 <script>
   import { onMount } from 'svelte'
-  import ClipboardJS from 'clipboard'
+  import * as ClipboardJS from 'clipboard'
 
   let clipboard;
 

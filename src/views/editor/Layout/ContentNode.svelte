@@ -7,7 +7,7 @@
   import CopyButton from './CopyButton.svelte'
   // import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
   
-  import { Editor } from '@tiptap/core'
+  import { Editor, Extension } from '@tiptap/core'
   import { defaultExtensions } from '@tiptap/starter-kit'
 	import BubbleMenu from '@tiptap/extension-bubble-menu'
   import Link from '@tiptap/extension-link'
