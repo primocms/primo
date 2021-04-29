@@ -1,3 +1,3 @@
-primo is an all-in-one web development toolkit. It contains a browser-based development environment; document-like, on-page editing for copy and structured, field based content editing for components; a component library for storing and accessing reusable components; and a static site generator for publishing a secure, fast loading site. 
+primo is an all-in-one web development toolkit containing a browser-based development environment; document-like, on-page editing for copy and structured, field based content editing for components; a component library for storing and accessing reusable components; and a static site generator for publishing a secure, lightning fast website. 
 
 primo's undergoing some big changes at the moment so this repo is out of date and won't work if you try running it locally. If you'd like to contribute or just stay in the loop, please join the [Discord](https://discord.com/invite/UeNeTk6cF3) to get notified when the repo's back up to speed.
