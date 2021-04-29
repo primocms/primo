@@ -23,9 +23,10 @@
 	import site from './stores/data/site'
 	import {hydrateSite} from './stores/actions'
 
-	export let data
+	export let data = createSite()
 	export let role = 'developer'
 	export let saving = false
+
 	$: $savingStore = saving
 
 	$: $switchEnabled = (role === 'developer') ? true : false

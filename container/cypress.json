@@ -1,8 +1,0 @@
-{
-  "baseUrl": "http://localhost:5000",
-  "hosts": {
-    "*.localhost": "127.0.0.1"
-  },
-  "viewportWidth": 1100,
-  "experimentalShadowDomSupport": true
-}
