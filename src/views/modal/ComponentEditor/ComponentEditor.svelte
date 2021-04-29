@@ -38,7 +38,7 @@
     button: {
       icon: "fas fa-plus",
       label: "Add to page",
-      onclick: () => {
+      onclick: (component) => {
         console.warn('Component not going anywhere', component)
       },
     },
@@ -362,7 +362,7 @@
   }}
   button={{  
     ...header.button,
-    onclick: () => header.button.onclick(localComponent) ,
+    onclick: () => header.button.onclick(localComponent),
     disabled: disableSave
   }}>
   {#if isSingleUse}
@@ -535,7 +535,7 @@
           </div>
         {/if}
       {:else}
-        <div class="gridgap-2 h-full">
+        <div class="space-y-2 h-full">
           {#each fields as field}
             {#if field.key && getFieldComponent(field)}
               <div class="field-item shadow" class:repeater={field.key === 'repeater'}  id="field-{field.key}">
@@ -621,7 +621,7 @@
     }
 
   select {
-    @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
+    @apply w-full p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
   }
 
 </style>

@@ -12,7 +12,7 @@
 
 <style>
   button {
-    @apply flex items-center justify-center rounded-sm py-2 px-3 ring-1 ring-transparent transition-colors duration-100;
+    @apply flex items-center justify-center py-2 px-3 ring-1 ring-transparent transition-colors duration-100;
 
     i {
       @apply opacity-100 transition-opacity duration-100;

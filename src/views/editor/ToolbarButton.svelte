@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { fade } from "svelte/transition";
-  import {showKeyHint} from '../../stores/app/misc'
+  import {showKeyHint,onMobile} from '../../stores/app/misc'
 
   const dispatch = createEventDispatcher();
 
@@ -51,37 +51,12 @@
       <slot></slot>
     {/if}
   </button>
-  {#if buttons}
-    <!-- <div class="tooltip sub-buttons" class:active={subButtonsActive}> -->
-    <div class="tooltip sub-buttons" style={tooltipStyle}>
-      {#each buttons as button}
-        <button 
-          id="primo-toolbar--{button.id}"
-          on:click={() => { 
-            subButtonsActive = true; 
-            if (button.onclick) button.onclick()
-          }} 
-          class="sub-button"
-        >
-          {#if button.key}
-            <span class="key-hint" class:active={$showKeyHint} aria-hidden>&#8984;{button.key.toUpperCase()}</span>
-          {/if}
-          <i class="fas fa-{button.icon}" aria-label={button.title}/>
-        </button>
-      {/each}
-    </div>
-  {:else if title}
+  {#if title && !$onMobile}
     <div class="tooltip lg:block {tooltipVariants}">{title}</div>
   {/if}
 </div>
 
 <style>
-  .button-group:after {
-    content: '';
-    @apply w-8 h-4 absolute;
-    bottom: -1rem;
-  }
-
   .primo {
     @apply bg-primored text-gray-100;
   }

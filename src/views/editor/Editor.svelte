@@ -26,74 +26,6 @@
     savePage()
   })
 
-  // const editorialButtons = [
-  //   [ 
-  //     {
-  //       title: 'Heading', 
-  //       icon: 'heading', 
-  //       key: 'h',
-  //       id: 'h1'
-  //     },
-  //     {
-  //       title: 'Subheading', 
-  //       icon: 'heading heading2', 
-  //       id: 'h2'
-  //     },
-  //   ],
-  //   [
-  //     {
-  //       title: 'Bold', 
-  //       icon: 'bold', 
-  //       key: 'b',
-  //       id: 'bold'
-  //     },
-  //     {
-  //       title: 'Italic', 
-  //       icon: 'italic', 
-  //       key: 'i',
-  //       id: 'italic'
-  //     },
-  //     {
-  //       title: 'Highlight', 
-  //       icon: 'highlighter', 
-  //       key: 'l',
-  //       id: 'highlight'
-  //     }
-  //   ],
-  //   [
-  //     {
-  //       title: 'Link', 
-  //       icon: 'link', 
-  //       key: 'k',
-  //       id: 'link'
-  //     }
-  //   ],
-  //   [
-  //     {
-  //       title: 'CodeFormat', 
-  //       icon: 'code', 
-  //       id: 'code'
-  //     },
-  //     {
-  //       title: 'Quote', 
-  //       icon: 'quote-left',
-  //       id: 'blockquote'
-  //     }
-  //   ],
-  //   [
-  //     {
-  //       title: 'Unordered List', 
-  //       icon: 'list-ul', 
-  //       id: 'ul'
-  //     },
-  //     {
-  //       title: 'Ordered List', 
-  //       icon: 'list-ol', 
-  //       id: 'ol'
-  //     }
-  //   ],
-  // ]
-
   const editorButtons = [
     [
       {
@@ -103,13 +35,6 @@
         onclick: () => modal.show('SITE_PAGES') 
       }
     ],
-    // [
-    //   {
-    //     title: 'Content',
-    //     icon: 'heading',
-    //     buttons: flatten(editorialButtons)
-    //   }
-    // ],
     [
       {
         title: 'Content', 
@@ -128,14 +53,6 @@
         onclick: () => modal.show('SITE_PAGES') 
       }
     ],
-    // [
-    //   {
-    //     id: 'toolbar--formatting',
-    //     title: 'Content',
-    //     icon: 'heading',
-    //     buttons: flatten(editorialButtons)
-    //   }
-    // ],
     [
       {
         id: 'toolbar--html',
@@ -148,22 +65,15 @@
         title: 'CSS',
         icon: 'fab fa-css3',
         onclick: () => modal.show('STYLES')
-      }
-    ],
-    [
+      },
       {
         id: 'toolbar--fields',
         title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS')
       }
-    ],
+    ]
   ]
-
-  function addComponentToPage(component) {
-    saveRow(component)
-    modal.hide()
-  }
 
   function savePage() {
     dispatch('save')
@@ -191,9 +101,9 @@
   {/if}
   <ToolbarButton id="save" title="Save" icon="save" key="s" loading={$saving} on:click={savePage} disabled={!$unsaved} buttonStyles="mr-1 bg-gray-600" />
   {#if $switchEnabled}
-    <ToolbarButton type="primo" title="Build" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-gray-200 text-gray-900 hover:bg-gray-400" />
+    <ToolbarButton type="primo" title="Build" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-primored text-gray-900 hover:bg-gray-400" />
   {:else}
-    <ToolbarButton type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
+    <ToolbarButton variant="bg-primored" type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
   {/if}
 </Toolbar>
 

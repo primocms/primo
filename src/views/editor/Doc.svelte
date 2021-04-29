@@ -3,7 +3,6 @@
   import Block from './Layout/Block.svelte'
   import { pages, wrapper as siteWrapper, symbols, fields as siteFields } from '../../stores/data/draft'
   import { id, wrapper as pageWrapper, content, fields as pageFields } from '../../stores/app/activePage'
-  import {getSymbol,getAllFields} from '../../stores/helpers'
 
   $: pageExists = findPage($id, $pages)
   function findPage(id, pages) {
@@ -28,7 +27,7 @@
 
 </script>
 
-<div class="primo-page" style="border-top: 56px solid rgb(20,20,20)">
+<div class="primo-page" style="border-top: 48px solid rgb(20,20,20)">
   {#if pageExists}
     {#each $content as block, i (block.id)}
       {#if block.symbolID}

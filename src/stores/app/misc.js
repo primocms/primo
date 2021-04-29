@@ -11,3 +11,5 @@ export const unsaved = writable(false)
 export const showKeyHint = writable(false)
 
 export const loadingSite = writable(true)
+
+export const onMobile = writable(false)

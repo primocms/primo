@@ -34,7 +34,7 @@
           {/if}
           <span class="ml-2">Edit</span>
         </button>
-        <button on:click={() => dispatch('delete')} class="rounded-br px-3 ">
+        <button on:click={() => dispatch('delete')} class="rounded-br px-3">
           {@html trash(`${iconStyles}`)}    
         </button>
       </div>

@@ -11,12 +11,14 @@
   import ComponentNode from './ComponentNode.svelte'
   import BlockButtons from './BlockButtons.svelte'
   import { createDebouncer } from '../../../utils'
-  const slowDebounce = createDebouncer(2000)
+  const slowDebounce = createDebouncer(1000)
 
   import { focusedNode } from '../../../stores/app'
+  import {onMobile,unsaved} from '../../../stores/app/misc'
   import modal from '../../../stores/app/modal'
   import {id, content} from '../../../stores/app/activePage'
   import {pages} from '../../../stores/actions'
+  import site from '../../../stores/data/site'
 
   export let block: Block
   export let i
@@ -49,13 +51,10 @@
   }
 
   function updateBlock(newBlock) {
-    $content = $content.map((existingRow) => {
-      if (existingRow.id === block.id) {
-        return newBlock
-      } else return existingRow
-    }).filter(Boolean)
     updateContent(
       $content
+        .map((exitingBlock) => exitingBlock.id === block.id ? newBlock : exitingBlock)
+        .filter(Boolean)
     )
   }
 
@@ -64,6 +63,7 @@
       ...page,
       content: newContent
     }))
+    $unsaved = true
   }
 
   // Constructors
@@ -158,14 +158,12 @@
     sticky = false;
   } 
   let sticky = false
-  const toolbarHeight = 56
+  const toolbarHeight = 48
 
-  function blockContainer(container, hovering) {
+  function blockContainer(container) {
     const node = container.children[0]
     window.addEventListener('scroll', positionBlock)
-    if (hovering) {
-      positionBlock()
-    }
+    positionBlock()
 
     function positionBlock() {
       const { top } = node.getBoundingClientRect();
@@ -203,11 +201,16 @@
 
   }    
 
+  function savePage() {
+    site.save()
+    $unsaved = false
+  }
+
 </script>
 
-<div in:fade={{ duration: 200 }} class="block" class:z-50={block.type === 'options'} id="block-{block.id}" on:mouseenter={() => hovering = true} on:mouseleave={() => hovering = false}>
-  {#if hovering && block.type !== 'options'}
-    <div class="block-buttons-container" use:blockContainer={hovering}>
+<div in:fade={{ duration: 200 }} class="block" class:content={block.type === 'content'} class:component={block.type === 'component'} class:z-50={block.type === 'options'} id="block-{block.id}" on:mouseenter={() => hovering = true} on:mouseleave={() => hovering = false}>
+  {#if (hovering || $onMobile) && block.type !== 'options'}
+    <div class="block-buttons-container" use:blockContainer>
       <BlockButtons 
         {i}
         editable={block.type === 'component'} 
@@ -243,6 +246,7 @@
   {:else if block.type === 'content'}
     <ContentNode
       {block}
+      on:save={savePage}
       on:focus={({ detail: selection }) => {
         focusedNode.setSelection({
           id: block.id,
@@ -251,13 +255,16 @@
           // path: { section, column, block },
         })
       }}
-      on:change={({ detail: html }) => slowDebounce([() => {
+      on:debounce={() => {
+        if (!$unsaved) {$unsaved = true}
+      }}
+      on:change={({ detail: html }) => {
         updateBlock({
           ...block,
           value: { html }
         })
         dispatch('contentChanged')
-      }])}
+      }}
       on:selectionChange={({ detail: selection }) => {
         focusedNode.setSelection({
           id: block.id,

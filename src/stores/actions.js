@@ -3,6 +3,7 @@ import {get} from 'svelte/store'
 import {getSymbol} from './helpers'
 import {createUniqueID} from '../utilities'
 import {id,content} from './app/activePage'
+import {unsaved} from './app/misc'
 import {focusedNode} from './app/editor'
 import {styles, wrapper, fields} from './data/draft'
 import * as stores from './data/draft'
@@ -73,14 +74,17 @@ export function redoSiteChange() {
 // experimenting with exporting objects to make things cleaner
 export const symbols = {
   create: (symbol) => {
+    unsaved.set(true)
     stores.symbols.update(s => [ _.cloneDeep(symbol), ...s ])
   },
   update: (toUpdate) => {
+    unsaved.set(true)
     stores.symbols.update(symbols => {
       return symbols.map(s => s.id === toUpdate.id ? toUpdate : s)
     })
   },
   delete: (toDelete) => {
+    unsaved.set(true)
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
     })
@@ -89,6 +93,7 @@ export const symbols = {
 
 export const pages = {
   add: (newpage, path) => {
+    unsaved.set(true)
     const currentPages = get(stores.pages)
     let newPages = _.cloneDeep(currentPages)
     if (path.length > 0) {
@@ -100,6 +105,7 @@ export const pages = {
     stores.pages.set(newPages)
   },
   delete: (pageId, path) => {
+    unsaved.set(true)
     const currentPages = get(stores.pages)
     let newPages = _.cloneDeep(currentPages)
     if (path.length > 0) {
@@ -110,17 +116,21 @@ export const pages = {
     }
     stores.pages.set(newPages)
   },
-  update: (pageId, fn) => {
-    const newPages = get(stores.pages).map(page => {
-      if (page.id === pageId) {
-        return fn(page)
-      } else if (_.some(page.pages, ['id', pageId])) {
-        return {
-          ...page,
-          pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
-        }
-      } else return page
-    })
+  update: async (pageId, fn) => {
+    unsaved.set(true)
+    const newPages = await Promise.all(
+      get(stores.pages).map(async page => {
+        if (page.id === pageId) {
+          const newPage = await fn(page)
+          return newPage
+        } else if (_.some(page.pages, ['id', pageId])) {
+          return {
+            ...page,
+            pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
+          }
+        } else return page
+      })
+    )
     stores.pages.set(newPages)
   }
 }

@@ -2,6 +2,7 @@
 <script>
   import {fade} from 'svelte/transition'
   import { createEventDispatcher } from "svelte"
+  import {switchEnabled} from '../../../stores/app'
 
   const dispatch = createEventDispatcher()
 
@@ -13,15 +14,17 @@
     <div class="w-8 flex items-center">
       <svg class="w-6 h-6 text-gray-100" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
     </div>
-    <div class="flex-1 grid gap-2" class:grid-cols-4={deletable} class:grid-cols-3={!deletable}>
+    <div class="flex-1 grid gap-2" class:grid-cols-4={deletable && $switchEnabled} class:grid-cols-3={!deletable || !$switchEnabled}>
       <button on:click={() => dispatch('convert', 'content')} class="is-primored" on:click={() => dispatch('delete')} id="component-remove">
         <i class="fas fa-edit"></i> 
         <span class="hidden md:inline">Content</span>
       </button>
-      <button on:click={() => dispatch('convert', 'component')} class="is-primored" on:click={() => dispatch('delete')} id="component-remove">
-        <i class="fas fa-code"></i>
-        <span class="hidden md:inline">Component</span>
-      </button>
+      {#if $switchEnabled}
+        <button on:click={() => dispatch('convert', 'component')} class="is-primored" on:click={() => dispatch('delete')} id="component-remove">
+          <i class="fas fa-code"></i>
+          <span class="hidden md:inline">Component</span>
+        </button>
+      {/if}
       <button on:click={() => dispatch('convert', 'symbol')} class="is-primored" on:click={() => dispatch('delete')} id="component-remove">
         <i class="fas fa-clone"></i>  
         <span class="hidden md:inline">Symbol</span>
@@ -42,7 +45,7 @@
   @tailwind utilities; */
 
   i {
-    @apply mr-2;
+    @apply md:mr-2;
   }
 
   button {

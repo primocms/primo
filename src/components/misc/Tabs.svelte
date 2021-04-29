@@ -1,10 +1,14 @@
 <script>
   import { fade } from 'svelte/transition'
+  import {createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
 
   export let tabs
   export let activeTab
   export let variants = ''
   export let activeColor = 'rgb(248,68,73)'
+
+  $: dispatch('switch', activeTab)
 </script>
 
 {#if tabs.length > 1}

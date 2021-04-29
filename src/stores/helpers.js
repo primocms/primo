@@ -108,7 +108,7 @@ export async function buildPagePreview({ page, site, separate = false }) {
     const html = buildBlockHTML(content)
     const css = site.styles.final + page.styles.final
     const js = buildBlockJS(content)
-    return { html, css, js }
+    return { html, css, js, tailwind }
   } else {
     const parentStyles = wrapInStyleTags(site.styles.final) + wrapInStyleTags(page.styles.final)
     return parentStyles + buildBlockHTML(content, tailwind)

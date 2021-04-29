@@ -50,7 +50,10 @@
       html = cachedHTML
     } else {
       const allFields = getAllFields(block.value.fields);
-      const data = convertFieldsToData(allFields);
+      const data = {
+        id: block.id,
+        ...convertFieldsToData(allFields)
+      }
       processors.html(raw, data).then(res => {
         html = res
         $components[cacheKey] = html

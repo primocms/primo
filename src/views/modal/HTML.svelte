@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash'
+  import {cloneDeep,isEqual} from 'lodash'
   import {Tabs} from '../../components/misc'
   import {CodeMirror} from '../../components'
   import { parseHandlebars, convertFieldsToData } from '../../utils'
@@ -7,11 +7,13 @@
 
   import modal from '../../stores/app/modal'
   import {getAllFields} from '../../stores/helpers'
-  import {wrapper as pageHTML} from '../../stores/app/activePage'
-  import {wrapper as siteHTML} from '../../stores/data/draft'
+  import {wrapper as pageHTML, id} from '../../stores/app/activePage'
+  import {unsaved} from '../../stores/app/misc'
+  import {wrapper as siteHTML, pages as pagesStore} from '../../stores/data/draft'
+  import {pages} from '../../stores/actions'
 
-  let activeHTML = $pageHTML
-  $: activeHTML = activeTab.id === 'page' ? $pageHTML : $siteHTML
+  let localPageHTML = cloneDeep($pageHTML)
+  let localSiteHTML = cloneDeep($siteHTML)
 
   const tabs = [
     {
@@ -36,20 +38,29 @@
   }
 
   async function saveFinalHTML() {
-    if (activeTab['id'] === 'page') {
-      $pageHTML.head.raw = activeHTML.head.raw
-      $pageHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
-      $pageHTML.below.raw = activeHTML.below.raw
-      $pageHTML.below.final = await updateHtmlWithFieldData(activeHTML.below.raw)
-    } else {
-      $siteHTML.head.raw = activeHTML.head.raw
-      $siteHTML.head.final = await updateHtmlWithFieldData(activeHTML.head.raw)
-      $siteHTML.below.raw = activeHTML.below.raw
-      $siteHTML.below.final = await updateHtmlWithFieldData(activeHTML.below.raw)
+    const wrapper = {
+      head: {
+        raw: localPageHTML.head.raw,
+        final: await updateHtmlWithFieldData(localPageHTML.head.raw)
+      },
+      below: {
+        raw: localPageHTML.below.raw,
+        final: await updateHtmlWithFieldData(localPageHTML.below.raw)
+      }
     }
+
+    pages.update($id, page => ({
+      ...page,
+      wrapper
+    }))
+
+    $siteHTML.head.raw = localSiteHTML.head.raw
+    $siteHTML.head.final = await updateHtmlWithFieldData(localSiteHTML.head.raw)
+    $siteHTML.below.raw = localSiteHTML.below.raw
+    $siteHTML.below.final = await updateHtmlWithFieldData(localSiteHTML.below.raw)
+
+    $unsaved = true
   }
-
-
 
 </script>
 
@@ -59,7 +70,16 @@
   button={{
     label: `Draft`,
     icon: 'fas fa-check',
-    onclick: () => modal.hide()
+    onclick: () => {
+      saveFinalHTML()
+      modal.hide()
+    }
+  }}
+  warn={() => {
+    if (!isEqual(localPageHTML, $pageHTML) || !isEqual(localSiteHTML, $siteHTML)) {
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
+      return proceed
+    } else return true
   }}
   variants="mb-4"
 />
@@ -67,20 +87,34 @@
 <div class="flex flex-col">
   <Tabs {tabs} bind:activeTab variants="mb-4" />
   <div class="flex-1">
-    <span class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span> 
-    <CodeMirror 
-      bind:value={activeHTML.head.raw} 
-      on:change={saveFinalHTML}
-      style="height:10rem" 
-      mode="html"
-    />
-
-    <span class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span> 
-    <CodeMirror 
-      bind:value={activeHTML.below.raw} 
-      on:change={saveFinalHTML}
-      style="height:15rem" 
-      mode="html"
-    />
+    {#if activeTab.id === 'page'}
+      <span class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span> 
+        <CodeMirror 
+          bind:value={localPageHTML.head.raw} 
+          style="height:10rem" 
+          mode="html"
+        />
+    
+        <span class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span> 
+        <CodeMirror 
+          bind:value={localPageHTML.below.raw} 
+          style="height:15rem" 
+          mode="html"
+        />
+    {:else}
+      <span class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span> 
+      <CodeMirror 
+        bind:value={localSiteHTML.head.raw} 
+        style="height:10rem" 
+        mode="html"
+      />
+  
+      <span class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span> 
+      <CodeMirror 
+        bind:value={localSiteHTML.below.raw} 
+        style="height:15rem" 
+        mode="html"
+      />
+    {/if}
   </div>
 </div>

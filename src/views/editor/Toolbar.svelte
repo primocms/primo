@@ -29,18 +29,18 @@
   role="navigation"
   aria-label="toolbar"
   id="primo-toolbar"
-  class="bg-codeblack p-2 bg-opacity-90"
+  class=""
   class:mounted>
-  <div class="container flex items-start">
+  <div class="container menu-container">
     <div
       class="navbar-menu justify-between flex-1"
       >
-        <div class="w-full flex flex-wrap justify-start">
-          <div class="flex flex-row rounded-sm mr-2 lg:block">
+        <div class="w-full flex justify-start space-x-2">
+          <div class="flex flex-row lg:block">
             <PrimoButton variants="py-2" on:signOut />
           </div>
           {#each buttons as group}
-            <div class="flex flex-row rounded-sm mr-2">
+            <div class="flex flex-row">
               {#each group as button}
                 <ToolbarButton {...button} />
               {/each}
@@ -57,7 +57,7 @@
           {/if}
         </div>
     </div>
-    <div class="flex flex-row justify-end">
+    <div class="primary-buttons">
       <slot />
     </div>
   </div>
@@ -65,15 +65,29 @@
 
 <style>
 
+  .menu-container {
+    @apply flex py-1;
+  }
+
+  .menu-container:after {
+    content: '';
+    z-index: -1;
+    @apply w-full absolute bg-codeblack bg-opacity-90 h-full top-0 left-0; 
+    backdrop-filter: blur(10px);
+  }
+
+  .primary-buttons {
+    @apply flex flex-row justify-end fixed bottom-0 right-0 mr-1 mb-1 bg-codeblack p-2 rounded-sm shadow-xl;
+    @apply sm:static sm:mr-0 sm:mb-0 sm:p-0 sm:rounded-none sm:shadow-none;
+  }
+
   #primo-toolbar {
     position: fixed; 
     top: -5rem;
     left: 0;
     right: 0;
     z-index: 999;
-    transition: top 1;
     will-change: top;
-    backdrop-filter: blur(10px);
 
     &.mounted {
       top: 0;

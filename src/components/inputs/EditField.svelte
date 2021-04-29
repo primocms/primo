@@ -48,8 +48,14 @@
 
 <style>
   .field-container {
-    @apply grid p-2 gap-8;
-    grid-template-columns: auto 1fr 1fr auto;
+    @apply grid p-2 gap-4;
+    @screen md {
+      grid-template-columns: auto 1fr 1fr auto;
+    }
+
+    select {
+      @apply w-full;
+    }
   }
   button[disabled] {
     @apply text-gray-700 cursor-default;

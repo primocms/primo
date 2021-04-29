@@ -1,13 +1,14 @@
 <script>
   import {onMount,onDestroy,createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
-
-  import {createEditor} from '../../../libraries/prosemirror/prosemirror.js'
-  import {focusedNode} from '../../../stores/app'
   import CopyButton from './CopyButton.svelte'
+
+  import {createDebouncer} from '../../../utils'
+  const slowDebounce = createDebouncer(500)
+
   // import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
   
-  import { Editor, Extension } from '@tiptap/core'
+  import { Editor, Extension } from '@tiptap/core/src/index'
   import { defaultExtensions } from '@tiptap/starter-kit'
 	import BubbleMenu from '@tiptap/extension-bubble-menu'
   import Link from '@tiptap/extension-link'
@@ -29,26 +30,28 @@
   let element
   let editor
 
+  // seems to be the only way to detect key presses
+  const KeyboardShortcuts = Extension.create({
+    addKeyboardShortcuts() {
+      return {
+        // Delete the block when backspacing in an empty node
+        'Backspace': () => {
+          if (focused && editor.isEmpty) {
+            dispatch('delete')
+            editor && editor.destroy()
+          }
+          return false
+        },
+        'Mod-s': () => {
+          dispatch('save')
+          return true
+        },
+      }
+    },
+  })
+
   let focused = false
   onMount(() => {
-
-    // seems to be the only way to detect key presses
-    const KeyboardShortcuts = Extension.create({
-      addKeyboardShortcuts() {
-        return {
-          // Delete the block when backspacing in an empty node
-          'Backspace': () => {
-            if (focused && editor.isEmpty) {
-              dispatch('delete')
-              editor && editor.destroy()
-            }
-          },
-        }
-      },
-    })
-
-    alert('yes')
-
     editor = new Editor({
       // autofocus: true,
       element: element,
@@ -72,15 +75,16 @@
         Dropcursor
 			],
       content: block.value.html,
-      onTransaction({ editor, transaction }) {
+      onTransaction() {
         // force re-render so `editor.isActive` works as expected
         editor = editor
-        // backspacing when no content exists
       },
-      onUpdate({ editor }) {
-        // The content has changed.
-        dispatch('change',editor.getHTML())
-      },
+      onUpdate: ({editor}) => {
+        dispatch('debounce')
+        return slowDebounce([() => {
+          dispatch('change',editor.getHTML())
+        }])
+      }, 
       onFocus({ editor, event }) {
         focused = true
         // dispatch('focus', selection)
@@ -113,10 +117,11 @@
       editor.chain().focus().setImage({ src: url }).run()
     }
   }
+
 </script>
 
 <div class="primo-copy" id="copy-{block.id}" bind:this={element}>
-	<div class="bubble-menu text-gray-800 text-xs" bind:this="{floatingMenu}">
+	<div class="bubble-menu text-gray-800 text-xs shadow-sm " bind:this="{floatingMenu}">
 		{#if editor}
       <CopyButton icon="heading" on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} />
       <CopyButton icon="code" on:click={() => editor.chain().focus().toggleCodeBlock().run()} />
@@ -126,7 +131,7 @@
       <CopyButton icon="image" on:click={addImage} />
 		{/if}
 	</div>
-	<div class="bubble-menu bg-gray-900 text-gray-100 " bind:this="{bubbleMenu}">
+	<div class="bubble-menu bg-codeblack text-gray-100 border-b-2 border-primored shadow-xl" bind:this="{bubbleMenu}">
 		{#if editor}
       <CopyButton icon="link" on:click={setLink} />
       <CopyButton icon="bold" on:click={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} />
@@ -152,7 +157,8 @@
   }
 
 	.bubble-menu {
-    @apply ml-2 flex transition-opacity duration-200 text-sm z-50 transform -translate-y-1;
+    @apply rounded-sm ml-2 flex transition-opacity duration-200 text-sm transform -translate-y-2;
+    z-index: 99999 !important;
 	}
 	
 	/* :global(.bubble-menu button:hover, .bubble-menu button.is-active) {

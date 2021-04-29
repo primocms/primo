@@ -56,7 +56,8 @@ const modalTypes = {
     //   icon: 'fas fa-database'
     // },
     variants: 'max-w-3xl',
-    showSwitch: true 
+    showSwitch: true,
+    disabledBgClose: true
   },
   'STYLES' : {
     route: 'css',
@@ -64,7 +65,8 @@ const modalTypes = {
       title: 'CSS',
       icon: 'fab fa-css3'
     },
-    variants: 'fullscreen'
+    variants: 'fullscreen',
+    disabledBgClose: true
   },
   'WRAPPER' : {
     route: 'html',
@@ -72,7 +74,8 @@ const modalTypes = {
       title: 'HTML',
       icon: 'fab fa-html5'
     },
-    variants: 'max-w-2xl'
+    variants: 'max-w-2xl',
+    disabledBgClose: true
   },
 }
 

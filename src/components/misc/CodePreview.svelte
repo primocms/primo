@@ -5,6 +5,7 @@
   import {isEqual} from 'lodash'
   import { BroadcastChannel } from 'broadcast-channel'
   import {iframePreview} from './misc'
+  import {onMobile} from '../../stores/app/misc'
 
   export let id = ''
   export let html = ''
@@ -119,12 +120,14 @@
           <span>contained view</span>
         </button>
       {/if}
-      <a target="blank" class="separate-tab" href="/preview">
-        <span>preview in separate tab</span>
-        <span class="icon ml-1">
-          <i class="fas fa-external-link-alt" />
-        </span>
-      </a>
+      {#if !$onMobile}
+        <a target="blank" class="separate-tab" href="/preview">
+          <span>preview in separate tab</span>
+          <span class="icon ml-1">
+            <i class="fas fa-external-link-alt" />
+          </span>
+        </a>
+      {/if}
     </div>
   {/if}
 </div>

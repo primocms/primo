@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash'
+  import {cloneDeep,isEqual} from 'lodash'
   import {CodeMirror} from '../../components'
   import {Tabs} from '../../components/misc'
   import {CodePreview} from '../../components/misc'
@@ -12,15 +12,16 @@
 
   import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
   import activePage, {content,id} from '../../stores/app/activePage'
+  import {unsaved} from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
+  import {pages} from '../../stores/actions'
 
   import {styles as pageStyles} from '../../stores/app/activePage'
-  import {site, styles as siteStyles, pages} from '../../stores/data/draft'
+  import {site, styles as siteStyles, pages as pagesStore} from '../../stores/data/draft'
   import { buildPagePreview } from '../../stores/helpers';
 
-  function buildPreview(siteCSS, pageCSS, content) {
-
-  }
+  const localPageStyles = cloneDeep($pageStyles)
+  const localSiteStyles = cloneDeep($siteStyles)
 
   let refreshPreview
 
@@ -33,18 +34,23 @@
 
   getNewPagePreview()
   async function getNewPagePreview() {
+    console.log('getting new preview')
     pagePreview = await buildPagePreview({
-      page: $activePage,
+      page: {
+        ...$activePage,
+        styles: localPageStyles
+      },
       site: $site,
-      separate: true
+      separate: true,
     })
+    console.log({pagePreview})
   }
 
   let allPages = []
   buildSitePreview()
   async function buildSitePreview() {
     allPages = await Promise.all(
-      $pages.map(page => buildPagePreview({ page, site: $site, separate: true }))
+      $pagesStore.map(page => buildPagePreview({ page, site: $site, separate: true }))
     )
   }
 
@@ -92,12 +98,22 @@
     if (!result.error) {
       onCompile(result)
       if (tailwindConfigChanged) {
-        const combinedTailwindConfig = getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind)
+        const combinedTailwindConfig = getCombinedTailwindConfig(localPageStyles.tailwind, localSiteStyles.tailwind)
         tailwind.swapInConfig(combinedTailwindConfig, () => {
           tailwindConfigChanged = false
         })
       }
     } 
+  }
+
+  async function saveStyles() {
+    $siteStyles = localSiteStyles
+    pages.update($id, page => ({
+      ...page,
+      styles: localPageStyles
+    }))
+    $unsaved = true
+    modal.hide()
   }
 
 </script>
@@ -108,91 +124,123 @@
   button={{
     label: `Draft`,
     icon: 'fas fa-check',
-    onclick: () => {
-      // tailwind.saveSwappedInConfig() TODO
-      modal.hide()
-    },
+    onclick: saveStyles,
     loading
+  }}
+  warn={() => {
+    if (!isEqual(localPageStyles, $pageStyles) || !isEqual(localSiteStyles, $siteStyles)) {
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
+      return proceed
+    } else return true
   }}
   variants="mb-4"
 />
 
 <div class="h-full flex flex-col">
-  <div class="flex flex-row flex-1">
-    <div class="w-1/2 flex flex-col">
+  <div class="grid md:grid-cols-2 flex-1">
+    <div class="flex flex-col">
         <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
         <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
         {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
           <CodeMirror 
             autofocus
-            bind:value={$pageStyles.raw} 
+            bind:value={localPageStyles.raw} 
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
-            on:change={() => {
-              loading = true
-              slowDebounce([compileStyles, {
-                styles: $pageStyles,
-                onCompile: (css) => {
-                  $pageStyles.final = css
-                  getNewPagePreview()
-                }
-              }])
+            debounce={true}
+            on:debounce={() => {
+              if (!loading) {
+                loading = true
+              } 
             }}
+            on:change={() => {
+              console.log('localPageStyles')
+              compileStyles({
+                styles: localPageStyles,
+                onCompile: async (css) => {
+                  localPageStyles.final = css
+                  await getNewPagePreview()
+                  loading = false
+                }
+              })
+            }}
+            on:save={saveStyles}
           />
         {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
           <CodeMirror 
             autofocus
             prefix="module.exports = "
-            bind:value={$pageStyles.tailwind} 
-            on:change={() => {
-              loading = true
-              quickDebounce([() => {
-                tailwindConfigChanged = true
-                getNewPagePreview()
-              }])
+            bind:value={localPageStyles.tailwind} 
+            debounce={true}
+            on:debounce={() => {
+              if (!loading) {
+                loading = true
+              } 
             }}
+            on:change={async () => {
+              tailwindConfigChanged = true
+              await getNewPagePreview()
+              loading = false
+            }}
+            on:save={saveStyles}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'styles'}
           <CodeMirror 
             autofocus
-            bind:value={$siteStyles.raw} 
+            bind:value={localSiteStyles.raw} 
             mode="css" 
             docs="https://adam-marsden.co.uk/css-cheat-sheet"
-            on:change={() => {
-              loading = true
-              quickDebounce([compileStyles, {
-                styles: $siteStyles,
-                onCompile: (css) => {
-                  $siteStyles.final = css
-                  buildSitePreview()
-                }
-              }])
+            debounce={true}
+            on:debounce={() => {
+              if (!loading) {
+                loading = true
+              } 
             }}
+            on:change={() => {
+              compileStyles({
+                styles: localSiteStyles,
+                onCompile: async (css) => {
+                  localSiteStyles.final = css
+                  await buildSitePreview()
+                  loading = false
+                }
+              })
+            }}
+            on:save={saveStyles}
           />
         {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
           <CodeMirror 
             autofocus
             prefix="module.exports = "
-            bind:value={$siteStyles.tailwind} 
-            on:change={() => {
-              loading = true
-              tailwindConfigChanged = true
-              slowDebounce([compileStyles, {
-                styles: $siteStyles,
-                onCompile: (css) => {
-                  $siteStyles.final = css
-                  buildSitePreview()
-                }
-              }])
+            bind:value={localSiteStyles.tailwind} 
+            debounce={true}
+            on:debounce={() => {
+              if (!loading) {
+                loading = true
+              } 
+              if (!tailwindConfigChanged) {
+                tailwindConfigChanged = true
+              }
             }}
+            on:change={() => {
+              compileStyles({
+                styles: localSiteStyles,
+                onCompile: async (css) => {
+                  localSiteStyles.final = css
+                  await buildSitePreview()
+                  loading = false
+                }
+              })
+            }}
+            on:save={saveStyles}
             mode="javascript" 
             docs="https://tailwindcss.com/docs/configuration"
           />
         {/if} 
     </div>
-    <div class="w-1/2">
+    <div class="h-96 md:h-auto">
       {#if primaryTab.id === 'page'}
         <CodePreview 
           bind:view
@@ -200,7 +248,7 @@
           html={pagePreview.html}
           css={pagePreview.css}
           js={pagePreview.js}
-          tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
+          tailwind={pagePreview.tailwind}
         />
       {:else}
         {#each allPages as page}
@@ -210,7 +258,7 @@
             html={page.html}
             css={page.css}
             js={page.js}
-            tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
+            tailwind={page.tailwind}
             hideControls={true}
           />
         {/each}

@@ -1,5 +1,5 @@
 <script>  
-  import _ from 'lodash'
+  import { find, findIndex, cloneDeep, isEqual } from 'lodash'
   import {EditField} from '../../components/inputs'
   import {Tabs} from '../../components/misc'
   import {Card} from '../../components/misc'
@@ -9,12 +9,15 @@
   import fieldTypes from '../../stores/app/fieldTypes'
   import {switchEnabled,userRole} from '../../stores/app'
   import modal from '../../stores/app/modal'
-  import {fields as pageFields} from '../../stores/app/activePage'
+  import {id, fields as pageFields} from '../../stores/app/activePage'
   import {fields as siteFields} from '../../stores/data/draft'
+  import {pages} from '../../stores/actions'
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte'
   import GroupField from '../../components/FieldTypes/GroupField.svelte'
 
-  let fields = $pageFields 
+  let fields = cloneDeep($pageFields)
+  let localPageFields = cloneDeep($pageFields)
+  let localSiteFields = cloneDeep($siteFields)
 
   const allFieldTypes = [
     {
@@ -38,52 +41,69 @@
     }
   }
 
+  const Field = () => ({
+    id: createUniqueID(),
+    key: '',
+    label: '',
+    value: '',
+    type: 'text',
+    fields: []
+  })
+
   function addField() {
-    fields = [
-      ...fields,
-      {
-        id: createUniqueID(),
-        key: '',
-        label: '',
-        value: '',
-        type: 'text',
-        fields: []
-      }
-    ]
-    saveFields(fields)
+    if (showingPage) {
+      localPageFields = [
+        ...localPageFields,
+        Field()
+      ]
+    } else {
+      localSiteFields = [
+        ...localSiteFields,
+        Field()
+      ]
+    }
   }
 
   function addSubField(id) {
-    fields = fields.map(field => ({
-      ...field,
-      fields: field.id === id ? [
-        ...field.fields,
-        {
-          id: createUniqueID(),
-          key: '',
-          label: '',
-          value: '',
-          type: 'text'
-        }
-      ] : field.fields
-    }))
-    saveFields(fields)
-    updateHtmlWithFieldData('static')
+    if (showingPage) {
+      localPageFields = localPageFields.map(field => ({
+        ...field,
+        fields: field.id === id ? [
+          ...field.fields,
+          Field()
+        ] : field.fields
+      }))
+    } else {
+      localSiteFields = localSiteFields.map(field => ({
+        ...field,
+        fields: field.id === id ? [
+          ...field.fields,
+          Field()
+        ] : field.fields
+      }))
+    }
   }
 
   function deleteSubfield(fieldId, subfieldId) {
-    fields = fields.map(field => field.id !== fieldId ? field : {
-      ...field,
-      fields: field.fields.filter(subfield => subfield.id !== subfieldId)
-    })
-    saveFields(fields)
-    updateHtmlWithFieldData('static')
+    if (showingPage) {
+      localPageFields = localPageFields.map(field => field.id !== fieldId ? field : {
+        ...field,
+        fields: field.fields.filter(subfield => subfield.id !== subfieldId)
+      })
+    } else {
+      localSiteFields = localSiteFields.map(field => field.id !== fieldId ? field : {
+        ...field,
+        fields: field.fields.filter(subfield => subfield.id !== subfieldId)
+      })
+    }
   }
 
   function deleteField(id) {
-    fields = fields.filter(field => field.id !== id)
-    updateHtmlWithFieldData('static')
-    saveFields(fields)
+    if (showingPage) {
+      localPageFields = localPageFields.filter(field => field.id !== id)
+    } else {
+      localSiteFields = localSiteFields.filter(field => field.id !== id)
+    }
   }
 
   function addRepeaterItem(repeaterField) {
@@ -93,7 +113,6 @@
       keys.reduce((a,b) => (a[b]='',a), { id: createUniqueID() }) // turn keys into value object
     ]
     refreshFields()
-    updateHtmlWithFieldData('static')
   }
 
   function removeRepeaterItem(fieldId, itemId) {
@@ -102,11 +121,10 @@
       value: Array.isArray(field.value) ? field.value.filter(item => item.id !== itemId) : field.value
     }))
     refreshFields()
-    updateHtmlWithFieldData('static')
   }
 
   function moveRepeaterItem(field, item, direction) {
-    const indexOfItem = _.findIndex(field.value, ['id', item.id])
+    const indexOfItem = findIndex(field.value, ['id', item.id])
     const withoutItems = field.value.filter(i => i.id !== item.id)
     if (direction === 'up') {
       field.value = [...withoutItems.slice(0,indexOfItem-1), item, ...withoutItems.slice(indexOfItem-1)];
@@ -121,11 +139,7 @@
     saveFields(fields)
   }
 
-  //// 
   let disabled = false
-  function updateHtmlWithFieldData(type) {
-    // TODO: update page preview
-  }
 
   const tabs = [
     {
@@ -142,26 +156,23 @@
   let showingPage = true
   $: showingPage = activeTab === tabs[0]
 
-  $: if (showingPage) {
-    fields = $pageFields
-  } else {
-    fields = $siteFields
-  }
-
-  function applyFields() {
-    $pageFields = $pageFields // register store change in Doc.svelte
-    $siteFields = $siteFields // register store change in Doc.svelte
-    modal.hide()
-  }
-
   function getComponent(field) {
-    const fieldType =  _.find(allFieldTypes, ['id', field.type])
+    const fieldType =  find(allFieldTypes, ['id', field.type])
     if (fieldType) {
       return fieldType.component
     } else {
       console.warn(`Field type '${field.type}' no longer exists, removing '${field.label}' field`)
       return null
     }
+  }
+
+  function applyFields() {
+    pages.update($id, page => ({
+      ...page,
+      fields: cloneDeep(localPageFields)
+    }))
+    $siteFields = localSiteFields 
+    modal.hide()
   }
 
 </script>
@@ -174,6 +185,12 @@
     icon: 'fas fa-check',
     onclick: applyFields
   }}
+  warn={() => {
+    if (!isEqual(localPageFields, $pageFields) || !isEqual(localSiteFields, $siteFields)) {
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
+      return proceed
+    } else return true
+  }}
   variants="mb-4"
 />
 
@@ -181,56 +198,120 @@
 
 <div class="flex flex-col p-2 text-gray-200">
   {#if $switchEnabled}
-    {#each fields as field (field.id)}
-      <Card variants="field-item bg-gray-900 shadow-sm mb-2">
-        <EditField on:delete={() => deleteField(field.id)} {disabled}>
-          <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
-            {#each allFieldTypes as field}
-              <option value={field.id}>{ field.label }</option>
-            {/each}
-          </select>
-          <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
-          <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
-        </EditField>
-        {#if field.type === 'group'}
-          {#if field.fields}
-            {#each field.fields as subfield}
-              <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
-                <select bind:value={subfield.type} slot="type" {disabled}>
-                  {#each $fieldTypes as field}
-                    <option value={field.id}>{ field.label }</option>
-                  {/each}
-                </select>
-                <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-              </EditField>
-            {/each}
+    {#if showingPage}
+      {#each localPageFields as field (field.id)}
+        <Card variants="field-item bg-gray-900 shadow-sm mb-2">
+          <EditField on:delete={() => deleteField(field.id)} {disabled}>
+            <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
+              {#each allFieldTypes as field}
+                <option value={field.id}>{ field.label }</option>
+              {/each}
+            </select>
+            <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
+            <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
+          </EditField>
+          {#if field.type === 'group'}
+            {#if field.fields}
+              {#each field.fields as subfield}
+                <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                  <select bind:value={subfield.type} slot="type" {disabled}>
+                    {#each $fieldTypes as field}
+                      <option value={field.id}>{ field.label }</option>
+                    {/each}
+                  </select>
+                  <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                  <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                </EditField>
+              {/each}
+            {/if}
+            <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
+          {:else if field.type === 'repeater'}
+            {#if field.fields}
+              {#each field.fields as subfield}
+                <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                  <select bind:value={subfield.type} slot="type" {disabled}>
+                    {#each $fieldTypes as field}
+                      <option value={field.id}>{ field.label }</option>
+                    {/each}
+                  </select>
+                  <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                  <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                </EditField>
+              {/each}
+            {/if}
+            <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
           {/if}
-          <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
-        {:else if field.type === 'repeater'}
-          {#if field.fields}
-            {#each field.fields as subfield}
-              <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
-                <select bind:value={subfield.type} slot="type" {disabled}>
-                  {#each $fieldTypes as field}
-                    <option value={field.id}>{ field.label }</option>
-                  {/each}
-                </select>
-                <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
-                <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
-              </EditField>
-            {/each}
+        </Card>
+      {/each}
+    {:else}
+      {#each localSiteFields as field (field.id)}
+        <Card variants="field-item bg-gray-900 shadow-sm mb-2">
+          <EditField on:delete={() => deleteField(field.id)} {disabled}>
+            <select bind:value={field.type} slot="type" on:change={refreshFields} {disabled}>
+              {#each allFieldTypes as field}
+                <option value={field.id}>{ field.label }</option>
+              {/each}
+            </select>
+            <input class="input label-input" type="text" placeholder="Heading" bind:value={field.label} slot="label" {disabled}>
+            <input class="input key-input" type="text" placeholder="main-heading" bind:value={field.key} slot="key" {disabled}>
+          </EditField>
+          {#if field.type === 'group'}
+            {#if field.fields}
+              {#each field.fields as subfield}
+                <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                  <select bind:value={subfield.type} slot="type" {disabled}>
+                    {#each $fieldTypes as field}
+                      <option value={field.id}>{ field.label }</option>
+                    {/each}
+                  </select>
+                  <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                  <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                </EditField>
+              {/each}
+            {/if}
+            <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
+          {:else if field.type === 'repeater'}
+            {#if field.fields}
+              {#each field.fields as subfield}
+                <EditField fieldTypes={$fieldTypes} on:delete={() => deleteSubfield(field.id, subfield.id)} {disabled}>
+                  <select bind:value={subfield.type} slot="type" {disabled}>
+                    {#each $fieldTypes as field}
+                      <option value={field.id}>{ field.label }</option>
+                    {/each}
+                  </select>
+                  <input class="input" type="text" placeholder="Heading" bind:value={subfield.label} slot="label" {disabled}>
+                  <input class="input" type="text" placeholder="main-heading" bind:value={subfield.key} slot="key" {disabled}>
+                </EditField>
+              {/each}
+            {/if}
+            <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
           {/if}
-          <button class="field-button subfield-button" on:click={() => addSubField(field.id)} {disabled}><i class="fas fa-plus mr-2"></i>Create Subfield</button>
-        {/if}
-      </Card>
-    {/each}
+        </Card>
+      {/each}
+    {/if}
     <button class="field-button" on:click={addField} {disabled}><i class="fas fa-plus mr-2"></i>Add a Field</button>
-  {:else}
-    {#each fields as field}
+    {:else}
+      {#if showingPage}
+        {#each localPageFields as field}
+          {#if getComponent(field)}
+            <div class="field-item" id="field-{field.key}">
+              <svelte:component this={getComponent(field)} {field} />
+            </div>
+          {/if}
+        {:else}
+          <p class="text-center h-full flex items-start p-24 justify-center text-lg mt-3">
+            {#if $userRole === 'developer'}
+              You'll need to create and integrate a field before you can edit content from here
+            {:else}
+              The site developer will need to create and integrate a field before you can edit content from here
+            {/if}
+          </p>
+        {/each}
+      {:else}
+      {#each localSiteFields as field}
       {#if getComponent(field)}
         <div class="field-item" id="field-{field.key}">
-          <svelte:component this={getComponent(field)} {field} on:input={() => updateHtmlWithFieldData('static')} />
+          <svelte:component this={getComponent(field)} {field} />
         </div>
       {/if}
     {:else}
@@ -242,6 +323,7 @@
         {/if}
       </p>
     {/each}
+    {/if}
   {/if}
 </div>
 

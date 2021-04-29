@@ -45,20 +45,11 @@
 
     const [_, user, repo] = $router.path.split('/')
 
-    router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`)
-
-    // if (user === 'try') {
-    //   console.log('try')
-    //   const url = `${window.location.origin}/try/${page.id === 'index' ? '' : page.id }/${hash}`
-    //   console.log({ user, repo, pageId, url })
-    //   console.log({url})
-    //   // navigate(url) // TODO
-    // } else {
-    //   console.log('normal')
-    //   const url = `${window.location.origin}/${user}/${repo}/${page.id === 'index' ? '' : page.id }/${hash}`
-    //   console.log({url})
-    //   // navigate(url) // TODO
-    // }
+    if (user === 'try') {
+      router.goto(`/try/${page.id === 'index' ? '' : page.id }`)
+    } else {
+      router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`)
+    }
   }
 
   let shouldLoadIframe = false

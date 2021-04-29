@@ -1,7 +1,11 @@
 <script>
+  import _ from 'lodash'
   import {onMount,onDestroy,createEventDispatcher} from 'svelte'
   import {fade} from 'svelte/transition'
   import Mousetrap from 'mousetrap'
+  import { formatCode } from '../../utilities'
+  import {createDebouncer} from '../../utils'
+  const slowDebounce = createDebouncer(500)
 
   import CodeMirror from 'codemirror/lib/codemirror'
   import 'requestidlecallback-polyfill';
@@ -16,28 +20,7 @@
   export let CodeMirrorOptions = {}
   export let docs
   export let autofocus = false
-
-  async function formatCode(code, mode) {
-    const {default:prettier} = await import('prettier')
-    const plugin = await {
-      'html': import('prettier/parser-html'),
-      'css': import('prettier/parser-postcss'),
-      'javascript': import('prettier/parser-babel')
-    }[mode]
-
-    let formatted = code
-    try {
-      formatted = prettier.format(value, { 
-        parser: mode,  
-        jsxBracketSameLine: true,
-        plugins: [plugin]
-      })
-    } catch(e) {
-      console.warn(e)
-    }
-    return formatted
-  }
-
+  export let debounce = false
 
   const languageMode = {
     'css' : 'text/x-scss',
@@ -96,7 +79,9 @@
         'Esc': 'emmetResetAbbreviation',
         'Enter': 'emmetInsertLineBreak',
         "Cmd-Enter": async () => {
-          value = await formatCode(value, mode)
+          const formatted = await formatCode(Editor.doc.getValue(), mode)
+          dispatchChanges(formatted)
+          Editor.getDoc().setValue(formatted)
         },
         "Cmd-S": async () => {
           dispatch('save')
@@ -118,7 +103,12 @@
     Editor.on('change', () => {
       const newValue = Editor.doc.getValue()
       value = newValue.replace(prefix, '')
-      dispatch('change', value)
+      if (debounce) {
+        dispatch('debounce', value)
+        slowDebounce([ dispatchChanges, value ])
+      } else {
+        dispatchChanges(value)
+      }
     })
     Editor.on("gutterClick", foldHTML);
     function foldHTML(cm, where) { cm.foldCode(where, CodeMirror.tagRangeFinder); }
@@ -130,19 +120,14 @@
       } 
     }, 100) // so the fade works
   })
-
-  $: {
-    if (Editor) {
-      // make bind:value work from parent to child
-      if ((prefix+value) !== Editor.doc.getValue()) {
-        Editor.getDoc().setValue(prefix+value)
-      }
-      // make `disabled` dynamic
-      Editor.setOption('readOnly', disabled)
-    }
-  } 
+      
+  $: Editor && Editor.setOption('readOnly', disabled) // make `disabled` dynamic
 
   let editorNode
+
+  function dispatchChanges(value) {
+    dispatch('change', value)
+  }
 
 </script>
 

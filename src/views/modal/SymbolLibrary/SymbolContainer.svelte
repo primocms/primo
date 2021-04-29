@@ -21,6 +21,7 @@
   export let title = symbol.title || '';
   export let buttons = []
   export let titleEditable
+  export let loadPreview = true
 
   let editingTitle = false
   let titleInput
@@ -47,17 +48,17 @@
     resizePreview()
   } 
 
+  let mounted = false
   let shouldLoadIframe = true
   onMount(() => {
-    window.requestIdleCallback(() => {
-      shouldLoadIframe = true
-    })
+    mounted = true
+    shouldLoadIframe = true
   })
 
   let copied = false
 
   let css
-  $: processCSS(symbol.value.css)
+  $: mounted && processCSS(symbol.value.css)
   function processCSS(raw = '') {
     if (!raw) return
     const cachedCSS = $components[raw]
@@ -74,7 +75,7 @@
   }
 
   let html
-  $: processHTML(symbol.value.html)
+  $: mounted && processHTML(symbol.value.html)
   function processHTML(raw = '') {
     if (!raw) return 
     const cachedHTML = $components[raw]
@@ -91,7 +92,7 @@
   }
 
   let js
-  $: processJS(symbol.value.js)
+  $: mounted && processJS(symbol.value.js)
   function processJS(raw) {
     if (!raw) {
       js = `//` // set js to something to component renders
@@ -111,7 +112,7 @@
 
   $: preview = buildPreview(html, css, js)
   function buildPreview(html, css, js) {
-    if (!html && !js && !css) return ``
+    if (!mounted || !html && !js && !css) return ``
     const parentStyles = $siteStyles.final + $pageStyles.final
     const previewCode = createSymbolPreview({
       id: symbol.id,
@@ -129,18 +130,6 @@
 
 <svelte:window on:resize={resizePreview} />
 <div class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
-  <!-- <div class="message-header">
-    <p class="component-label" on:click={() => titleInput.focus()} class:editing={editingTitle}>
-      <i class="far fa-edit text-xs text-gray-500 cursor-pointer mr-2"></i>
-      <span>{title}</span>
-    </p>
-    <div class="buttons">
-      <IconButton variants="text-xs" icon="copy" on:click={() => dispatch('copy')} />  
-      <IconButton label="Delete" variants="text-xs" icon="trash" on:click={() => dispatch('delete')} />  
-      <IconButton label="Edit" variants="text-xs" icon="edit" on:click={() => dispatch('edit')} />  
-      <IconButton label="Add" variants="is-main text-xs" icon="plus-circle" on:click={() => dispatch('select')} />  
-    </div>
-  </div> -->
   {#if titleEditable}
     <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
       <input class="cursor-pointer" type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
@@ -162,7 +151,7 @@
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>
       </button>
       {#each buttons as button}
-        <button class="p-2" on:click={button.onclick}>
+        <button class="p-2" class:bg-primored={button.highlight} on:click={button.onclick}>
           <span class="sr-only">{button.label}</span>
           {@html button.svg}
         </button>
@@ -175,7 +164,7 @@
         <Spinner />
       </div>
     {/if}
-    {#if shouldLoadIframe}
+    {#if loadPreview}
       <iframe on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} style="transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={preview}></iframe>
     {/if}
     </div>
@@ -191,14 +180,12 @@
   button {
     @apply transition-colors duration-100 focus:outline-none focus:opacity-75;
   }
-  button:hover {@apply bg-primored;}
+  button:hover {@apply bg-gray-800;}
   .buttons {
     @apply flex justify-end;
   }
   iframe {
     @apply w-full opacity-0 transition-opacity duration-200;
-    width: 50vw;
-    min-width: 500px;
     height: 300vw;
     transform-origin: top left;
   }

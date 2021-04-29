@@ -1,20 +1,21 @@
 <script context="module">
   import { writable } from 'svelte/store'
   const originalButton = writable(null)
+  const publicSymbols = writable([])
 </script>
 
 <script>
   import { createEventDispatcher, onMount } from 'svelte'
   import _ from 'lodash'
-  // import {pop} from 'svelte-spa-router'
   import { Tabs } from '../../../components/misc'
   import axios from 'axios'
 
   import ModalHeader from '../ModalHeader.svelte'
   import Container from './SymbolContainer.svelte'
+  import Spinner from '../../../components/misc/Spinner.svelte'
   import { createSymbol } from '../../../const'
   import { createUniqueID } from '../../../utilities'
-
+  import { sites } from '../../../../supabase/db'
   import { userRole } from '../../../stores/app'
   import modal from '../../../stores/app/modal'
   import { symbols } from '../../../stores/data/draft'
@@ -129,7 +130,9 @@
 
   let mounted
   onMount(async () => {
-    mounted = true
+    setTimeout(() => {
+      mounted = true
+    }, 3000)
     if (!LZ) {
       LZ = (await import('lz-string')).default
     }
@@ -150,28 +153,22 @@
 
   let activeTab = tabs[0]
 
-  let publicSymbols = []
-  ;(async () => {
-    const { data } = await axios.get(
-      'https://raw.githubusercontent.com/mateomorris/public-library/main/primo.json'
-    )
-    const fixedSymbols = data.symbols.map(s => {
-      if (s.value.raw) {
-        return {
-          ...s,
-          value: s.value.raw
-        }
-      } else return s
-    })
-    publicSymbols = data ? fixedSymbols : []
-  })()
+  async function getSymbols() {
+    window.plausible('Get Public Library')
+    const {data} = await sites.get({ path: 'mateo/public-library' })
+    $publicSymbols = data.symbols
+  }
+
+  $: if ($publicSymbols.length === 0 && activeTab === tabs[1]) {
+    getSymbols()
+  }
+
 </script>
 
 <ModalHeader icon="fas fa-clone" title="Symbols" variants="mb-2" />
 
 <Tabs {tabs} bind:activeTab variants="mt-2 mb-4" />
 
-{#if mounted} <!-- to prevent lag -->
   <div class="mt-2">
     {#if activeTab === tabs[0]}
       <ul
@@ -221,6 +218,7 @@
             <Container
               titleEditable
               {symbol}
+              loadPreview={mounted}
               on:copy={() => copySymbol(symbol)}
               buttons={[
                 {
@@ -235,6 +233,7 @@
                 },
                 {
                   onclick: () => addComponentToPage(symbol),
+                  highlight: true,
                   label: 'Select Symbol',
                   svg: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>`,
                 },
@@ -248,19 +247,23 @@
         class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
         xyz="fade stagger stagger-2"
       >
-        {#each publicSymbols as symbol (getID(symbol))}
-          <li class="xyz-in">
-            <Container
-              titleEditable={false}
-              on:copy={() => copySymbol(symbol)}
-              {symbol}
-            />
-          </li>
-        {/each}
+      {#each $publicSymbols as symbol (getID(symbol))}
+        <li class="xyz-in">
+          <Container
+            titleEditable={false}
+            on:copy={() => {
+              window.plausible('Copy Symbol', { props: { id: symbol.id } })
+              copySymbol(symbol)
+            }}
+            {symbol}
+          />
+        </li>
+      {:else}
+        <Spinner />
+      {/each}
       </ul>
     {/if}
   </div>
-{/if}
 
 <style>
   .library-buttons:only-child {

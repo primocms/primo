@@ -15,7 +15,7 @@
 	import {id as pageId} from './stores/app/activePage'
 	import {content, styles, fields, wrapper} from './stores/app/activePage'
   import {switchEnabled, userRole} from './stores/app'
-	import {saving as savingStore, showKeyHint, loadingSite} from './stores/app/misc'
+	import {saving as savingStore, showKeyHint, loadingSite, onMobile} from './stores/app/misc'
 	import {createSite} from './const'
 
 	// import site from './stores/data/site'
@@ -42,9 +42,12 @@
 
 	$: $pageId = getPageId($router.path)
 	function getPageId(path) {
-		const [ user, site, root, child ] = $router.path.substr(1).split('/')
-		const final = child ? `${root}/${child}` : root || 'index'
-		return final
+		const [ user, site, root, child ] = path.substr(1).split('/')
+		if (user === 'try') {
+			return root ? `${site}/${root}` : site || 'index'
+		} else {
+			return child ? `${root}/${child}` : root || 'index'
+		}
 	}
 
 	$: setPageContent($pageId, $pages)
@@ -93,6 +96,9 @@
 	onDestroy(() => {
 		dispatch('destroy')
 	})
+
+	import isMobile from 'ismobilejs';
+	$onMobile = isMobile(window.navigator).phone || isMobile(window.navigator).tablet
 
 </script>  
 
