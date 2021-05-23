@@ -3,7 +3,6 @@
   const dispatch = createEventDispatcher();
 
   import { CodeMirror } from "../../../components";
-
   export let disabled = false;
 
   export let variants = "";
@@ -12,37 +11,48 @@
   export let css = "";
   export let js = "";
 
-  let activeTab = "html";
+  let activeTab = 0;
+
+  let selections = {
+    html: 0,
+    css: 0,
+    js: 0
+  }
+
 </script>
 
-<div class="flex flex-col {variants}">
+<div class="flex flex-col overflow-scroll {variants}">
   <div class="tabs is-toggle is-fullwidth is-small">
     <ul class="text-gray-200 border border-gray-900" xyz="fade stagger delay-2">
-      <li class="xyz-in" class:is-active={activeTab === 'html'}>
-        <button on:click={() => (activeTab = 'html')}>
+      <li class="xyz-in" class:is-active={activeTab === 0}>
+        <button on:click={() => (activeTab = 0)}>
           <span>HTML</span>
         </button>
       </li>
-      <li class="xyz-in border-l border-r border-gray-900" class:is-active={activeTab === 'css'}>
-        <button on:click={() => (activeTab = 'css')}> <span>CSS</span> </button>
+      <li class="xyz-in border-l border-r border-gray-900" class:is-active={activeTab === 1}>
+        <button on:click={() => (activeTab = 1)}> <span>CSS</span> </button>
       </li>
-      <li class="xyz-in" class:is-active={activeTab === 'js'}>
-        <button on:click={() => (activeTab = 'js')}> <span>JS</span> </button>
+      <li class="xyz-in" class:is-active={activeTab === 2}>
+        <button on:click={() => (activeTab = 2)}> <span>JS</span> </button>
       </li>
     </ul>
   </div>
-  {#if activeTab === 'html'}
+  {#if activeTab === 0}
     <CodeMirror
       autofocus
-      bind:value={html}
       mode="html"
       {disabled}
+      bind:value={html}
+      bind:selection={selections['html']}
+      on:tab-switch={({detail}) => activeTab = detail}
       on:change={({ detail }) => dispatch('htmlChange')}
       on:save={() => dispatch('save')}
       docs="https://handlebarsjs.com/guide/" />
-  {:else if activeTab === 'css'}
+  {:else if activeTab === 1}
     <CodeMirror
       autofocus
+      on:tab-switch={({detail}) => activeTab = detail}
+      bind:selection={selections['css']}
       bind:value={css}
       mode="css"
       {disabled}
@@ -51,6 +61,8 @@
   {:else}
     <CodeMirror
       autofocus
+      on:tab-switch={({detail}) => activeTab = detail}
+      bind:selection={selections['js']}
       bind:value={js}
       mode="javascript"
       {disabled}
@@ -61,7 +73,7 @@
 
 <style>
   .tabs {
-    height: 35px;
+    /* height: 35px; */
   }
 
   .tabs ul {
@@ -77,14 +89,16 @@
 
   }
 
-  .tabs ul li.is-active {
-          @apply bg-codeblack text-white border-codeblack;
-        }
+  .tabs ul li:first-child {
+      border-top-left-radius: 5px;
+    }
+    .tabs ul li:last-child {
+      border-top-right-radius: 5px;
+    }
 
-        .tabs ul li:first-child {
-          border-top-left-radius: 5px;
-        }
-        .tabs ul li:last-child {
-          border-top-right-radius: 5px;
-        }
+  .tabs ul li.is-active {
+      @apply bg-codeblack text-white;
+    }
+
+
 </style>

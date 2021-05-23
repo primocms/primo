@@ -101,22 +101,9 @@
     }
   }
 
-  async function selectOption(option) {
+  async function selectOption(option, payload = null) {
     if (option === 'component') {
-      modal.show('COMPONENT_EDITOR', {
-        header: {
-          title: 'Create Component',
-          icon: 'fas fa-code',
-          button: {
-            icon: 'fas fa-plus',
-            label: 'Add to page',
-            onclick: (component) => {
-              updateBlock(component)
-              modal.hide()
-            },
-          },
-        },
-      })
+      updateBlock(payload)
     } else if (option === 'symbol') {
       modal.show('SYMBOL_LIBRARY', {
         button: {
@@ -277,6 +264,9 @@
   {:else if block.type === 'options'}
     <OptionsButtons
       deletable={!checkIfOnlyChild(block.id)}
+      on:select={({detail:component}) => {
+        selectOption('component', component)
+      }}
       on:convert={({ detail: type }) => selectOption(type)}
       on:remove={deleteRow}
     />

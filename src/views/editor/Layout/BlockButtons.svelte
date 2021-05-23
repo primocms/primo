@@ -1,11 +1,24 @@
 <!-- <svelte:options tag='block-buttons' /> -->
 <script>
+  import Mousetrap from 'mousetrap'
+
   import {code, trash, edit} from '../../../components/svg/small'
 
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import {fade} from 'svelte/transition' 
   import { content } from '../../../stores/app/activePage';
   import {switchEnabled} from '../../../stores/app'
+
+  let modKeydown = false
+  Mousetrap.bind('mod', () => {
+    modKeydown = true
+  }, 'keydown');
+  Mousetrap.bind('mod', () => {
+    modKeydown = false
+  }, 'keyup');
+  Mousetrap.bind('mod+e', () => {
+    dispatch('edit')
+  }, 'keydown');
   const dispatch = createEventDispatcher()
 
   export let i
@@ -22,23 +35,27 @@
 
 </script>
 
-<div in:fade={{ duration: 100 }} class="block-buttons" class:editable bind:this={node}>
+<div in:fade={{ duration: 100 }} class="block-buttons" class:editable class:is-content={!editable} bind:this={node}>
   <div class="top">
-    {#if editable}
       <div class="left-0 flex">
+        {#if editable}
         <button on:click={() => dispatch('edit')} class="border-r border-red-500 px-3 ">
-          {#if $switchEnabled}
-            {@html code(iconStyles)}    
+          {#if modKeydown}
+            <span class="ml-2">&#8984; E</span>
           {:else}
-            {@html edit(iconStyles)}    
+            {#if $switchEnabled}
+              {@html code(iconStyles)}    
+            {:else}
+              {@html edit(iconStyles)}    
+            {/if}
+            <span class="ml-2">Edit</span>
           {/if}
-          <span class="ml-2">Edit</span>
         </button>
+        {/if}
         <button on:click={() => dispatch('delete')} class="rounded-br px-3">
           {@html trash(`${iconStyles}`)}    
         </button>
       </div>
-    {/if}
     <div class="absolute right-0 flex">
       {#if !isFirst}
         <button class="rounded-bl border-r border-red-500 px-2" on:click={() => dispatch('moveUp')} >
@@ -71,7 +88,12 @@
 <style>
 
   .block-buttons {
-    @apply z-10 absolute top-0 left-0 right-0 bottom-0 pointer-events-none ring-inset ring-4 ring-primored;
+    @apply z-10 absolute top-0 left-0 right-0 bottom-0 pointer-events-none;
+    box-shadow: inset 0 0 0 calc(4px) rgb(248,68,73);
+  }
+
+  .is-content {
+    box-shadow: inset 0 0 0 calc(4px) rgba(248,68,73,0.1);
   }
 
   button {

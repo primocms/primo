@@ -47,7 +47,7 @@ const modalTypes = {
       title: 'Pages',
       icon: 'fas fa-th-large'
     },
-    variants: 'max-w-md'
+    variants: 'max-w-xl'
   },
   'FIELDS' : {
     route: 'fields',

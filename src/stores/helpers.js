@@ -72,7 +72,11 @@ export async function processContent(page, site) {
         let component = block
 
         if (block.symbolID) {
-          component = site.symbols.filter(s => s.id === block.symbolID)[0]
+          const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+          component = {
+            ...symbol,
+            id: component.id
+          }
         } 
 
         const cacheKey = component.value.html + JSON.stringify(fields) // to avoid getting html cached with irrelevant data
@@ -124,6 +128,7 @@ export async function buildPagePreview({ page, site, separate = false }) {
             <div>${block.html}</div>
           </div>
         </div>
+        <style type="text/css">${block.css}</style>
         `
       } else if (block.type === 'content') {
         html += `

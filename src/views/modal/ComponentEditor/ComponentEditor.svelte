@@ -44,8 +44,8 @@
     },
   };
 
-  let localComponent = _.cloneDeep(component);
 
+  let localComponent = _.cloneDeep(component);
   function saveRawValue(property, value) {
     // localComponent.value.raw[property] = value;
     localComponent.value[property] = value;
@@ -98,30 +98,26 @@
 
   let rawCSS = localComponent.value.css;
   let finalCSS = ''
-  $: quickDebounce([compileCss, rawCSS]);
-  $: ((css) => {
-    loading = true;
-  })(rawCSS);
-  async function compileCss(css) {
+  $: (async css => {
+    loading = true
+    await compileCSS(css)
+    loading = false
+  })(rawCSS)
+  const compileCSS = _.debounce(async (css) => {
     saveRawValue("css", css);
-    loading = true;
     const encapsulatedCss = `#component-${localComponent.id} {${css}}`;
     const result = await processors.css(encapsulatedCss, {
       html: finalHTML,
       tailwind: $siteStyles.tailwind
     })
-
     if (result.error) {
       disableSave = true
-      // finalHTML = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${result.error}</pre>`
     } else if (result) {
       disableSave = false
-      // finalHTML = localComponent.value.final.html
-      finalCSS = result;
-      // saveFinalValue("css", finalCSS);
+      finalCSS = result
     }
     loading = false;
-  }
+  }, 200)
 
   let rawJS = localComponent.value.js;
   let finalJS = ''
@@ -187,7 +183,7 @@
     disabled = false;
     const symbol = getSymbol(localComponent.symbolID)
     localComponent = _.cloneDeep(symbol)
-    compileCss(symbol.value.css) // workaround for styles breaking
+    compileCSS(symbol.value.css) // workaround for styles breaking
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
       header: {
@@ -368,7 +364,7 @@
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone mr-1"></i>
-      <span class="hidden md:inline text-gray-200 font-semibold">Convert to Symbol</span>
+      <span class="hidden md:inline text-gray-200 font-semibold">Add to Library</span>
     </button>
   {/if}
 </ModalHeader>
@@ -381,22 +377,24 @@
           <Tabs {tabs} bind:activeTab variants="mb-1" />
         {/if}
         {#if disabled && activeTab === tabs[0]}
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="flex flex-wrap">
             <button
-              class="border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
+              style="min-width: 200px"
+              class="flex-1 m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
               on:click={loadSymbol}
               id="edit-symbol"
-              title="Edit the Symbol">
+              title="Edit the Component">
               <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                 <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
               </svg>
-              <span>Edit Symbol</span>
+              <span>Edit Component</span>
             </button>
               <button
-              class="border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
+              style="min-width: 200px"
+              class="flex-1 m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored flex items-center justify-center"
               on:click={separateFromSymbol}
-              title="Separate the component instance from its Symbol"
+              title="Separate the Component instance from its Component"
               id="emancipate-symbol">
               <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.5 2a3.5 3.5 0 101.665 6.58L8.585 10l-1.42 1.42a3.5 3.5 0 101.414 1.414l8.128-8.127a1 1 0 00-1.414-1.414L10 8.586l-1.42-1.42A3.5 3.5 0 005.5 2zM4 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 9a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />

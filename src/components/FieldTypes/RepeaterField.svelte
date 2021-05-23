@@ -99,7 +99,7 @@
 
 <style>
   .repeater-item {
-    @apply p-2 bg-gray-900 flex flex-col relative;
+    @apply p-4 bg-gray-900 flex flex-col relative border-2 border-primored;
   }
   .repeater-item:last-of-type {
       @apply mb-0;

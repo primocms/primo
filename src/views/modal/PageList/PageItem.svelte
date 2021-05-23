@@ -1,6 +1,9 @@
 <script>
+  import {fade} from 'svelte/transition'
   import { onMount, createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
+  import { SelectOne, TextInput } from "../../../components/inputs";
+  import { PrimaryButton } from "../../../components/buttons";
 
   import { router } from 'tinro'
   // import { navigate } from "svelte-routing";
@@ -58,20 +61,33 @@
       shouldLoadIframe = true
     })
   })
+
+  let editingPage = false
+  let title = page.title || ''
+  let id = page.id || ''
+  $: disableSave = !title || !id
+
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="shadow-lg rounded overflow-hidden border-gray-900">
+<li class="shadow-lg rounded overflow-hidden border-gray-900">
   <div class="text-gray-200 bg-codeblack w-full flex justify-between px-3 py-2">
     <div>
       <span class="text-xs font-semibold">{page.title}</span>
     </div>
     <div class="flex justify-end">
+      <button
+        title="Edit"
+        on:click={() => editingPage = !editingPage}
+        class="p-1 text-xs hover:text-primored"
+      >
+        <i class="fas fa-edit" />
+      </button>
       {#if page.pages && !disableAdd}
         <button
           title="Show sub-pages"
           on:click={() => dispatch('list')}
-          class="p-1 text-xs"
+          class="p-1 text-xs hover:text-primored"
         >
           <i class="fas fa-th-large" />
         </button>
@@ -79,7 +95,7 @@
         <button
           title="Add sub-page"
           on:click={() => dispatch('add')}
-          class="p-1 text-xs"
+          class="p-1 text-xs hover:text-primored"
         >
           <i class="fas fa-plus" />
         </button>
@@ -88,56 +104,86 @@
         <button
           title="Delete page"
           on:click={() => dispatch('delete')}
-          class="ml-1 p-1 delete-page text-xs text-red-500 hover:text-red-600"
+          class="ml-1 p-1 delete-page text-xs text-red-400 hover:text-primored"
         >
           <i class="fas fa-trash" />
         </button>
       {/if}
     </div>
   </div>
-  <a
-    tinro-ignore
-    class="page-container"
-    href="/{page.id}"
-    on:click={openPage}
-    class:active
-    bind:this={container}
-    aria-label="Go to /{page.id}"
-  >
-    {#if shouldLoadIframe}
-      <iframe
-        bind:this={iframe}
-        style="transform: scale({scale})"
-        class:fadein={iframeLoaded}
-        title="page preview"
-        srcdoc={preview}
-        on:load={() => {
-          iframeLoaded = true
-        }}
-      />
-    {/if}
-  </a>
-</div>
+  {#if editingPage}
+    <div class="p-4">
+      <form on:submit|preventDefault={() => {
+        editingPage = false
+        dispatch('edit', { title, id })
+      }} in:fade={{ duration: 100 }}>
+        <TextInput
+          bind:value={title}
+          id="page-label"
+          autofocus={true}
+          variants="mb-2 text-xs"
+          label="Page Label"
+          placeholder="About Us" />
+          {#if id !== 'index'}
+            <TextInput
+              bind:value={id}
+              id="page-url"
+              variants="mb-2 text-xs"
+              label="Page URL"
+              prefix="/"
+              placeholder="about-us" />
+          {/if}
+        <PrimaryButton disabled={disableSave} id="save-page" type="submit">Save</PrimaryButton>
+      </form>
+    </div>
+  {:else}
+    <a
+      tinro-ignore
+      class="page-container"
+      href="/{page.id}"
+      on:click={openPage}
+      class:active
+      bind:this={container}
+      aria-label="Go to /{page.id}"
+    >
+      {#if shouldLoadIframe}
+        <iframe
+          bind:this={iframe}
+          style="transform: scale({scale})"
+          class:fadein={iframeLoaded}
+          title="page preview"
+          srcdoc={preview}
+          on:load={() => {
+            iframeLoaded = true
+          }}
+        />
+      {/if}
+    </a>
+  {/if}
+</li>
 
 <style>
-  a.page-container.active {
+  button {
+    @apply transition-colors duration-100 focus:outline-none;
+  }
+  .page-container.active {
     @apply cursor-default pointer-events-none opacity-50;
   }
-  a.page-container.active:after {
+  .page-container.active:after {
     @apply opacity-50;
   }
-  a.page-container {
+  .page-container {
     @apply bg-white cursor-pointer block w-full relative overflow-hidden transition-colors duration-100;
-    height: 15vh;
+    height: 20vh;
   }
 
-  a.page-container:after {
+  /* .page-container:after {
     content: '';
     @apply absolute top-0 left-0 right-0 bottom-0 bg-codeblack opacity-0 transition-opacity duration-100;
     pointer-events: all;
-  }
+  } */
 
-  a.page-container:hover:after {
+  .page-container:hover {
     @apply opacity-50;
   }
   iframe {

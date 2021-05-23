@@ -121,7 +121,7 @@
 </script>
 
 <div class="primo-copy" id="copy-{block.id}" bind:this={element}>
-	<div class="bubble-menu text-gray-800 text-xs shadow-sm " bind:this="{floatingMenu}">
+	<div class="bubble-menu text-gray-800 bg-white text-xs shadow-sm " bind:this="{floatingMenu}">
 		{#if editor}
       <CopyButton icon="heading" on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} />
       <CopyButton icon="code" on:click={() => editor.chain().focus().toggleCodeBlock().run()} />

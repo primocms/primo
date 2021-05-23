@@ -13,6 +13,7 @@
   }
 
   function hydrateInstance(block, symbols, ...args) {
+    console.log({ block, symbols })
     const { fields } = block.value
     const symbol = find(symbols, ['id', block.symbolID])
     const instance = {
@@ -25,11 +26,13 @@
     return instance
   }
 
+  $: console.log({$content})
+
 </script>
 
 <div class="primo-page" style="border-top: 48px solid rgb(20,20,20)">
   {#if pageExists}
-    {#each $content as block, i (block.id)}
+    <!-- {#each $content as block, i (block.id)}
       {#if block.symbolID}
         <Block block={
           hydrateInstance(
@@ -43,7 +46,7 @@
       {:else}
         <Block {block} {i} />
       {/if}
-    {/each}
+    {/each} -->
   {/if}
   {@html $pageWrapper.below.final}
   {@html $siteWrapper.below.final}

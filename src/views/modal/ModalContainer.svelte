@@ -7,12 +7,10 @@
   export let visible
 
   Mousetrap.bind(['esc'], () => {
-    modal.hide()
+    if (!$modal.disabledBgClose) {
+      modal.hide()  
+    }
   })
-
-  async function closeModal() {
-    modal.hide()
-  }
 
   $: header = $modal.header
   $: button = $modal.button

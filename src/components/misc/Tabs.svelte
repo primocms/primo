@@ -21,6 +21,7 @@
         >
           <button
             on:click={() => (activeTab = tab)}
+            class:text-primored={tab.highlighted}
             id={tab.id ? `tab-${tab.id}` : null}
           >
             {#if tab.icon}<i class="fas fa-{tab.icon}" />{/if}
@@ -77,6 +78,10 @@
   .tabs.secondary li.is-active {
     @apply bg-codeblack text-white;
     @apply border-codeblack;
+  }
+
+  button {
+    @apply transition-colors duration-100;
   }
 
 </style>

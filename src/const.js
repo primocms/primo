@@ -12,47 +12,106 @@ export const tailwindConfig = `{
 
 
 export const defaultStyles = {
-  raw: `\
-/* Default content styles */\n
-.primo-copy {
-  @apply text-lg text-gray-700 container;
-  h1 {
-    @apply text-3xl font-medium;
-  }
-  h2 {
-    @apply text-2xl font-medium;
-  }
-  ol {
-    @apply list-decimal;
-  }
-  ul {
-    @apply list-disc list-inside;
-    p {
-        @apply inline;
-    }
-  } 
-  ol {
-    @apply list-decimal list-inside;
-  } 
-  a {
-    @apply text-blue-600 underline;
-  }
-  blockquote {
-      @apply shadow-md p-6;
-  }
-  mark {
-    @apply text-gray-900 bg-yellow-200;
-  }
+  raw: `
+--gray: #374151;
   
-  @screen lg {
-    h1 {
-      @apply text-5xl;
-    }
-    h2 {
-      @apply text-4xl;
-    }
+.primo-copy {
+  margin: 0 auto;
+  width: 100%;
+  padding-right: 2rem;
+  padding-left: 2rem;
+  font-size: 1.125rem;
+  color: #374151;
+  
+  h1 { 
+    font-size: 1.875rem;
+    font-weight: 500;
   }
-}`,
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+
+  ol {
+    list-style-type: decimal;
+    list-style-position: inside;
+  }
+
+  ul {
+    list-style-type: disc;
+    list-style-position: inside;
+  }
+
+  p {
+    display: inline;
+  }
+
+  ol {
+    list-style-type: decimal;
+    list-style-position: inside;
+  }
+
+  a {
+    color: #1c64f2;
+    text-decoration: underline;
+  }
+
+  blockquote {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+  }
+
+  mark {
+    --text-opacity: 1;
+    color: #161e2e;
+    --bg-opacity: 1;
+    background-color: #fce96a;
+  }
+}
+
+@media (min-width: 1024px) {
+  .primo-copy h1 {
+    font-size: 3rem;
+  }
+
+  .primo-copy h2 {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .primo-copy {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .primo-copy {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .primo-copy {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .primo-copy {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .primo-copy {
+    max-width: 1536px;
+  }
+}
+
+  `,
   final: `\
 /* Default content styles */
 

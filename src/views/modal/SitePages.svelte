@@ -77,6 +77,13 @@
       .toLowerCase();
   }
 
+  function editPage(pageId, args) {
+    actions.update(pageId, page => ({
+      ...page,
+      ...args
+    }))
+  }
+
   function listPages(pageId) {
     const {pages} = _.find(listedPages, ['id', pageId])
     listedPages = pages
@@ -142,19 +149,18 @@
   </div>
 {/if}
 
-<ul class="grid grid-cols-2 gap-4 mb-4" xyz="fade stagger stagger-1">
+<ul class="grid grid-cols-2 gap-4 mb-4 xyz-in" xyz="fade stagger stagger-1">
   {#each listedPages as page (page.id)}
-    <li in:fade={{ duration: 200 }} id="page-{page.id}" class="xyz-in">
-      <PageItem
-        {page}
-        parent={currentPath[0]}
-        disableAdd={breadcrumbs}
-        active={$id === page.id}
-        on:add={() => addSubPage(page.id)} 
-        on:delete={() => deletePage(page.id)} 
-        on:list={() => listPages(page.id)}
-      />
-    </li>
+    <PageItem
+      {page}
+      parent={currentPath[0]}
+      disableAdd={breadcrumbs}
+      active={$id === page.id}
+      on:edit={({detail}) => editPage(page.id, detail)} 
+      on:add={() => addSubPage(page.id)} 
+      on:delete={() => deletePage(page.id)} 
+      on:list={() => listPages(page.id)}
+    />
   {/each}
 </ul>
 

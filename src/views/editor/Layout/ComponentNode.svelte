@@ -101,6 +101,7 @@
     transition: outline-color 0.2s;
     outline-color: transparent;
     @apply w-full;
+    min-height: 2rem;
   }
   .component > div {
       @apply w-full;

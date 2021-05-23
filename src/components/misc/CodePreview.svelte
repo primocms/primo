@@ -87,6 +87,16 @@
     }
   }
 
+
+  function setLoading(e) {
+    if (!iframeLoaded) {
+      iframeLoaded = true
+      return
+    }
+    iframeLoaded = false
+    iframe.srcdoc = iframePreview
+  }
+
 </script>
 
 <div class="h-full flex flex-col lg:pl-2">
@@ -98,7 +108,7 @@
     {#key JSON.stringify(tailwind)}
       <iframe
         class:scaled={view === 'large'}
-        on:load={() => iframeLoaded = true}
+        on:load={setLoading}
         class:fadein={previewLoaded}
         title="Preview HTML"
         srcdoc={iframePreview}

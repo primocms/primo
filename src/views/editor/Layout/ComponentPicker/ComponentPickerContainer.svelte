@@ -1,28 +1,27 @@
 <script>
-  import {Spinner} from '../../../components/misc'
+  import {Spinner} from '../../../../components/misc'
   import {fade} from 'svelte/transition'
   import { createEventDispatcher, onMount } from 'svelte';
   import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
-  import {createSymbolPreview} from '../../../utils'
+  import {createSymbolPreview} from '../../../../utils'
 
-  import {styles as siteStyles, wrapper} from '../../../stores/data/draft'
-  import {styles as pageStyles} from '../../../stores/app/activePage'
-  import { getTailwindConfig } from '../../../stores/helpers';
-  import {processors} from '../../../component'
-  import {getAllFields} from '../../../stores/helpers'
-  import components from '../../../stores/app/components'
+  import {styles as siteStyles, wrapper} from '../../../../stores/data/draft'
+  import {styles as pageStyles} from '../../../../stores/app/activePage'
+  import { getTailwindConfig } from '../../../../stores/helpers';
+  import {processors} from '../../../../component'
+  import {getAllFields} from '../../../../stores/helpers'
+  import components from '../../../../stores/app/components'
   import {
     convertFieldsToData
-  } from "../../../utils";
+  } from "../../../../utils";
 
   export let symbol;
   export let title = symbol.title || '';
   export let buttons = []
   export let titleEditable
   export let loadPreview = true
-  export let hovering = false
 
   let editingTitle = false
   let titleInput
@@ -55,6 +54,8 @@
     mounted = true
     shouldLoadIframe = true
   })
+
+  let copied = false
 
   let css
   $: mounted && processCSS(symbol.value.css)
@@ -125,46 +126,24 @@
     return previewCode
   }
 
-  let active = false
-
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
+<div class="component-wrapper flex flex-col shadow-xl text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
   {#if titleEditable}
     <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
       <input class="cursor-pointer" type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
     </form>
   {/if}
-  <div class="flex justify-between items-center shadow-sm">
-    <p class="component-label text-sm" on:click={() => titleInput && titleInput.focus()} class:editing={editingTitle}>
-      {#if titleEditable}
-        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
-      {/if}
+  <div class="shadow-sm component-header">
+    <p class="component-label text-xs font-medium ml-1">
       <span>{title}</span>
     </p>
     <div class="flex">
       {#each buttons as button}
-        <button title={button.title} class="p-2 {button.class}" class:focus={button.focus && !active}
-          on:mouseenter={() => {
-            hovering = true
-          }} 
-          on:mouseleave={() => {
-            hovering = false
-          }} 
-          on:click={() => {
-            active = true
-            button.onclick()
-          }}>
-          {#if active && button.clicked}
-            <span class="mr-2 text-sm font-semibold">{button.clicked.label}</span>
-            {@html button.clicked.svg}
-          {:else}
-            {#if button.label}
-              <span class="mr-2 text-sm font-semibold">{button.label}</span>
-            {/if}
-            {@html button.svg}
-          {/if}
+        <button class="p-2 flex space-x-2 items-center" class:bg-primored={button.highlight} on:click={button.onclick}>
+          <span class="text-xs font-semibold">{button.label}</span>
+          {@html button.svg}
         </button>
       {/each}
     </div>
@@ -182,6 +161,14 @@
 </div>
 
 <style> 
+  .component-header {
+    margin-bottom: -2rem;
+    z-index: 1;
+    background: rgba(20,20,20,0.75);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   .component-wrapper {
     @apply relative shadow;
     height: 40vh;
@@ -189,13 +176,9 @@
     content-visibility: auto;
   }
   button {
-    @apply bg-codeblack;
-    @apply flex space-x-2 items-center transition-colors duration-100 focus:outline-none focus:opacity-75;
+    @apply transition-colors duration-100 focus:outline-none focus:opacity-75;
   }
-  button.focus {
-    @apply bg-primored;
-  }
-  button:hover {@apply bg-gray-800;}
+  button:hover {@apply bg-red-600;}
   .buttons {
     @apply flex justify-end;
   }

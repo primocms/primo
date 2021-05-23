@@ -100,11 +100,8 @@
     <ToolbarButton id="redo" title="Redo" icon="redo-alt" on:click={redoSiteChange} buttonStyles="mr-1 bg-gray-600" />
   {/if}
   <ToolbarButton id="save" title="Save" icon="save" key="s" loading={$saving} on:click={savePage} disabled={!$unsaved} buttonStyles="mr-1 bg-gray-600" />
-  {#if $switchEnabled}
-    <ToolbarButton type="primo" title="Build" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-primored text-gray-900 hover:bg-gray-400" />
-  {:else}
-    <ToolbarButton variant="bg-primored" type="primo" on:click={() => modal.show('BUILD')} disabled={updatingDatabase}>publish</ToolbarButton>
-  {/if}
+  <ToolbarButton type="primo" title="Build" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-primored text-gray-900 hover:bg-gray-400" />
+
 </Toolbar>
 
 <Doc />  

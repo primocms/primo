@@ -1,7 +1,7 @@
 <script>
 
   import modal from '../../stores/app/modal'
-  import {switchEnabled,userRole} from '../../stores/app/misc'
+  import {switchEnabled,userRole,onMobile} from '../../stores/app/misc'
 
   export let variants = ''
   export let icon = ''
@@ -39,15 +39,16 @@
   <div class="flex-1 flex justify-end">
     <slot></slot>
     {#if $userRole === 'developer' && $modal.showSwitch}
-      <button on:click={() => $switchEnabled = !$switchEnabled} class="xyz-in button in-header font-semibold switch" class:to-cms={$switchEnabled} class:to-ide={!$switchEnabled}>
-        {#if $switchEnabled}
-          <i class="hidden lg:inline-block fas fa-edit lg:mr-1"></i>
-          <span class="hidden lg:inline-block">Switch to CMS</span>
-        {:else}
-          <i class="hidden lg:inline-block fas fa-code lg:mr-1"></i>
-          <span class="hidden lg:inline-block">Switch to IDE</span>
-        {/if}
-      </button>
+      <div class="content xyz-in" id="ide-toggle">
+        <label class="switch">
+          <input type="checkbox" bind:checked={$switchEnabled}>
+          <span class="slider round" class:code={$switchEnabled}>
+            <i class="fas fa-code"></i> 
+            <i class="fas fa-edit"></i>    
+          </span>
+          <span class="sr-only">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</span>
+        </label>
+      </div>
     {/if}
     {#if button && button.onclick}
       <button class="xyz-in button primary" disabled={button.loading || button.disabled} on:click={button.onclick}>
@@ -73,6 +74,114 @@
 </header>
 
 <style>
+  .content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 50px;
+    height: 26px;
+  }
+
+  .switch i {
+    font-size: 11px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    width: 50%;
+    justify-content: center;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(248,68,73);
+    transition: .4s;
+    display: flex;
+    align-items: center;
+  }
+
+  .slider i.fa-edit {
+    color: rgb(248,68,73);
+  }
+
+  .slider.code i.fa-edit {
+    color: white;
+  }
+
+  .slider.code i.fa-code {
+    color: rgb(248,68,73);
+  }
+
+
+
+  .slider i {
+    position: absolute;
+    z-index: 1;
+    color: white;
+  }
+
+  .slider i.fa-edit {
+    left: 1px;
+    bottom: 1px;
+  }
+
+  .slider i.fa-code {
+    /* right: 1px; */
+    right: 0;
+    bottom: 1px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    z-index: 1;
+    background-color: white;
+    transition: background-color .4s, transform 0.1s;
+    box-shadow: 0px 0px 3px 0px rgb(0 0 0 / 50%);
+  }
+
+  input:checked + .slider {
+
+  }
+
+  input:focus + .slider {
+    outline: none;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+    transition: .1s;
+  }
+
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
   header {
     margin-top: -0.75rem;
     margin-left: -0.75rem;

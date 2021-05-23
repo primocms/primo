@@ -16,7 +16,7 @@
 <!-- svelte-ignore a11y-label-has-associated-control -->
 <label class="flex flex-col items-start text-gray-200 {variants}" {id}>
   {#if label}
-     <span class="text-base mb-1 text-gray-200 font-semibold">{label}</span>
+     <span class="mb-1 text-gray-200 font-semibold">{label}</span>
   {/if}
   <div class="flex items-normal w-full">
     {#if prefix}
@@ -28,6 +28,6 @@
 
 <style>
   input {
-    @apply text-base bg-gray-800 text-gray-100 font-medium rounded-sm py-2 px-3 flex-1;
+    @apply bg-gray-800 text-gray-100 font-medium rounded-sm py-2 px-3 flex-1;
   }
 </style>

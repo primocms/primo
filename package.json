@@ -58,6 +58,15 @@
     "vite": "^2.1.5"
   },
   "dependencies": {
+    "@codemirror/basic-setup": "^0.18.0",
+    "@codemirror/closebrackets": "^0.18.0",
+    "@codemirror/lang-css": "^0.18.0",
+    "@codemirror/lang-html": "^0.18.1",
+    "@codemirror/lang-javascript": "^0.18.0",
+    "@codemirror/matchbrackets": "^0.18.0",
+    "@codemirror/state": "^0.18.7",
+    "@codemirror/theme-one-dark": "^0.18.0",
+    "@codemirror/view": "^0.18.11",
     "@emmetio/codemirror-plugin": "^1.2.1",
     "@tiptap/core": "^2.0.0-beta.29",
     "@tiptap/extension-blockquote": "^2.0.0-beta.1",

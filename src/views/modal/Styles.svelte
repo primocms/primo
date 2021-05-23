@@ -43,14 +43,16 @@
       site: $site,
       separate: true,
     })
-    console.log({pagePreview})
   }
 
   let allPages = []
   buildSitePreview()
   async function buildSitePreview() {
     allPages = await Promise.all(
-      $pagesStore.map(page => buildPagePreview({ page, site: $site, separate: true }))
+      $pagesStore.map(page => buildPagePreview({ page, site: {
+        ...$site,
+        styles: localSiteStyles
+      }, separate: true }))
     )
   }
 
@@ -140,8 +142,8 @@
   <div class="grid md:grid-cols-2 flex-1">
     <div class="flex flex-col">
         <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-        <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" />
-        {#if primaryTab.id === 'page' && secondaryTab.id === 'styles'}
+        <!-- <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" /> -->
+        {#if primaryTab.id === 'page'}
           <CodeMirror 
             autofocus
             bind:value={localPageStyles.raw} 
@@ -166,27 +168,7 @@
             }}
             on:save={saveStyles}
           />
-        {:else if primaryTab.id === 'page' && secondaryTab.id === 'tw'}
-          <CodeMirror 
-            autofocus
-            prefix="module.exports = "
-            bind:value={localPageStyles.tailwind} 
-            debounce={true}
-            on:debounce={() => {
-              if (!loading) {
-                loading = true
-              } 
-            }}
-            on:change={async () => {
-              tailwindConfigChanged = true
-              await getNewPagePreview()
-              loading = false
-            }}
-            on:save={saveStyles}
-            mode="javascript" 
-            docs="https://tailwindcss.com/docs/configuration"
-          />
-        {:else if primaryTab.id === 'site' && secondaryTab.id === 'styles'}
+        {:else if primaryTab.id === 'site'}
           <CodeMirror 
             autofocus
             bind:value={localSiteStyles.raw} 
@@ -209,34 +191,6 @@
               })
             }}
             on:save={saveStyles}
-          />
-        {:else if primaryTab.id === 'site' && secondaryTab.id === 'tw'}
-          <CodeMirror 
-            autofocus
-            prefix="module.exports = "
-            bind:value={localSiteStyles.tailwind} 
-            debounce={true}
-            on:debounce={() => {
-              if (!loading) {
-                loading = true
-              } 
-              if (!tailwindConfigChanged) {
-                tailwindConfigChanged = true
-              }
-            }}
-            on:change={() => {
-              compileStyles({
-                styles: localSiteStyles,
-                onCompile: async (css) => {
-                  localSiteStyles.final = css
-                  await buildSitePreview()
-                  loading = false
-                }
-              })
-            }}
-            on:save={saveStyles}
-            mode="javascript" 
-            docs="https://tailwindcss.com/docs/configuration"
           />
         {/if} 
     </div>
