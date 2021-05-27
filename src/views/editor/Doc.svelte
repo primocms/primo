@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import {find,unionBy} from 'lodash'
   import Block from './Layout/Block.svelte'
   import { pages, wrapper as siteWrapper, symbols, fields as siteFields } from '../../stores/data/draft'

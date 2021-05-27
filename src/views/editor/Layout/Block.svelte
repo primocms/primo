@@ -1,11 +1,10 @@
-<script lang="ts">
+<script>
   import _ from 'lodash'
   import { tick, createEventDispatcher } from 'svelte'
   import {fade} from 'svelte/transition'
   const dispatch = createEventDispatcher()
 
   import { createUniqueID, move } from '../../../utilities'
-  import type { Block } from './LayoutTypes'
   import OptionsButtons from './OptionsButtons.svelte'
   import ContentNode from './ContentNode.svelte'
   import ComponentNode from './ComponentNode.svelte'
@@ -20,24 +19,24 @@
   import {pages} from '../../../stores/actions'
   import site from '../../../stores/data/site'
 
-  export let block: Block
+  export let block
   export let i
 
-  function hasOptionsAbove(rowIndex: number, rows: Array<Block>): boolean {
-    const rowAbove: Block = rows[rowIndex - 1]
+  function hasOptionsAbove(rowIndex, rows) {
+    const rowAbove = rows[rowIndex - 1]
     if (rowAbove && rowAbove.type === 'options') {
       return true
     } else return false
   }
 
-  function hasOptionsBelow(rowIndex: number, rows: Array<Block>): boolean {
-    const rowBelow: Block = rows[rowIndex + 1]
+  function hasOptionsBelow(rowIndex, rows) {
+    const rowBelow = rows[rowIndex + 1]
     if (rowBelow && rowBelow.type === 'options') {
       return true
     } else return false
   }
 
-  function checkIfOnlyChild(): boolean {
+  function checkIfOnlyChild() {
     return $content.length <= 1
   }
 
