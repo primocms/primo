@@ -15,6 +15,7 @@
   import Spinner from '../../../components/misc/Spinner.svelte'
   import { createSymbol } from '../../../const'
   import { createUniqueID } from '../../../utilities'
+  import { sites } from '../../../../supabase/db'
   import { userRole } from '../../../stores/app'
   import modal from '../../../stores/app/modal'
   import { symbols } from '../../../stores/data/draft'
@@ -141,7 +142,7 @@
     },
     {
       id: 'public',
-      label: 'Community Library',
+      label: 'Public Library',
       icon: 'users',
     },
   ]
@@ -149,9 +150,9 @@
   let activeTab = tabs[0]
 
   async function getSymbols() {
-    window.plausible('Get Community Library')
-    // const {data} = await sites.get({ path: 'mateo/public-library' })
-    // $publicSymbols = data.symbols
+    window.plausible('Get Public Library')
+    const {data} = await sites.get({ path: 'mateo/public-library' })
+    $publicSymbols = data.symbols
   }
 
   $: if ($publicSymbols.length === 0 && activeTab === tabs[1]) {

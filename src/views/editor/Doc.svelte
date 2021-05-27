@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, tick } from 'svelte';
   import {find,unionBy} from 'lodash'
   import Block from './Layout/Block.svelte'
   import { pages, wrapper as siteWrapper, symbols, fields as siteFields } from '../../stores/data/draft'
@@ -13,7 +14,6 @@
   }
 
   function hydrateInstance(block, symbols, ...args) {
-    console.log({ block, symbols })
     const { fields } = block.value
     const symbol = find(symbols, ['id', block.symbolID])
     const instance = {
@@ -26,13 +26,28 @@
     return instance
   }
 
-  $: console.log({$content})
+  let element;
 
+  async function disableLinks(content) {
+    if (!element) return
+    setTimeout(() => {
+      element.querySelectorAll('a').forEach(link => {
+        link.setAttribute('data-tinro-ignore', '');
+        link.onclick = function(e) {
+          const confirm = window.confirm(`You're navigating away from your site. Continue?`)
+          if (!confirm) {
+            e.preventDefault()
+          }
+        }
+      })
+    }, 100)
+  }
+  $: disableLinks($content)
 </script>
 
-<div class="primo-page" style="border-top: 48px solid rgb(20,20,20)">
+<div bind:this={element} class="primo-page" style="border-top: 48px solid rgb(20,20,20)">
   {#if pageExists}
-    <!-- {#each $content as block, i (block.id)}
+    {#each $content as block, i (block.id)}
       {#if block.symbolID}
         <Block block={
           hydrateInstance(
@@ -46,7 +61,7 @@
       {:else}
         <Block {block} {i} />
       {/if}
-    {/each} -->
+    {/each}
   {/if}
   {@html $pageWrapper.below.final}
   {@html $siteWrapper.below.final}

@@ -1,7 +1,7 @@
 <script>
   import axios from 'axios'
   import { createEventDispatcher } from 'svelte'
-  import { makeValidUrl } from '../utils'
+  import { makeValidUrl } from '../../utils'
   const dispatch = createEventDispatcher()
 
   import TextInput from '../components/inputs/TextInput.svelte'

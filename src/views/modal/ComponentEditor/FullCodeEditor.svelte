@@ -42,6 +42,7 @@
       autofocus
       mode="html"
       {disabled}
+      {css}
       bind:value={html}
       bind:selection={selections['html']}
       on:tab-switch={({detail}) => activeTab = detail}
