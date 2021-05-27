@@ -96,6 +96,7 @@
     "jszip": "^3.6.0",
     "lz-string": "^1.4.4",
     "mousetrap": "^1.6.5",
+    "object-path": "^0.11.5",
     "pluralize": "^8.0.0",
     "prettier": "^2.2.1",
     "prosemirror-commands": "^1.1.6",
