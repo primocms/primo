@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import { onMount, tick } from 'svelte';
   import {find,unionBy} from 'lodash'
   import Block from './Layout/Block.svelte'
