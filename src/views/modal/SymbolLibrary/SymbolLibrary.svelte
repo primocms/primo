@@ -15,7 +15,7 @@
   import Spinner from '../../../components/misc/Spinner.svelte'
   import { createSymbol } from '../../../const'
   import { createUniqueID } from '../../../utilities'
-  import { sites } from '../../../../supabase/db'
+  // import { sites } from '../../../../supabase/db'
   import { userRole } from '../../../stores/app'
   import modal from '../../../stores/app/modal'
   import { symbols } from '../../../stores/data/draft'
@@ -151,8 +151,8 @@
 
   async function getSymbols() {
     window.plausible('Get Public Library')
-    const {data} = await sites.get({ path: 'mateo/public-library' })
-    $publicSymbols = data.symbols
+    // const {data} = await sites.get({ path: 'mateo/public-library' })
+    // $publicSymbols = data.symbols
   }
 
   $: if ($publicSymbols.length === 0 && activeTab === tabs[1]) {
