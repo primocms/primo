@@ -14,7 +14,7 @@
   import MainTheme from './theme'
   import emmetExt from './emmet-codemirror'
   import extensions, {getLanguage} from './extensions'
-  import cssPeek from './css-peek';
+  // import cssPeek from './css-peek';
 
   import 'requestidlecallback-polyfill';
 
@@ -55,9 +55,9 @@
       //     syntax: 'html'
       //   }
       // }),
-      cssPeek({
-        css
-      }),
+      // cssPeek({
+      //   css
+      // }),
       keymap.of([
         defaultTabBinding,
         { 
@@ -138,6 +138,11 @@
     dispatch('change', value) 
   }
 
+  let element
+  $: if (element) {
+    console.log(element.parentElement)
+  } 
+
 </script>
 
 <svelte:window 
@@ -146,7 +151,7 @@
   }}
 />
 
-<div class="codemirror-container {mode}" style="{style}">
+<div bind:this={element} class="codemirror-container {mode}" style="{style}">
   <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:100px"></div>
 </div>
 <!-- {#if docs}
@@ -161,6 +166,7 @@
   .codemirror-container {
     @apply w-full overflow-x-scroll;
     font-family: 'Fira Code', serif;
+    height: calc(100vh - 9.5rem);
   }
 
 </style>
