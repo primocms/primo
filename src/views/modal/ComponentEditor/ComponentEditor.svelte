@@ -566,7 +566,7 @@
       </div>
     </div>
   </div>
-  <div slot="right" class="w-full">
+  <div slot="right" class="w-full flex-1">
     <CodePreview
       view="small"
       {loading}

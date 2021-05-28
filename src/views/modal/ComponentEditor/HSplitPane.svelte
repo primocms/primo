@@ -178,7 +178,7 @@
   }
   div.separator {
       cursor: col-resize;
-      height: 100vh;
+      height: auto;
       width: 4px;
       margin-left: -2px;
       z-index: 1;
@@ -197,7 +197,6 @@
   div.right {
       width: var(--right-panel-size);
       min-width: var(--min-right-panel-size);
-      height: 100%;
       display: flex;
   }
   .transitioning {
