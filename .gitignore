@@ -3,3 +3,4 @@ container/node_modules
 container/public/build/
 container/public/preview/
 .vscode
+.idea
