@@ -182,7 +182,11 @@
       width: 4px;
       margin-left: -2px;
       z-index: 1;
-      @apply bg-gray-800;
+      @apply bg-gray-800 text-gray-200;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='30'><path d='M2 0 v30 M5 0 v30 M8 0 v30' fill='none' stroke='currentColor'/></svg>");
+        background-size: 20px 30px;
+        background-repeat: no-repeat;
+        background-position: center;
   }
   div.left {
       width: var(--left-panel-size);
