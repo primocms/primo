@@ -347,7 +347,7 @@
     editorWidth = containerWidth - newPreviewWidth - 16
   } 
 
-  if (localComponent.symbolID) {
+  if (localComponent.symbolID && $switchEnabled) {
     loadSymbol() 
   }
 
