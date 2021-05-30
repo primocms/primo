@@ -2,8 +2,9 @@
   import {cloneDeep,isEqual} from 'lodash'
   import {Tabs} from '../../components/misc'
   import {CodeMirror} from '../../components'
-  import { parseHandlebars, convertFieldsToData } from '../../utils'
+  import { convertFieldsToData } from '../../utils'
   import ModalHeader from './ModalHeader.svelte'
+  import {processors} from '../../component'
 
   import modal from '../../stores/app/modal'
   import {getAllFields} from '../../stores/helpers'
@@ -33,7 +34,7 @@
   async function updateHtmlWithFieldData(rawHTML) {
     const allFields = getAllFields()
     const data = await convertFieldsToData(allFields, 'all')
-    const finalHTML = await parseHandlebars(rawHTML, data)
+    const finalHTML = await processors(rawHTML, data)
     return finalHTML
   }
 

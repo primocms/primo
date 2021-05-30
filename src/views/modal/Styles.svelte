@@ -34,7 +34,6 @@
 
   getNewPagePreview()
   async function getNewPagePreview() {
-    console.log('getting new preview')
     pagePreview = await buildPagePreview({
       page: {
         ...$activePage,
@@ -156,7 +155,6 @@
               } 
             }}
             on:change={() => {
-              console.log('localPageStyles')
               compileStyles({
                 styles: localPageStyles,
                 onCompile: async (css) => {

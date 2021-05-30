@@ -10,13 +10,11 @@
   import {keymap} from "@codemirror/view"
   import {basicSetup, EditorView} from "@codemirror/basic-setup"
   import {defaultTabBinding} from "@codemirror/commands"
-  import {bracketMatching} from '@codemirror/matchbrackets'
-  import {closeBrackets} from '@codemirror/closebrackets'
   import {EditorState,Compartment} from "@codemirror/state"
-  import {html} from "@codemirror/lang-html"
-  import {css} from "@codemirror/lang-css"
-  import {javascript} from "@codemirror/lang-javascript"
   import MainTheme from './theme'
+  import emmetExt from './emmet-codemirror'
+  import extensions, {getLanguage} from './extensions'
+  // import cssPeek from './css-peek';
 
   import 'requestidlecallback-polyfill';
 
@@ -30,16 +28,12 @@
   export let mode = 'html'
   export let disabled = false
   export let style = ''
-  export let docs
   export let autofocus
   export let debounce
   export let selection = 0
+  export let css = ''
 
-  const language = {
-    'html': html(),
-    'css': css(),
-    'javascript': javascript()
-  }[mode]
+  const language = getLanguage(mode)
 
   var Editor
   const state = EditorState.create({
@@ -48,10 +42,22 @@
     },
     doc: prefix + value,
     extensions: [
-      basicSetup,
+      extensions,
       languageConf.of(language),
-      bracketMatching(),
-      closeBrackets(),
+      // emmetExt({
+      //   theme: {
+      //     padding: '0.5rem',
+      //     background: '#111',
+      //     boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
+      //   },
+      //   config: {
+      //     type: 'html',
+      //     syntax: 'html'
+      //   }
+      // }),
+      // cssPeek({
+      //   css
+      // }),
       keymap.of([
         defaultTabBinding,
         { 
@@ -132,6 +138,8 @@
     dispatch('change', value) 
   }
 
+  let element
+
 </script>
 
 <svelte:window 
@@ -140,7 +148,7 @@
   }}
 />
 
-<div class="codemirror-container {mode}" style="{style}">
+<div bind:this={element} class="codemirror-container {mode}" style="{style}">
   <div in:fade={{ duration: 200 }} bind:this={editorNode} style="min-height:100px"></div>
 </div>
 <!-- {#if docs}
@@ -152,10 +160,10 @@
 
 <style>
 
-  @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
-
   .codemirror-container {
     @apply w-full overflow-x-scroll;
+    font-family: 'Fira Code', serif;
+    height: calc(100vh - 9.5rem);
   }
 
 </style>

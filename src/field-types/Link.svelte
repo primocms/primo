@@ -1,7 +1,6 @@
 <script>
   import axios from 'axios'
   import { createEventDispatcher } from 'svelte'
-  import { makeValidUrl } from '../utils'
   const dispatch = createEventDispatcher()
 
   import TextInput from '../components/inputs/TextInput.svelte'
@@ -23,6 +22,14 @@
   }
 
   $: field.value.url = makeValidUrl(field.value.url)
+
+  const makeValidUrl = (str = '') => {
+    if (str) {
+      return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
+    } else {
+      return ''
+    }
+  }
   
 </script>
 

@@ -11,6 +11,7 @@
 
 	const dispatch = createEventDispatcher()
 
+	import librariesStore from './stores/data/libraries'
 	import tailwind from './stores/data/tailwind'
 	import {id as pageId} from './stores/app/activePage'
 	import {content, styles, fields, wrapper} from './stores/app/activePage'
@@ -24,12 +25,14 @@
 	import {hydrateSite} from './stores/actions'
 
 	export let data
+	export let libraries = []
 	export let role = 'developer'
 	export let saving = false
 	$: $savingStore = saving
 
 	$: $switchEnabled = (role === 'developer') ? true : false
 	$: $userRole = role
+	$: $librariesStore = libraries
 
 	let cachedData
 	$: if (!isEqual(cachedData, data)) {
