@@ -347,7 +347,9 @@
     editorWidth = containerWidth - newPreviewWidth - 16
   } 
 
-  loadSymbol()
+  if (localComponent.symbolID) {
+    loadSymbol() 
+  }
 
 </script>
 
