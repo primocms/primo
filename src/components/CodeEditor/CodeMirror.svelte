@@ -139,9 +139,6 @@
   }
 
   let element
-  $: if (element) {
-    console.log(element.parentElement)
-  } 
 
 </script>
 
