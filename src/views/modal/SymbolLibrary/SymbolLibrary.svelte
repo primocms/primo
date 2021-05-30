@@ -17,6 +17,7 @@
   import { createUniqueID } from '../../../utilities'
   // import { sites } from '../../../../supabase/db'
   import { userRole } from '../../../stores/app'
+  import libraries from '../../../stores/data/libraries'
   import modal from '../../../stores/app/modal'
   import { symbols } from '../../../stores/data/draft'
   import { symbols as actions, emancipateInstances } from '../../../stores/actions'
@@ -140,11 +141,7 @@
       icon: 'clone',
       highlighted: false
     },
-    {
-      id: 'public',
-      label: 'Public Library',
-      icon: 'users',
-    },
+    ...$libraries
   ]
 
   let activeTab = tabs[0]
@@ -152,7 +149,7 @@
   async function getSymbols() {
     window.plausible('Get Public Library')
     // const {data} = await sites.get({ path: 'mateo/public-library' })
-    // $publicSymbols = data.symbols
+    $publicSymbols = $libraries[0]['components']
   }
 
   $: if ($publicSymbols.length === 0 && activeTab === tabs[1]) {
@@ -161,7 +158,6 @@
 
   let hovering = false
   $: tabs[0]['highlighted'] = hovering
-  $: console.log(hovering)
 
 </script>
 
