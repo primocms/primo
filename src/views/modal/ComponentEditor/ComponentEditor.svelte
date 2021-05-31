@@ -1,6 +1,6 @@
 <script>
   import _ from "lodash";
-  import { HSplitPane } from 'svelte-split-pane';
+  import HSplitPane from './HSplitPane.svelte';
   import {createUniqueID} from '../../../utilities'
   import Resizer from './Resizer.svelte'
   import ModalHeader from "../ModalHeader.svelte";

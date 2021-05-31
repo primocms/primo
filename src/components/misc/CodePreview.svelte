@@ -99,7 +99,7 @@
 
 </script>
 
-<div class="h-full flex flex-col lg:pl-2">
+<div class="h-full flex flex-col">
   <div
     class="preview-container flex-1 bg-white"
     class:loading
