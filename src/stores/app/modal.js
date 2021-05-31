@@ -35,7 +35,7 @@ const modalTypes = {
   'SYMBOL_LIBRARY' : {
     route: 'symbols',
     header: {
-      title: 'Symbol Library',
+      title: 'Component Library',
       icon: 'fas fa-clone'
     },
     variants: 'fullscreen',

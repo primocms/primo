@@ -13,7 +13,7 @@ export const modalTypes = {
   'SYMBOL_LIBRARY' : {
     component: SymbolLibrary,
     header: {
-      title: 'Symbol Library',
+      title: 'Component Library',
       icon: 'fas fa-clone'
     },
     variants: 'fullscreen',

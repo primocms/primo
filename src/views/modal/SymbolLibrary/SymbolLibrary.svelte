@@ -256,7 +256,7 @@
             titleEditable={false}
             bind:hovering
             on:copy={() => {
-              window.plausible('Copy Symbol', { props: { id: symbol.id } })
+              window.plausible('Copy Component', { props: { id: symbol.id } })
               copySymbol(symbol)
             }}
               buttons={[
