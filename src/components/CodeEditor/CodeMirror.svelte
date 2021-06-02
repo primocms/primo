@@ -31,7 +31,6 @@
   export let autofocus
   export let debounce
   export let selection = 0
-  export let css = ''
 
   const language = getLanguage(mode)
 
@@ -44,20 +43,17 @@
     extensions: [
       extensions,
       languageConf.of(language),
-      // emmetExt({
-      //   theme: {
-      //     padding: '0.5rem',
-      //     background: '#111',
-      //     boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
-      //   },
-      //   config: {
-      //     type: 'html',
-      //     syntax: 'html'
-      //   }
-      // }),
-      // cssPeek({
-      //   css
-      // }),
+      mode === 'html' ? emmetExt({
+        theme: {
+          padding: '0.5rem',
+          background: '#111',
+          boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
+        },
+        config: {
+          type: mode,
+          syntax: mode
+        }
+      }) : [],
       keymap.of([
         defaultTabBinding,
         { 
