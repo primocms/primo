@@ -332,24 +332,12 @@
     }
   }
 
-  let ogPreviewWidth
-  let newPreviewWidth
-  let containerWidth
-  let editorWidth
-  let resizingPreview = false
-  function resizePreview(x) {
-    if (!resizingPreview) {
-      resizingPreview = true
-      newPreviewWidth = ogPreviewWidth
-      editorWidth = newPreviewWidth
-    } 
-    newPreviewWidth = newPreviewWidth - x
-    editorWidth = containerWidth - newPreviewWidth - 16
-  } 
-
   if (localComponent.symbolID && $switchEnabled) {
     loadSymbol() 
   }
+
+  let editorWidth = localStorage.getItem('editorWidth') || '66%'
+  let previewWidth = localStorage.getItem('previewWidth') || '33%'
 
 </script>
 
@@ -374,9 +362,13 @@
   {/if}
 </ModalHeader>
 
-<HSplitPane>
+<HSplitPane leftPaneSize={editorWidth} rightPaneSize={previewWidth} on:resize={({detail}) => {
+  const { left, right } = detail
+  localStorage.setItem('editorWidth', left)
+  localStorage.setItem('previewWidth', right)
+}}>
   <div slot="left" class="h-full">
-    <div class="mb-4 lg:mb-0 w-full h-full" style="width:{editorWidth}px">
+    <div class="mb-4 lg:mb-0 w-full h-full">
       <div class="flex flex-col h-full overflow-y-scroll">
         {#if $switchEnabled}
           {#if !disabled}
@@ -568,7 +560,7 @@
       </div>
     </div>
   </div>
-  <div slot="right" class="w-full h-full">
+  <div slot="right" class="w-full h-full overflow-hidden">
     <CodePreview
       view="small"
       {loading}

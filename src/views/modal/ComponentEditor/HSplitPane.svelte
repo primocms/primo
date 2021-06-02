@@ -41,30 +41,36 @@
   }
 
   const onMouseMoveLeft = (e) => {
-    dispatch('mousedown', e)
-      e.preventDefault();
-      if (e.button !== 0) return;
-      var delta = {
-        x: e.clientX - md.e.clientX,
-        y: e.clientY - md.e.clientY
-      };
-      // Prevent negative-sized elements
-      delta.x = Math.min(
-        Math.max(delta.x, -(md.firstWidth + md.centerWidth)), 
-        md.secondWidth + md.centerWidth
-      );
+    // assumes no center column for now
+    const width = parseInt(right.style.width) / parseInt(left.style.width) / 2 * 100
+    dispatch('resize', {
+      right: Math.round(width) + '%',
+      left: Math.round(100 - width) + '%'
+    })
+    // dispatch('mousedown', e)
+    e.preventDefault();
+    if (e.button !== 0) return;
+    var delta = {
+      x: e.clientX - md.e.clientX,
+      y: e.clientY - md.e.clientY
+    };
+    // Prevent negative-sized elements
+    delta.x = Math.min(
+      Math.max(delta.x, -(md.firstWidth + md.centerWidth)), 
+      md.secondWidth + md.centerWidth
+    );
 
-      if ($$slots.center) {
-        rightSeparator.style.left = md.firstWidth + (delta.x/2) + (md.centerWidth - (delta.x/2)) + "px"
-        left.style.width = md.firstWidth + (delta.x/2) + "px";
-        center.style.width = md.centerWidth + (delta.x/2) + "px";
-        right.style.width = md.secondWidth - delta.x + "px";
-      } else {
-        leftSeparator.style.left = md.firstWidth + delta.x
-        left.style.width = md.firstWidth + delta.x + "px";
-        right.style.width = md.secondWidth - delta.x + "px";
-      }
-      updateCallback();
+    if ($$slots.center) {
+      rightSeparator.style.left = md.firstWidth + (delta.x/2) + (md.centerWidth - (delta.x/2)) + "px"
+      left.style.width = md.firstWidth + (delta.x/2) + "px";
+      center.style.width = md.centerWidth + (delta.x/2) + "px";
+      right.style.width = md.secondWidth - delta.x + "px";
+    } else {
+      leftSeparator.style.left = md.firstWidth + delta.x
+      left.style.width = md.firstWidth + delta.x + "px";
+      right.style.width = md.secondWidth - delta.x + "px";
+    }
+    updateCallback();
   }
 
   const onMouseDownRight = (e) => {

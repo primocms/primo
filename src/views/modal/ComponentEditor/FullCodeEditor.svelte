@@ -6,9 +6,6 @@
   import { CodeMirror } from "../../../components";
   import { onMobile } from "../../../stores/app/misc";
 
-  export let refreshEditorPane = function() {
-
-  }
   export let disabled = false;
 
   export let variants = "";
