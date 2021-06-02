@@ -29,7 +29,6 @@ const modalTypes = {
       icon: 'fas fa-code'
     },
     variants: 'fullscreen',
-    showSwitch: true,
     disabledBgClose: true
   },
   'SYMBOL_LIBRARY' : {
@@ -39,7 +38,6 @@ const modalTypes = {
       icon: 'fas fa-clone'
     },
     variants: 'fullscreen',
-    showSwitch: true 
   },
   'SITE_PAGES' : {
     route: 'pages',
@@ -56,7 +54,6 @@ const modalTypes = {
     //   icon: 'fas fa-database'
     // },
     variants: 'max-w-3xl',
-    showSwitch: true,
     disabledBgClose: true
   },
   'STYLES' : {
@@ -97,6 +94,7 @@ export default {
     store.update(s => ({ 
       ...initialState, 
       ...typeToShow,
+      ...modalOptions,
       type,
     }))
   },

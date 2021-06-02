@@ -38,7 +38,7 @@
   </div>
   <div class="flex-1 flex justify-end">
     <slot></slot>
-    <!-- {#if $userRole === 'developer' && $modal.showSwitch}
+    {#if $userRole === 'developer' && $modal.showSwitch}
       <div class="content xyz-in" id="ide-toggle">
         <label class="switch">
           <input type="checkbox" bind:checked={$switchEnabled}>
@@ -49,7 +49,7 @@
           <span class="sr-only">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</span>
         </label>
       </div>
-    {/if} -->
+    {/if}
     {#if button && button.onclick}
       <button class="xyz-in button primary" disabled={button.loading || button.disabled} on:click={button.onclick}>
         {#if button.icon}

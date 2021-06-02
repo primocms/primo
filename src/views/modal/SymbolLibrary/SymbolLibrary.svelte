@@ -42,6 +42,8 @@
           },
         },
       },
+    }, {
+      showSwitch: true
     })
   }
 

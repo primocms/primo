@@ -8,7 +8,7 @@ export const modalTypes = {
       icon: 'fas fa-code'
     },
     variants: 'fullscreen',
-    showSwitch: true
+    // showSwitch: true
   },
   'SYMBOL_LIBRARY' : {
     component: SymbolLibrary,
@@ -17,7 +17,7 @@ export const modalTypes = {
       icon: 'fas fa-clone'
     },
     variants: 'fullscreen',
-    showSwitch: true 
+    // showSwitch: true 
   },
   'SITE_PAGES' : {
     component: SitePages,
@@ -34,7 +34,7 @@ export const modalTypes = {
     //   icon: 'fas fa-database'
     // },
     variants: 'max-w-3xl',
-    showSwitch: true 
+    // showSwitch: true 
   },
   'STYLES' : {
     component: Styles,
