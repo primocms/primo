@@ -19,7 +19,6 @@
 	import {saving as savingStore, showKeyHint, loadingSite, onMobile} from './stores/app/misc'
 	import {createSite} from './const'
 
-	// import site from './stores/data/site'
 	import {pages} from './stores/data/draft'
 	import site from './stores/data/site'
 	import {hydrateSite} from './stores/actions'

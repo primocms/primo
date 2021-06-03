@@ -30,52 +30,57 @@
   role="navigation"
   aria-label="toolbar"
   id="primo-toolbar"
-  class=""
   class:mounted>
   <div class="container menu-container">
-    <div
-      class="navbar-menu justify-between flex-1"
-      >
-        <div class="w-full flex justify-start space-x-2">
-          <div class="flex flex-row lg:block">
-            <PrimoButton variants="py-2" on:signOut />
-          </div>
-          {#each buttons as group}
-            <div class="flex flex-row">
-              {#each group as button}
-                <ToolbarButton {...button} />
-              {/each}
-            </div>
+    <div class="left">
+      <PrimoButton variants="py-2" on:signOut />
+      {#each buttons as group}
+        <div class="buttons">
+          {#each group as button}
+            <ToolbarButton {...button} />
           {/each}
         </div>
+      {/each}
     </div>
     <div class="primary-buttons">
       {#if $userRole === 'developer'}
-      <div class="content" id="ide-toggle">
-        <label class="switch">
-          <input type="checkbox" bind:checked={$switchEnabled} on:click={() => dispatch('toggleView')}>
-          <span class="slider round" class:code={$switchEnabled}>
-            <svg id="cms" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-              <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-            </svg>
-            <svg id="ide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-          </span>
-          <span class="sr-only">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</span>
-        </label>
-        {#if !$onMobile}
-          <div class="tooltip lg:block w-24">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</div>
-        {/if}
-      </div>
-    {/if}
+        <div class="content" id="ide-toggle">
+          <label class="switch">
+            <input type="checkbox" bind:checked={$switchEnabled} on:click={() => dispatch('toggleView')}>
+            <span class="slider" class:code={$switchEnabled}>
+              <svg id="cms" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+              </svg>
+              <svg id="ide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </span>
+            <span class="sr-only">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</span>
+          </label>
+          {#if !$onMobile}
+            <div class="tooltip">Switch to {$switchEnabled ? 'CMS' : 'IDE'}</div>
+          {/if}
+        </div>
+      {/if}
       <slot />
     </div>
   </div>
 </nav>
 
 <style>
+  .navbar-menu {
+    flex: 1;
+  }
+  .left {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+  .left .buttons {
+    display: flex;
+    flex-direction: row;
+  }
   .content {
     position: relative;
     display: flex;
@@ -118,6 +123,7 @@
     transition: .4s;
     display: flex;
     align-items: center;
+    border-radius: 34px;
   }
 
   .slider svg {
@@ -142,6 +148,7 @@
   }
 
   .slider:before {
+    border-radius: 50%;
     position: absolute;
     content: "";
     height: 20px;
@@ -164,14 +171,6 @@
   input:checked + .slider:before {
     transform: translateX(24px);
     transition: .1s;
-  }
-
-  .slider.round {
-    border-radius: 34px;
-  }
-
-  .slider.round:before {
-    border-radius: 50%;
   }
 
   .menu-container {
@@ -219,6 +218,7 @@
     left: 50%;
     transform: translateX(-50%);
     top: calc(100% + 0.75rem);
+    width: 6rem;
   }
 
   .button-container:hover .tooltip, .button-container:focus .tooltip, .sub-buttons:hover, .tooltip.active {
@@ -239,5 +239,11 @@
     margin-left: -7px;
   }
 
+
+  @media (min-width: 1024px) {
+    .tooltip {
+      display: block;
+    }
+  }
 
 </style>

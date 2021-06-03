@@ -2,23 +2,18 @@
   import {fade} from 'svelte/transition'
   import { onMount, createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
-  import { SelectOne, TextInput } from "../../../components/inputs";
+  import { TextInput } from "../../../components/inputs";
   import { PrimaryButton } from "../../../components/buttons";
 
   import { router } from 'tinro'
-  // import { navigate } from "svelte-routing";
-  import { wrapInStyleTags, convertFieldsToData } from '../../../utils'
-  import { styles as siteStyles } from '../../../stores/data/draft'
   import modal from '../../../stores/app/modal'
-  import components from '../../../stores/app/components'
-  import {processors} from '../../../component'
-  import {getSymbol, getTailwindConfig, getAllFields, buildPagePreview} from '../../../stores/helpers'
+  import {buildPagePreview} from '../../../stores/helpers'
   import {site} from '../../../stores/data/draft'
   import 'requestidlecallback-polyfill'
 
   export let page
   export let active = false
-  export let disableAdd = falses
+  export let disableAdd = false
 
   let preview = ''
   buildPreview()

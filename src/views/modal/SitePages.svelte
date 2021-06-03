@@ -140,7 +140,7 @@
 <ModalHeader icon="fas fa-th-large" title="Pages" />
 
 {#if breadcrumbs}
-  <div in:fade class="breadcrumbs flex text-sm p-2 font-bold text-gray-200">
+  <div in:fade class="breadcrumbs">
     {#each breadcrumbs as {label, path}, i }
       <div class="breadcrumb" on:click={() => currentPath}>
         <button on:click={() => currentPath = path} class:underline={breadcrumbs.length !== i+1} class="font-semibold">{label}</button>
@@ -149,7 +149,7 @@
   </div>
 {/if}
 
-<ul class="grid grid-cols-2 gap-4 mb-4 xyz-in" xyz="fade stagger stagger-1">
+<ul class="page-items xyz-in" xyz="fade stagger stagger-1">
   {#each listedPages as page (page.id)}
     <PageItem
       {page}
@@ -202,11 +202,21 @@
 
 
 <style>
+  ul.page-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .breadcrumbs {
+    display: flex;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 700;
+    color: rgb(229, 231, 235);
+  }
   .breadcrumb:not(:last-child):after {
     content: '/';
     @apply mx-2 no-underline;
-  }
-  li {
-    @apply list-none;
   }
 </style>

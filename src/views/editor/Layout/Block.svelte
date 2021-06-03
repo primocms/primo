@@ -1,6 +1,6 @@
 <script>
   import _ from 'lodash'
-  import { tick, createEventDispatcher } from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   import {fade} from 'svelte/transition'
   const dispatch = createEventDispatcher()
 
@@ -10,7 +10,6 @@
   import ComponentNode from './ComponentNode.svelte'
   import BlockButtons from './BlockButtons.svelte'
   import { createDebouncer } from '../../../utils'
-  const slowDebounce = createDebouncer(1000)
 
   import { focusedNode } from '../../../stores/app'
   import {onMobile,unsaved} from '../../../stores/app/misc'
@@ -274,10 +273,6 @@
 
 <style>
   .block {
-    @apply relative;
-
-    .block-buttons-container {
-      @apply pointer-events-none absolute top-0 left-0 right-0 bottom-0 z-30;
-    }
+    position: relative;
   }
 </style>

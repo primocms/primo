@@ -17,7 +17,6 @@
   export let active = false
   export let buttons = null
   export let type = null
-  export let tooltipStyle = ''
   export let tooltipVariants = ''
 
   let subButtonsActive = false
@@ -84,15 +83,12 @@
   }
 
   .tooltip.sub-buttons:before, .tooltip.sub-buttons:after {
-      left: 5%;
-      @apply border-codeblack;
-      border-top-color: transparent;
-      border-left-color: transparent;
-      border-right-color: transparent;
-    }
-    .tooltip.sub-buttons button:hover, .tooltip.sub-buttons button:focus {
-      @apply bg-gray-700;
-    }
+    left: 5%;
+    @apply border-codeblack;
+    border-top-color: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
 
   .has-subbuttons {
 
@@ -100,10 +96,13 @@
 
   .has-subbuttons:hover .has-subbuttons:after, .has-subbuttons:focus .has-subbuttons:after {
     content: '';
-        @apply h-4 absolute left-0 cursor-default;
-        bottom: -1rem;
-        right: -1rem;
-    }
+    height: 1rem;
+    position: absolute;
+    left: 0;
+    cursor: default;
+    bottom: -1rem;
+    right: -1rem;
+  }
 
   .tooltip {
     @apply absolute text-center text-gray-100 font-bold bg-gray-800 px-4 py-2 text-sm pointer-events-none invisible opacity-0 transition-opacity duration-200;
@@ -144,13 +143,9 @@
       @apply bg-gray-800 transition-colors duration-200;
     }
 
-    button.key-hint {
-        @apply opacity-100 transition-opacity duration-100;
-      }
-      button.key-hint + i {
-        @apply opacity-0 transition-opacity duration-100;
-      }
-
+  button.key-hint {
+    @apply opacity-100 transition-opacity duration-100;
+  }
 
   button[disabled] {
     @apply text-gray-700 bg-codeblack cursor-default transition-colors duration-200;
