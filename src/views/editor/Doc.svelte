@@ -13,17 +13,23 @@
     return childPage || rootPage
   }
 
-  function hydrateInstance(block, symbols, ...args) {
-    const { fields } = block.value
+  function hydrateInstance(block, symbols) {
     const symbol = find(symbols, ['id', block.symbolID])
-    const instance = {
+    // overwrite the symbol field values
+    return {
       ...block,
       value: {
         ...symbol.value,
-        fields
+        fields: symbol.value.fields.map(field => {
+          const originalField = find(block.value.fields, ['id', field.id]) || find(symbol.value.fields, ['id', field.id]) || { value: '' }
+          return {
+            ...field,
+            fields: originalField.fields,
+            value: originalField.value
+          }
+        })
       }
     }
-    return instance
   }
 
   let element;

@@ -32,7 +32,8 @@ export function convertFieldsToData(fields) {
     return field;
   })
 
-  return _.chain(parsedFields).keyBy("key").mapValues("value").value();
+
+  return _.chain(parsedFields).keyBy("key").mapValues("value").value()
 }
 
 // Lets us debounce from reactive statements

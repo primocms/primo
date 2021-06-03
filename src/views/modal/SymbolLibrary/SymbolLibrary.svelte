@@ -70,18 +70,6 @@
     return symbol.id + symbol.value.html + symbol.value.css
   }
 
-  function createInstance(symbol) {
-    const instanceID = createUniqueID()
-    return {
-      type: 'component',
-      id: instanceID,
-      symbolID: symbol.id,
-      value: {
-        fields: symbol.value.fields
-      },
-    }
-  }
-
   let LZ
   async function copySymbol(symbol) {
     if (!navigator.clipboard) {

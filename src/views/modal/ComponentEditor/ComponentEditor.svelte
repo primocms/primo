@@ -188,7 +188,7 @@
     modal.show("COMPONENT_EDITOR", {
       component: symbol,
       header: {
-        title: `Edit ${symbol.title || "Symbol"}`,
+        title: `Edit ${symbol.title || "Component"}`,
         icon: "fas fa-th-large",
         button: {
           icon: "fas fa-check",
@@ -196,7 +196,7 @@
           onclick: async (symbol) => {
             loading = true;
             symbols.update(symbol)
-            modal.hide();
+            modal.hide()
           },
         },
       },
