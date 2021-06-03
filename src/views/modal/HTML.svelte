@@ -34,7 +34,7 @@
   async function updateHtmlWithFieldData(rawHTML) {
     const allFields = getAllFields()
     const data = await convertFieldsToData(allFields, 'all')
-    const finalHTML = await processors(rawHTML, data)
+    const finalHTML = await processors.html(rawHTML, data)
     return finalHTML
   }
 
