@@ -24,7 +24,7 @@
           const originalField = find(block.value.fields, ['id', field.id]) || find(symbol.value.fields, ['id', field.id]) || { value: '' }
           return {
             ...field,
-            fields: originalField.fields,
+            fields: field.type === 'repeater' ? field.fields : originalField.fields,
             value: originalField.value
           }
         })
