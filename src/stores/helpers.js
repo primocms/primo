@@ -152,9 +152,9 @@ export async function buildPagePreview({ page, site, separate = false }) {
         ${twConfig}
       </script>`
 
-      return `<html hidden>${html}</html>`;
+      return `<html hidden class="primo-page">${html}</html>`;
     } else {
-      return `<html>${html}</html>`
+      return `<html class="primo-page">${html}</html>`
     }
   }
 
