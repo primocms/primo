@@ -49,6 +49,7 @@
     }, 100)
   }
   $: disableLinks($content)
+
 </script>
 
 <div bind:this={element} class="primo-page" style="border-top: 48px solid rgb(20,20,20)">

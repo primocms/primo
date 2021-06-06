@@ -140,7 +140,7 @@
 
 <svelte:window 
   on:resize={() => {
-    Editor.setSize(null, editorNode.clientHeight)
+    // Editor.setSize(null, editorNode.clientHeight)
   }}
 />
 

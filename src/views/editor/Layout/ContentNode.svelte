@@ -65,14 +65,8 @@
         FloatingMenu.configure({
           element: floatingMenu,
         }),
-        OrderedList,
         KeyboardShortcuts,
-        BulletList,
-        ListItem,
-        Blockquote,
-        CodeBlock,
         Image, 
-        Dropcursor
 			],
       content: block.value.html,
       onTransaction() {

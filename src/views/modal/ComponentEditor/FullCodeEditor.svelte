@@ -130,11 +130,11 @@
     {/if}
   </div>
 {:else}
-  <HSplitPane {leftPaneSize} {centerPaneSize} {rightPaneSize} bind:resetSize updateCallback={() => {
-    // console.log('HSplitPane Updated!');
-  }}>
-    <div slot="left">
-      <h2>HTML</h2>
+  <HSplitPane {leftPaneSize} {centerPaneSize} {rightPaneSize} bind:resetSize>
+    <div slot="left" class="tabs">
+      <button class:tab-hidden={leftPaneSize === '0'} on:click={() => toggleTab(0)}>
+        <span>HTML</span>
+      </button>
       <CodeMirror
         autofocus
         mode="html"
@@ -142,12 +142,14 @@
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({detail}) => toggleTab(detail)}
-        on:change={({ detail }) => dispatch('htmlChange')}
-        on:save={() => dispatch('save')}
+        on:change={() => dispatch('htmlChange')}
+        on:save
         docs="https://handlebarsjs.com/guide/" />
     </div>
-    <div slot="center">
-      <h2>CSS</h2>
+    <div slot="center" class="tabs">
+      <button class:tab-hidden={centerPaneSize === '0'} on:click={() => toggleTab(1)}>
+        <span>CSS</span>
+      </button>
       <CodeMirror
         autofocus
         on:tab-switch={({detail}) => toggleTab(detail)}
@@ -155,11 +157,13 @@
         bind:value={css}
         mode="css"
         {disabled}
-        on:change={({ detail }) => dispatch('cssChange')}
-        on:save={() => dispatch('save')} />
+        on:change={() => dispatch('cssChange')}
+        on:save />
     </div>
-    <div slot="right">
-      <h2>JS</h2>
+    <div slot="right" class="tabs">
+      <button class:tab-hidden={rightPaneSize === '0'} on:click={() => toggleTab(2)}>
+        <span>JS</span>
+      </button>
       <CodeMirror
         autofocus
         on:tab-switch={({detail}) => toggleTab(detail)}
@@ -167,8 +171,8 @@
         bind:value={js}
         mode="javascript"
         {disabled}
-        on:change={({ detail }) => dispatch('jsChange')}
-        on:save={() => dispatch('save')} />
+        on:change={() => dispatch('jsChange')}
+        on:save />
     </div>
   </HSplitPane>
 {/if}
@@ -177,17 +181,6 @@
 <style>
   [slot] {
     width: 100%;
-  }
-  h2 {
-    font-size: 0.75rem;
-    color: white;
-    text-align: center;
-    padding: 0.5rem 0;
-    font-weight: 600;
-    overflow: hidden;
-  }
-  .tabs {
-    /* height: 35px; */
   }
 
   .tabs ul {
@@ -198,21 +191,35 @@
     @apply flex-1 border-gray-900 text-xs font-bold;
   }
 
-  .tabs ul li button {
-    @apply w-full text-center py-2 outline-none text-xs font-bold;
+  .tabs button {
+    @apply text-white w-full text-center py-2 outline-none text-xs font-bold z-10;
 
+    &.tab-hidden {
+      height: 100%;
+      position: absolute;
+      background: #111;
+      transition: background 0.1s 0.05s;
+
+      &:hover {
+        background: rgb(248,68,73);
+      }
+
+      span {
+        transform: rotate(270deg);
+        display: block;
+      }
+    }
   }
 
   .tabs ul li:first-child {
-      border-top-left-radius: 5px;
-    }
-    .tabs ul li:last-child {
-      border-top-right-radius: 5px;
-    }
+    border-top-left-radius: 5px;
+  }
+  .tabs ul li:last-child {
+    border-top-right-radius: 5px;
+  }
 
   .tabs ul li.is-active {
-      @apply bg-codeblack text-white;
-    }
-
+    @apply bg-codeblack text-white;
+  }
 
 </style>

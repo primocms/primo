@@ -146,11 +146,11 @@
 
   let left, center, right;
   export let leftPaneSize = $$slots.center ? '33%' : '66%';
-  export let minLeftPaneSize = '0';
+  export let minLeftPaneSize = '1.5rem';
   export let centerPaneSize = '33%';
-  export let minCenterPaneSize = '0';
+  export let minCenterPaneSize = '1.5rem';
   export let rightPaneSize = $$slots.center ? '33%' : '66%';
-  export let minRightPaneSize = '0';
+  export let minRightPaneSize = '1.5rem';
   
   $: leftPaneSize && resetSize();
   $: rightPaneSize && resetSize();
@@ -238,6 +238,9 @@
         right: 0;
         content: '';
     }
+  .left, .center, .right {
+    position: relative;
+  }
   div.left {
       width: var(--left-panel-size);
       min-width: var(--min-left-panel-size);
