@@ -34,15 +34,18 @@
 
   let element;
 
-  async function disableLinks(content) {
+  // Disable the links on the page that don't navigate to a page within primo
+  // TODO: prevent navigating away from site 
+  // prevent navigating to pages that don't exist
+  async function disableLinks(_) {
     if (!element) return
     setTimeout(() => {
       element.querySelectorAll('a').forEach(link => {
-        link.setAttribute('data-tinro-ignore', '');
-        link.onclick = function(e) {
-          const confirm = window.confirm(`You're navigating away from your site. Continue?`)
-          if (!confirm) {
+        if (window.location.host !== link.host) {
+          link.setAttribute('data-tinro-ignore', '');
+          link.onclick = (e) => {
             e.preventDefault()
+            window.open(link.href, '_blank')
           }
         }
       })
