@@ -4,4 +4,3 @@ container/public/build/
 container/public/preview/
 .vscode
 .idea
-package-lock.json
