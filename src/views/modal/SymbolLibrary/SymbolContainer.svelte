@@ -60,7 +60,8 @@
   $: mounted && processCSS(symbol.value.css)
   function processCSS(raw = '') {
     if (!raw) return
-    const cachedCSS = $components[raw]
+    const cacheKey = symbol.id + raw // to avoid getting html cached with irrelevant data
+    const cachedCSS = $components[cacheKey]
     if (cachedCSS) {
       css = cachedCSS
     } else {

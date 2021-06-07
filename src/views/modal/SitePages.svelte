@@ -214,6 +214,7 @@
     line-height: 1.25rem;
     font-weight: 700;
     color: rgb(229, 231, 235);
+    margin-bottom: 1rem;
   }
   .breadcrumb:not(:last-child):after {
     content: '/';
