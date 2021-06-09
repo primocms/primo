@@ -29,10 +29,26 @@
   export let disabled = false
   export let style = ''
   export let autofocus
-  export let debounce
+  export let debounce = false
   export let selection = 0
 
   const language = getLanguage(mode)
+  function getEmmetConfig(type) {
+    switch (type) {
+      case 'css':
+        return {
+          type: 'stylesheet',
+          syntax: 'css'
+        };
+      case 'html':
+        return {
+          type: 'markup',
+          syntax: 'html'
+        };
+      default:
+        throw `Invalid type: ${type}. Expected 'stylesheet' or 'markup'`
+    }
+  }
 
   var Editor
   const state = EditorState.create({
@@ -43,17 +59,14 @@
     extensions: [
       extensions,
       languageConf.of(language),
-      // mode === 'html' ? emmetExt({
-      //   theme: {
-      //     padding: '0.5rem',
-      //     background: '#111',
-      //     boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
-      //   },
-      //   config: {
-      //     type: mode,
-      //     syntax: mode
-      //   }
-      // }) : [],
+      mode !== 'javascript' ? emmetExt({
+        theme: {
+          padding: '0.5rem',
+          background: '#111',
+          boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
+        },
+        config: getEmmetConfig(mode)
+      }) : [],
       keymap.of([
         defaultTabBinding,
         { 
