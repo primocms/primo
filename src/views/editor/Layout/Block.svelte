@@ -155,7 +155,7 @@
       const { top:parentTop, bottom:parentBottom } = container.getBoundingClientRect();
       const topButtons = node.querySelector('.top')
 
-      const shouldSticky = !sticky && top < toolbarHeight && hovering
+      const shouldSticky = top < toolbarHeight && hovering
       const outOfView = parentBottom <= toolbarHeight
       const belowToolbar = parentTop > toolbarHeight || !hovering && sticky
 
@@ -164,12 +164,17 @@
       } else if (belowToolbar || outOfView) { // currently sticky, top is below toolbar
         resetButtons(topButtons)
       } 
+
+      if (node.style.position === 'fixed') {
+        sticky = true
+      } else {
+        sticky = false
+      }
     }
 
     function stickyButtons(node) {
       node.style.position = 'fixed'
       node.style.top = `${toolbarHeight}px`
-      sticky = true
     }
 
     function resetButtons(node) {
