@@ -75,8 +75,7 @@ export default function emmetExt(extConfig : EmmetExt) {
    */
   function getEmmetAbbreviation(state: EditorState) {
     const { from, to } = state.selection.main
-    const {selection, start: selectionStart} = getSelection(state, from, to)
-
+    let {selection, start: selectionStart} = getSelection(state, from, to)
     const info = syntaxInfo(config.syntax, state, from);
     if (!info.context) return null;
     if (info.type === 'stylesheet') {
@@ -84,6 +83,10 @@ export default function emmetExt(extConfig : EmmetExt) {
       if (!info.context.ancestors || !info.context.ancestors.length)
         return null;
     }
+
+    if (selectionStart === 0) { // avoid bug where emmet doesn't work if selection starts at 0
+      selectionStart = null
+    } 
 
     const extraction = extract(selection, selectionStart, {
       lookAhead: info.type !== 'stylesheet',
