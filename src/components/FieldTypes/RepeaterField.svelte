@@ -1,6 +1,6 @@
 <script>
   import _ from "lodash";
-  import pluralize from "pluralize";
+  import pluralize from "../../libraries/pluralize";
   import { fade } from "svelte/transition";
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
@@ -9,8 +9,6 @@
   import { Card } from "../misc";
   import { EditField, GenericField, ImageField } from "../inputs";
   import fieldTypes from "../../stores/app/fieldTypes";
-
-  console.log(pluralize);
 
   export let field;
 
