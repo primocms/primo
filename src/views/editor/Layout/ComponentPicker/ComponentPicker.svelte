@@ -87,9 +87,9 @@
     padding: 2.5rem;
     overflow-x: scroll;
     height: 75vh;
-    background-color: rgba(30, 30, 30, var(--tw-bg-opacity));
+    background-color: rgba(30, 30, 30);
     border-width: 4px;
-    border-color: rgba(248, 68, 73, var(--tw-border-opacity));
+    border-color: rgba(248, 68, 73);
   }
   .buttons {
     display: flex;
