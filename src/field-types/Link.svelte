@@ -37,7 +37,7 @@
       bind:value={field.value.label}
       id="page-label"
       variants="mb-2"
-      label="Title"
+      label="Label"
       placeholder="About Us" />
     <TextInput
       on:input
@@ -49,6 +49,3 @@
   </div>
 </div>
 <slot />
-
-<style>
-</style>
