@@ -1,36 +1,32 @@
 <script>
-  import axios from 'axios'
-  import { createEventDispatcher } from 'svelte'
-  const dispatch = createEventDispatcher()
+  import axios from 'axios';
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
 
-  import TextInput from '../components/inputs/TextInput.svelte'
+  import TextInput from '../components/inputs/TextInput.svelte';
 
   export let field = {
     value: {
-      title: '',
+      label: '',
       url: '',
-      active: false
-    }
-  }
+      active: false,
+    },
+  };
 
   $: if (typeof field.value === 'string' || !field.value) {
     field.value = {
-      title: '',
+      label: '',
       url: '',
-      active: false
-    }
+      active: false,
+    };
+  } else if (field.value.title && !field.value.label) {
+    // Fix old values using `title` instead of `label`
+    field.value = {
+      ...field.value,
+      label: field.value.title,
+    };
   }
 
-  $: field.value.url = makeValidUrl(field.value.url)
-
-  const makeValidUrl = (str = '') => {
-    if (str) {
-      return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
-    } else {
-      return ''
-    }
-  }
-  
 </script>
 
 <div class="flex flex-col">
@@ -38,23 +34,21 @@
   <div class="flex flex-col w-full">
     <TextInput
       on:input
-      bind:value={field.value.title}
+      bind:value={field.value.label}
       id="page-label"
-      autofocus={true}
       variants="mb-2"
       label="Title"
       placeholder="About Us" />
     <TextInput
       on:input
       bind:value={field.value.url}
-      autofocus={true}
       variants="mb-2"
       label="URL"
+      type="url"
       placeholder="about-us" />
   </div>
 </div>
-<slot></slot>
+<slot />
 
 <style>
-
 </style>
