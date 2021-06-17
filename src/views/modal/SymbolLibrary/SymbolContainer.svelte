@@ -1,44 +1,41 @@
 <script>
-  import {Spinner} from '../../../components/misc'
-  import {fade} from 'svelte/transition'
-  import { createEventDispatcher, onMount } from 'svelte';
-  import 'requestidlecallback-polyfill';
+  import { Spinner } from "../../../components/misc";
+  import { fade } from "svelte/transition";
+  import { createEventDispatcher, onMount } from "svelte";
+  import "requestidlecallback-polyfill";
 
   const dispatch = createEventDispatcher();
-  import {createSymbolPreview} from '../../../utils'
+  import { createSymbolPreview } from "../../../utils";
 
-  import {styles as siteStyles, wrapper} from '../../../stores/data/draft'
-  import {styles as pageStyles} from '../../../stores/app/activePage'
-  import { getTailwindConfig } from '../../../stores/helpers';
-  import {processors} from '../../../component'
-  import {getAllFields} from '../../../stores/helpers'
-  import components from '../../../stores/app/components'
-  import {
-    convertFieldsToData
-  } from "../../../utils";
+  import { styles as siteStyles, wrapper } from "../../../stores/data/draft";
+  import { styles as pageStyles } from "../../../stores/app/activePage";
+  import { getTailwindConfig } from "../../../stores/helpers";
+  import { processors } from "../../../component";
+  import { getAllFields } from "../../../stores/helpers";
+  import components from "../../../stores/app/components";
+  import { convertFieldsToData } from "../../../utils";
 
   export let symbol;
-  export let title = symbol.title || '';
-  export let buttons = []
-  export let titleEditable
-  export let loadPreview = true
-  export let hovering = false
+  export let title = symbol.title || "";
+  export let buttons = [];
+  export let titleEditable;
+  export let loadPreview = true;
+  export let hovering = false;
 
-  let editingTitle = false
-  let titleInput
+  let editingTitle = false;
+  let titleInput;
 
   function changeTitle() {
-    editingTitle = false
-    if (title !== symbol.title) {
-      dispatch('update', { title })
-    }
+    editingTitle = false;
+    symbol.title = title;
+    dispatch("update", symbol);
   }
 
-  let iframe
-  let iframeLoaded = false
+  let iframe;
+  let iframeLoaded = false;
 
-  let scale
-  let iframeContainer
+  let scale;
+  let iframeContainer;
   function resizePreview() {
     const { clientWidth: parentWidth } = iframeContainer;
     const { clientWidth: childWidth } = iframe;
@@ -46,119 +43,155 @@
   }
 
   $: if (iframe) {
-    resizePreview()
-  } 
+    resizePreview();
+  }
 
-  let mounted = false
-  let shouldLoadIframe = true
+  let mounted = false;
+  let shouldLoadIframe = true;
   onMount(() => {
-    mounted = true
-    shouldLoadIframe = true
-  })
+    mounted = true;
+    shouldLoadIframe = true;
+  });
 
-  let css
-  $: mounted && processCSS(symbol.value.css)
-  function processCSS(raw = '') {
-    if (!raw) return
-    const cacheKey = symbol.id + raw // to avoid getting html cached with irrelevant data
-    const cachedCSS = $components[cacheKey]
+  let css;
+  $: mounted && processCSS(symbol.value.css);
+  function processCSS(raw = "") {
+    if (!raw) return;
+    const cacheKey = symbol.id + raw; // to avoid getting html cached with irrelevant data
+    const cachedCSS = $components[cacheKey];
     if (cachedCSS) {
-      css = cachedCSS
+      css = cachedCSS;
     } else {
-      const tailwind = getTailwindConfig(true)
+      const tailwind = getTailwindConfig(true);
       const encapsulatedCss = `#component-${symbol.id} {${raw}}`;
-      processors.css(encapsulatedCss, { tailwind }).then(res => {
-        css = res || '/**/'
-        $components[raw] = css
-      })
+      processors.css(encapsulatedCss, { tailwind }).then((res) => {
+        css = res || "/**/";
+        $components[raw] = css;
+      });
     }
   }
 
-  let html
-  $: mounted && processHTML(symbol.value.html)
-  function processHTML(raw = '') {
-    if (!raw) return 
-    const cachedHTML = $components[raw]
+  let html;
+  $: mounted && processHTML(symbol.value.html);
+  function processHTML(raw = "") {
+    if (!raw) return;
+    const cachedHTML = $components[raw];
     if (cachedHTML) {
-      html = cachedHTML
+      html = cachedHTML;
     } else {
       const allFields = getAllFields(symbol.value.fields);
       const data = convertFieldsToData(allFields);
-      processors.html(raw, data).then(res => {
-        html = res
-        $components[raw] = html
-      })
+      processors.html(raw, data).then((res) => {
+        html = res;
+        $components[raw] = html;
+      });
     }
   }
 
-  let js
-  $: mounted && processJS(symbol.value.js)
+  let js;
+  $: mounted && processJS(symbol.value.js);
   function processJS(raw) {
     if (!raw) {
-      js = `//` // set js to something to component renders
+      js = `//`; // set js to something to component renders
     } else {
-      const allFields = getAllFields(symbol.value.fields)
-      const data = convertFieldsToData(allFields)
+      const allFields = getAllFields(symbol.value.fields);
+      const data = convertFieldsToData(allFields);
       const finalJS = `
         const primo = {
           id: '${symbol.id}',
           data: ${JSON.stringify(data)},
           fields: ${JSON.stringify(allFields)}
         }
-        ${raw.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)}`
-      js = finalJS
+        ${raw.replace(
+          /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
+          `import $1 from 'https://cdn.skypack.dev/$2'`
+        )}`;
+      js = finalJS;
     }
   }
 
-  $: preview = buildPreview(html, css, js)
+  $: preview = buildPreview(html, css, js);
   function buildPreview(html, css, js) {
-    if (!mounted || !html && !js && !css) return ``
-    const parentStyles = $siteStyles.final + $pageStyles.final
+    if (!mounted || (!html && !js && !css)) return ``;
+    const parentStyles = $siteStyles.final + $pageStyles.final;
     const previewCode = createSymbolPreview({
       id: symbol.id,
       html,
       wrapper: $wrapper,
       js,
       css: parentStyles + css,
-      tailwind: getTailwindConfig()
+      tailwind: getTailwindConfig(),
     });
 
-    return previewCode
+    return previewCode;
   }
 
-  let active = false
+  let active = false;
 
 </script>
 
 <svelte:window on:resize={resizePreview} />
-<div class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded" in:fade={{ delay: 250, duration: 200 }} id="symbol-{symbol.id}">
+<div
+  class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
+  in:fade={{ delay: 250, duration: 200 }}
+  id="symbol-{symbol.id}"
+>
   {#if titleEditable}
     <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
-      <input class="cursor-pointer" type="text" bind:this={titleInput} bind:value={title} on:blur={changeTitle} on:focus={() => editingTitle = true}/>
+      <input
+        class="cursor-pointer"
+        type="text"
+        bind:this={titleInput}
+        bind:value={title}
+        on:blur={changeTitle}
+        on:focus={() => (editingTitle = true)}
+      />
     </form>
   {/if}
   <div class="flex justify-between items-center shadow-sm">
-    <p class="component-label text-sm" on:click={() => titleInput && titleInput.focus()} class:editing={editingTitle}>
+    <p
+      class="component-label text-sm"
+      on:click={() => titleInput && titleInput.focus()}
+      class:editing={editingTitle}
+    >
       {#if titleEditable}
-        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+        <svg
+          class="w-4 h-4 mr-1"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        ><path
+            d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
+          />
+          <path
+            fill-rule="evenodd"
+            d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+            clip-rule="evenodd"
+          /></svg>
       {/if}
       <span>{title}</span>
     </p>
     <div class="flex">
       {#each buttons as button}
-        <button title={button.title} class="p-2 {button.class}" class:focus={button.focus && !active}
+        <button
+          title={button.title}
+          class="p-2 {button.class}"
+          class:focus={button.focus && !active}
           on:mouseenter={() => {
-            hovering = true
-          }} 
+            hovering = true;
+          }}
           on:mouseleave={() => {
-            hovering = false
-          }} 
+            hovering = false;
+          }}
           on:click={() => {
-            active = true
-            button.onclick()
-          }}>
+            active = true;
+            button.onclick();
+          }}
+        >
           {#if active && button.clicked}
-            <span class="mr-2 text-sm font-semibold">{button.clicked.label}</span>
+            <span
+              class="mr-2 text-sm font-semibold"
+            >{button.clicked.label}</span>
             {@html button.clicked.svg}
           {:else}
             {#if button.label}
@@ -170,19 +203,32 @@
       {/each}
     </div>
   </div>
-  <div class="bg-gray-100 flex-1 flex flex-col relative" bind:this={iframeContainer}>
+  <div
+    class="bg-gray-100 flex-1 flex flex-col relative"
+    bind:this={iframeContainer}
+  >
     {#if !iframeLoaded}
-      <div class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
+      <div
+        class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50"
+      >
         <Spinner />
       </div>
     {/if}
     {#if loadPreview}
-      <iframe on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} style="transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={preview}></iframe>
+      <iframe
+        on:load={() => (iframeLoaded = true)}
+        class:fadein={iframeLoaded}
+        style="transform: scale({scale})"
+        class="w-full shadow-lg"
+        bind:this={iframe}
+        title="component preview"
+        srcdoc={preview}
+      />
     {/if}
-    </div>
+  </div>
 </div>
 
-<style> 
+<style>
   .component-wrapper {
     @apply relative shadow;
     height: 40vh;
@@ -196,7 +242,9 @@
   button.focus {
     @apply bg-primored;
   }
-  button:hover {@apply bg-gray-800;}
+  button:hover {
+    @apply bg-gray-800;
+  }
   .buttons {
     @apply flex justify-end;
   }
@@ -217,7 +265,7 @@
     height: 1.5rem;
   }
   .component-label:before {
-    content: '';
+    content: "";
     display: inline-block;
     height: 1rem;
     width: 0;
@@ -231,9 +279,10 @@
     opacity: 0;
   }
   .editing:before {
-    content: '';
+    content: "";
     width: 4px;
     margin-right: 5px;
     transition: margin-right 0.25s, width 0.25s;
   }
+
 </style>
