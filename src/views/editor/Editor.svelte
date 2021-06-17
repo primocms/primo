@@ -1,30 +1,30 @@
 <script>
-  import Mousetrap from 'mousetrap'
-  import {flatten} from 'lodash'
-  import { createEventDispatcher } from 'svelte'
+  import Mousetrap from 'mousetrap';
+  import { flatten } from 'lodash';
+  import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher()
-  
-  import Toolbar from './Toolbar.svelte'
-  import ToolbarButton from './ToolbarButton.svelte'
-  import Doc from './Doc.svelte'
+  const dispatch = createEventDispatcher();
 
-  import site from '../../stores/data/site'
-  import {focusedNode,switchEnabled} from '../../stores/app'
-  import {undone} from '../../stores/data/draft'
-  import {saving,unsaved,loadingSite} from '../../stores/app/misc'
-  import modal from '../../stores/app/modal'
-  import {undoSiteChange,redoSiteChange} from '../../stores/actions'
-  import {id, content} from '../../stores/app/activePage'
+  import Toolbar from './Toolbar.svelte';
+  import ToolbarButton from './ToolbarButton.svelte';
+  import Doc from './Doc.svelte';
 
-  let unlockingPage = false
-  let updatingDatabase = false
+  import site from '../../stores/data/site';
+  import { focusedNode, switchEnabled } from '../../stores/app';
+  import { undone } from '../../stores/data/draft';
+  import { saving, unsaved, loadingSite } from '../../stores/app/misc';
+  import modal from '../../stores/app/modal';
+  import { undoSiteChange, redoSiteChange } from '../../stores/actions';
+  import { id, content } from '../../stores/app/activePage';
+
+  let unlockingPage = false;
+  let updatingDatabase = false;
 
   // setup key-bindings
   Mousetrap.bind(['mod+s'], (e) => {
-    e.preventDefault()
-    savePage()
-  })
+    e.preventDefault();
+    savePage();
+  });
 
   const editorButtons = [
     [
@@ -32,17 +32,23 @@
         id: 'pages',
         title: 'Pages',
         icon: 'th-large',
-        onclick: () => modal.show('SITE_PAGES') 
-      }
+        onclick: () => modal.show('SITE_PAGES'),
+      },
     ],
     [
       {
-        title: 'Content', 
-        icon: 'database', 
-        onclick: () => modal.show('FIELDS')
-      }
-    ]
-  ]
+        title: 'Content',
+        icon: 'database',
+        onclick: () => modal.show('FIELDS'),
+      },
+      {
+        id: 'toolbar--components',
+        title: 'Component Library',
+        icon: 'clone',
+        onclick: () => modal.show('SYMBOL_LIBRARY'),
+      },
+    ],
+  ];
 
   const developerButtons = [
     [
@@ -50,8 +56,8 @@
         id: 'toolbar--pages',
         title: 'Pages',
         icon: 'th-large',
-        onclick: () => modal.show('SITE_PAGES') 
-      }
+        onclick: () => modal.show('SITE_PAGES'),
+      },
     ],
     [
       {
@@ -64,44 +70,77 @@
         id: 'toolbar--css',
         title: 'CSS',
         icon: 'fab fa-css3',
-        onclick: () => modal.show('STYLES')
+        onclick: () => modal.show('STYLES'),
       },
       {
         id: 'toolbar--fields',
         title: 'Fields',
         icon: 'database',
-        onclick: () => modal.show('FIELDS')
-      }
-    ]
-  ]
+        onclick: () => modal.show('FIELDS'),
+      },
+      {
+        id: 'toolbar--components',
+        title: 'Component Library',
+        icon: 'clone',
+        onclick: () => modal.show('SYMBOL_LIBRARY'),
+      },
+    ],
+  ];
 
   function savePage() {
-    dispatch('save')
+    dispatch('save');
   }
 
-  $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons
+  $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons;
 
-  // Show 'are you sure you want to leave prompt' when closing window 
+  // Show 'are you sure you want to leave prompt' when closing window
   $: if ($unsaved && window.location.hostname !== 'localhost') {
-    window.onbeforeunload = function(e){
+    window.onbeforeunload = function (e) {
       e.returnValue = '';
     };
   } else {
-    window.onbeforeunload = function(e){
+    window.onbeforeunload = function (e) {
       delete e['returnValue'];
     };
   }
 
 </script>
 
-<Toolbar on:signOut buttons={$loadingSite ? [] : toolbarButtons} on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
-  <ToolbarButton id="undo" title="Undo" icon="undo-alt" on:click={undoSiteChange} buttonStyles="mr-1 bg-gray-600" />
+<Toolbar
+  on:signOut
+  buttons={$loadingSite ? [] : toolbarButtons}
+  on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
+  <ToolbarButton
+    id="undo"
+    title="Undo"
+    icon="undo-alt"
+    on:click={undoSiteChange}
+    buttonStyles="mr-1 bg-gray-600" />
   {#if $undone.length > 0}
-    <ToolbarButton id="redo" title="Redo" icon="redo-alt" on:click={redoSiteChange} buttonStyles="mr-1 bg-gray-600" />
+    <ToolbarButton
+      id="redo"
+      title="Redo"
+      icon="redo-alt"
+      on:click={redoSiteChange}
+      buttonStyles="mr-1 bg-gray-600" />
   {/if}
-  <ToolbarButton id="save" title="Save" icon="save" key="s" loading={$saving} on:click={savePage} disabled={!$unsaved} buttonStyles="mr-1 bg-gray-600" />
-  <ToolbarButton type="primo" title="Build" icon="fas fa-hammer" active={false} on:click={() => modal.show('BUILD')} disabled={updatingDatabase} variant="bg-primored text-gray-900 hover:bg-gray-400" />
-
+  <ToolbarButton
+    id="save"
+    title="Save"
+    icon="save"
+    key="s"
+    loading={$saving}
+    on:click={savePage}
+    disabled={!$unsaved}
+    buttonStyles="mr-1 bg-gray-600" />
+  <ToolbarButton
+    type="primo"
+    title="Build"
+    icon="fas fa-hammer"
+    active={false}
+    on:click={() => modal.show('BUILD')}
+    disabled={updatingDatabase}
+    variant="bg-primored text-gray-900 hover:bg-gray-400" />
 </Toolbar>
 
-<Doc />  
+<Doc />
