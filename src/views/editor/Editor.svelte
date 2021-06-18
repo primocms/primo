@@ -41,12 +41,6 @@
         icon: 'database',
         onclick: () => modal.show('FIELDS'),
       },
-      {
-        id: 'toolbar--components',
-        title: 'Component Library',
-        icon: 'clone',
-        onclick: () => modal.show('SYMBOL_LIBRARY'),
-      },
     ],
   ];
 
