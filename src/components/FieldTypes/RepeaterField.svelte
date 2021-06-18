@@ -1,21 +1,21 @@
 <script>
-  import _ from "lodash";
-  import pluralize from "../../libraries/pluralize";
-  import { fade } from "svelte/transition";
-  import { createEventDispatcher } from "svelte";
+  import _ from 'lodash';
+  import pluralize from '../../libraries/pluralize';
+  import { fade } from 'svelte/transition';
+  import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
-  import { createUniqueID } from "../../utilities";
-  import { Card } from "../misc";
-  import { EditField, GenericField, ImageField } from "../inputs";
-  import fieldTypes from "../../stores/app/fieldTypes";
+  import { createUniqueID } from '../../utilities';
+  import { Card } from '../misc';
+  import { EditField, GenericField, ImageField } from '../inputs';
+  import fieldTypes from '../../stores/app/fieldTypes';
 
   export let field;
 
   function addRepeaterItem() {
     const keys = field.fields.map((f) => f.key);
     fieldValues = [...fieldValues, createSubfield()];
-    dispatch("input");
+    onInput();
   }
 
   function removeRepeaterItem(itemIndex) {
@@ -26,20 +26,20 @@
   function moveRepeaterItem(indexOfItem, direction) {
     const item = fieldValues[indexOfItem];
     const withoutItem = fieldValues.filter((_, i) => i !== indexOfItem);
-    if (direction === "up") {
+    if (direction === 'up') {
       fieldValues = [
         ...withoutItem.slice(0, indexOfItem - 1),
         item,
         ...withoutItem.slice(indexOfItem - 1),
       ];
-    } else if (direction === "down") {
+    } else if (direction === 'down') {
       fieldValues = [
         ...withoutItem.slice(0, indexOfItem + 1),
         item,
         ...withoutItem.slice(indexOfItem + 1),
       ];
     } else {
-      console.error("Direction must be up or down");
+      console.error('Direction must be up or down');
     }
   }
 
@@ -47,7 +47,7 @@
     return field.fields.map((subfield) => ({
       ...subfield,
       id: createUniqueID(),
-      value: "",
+      value: '',
     }));
   }
 
@@ -67,7 +67,8 @@
         {}
       )
     );
-    dispatch("input");
+    console.log(field.value);
+    dispatch('input');
   }
 
 </script>
@@ -79,16 +80,13 @@
       <div
         class="repeater-item"
         id="repeater-{field.key}-{i}"
-        in:fade={{ duration: 100 }}
-      >
+        in:fade={{ duration: 100 }}>
         <div
-          class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded"
-        >
+          class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded">
           {#if i !== 0}
             <button
               title="Move {field.label} up"
-              on:click={() => moveRepeaterItem(i, 'up')}
-            >
+              on:click={() => moveRepeaterItem(i, 'up')}>
               <i class="fas fa-arrow-up" />
             </button>
           {/if}
@@ -96,29 +94,25 @@
             <button
               class="mr-2"
               title="Move {field.label} down"
-              on:click={() => moveRepeaterItem(i, 'down')}
-            >
+              on:click={() => moveRepeaterItem(i, 'down')}>
               <i class="fas fa-arrow-down" />
             </button>
           {/if}
           <button
             class="text-red-400 hover:text-red-500"
             title="Delete {field.label} item"
-            on:click={() => removeRepeaterItem(i)}
-          >
+            on:click={() => removeRepeaterItem(i)}>
             <i class="fas fa-trash" />
           </button>
         </div>
         {#each fieldValue as subfield}
           <div
             class="repeater-item-field"
-            id="repeater-{field.key}-{i}-{subfield.key}"
-          >
+            id="repeater-{field.key}-{i}-{subfield.key}">
             <svelte:component
               this={_.find($fieldTypes, ['id', subfield.type]).component}
               field={subfield}
-              on:input={onInput}
-            />
+              on:input={onInput} />
           </div>
         {/each}
       </div>

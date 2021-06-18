@@ -30,6 +30,7 @@
       class="inline-block flex-1"
       on:input={({ target }) => {
         value = target.value;
+        dispatch('input', value);
       }} />
   </div>
 </label>
