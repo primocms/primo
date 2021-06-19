@@ -14,7 +14,10 @@
     wrapper as siteHTML,
     pages as pagesStore,
   } from '../../stores/data/draft';
-  import { updateSiteWrapper } from '../../stores/actions';
+  import {
+    updateSiteWrapper,
+    updateActivePageWrapper,
+  } from '../../stores/actions';
 
   let localPageHTML = cloneDeep($pageHTML);
   let localSiteHTML = cloneDeep($siteHTML);
@@ -42,42 +45,8 @@
   }
 
   async function saveFinalHTML() {
-    // if page html has changed, dispatch action to update it
-    // if site html has changed, dispatch action to update it
-
-    if (localPageHTML.head.raw !== $pageHTML.head.raw) {
-      // updateActivePageWrapper(localPageHTML)
-    }
-
-    if (localSiteHTML.head.raw !== $siteHTML.head.raw) {
-      updateSiteWrapper(localSiteHTML);
-    }
-
-    // const wrapper = {
-    //   head: {
-    //     raw: localPageHTML.head.raw,
-    //     final: await updateHtmlWithFieldData(localPageHTML.head.raw),
-    //   },
-    //   below: {
-    //     raw: localPageHTML.below.raw,
-    //     final: await updateHtmlWithFieldData(localPageHTML.below.raw),
-    //   },
-    // };
-
-    // pages.update($id, (page) => ({
-    //   ...page,
-    //   wrapper,
-    // }));
-
-    // $siteHTML.head.raw = localSiteHTML.head.raw;
-    // $siteHTML.head.final = await updateHtmlWithFieldData(
-    //   localSiteHTML.head.raw
-    // );
-    // $siteHTML.below.raw = localSiteHTML.below.raw;
-    // $siteHTML.below.final = await updateHtmlWithFieldData(
-    //   localSiteHTML.below.raw
-    // );
-
+    updateActivePageWrapper(localPageHTML);
+    updateSiteWrapper(localSiteHTML);
     $unsaved = true;
   }
 

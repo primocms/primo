@@ -22,6 +22,23 @@ export async function hydrateSite(data) {
   stores.symbols.set(data.symbols)
 }
 
+export async function updateActivePageWrapper(newPageHTML) {
+  const wrapper = {
+    head: {
+      raw: newPageHTML.head.raw,
+      final: await updateHtmlWithFieldData(newPageHTML.head.raw),
+    },
+    below: {
+      raw: newPageHTML.below.raw,
+      final: await updateHtmlWithFieldData(newPageHTML.below.raw),
+    },
+  };
+  pages.update(get(id), (page) => ({
+    ...page,
+    wrapper,
+  }));
+}
+
 export async function updateSiteWrapper(newSiteHTML) {
   const final = {
     head: await updateHtmlWithFieldData(
