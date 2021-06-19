@@ -1,14 +1,15 @@
 import _ from 'lodash'
-import {get} from 'svelte/store'
-import {getSymbol} from './helpers'
-import {createUniqueID} from '../utilities'
-import {id,content} from './app/activePage'
-import {unsaved} from './app/misc'
-import {focusedNode} from './app/editor'
-import {styles, wrapper, fields} from './data/draft'
+import { get } from 'svelte/store'
+import { getSymbol } from './helpers'
+import { createUniqueID } from '../utilities'
+import { id, content } from './app/activePage'
+import { unsaved } from './app/misc'
+import { focusedNode } from './app/editor'
+import { styles, wrapper, fields } from './data/draft'
 import * as stores from './data/draft'
-import {timeline,undone} from './data/draft'
-import {processors} from '../component'
+import { timeline, undone } from './data/draft'
+import { processors } from '../component'
+import { updateHtmlWithFieldData } from '../utils'
 
 export async function hydrateSite(data) {
   content.set([])
@@ -19,6 +20,28 @@ export async function hydrateSite(data) {
   wrapper.set(data.wrapper)
   fields.set(data.fields)
   stores.symbols.set(data.symbols)
+}
+
+export async function updateSiteWrapper(newSiteHTML) {
+  const final = {
+    head: await updateHtmlWithFieldData(
+      newSiteHTML.head.raw,
+    ),
+    below: await updateHtmlWithFieldData(
+      newSiteHTML.below.raw
+    )
+  }
+  wrapper.set({
+    ...get(wrapper),
+    head: {
+      raw: newSiteHTML.head.raw,
+      final: final.head
+    },
+    below: {
+      raw: newSiteHTML.below.raw,
+      final: final.below
+    }
+  })
 }
 
 export async function emancipateInstances(symbol) {
@@ -57,7 +80,7 @@ export function undoSiteChange() {
   timeline.set(timelineWithoutLastChange)
 
   // Save removed states
-  undone.update(u => ([ ...state.slice(state.length - 1), ...u ]))
+  undone.update(u => ([...state.slice(state.length - 1), ...u]))
 
   // Set Site
   const siteWithoutLastChange = _.last(timelineWithoutLastChange)
@@ -66,16 +89,16 @@ export function undoSiteChange() {
 }
 
 export function redoSiteChange() {
-  const restoredState = [ ...get(timeline), ...get(undone) ]
+  const restoredState = [...get(timeline), ...get(undone)]
   timeline.set(restoredState)
-  hydrateSite(restoredState[restoredState.length-1])
+  hydrateSite(restoredState[restoredState.length - 1])
 }
 
 // experimenting with exporting objects to make things cleaner
 export const symbols = {
   create: (symbol) => {
     unsaved.set(true)
-    stores.symbols.update(s => [ _.cloneDeep(symbol), ...s ])
+    stores.symbols.update(s => [_.cloneDeep(symbol), ...s])
   },
   update: (toUpdate) => {
     unsaved.set(true)
@@ -98,9 +121,9 @@ export const pages = {
     let newPages = _.cloneDeep(currentPages)
     if (path.length > 0) {
       const rootPage = _.find(newPages, ['id', path[0]])
-      rootPage.pages = rootPage.pages ? [ ...rootPage.pages, newpage ] : [ newpage ]
+      rootPage.pages = rootPage.pages ? [...rootPage.pages, newpage] : [newpage]
     } else {
-      newPages = [ ...newPages, newpage ]
+      newPages = [...newPages, newpage]
     }
     stores.pages.set(newPages)
   },

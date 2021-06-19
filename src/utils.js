@@ -5,12 +5,12 @@ import { get } from "svelte/store";
 // import ShortUniqueId from "short-unique-id";
 import { customAlphabet } from 'nanoid'
 import objectPath from "object-path";
-import {createUniqueID} from './utilities'
+import { createUniqueID } from './utilities'
 
-import {id, wrapper as pageWrapper} from './stores/app/activePage'
-import {getAllFields} from './stores/helpers'
+import { id, wrapper as pageWrapper } from './stores/app/activePage'
+import { getAllFields } from './stores/helpers'
 import Handlebars from 'handlebars/dist/handlebars.min.js'
-import {processors} from './component'
+import { processors } from './component'
 
 export function convertFieldsToData(fields) {
   let literalValueFields = fields
@@ -36,6 +36,13 @@ export function convertFieldsToData(fields) {
   return _.chain(parsedFields).keyBy("key").mapValues("value").value()
 }
 
+export async function updateHtmlWithFieldData(rawHTML) {
+  const allFields = getAllFields();
+  const data = await convertFieldsToData(allFields, 'all');
+  const finalHTML = await processors.html(rawHTML, data);
+  return finalHTML;
+}
+
 // Lets us debounce from reactive statements
 export function createDebouncer(time) {
   return _.debounce((val) => {
@@ -43,7 +50,7 @@ export function createDebouncer(time) {
     fn(arg);
   }, time);
 }
- 
+
 export function createSymbolPreview({ id, wrapper, html, css, js, tailwind }) {
   const twConfig = JSON.stringify({
     mode: 'silent',
@@ -118,7 +125,7 @@ export function buildPagePreview(content, tailwind) {
 // make a url string valid
 export const makeValidUrl = (str = '') => {
   if (str) {
-    return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase() 
+    return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase()
   } else {
     return ''
   }

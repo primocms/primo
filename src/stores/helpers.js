@@ -1,13 +1,13 @@
 import _ from 'lodash'
-import {get} from 'svelte/store'
-import {router} from 'tinro'
+import { get } from 'svelte/store'
+import { router } from 'tinro'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
 import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
-import {getCombinedTailwindConfig} from './data/tailwind'
-import {symbols} from './data/draft'
+import { getCombinedTailwindConfig } from './data/tailwind'
+import { symbols, wrapper } from './data/draft'
 import components from './app/components'
-import {wrapInStyleTags,convertFieldsToData} from '../utils'
-import {processors} from '../component'
+import { wrapInStyleTags, convertFieldsToData } from '../utils'
+import { processors } from '../component'
 
 export function getAllFields(componentFields = []) {
   const allFields = _.unionBy(componentFields, get(pageFields), get(siteFields), "key");
@@ -35,19 +35,19 @@ export function getAllFields(componentFields = []) {
     }
   }
 
-  function getActiveLink({value}) {
+  function getActiveLink({ value }) {
     const [currentPage] = get(router).path.split('/').slice(-1)
     return currentPage === value.url
   }
 }
 
 export function getSymbol(symbolID) {
-   return _.find(get(symbols), ['id', symbolID]);
+  return _.find(get(symbols), ['id', symbolID]);
 }
 
 export function getTailwindConfig(asString = false) {
-  const { tailwind:pageTW } = get(pageStyles)
-  const { tailwind:siteTW } = get(siteStyles)
+  const { tailwind: pageTW } = get(pageStyles)
+  const { tailwind: siteTW } = get(siteStyles)
   const combined = getCombinedTailwindConfig(pageTW, siteTW)
   if (asString) {
     return combined
@@ -55,7 +55,7 @@ export function getTailwindConfig(asString = false) {
   let asObj = {}
   try {
     asObj = new Function(`return ${combined}`)()
-  } catch(e) {
+  } catch (e) {
     console.warn(e)
   }
   return asObj
@@ -77,10 +77,10 @@ export async function processContent(page, site) {
             ...symbol,
             id: component.id
           }
-        } 
+        }
 
         const cacheKey = component.value.html + JSON.stringify(fields) // to avoid getting html cached with irrelevant data
-        const [ html, css, js ] = await Promise.all([
+        const [html, css, js] = await Promise.all([
           getSavedValue(cacheKey, processHTML),
           getSavedValue(component.value.css, processCSS),
           getSavedValue(component.value.js, processJS),
@@ -173,7 +173,7 @@ async function processHTML({ value }, { data }) {
 }
 
 async function processCSS({ id, value }) {
-  if (!value.css) return `` 
+  if (!value.css) return ``
   const tailwind = getTailwindConfig(true)
   const encapsulatedCss = `#component-${id} {${value.css}}`;
   components.update(c => ({
@@ -191,6 +191,6 @@ async function processJS({ id, value }, { data, fields }) {
       data: ${JSON.stringify(data)},
       fields: ${JSON.stringify(fields)}
     }
-    ${value.js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)}`
+    ${value.js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g, `import $1 from 'https://cdn.skypack.dev/$2'`)}`
   return finalJS
 }
