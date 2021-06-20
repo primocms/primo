@@ -1,32 +1,35 @@
 <script>
-  import _ from "lodash";
+  import _ from 'lodash';
   import HSplitPane from './HSplitPane.svelte';
-  import {createUniqueID} from '../../../utilities'
-  import Resizer from './Resizer.svelte'
-  import ModalHeader from "../ModalHeader.svelte";
-  import { EditField } from "../../../components/inputs";
-  import { PrimaryButton } from "../../../components/buttons";
-  import { Tabs, Card } from "../../../components/misc";
-  import FullCodeEditor from "./FullCodeEditor.svelte";
-  import { CodePreview } from "../../../components/misc";
-  import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte'
-  import GroupField from '../../../components/FieldTypes/GroupField.svelte'
+  import { createUniqueID } from '../../../utilities';
+  import Resizer from './Resizer.svelte';
+  import ModalHeader from '../ModalHeader.svelte';
+  import { EditField } from '../../../components/inputs';
+  import { PrimaryButton } from '../../../components/buttons';
+  import { Tabs, Card } from '../../../components/misc';
+  import FullCodeEditor from './FullCodeEditor.svelte';
+  import { CodePreview } from '../../../components/misc';
+  import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
+  import GroupField from '../../../components/FieldTypes/GroupField.svelte';
 
+  import { convertFieldsToData, createDebouncer } from '../../../utils';
+
+  import { getCombinedTailwindConfig } from '../../../stores/data/tailwind';
   import {
-    convertFieldsToData,
-    createDebouncer,
-  } from "../../../utils";
-
-  import {getCombinedTailwindConfig} from "../../../stores/data/tailwind"
-  import { styles as siteStyles } from "../../../stores/data/draft";
-  import { styles as pageStyles} from "../../../stores/app/activePage"
-  import { switchEnabled } from "../../../stores/app";
-  import fieldTypes from "../../../stores/app/fieldTypes";
-  import modal from "../../../stores/app/modal";
-  import { createComponent } from "../../../const";
-  import {symbols} from '../../../stores/actions'
-  import {getAllFields,getSymbol} from '../../../stores/helpers'
-  import {processors} from '../../../component'
+    styles as siteStyles,
+    wrapper as siteWrapper,
+  } from '../../../stores/data/draft';
+  import {
+    styles as pageStyles,
+    wrapper as pageWrapper,
+  } from '../../../stores/app/activePage';
+  import { switchEnabled } from '../../../stores/app';
+  import fieldTypes from '../../../stores/app/fieldTypes';
+  import modal from '../../../stores/app/modal';
+  import { createComponent } from '../../../const';
+  import { symbols } from '../../../stores/actions';
+  import { getAllFields, getSymbol } from '../../../stores/helpers';
+  import { processors } from '../../../component';
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
@@ -34,17 +37,16 @@
 
   export let component = createComponent();
   export let header = {
-    label: "Create Component",
-    icon: "fas fa-code",
+    label: 'Create Component',
+    icon: 'fas fa-code',
     button: {
-      icon: "fas fa-plus",
-      label: "Add to page",
+      icon: 'fas fa-plus',
+      label: 'Add to page',
       onclick: (component) => {
-        console.warn('Component not going anywhere', component)
+        console.warn('Component not going anywhere', component);
       },
     },
   };
-
 
   let localComponent = _.cloneDeep(component);
   function saveRawValue(property, value) {
@@ -60,99 +62,107 @@
     {
       id: 'repeater',
       label: 'Repeater',
-      component: RepeaterField
+      component: RepeaterField,
     },
     {
       id: 'group',
       label: 'Group',
-      component: GroupField
+      component: GroupField,
     },
-    ...$fieldTypes
-  ]
+    ...$fieldTypes,
+  ];
 
   let loading = false;
 
   let fields = localComponent.value.fields;
 
   let rawHTML = localComponent.value.html;
-  let finalHTML = ''
+  let finalHTML = '';
   $: compileHtml(rawHTML);
   async function compileHtml(html) {
     loading = true;
-    saveRawValue("html", html);
-    let res = await processors.html(html, componentData)
+    saveRawValue('html', html);
+    let res = await processors.html(html, componentData);
     if (res.error) {
-      disableSave = true
-      res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`
+      disableSave = true;
+      res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`;
     } else {
-      disableSave = false
-      finalHTML = res
+      disableSave = false;
+      finalHTML = res;
     }
     // saveFinalValue("html", finalHTML);
-    if(finalJS) {
-      finalJS = `${finalJS} ` // force preview to reload so JS evaluates over new DOM
+    if (finalJS) {
+      finalJS = `${finalJS} `; // force preview to reload so JS evaluates over new DOM
     }
-    quickDebounce([() => {
-      loading = false
-    }, null])
+    quickDebounce([
+      () => {
+        loading = false;
+      },
+      null,
+    ]);
   }
 
   let rawCSS = localComponent.value.css;
-  let finalCSS = ''
-  $: (async css => {
-    loading = true
-    await compileCSS(css)
-    loading = false
-  })(rawCSS)
+  let finalCSS = '';
+  $: (async (css) => {
+    loading = true;
+    await compileCSS(css);
+    loading = false;
+  })(rawCSS);
   const compileCSS = _.debounce(async (css) => {
-    saveRawValue("css", css);
+    saveRawValue('css', css);
     const encapsulatedCss = `#component-${localComponent.id} {${css}}`;
     const result = await processors.css(encapsulatedCss, {
       html: finalHTML,
-      tailwind: $siteStyles.tailwind
-    })
+      tailwind: $siteStyles.tailwind,
+    });
     if (result.error) {
-      disableSave = true
+      disableSave = true;
     } else if (result) {
-      disableSave = false
-      finalCSS = result
+      disableSave = false;
+      finalCSS = result;
     }
     loading = false;
-  }, 200)
+  }, 200);
 
   let rawJS = localComponent.value.js;
-  let finalJS = ''
+  let finalJS = '';
   $: compileJs(rawJS);
   async function compileJs(js) {
-    finalJS = js ? `
+    finalJS = js
+      ? `
       const primo = {
         id: '${localComponent.id}',
         data: ${JSON.stringify(getData(fields))},
         fields: ${JSON.stringify(getAllFields(fields))}
       }
-      ${js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,`import $1 from 'https://cdn.skypack.dev/$2'`)} 
-    `: ``;
-    saveRawValue("js", js);
-    saveFinalValue("js", finalJS);
+      ${js.replace(
+        /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
+        `import $1 from 'https://cdn.skypack.dev/$2'`
+      )} 
+    `
+      : ``;
+    saveRawValue('js', js);
+    saveFinalValue('js', finalJS);
   }
 
-  let componentData = getData(fields)
-  $: componentData = getData(fields)
+  let componentData = getData(fields);
+  $: componentData = getData(fields);
   function getData(fields) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
     return {
       ...data,
-      id: component.id
-    }
+      id: component.id,
+    };
   }
 
   async function updateHtmlWithFieldData() {
     loading = true;
     finalHTML = await processors.html(rawHTML, getData(fields));
-    saveFinalValue("html", finalHTML);
+    saveFinalValue('html', finalHTML);
     refreshFields();
-    if (rawJS) compileJs(rawJS) // re-run js with new field values
+    if (rawJS) compileJs(rawJS); // re-run js with new field values
     quickDebounce([
       () => {
         loading = false;
@@ -160,19 +170,20 @@
     ]);
   }
 
-  let isSingleUse = false
-  $: isSingleUse = localComponent.type === 'component' && localComponent.symbolID === null 
+  let isSingleUse = false;
+  $: isSingleUse =
+    localComponent.type === 'component' && localComponent.symbolID === null;
   function convertToSymbol() {
-    const newSymbol = { 
-      ...localComponent, 
+    const newSymbol = {
+      ...localComponent,
       id: createUniqueID(),
-      type: 'symbol'
-    }
-    delete newSymbol.symbolID
-    symbols.create(newSymbol)
-    localComponent.symbolID = newSymbol.id
-    header.button.onclick(localComponent)
-    loadSymbol()
+      type: 'symbol',
+    };
+    delete newSymbol.symbolID;
+    symbols.create(newSymbol);
+    localComponent.symbolID = newSymbol.id;
+    header.button.onclick(localComponent);
+    loadSymbol();
   }
 
   function separateFromSymbol() {
@@ -182,21 +193,21 @@
 
   async function loadSymbol() {
     disabled = false;
-    const symbol = getSymbol(localComponent.symbolID)
-    localComponent = _.cloneDeep(symbol)
-    compileCSS(symbol.value.css) // workaround for styles breaking
-    modal.show("COMPONENT_EDITOR", {
+    const symbol = getSymbol(localComponent.symbolID);
+    localComponent = _.cloneDeep(symbol);
+    compileCSS(symbol.value.css); // workaround for styles breaking
+    modal.show('COMPONENT_EDITOR', {
       component: symbol,
       header: {
-        title: `Edit ${symbol.title || "Component"}`,
-        icon: "fas fa-th-large",
+        title: `Edit ${symbol.title || 'Component'}`,
+        icon: 'fas fa-th-large',
         button: {
-          icon: "fas fa-check",
+          icon: 'fas fa-check',
           label: `Draft`,
           onclick: async (symbol) => {
             loading = true;
-            symbols.update(symbol)
-            modal.hide()
+            symbols.update(symbol);
+            modal.hide();
           },
         },
       },
@@ -205,15 +216,15 @@
 
   function addNewField() {
     fields = [...fields, createField()];
-    saveRawValue("fields", fields);
+    saveRawValue('fields', fields);
 
     function createField() {
       return {
         id: createUniqueID(),
-        key: "",
-        label: "",
-        value: "",
-        type: "text",
+        key: '',
+        label: '',
+        value: '',
+        type: 'text',
         fields: [],
       };
     }
@@ -228,16 +239,16 @@
               ...field.fields,
               {
                 id: createUniqueID(),
-                key: "",
-                label: "",
-                value: "",
-                type: "text",
+                key: '',
+                label: '',
+                value: '',
+                type: 'text',
               },
             ]
           : field.fields,
     }));
     updateHtmlWithFieldData();
-    saveRawValue("fields", fields);
+    saveRawValue('fields', fields);
   }
 
   function deleteSubfield(fieldId, subfieldId) {
@@ -252,18 +263,19 @@
           }
     );
     updateHtmlWithFieldData();
-    saveRawValue("fields", fields);
+    saveRawValue('fields', fields);
   }
 
   function deleteField(id) {
     fields = fields.filter((field) => field.id !== id);
     updateHtmlWithFieldData();
-    saveRawValue("fields", fields);
+    saveRawValue('fields', fields);
   }
 
-  function refreshFields() { // necessary to re-render field values in preview (since we're mutating `field`)
+  function refreshFields() {
+    // necessary to re-render field values in preview (since we're mutating `field`)
     fields = fields.filter(Boolean);
-    saveRawValue("fields", fields);
+    saveRawValue('fields', fields);
   }
 
   function setPlaceholderValues() {
@@ -285,59 +297,66 @@
         content: '',
         image: {
           url: 'https://source.unsplash.com/900x600',
-          alt: ''
+          alt: '',
         },
-      }[type] || ""
+      }[type] || ''
     );
   }
 
   const tabs = [
     {
-      id: "code",
-      label: "Code",
-      icon: "code",
+      id: 'code',
+      label: 'Code',
+      icon: 'code',
     },
     {
-      id: "fields",
-      label: "Fields",
-      icon: "database",
+      id: 'fields',
+      label: 'Fields',
+      icon: 'database',
     },
   ];
 
   let activeTab = tabs[0];
 
-  let disabled = false
+  let disabled = false;
   $: disabled = !!localComponent.symbolID;
-  let disableSave = false
+  let disableSave = false;
 
   function getFieldComponent(field) {
-    const fieldType = _.find(allFieldTypes, ['id', field.type])
+    const fieldType = _.find(allFieldTypes, ['id', field.type]);
     if (fieldType && fieldType.component) {
-      return fieldType.component
+      return fieldType.component;
     } else {
-      return null
+      return null;
     }
   }
 
-
-  function moveEditField({ i:indexOfItem, direction }) {
-    const item = fields[indexOfItem]
-    const withoutItem = fields.filter((_, i) => i !== indexOfItem)
+  function moveEditField({ i: indexOfItem, direction }) {
+    const item = fields[indexOfItem];
+    const withoutItem = fields.filter((_, i) => i !== indexOfItem);
     if (direction === 'up') {
-      fields = [...withoutItem.slice(0,indexOfItem-1), item, ...withoutItem.slice(indexOfItem-1)];
+      fields = [
+        ...withoutItem.slice(0, indexOfItem - 1),
+        item,
+        ...withoutItem.slice(indexOfItem - 1),
+      ];
     } else if (direction === 'down') {
-      fields = [...withoutItem.slice(0, indexOfItem+1), item, ...withoutItem.slice(indexOfItem+1)];
+      fields = [
+        ...withoutItem.slice(0, indexOfItem + 1),
+        item,
+        ...withoutItem.slice(indexOfItem + 1),
+      ];
     } else {
-      console.error('Direction must be up or down')
+      console.error('Direction must be up or down');
     }
   }
 
   if (localComponent.symbolID && $switchEnabled) {
-    loadSymbol() 
+    loadSymbol();
   }
 
-  let editorWidth = localStorage.getItem('editorWidth') || '66%'
-  let previewWidth = localStorage.getItem('previewWidth') || '33%'
+  let editorWidth = localStorage.getItem('editorWidth') || '66%';
+  let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
 </script>
 
@@ -345,28 +364,27 @@
   {...header}
   warn={() => {
     if (!_.isEqual(localComponent, component)) {
-      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
-      return proceed
-    } else return true
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?');
+      return proceed;
+    } else return true;
   }}
-  button={{  
-    ...header.button,
-    onclick: () => header.button.onclick(localComponent),
-    disabled: disableSave
-  }}>
+  button={{ ...header.button, onclick: () => header.button.onclick(localComponent), disabled: disableSave }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
-      <i class="fas fa-clone mr-1"></i>
+      <i class="fas fa-clone mr-1" />
       <span class="hidden md:inline text-gray-200 font-semibold">Add to Library</span>
     </button>
   {/if}
 </ModalHeader>
 
-<HSplitPane leftPaneSize={editorWidth} rightPaneSize={previewWidth} on:resize={({detail}) => {
-  const { left, right } = detail
-  localStorage.setItem('editorWidth', left)
-  localStorage.setItem('previewWidth', right)
-}}>
+<HSplitPane
+  leftPaneSize={editorWidth}
+  rightPaneSize={previewWidth}
+  on:resize={({ detail }) => {
+    const { left, right } = detail;
+    localStorage.setItem('editorWidth', left);
+    localStorage.setItem('previewWidth', right);
+  }}>
   <div slot="left" class="h-full">
     <div class="mb-4 lg:mb-0 w-full h-full">
       <div class="flex flex-col h-full overflow-y-scroll">
@@ -388,9 +406,9 @@
                     <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                   </svg> -->
                   Edit Component
-              </span>
+                </span>
               </button>
-                <button
+              <button
                 style="min-width: 200px"
                 class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
                 on:click={separateFromSymbol}
@@ -417,13 +435,12 @@
             <div class="flex flex-col">
               {#each fields as field, i (field.id)}
                 <Card id="field-{i}" variants="field-item">
-                  <EditField 
-                    on:delete={() => deleteField(field.id)} 
+                  <EditField
+                    on:delete={() => deleteField(field.id)}
                     isFirst={i === 0}
-                    isLast={i === (fields.length-1)}
-                    {disabled} 
-                    on:move={({ detail:direction }) => moveEditField({ i, direction })}
-                  >
+                    isLast={i === fields.length - 1}
+                    {disabled}
+                    on:move={({ detail: direction }) => moveEditField( { i, direction } )}>
                     <select
                       bind:value={field.type}
                       slot="type"
@@ -522,7 +539,6 @@
                       class="field-button subfield-button"
                       on:click={() => addSubField(field.id)}
                       {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
-  
                   {/if}
                 </Card>
               {/each}
@@ -538,7 +554,10 @@
           <div class="space-y-2 h-full">
             {#each fields as field}
               {#if field.key && getFieldComponent(field)}
-                <div class="field-item shadow" class:repeater={field.key === 'repeater'}  id="field-{field.key}">
+                <div
+                  class="field-item shadow"
+                  class:repeater={field.key === 'repeater'}
+                  id="field-{field.key}">
                   <svelte:component
                     this={getFieldComponent(field)}
                     {field}
@@ -564,14 +583,18 @@
     <CodePreview
       view="small"
       {loading}
-      html={`<div id="component-${localComponent.id}">${finalHTML}</div>`}
+      html={`
+        ${$siteWrapper.head.final}
+        ${$pageWrapper.head.final}
+        <div id="component-${localComponent.id}">${finalHTML}</div>
+        ${$siteWrapper.below.final}
+        ${$pageWrapper.below.final}
+        `}
       css={$siteStyles.final + $pageStyles.final + finalCSS}
-      js={finalJS} 
-      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)}
-    />
+      js={finalJS}
+      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)} />
   </div>
 </HSplitPane>
-
 
 <style>
   .repeater {
@@ -580,11 +603,11 @@
 
   button.convert {
     @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
-    outline-color: rgb(248,68,73);
+    outline-color: rgb(248, 68, 73);
   }
   button.convert:hover {
-      @apply bg-red-700 text-white;
-    }
+    @apply bg-red-700 text-white;
+  }
   .field-item {
     @apply p-4 shadow bg-gray-900 text-gray-200;
   }
@@ -592,29 +615,29 @@
     @apply w-full bg-gray-800 text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
   }
   .field-button:hover {
-      @apply bg-gray-900;
-    }
-    .field-button[disabled] {
-      @apply bg-gray-500;
-      @apply cursor-not-allowed;
-    }
+    @apply bg-gray-900;
+  }
+  .field-button[disabled] {
+    @apply bg-gray-500;
+    @apply cursor-not-allowed;
+  }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
     @apply rounded-sm ml-4 mb-2 mt-2 text-sm py-1 bg-codeblack text-gray-200 transition-colors duration-100 outline-none;
   }
   .field-button.subfield-button:hover {
-      @apply bg-gray-900;
-    }
-    .field-button.subfield-button:focus {
-      @apply bg-gray-800;
-    }
+    @apply bg-gray-900;
+  }
+  .field-button.subfield-button:focus {
+    @apply bg-gray-800;
+  }
 
   input {
     @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
   }
   input:focus {
-      @apply outline-none;
-    }
+    @apply outline-none;
+  }
 
   select {
     @apply w-full p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
