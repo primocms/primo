@@ -69,7 +69,7 @@ export async function processContent(page, site) {
 
         const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
         const data = convertFieldsToData(fields);
-        let component = block
+        let component = _.cloneDeep(block)
 
         if (block.symbolID) {
           const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
