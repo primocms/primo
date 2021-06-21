@@ -1,11 +1,11 @@
 <script>
-  import { fade } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
-  import _ from "lodash";
-  import Container from "./ComponentPickerContainer.svelte";
+  import { fade } from 'svelte/transition';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import _ from 'lodash';
+  import Container from './ComponentPickerContainer.svelte';
 
-  import { symbols } from "../../../../stores/data/draft";
-  import { createUniqueID } from "../../../../utilities";
+  import { symbols } from '../../../../stores/data/draft';
+  import { createUniqueID } from '../../../../utilities';
 
   const dispatch = createEventDispatcher();
 
@@ -15,7 +15,7 @@
   function createInstance(symbol) {
     const instanceID = createUniqueID();
     return {
-      type: "component",
+      type: 'component',
       id: instanceID,
       symbolID: symbol.id,
       value: {
@@ -33,9 +33,9 @@
 
   onMount(() => {
     element.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-      inline: "center",
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center',
     });
   });
 
@@ -48,15 +48,13 @@
       on:click={() => dispatch('remove')}
       type="button"
       xyz="small"
-      aria-label="Close modal"
-    >
+      aria-label="Close modal">
       <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-        />
+          d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
     <button class="button" on:click={() => dispatch('manage')}>
@@ -74,8 +72,7 @@
             loadPreview={mounted}
             buttons={[{ onclick: () => {
                   dispatch('select', createInstance(symbol));
-                }, highlight: true, label: 'Select', svg: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]}
-          />
+                }, highlight: true, label: 'Select', svg: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
         </li>
       {/each}
     </ul>
@@ -122,9 +119,12 @@
   button.close {
     transform: translateX(-1rem) translateY(-2rem);
     color: rgba(245, 245, 245, var(--tw-text-opacity));
+    height: 2rem;
+    width: 2rem;
+    color: white;
 
     &:hover {
-      color: rgba(248, 68, 73, var(--tw-text-opacity));
+      color: var(--color-primored);
     }
   }
 
