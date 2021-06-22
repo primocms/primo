@@ -125,6 +125,7 @@
     --tw-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
     --tw-ring-offset-shadow: 0 0 #0000;
     --tw-ring-shadow: 0 0 #0000;
+    --tw-text-opacity: 1;
   }
 
 </style>
