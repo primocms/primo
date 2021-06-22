@@ -1,9 +1,11 @@
-import {EditorView} from "@codemirror/basic-setup"
-import {StateField, EditorState} from "@codemirror/state"
-import {Tooltip, showTooltip} from "@codemirror/tooltip"
-import {keymap} from "@codemirror/view"
-import expand, { extract, Config } from 'emmet';
-import {syntaxInfo} from './lib/syntax'
+import { EditorView } from "@codemirror/basic-setup"
+import { StateField, EditorState, EditorSelection, TransactionSpec, ChangeSpec } from "@codemirror/state"
+import { Tooltip, showTooltip } from "@codemirror/tooltip"
+import { keymap } from "@codemirror/view"
+import { expand } from './lib/emmet';
+import { extract, Config } from 'emmet';
+import { syntaxInfo } from './lib/syntax'
+import { getSelectionsFromSnippet, tabStopEnd, tabStopStart } from './lib/utils'
 
 export interface EmmetExt {
   theme: Object,
@@ -19,8 +21,8 @@ const ABBR_BLACKLIST = ['{}', '{{}}'];
  * @param config.type - stylesheet | markup
  * @param config.syntax - e.g. css, stylus, scss, html
  */
-export default function emmetExt(extConfig : EmmetExt) {
-  const {theme, config} = extConfig;
+export default function emmetExt(extConfig: EmmetExt) {
+  const { theme, config } = extConfig;
   /**
    * Given a start and end position, parse out a text string from the document.
    * If start and end are the same (no selection), returns the current line.
@@ -69,13 +71,51 @@ export default function emmetExt(extConfig : EmmetExt) {
   }
 
   /**
+   * Search for next tab stop start/end to get the next range
+   * to move the cursor to
+   * @param {EditorState} state
+   * @param {number} start - index to start searching from
+   */
+  function findNextTabStop(state: EditorState, start: number) {
+    const doc = state.doc.toString();
+    const nextTabStopStart = doc.indexOf(tabStopStart, start);
+    const from = nextTabStopStart;
+    if (nextTabStopStart > -1) {
+      let to;
+      const nextEnd = doc.indexOf(tabStopEnd, nextTabStopStart + 1);
+      const nextStart = doc.indexOf(tabStopStart, nextTabStopStart + 1);
+
+      if (nextEnd == -1) {
+        to = nextTabStopStart + 1; // just this single tabStopStart
+      } else if (nextStart == -1) {
+        to = nextEnd + 1 // select through next tabStopEnd
+      } else {
+        to = Math.min(nextStart, nextEnd);
+      }
+      to = to === -1 ? nextTabStopStart + 1 : to;
+
+      let placeholder = '';
+      if (to - from > 2) {
+        placeholder = state.doc.sliceString(from + 1, to - 1);
+      }
+      return {
+        from: nextTabStopStart,
+        to,
+        placeholder,
+      }
+    }
+    return null;
+  }
+
+  /**
    * Attempt to get a valid Emmet abbreviation from the current document selection
    * @param {EditorState} state
    * @returns {{start: number, end: number, abbreviation: string}|null}
    */
   function getEmmetAbbreviation(state: EditorState) {
     const { from, to } = state.selection.main
-    let {selection, start: selectionStart} = getSelection(state, from, to)
+    let { selection, start: selectionStart } = getSelection(state, from, to)
+
     const info = syntaxInfo(config.syntax, state, from);
     if (!info.context) return null;
     if (info.type === 'stylesheet') {
@@ -86,7 +126,7 @@ export default function emmetExt(extConfig : EmmetExt) {
 
     if (selectionStart === 0) { // avoid bug where emmet doesn't work if selection starts at 0
       selectionStart = null
-    } 
+    }
 
     const extraction = extract(selection, selectionStart, {
       lookAhead: info.type !== 'stylesheet',
@@ -123,7 +163,7 @@ export default function emmetExt(extConfig : EmmetExt) {
 
     return false;
   }
-  
+
   const cursorTooltipField = StateField.define<readonly Tooltip[]>({
     create: getCursorTooltips,
 
@@ -152,7 +192,7 @@ export default function emmetExt(extConfig : EmmetExt) {
               let dom = document.createElement("div")
               dom.classList.add('ͼh')
               dom.textContent = expanded
-              return {dom}
+              return { dom }
             }
           }
         }
@@ -173,20 +213,54 @@ export default function emmetExt(extConfig : EmmetExt) {
     keymap.of([{
       key: "Tab",
       run: (view: EditorView) => {
-        const extraction = getEmmetAbbreviation(view.viewState.state);
+        const extraction = getEmmetAbbreviation(view.state);
         if (extraction) {
-          const {abbreviation, start, end} = extraction
-          const expanded = expand(abbreviation, config)
-          view.dispatch({
+          const { abbreviation, start, end } = extraction
+
+          const snippet = expand(abbreviation, config) as string;
+          const snippetPayload = getSelectionsFromSnippet(snippet);
+          const transaction = {
             changes: {
               from: start,
               to: end,
-              insert: expanded
-            }
-          })
+              insert: snippet
+            } as ChangeSpec
+          } as TransactionSpec;
+
+          // position cursor at first position in snippet
+          if (snippetPayload.ranges && snippetPayload.ranges.length) {
+            const range = snippetPayload.ranges[0];
+
+            // replace tab stop start/end characters of first selection
+            const placeholder = range[1] - range[0] > 2 ? view.state.doc.sliceString(range[0] + 1, range[1] - 1) : "";
+            const rangeStart = start + range[0];
+            transaction.selection = EditorSelection.range(rangeStart, rangeStart + placeholder.length);
+            transaction.changes.insert = snippet.slice(0, range[0]) +
+              placeholder +
+              snippet.slice(range[1]) +
+              tabStopStart;
+          }
+          view.dispatch(transaction)
           return true
         }
-        return false
+
+        // if there is an upcoming tabstop, move cursor to it
+        const { from } = view.state.selection.main
+        const nextRange = findNextTabStop(view.state, from);
+        if (nextRange) {
+          // replace tab stop start/end characters of next selection
+          view.dispatch({
+            changes: {
+              from: nextRange.from,
+              to: nextRange.to,
+              insert: nextRange.placeholder,
+            },
+            selection: EditorSelection.range(nextRange.from, nextRange.from + nextRange.placeholder.length),
+          });
+          return true;
+        }
+
+        return false;
       }
     }]),
   ];

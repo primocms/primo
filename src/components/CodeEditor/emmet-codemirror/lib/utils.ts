@@ -287,7 +287,7 @@ export function getInternalState(editor: CodeMirror.Editor): EmmetState {
 /**
  * Finds and collects selections ranges from given snippet
  */
-function getSelectionsFromSnippet(snippet: string, base = 0): { ranges: TextRange[], snippet: string } {
+export function getSelectionsFromSnippet(snippet: string, base = 0): { ranges: TextRange[], snippet: string } {
     // Find and collect selection ranges from snippet
     const ranges: TextRange[] = [];
     let result = '';
@@ -303,7 +303,7 @@ function getSelectionsFromSnippet(snippet: string, base = 0): { ranges: TextRang
             offset = i;
 
             if (ch === tabStopStart) {
-                sel = [base + result.length, base + result.length];
+                sel = [base + result.length, base + result.length + 1];
                 ranges.push(sel);
             } else if (sel) {
                 sel[1] = base + result.length;
