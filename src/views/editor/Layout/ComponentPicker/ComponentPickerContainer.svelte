@@ -155,7 +155,7 @@
       </div>
     {/if}
     {#if loadPreview}
-      <iframe on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} style="box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) width: 100% transform: scale({scale})" class="w-full shadow-lg" bind:this={iframe} title="component preview" srcdoc={preview}></iframe>
+      <iframe on:load={() => iframeLoaded = true} class:fadein={iframeLoaded} style="box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) width: 100% transform: scale({scale})" bind:this={iframe} title="component preview" srcdoc={preview}></iframe>
     {/if}
     </div>
 </div>
