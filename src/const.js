@@ -1,4 +1,4 @@
-import {createUniqueID} from './utilities'
+import { createUniqueID } from './utilities'
 
 export const tailwindConfig = `{
   theme: {
@@ -13,7 +13,6 @@ export const tailwindConfig = `{
 
 export const defaultStyles = {
   raw: `
---gray: #374151;
   
 .primo-copy {
   margin: 0 auto;
@@ -80,37 +79,6 @@ export const defaultStyles = {
     font-size: 2.25rem;
   }
 }
-
-@media (min-width: 640px) {
-  .primo-copy {
-    max-width: 640px;
-  }
-}
-
-@media (min-width: 768px) {
-  .primo-copy {
-    max-width: 768px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .primo-copy {
-    max-width: 1024px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .primo-copy {
-    max-width: 1280px;
-  }
-}
-
-@media (min-width: 1536px) {
-  .primo-copy {
-    max-width: 1536px;
-  }
-}
-
   `,
   final: `\
 /* Default content styles */
@@ -121,36 +89,6 @@ export const defaultStyles = {
   margin-left: auto;
   padding-right: 2rem;
   padding-left: 2rem
-}
-
-@media (min-width: 640px) {
-  .primo-copy {
-    max-width: 640px
-  }
-}
-
-@media (min-width: 768px) {
-  .primo-copy {
-    max-width: 768px
-  }
-}
-
-@media (min-width: 1024px) {
-  .primo-copy {
-    max-width: 1024px
-  }
-}
-
-@media (min-width: 1280px) {
-  .primo-copy {
-    max-width: 1280px
-  }
-}
-
-@media (min-width: 1536px) {
-  .primo-copy {
-    max-width: 1536px
-  }
 }
 
 .primo-copy {
@@ -321,7 +259,7 @@ export const createPage = (id = createUniqueID(), title) => ({
 
 export const createSite = (name) => ({
   name,
-  pages: [ createPage('index', 'Home Page') ],
+  pages: [createPage('index', 'Home Page')],
   styles: DEFAULTS.styles,
   wrapper: DEFAULTS.wrapper,
   fields: [],
@@ -331,7 +269,7 @@ export const createSite = (name) => ({
 
 export const createNewSite = ({ id = '00000', name = 'website' }) => ({
   name,
-  pages: [ createPage('index', 'Home Page') ],
+  pages: [createPage('index', 'Home Page')],
   styles: DEFAULTS.styles,
   wrapper: DEFAULTS.wrapper,
   fields: [],
