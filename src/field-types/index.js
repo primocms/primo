@@ -3,8 +3,9 @@ import Content from './Content.svelte'
 import Switch from './Switch.svelte'
 import URL from './URL.svelte'
 import Link from './Link.svelte'
+import Information from './Information.svelte'
 
-export default [ 
+export default [
   {
     id: 'content',
     label: 'Copy',
@@ -29,5 +30,10 @@ export default [
     id: 'link',
     label: 'Link',
     component: Link
+  },
+  {
+    id: 'info',
+    label: 'Info',
+    component: Information
   }
 ]

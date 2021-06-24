@@ -226,7 +226,10 @@
     {#if showingPage}
       {#each localPageFields as field (field.id)}
         <Card variants="field-item bg-gray-900 shadow-sm mb-2">
-          <EditField on:delete={() => deleteField(field.id)} {disabled}>
+          <EditField
+            minimal={field.type === 'info'}
+            on:delete={() => deleteField(field.id)}
+            {disabled}>
             <select
               bind:value={field.type}
               slot="type"
@@ -236,6 +239,7 @@
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
+            <textarea slot="main" class="info" bind:value={field.value} />
             <input
               class="input label-input"
               type="text"
@@ -323,7 +327,10 @@
     {:else}
       {#each localSiteFields as field (field.id)}
         <Card variants="field-item bg-gray-900 shadow-sm mb-2">
-          <EditField on:delete={() => deleteField(field.id)} {disabled}>
+          <EditField
+            minimal={field.type === 'info'}
+            on:delete={() => deleteField(field.id)}
+            {disabled}>
             <select
               bind:value={field.type}
               slot="type"
@@ -333,6 +340,7 @@
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
+            <textarea slot="main" class="info" bind:value={field.value} />
             <input
               class="input label-input"
               type="text"
@@ -462,6 +470,12 @@
 </div>
 
 <style>
+  textarea.info {
+    width: 100%;
+    background: transparent;
+    height: 7rem;
+    padding: 1rem;
+  }
   .field-item {
     @apply p-4 shadow mb-2 bg-gray-900;
   }
