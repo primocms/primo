@@ -2,7 +2,6 @@
   import _ from 'lodash';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
-  import Resizer from './Resizer.svelte';
   import ModalHeader from '../ModalHeader.svelte';
   import { EditField } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
@@ -440,6 +439,7 @@
                     isFirst={i === 0}
                     isLast={i === fields.length - 1}
                     {disabled}
+                    minimal={field.type === 'info'}
                     on:move={({ detail: direction }) => moveEditField( { i, direction } )}>
                     <select
                       bind:value={field.type}
@@ -450,6 +450,10 @@
                         <option value={field.id}>{field.label}</option>
                       {/each}
                     </select>
+                    <textarea
+                      slot="main"
+                      class="info"
+                      bind:value={field.value} />
                     <input
                       class="input label-input"
                       type="text"
@@ -471,6 +475,7 @@
                     {#if field.fields}
                       {#each field.fields as subfield}
                         <EditField
+                          minimal={field.type === 'info'}
                           variants="ml-4 text-sm"
                           on:delete={() => deleteSubfield(field.id, subfield.id)}
                           {disabled}>
@@ -482,6 +487,10 @@
                               <option value={field.id}>{field.label}</option>
                             {/each}
                           </select>
+                          <textarea
+                            slot="main"
+                            class="info"
+                            bind:value={field.value} />
                           <input
                             class="label-input"
                             type="text"
@@ -507,6 +516,7 @@
                     {#if field.fields}
                       {#each field.fields as subfield}
                         <EditField
+                          minimal={field.type === 'info'}
                           variants="ml-4 text-sm"
                           on:delete={() => deleteSubfield(field.id, subfield.id)}
                           {disabled}>
@@ -518,6 +528,10 @@
                               <option value={field.id}>{field.label}</option>
                             {/each}
                           </select>
+                          <textarea
+                            slot="main"
+                            class="info"
+                            bind:value={field.value} />
                           <input
                             class="label-input"
                             type="text"
