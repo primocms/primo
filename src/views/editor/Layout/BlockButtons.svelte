@@ -172,13 +172,6 @@
    height: 1.25rem/* 20px */;
   }
   .svg-movedown {
-   --tw-translate-x: 0;
-   --tw-translate-y: 0;
-   --tw-rotate: 0;
-   --tw-skew-x: 0;
-   --tw-skew-y: 0;
-   --tw-scale-x: 1;
-   --tw-scale-y: 1;
    --tw-rotate: 180deg;
    width: 1.25rem/* 20px */;
    height: 1.25rem/* 20px */;
