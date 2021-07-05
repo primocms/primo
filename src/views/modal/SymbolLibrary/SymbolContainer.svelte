@@ -1,34 +1,31 @@
 <script>
-  import { Spinner } from "../../../components/misc";
-  import { fade } from "svelte/transition";
-  import { createEventDispatcher, onMount } from "svelte";
-  import "requestidlecallback-polyfill";
+  import { Spinner } from '../../../components/misc';
+  import { fade } from 'svelte/transition';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
-  import { createSymbolPreview } from "../../../utils";
+  import { createSymbolPreview } from '../../../utils';
 
-  import { styles as siteStyles, wrapper } from "../../../stores/data/draft";
-  import { styles as pageStyles } from "../../../stores/app/activePage";
-  import { getTailwindConfig } from "../../../stores/helpers";
-  import { processors } from "../../../component";
-  import { getAllFields } from "../../../stores/helpers";
-  import components from "../../../stores/app/components";
-  import { convertFieldsToData } from "../../../utils";
+  import { styles as siteStyles, wrapper } from '../../../stores/data/draft';
+  import { styles as pageStyles } from '../../../stores/app/activePage';
+  import { getTailwindConfig } from '../../../stores/helpers';
+  import { processors } from '../../../component';
+  import { getAllFields } from '../../../stores/helpers';
+  import components from '../../../stores/app/components';
+  import { convertFieldsToData } from '../../../utils';
 
   export let symbol;
-  export let title = symbol.title || "";
+  export let title = symbol.title || '';
   export let buttons = [];
   export let titleEditable;
   export let loadPreview = true;
   export let hovering = false;
 
-  let editingTitle = false;
-  let titleInput;
-
-  function changeTitle() {
-    editingTitle = false;
+  function changeTitle(e) {
+    document.activeElement.blur();
     symbol.title = title;
-    dispatch("update", symbol);
+    dispatch('update', symbol);
   }
 
   let iframe;
@@ -55,7 +52,7 @@
 
   let css;
   $: mounted && processCSS(symbol.value.css);
-  function processCSS(raw = "") {
+  function processCSS(raw = '') {
     if (!raw) return;
     const cacheKey = symbol.id + raw; // to avoid getting html cached with irrelevant data
     const cachedCSS = $components[cacheKey];
@@ -65,7 +62,7 @@
       const tailwind = getTailwindConfig(true);
       const encapsulatedCss = `#component-${symbol.id} {${raw}}`;
       processors.css(encapsulatedCss, { tailwind }).then((res) => {
-        css = res || "/**/";
+        css = res || '/**/';
         $components[raw] = css;
       });
     }
@@ -73,7 +70,7 @@
 
   let html;
   $: mounted && processHTML(symbol.value.html);
-  function processHTML(raw = "") {
+  function processHTML(raw = '') {
     if (!raw) return;
     const cachedHTML = $components[raw];
     if (cachedHTML) {
@@ -134,43 +131,25 @@
 <div
   class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
   in:fade={{ delay: 250, duration: 200 }}
-  id="symbol-{symbol.id}"
->
-  {#if titleEditable}
-    <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
-      <input
-        class="cursor-pointer"
-        type="text"
-        bind:this={titleInput}
-        bind:value={title}
-        on:blur={changeTitle}
-        on:focus={() => (editingTitle = true)}
-      />
-    </form>
-  {/if}
+  id="symbol-{symbol.id}">
   <div class="flex justify-between items-center shadow-sm">
-    <p
-      class="component-label text-sm"
-      on:click={() => titleInput && titleInput.focus()}
-      class:editing={editingTitle}
-    >
+    <div class="component-label">
       {#if titleEditable}
-        <svg
-          class="w-4 h-4 mr-1"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        ><path
-            d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
-          />
-          <path
-            fill-rule="evenodd"
-            d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-            clip-rule="evenodd"
-          /></svg>
-      {/if}
-      <span>{title}</span>
-    </p>
+        <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
+          <svg
+            class="w-4 h-4 mr-1"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"><path
+              d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+            <path
+              fill-rule="evenodd"
+              d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+              clip-rule="evenodd" /></svg>
+          <input class="cursor-pointer" type="text" bind:value={title} />
+        </form>
+      {:else}<span>{title}</span>{/if}
+    </div>
     <div class="flex">
       {#each buttons as button}
         <button
@@ -186,12 +165,10 @@
           on:click={() => {
             active = true;
             button.onclick();
-          }}
-        >
+          }}>
           {#if active && button.clicked}
             <span
-              class="mr-2 text-sm font-semibold"
-            >{button.clicked.label}</span>
+              class="mr-2 text-sm font-semibold">{button.clicked.label}</span>
             {@html button.clicked.svg}
           {:else}
             {#if button.label}
@@ -205,12 +182,10 @@
   </div>
   <div
     class="bg-gray-100 flex-1 flex flex-col relative"
-    bind:this={iframeContainer}
-  >
+    bind:this={iframeContainer}>
     {#if !iframeLoaded}
       <div
-        class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50"
-      >
+        class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
         <Spinner />
       </div>
     {/if}
@@ -222,8 +197,7 @@
         class="w-full shadow-lg"
         bind:this={iframe}
         title="component preview"
-        srcdoc={preview}
-      />
+        srcdoc={preview} />
     {/if}
   </div>
 </div>
@@ -261,28 +235,22 @@
   }
   .component-label {
     @apply flex items-center flex-1 pl-2;
-    min-width: 3rem;
-    height: 1.5rem;
-  }
-  .component-label:before {
-    content: "";
-    display: inline-block;
-    height: 1rem;
-    width: 0;
-    margin-right: 0;
-    transition: margin-right 0.25s, width 0.25s;
-    background: gainsboro;
-  }
-  input {
-    user-select: none;
-    position: absolute;
-    opacity: 0;
-  }
-  .editing:before {
-    content: "";
-    width: 4px;
-    margin-right: 5px;
-    transition: margin-right 0.25s, width 0.25s;
+
+    form {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      input {
+        width: 100%;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        font-size: 0.85rem;
+      }
+      input:focus {
+        box-shadow: none;
+      }
+    }
   }
 
 </style>
