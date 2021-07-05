@@ -1,6 +1,7 @@
 {
   "arrowParens": "always",
-  "singleQuote": false,
+  "singleQuote": true,
   "tabWidth": 2,
-  "trailingComma": "es5"
+  "trailingComma": "es5",
+  "svelteSortOrder": "options-scripts-markup-styles"
 }
