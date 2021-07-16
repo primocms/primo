@@ -35,9 +35,8 @@
             find(symbol.value.fields, ['id', field.id]) || { value: '' };
           return {
             ...field,
-            fields: ['repeater', 'group'].includes(field.type)
-              ? field.fields
-              : originalField.fields,
+            fields:
+              field.type === 'repeater' ? field.fields : originalField.fields,
             value: originalField.value,
           };
         }),

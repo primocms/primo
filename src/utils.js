@@ -1,25 +1,8 @@
 import _ from "lodash";
-import axios from "axios";
-import { getContext } from "svelte";
-import { get } from "svelte/store";
-// import ShortUniqueId from "short-unique-id";
-import { customAlphabet } from 'nanoid'
-import objectPath from "object-path";
-import { createUniqueID } from './utilities'
-
-import { id, wrapper as pageWrapper } from './stores/app/activePage'
 import { getAllFields } from './stores/helpers'
-import Handlebars from 'handlebars/dist/handlebars.min.js'
 import { processors } from './component'
 
 export function convertFieldsToData(fields) {
-  let literalValueFields = fields
-    .map((f) => ({
-      key: f.key,
-      value: f.type === "number" ? parseInt(f.value) : f.value,
-    }))
-    .reduce((obj, item) => ((obj[item.key] = item.value), obj), {});
-
   const parsedFields = fields.map((field) => {
     if (field.type === "group") {
       if (field.fields) {
