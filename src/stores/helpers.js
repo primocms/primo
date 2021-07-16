@@ -79,10 +79,14 @@ export async function processContent(page, site) {
           }
         }
 
-        const cacheKey = component.value.html + JSON.stringify(fields) // to avoid getting html cached with irrelevant data
+        const cacheKeys = {
+          html: component.value.html + JSON.stringify(fields),
+          css: component.id + component.value.css
+        }
+
         const [html, css, js] = await Promise.all([
-          getSavedValue(cacheKey, processHTML),
-          getSavedValue(component.value.css, processCSS),
+          getSavedValue(cacheKeys.html, processHTML),
+          getSavedValue(cacheKeys.css, processCSS),
           getSavedValue(component.value.js, processJS),
         ])
 

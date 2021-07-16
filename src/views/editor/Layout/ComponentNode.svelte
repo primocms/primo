@@ -44,7 +44,6 @@
     if (!block.symbolID && cachedHTML) {
       html = cachedHTML;
     } else {
-      console.log(block.value.fields);
       const allFields = getAllFields(block.value.fields);
       const data = {
         id: block.id,
@@ -60,7 +59,7 @@
   let css = '';
   $: processCSS(block.value.css);
   function processCSS(raw = '') {
-    const cacheKey = block.id + raw; // to avoid getting html cached with irrelevant data
+    const cacheKey = block.id + raw; // to avoid getting CSS w/ wrong encapsulation
     const cachedCSS = $components[cacheKey];
     if (cachedCSS) {
       css = cachedCSS;
