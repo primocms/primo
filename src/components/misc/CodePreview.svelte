@@ -1,100 +1,101 @@
 <script>
+  import { onMount, onDestroy } from 'svelte';
+  import { set } from 'idb-keyval';
+  import { isEqual } from 'lodash';
+  import { BroadcastChannel } from 'broadcast-channel';
+  import { iframePreview } from './misc';
+  import { onMobile } from '../../stores/app/misc';
 
-  import { onMount, onDestroy } from 'svelte'
-  import { set } from 'idb-keyval'
-  import {isEqual} from 'lodash'
-  import { BroadcastChannel } from 'broadcast-channel'
-  import {iframePreview} from './misc'
-  import {onMobile} from '../../stores/app/misc'
-
-  export let id = ''
-  export let html = ''
-  export let css = ''
-  export let js = ''
-  export let tailwind = {}
-  export let view = 'small'
-  export let loading = false
-  export let hideControls = false
+  export let id = '';
+  export let html = '';
+  export let css = '';
+  export let js = '';
+  export let tailwind = {};
+  export let view = 'small';
+  export let loading = false;
+  export let hideControls = false;
+  export let componentApp;
 
   // used in separate tab preview
-  const BC = new BroadcastChannel('preview')
-  $: BC.postMessage({ id, html, css, js })
-  $: set('preview', { id, html, css, js })
+  const BC = new BroadcastChannel('preview');
+  $: BC.postMessage({ id, html, css, js });
+  $: set('preview', { id, html, css, js });
 
-  let iframe
-  let previewLoaded = false
+  let iframe;
+  let previewLoaded = false;
   $: if (iframe) {
-    iframe.contentWindow.addEventListener("message", ({data}) => {
+    iframe.contentWindow.addEventListener('message', ({ data }) => {
       if (data === 'done') {
-        previewLoaded = true
+        previewLoaded = true;
       }
     });
   }
 
-  let container
-  let iframeLoaded = false
+  let container;
+  let iframeLoaded = false;
 
   function resizePreview() {
     if (view) {
-      const { clientWidth: parentWidth } = container
-      const { clientWidth: childWidth } = iframe
-      const scaleRatio = parentWidth / childWidth
-      iframe.style.transform = `scale(${scaleRatio})`
-      iframe.style.height = 100 / scaleRatio + '%'
+      const { clientWidth: parentWidth } = container;
+      const { clientWidth: childWidth } = iframe;
+      const scaleRatio = parentWidth / childWidth;
+      iframe.style.transform = `scale(${scaleRatio})`;
+      iframe.style.height = 100 / scaleRatio + '%';
     }
   }
 
   function changeView() {
-    iframe.classList.remove('fadein')
+    iframe.classList.remove('fadein');
     setTimeout(() => {
       if (view === 'small') {
-        view = 'large'
+        view = 'large';
         // clientWidth doesn't compute right without this
-        setTimeout(resizePreview, 100)
+        setTimeout(resizePreview, 100);
       } else {
-        iframe.classList.remove('fadein')
-        iframe.style.transform = 'scale(1)'
-        iframe.style.height = '100%'
-        view = 'small'
+        iframe.classList.remove('fadein');
+        iframe.style.transform = 'scale(1)';
+        iframe.style.height = '100%';
+        view = 'small';
       }
-      setTimeout(() => {iframe.classList.add('fadein')}, 100)
-    }, 100)
+      setTimeout(() => {
+        iframe.classList.add('fadein');
+      }, 100);
+    }, 100);
   }
 
-  let interval
+  let interval;
   onMount(() => {
-    interval = setInterval(resizePreview, 500) 
-  })
+    interval = setInterval(resizePreview, 500);
+  });
   onDestroy(() => {
-    set('preview', { html: '', css: '', js: '' })
-    clearInterval(interval)
-  })
+    set('preview', { html: '', css: '', js: '' });
+    clearInterval(interval);
+  });
 
   // Necessary to reload tw config
-  let cachedTailwind = tailwind
-  $: resetIframe(tailwind)
+  let cachedTailwind = tailwind;
+  $: resetIframe(tailwind);
   function resetIframe() {
     if (!isEqual(tailwind, cachedTailwind)) {
-      cachedTailwind = tailwind
-      iframeLoaded = false
+      cachedTailwind = tailwind;
+      iframeLoaded = false;
     }
   }
 
-  $: setIframeContent({ iframeLoaded, html, css, js, tailwind })
-  function setIframeContent({ iframeLoaded, html, css, js, tailwind }) {
+  $: setIframeContent({ iframeLoaded, componentApp });
+  function setIframeContent({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ html, css, js, tailwind })
+      iframe.contentWindow.postMessage({ componentApp });
     }
   }
-
 
   function setLoading(e) {
     if (!iframeLoaded) {
-      iframeLoaded = true
-      return
+      iframeLoaded = true;
+      return;
     }
-    iframeLoaded = false
-    iframe.srcdoc = iframePreview
+    iframeLoaded = false;
+    iframe.srcdoc = iframePreview;
   }
 
 </script>
@@ -103,8 +104,7 @@
   <div
     class="preview-container flex-1 bg-white"
     class:loading
-    bind:this={container}
-  >
+    bind:this={container}>
     {#key JSON.stringify(tailwind)}
       <iframe
         class:scaled={view === 'large'}
@@ -113,8 +113,7 @@
         title="Preview HTML"
         srcdoc={iframePreview}
         class="bg-white w-full h-full"
-        bind:this={iframe}
-      />
+        bind:this={iframe} />
     {/key}
   </div>
   {#if !hideControls}
@@ -146,7 +145,7 @@
 
 <style>
   iframe {
-    @apply w-full border-0 opacity-0 transition-opacity duration-300;
+    @apply w-full border-0 transition-opacity duration-300;
   }
   .fadein {
     @apply opacity-100 duration-300;
@@ -181,4 +180,5 @@
   .footer-buttons button:hover {
     @apply bg-gray-800;
   }
+
 </style>

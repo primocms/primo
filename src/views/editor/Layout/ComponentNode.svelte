@@ -84,22 +84,23 @@
     js: block.value.js,
   });
 
-  async function compileComponentCode() {
+  async function compileComponentCode({ html, css, js }) {
     const data = {
       id: block.id,
       ...convertFieldsToData(getAllFields(block.value.fields)),
     };
-    const res = await processCode(
-      {
-        html: block.value.html,
-        css: block.value.css,
-        js: block.value.js,
-      },
-      data
-    );
-    console.log('ComponentNode', res);
+    const res = await processCode({ html, css, js }, data);
     if (component) component.$destroy();
-    component = new res({ target: node });
+    const blob = new Blob([res], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+
+    const { default: App } = await import(url /* @vite-ignore */);
+    component = new App({
+      target: node,
+      props: {
+        ...data,
+      },
+    });
     // $components[cacheKey] = html;
   }
 
