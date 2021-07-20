@@ -2,6 +2,11 @@ import _ from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 
+export async function processCode(precompiled, data) {
+  const res = await processors.html(precompiled, data)
+  return res
+}
+
 export function convertFieldsToData(fields) {
   const parsedFields = fields.map((field) => {
     if (field.type === "group") {
