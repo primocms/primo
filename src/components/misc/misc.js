@@ -19,10 +19,17 @@ export const iframePreview = `
         }
 
         window.addEventListener('message', ({data}) => {
-          update(data.componentApp)
+          if (data.error) {
+					  document.querySelector('#error').innerHTML = data.error 
+          } else {
+					  document.querySelector('#error').innerHTML = ''
+            update(data.componentApp)
+          }
         }, false)
 		  <\/script>
     </head>
+    <div id="error">
+    </div>
     <body class="primo-page">
     </body>
   </html>

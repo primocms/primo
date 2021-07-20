@@ -80,6 +80,7 @@
   let fields = localComponent.value.fields;
 
   let componentApp;
+  let error;
   $: compileComponentCode({
     html: rawHTML,
     css: rawCSS,
@@ -87,7 +88,11 @@
   });
   async function compileComponentCode({ html, css, js }) {
     const res = await processCode({ html, css, js }, componentData);
+    error = res.error;
     componentApp = res;
+    saveRawValue('html', html);
+    saveRawValue('css', css);
+    saveRawValue('js', js);
   }
 
   let rawHTML = localComponent.value.html;
@@ -383,7 +388,10 @@
       return proceed;
     } else return true;
   }}
-  button={{ ...header.button, onclick: () => header.button.onclick(localComponent), disabled: disableSave }}>
+  button={{ ...header.button, onclick: () => {
+      // header.button.onclick(localComponent)
+      alert('yes');
+    }, disabled: disableSave }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone mr-1" />
@@ -610,7 +618,7 @@
     </div>
   </div>
   <div slot="right" class="w-full h-full overflow-hidden">
-    <CodePreview view="small" {loading} {componentApp} />
+    <CodePreview view="small" {loading} {componentApp} {error} />
     <!-- <CodePreview
       view="small"
       {loading}

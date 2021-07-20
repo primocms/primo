@@ -84,23 +84,27 @@
     js: block.value.js,
   });
 
+  let error = '';
   async function compileComponentCode({ html, css, js }) {
     const data = {
       id: block.id,
       ...convertFieldsToData(getAllFields(block.value.fields)),
     };
     const res = await processCode({ html, css, js }, data);
-    if (component) component.$destroy();
-    const blob = new Blob([res], { type: 'text/javascript' });
-    const url = URL.createObjectURL(blob);
+    if (res.error) {
+      error = res.error;
+    } else {
+      error = '';
+      if (component) component.$destroy();
+      const blob = new Blob([res], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
 
-    const { default: App } = await import(url /* @vite-ignore */);
-    component = new App({
-      target: node,
-      props: {
-        ...data,
-      },
-    });
+      const { default: App } = await import(url /* @vite-ignore */);
+      component = new App({
+        target: node,
+      });
+    }
+
     // $components[cacheKey] = html;
   }
 
@@ -114,6 +118,9 @@
   class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
   id="component-{block.id}"
   transition:fade={{ duration: 100 }} />
+<div>
+  {@html error}
+</div>
 
 <style>
   .component {

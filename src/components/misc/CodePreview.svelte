@@ -15,6 +15,7 @@
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
+  export let error = null;
 
   // used in separate tab preview
   const BC = new BroadcastChannel('preview');
@@ -82,10 +83,10 @@
     }
   }
 
-  $: setIframeContent({ iframeLoaded, componentApp });
-  function setIframeContent({ iframeLoaded, componentApp }) {
+  $: setIframeContent({ iframeLoaded, componentApp, error });
+  function setIframeContent({ iframeLoaded, componentApp, error }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentApp });
+      iframe.contentWindow.postMessage({ componentApp, error });
     }
   }
 
