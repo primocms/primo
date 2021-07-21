@@ -1,5 +1,5 @@
 <script>
-  import { cloneDeep } from 'lodash';
+  import { cloneDeep, isEqual, differenceWith } from 'lodash';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { router } from 'tinro';
@@ -14,95 +14,49 @@
   let mounted = false;
   onMount(() => (mounted = true));
 
-  // $: appendJS(block.value.js, mounted);
-  // function appendJS(js, mounted) {
-  //   if (mounted && js) {
-  //     const allFields = getAllFields(block.value.fields);
-  //     const data = convertFieldsToData(allFields);
-  //     const finalJS = `
-  //       const primo = {
-  //         id: '${block.id}',
-  //         data: ${JSON.stringify(data)},
-  //         fields: ${JSON.stringify(allFields)}
-  //       }
-  //       ${js.replace(
-  //         /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-  //         `import $1 from 'https://cdn.skypack.dev/$2'`
-  //       )}`;
-  //     appendHtml(`#component-${block.id} > [primo-js]`, 'script', finalJS, {
-  //       type: 'module',
-  //     });
-  //     $components[js] = finalJS;
-  //   }
-  // }
-
-  // let html = '';
-  // $: processHTML(block.value.html);
-  // function processHTML(raw = '') {
-  //   const cacheKey = raw + JSON.stringify(block.value.fields); // to avoid getting html cached with irrelevant data
-  //   const cachedHTML = $components[cacheKey];
-  //   if (!block.symbolID && cachedHTML) {
-  //     html = cachedHTML;
-  //   } else {
-  //     const allFields = getAllFields(block.value.fields);
-  //     const data = {
-  //       id: block.id,
-  //       ...convertFieldsToData(allFields),
-  //     };
-  //     processors.html(raw, data).then(async (res) => {
-  //       html = res;
-  //       $components[cacheKey] = html;
-  //     });
-  //   }
-  // }
-
-  // let css = '';
-  // $: processCSS(block.value.css);
-  // function processCSS(raw = '') {
-  //   const cacheKey = block.id + raw; // to avoid getting CSS w/ wrong encapsulation
-  //   const cachedCSS = $components[cacheKey];
-  //   if (cachedCSS) {
-  //     css = cachedCSS;
-  //   } else if (raw) {
-  //     const tailwind = getTailwindConfig(true);
-  //     const encapsulatedCss = `#component-${block.id} {${raw}}`;
-  //     processors.css(encapsulatedCss, { tailwind }).then((res) => {
-  //       css = res;
-  //       $components[cacheKey] = css;
-  //     });
-  //   } else {
-  //     css = ``;
-  //   }
-  // }
-
   let html = '';
   let css = '';
   let js = '';
+  let fields = [];
   $: compileComponentCode({
     html: block.value.html,
     css: block.value.css,
     js: block.value.js,
+    fields: block.value.fields,
   });
 
   let error = '';
-  async function compileComponentCode({ html, css, js }) {
-    const data = {
-      id: block.id,
-      ...convertFieldsToData(getAllFields(block.value.fields)),
-    };
-    const res = await processCode({ html, css, js }, data);
-    if (res.error) {
-      error = res.error;
-    } else {
-      error = '';
-      if (component) component.$destroy();
-      const blob = new Blob([res], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
+  async function compileComponentCode(rawCode) {
+    // workaround for this function re-running anytime something changes on the page
+    // (as opposed to when the code actually changes)
+    if (
+      html !== rawCode.html ||
+      css !== rawCode.css ||
+      js !== rawCode.js ||
+      differenceWith(fields, rawCode.fields, isEqual)
+    ) {
+      html = rawCode.html;
+      css = rawCode.css;
+      js = rawCode.js;
+      fields = rawCode.fields;
+      const data = {
+        id: block.id,
+        ...convertFieldsToData(getAllFields(block.value.fields)),
+      };
+      const res = await processCode(rawCode, data);
+      if (res.error) {
+        error = res.error;
+      } else {
+        error = '';
+        if (component) component.$destroy();
+        const blob = new Blob([res], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
 
-      const { default: App } = await import(url /* @vite-ignore */);
-      component = new App({
-        target: node,
-      });
+        const { default: App } = await import(url /* @vite-ignore */);
+        component = new App({
+          target: node,
+        });
+      }
     }
 
     // $components[cacheKey] = html;

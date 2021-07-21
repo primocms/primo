@@ -85,9 +85,12 @@
     html: rawHTML,
     css: rawCSS,
     js: rawJS,
+    fields,
   });
-  async function compileComponentCode({ html, css, js }) {
-    const res = await processCode({ html, css, js }, componentData);
+  async function compileComponentCode({ html, css, js, fields }) {
+    const allFields = getAllFields(fields);
+    const data = convertFieldsToData(allFields);
+    const res = await processCode({ html, css, js }, data);
     error = res.error;
     componentApp = res;
     saveRawValue('html', html);
@@ -96,98 +99,13 @@
   }
 
   let rawHTML = localComponent.value.html;
-  // let finalHTML = '';
-  // $: compileHtml(rawHTML);
-  // async function compileHtml(html) {
-  //   loading = true;
-  //   saveRawValue('html', html);
-  //   let res = await processors.html(html, componentData);
-  //   console.log('Component Editor', res);
-  //   if (res.error) {
-  //     disableSave = true;
-  //     res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`;
-  //   } else {
-  //     disableSave = false;
-  //     finalHTML = res;
-  //   }
-  //   // saveFinalValue("html", finalHTML);
-  //   if (finalJS) {
-  //     finalJS = `${finalJS} `; // force preview to reload so JS evaluates over new DOM
-  //   }
-  //   quickDebounce([
-  //     () => {
-  //       loading = false;
-  //     },
-  //     null,
-  //   ]);
-  // }
 
   let rawCSS = localComponent.value.css;
-  // let finalCSS = '';
-  // $: (async (css) => {
-  //   loading = true;
-  //   await compileCSS(css);
-  //   loading = false;
-  // })(rawCSS);
-  // const compileCSS = _.debounce(async (css) => {
-  //   saveRawValue('css', css);
-  //   const encapsulatedCss = `#component-${localComponent.id} {${css}}`;
-  //   const result = await processors.css(encapsulatedCss, {
-  //     html: finalHTML,
-  //     tailwind: $siteStyles.tailwind,
-  //   });
-  //   if (result.error) {
-  //     disableSave = true;
-  //   } else if (result) {
-  //     disableSave = false;
-  //     finalCSS = result;
-  //   }
-  //   loading = false;
-  // }, 200);
 
   let rawJS = localComponent.value.js;
-  // let finalJS = '';
-  // $: compileJs(rawJS);
-  // async function compileJs(js) {
-  //   finalJS = js
-  //     ? `
-  //     const primo = {
-  //       id: '${localComponent.id}',
-  //       data: ${JSON.stringify(getData(fields))},
-  //       fields: ${JSON.stringify(getAllFields(fields))}
-  //     }
-  //     ${js.replace(
-  //       /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-  //       `import $1 from 'https://cdn.skypack.dev/$2'`
-  //     )}
-  //   `
-  //     : ``;
-  //   saveRawValue('js', js);
-  //   saveFinalValue('js', finalJS);
-  // }
-
-  let componentData = getData(fields);
-  $: componentData = getData(fields);
-  function getData(fields) {
-    const allFields = getAllFields(fields);
-    const data = convertFieldsToData(allFields);
-    return {
-      ...data,
-      id: component.id,
-    };
-  }
 
   async function updateHtmlWithFieldData() {
-    // loading = true;
-    // finalHTML = await processors.html(rawHTML, getData(fields));
-    // saveFinalValue('html', finalHTML);
-    // refreshFields();
-    // if (rawJS) compileJs(rawJS); // re-run js with new field values
-    // quickDebounce([
-    //   () => {
-    //     loading = false;
-    //   },
-    // ]);
+    refreshFields();
   }
 
   let isSingleUse = false;
@@ -388,10 +306,7 @@
       return proceed;
     } else return true;
   }}
-  button={{ ...header.button, onclick: () => {
-      // header.button.onclick(localComponent)
-      alert('yes');
-    }, disabled: disableSave }}>
+  button={{ ...header.button, onclick: () => header.button.onclick(localComponent), disabled: disableSave }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone mr-1" />

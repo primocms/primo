@@ -7,13 +7,15 @@
   const dispatch = createEventDispatcher();
   import { createSymbolPreview } from '../../../utils';
 
+  import IFrame from './IFrame.svelte';
+  import CodePreview from '../../../components/misc/CodePreview.svelte';
   import { styles as siteStyles, wrapper } from '../../../stores/data/draft';
   import { styles as pageStyles } from '../../../stores/app/activePage';
   import { getTailwindConfig } from '../../../stores/helpers';
   import { processors } from '../../../component';
   import { getAllFields } from '../../../stores/helpers';
   import components from '../../../stores/app/components';
-  import { convertFieldsToData } from '../../../utils';
+  import { convertFieldsToData, processCode } from '../../../utils';
 
   export let symbol;
   export let title = symbol.title || '';
@@ -49,6 +51,19 @@
     mounted = true;
     shouldLoadIframe = true;
   });
+
+  let loading = true;
+  let componentApp;
+  let error;
+  compileComponentCode(symbol.value);
+  async function compileComponentCode(value) {
+    const allFields = getAllFields(value.fields);
+    const data = convertFieldsToData(allFields);
+    const res = await processCode(value, data);
+    error = res.error;
+    componentApp = res;
+    loading = false;
+  }
 
   let css;
   $: mounted && processCSS(symbol.value.css);
@@ -130,7 +145,6 @@
 <svelte:window on:resize={resizePreview} />
 <div
   class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
-  in:fade={{ delay: 250, duration: 200 }}
   id="symbol-{symbol.id}">
   <div class="flex justify-between items-center shadow-sm">
     <div class="component-label">
@@ -182,24 +196,7 @@
   </div>
   <div
     class="bg-gray-100 flex-1 flex flex-col relative"
-    bind:this={iframeContainer}>
-    {#if !iframeLoaded}
-      <div
-        class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
-        <Spinner />
-      </div>
-    {/if}
-    {#if loadPreview}
-      <iframe
-        on:load={() => (iframeLoaded = true)}
-        class:fadein={iframeLoaded}
-        style="transform: scale({scale})"
-        class="w-full shadow-lg"
-        bind:this={iframe}
-        title="component preview"
-        srcdoc={preview} />
-    {/if}
-  </div>
+    bind:this={iframeContainer} />
 </div>
 
 <style>
