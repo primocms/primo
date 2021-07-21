@@ -30,29 +30,6 @@
     dispatch('update', symbol);
   }
 
-  let iframe;
-  let iframeLoaded = false;
-
-  let scale;
-  let iframeContainer;
-  function resizePreview() {
-    const { clientWidth: parentWidth } = iframeContainer;
-    const { clientWidth: childWidth } = iframe;
-    scale = parentWidth / childWidth;
-  }
-
-  $: if (iframe) {
-    resizePreview();
-  }
-
-  let mounted = false;
-  let shouldLoadIframe = true;
-  onMount(() => {
-    mounted = true;
-    shouldLoadIframe = true;
-  });
-
-  let loading = true;
   let componentApp;
   let error;
   compileComponentCode(symbol.value);
@@ -62,87 +39,12 @@
     const res = await processCode(value, data);
     error = res.error;
     componentApp = res;
-    loading = false;
   }
 
-  let css;
-  $: mounted && processCSS(symbol.value.css);
-  function processCSS(raw = '') {
-    if (!raw) return;
-    const cacheKey = symbol.id + raw; // to avoid getting html cached with irrelevant data
-    const cachedCSS = $components[cacheKey];
-    if (cachedCSS) {
-      css = cachedCSS;
-    } else {
-      const tailwind = getTailwindConfig(true);
-      const encapsulatedCss = `#component-${symbol.id} {${raw}}`;
-      processors.css(encapsulatedCss, { tailwind }).then((res) => {
-        css = res || '/**/';
-        $components[raw] = css;
-      });
-    }
-  }
-
-  let html;
-  $: mounted && processHTML(symbol.value.html);
-  function processHTML(raw = '') {
-    if (!raw) return;
-    const cachedHTML = $components[raw];
-    if (cachedHTML) {
-      html = cachedHTML;
-    } else {
-      const allFields = getAllFields(symbol.value.fields);
-      const data = convertFieldsToData(allFields);
-      processors.html(raw, data).then((res) => {
-        html = res;
-        $components[raw] = html;
-      });
-    }
-  }
-
-  let js;
-  $: mounted && processJS(symbol.value.js);
-  function processJS(raw) {
-    if (!raw) {
-      js = `//`; // set js to something to component renders
-    } else {
-      const allFields = getAllFields(symbol.value.fields);
-      const data = convertFieldsToData(allFields);
-      const finalJS = `
-        const primo = {
-          id: '${symbol.id}',
-          data: ${JSON.stringify(data)},
-          fields: ${JSON.stringify(allFields)}
-        }
-        ${raw.replace(
-          /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-          `import $1 from 'https://cdn.skypack.dev/$2'`
-        )}`;
-      js = finalJS;
-    }
-  }
-
-  $: preview = buildPreview(html, css, js);
-  function buildPreview(html, css, js) {
-    if (!mounted || (!html && !js && !css)) return ``;
-    const parentStyles = $siteStyles.final + $pageStyles.final;
-    const previewCode = createSymbolPreview({
-      id: symbol.id,
-      html,
-      wrapper: $wrapper,
-      js,
-      css: parentStyles + css,
-      tailwind: getTailwindConfig(),
-    });
-
-    return previewCode;
-  }
-
-  let active = false;
+  let active;
 
 </script>
 
-<svelte:window on:resize={resizePreview} />
 <div
   class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
   id="symbol-{symbol.id}">
@@ -169,7 +71,7 @@
         <button
           title={button.title}
           class="p-2 {button.class}"
-          class:focus={button.focus && !active}
+          class:highlight={button.highlight && !active}
           on:mouseenter={() => {
             hovering = true;
           }}
@@ -194,9 +96,7 @@
       {/each}
     </div>
   </div>
-  <div
-    class="bg-gray-100 flex-1 flex flex-col relative"
-    bind:this={iframeContainer} />
+  <IFrame {componentApp} />
 </div>
 
 <style>
@@ -210,7 +110,7 @@
     @apply bg-codeblack;
     @apply flex space-x-2 items-center transition-colors duration-100 focus:outline-none focus:opacity-75;
   }
-  button.focus {
+  button.highlight {
     @apply bg-primored;
   }
   button:hover {
@@ -247,6 +147,11 @@
       input:focus {
         box-shadow: none;
       }
+    }
+
+    span {
+      padding: 0.25rem 0;
+      font-size: 0.75rem;
     }
   }
 
