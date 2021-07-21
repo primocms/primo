@@ -15,7 +15,7 @@
   import librariesStore from './stores/data/libraries';
   import tailwind from './stores/data/tailwind';
   import { id as pageId } from './stores/app/activePage';
-  import { content, styles, fields, wrapper } from './stores/app/activePage';
+  import { content, styles, fields, html } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';
   import {
     saving as savingStore,
@@ -23,7 +23,7 @@
     loadingSite,
     onMobile,
   } from './stores/app/misc';
-  import { createSite } from './const';
+  import { DEFAULTS } from './const';
 
   import { pages } from './stores/data/draft';
   import site from './stores/data/site';
@@ -43,10 +43,11 @@
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
-    tailwind.setInitial();
+    // tailwind.setInitial();
   }
 
   $: dispatch('save', $site);
+  $: console.log({ $site });
 
   $: $pageId = getPageId($router.path);
   function getPageId(path) {
@@ -75,7 +76,8 @@
       content.set(page.content);
       styles.set(page.styles);
       fields.set(page.fields);
-      wrapper.set(page.wrapper);
+      // wrapper.set(page.wrapper);
+      html.set(page.html || DEFAULTS.html);
     }
   }
 

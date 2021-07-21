@@ -13,7 +13,10 @@
     wrapper as pageWrapper,
     content,
     fields as pageFields,
+    html as pageHTML,
   } from '../../stores/app/activePage';
+  import { processCode, convertFieldsToData } from '../../utils';
+  import { getAllFields } from '../../stores/helpers';
 
   $: pageExists = findPage($id, $pages);
   function findPage(id, pages) {
@@ -65,6 +68,50 @@
   }
   $: disableLinks($content);
 
+  let componentHead;
+  let componentBelow;
+  $: setPageHTML($pageHTML);
+  async function setPageHTML(html) {
+    const data = convertFieldsToData(getAllFields());
+    const [head, below] = await Promise.all([
+      processCode(
+        {
+          html: `<svelte:head>${html.head}</svelte:head>`,
+          css: '',
+          js: '',
+        },
+        data
+      ),
+      processCode(
+        {
+          html: html.below,
+          css: '',
+          js: '',
+        },
+        data
+      ),
+    ]);
+    createSvelteApp(head, (App) => {
+      if (componentHead) componentHead.$destroy();
+      componentHead = new App({
+        target: element,
+      });
+    });
+    createSvelteApp(below, (App) => {
+      if (componentBelow) componentBelow.$destroy();
+      componentBelow = new App({
+        target: element,
+      });
+    });
+
+    async function createSvelteApp(code, fn) {
+      const blob = new Blob([code], { type: 'text/javascript' });
+      const url = URL.createObjectURL(blob);
+      const { default: App } = await import(url /* @vite-ignore */);
+      fn(App);
+    }
+  }
+
 </script>
 
 <div
@@ -82,6 +129,6 @@
       {/if}
     {/each}
   {/if}
-  {@html $pageWrapper.below.final}
-  {@html $siteWrapper.below.final}
+  <!-- {@html $pageWrapper.below.final}
+  {@html $siteWrapper.below.final} -->
 </div>

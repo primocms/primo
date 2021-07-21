@@ -207,33 +207,43 @@ export const DEFAULTS = {
         type: 'options',
       }
     ],
-    styles: {
-      raw: '',
-      final: '',
-      tailwind: ''
+    html: {
+      head: '',
+      below: ''
     },
-    wrapper: {
-      head: {
-        raw: '',
-        final: ''
-      },
-      below: {
-        raw: '',
-        final: ''
-      }
-    },
+    css: '',
+    // styles: {
+    //   raw: '',
+    //   final: '',
+    //   tailwind: ''
+    // },
+    // wrapper: {
+    //   head: {
+    //     raw: '',
+    //     final: ''
+    //   },
+    //   below: {
+    //     raw: '',
+    //     final: ''
+    //   }
+    // },
     fields: []
   },
-  wrapper: {
-    head: {
-      raw: '',
-      final: ''
-    },
-    below: {
-      raw: '',
-      final: ''
-    }
+  // wrapper: {
+  //   head: {
+  //     raw: '',
+  //     final: ''
+  //   },
+  //   below: {
+  //     raw: '',
+  //     final: ''
+  //   }
+  // },
+  html: {
+    head: '',
+    below: ''
   },
+  css: '',
   styles: defaultStyles,
   fields: [],
   symbols: []
@@ -248,20 +258,30 @@ export const createPage = (id = createUniqueID(), title) => ({
       type: 'options',
     }
   ],
-  styles: {
-    raw: '',
-    final: '',
-    tailwind: defaultStyles.tailwind
+  // styles: {
+  //   raw: '',
+  //   final: '',
+  //   tailwind: defaultStyles.tailwind
+  // },
+  // wrapper: DEFAULTS.wrapper,
+  css: '',
+  html: {
+    head: '',
+    below: ''
   },
-  wrapper: DEFAULTS.wrapper,
   fields: []
 })
 
 export const createSite = (name) => ({
   name,
   pages: [createPage('index', 'Home Page')],
-  styles: DEFAULTS.styles,
-  wrapper: DEFAULTS.wrapper,
+  // styles: DEFAULTS.styles,
+  // wrapper: DEFAULTS.wrapper,
+  css: '',
+  html: {
+    head: '',
+    below: ''
+  },
   fields: [],
   symbols: []
 })
@@ -270,8 +290,13 @@ export const createSite = (name) => ({
 export const createNewSite = ({ id = '00000', name = 'website' }) => ({
   name,
   pages: [createPage('index', 'Home Page')],
-  styles: DEFAULTS.styles,
-  wrapper: DEFAULTS.wrapper,
+  // styles: DEFAULTS.styles,
+  // wrapper: DEFAULTS.wrapper,
+  css: '',
+  html: {
+    head: '',
+    below: ''
+  },
   fields: [],
   symbols: []
 })

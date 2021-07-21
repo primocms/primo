@@ -6,12 +6,14 @@
   import tailwind from '../../stores/data/tailwind';
   import {
     styles as siteStyles,
-    wrapper as siteWrapper,
+    // wrapper as siteWrapper,
+    html as siteHTML,
   } from '../../stores/data/draft';
   import {
     id,
     styles as pageStyles,
-    wrapper as pageWrapper,
+    // wrapper as pageWrapper,
+    html,
   } from '../../stores/app/activePage';
   import { unsaved } from '../../stores/app/misc';
   import site from '../../stores/data/site';
@@ -24,11 +26,10 @@
 </script>
 
 <svelte:head>
-  {@html wrapInStyleTags($tailwind, 'tailwind')}
-  {@html $siteWrapper.head.final}
-  {@html $pageWrapper.head.final}
-  {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
-  {@html wrapInStyleTags($pageStyles.final, 'page-styles')}
+  <!-- {@html $siteWrapper.head.final}
+  {@html $pageWrapper.head.final} -->
+  <!-- {@html wrapInStyleTags($siteStyles.final, 'site-styles')}
+  {@html wrapInStyleTags($pageStyles.final, 'page-styles')} -->
 </svelte:head>
 
 <Editor on:change on:save={savePage} on:build on:signOut />

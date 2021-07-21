@@ -5,11 +5,12 @@ import { createUniqueID } from '../utilities'
 import { id, content } from './app/activePage'
 import { unsaved } from './app/misc'
 import { focusedNode } from './app/editor'
-import { styles, wrapper, fields } from './data/draft'
+import { styles, html, fields } from './data/draft'
 import * as stores from './data/draft'
 import { timeline, undone } from './data/draft'
 import { processors } from '../component'
 import { updateHtmlWithFieldData } from '../utils'
+import {DEFAULTS} from '../const'
 
 export async function hydrateSite(data) {
   content.set([])
@@ -17,48 +18,44 @@ export async function hydrateSite(data) {
   stores.name.set(data.name)
   stores.pages.set(data.pages)
   styles.set(data.styles)
-  wrapper.set(data.wrapper)
+  // wrapper.set(data.wrapper)
+
+  html.set(data.css || DEFAULTS.css)
+  html.set(data.html || DEFAULTS.html)
   fields.set(data.fields)
   stores.symbols.set(data.symbols)
 }
 
-export async function updateActivePageWrapper(newPageHTML) {
-  const wrapper = {
-    head: {
-      raw: newPageHTML.head.raw,
-      final: await updateHtmlWithFieldData(newPageHTML.head.raw),
-    },
-    below: {
-      raw: newPageHTML.below.raw,
-      final: await updateHtmlWithFieldData(newPageHTML.below.raw),
-    },
-  };
+export async function updateActivePageWrapper(html) {
+  // const wrapper = {
+  //   head: {
+  //     raw: newPageHTML.head.raw,
+  //     final: await updateHtmlWithFieldData(newPageHTML.head.raw),
+  //   },
+  //   below: {
+  //     raw: newPageHTML.below.raw,
+  //     final: await updateHtmlWithFieldData(newPageHTML.below.raw),
+  //   },
+  // };
   pages.update(get(id), (page) => ({
     ...page,
-    wrapper,
+    html,
   }));
 }
 
+
 export async function updateSiteWrapper(newSiteHTML) {
-  const final = {
-    head: await updateHtmlWithFieldData(
-      newSiteHTML.head.raw,
-    ),
-    below: await updateHtmlWithFieldData(
-      newSiteHTML.below.raw
-    )
-  }
-  wrapper.set({
-    ...get(wrapper),
-    head: {
-      raw: newSiteHTML.head.raw,
-      final: final.head
-    },
-    below: {
-      raw: newSiteHTML.below.raw,
-      final: final.below
-    }
-  })
+  // const final = {
+  //   head: newSiteHTML.head,
+  //   below: await updateHtmlWithFieldData(
+  //     newSiteHTML.below.raw
+  //   )
+  // }
+  html.set(newSiteHTML)
+  // wrapper.set({
+  //   head: newSiteHTML.head,
+  //   below: newSiteHTML.below
+  // })
 }
 
 export async function emancipateInstances(symbol) {

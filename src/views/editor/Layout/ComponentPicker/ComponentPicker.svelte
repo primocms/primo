@@ -2,7 +2,6 @@
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
   import _ from 'lodash';
-  import Container from './ComponentPickerContainer.svelte';
   import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
 
   import { symbols } from '../../../../stores/data/draft';

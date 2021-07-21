@@ -27,7 +27,11 @@ export function convertFieldsToData(fields) {
 export async function updateHtmlWithFieldData(rawHTML) {
   const allFields = getAllFields();
   const data = await convertFieldsToData(allFields, 'all');
-  const finalHTML = await processors.html(rawHTML, data);
+  const finalHTML = await processors.html({
+    html: rawHTML,
+    css: '',
+    js: ''
+  }, data);
   return finalHTML;
 }
 

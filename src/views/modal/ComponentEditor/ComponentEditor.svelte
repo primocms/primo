@@ -21,10 +21,12 @@
   import {
     styles as siteStyles,
     wrapper as siteWrapper,
+    html as siteHTML,
   } from '../../../stores/data/draft';
   import {
     styles as pageStyles,
     wrapper as pageWrapper,
+    html as pageHTML,
   } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
@@ -90,7 +92,20 @@
   async function compileComponentCode({ html, css, js, fields }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    const res = await processCode({ html, css, js }, data);
+    const res = await processCode(
+      {
+        html: `
+      <svelte:head>
+        ${$pageHTML.head}
+        ${$siteHTML.head}
+      </svelte:head>
+      ${html}
+      `,
+        css,
+        js,
+      },
+      data
+    );
     error = res.error;
     componentApp = res;
     saveRawValue('html', html);

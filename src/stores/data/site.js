@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { createSite } from '../../const'
 
-import {fields,styles,symbols,wrapper,pages,id,name} from './draft'
+import {fields,styles,symbols,wrapper,pages,id,name,html} from './draft'
 
 let site
 const {subscribe,set} = writable(createSite())
@@ -18,7 +18,8 @@ export default {
       fields: get(fields),
       styles: get(styles),
       symbols: get(symbols),
-      wrapper: get(wrapper),
+      // wrapper: get(wrapper),
+      html: get(html),
       pages: get(pages)
     })
   },
@@ -29,7 +30,8 @@ export default {
     fields: get(fields),
     styles: get(styles),
     symbols: get(symbols),
-    wrapper: get(wrapper),
+    // wrapper: get(wrapper),
+    html: get(html),
     pages: get(pages)
   }),
   hydrate: (site) => {
@@ -38,7 +40,8 @@ export default {
     fields.set(site.fields)
     styles.set(site.styles)
     symbols.set(site.symbols)
-    wrapper.set(site.wrapper)
+    // wrapper.set(site.wrapper)
+    html.set(site.html)
     pages.set(site.pages)
   },
   subscribe

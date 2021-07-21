@@ -15,6 +15,8 @@ styles.subscribe(styles => {
   // updatePage({ styles })
 })
 
+export const html = writable(DEFAULTS.html)
+
 export const wrapper = writable(DEFAULTS.wrapper)
 // wrapper.subscribe(wrapper => {
 //   updatePage({ wrapper })
