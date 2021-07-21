@@ -8,7 +8,6 @@ export const iframePreview = `
         let c;
 
         function update(source) {
-          console.log({source})
           const blob = new Blob([source], { type: 'text/javascript' });
           const url = URL.createObjectURL(blob);
 
@@ -32,5 +31,39 @@ export const iframePreview = `
     </div>
     <body class="primo-page">
     </body>
+  </html>
+`
+
+export const pagePreview = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script type="module">
+        let c;
+
+        function update(source) {
+          source.forEach(async (item, i) => {
+            const blob = new Blob([item.svelte], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const { default:App } = await import(url)
+            new App({ target: document.body })
+          })
+        }
+
+        window.addEventListener('message', ({data}) => {
+          update(data.preview)
+        }, false)
+		  <\/script>
+    </head>
+    <body class="primo-page">
+    </body>
+    <style>
+        .primo-page {
+          height: 100vh;
+          overflow: hidden;
+        }
+    </style>
   </html>
 `

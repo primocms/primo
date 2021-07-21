@@ -6,7 +6,7 @@ import { fields as pageFields, styles as pageStyles, content } from './app/activ
 import { getCombinedTailwindConfig } from './data/tailwind'
 import { symbols, wrapper } from './data/draft'
 import components from './app/components'
-import { wrapInStyleTags, convertFieldsToData } from '../utils'
+import { wrapInStyleTags, convertFieldsToData, processCode } from '../utils'
 import { processors } from '../component'
 
 export function getAllFields(componentFields = []) {
@@ -109,62 +109,35 @@ export async function processContent(page, site) {
   )
 }
 
-export async function buildPagePreview({ page, site, separate = false }) {
-  const content = await processContent(page, site)
-  const tailwind = getTailwindConfig()
-  if (separate) {
-    const html = buildBlockHTML(content)
-    const css = site.styles.final + page.styles.final
-    const js = buildBlockJS(content)
-    return { html, css, js, tailwind }
-  } else {
-    const parentStyles = wrapInStyleTags(site.styles.final) + wrapInStyleTags(page.styles.final)
-    return parentStyles + buildBlockHTML(content, tailwind)
-  }
-
-  function buildBlockHTML(content, tailwind) {
-    let html = "";
-    for (let block of content) {
+export async function buildPagePreview({ page, site }) {
+  return await Promise.all(
+    page.content.map(async block => {
       if (block.type === 'component') {
-        html += `
-        <div class="block" id="block-${block.id}">
-          <div class="primo-component" id="component-${block.id}">
-            <div>${block.html}</div>
-          </div>
-        </div>
-        <style type="text/css">${block.css}</style>
-        `
-      } else if (block.type === 'content') {
-        html += `
-          <div class="block" id="block-${block.id}">
-            <div class="primo-copy" id="copy-${block.id}">
-              ${block.value.html}
-            </div>
-          </div>
-        `
+
+        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+        const data = convertFieldsToData(fields);
+
+        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        const { html, css, js } = symbol.value
+
+        const svelte = await processCode({ html, css, js }, data);
+
+        return {
+          svelte
+        } 
+
+      } else {
+        const {html} = block.value
+        // might add this back in later
+        // const fields = _.unionBy(page.fields, site.fields, "key");
+        // const data = convertFieldsToData(fields);
+        const svelte = await processCode({ html, css: '', js: '' }, {});
+        return {
+          svelte
+        }
       }
-    }
-
-    if (tailwind) {
-      const twConfig = JSON.stringify({
-        mode: 'silent',
-        theme: tailwind.theme
-      })
-
-      html += `<script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
-      <script type="twind-config">
-        ${twConfig}
-      </script>`
-
-      return `<html hidden class="primo-page">${html}</html>`;
-    } else {
-      return `<html class="primo-page">${html}</html>`
-    }
-  }
-
-  function buildBlockJS(content) {
-    return content.map(block => block.js).filter(Boolean)
-  }
+    })
+  )
 }
 
 async function processHTML({ value }, { data }) {
