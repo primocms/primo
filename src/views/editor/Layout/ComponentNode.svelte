@@ -29,11 +29,6 @@
     fields: block.value.fields,
   });
 
-  const compiled = {
-    html: '',
-    css: '',
-  };
-
   let error = '';
   async function compileComponentCode(rawCode) {
     // workaround for this function re-running anytime something changes on the page
@@ -52,22 +47,22 @@
         id: block.id,
         ...convertFieldsToData(getAllFields(block.value.fields)),
       };
-      const res = await processCode(rawCode, data, true);
-      compiled.html = res.html;
-      compiled.css = res.css;
-
+      const res = await processCode({
+        code: rawCode,
+        data,
+        buildStatic: false,
+      });
       if (res.error) {
         error = res.error;
       } else if (res.js) {
         error = '';
-        // if (component) component.$destroy();
+        if (component) component.$destroy();
         const blob = new Blob([res.js], { type: 'text/javascript' });
         const url = URL.createObjectURL(blob);
 
         const { default: App } = await import(url /* @vite-ignore */);
         component = new App({
           target: node,
-          hydrate: true,
         });
       }
     }
@@ -84,10 +79,7 @@
   bind:this={node}
   class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
   id="component-{block.id}"
-  transition:fade={{ duration: 100 }}>
-  {@html compiled.html}
-  {@html wrapInStyleTags(compiled.css)}
-</div>
+  transition:fade={{ duration: 100 }} />
 <div>
   {@html error}
 </div>
