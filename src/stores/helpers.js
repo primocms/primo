@@ -182,11 +182,11 @@ export async function buildStaticPage({ page, site }) {
       ${blocks.map(block => `
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}">
           ${block.html}
-          <style>${block.css}</style>
-          <script>${block.js}</script>
+          ${block.css ? `<style>${block.css}</style>` : ``}
+          ${block.js ? `<script>${block.js}</script>` : ``}
         </div>
       `).join('\n')}
-      ${below}
+      ${below.html}
     </body>
   </html>
   `
