@@ -1,13 +1,17 @@
 <script>
   import { cloneDeep, isEqual, differenceWith } from 'lodash';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { router } from 'tinro';
   import { getStyles, appendHtml } from '../pageUtils.js';
   import { processors } from '../../../component';
   import { getAllFields, getTailwindConfig } from '../../../stores/helpers';
   import components from '../../../stores/app/components';
-  import { convertFieldsToData, processCode } from '../../../utils';
+  import {
+    convertFieldsToData,
+    processCode,
+    wrapInStyleTags,
+  } from '../../../utils';
 
   export let block;
 
@@ -24,6 +28,11 @@
     js: block.value.js,
     fields: block.value.fields,
   });
+
+  const compiled = {
+    html: '',
+    css: '',
+  };
 
   let error = '';
   async function compileComponentCode(rawCode) {
@@ -43,18 +52,22 @@
         id: block.id,
         ...convertFieldsToData(getAllFields(block.value.fields)),
       };
-      const res = await processCode(rawCode, data);
+      const res = await processCode(rawCode, data, true);
+      compiled.html = res.html;
+      compiled.css = res.css;
+
       if (res.error) {
         error = res.error;
-      } else {
+      } else if (res.js) {
         error = '';
-        if (component) component.$destroy();
-        const blob = new Blob([res], { type: 'text/javascript' });
+        // if (component) component.$destroy();
+        const blob = new Blob([res.js], { type: 'text/javascript' });
         const url = URL.createObjectURL(blob);
 
         const { default: App } = await import(url /* @vite-ignore */);
         component = new App({
           target: node,
+          hydrate: true,
         });
       }
     }
@@ -71,7 +84,10 @@
   bind:this={node}
   class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
   id="component-{block.id}"
-  transition:fade={{ duration: 100 }} />
+  transition:fade={{ duration: 100 }}>
+  {@html compiled.html}
+  {@html wrapInStyleTags(compiled.css)}
+</div>
 <div>
   {@html error}
 </div>
@@ -85,9 +101,6 @@
     outline-color: transparent;
     width: 100%;
     min-height: 2rem;
-  }
-  .component > div {
-    @apply w-full;
   }
 
 </style>

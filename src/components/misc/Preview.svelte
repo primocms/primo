@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { pagePreview } from './misc';
   import { onMobile } from '../../stores/app/misc';
 
@@ -10,7 +11,6 @@
   let iframeLoaded;
   $: preview && iframeLoaded && setIframeContent({ preview });
   function setIframeContent({ preview }) {
-    console.log('adding');
     iframe.contentWindow.postMessage({ preview });
   }
 
@@ -22,17 +22,16 @@
     iframe.style.height = 100 / scaleRatio + '%';
   }
 
-  onMount(() => {
-    setTimeout(resizePreview, 100);
-  });
+  onMount(resizePreview);
 
 </script>
 
 <div class="h-full flex flex-col">
   <div class="preview-container flex-1 bg-white" bind:this={container}>
     <iframe
+      in:fade={{ duration: 100 }}
       title="Preview HTML"
-      srcdoc={pagePreview}
+      srcdoc={preview}
       class="bg-white w-full h-full"
       bind:this={iframe}
       on:load={() => (iframeLoaded = true)} />
@@ -46,9 +45,6 @@
     @apply w-full border-0 transition-opacity duration-300;
     width: 100vw;
     transform-origin: top left;
-  }
-  .fadein {
-    @apply opacity-100 duration-300;
   }
   .preview-container {
     will-change: border-color;

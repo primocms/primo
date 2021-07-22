@@ -5,7 +5,7 @@ import { createUniqueID } from '../utilities'
 import { id, content } from './app/activePage'
 import { unsaved } from './app/misc'
 import { focusedNode } from './app/editor'
-import { styles, html, fields } from './data/draft'
+import { styles, html, css, fields } from './data/draft'
 import * as stores from './data/draft'
 import { timeline, undone } from './data/draft'
 import { processors } from '../component'
@@ -20,7 +20,7 @@ export async function hydrateSite(data) {
   styles.set(data.styles)
   // wrapper.set(data.wrapper)
 
-  html.set(data.css || DEFAULTS.css)
+  css.set(data.css || DEFAULTS.css)
   html.set(data.html || DEFAULTS.html)
   fields.set(data.fields)
   stores.symbols.set(data.symbols)

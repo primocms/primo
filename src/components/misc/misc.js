@@ -13,14 +13,19 @@ export const iframePreview = `
 
           import(url).then(({ default: App }) => {
             if (c) c.$destroy();
-            c = new App({ target: document.body })
+            try {
+              c = new App({ target: document.body })
+            } catch(e) {
+              document.querySelector('#error').innerHTML = e.toString()
+            }
           })
         }
 
         window.addEventListener('message', ({data}) => {
           if (data.error) {
 					  document.querySelector('#error').innerHTML = data.error 
-          } else {
+          } else if (data.componentApp) {
+            console.log('building', {data})
 					  document.querySelector('#error').innerHTML = ''
             update(data.componentApp)
           }
@@ -44,11 +49,15 @@ export const pagePreview = `
         let c;
 
         function update(source) {
+          console.log({source})
           source.forEach(async (item, i) => {
+            if (item.svelte.error) return
+            const div = document.createElement("div")
+            document.body.appendChild(div)
             const blob = new Blob([item.svelte], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             const { default:App } = await import(url)
-            new App({ target: document.body })
+            new App({ target: div })
           })
         }
 
@@ -61,8 +70,8 @@ export const pagePreview = `
     </body>
     <style>
         .primo-page {
-          height: 100vh;
-          overflow: hidden;
+          /* height: 100vh;
+          overflow: hidden; */
         }
     </style>
   </html>

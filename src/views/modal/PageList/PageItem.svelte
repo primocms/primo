@@ -8,7 +8,7 @@
 
   import { router } from 'tinro';
   import modal from '../../../stores/app/modal';
-  import { buildPagePreview } from '../../../stores/helpers';
+  import { buildPagePreview, buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
   import 'requestidlecallback-polyfill';
 
@@ -19,7 +19,7 @@
   let preview = '';
   buildPreview();
   async function buildPreview() {
-    preview = await buildPagePreview({ page, site: $site });
+    preview = await buildStaticPage({ page, site: $site });
   }
 
   let iframeLoaded = false;
@@ -50,13 +50,6 @@
       router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`);
     }
   }
-
-  let shouldLoadIframe = false;
-  onMount(() => {
-    window.requestIdleCallback(() => {
-      shouldLoadIframe = true;
-    });
-  });
 
   let editingPage = false;
   let title = page.title || '';
@@ -140,18 +133,6 @@
       bind:this={container}
       aria-label="Go to /{page.id}">
       <Preview {preview} />
-      {#if shouldLoadIframe}
-        <!-- <iframe
-          bind:this={iframe}
-          style="transform: scale({scale})"
-          class:fadein={iframeLoaded}
-          title="page preview"
-          srcdoc={preview}
-          on:load={() => {
-            iframeLoaded = true
-          }}
-        /> -->
-      {/if}
     </a>
   {/if}
 </li>

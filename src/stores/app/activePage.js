@@ -17,6 +17,8 @@ styles.subscribe(styles => {
 
 export const html = writable(DEFAULTS.html)
 
+export const css = writable(DEFAULTS.css)
+
 export const wrapper = writable(DEFAULTS.wrapper)
 // wrapper.subscribe(wrapper => {
 //   updatePage({ wrapper })
@@ -70,12 +72,13 @@ function updatePage(prop) {
 
 // conveniently get the entire site
 export default derived(
-  [ content, styles, wrapper, fields ], 
-  ([content, styles, wrapper, fields]) => {
+  [ content, css, html, wrapper, fields ], 
+  ([content, css, html, wrapper, fields]) => {
   return {
     // ...createSite(),
     content, 
-    styles, 
+    css, 
+    html, 
     wrapper, 
     fields
   }

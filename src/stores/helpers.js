@@ -109,36 +109,243 @@ export async function processContent(page, site) {
   )
 }
 
-export async function buildPagePreview({ page, site }) {
-  return await Promise.all(
-    page.content.map(async block => {
+export async function buildStaticPage({ page, site }) {
+  const [ head, below, ...blocks ] = await Promise.all([
+    new Promise(async (resolve) => {
+      const fields = _.unionBy(page.fields, site.fields, "key");
+      const data = convertFieldsToData(fields);
+      const svelte = await processCode({ 
+        html: `<svelte:head>
+        ${site.html?.head}
+        ${page.html?.head}
+        <style>
+        ${site.css}
+        ${page.css}
+        </style>
+        </svelte:head>`, 
+        css: '', 
+        js: ''
+      }, data, true);
+
+      resolve(svelte)
+    }),
+    new Promise(async (resolve) => {
+      const fields = _.unionBy(page.fields, site.fields, "key");
+      const data = convertFieldsToData(fields);
+      const svelte = await processCode({ 
+        html: site.html?.below + page.html?.below, 
+        css: '', 
+        js: ''
+      }, data, true);
+
+      resolve(svelte) 
+    }),
+    ...page.content.map(async block => {
       if (block.type === 'component') {
 
         const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
         const data = convertFieldsToData(fields);
 
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        if (!symbol) return 
         const { html, css, js } = symbol.value
 
-        const svelte = await processCode({ html, css, js }, data);
+        const svelte = await processCode({ 
+          html, 
+          css, 
+          js 
+        }, data, true);
 
         return {
-          svelte
-        } 
+          ...svelte,
+          type: 'component'
+        }
+
+      } else {
+        const {html} = block.value
+        const svelte = await processCode({ 
+          html, 
+          css: '', 
+          js: '' 
+        }, {}, true);
+        return {
+          ...svelte,
+          type: 'content'
+        }
+      }
+    })
+  ])
+  const final = `
+  <html>
+    <head>${head.html}</head>
+    <body class="primo-page">
+      ${blocks.map(block => `
+        <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}">
+          ${block.html}
+          <style>${block.css}</style>
+          <script>${block.js}</script>
+        </div>
+      `).join('\n')}
+      ${below}
+    </body>
+  </html>
+  `
+  return final
+}
+
+
+export async function buildPagePreview({ page, site }) {
+  const res = await Promise.all([
+    // new Promise(async (resolve) => {
+    //   const fields = _.unionBy(page.fields, site.fields, "key");
+    //   const data = convertFieldsToData(fields);
+    //   const svelte = await processCode({ 
+    //     html: `<svelte:head>
+    //     ${site.html?.head}
+    //     ${page.html?.head}
+    //     <style>
+    //     ${site.css}
+    //     ${page.css}
+    //     </style>
+    //     </svelte:head>`, 
+    //     css: '', 
+    //     js: ''
+    //   }, data, true);
+
+    //   resolve({
+    //     svelte
+    //   })
+    // }),
+    ...page.content.map(async block => {
+      if (block.type === 'component') {
+
+        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+        const data = convertFieldsToData(fields);
+
+        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        if (!symbol) return 
+        const { html, css, js } = symbol.value
+
+        const svelte = await processCode({ 
+          html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+          ${html}
+          `, 
+          css, 
+          js 
+        }, data, true);
+
+        return svelte
 
       } else {
         const {html} = block.value
         // might add this back in later
         // const fields = _.unionBy(page.fields, site.fields, "key");
         // const data = convertFieldsToData(fields);
-        const svelte = await processCode({ html, css: '', js: '' }, {});
-        return {
-          svelte
-        }
+        const svelte = await processCode({ 
+          html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+          ${html}
+          `, 
+          css: '', 
+          js: '' 
+        }, {}, true);
+        return svelte
       }
-    })
-  )
+    }),
+    // new Promise(async (resolve) => {
+    //   const fields = _.unionBy(page.fields, site.fields, "key");
+    //   const data = convertFieldsToData(fields);
+    //   const svelte = await processCode({ 
+    //     html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+    //     ${site.html.below + page.html?.below}`, 
+    //     css: site.css + page.css, 
+    //     js: ''
+    //   }, data, true);
+
+    //   resolve({
+    //     svelte
+    //   }) 
+    // })
+  ])
+  return res
 }
+
+// export async function buildPagePreview({ page, site }) {
+//   return await Promise.all([
+//     new Promise(async (resolve) => {
+//       const fields = _.unionBy(page.fields, site.fields, "key");
+//       const data = convertFieldsToData(fields);
+//       const svelte = await processCode({ 
+//         html: `<svelte:head>
+//         ${site.html?.head}
+//         ${page.html?.head}
+//         <style>
+//         ${site.css}
+//         ${page.css}
+//         </style>
+//         </svelte:head>`, 
+//         css: '', 
+//         js: ''
+//       }, data, true);
+
+//       resolve({
+//         svelte
+//       })
+//     }),
+//     ...page.content.map(async block => {
+//       if (block.type === 'component') {
+
+//         const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+//         const data = convertFieldsToData(fields);
+
+//         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+//         if (!symbol) return 
+//         const { html, css, js } = symbol.value
+
+//         const svelte = await processCode({ 
+//           html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+//           ${html}
+//           `, 
+//           css, 
+//           js 
+//         }, data);
+
+//         return {
+//           svelte
+//         } 
+
+//       } else {
+//         const {html} = block.value
+//         // might add this back in later
+//         // const fields = _.unionBy(page.fields, site.fields, "key");
+//         // const data = convertFieldsToData(fields);
+//         const svelte = await processCode({ 
+//           html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+//           ${html}
+//           `, 
+//           css: '', 
+//           js: '' 
+//         }, {});
+//         return {
+//           svelte
+//         }
+//       }
+//     }),
+//     new Promise(async (resolve) => {
+//       const fields = _.unionBy(page.fields, site.fields, "key");
+//       const data = convertFieldsToData(fields);
+//       const svelte = await processCode({ 
+//         html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+//         ${site.html.below + page.html?.below}`, 
+//         css: site.css + page.css, 
+//         js: ''
+//       }, data);
+
+//       resolve({
+//         svelte
+//       }) 
+//     })
+//   ])
+// }
 
 async function processHTML({ value }, { data }) {
   const final = await processors.html(value.html, data)

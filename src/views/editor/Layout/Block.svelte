@@ -211,7 +211,7 @@
 
 <div
   in:fade={{ duration: 200 }}
-  class="block"
+  class="primo-block"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
   class:z-50={block.type === 'options'}
@@ -284,7 +284,7 @@
 </div>
 
 <style>
-  .block {
+  .primo-block {
     position: relative;
   }
 

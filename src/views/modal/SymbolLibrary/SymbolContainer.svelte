@@ -1,21 +1,21 @@
 <script>
-  import { Spinner } from '../../../components/misc';
-  import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
   import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
-  import { createSymbolPreview } from '../../../utils';
 
   import IFrame from './IFrame.svelte';
-  import CodePreview from '../../../components/misc/CodePreview.svelte';
-  import { styles as siteStyles, wrapper } from '../../../stores/data/draft';
-  import { styles as pageStyles } from '../../../stores/app/activePage';
-  import { getTailwindConfig } from '../../../stores/helpers';
-  import { processors } from '../../../component';
   import { getAllFields } from '../../../stores/helpers';
-  import components from '../../../stores/app/components';
-  import { convertFieldsToData, processCode } from '../../../utils';
+  import {
+    convertFieldsToData,
+    processCode,
+    wrapInStyleTags,
+  } from '../../../utils';
+  import { html as siteHTML, css as siteCSS } from '../../../stores/data/draft';
+  import {
+    html as pageHTML,
+    css as pageCSS,
+  } from '../../../stores/app/activePage';
 
   export let symbol;
   export let title = symbol.title || '';
@@ -36,9 +36,22 @@
   async function compileComponentCode(value) {
     const allFields = getAllFields(value.fields);
     const data = convertFieldsToData(allFields);
-    const res = await processCode(value, data);
+    const res = await processCode(
+      {
+        ...value,
+        html: `
+        <svelte:head>
+          ${$siteHTML + $pageHTML}
+          ${wrapInStyleTags($siteCSS + $pageCSS)}
+        </svelte:head>
+        ${value.html}
+      `,
+      },
+      data
+    );
+    console.log({ res });
     error = res.error;
-    componentApp = res;
+    componentApp = res.js;
   }
 
   let active;

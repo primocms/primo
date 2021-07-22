@@ -7,6 +7,8 @@
     wrapper as siteWrapper,
     symbols,
     fields as siteFields,
+    html as siteHTML,
+    css as siteCSS,
   } from '../../stores/data/draft';
   import {
     id,
@@ -14,8 +16,13 @@
     content,
     fields as pageFields,
     html as pageHTML,
+    css as pageCSS,
   } from '../../stores/app/activePage';
-  import { processCode, convertFieldsToData } from '../../utils';
+  import {
+    processCode,
+    convertFieldsToData,
+    wrapInStyleTags,
+  } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
 
   $: pageExists = findPage($id, $pages);
@@ -68,51 +75,49 @@
   }
   $: disableLinks($content);
 
-  let componentHead;
-  let componentBelow;
-  $: setPageHTML($pageHTML);
-  async function setPageHTML(html) {
+  let htmlHead = '';
+  let htmlBelow = '';
+  $: setPageHTML({
+    siteHTML: $siteHTML,
+    pageHTML: $pageHTML,
+    siteCSS: $siteCSS,
+    pageCSS: $pageCSS,
+  });
+  async function setPageHTML({ siteHTML, pageHTML, siteCSS, pageCSS }) {
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
       processCode(
         {
-          html: `<svelte:head>${html.head}</svelte:head>`,
+          html: `<svelte:head>
+            ${siteHTML.head}${pageHTML.head}
+            ${wrapInStyleTags(siteCSS + pageCSS)}
+          </svelte:head>`,
           css: '',
           js: '',
         },
-        data
+        data,
+        true
       ),
       processCode(
         {
-          html: html.below,
+          html: siteHTML.below + pageHTML.below,
           css: '',
           js: '',
         },
-        data
+        data,
+        true
       ),
     ]);
-    createSvelteApp(head, (App) => {
-      if (componentHead) componentHead.$destroy();
-      componentHead = new App({
-        target: element,
-      });
-    });
-    createSvelteApp(below, (App) => {
-      if (componentBelow) componentBelow.$destroy();
-      componentBelow = new App({
-        target: element,
-      });
-    });
 
-    async function createSvelteApp(code, fn) {
-      const blob = new Blob([code], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-      const { default: App } = await import(url /* @vite-ignore */);
-      fn(App);
-    }
+    htmlHead = head.html;
+    htmlBelow = below.html;
   }
 
 </script>
+
+<svelte:head>
+  {@html htmlHead}
+</svelte:head>
 
 <div
   bind:this={element}
@@ -129,6 +134,5 @@
       {/if}
     {/each}
   {/if}
-  <!-- {@html $pageWrapper.below.final}
-  {@html $siteWrapper.below.final} -->
 </div>
+{@html htmlBelow}

@@ -1,218 +1,179 @@
 <script>
-  import {cloneDeep,isEqual} from 'lodash'
-  import {CodeMirror} from '../../components'
-  import {Tabs} from '../../components/misc'
-  import {CodePreview} from '../../components/misc'
-  import { wrapInStyleTags, createDebouncer } from '../../utils'
-  import ModalHeader from './ModalHeader.svelte'
-  import {processors} from '../../component'
+  import { cloneDeep, isEqual } from 'lodash';
+  import { CodeMirror } from '../../components';
+  import { Tabs } from '../../components/misc';
+  import Preview from '../../components/misc/Preview.svelte';
+  import {
+    wrapInSvelteHeadTags,
+    wrapInStyleTags,
+    createDebouncer,
+  } from '../../utils';
+  import ModalHeader from './ModalHeader.svelte';
+  import { processors } from '../../component';
 
-  const quickDebounce = createDebouncer(500);
-  const slowDebounce = createDebouncer(1000)
+  import activePage, { content, id } from '../../stores/app/activePage';
+  import { unsaved } from '../../stores/app/misc';
+  import modal from '../../stores/app/modal';
+  import { pages } from '../../stores/actions';
 
-  import tailwind, {getCombinedTailwindConfig} from '../../stores/data/tailwind'
-  import activePage, {content,id} from '../../stores/app/activePage'
-  import {unsaved} from '../../stores/app/misc'
-  import modal from '../../stores/app/modal'
-  import {pages} from '../../stores/actions'
+  import { css as pageCSS } from '../../stores/app/activePage';
+  import {
+    site,
+    pages as pagesStore,
+    css as siteCSS,
+  } from '../../stores/data/draft';
+  import { buildStaticPage } from '../../stores/helpers';
 
-  import {styles as pageStyles} from '../../stores/app/activePage'
-  import {site, styles as siteStyles, pages as pagesStore} from '../../stores/data/draft'
-  import { buildPagePreview } from '../../stores/helpers';
+  let unsavedPageCSS = $pageCSS;
+  let unsavedSiteCSS = $siteCSS;
 
-  const localPageStyles = cloneDeep($pageStyles)
-  const localSiteStyles = cloneDeep($siteStyles)
-
-  let refreshPreview
-
-  let pagePreview = {
-    html: ``,
-    css: ``,
-    js: ``,
-    tailwind: {}
-  }
-
-  getNewPagePreview()
+  let preview = '';
+  getNewPagePreview();
   async function getNewPagePreview() {
-    pagePreview = await buildPagePreview({
+    preview = await buildStaticPage({
       page: {
         ...$activePage,
-        styles: localPageStyles
+        css: unsavedPageCSS,
       },
       site: $site,
-      separate: true,
-    })
+    });
   }
 
-  let allPages = []
-  buildSitePreview()
+  let allPages = [];
+  buildSitePreview();
   async function buildSitePreview() {
     allPages = await Promise.all(
-      $pagesStore.map(page => buildPagePreview({ page, site: {
-        ...$site,
-        styles: localSiteStyles
-      }, separate: true }))
-    )
+      $pagesStore.map((page) =>
+        buildStaticPage({
+          page,
+          site: {
+            ...$site,
+            css: unsavedSiteCSS,
+          },
+        })
+      )
+    );
   }
 
-  let loading = false
-  let tailwindConfigChanged = false
+  // preview = await buildPagePreview({ page, site: $site });
+
+  let loading = false;
+  let tailwindConfigChanged = false;
 
   const primaryTabs = [
     {
       id: 'page',
       label: 'Page',
-      icon: 'square'
+      icon: 'square',
     },
     {
       id: 'site',
       label: 'Site',
-      icon: 'th'
-    }
-  ]
+      icon: 'th',
+    },
+  ];
 
-  let primaryTab = primaryTabs[0]
+  let primaryTab = primaryTabs[0];
 
   const secondaryTabs = [
     {
       id: 'styles',
-      label: 'CSS'
+      label: 'CSS',
     },
     {
       id: 'tw',
-      label: 'Tailwind Config'
+      label: 'Tailwind Config',
     },
-  ]
+  ];
 
-  let secondaryTab = secondaryTabs[0]
+  let secondaryTab = secondaryTabs[0];
 
-  let view = 'large'
+  let view = 'large';
 
-  async function compileStyles({ styles, onCompile }) {
-    const result = await processors.css(
-      styles.raw, 
-      {
-        tailwind: styles.tailwind
-      }
-    );
-    loading = false
-    if (!result.error) {
-      onCompile(result)
-      if (tailwindConfigChanged) {
-        const combinedTailwindConfig = getCombinedTailwindConfig(localPageStyles.tailwind, localSiteStyles.tailwind)
-        tailwind.swapInConfig(combinedTailwindConfig, () => {
-          tailwindConfigChanged = false
-        })
-      }
-    } 
+  let pageComponent;
+  let pageError;
+  compilePageCSS();
+  async function compilePageCSS() {
+    const result = await processors.html({
+      html: `<svelte:head>${wrapInStyleTags(
+        unsavedSiteCSS + unsavedPageCSS
+      )}</svelte:head>`,
+      css: '',
+      js: '',
+    });
+    pageError = result.error;
+    pageComponent = result;
+  }
+
+  let siteComponent;
+  let siteError;
+  async function compileSiteCSS() {
+    const result = await processors.html({
+      html: `<svelte:head>${wrapInStyleTags(unsavedSiteCSS)}</svelte:head>`,
+      css: '',
+      js: '',
+    });
+    siteError = result.error;
+    siteComponent = result;
   }
 
   async function saveStyles() {
-    $siteStyles = localSiteStyles
-    pages.update($id, page => ({
+    $siteCSS = unsavedSiteCSS;
+    pages.update($id, (page) => ({
       ...page,
-      styles: localPageStyles
-    }))
-    $unsaved = true
-    modal.hide()
+      css: unsavedPageCSS,
+    }));
+    $unsaved = true;
+    modal.hide();
   }
 
 </script>
 
-<ModalHeader 
+<ModalHeader
   icon="fab fa-css3"
   title="CSS"
-  button={{
-    label: `Draft`,
-    icon: 'fas fa-check',
-    onclick: saveStyles,
-    loading
-  }}
+  button={{ label: `Draft`, icon: 'fas fa-check', onclick: saveStyles, loading }}
   warn={() => {
-    if (!isEqual(localPageStyles, $pageStyles) || !isEqual(localSiteStyles, $siteStyles)) {
-      const proceed = window.confirm('Undrafted changes will be lost. Continue?')
-      return proceed
-    } else return true
+    if (!isEqual(unsavedPageCSS, $pageCSS) || !isEqual(unsavedSiteCSS, $siteCSS)) {
+      const proceed = window.confirm('Undrafted changes will be lost. Continue?');
+      return proceed;
+    } else return true;
   }}
-  variants="mb-4"
-/>
+  variants="mb-4" />
 
 <div class="h-full flex flex-col">
   <div class="grid md:grid-cols-2 flex-1">
     <div class="flex flex-col">
-        <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-        <!-- <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" /> -->
-        {#if primaryTab.id === 'page'}
-          <CodeMirror 
-            autofocus
-            bind:value={localPageStyles.raw} 
-            mode="css" 
-            docs="https://adam-marsden.co.uk/css-cheat-sheet"
-            debounce={true}
-            on:debounce={() => {
-              if (!loading) {
-                loading = true
-              } 
-            }}
-            on:change={() => {
-              compileStyles({
-                styles: localPageStyles,
-                onCompile: async (css) => {
-                  localPageStyles.final = css
-                  await getNewPagePreview()
-                  loading = false
-                }
-              })
-            }}
-            on:save={saveStyles}
-          />
-        {:else if primaryTab.id === 'site'}
-          <CodeMirror 
-            autofocus
-            bind:value={localSiteStyles.raw} 
-            mode="css" 
-            docs="https://adam-marsden.co.uk/css-cheat-sheet"
-            debounce={true}
-            on:debounce={() => {
-              if (!loading) {
-                loading = true
-              } 
-            }}
-            on:change={() => {
-              compileStyles({
-                styles: localSiteStyles,
-                onCompile: async (css) => {
-                  localSiteStyles.final = css
-                  await buildSitePreview()
-                  loading = false
-                }
-              })
-            }}
-            on:save={saveStyles}
-          />
-        {/if} 
+      <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
+      <!-- <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" /> -->
+      {#if primaryTab.id === 'page'}
+        <CodeMirror
+          autofocus
+          bind:value={unsavedPageCSS}
+          mode="css"
+          docs="https://adam-marsden.co.uk/css-cheat-sheet"
+          debounce={true}
+          on:debounce={getNewPagePreview}
+          on:change={compilePageCSS}
+          on:save={saveStyles} />
+      {:else if primaryTab.id === 'site'}
+        <CodeMirror
+          autofocus
+          bind:value={unsavedSiteCSS}
+          mode="css"
+          docs="https://adam-marsden.co.uk/css-cheat-sheet"
+          debounce={true}
+          on:debounce={buildSitePreview}
+          on:change={compileSiteCSS}
+          on:save={saveStyles} />
+      {/if}
     </div>
     <div class="h-96 md:h-auto">
       {#if primaryTab.id === 'page'}
-        <CodePreview 
-          bind:view
-          bind:refreshPreview
-          html={pagePreview.html}
-          css={pagePreview.css}
-          js={pagePreview.js}
-          tailwind={pagePreview.tailwind}
-        />
+        <Preview {preview} />
       {:else}
-        {#each allPages as page}
-          <CodePreview 
-            bind:view
-            bind:refreshPreview
-            html={page.html}
-            css={page.css}
-            js={page.js}
-            tailwind={page.tailwind}
-            hideControls={true}
-          />
+        {#each allPages as preview}
+          <Preview {preview} />
         {/each}
       {/if}
     </div>

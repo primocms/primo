@@ -106,16 +106,14 @@
     class="preview-container flex-1 bg-white"
     class:loading
     bind:this={container}>
-    {#key JSON.stringify(tailwind)}
-      <iframe
-        class:scaled={view === 'large'}
-        on:load={setLoading}
-        class:fadein={previewLoaded}
-        title="Preview HTML"
-        srcdoc={iframePreview}
-        class="bg-white w-full h-full"
-        bind:this={iframe} />
-    {/key}
+    <iframe
+      class:scaled={view === 'large'}
+      on:load={setLoading}
+      class:fadein={previewLoaded}
+      title="Preview HTML"
+      srcdoc={iframePreview}
+      class="bg-white w-full h-full"
+      bind:this={iframe} />
   </div>
   {#if !hideControls}
     <div class="footer-buttons">

@@ -14,7 +14,7 @@ export const tailwindConfig = `{
 export const defaultStyles = {
   raw: `
   
-.primo-copy {
+.primo-content {
   margin: 0 auto;
   width: 100%;
   padding-right: 2rem;
@@ -71,11 +71,11 @@ export const defaultStyles = {
 }
 
 @media (min-width: 1024px) {
-  .primo-copy h1 {
+  .primo-content h1 {
     font-size: 3rem;
   }
 
-  .primo-copy h2 {
+  .primo-content h2 {
     font-size: 2.25rem;
   }
 }
@@ -83,7 +83,7 @@ export const defaultStyles = {
   final: `\
 /* Default content styles */
 
-.primo-copy {
+.primo-content {
   width: 100%;
   margin-right: auto;
   margin-left: auto;
@@ -91,54 +91,54 @@ export const defaultStyles = {
   padding-left: 2rem
 }
 
-.primo-copy {
+.primo-content {
   font-size: 1.125rem;
   --text-opacity: 1;
   color: #374151;
   color: rgba(55, 65, 81, var(--text-opacity));
 }
 
-.primo-copy h1 {
+.primo-content h1 {
     font-size: 1.875rem;
     font-weight: 500;
   }
 
-.primo-copy h2 {
+.primo-content h2 {
     font-size: 1.5rem;
     font-weight: 500;
   }
 
-.primo-copy ol {
+.primo-content ol {
     list-style-type: decimal;
   }
 
-.primo-copy ul {
+.primo-content ul {
     list-style-type: disc;
     list-style-position: inside;
   }
 
-.primo-copy ul p {
+.primo-content ul p {
       display: inline;
     }
 
-.primo-copy ol {
+.primo-content ol {
     list-style-type: decimal;
     list-style-position: inside;
   }
 
-.primo-copy a {
+.primo-content a {
     --text-opacity: 1;
     color: #1c64f2;
     color: rgba(28, 100, 242, var(--text-opacity));
     text-decoration: underline;
   }
 
-.primo-copy blockquote {
+.primo-content blockquote {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 1.5rem;
   }
 
-.primo-copy mark {
+.primo-content mark {
     --text-opacity: 1;
     color: #161e2e;
     color: rgba(22, 30, 46, var(--text-opacity));
@@ -148,11 +148,11 @@ export const defaultStyles = {
   }
 
 @media (min-width: 1024px) {
-  .primo-copy h1 {
+  .primo-content h1 {
     font-size: 3rem;
   }
 
-  .primo-copy h2 {
+  .primo-content h2 {
     font-size: 2.25rem;
   }
 }

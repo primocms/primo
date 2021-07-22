@@ -15,7 +15,7 @@
   import librariesStore from './stores/data/libraries';
   import tailwind from './stores/data/tailwind';
   import { id as pageId } from './stores/app/activePage';
-  import { content, styles, fields, html } from './stores/app/activePage';
+  import { content, styles, fields, html, css } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';
   import {
     saving as savingStore,
@@ -47,7 +47,6 @@
   }
 
   $: dispatch('save', $site);
-  $: console.log({ $site });
 
   $: $pageId = getPageId($router.path);
   function getPageId(path) {
@@ -76,8 +75,8 @@
       content.set(page.content);
       styles.set(page.styles);
       fields.set(page.fields);
-      // wrapper.set(page.wrapper);
       html.set(page.html || DEFAULTS.html);
+      css.set(page.css || DEFAULTS.css);
     }
   }
 

@@ -15,18 +15,15 @@
     convertFieldsToData,
     createDebouncer,
     processCode,
+    wrapInStyleTags,
   } from '../../../utils';
 
-  import { getCombinedTailwindConfig } from '../../../stores/data/tailwind';
-  import {
-    styles as siteStyles,
-    wrapper as siteWrapper,
-    html as siteHTML,
-  } from '../../../stores/data/draft';
+  import { css as siteCSS, html as siteHTML } from '../../../stores/data/draft';
   import {
     styles as pageStyles,
     wrapper as pageWrapper,
     html as pageHTML,
+    css as pageCSS,
   } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
@@ -94,12 +91,12 @@
     const data = convertFieldsToData(allFields);
     const res = await processCode(
       {
-        html: `
+        html: `${html}
       <svelte:head>
         ${$pageHTML.head}
         ${$siteHTML.head}
+        ${wrapInStyleTags($siteCSS + $pageCSS)}
       </svelte:head>
-      ${html}
       `,
         css,
         js,
@@ -107,16 +104,14 @@
       data
     );
     error = res.error;
-    componentApp = res;
+    componentApp = res.js;
     saveRawValue('html', html);
     saveRawValue('css', css);
     saveRawValue('js', js);
   }
 
   let rawHTML = localComponent.value.html;
-
   let rawCSS = localComponent.value.css;
-
   let rawJS = localComponent.value.js;
 
   async function updateHtmlWithFieldData() {
