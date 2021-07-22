@@ -2,6 +2,13 @@ import _ from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 
+export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
+  const res = await processors.html({
+    code, data, buildStatic, format
+  })
+  return res
+}
+
 export function convertFieldsToData(fields) {
   const parsedFields = fields.map((field) => {
     if (field.type === "group") {
@@ -22,7 +29,11 @@ export function convertFieldsToData(fields) {
 export async function updateHtmlWithFieldData(rawHTML) {
   const allFields = getAllFields();
   const data = await convertFieldsToData(allFields, 'all');
-  const finalHTML = await processors.html(rawHTML, data);
+  const finalHTML = await processors.html({
+    html: rawHTML,
+    css: '',
+    js: ''
+  }, data);
   return finalHTML;
 }
 
@@ -67,6 +78,10 @@ export function wrapInStyleTags(css, id = null) {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
 }
 
+export function wrapInSvelteHeadTags(content) {
+  return `<svelte:head>${content}</svelte:head>`;
+}
+
 export function buildPagePreview(content, tailwind) {
   let html = "";
   for (let block of content) {
@@ -82,7 +97,7 @@ export function buildPagePreview(content, tailwind) {
     } else if (block.type === 'content') {
       html += `
         <div class="block" id="block-${block.id}">
-          <div class="primo-copy" id="copy-${block.id}">
+          <div class="primo-content" id="content-${block.id}">
             ${block.value.html}
           </div>
         </div>

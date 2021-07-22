@@ -1,97 +1,86 @@
 <script>
-  import {fade} from 'svelte/transition'
-  import { onMount, createEventDispatcher } from 'svelte'
-  const dispatch = createEventDispatcher()
-  import { TextInput } from "../../../components/inputs";
-  import { PrimaryButton } from "../../../components/buttons";
+  import { fade } from 'svelte/transition';
+  import { onMount, createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+  import { TextInput } from '../../../components/inputs';
+  import { PrimaryButton } from '../../../components/buttons';
+  import Preview from '../../../components/misc/Preview.svelte';
 
-  import { router } from 'tinro'
-  import modal from '../../../stores/app/modal'
-  import {buildPagePreview} from '../../../stores/helpers'
-  import {site} from '../../../stores/data/draft'
-  import 'requestidlecallback-polyfill'
+  import { router } from 'tinro';
+  import modal from '../../../stores/app/modal';
+  import { buildPagePreview, buildStaticPage } from '../../../stores/helpers';
+  import { site } from '../../../stores/data/draft';
+  import 'requestidlecallback-polyfill';
 
-  export let page
-  export let active = false
-  export let disableAdd = false
+  export let page;
+  export let active = false;
+  export let disableAdd = false;
 
-  let preview = ''
-  buildPreview()
+  let preview = '';
+  buildPreview();
   async function buildPreview() {
-    preview = await buildPagePreview({ page, site: $site })
+    preview = await buildStaticPage({ page, site: $site });
   }
 
-  let iframeLoaded = false
+  let iframeLoaded = false;
 
-  let container
-  let iframe
-  let scale
+  let container;
+  let iframe;
+  let scale;
 
   function resizePreview() {
-    const { clientWidth: parentWidth } = container
-    const { clientWidth: childWidth } = iframe
-    scale = parentWidth / childWidth
+    const { clientWidth: parentWidth } = container;
+    const { clientWidth: childWidth } = iframe;
+    scale = parentWidth / childWidth;
   }
 
   $: if (iframe) {
-    resizePreview()
+    resizePreview();
   }
 
   function openPage(e) {
-    e.preventDefault()
-    modal.hide()
+    e.preventDefault();
+    modal.hide();
 
-    const [_, user, repo] = $router.path.split('/')
+    const [_, user, repo] = $router.path.split('/');
 
     if (user === 'try') {
-      router.goto(`/try/${page.id === 'index' ? '' : page.id }`)
+      router.goto(`/try/${page.id === 'index' ? '' : page.id}`);
     } else {
-      router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`)
+      router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`);
     }
   }
 
-  let shouldLoadIframe = false
-  onMount(() => {
-    window.requestIdleCallback(() => {
-      shouldLoadIframe = true
-    })
-  })
-
-  let editingPage = false
-  let title = page.title || ''
-  let id = page.id || ''
-  $: disableSave = !title || !id
+  let editingPage = false;
+  let title = page.title || '';
+  let id = page.id || '';
+  $: disableSave = !title || !id;
 
 </script>
 
 <svelte:window on:resize={resizePreview} />
 <li class="shadow-lg rounded overflow-hidden border-gray-900">
   <div class="text-gray-200 bg-codeblack w-full flex justify-between px-3 py-2">
-    <div>
-      <span class="text-xs font-semibold">{page.title}</span>
-    </div>
+    <div><span class="text-xs font-semibold">{page.title}</span></div>
     <div class="flex justify-end">
       <button
         title="Edit"
-        on:click={() => editingPage = !editingPage}
-        class="p-1 text-xs hover:text-primored"
-      >
+        on:click={() => (editingPage = !editingPage)}
+        class="p-1 text-xs hover:text-primored">
         <i class="fas fa-edit" />
       </button>
       {#if page.pages && !disableAdd}
         <button
           title="Show sub-pages"
           on:click={() => dispatch('list')}
-          class="p-1 text-xs hover:text-primored"
-        >
+          class="p-1 text-xs hover:text-primored">
           <i class="fas fa-th-large" />
         </button>
       {:else if page.id !== 'index' && !disableAdd}
         <button
           title="Add sub-page"
           on:click={() => dispatch('add')}
-          class="p-1 text-xs hover:text-primored"
-        >
+          class="p-1 text-xs hover:text-primored">
           <i class="fas fa-plus" />
         </button>
       {/if}
@@ -99,8 +88,7 @@
         <button
           title="Delete page"
           on:click={() => dispatch('delete')}
-          class="ml-1 p-1 delete-page text-xs text-red-400 hover:text-primored"
-        >
+          class="ml-1 p-1 delete-page text-xs text-red-400 hover:text-primored">
           <i class="fas fa-trash" />
         </button>
       {/if}
@@ -108,10 +96,12 @@
   </div>
   {#if editingPage}
     <div class="p-4">
-      <form on:submit|preventDefault={() => {
-        editingPage = false
-        dispatch('edit', { title, id })
-      }} in:fade={{ duration: 100 }}>
+      <form
+        on:submit|preventDefault={() => {
+          editingPage = false;
+          dispatch('edit', { title, id });
+        }}
+        in:fade={{ duration: 100 }}>
         <TextInput
           bind:value={title}
           id="page-label"
@@ -119,16 +109,18 @@
           variants="mb-2 text-xs"
           label="Page Label"
           placeholder="About Us" />
-          {#if id !== 'index'}
-            <TextInput
-              bind:value={id}
-              id="page-url"
-              variants="mb-2 text-xs"
-              label="Page URL"
-              prefix="/"
-              placeholder="about-us" />
-          {/if}
-        <PrimaryButton disabled={disableSave} id="save-page" type="submit">Save</PrimaryButton>
+        {#if id !== 'index'}
+          <TextInput
+            bind:value={id}
+            id="page-url"
+            variants="mb-2 text-xs"
+            label="Page URL"
+            prefix="/"
+            placeholder="about-us" />
+        {/if}
+        <PrimaryButton disabled={disableSave} id="save-page" type="submit">
+          Save
+        </PrimaryButton>
       </form>
     </div>
   {:else}
@@ -139,20 +131,8 @@
       on:click={openPage}
       class:active
       bind:this={container}
-      aria-label="Go to /{page.id}"
-    >
-      {#if shouldLoadIframe}
-        <iframe
-          bind:this={iframe}
-          style="transform: scale({scale})"
-          class:fadein={iframeLoaded}
-          title="page preview"
-          srcdoc={preview}
-          on:load={() => {
-            iframeLoaded = true
-          }}
-        />
-      {/if}
+      aria-label="Go to /{page.id}">
+      <Preview {preview} />
     </a>
   {/if}
 </li>
@@ -190,4 +170,5 @@
   .fadein {
     @apply opacity-100;
   }
+
 </style>

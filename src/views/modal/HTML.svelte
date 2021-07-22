@@ -8,11 +8,12 @@
 
   import modal from '../../stores/app/modal';
   import { getAllFields } from '../../stores/helpers';
-  import { wrapper as pageHTML, id } from '../../stores/app/activePage';
+  import { html as pageHTML, id } from '../../stores/app/activePage';
   import { unsaved } from '../../stores/app/misc';
   import {
-    wrapper as siteHTML,
-    pages as pagesStore,
+    // wrapper as siteHTML,
+    // pages as pagesStore,
+    html as siteHTML,
   } from '../../stores/data/draft';
   import {
     updateSiteWrapper,
@@ -21,6 +22,8 @@
 
   let localPageHTML = cloneDeep($pageHTML);
   let localSiteHTML = cloneDeep($siteHTML);
+
+  $: console.log({ $pageHTML, $siteHTML });
 
   const tabs = [
     {
@@ -40,7 +43,11 @@
   async function updateHtmlWithFieldData(rawHTML) {
     const allFields = getAllFields();
     const data = await convertFieldsToData(allFields, 'all');
-    const finalHTML = await processors.html(rawHTML, data);
+    const finalHTML = await processors.html(
+      { html: rawHTML, css: '', js: '' },
+      data
+    );
+
     return finalHTML;
   }
 
@@ -74,28 +81,28 @@
       <span
         class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span>
       <CodeMirror
-        bind:value={localPageHTML.head.raw}
+        bind:value={localPageHTML.head}
         style="height:10rem"
         mode="html" />
 
       <span
         class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span>
       <CodeMirror
-        bind:value={localPageHTML.below.raw}
+        bind:value={localPageHTML.below}
         style="height:15rem"
         mode="html" />
     {:else}
       <span
         class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span>
       <CodeMirror
-        bind:value={localSiteHTML.head.raw}
+        bind:value={localSiteHTML.head}
         style="height:10rem"
         mode="html" />
 
       <span
         class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span>
       <CodeMirror
-        bind:value={localSiteHTML.below.raw}
+        bind:value={localSiteHTML.below}
         style="height:15rem"
         mode="html" />
     {/if}

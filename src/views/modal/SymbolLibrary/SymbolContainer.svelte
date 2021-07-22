@@ -1,19 +1,21 @@
 <script>
-  import { Spinner } from '../../../components/misc';
-  import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
   import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
-  import { createSymbolPreview } from '../../../utils';
 
-  import { styles as siteStyles, wrapper } from '../../../stores/data/draft';
-  import { styles as pageStyles } from '../../../stores/app/activePage';
-  import { getTailwindConfig } from '../../../stores/helpers';
-  import { processors } from '../../../component';
+  import IFrame from './IFrame.svelte';
   import { getAllFields } from '../../../stores/helpers';
-  import components from '../../../stores/app/components';
-  import { convertFieldsToData } from '../../../utils';
+  import {
+    convertFieldsToData,
+    processCode,
+    wrapInStyleTags,
+  } from '../../../utils';
+  import { html as siteHTML, css as siteCSS } from '../../../stores/data/draft';
+  import {
+    html as pageHTML,
+    css as pageCSS,
+  } from '../../../stores/app/activePage';
 
   export let symbol;
   export let title = symbol.title || '';
@@ -28,109 +30,37 @@
     dispatch('update', symbol);
   }
 
-  let iframe;
-  let iframeLoaded = false;
-
-  let scale;
-  let iframeContainer;
-  function resizePreview() {
-    const { clientWidth: parentWidth } = iframeContainer;
-    const { clientWidth: childWidth } = iframe;
-    scale = parentWidth / childWidth;
-  }
-
-  $: if (iframe) {
-    resizePreview();
-  }
-
-  let mounted = false;
-  let shouldLoadIframe = true;
-  onMount(() => {
-    mounted = true;
-    shouldLoadIframe = true;
-  });
-
-  let css;
-  $: mounted && processCSS(symbol.value.css);
-  function processCSS(raw = '') {
-    if (!raw) return;
-    const cacheKey = symbol.id + raw; // to avoid getting html cached with irrelevant data
-    const cachedCSS = $components[cacheKey];
-    if (cachedCSS) {
-      css = cachedCSS;
-    } else {
-      const tailwind = getTailwindConfig(true);
-      const encapsulatedCss = `#component-${symbol.id} {${raw}}`;
-      processors.css(encapsulatedCss, { tailwind }).then((res) => {
-        css = res || '/**/';
-        $components[raw] = css;
-      });
-    }
-  }
-
-  let html;
-  $: mounted && processHTML(symbol.value.html);
-  function processHTML(raw = '') {
-    if (!raw) return;
-    const cachedHTML = $components[raw];
-    if (cachedHTML) {
-      html = cachedHTML;
-    } else {
-      const allFields = getAllFields(symbol.value.fields);
-      const data = convertFieldsToData(allFields);
-      processors.html(raw, data).then((res) => {
-        html = res;
-        $components[raw] = html;
-      });
-    }
-  }
-
-  let js;
-  $: mounted && processJS(symbol.value.js);
-  function processJS(raw) {
-    if (!raw) {
-      js = `//`; // set js to something to component renders
-    } else {
-      const allFields = getAllFields(symbol.value.fields);
-      const data = convertFieldsToData(allFields);
-      const finalJS = `
-        const primo = {
-          id: '${symbol.id}',
-          data: ${JSON.stringify(data)},
-          fields: ${JSON.stringify(allFields)}
-        }
-        ${raw.replace(
-          /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-          `import $1 from 'https://cdn.skypack.dev/$2'`
-        )}`;
-      js = finalJS;
-    }
-  }
-
-  $: preview = buildPreview(html, css, js);
-  function buildPreview(html, css, js) {
-    if (!mounted || (!html && !js && !css)) return ``;
-    const parentStyles = $siteStyles.final + $pageStyles.final;
-    const previewCode = createSymbolPreview({
-      id: symbol.id,
-      html,
-      wrapper: $wrapper,
-      js,
-      css: parentStyles + css,
-      tailwind: getTailwindConfig(),
+  let componentApp;
+  let error;
+  compileComponentCode(symbol.value);
+  async function compileComponentCode(value) {
+    const allFields = getAllFields(value.fields);
+    const data = convertFieldsToData(allFields);
+    const res = await processCode({
+      code: {
+        ...value,
+        html: `
+        <svelte:head>
+          ${$siteHTML + $pageHTML}
+          ${wrapInStyleTags($siteCSS + $pageCSS)}
+        </svelte:head>
+        ${value.html}
+        `,
+      },
+      data,
+      buildStatic: false,
     });
-
-    return previewCode;
+    console.log({ res });
+    error = res.error;
+    componentApp = res.js;
   }
 
-  let active = false;
+  let active;
 
 </script>
 
-<svelte:window on:resize={resizePreview} />
 <div
   class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
-  in:fade={{ delay: 250, duration: 200 }}
   id="symbol-{symbol.id}">
   <div class="flex justify-between items-center shadow-sm">
     <div class="component-label">
@@ -155,7 +85,7 @@
         <button
           title={button.title}
           class="p-2 {button.class}"
-          class:focus={button.focus && !active}
+          class:highlight={button.highlight && !active}
           on:mouseenter={() => {
             hovering = true;
           }}
@@ -180,26 +110,7 @@
       {/each}
     </div>
   </div>
-  <div
-    class="bg-gray-100 flex-1 flex flex-col relative"
-    bind:this={iframeContainer}>
-    {#if !iframeLoaded}
-      <div
-        class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
-        <Spinner />
-      </div>
-    {/if}
-    {#if loadPreview}
-      <iframe
-        on:load={() => (iframeLoaded = true)}
-        class:fadein={iframeLoaded}
-        style="transform: scale({scale})"
-        class="w-full shadow-lg"
-        bind:this={iframe}
-        title="component preview"
-        srcdoc={preview} />
-    {/if}
-  </div>
+  <IFrame {componentApp} />
 </div>
 
 <style>
@@ -213,7 +124,7 @@
     @apply bg-codeblack;
     @apply flex space-x-2 items-center transition-colors duration-100 focus:outline-none focus:opacity-75;
   }
-  button.focus {
+  button.highlight {
     @apply bg-primored;
   }
   button:hover {
@@ -250,6 +161,11 @@
       input:focus {
         box-shadow: none;
       }
+    }
+
+    span {
+      padding: 0.25rem 0;
+      font-size: 0.75rem;
     }
   }
 

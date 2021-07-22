@@ -1,76 +1,78 @@
 export const iframePreview = `
   <!DOCTYPE html>
-  <html hidden>
+  <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <style id="_style"></style>
-      <script type="module" id="_script"></script>
-      <script>
-        window.addEventListener('message', ({data}) => {
-          const {html, css, js, tailwind} = data
-          if (html) {
-            setHTML(data.html)
-          }
-          if (css) {
-            setCSS(css)
-          }
-          if (js) {
-            setJS(js)
-          }
-          if (tailwind) {
-            setTW(tailwind)
-          }
-        })
-        function setHTML(html) {
-          document.body.innerHTML = html
-        }
-        function setCSS(css) {
-          const style = document.getElementById('_style')
-          const newStyle = document.createElement('style')
-          newStyle.id = '_style'
-          newStyle.innerHTML = css
-          style.parentNode.replaceChild(newStyle, style)
-        }
-        function setJS(js = '') {
-          const script = document.getElementById('_script')
-          if (Array.isArray(js)) {
-            for (let blockJS of js) {
-              const newScript = document.createElement('script')
-              newScript.innerHTML = blockJS
-              newScript.setAttribute('type', 'module');
-              script.appendChild(newScript)
-            }
-          } else {
-            const newScript = document.createElement('script')
-            newScript.id = '_script'
-            newScript.innerHTML = js
-            newScript.setAttribute('type', 'module');
-            script.parentNode.replaceChild(newScript, script)
-          }
-        }
-        function setTW(config = { theme: {} }) {
-          const twindConfig = document.getElementById('twind-config')
-          const newTwindConfig = document.createElement('script')
-          newTwindConfig.id = 'twind-config'
-          newTwindConfig.innerHTML = JSON.stringify({ mode: 'silent', theme: config.theme })
-          newTwindConfig.setAttribute('type', 'twind-config');
-          twindConfig.parentNode.replaceChild(newTwindConfig, twindConfig)
+      <script type="module">
+        let c;
 
-          const twindScript = document.createElement('script')
-          twindScript.setAttribute('type', 'module');
-          twindScript.setAttribute('src', 'https://cdn.skypack.dev/twind/shim');
-          twindScript.onload = () => {
-            setTimeout(() => {
-              this.postMessage('done')
-            }, 200)
-          }
-          newTwindConfig.parentNode.appendChild(twindScript)
+        function update(source) {
+          const blob = new Blob([source], { type: 'text/javascript' });
+          const url = URL.createObjectURL(blob);
+
+          import(url).then(({ default: App }) => {
+            if (c) c.$destroy();
+            try {
+              c = new App({ target: document.body })
+            } catch(e) {
+              document.querySelector('#error').innerHTML = e.toString()
+            }
+          })
         }
-      </script>
-      <script type="twind-config" id="twind-config"></script>
+
+        window.addEventListener('message', ({data}) => {
+          if (data.error) {
+					  document.querySelector('#error').innerHTML = data.error 
+          } else if (data.componentApp) {
+            console.log('building', {data})
+					  document.querySelector('#error').innerHTML = ''
+            update(data.componentApp)
+          }
+        }, false)
+		  <\/script>
+    </head>
+    <div id="error">
+    </div>
+    <body class="primo-page">
+    </body>
+  </html>
+`
+
+export const pagePreview = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script type="module">
+        let c;
+
+        function update(source) {
+          console.log({source})
+          source.forEach(async (item, i) => {
+            if (item.svelte.error) return
+            const div = document.createElement("div")
+            document.body.appendChild(div)
+            const blob = new Blob([item.svelte], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const { default:App } = await import(url)
+            new App({ target: div })
+          })
+        }
+
+        window.addEventListener('message', ({data}) => {
+          update(data.preview)
+        }, false)
+		  <\/script>
     </head>
     <body class="primo-page">
     </body>
+    <style>
+        .primo-page {
+          /* height: 100vh;
+          overflow: hidden; */
+        }
+    </style>
   </html>
 `

@@ -6,7 +6,7 @@ import { fields as pageFields, styles as pageStyles, content } from './app/activ
 import { getCombinedTailwindConfig } from './data/tailwind'
 import { symbols, wrapper } from './data/draft'
 import components from './app/components'
-import { wrapInStyleTags, convertFieldsToData } from '../utils'
+import { wrapInStyleTags, convertFieldsToData, processCode } from '../utils'
 import { processors } from '../component'
 
 export function getAllFields(componentFields = []) {
@@ -109,62 +109,157 @@ export async function processContent(page, site) {
   )
 }
 
-export async function buildPagePreview({ page, site, separate = false }) {
-  const content = await processContent(page, site)
-  const tailwind = getTailwindConfig()
-  if (separate) {
-    const html = buildBlockHTML(content)
-    const css = site.styles.final + page.styles.final
-    const js = buildBlockJS(content)
-    return { html, css, js, tailwind }
-  } else {
-    const parentStyles = wrapInStyleTags(site.styles.final) + wrapInStyleTags(page.styles.final)
-    return parentStyles + buildBlockHTML(content, tailwind)
-  }
+export async function buildStaticPage({ page, site }) {
+  const [ head, below, ...blocks ] = await Promise.all([
+    new Promise(async (resolve) => {
+      const fields = _.unionBy(page.fields, site.fields, "key");
+      const data = convertFieldsToData(fields);
+      const svelte = await processCode({ 
+        code: {
+          html: `<svelte:head>
+          ${site.html?.head}
+          ${page.html?.head}
+          <style>
+          ${site.css}
+          ${page.css}
+          </style>
+          </svelte:head>`, 
+          css: '', 
+          js: ''
+        },
+        data,
+        format: 'esm'});
 
-  function buildBlockHTML(content, tailwind) {
-    let html = "";
-    for (let block of content) {
+      resolve(svelte)
+    }),
+    new Promise(async (resolve) => {
+      const fields = _.unionBy(page.fields, site.fields, "key");
+      const data = convertFieldsToData(fields);
+      const svelte = await processCode({ 
+        code: {
+          html: site.html?.below + page.html?.below, 
+          css: '', 
+          js: ''
+        },
+        data
+      });
+
+      resolve(svelte) 
+    }),
+    ...page.content.map(async block => {
       if (block.type === 'component') {
-        html += `
-        <div class="block" id="block-${block.id}">
-          <div class="primo-component" id="component-${block.id}">
-            <div>${block.html}</div>
-          </div>
-        </div>
-        <style type="text/css">${block.css}</style>
-        `
-      } else if (block.type === 'content') {
-        html += `
-          <div class="block" id="block-${block.id}">
-            <div class="primo-copy" id="copy-${block.id}">
-              ${block.value.html}
-            </div>
-          </div>
-        `
+
+        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+        const data = convertFieldsToData(fields);
+
+        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        if (!symbol) return 
+        const { html, css, js } = symbol.value
+
+        const svelte = await processCode({ 
+          code: {
+            html, 
+            css, 
+            js 
+          },
+          data,
+          format: 'iife'
+        });
+
+        return {
+          ...svelte,
+          type: 'component',
+          id: block.id
+        }
+
+      } else {
+        const {html} = block.value
+        const svelte = await processCode({ 
+          code: {
+            html, 
+            css: '', 
+            js: '' 
+          }
+        });
+        return {
+          ...svelte,
+          type: 'content'
+        }
       }
-    }
+    })
+  ])
+  const final = `
+  <html>
+    <head>${head.html}</head>
+    <body class="primo-page">
+      ${blocks.map(block => `
+        <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
+          ${block.html}
+          ${
+            block.js ? 
+            `<script type="module">
+              const App = ${block.js}
+              new App({
+                target: document.querySelector('#block-${block.id}'),
+                hydrate: true
+              })
+            </script>` 
+          : ``}
+        </div>
+        ${block.css ? `<style>${block.css}</style>` : ``}
+      `).join('\n')}
+      ${below.html}
+    </body>
+  </html>
+  `
+  return final
+}
 
-    if (tailwind) {
-      const twConfig = JSON.stringify({
-        mode: 'silent',
-        theme: tailwind.theme
-      })
 
-      html += `<script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
-      <script type="twind-config">
-        ${twConfig}
-      </script>`
+export async function buildPagePreview({ page, site }) {
+  const res = await Promise.all([
+    ...page.content.map(async block => {
+      if (block.type === 'component') {
 
-      return `<html hidden class="primo-page">${html}</html>`;
-    } else {
-      return `<html class="primo-page">${html}</html>`
-    }
-  }
+        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+        const data = convertFieldsToData(fields);
 
-  function buildBlockJS(content) {
-    return content.map(block => block.js).filter(Boolean)
-  }
+        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        if (!symbol) return 
+        const { html, css, js } = symbol.value
+
+        const svelte = await processCode({ 
+          code: {
+            html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+            ${html}
+            `, 
+            css, 
+            js 
+          },
+          data
+        });
+
+        return svelte
+
+      } else {
+        const {html} = block.value
+        // might add this back in later
+        // const fields = _.unionBy(page.fields, site.fields, "key");
+        // const data = convertFieldsToData(fields);
+        const svelte = await processCode({ 
+          code: {
+            html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
+            ${html}
+            `, 
+            css: '', 
+            js: '' 
+          }
+        });
+        return svelte
+      }
+    })
+  ])
+  return res
 }
 
 async function processHTML({ value }, { data }) {

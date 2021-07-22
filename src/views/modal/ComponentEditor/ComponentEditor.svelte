@@ -11,16 +11,19 @@
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../../components/FieldTypes/GroupField.svelte';
 
-  import { convertFieldsToData, createDebouncer } from '../../../utils';
-
-  import { getCombinedTailwindConfig } from '../../../stores/data/tailwind';
   import {
-    styles as siteStyles,
-    wrapper as siteWrapper,
-  } from '../../../stores/data/draft';
+    convertFieldsToData,
+    createDebouncer,
+    processCode,
+    wrapInStyleTags,
+  } from '../../../utils';
+
+  import { css as siteCSS, html as siteHTML } from '../../../stores/data/draft';
   import {
     styles as pageStyles,
     wrapper as pageWrapper,
+    html as pageHTML,
+    css as pageCSS,
   } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
@@ -75,98 +78,44 @@
 
   let fields = localComponent.value.fields;
 
-  let rawHTML = localComponent.value.html;
-  let finalHTML = '';
-  $: compileHtml(rawHTML);
-  async function compileHtml(html) {
-    loading = true;
-    saveRawValue('html', html);
-    let res = await processors.html(html, componentData);
-    if (res.error) {
-      disableSave = true;
-      res = `<pre class="flex justify-start p-8 items-start bg-red-100 text-red-900 h-screen font-mono text-xs lg:text-sm xl:text-md">${res.error}</pre>`;
-    } else {
-      disableSave = false;
-      finalHTML = res;
-    }
-    // saveFinalValue("html", finalHTML);
-    if (finalJS) {
-      finalJS = `${finalJS} `; // force preview to reload so JS evaluates over new DOM
-    }
-    quickDebounce([
-      () => {
-        loading = false;
-      },
-      null,
-    ]);
-  }
-
-  let rawCSS = localComponent.value.css;
-  let finalCSS = '';
-  $: (async (css) => {
-    loading = true;
-    await compileCSS(css);
-    loading = false;
-  })(rawCSS);
-  const compileCSS = _.debounce(async (css) => {
-    saveRawValue('css', css);
-    const encapsulatedCss = `#component-${localComponent.id} {${css}}`;
-    const result = await processors.css(encapsulatedCss, {
-      html: finalHTML,
-      tailwind: $siteStyles.tailwind,
-    });
-    if (result.error) {
-      disableSave = true;
-    } else if (result) {
-      disableSave = false;
-      finalCSS = result;
-    }
-    loading = false;
-  }, 200);
-
-  let rawJS = localComponent.value.js;
-  let finalJS = '';
-  $: compileJs(rawJS);
-  async function compileJs(js) {
-    finalJS = js
-      ? `
-      const primo = {
-        id: '${localComponent.id}',
-        data: ${JSON.stringify(getData(fields))},
-        fields: ${JSON.stringify(getAllFields(fields))}
-      }
-      ${js.replace(
-        /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-        `import $1 from 'https://cdn.skypack.dev/$2'`
-      )} 
-    `
-      : ``;
-    saveRawValue('js', js);
-    saveFinalValue('js', finalJS);
-  }
-
-  let componentData = getData(fields);
-  $: componentData = getData(fields);
-  function getData(fields) {
+  let componentApp;
+  let error;
+  $: compileComponentCode({
+    html: rawHTML,
+    css: rawCSS,
+    js: rawJS,
+    fields,
+  });
+  async function compileComponentCode({ html, css, js, fields }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    return {
-      ...data,
-      id: component.id,
-    };
+    const res = await processCode({
+      code: {
+        html: `${html}
+      <svelte:head>
+        ${$pageHTML.head}
+        ${$siteHTML.head}
+        ${wrapInStyleTags($siteCSS + $pageCSS)}
+      </svelte:head>
+      `,
+        css,
+        js,
+      },
+      data,
+    });
+    error = res.error;
+    componentApp = res.js;
+    saveRawValue('html', html);
+    saveRawValue('css', css);
+    saveRawValue('js', js);
   }
 
+  let rawHTML = localComponent.value.html;
+  let rawCSS = localComponent.value.css;
+  let rawJS = localComponent.value.js;
+
   async function updateHtmlWithFieldData() {
-    loading = true;
-    finalHTML = await processors.html(rawHTML, getData(fields));
-    saveFinalValue('html', finalHTML);
     refreshFields();
-    if (rawJS) compileJs(rawJS); // re-run js with new field values
-    quickDebounce([
-      () => {
-        loading = false;
-      },
-    ]);
   }
 
   let isSingleUse = false;
@@ -194,7 +143,7 @@
     disabled = false;
     const symbol = getSymbol(localComponent.symbolID);
     localComponent = _.cloneDeep(symbol);
-    compileCSS(symbol.value.css); // workaround for styles breaking
+    // compileCSS(symbol.value.css); // workaround for styles breaking
     modal.show('COMPONENT_EDITOR', {
       component: symbol,
       header: {
@@ -594,7 +543,8 @@
     </div>
   </div>
   <div slot="right" class="w-full h-full overflow-hidden">
-    <CodePreview
+    <CodePreview view="small" {loading} {componentApp} {error} />
+    <!-- <CodePreview
       view="small"
       {loading}
       html={`
@@ -606,7 +556,7 @@
         `}
       css={$siteStyles.final + $pageStyles.final + finalCSS}
       js={finalJS}
-      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)} />
+      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)} /> -->
   </div>
 </HSplitPane>
 

@@ -10,16 +10,21 @@ export const wrapper = writable(DEFAULTS.wrapper)
 export const fields = writable([])
 export const symbols = writable([])
 
+export const html = writable(DEFAULTS.html)
+export const css = writable(DEFAULTS.css)
+
 // conveniently get the entire site
 export const site = derived(
-  [ id, name, pages, styles, wrapper, fields, symbols ], 
-  ([ id, name, pages, styles, wrapper, fields, symbols]) => {
+  [ id, name, pages, html, css, fields, symbols ], 
+  ([ id, name, pages, html, css, fields, symbols]) => {
   return {
     id, 
     name,
     pages,
-    styles, 
-    wrapper, 
+    // styles, 
+    // wrapper, 
+    html,
+    css,
     fields, 
     symbols
   }

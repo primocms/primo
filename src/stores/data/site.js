@@ -1,7 +1,7 @@
 import { writable, readable, derived, get } from 'svelte/store';
 import { createSite } from '../../const'
 
-import {fields,styles,symbols,wrapper,pages,id,name} from './draft'
+import {fields,styles,symbols,pages,id,name,html,css} from './draft'
 
 let site
 const {subscribe,set} = writable(createSite())
@@ -16,9 +16,9 @@ export default {
       id: get(id),
       name: get(name),
       fields: get(fields),
-      styles: get(styles),
       symbols: get(symbols),
-      wrapper: get(wrapper),
+      html: get(html),
+      css: get(css),
       pages: get(pages)
     })
   },
@@ -27,18 +27,18 @@ export default {
     id: get(id),
     name: get(name),
     fields: get(fields),
-    styles: get(styles),
+    css: get(css),
     symbols: get(symbols),
-    wrapper: get(wrapper),
+    html: get(html),
     pages: get(pages)
   }),
   hydrate: (site) => {
     id.set(site.id)
     name.set(site.name)
     fields.set(site.fields)
-    styles.set(site.styles)
+    css.set(site.css)
     symbols.set(site.symbols)
-    wrapper.set(site.wrapper)
+    html.set(site.html)
     pages.set(site.pages)
   },
   subscribe

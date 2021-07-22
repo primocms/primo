@@ -7,13 +7,23 @@
     wrapper as siteWrapper,
     symbols,
     fields as siteFields,
+    html as siteHTML,
+    css as siteCSS,
   } from '../../stores/data/draft';
   import {
     id,
     wrapper as pageWrapper,
     content,
     fields as pageFields,
+    html as pageHTML,
+    css as pageCSS,
   } from '../../stores/app/activePage';
+  import {
+    processCode,
+    convertFieldsToData,
+    wrapInStyleTags,
+  } from '../../utils';
+  import { getAllFields } from '../../stores/helpers';
 
   $: pageExists = findPage($id, $pages);
   function findPage(id, pages) {
@@ -65,7 +75,47 @@
   }
   $: disableLinks($content);
 
+  let htmlHead = '';
+  let htmlBelow = '';
+  $: setPageHTML({
+    siteHTML: $siteHTML,
+    pageHTML: $pageHTML,
+    siteCSS: $siteCSS,
+    pageCSS: $pageCSS,
+  });
+  async function setPageHTML({ siteHTML, pageHTML, siteCSS, pageCSS }) {
+    const data = convertFieldsToData(getAllFields());
+    const [head, below] = await Promise.all([
+      processCode({
+        code: {
+          html: `<svelte:head>
+            ${siteHTML.head}${pageHTML.head}
+            ${wrapInStyleTags(siteCSS + pageCSS)}
+          </svelte:head>`,
+          css: '',
+          js: '',
+        },
+        data,
+      }),
+      processCode({
+        code: {
+          html: siteHTML.below + pageHTML.below,
+          css: '',
+          js: '',
+        },
+        data,
+      }),
+    ]);
+
+    htmlHead = head.html;
+    htmlBelow = below.html;
+  }
+
 </script>
+
+<svelte:head>
+  {@html htmlHead}
+</svelte:head>
 
 <div
   bind:this={element}
@@ -82,6 +132,5 @@
       {/if}
     {/each}
   {/if}
-  {@html $pageWrapper.below.final}
-  {@html $siteWrapper.below.final}
 </div>
+{@html htmlBelow}

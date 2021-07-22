@@ -2,7 +2,7 @@
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
   import _ from 'lodash';
-  import Container from './ComponentPickerContainer.svelte';
+  import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
 
   import { symbols } from '../../../../stores/data/draft';
   import { createUniqueID } from '../../../../utilities';
@@ -66,10 +66,8 @@
     <ul class="components" xyz="fade stagger stagger-2">
       {#each $symbols as symbol (componentID(symbol))}
         <li class="xyz-in">
-          <Container
-            titleEditable
+          <SymbolContainer
             {symbol}
-            loadPreview={mounted}
             buttons={[{ onclick: () => {
                   dispatch('select', createInstance(symbol));
                 }, highlight: true, label: 'Select', svg: `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />

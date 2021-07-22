@@ -1,93 +1,87 @@
 <script>
-  import { cloneDeep } from 'lodash';
-  import { onMount } from 'svelte';
+  import { cloneDeep, isEqual, differenceWith } from 'lodash';
+  import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { router } from 'tinro';
   import { getStyles, appendHtml } from '../pageUtils.js';
   import { processors } from '../../../component';
   import { getAllFields, getTailwindConfig } from '../../../stores/helpers';
   import components from '../../../stores/app/components';
-  import { convertFieldsToData } from '../../../utils';
+  import {
+    convertFieldsToData,
+    processCode,
+    wrapInStyleTags,
+  } from '../../../utils';
 
   export let block;
 
   let mounted = false;
   onMount(() => (mounted = true));
 
-  $: appendJS(block.value.js, mounted);
-  function appendJS(js, mounted) {
-    if (mounted && js) {
-      const allFields = getAllFields(block.value.fields);
-      const data = convertFieldsToData(allFields);
-      const finalJS = `
-        const primo = {
-          id: '${block.id}',
-          data: ${JSON.stringify(data)},
-          fields: ${JSON.stringify(allFields)}
-        }
-        ${js.replace(
-          /(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g,
-          `import $1 from 'https://cdn.skypack.dev/$2'`
-        )}`;
-      appendHtml(`#component-${block.id} > [primo-js]`, 'script', finalJS, {
-        type: 'module',
-      });
-      $components[js] = finalJS;
-    }
-  }
-
   let html = '';
-  $: processHTML(block.value.html);
-  function processHTML(raw = '') {
-    const cacheKey = raw + JSON.stringify(block.value.fields); // to avoid getting html cached with irrelevant data
-    const cachedHTML = $components[cacheKey];
-    if (!block.symbolID && cachedHTML) {
-      html = cachedHTML;
-    } else {
-      const allFields = getAllFields(block.value.fields);
+  let css = '';
+  let js = '';
+  let fields = [];
+  $: compileComponentCode({
+    html: block.value.html,
+    css: block.value.css,
+    js: block.value.js,
+    fields: block.value.fields,
+  });
+
+  let error = '';
+  async function compileComponentCode(rawCode) {
+    // workaround for this function re-running anytime something changes on the page
+    // (as opposed to when the code actually changes)
+    if (
+      html !== rawCode.html ||
+      css !== rawCode.css ||
+      js !== rawCode.js ||
+      differenceWith(fields, rawCode.fields, isEqual)
+    ) {
+      html = rawCode.html;
+      css = rawCode.css;
+      js = rawCode.js;
+      fields = rawCode.fields;
       const data = {
         id: block.id,
-        ...convertFieldsToData(allFields),
+        ...convertFieldsToData(getAllFields(block.value.fields)),
       };
-      processors.html(raw, data).then((res) => {
-        html = res;
-        $components[cacheKey] = html;
+      const res = await processCode({
+        code: rawCode,
+        data,
+        buildStatic: false,
       });
+      if (res.error) {
+        error = res.error;
+      } else if (res.js) {
+        error = '';
+        if (component) component.$destroy();
+        const blob = new Blob([res.js], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+
+        const { default: App } = await import(url /* @vite-ignore */);
+        component = new App({
+          target: node,
+        });
+      }
     }
+
+    // $components[cacheKey] = html;
   }
 
-  let css = '';
-  $: processCSS(block.value.css);
-  function processCSS(raw = '') {
-    const cacheKey = block.id + raw; // to avoid getting CSS w/ wrong encapsulation
-    const cachedCSS = $components[cacheKey];
-    if (cachedCSS) {
-      css = cachedCSS;
-    } else if (raw) {
-      const tailwind = getTailwindConfig(true);
-      const encapsulatedCss = `#component-${block.id} {${raw}}`;
-      processors.css(encapsulatedCss, { tailwind }).then((res) => {
-        css = res;
-        $components[cacheKey] = css;
-      });
-    } else {
-      css = ``;
-    }
-  }
+  let node;
+  let component;
 
 </script>
 
 <div
+  bind:this={node}
   class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
   id="component-{block.id}"
-  transition:fade={{ duration: 100 }}>
-  <div>
-    {@html html}
-  </div>
-  <div primo-css>
-    {@html getStyles(css)}
-  </div>
-  <div primo-js />
+  transition:fade={{ duration: 100 }} />
+<div>
+  {@html error}
 </div>
 
 <style>
@@ -99,9 +93,6 @@
     outline-color: transparent;
     width: 100%;
     min-height: 2rem;
-  }
-  .component > div {
-    @apply w-full;
   }
 
 </style>
