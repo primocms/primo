@@ -86,8 +86,8 @@
   async function setPageHTML({ siteHTML, pageHTML, siteCSS, pageCSS }) {
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
-      processCode(
-        {
+      processCode({
+        code: {
           html: `<svelte:head>
             ${siteHTML.head}${pageHTML.head}
             ${wrapInStyleTags(siteCSS + pageCSS)}
@@ -96,17 +96,15 @@
           js: '',
         },
         data,
-        true
-      ),
-      processCode(
-        {
+      }),
+      processCode({
+        code: {
           html: siteHTML.below + pageHTML.below,
           css: '',
           js: '',
         },
         data,
-        true
-      ),
+      }),
     ]);
 
     htmlHead = head.html;

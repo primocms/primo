@@ -36,8 +36,8 @@
   async function compileComponentCode(value) {
     const allFields = getAllFields(value.fields);
     const data = convertFieldsToData(allFields);
-    const res = await processCode(
-      {
+    const res = await processCode({
+      code: {
         ...value,
         html: `
         <svelte:head>
@@ -45,10 +45,11 @@
           ${wrapInStyleTags($siteCSS + $pageCSS)}
         </svelte:head>
         ${value.html}
-      `,
+        `,
       },
-      data
-    );
+      data,
+      buildStatic: false,
+    });
     console.log({ res });
     error = res.error;
     componentApp = res.js;

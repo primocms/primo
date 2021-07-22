@@ -2,8 +2,10 @@ import _ from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 
-export async function processCode(precompiled, data, buildStatic) {
-  const res = await processors.html(precompiled, data, buildStatic)
+export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
+  const res = await processors.html({
+    code, data, buildStatic, format
+  })
   return res
 }
 

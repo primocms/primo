@@ -89,8 +89,8 @@
   async function compileComponentCode({ html, css, js, fields }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    const res = await processCode(
-      {
+    const res = await processCode({
+      code: {
         html: `${html}
       <svelte:head>
         ${$pageHTML.head}
@@ -101,8 +101,8 @@
         css,
         js,
       },
-      data
-    );
+      data,
+    });
     error = res.error;
     componentApp = res.js;
     saveRawValue('html', html);
