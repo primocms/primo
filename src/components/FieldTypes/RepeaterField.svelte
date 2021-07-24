@@ -67,7 +67,6 @@
         {}
       )
     );
-    console.log(field.value);
     dispatch('input');
   }
 
