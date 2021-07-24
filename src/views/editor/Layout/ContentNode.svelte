@@ -8,18 +8,20 @@
 
   // import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 
-  import { Editor, Extension } from '@tiptap/core/src/index';
-  import { defaultExtensions } from '@tiptap/starter-kit';
+  import { Editor, Extension } from '@tiptap/core';
+  import StarterKit from '@tiptap/starter-kit';
+
+  // import { defaultExtensions } from '@tiptap/starter-kit';
   import BubbleMenu from '@tiptap/extension-bubble-menu';
-  import Link from '@tiptap/extension-link';
-  import Highlight from '@tiptap/extension-highlight';
-  import OrderedList from '@tiptap/extension-ordered-list';
-  import ListItem from '@tiptap/extension-list-item';
-  import BulletList from '@tiptap/extension-bullet-list';
-  import Blockquote from '@tiptap/extension-blockquote';
-  import CodeBlock from '@tiptap/extension-code-block';
-  import Image from '@tiptap/extension-image';
-  import Dropcursor from '@tiptap/extension-dropcursor';
+  // import Link from '@tiptap/extension-link';
+  // import Highlight from '@tiptap/extension-highlight';
+  // import OrderedList from '@tiptap/extension-ordered-list';
+  // import ListItem from '@tiptap/extension-list-item';
+  // import BulletList from '@tiptap/extension-bullet-list';
+  // import Blockquote from '@tiptap/extension-blockquote';
+  // import CodeBlock from '@tiptap/extension-code-block';
+  // import Image from '@tiptap/extension-image';
+  // import Dropcursor from '@tiptap/extension-dropcursor';
 
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
@@ -56,17 +58,18 @@
       // autofocus: true,
       element: element,
       extensions: [
-        ...defaultExtensions(),
+        StarterKit,
+        // ...defaultExtensions(),
         BubbleMenu.configure({
           element: bubbleMenu,
         }),
-        Link,
-        Highlight.configure({ multicolor: false }),
+        // Link,
+        // Highlight.configure({ multicolor: false }),
         FloatingMenu.configure({
           element: floatingMenu,
         }),
-        KeyboardShortcuts,
-        Image,
+        // KeyboardShortcuts,
+        // Image,
       ],
       content: block.value.html,
       onTransaction() {
