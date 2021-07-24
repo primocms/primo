@@ -102,6 +102,7 @@
         js,
       },
       data,
+      buildStatic: false,
     });
     error = res.error;
     componentApp = res.js;
