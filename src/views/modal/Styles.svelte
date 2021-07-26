@@ -3,11 +3,7 @@
   import { CodeMirror } from '../../components';
   import { Tabs } from '../../components/misc';
   import Preview from '../../components/misc/Preview.svelte';
-  import {
-    wrapInSvelteHeadTags,
-    wrapInStyleTags,
-    createDebouncer,
-  } from '../../utils';
+  import { wrapInStyleTags, processCode } from '../../utils';
   import ModalHeader from './ModalHeader.svelte';
   import { processors } from '../../component';
 
@@ -55,10 +51,7 @@
     );
   }
 
-  // preview = await buildPagePreview({ page, site: $site });
-
   let loading = false;
-  let tailwindConfigChanged = false;
 
   const primaryTabs = [
     {
@@ -89,33 +82,6 @@
   let secondaryTab = secondaryTabs[0];
 
   let view = 'large';
-
-  let pageComponent;
-  let pageError;
-  compilePageCSS();
-  async function compilePageCSS() {
-    const result = await processors.html({
-      html: `<svelte:head>${wrapInStyleTags(
-        unsavedSiteCSS + unsavedPageCSS
-      )}</svelte:head>`,
-      css: '',
-      js: '',
-    });
-    pageError = result.error;
-    pageComponent = result;
-  }
-
-  let siteComponent;
-  let siteError;
-  async function compileSiteCSS() {
-    const result = await processors.html({
-      html: `<svelte:head>${wrapInStyleTags(unsavedSiteCSS)}</svelte:head>`,
-      css: '',
-      js: '',
-    });
-    siteError = result.error;
-    siteComponent = result;
-  }
 
   async function saveStyles() {
     $siteCSS = unsavedSiteCSS;
@@ -154,7 +120,6 @@
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
           on:debounce={getNewPagePreview}
-          on:change={compilePageCSS}
           on:save={saveStyles} />
       {:else if primaryTab.id === 'site'}
         <CodeMirror
@@ -164,7 +129,6 @@
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
           on:debounce={buildSitePreview}
-          on:change={compileSiteCSS}
           on:save={saveStyles} />
       {/if}
     </div>

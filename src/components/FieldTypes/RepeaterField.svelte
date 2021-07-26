@@ -7,7 +7,6 @@
 
   import { createUniqueID } from '../../utilities';
   import { Card } from '../misc';
-  import { EditField, GenericField, ImageField } from '../inputs';
   import fieldTypes from '../../stores/app/fieldTypes';
 
   export let field;
@@ -73,15 +72,14 @@
 </script>
 
 <Card variants="pb-4" id="repeater-{field.key}">
-  <header class="w-full py-1 font-bold text-sm">{field.label}</header>
-  <div class="grid grid-cols-2 gap-2">
+  <header class="">{field.label}</header>
+  <div class="fields">
     {#each fieldValues as fieldValue, i}
       <div
         class="repeater-item"
         id="repeater-{field.key}-{i}"
         in:fade={{ duration: 100 }}>
-        <div
-          class="absolute top-0 right-0 py-1 px-2 text-gray-200 bg-gray-900 z-10 rounded">
+        <div class="item-options">
           {#if i !== 0}
             <button
               title="Move {field.label} up"
@@ -91,14 +89,12 @@
           {/if}
           {#if i !== fieldValues.length - 1}
             <button
-              class="mr-2"
               title="Move {field.label} down"
               on:click={() => moveRepeaterItem(i, 'down')}>
               <i class="fas fa-arrow-down" />
             </button>
           {/if}
           <button
-            class="text-red-400 hover:text-red-500"
             title="Delete {field.label} item"
             on:click={() => removeRepeaterItem(i)}>
             <i class="fas fa-trash" />
@@ -116,36 +112,90 @@
         {/each}
       </div>
     {/each}
-    <div class="p-2 bg-gray-900">
-      <button class="field-button" on:click={() => addRepeaterItem()}>
-        <i class="fas fa-plus mr-1" />
-        <span>Add {pluralize.singular(field.label)}</span>
-      </button>
-    </div>
+    <button class="field-button" on:click={() => addRepeaterItem()}>
+      <i class="fas fa-plus mr-1" />
+      <span>Add {pluralize.singular(field.label)}</span>
+    </button>
   </div>
 </Card>
 
-<style>
-  .repeater-item {
-    @apply p-4 bg-gray-900 flex flex-col relative border-2 border-primored;
+<style lang="postcss">
+  header {
+    width: 100%;
+    padding: 0.25rem 0;
+    font-weight: 700;
+    font-size: var(--font-size-2);
   }
-  .repeater-item:last-of-type {
-    @apply mb-0;
+
+  .fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .repeater-item {
+    padding: 1rem;
+    background: var(--color-gray-9);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid var(--color-primored);
+    border-radius: 1px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .item-options {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 0.25rem 0.5rem;
+      color: var(--color-gray-2);
+      background: var(--color-gray-9);
+      z-index: 10;
+      border-radius: 1px;
+
+      button {
+        &:focus {
+          outline: 0;
+        }
+        &:hover {
+          color: var(--color-primored);
+        }
+        &:last-child {
+          margin-left: 0.5rem;
+          color: var(--color-gray-5);
+
+          &:hover {
+            color: var(--color-primored);
+          }
+        }
+      }
+    }
   }
   .repeater-item-field {
-    @apply mb-2;
+    margin-bottom: 0.5rem;
   }
   .repeater-item-field:not(:first-child) {
-    @apply pt-0;
+    padding-top: 0;
   }
   .field-button {
-    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
-  }
-  .field-button:hover {
-    @apply bg-gray-900;
-  }
-  .field-button[disabled] {
-    @apply bg-gray-500 cursor-not-allowed;
+    width: 100%;
+    background: var(--color-gray-8);
+    border: 1px solid var(--color-primored);
+    color: var(--color-gray-3);
+    padding: 0.5rem 0;
+    border-radius: 1px;
+    transition: background 0.1s, color 0.1s;
+
+    &:hover {
+      background: var(--color-primored);
+    }
+
+    &[disabled] {
+      background: var(--color-gray-5);
+      cursor: not-allowed;
+    }
   }
 
 </style>

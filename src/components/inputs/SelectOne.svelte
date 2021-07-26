@@ -1,35 +1,54 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
+  import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
-  export let id = null
-  export let label
-  export let options
-  export let selection
-  export let variants = ''
+  export let id = null;
+  export let label;
+  export let options;
+  export let selection;
+  export let variants = '';
 
-  $: dispatch('select', selection)
-
+  $: dispatch('select', selection);
 
 </script>
 
 <div class={variants} {id}>
-  <span class="text-base text-gray-100 font-semibold">{label}</span>
+  <span>{label}</span>
   <div class="toggle">
     {#each options as option}
-      <button class:selected={selection === option} type="button" on:click={() => selection = option}>{option}</button>
+      <button
+        class:selected={selection === option}
+        type="button"
+        on:click={() => (selection = option)}>{option}</button>
     {/each}
   </div>
 </div>
 
-<style>
+<style lang="postcss">
+  span {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   .toggle {
-    @apply flex mt-1 rounded-sm overflow-hidden;
+    display: flex;
+    margin-top: 0.25rem;
+    border-radius: 1px;
+    overflow: hidden;
+
+    button {
+      flex: 1;
+      background: var(--color-gray-1);
+      color: var(--color-gray-7);
+      padding: 0.5rem 0;
+      transition: background 0.1s, color 0.1s;
+
+      &.selected {
+        background: var(--color-primored);
+        color: var(--color-gray-1);
+        outline: 0;
+      }
+    }
   }
-  .toggle > button {
-    @apply flex-1 bg-gray-100 text-gray-700 py-2 font-medium transition-colors duration-200;
-  }
-  .toggle > button.selected {
-    @apply bg-primored text-gray-100 transition-colors duration-200 outline-none;
-  }
+
 </style>

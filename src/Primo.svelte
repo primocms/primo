@@ -35,8 +35,6 @@
   export let saving = false;
   $: $savingStore = saving;
 
-  $: console.log({ role });
-
   $: $switchEnabled = role === 'developer' ? true : false;
   $: $userRole = role;
   $: $librariesStore = libraries;
@@ -124,6 +122,29 @@
 <style>
   :global(:root) {
     --color-primored: rgb(248, 68, 73);
+    --color-primored-dark: rgb(186, 37, 42);
+    --color-white: white;
+    --color-codeblack: rgb(30, 30, 30);
+    --color-codeblack-opaque: rgba(30, 30, 30, 0.9);
+
+    --color-gray-1: rgb(245, 245, 245);
+    --color-gray-2: rgb(229, 229, 229);
+    --color-gray-3: rgb(212, 212, 212);
+    --color-gray-5: rgb(115, 115, 115);
+    --color-gray-6: rgb(82, 82, 82);
+    --color-gray-7: rgb(64, 64, 64);
+    --color-gray-8: rgb(38, 38, 38);
+    --color-gray-9: rgb(23, 23, 23);
+
+    --font-size-1: 0.75rem;
+    --font-size-2: 0.875rem;
+    --font-size-4: 1.25rem;
+
+    --box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    --transition-colors: background-color 0.1s, border-color 0.1s, color 0.1s,
+      fill 0.1s, stroke 0.1s;
   }
 
 </style>

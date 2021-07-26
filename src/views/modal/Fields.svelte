@@ -290,7 +290,7 @@
               {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
-              {#each field.fields as subfield}
+              {#each field.fields as subfield (subfield.id)}
                 <EditField
                   fieldTypes={$fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
@@ -391,7 +391,7 @@
               {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
-              {#each field.fields as subfield}
+              {#each field.fields as subfield (subfield.id)}
                 <EditField
                   fieldTypes={$fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}

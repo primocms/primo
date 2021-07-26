@@ -25,7 +25,6 @@ export const iframePreview = `
           if (data.error) {
 					  document.querySelector('#error').innerHTML = data.error 
           } else if (data.componentApp) {
-            console.log('building', {data})
 					  document.querySelector('#error').innerHTML = ''
             update(data.componentApp)
           }

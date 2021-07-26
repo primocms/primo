@@ -6,22 +6,11 @@
   import { createDebouncer } from '../../../utils';
   const slowDebounce = createDebouncer(500);
 
-  // import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-
   import { Editor, Extension } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
+  import Highlight from '@tiptap/extension-highlight';
 
-  // import { defaultExtensions } from '@tiptap/starter-kit';
   import BubbleMenu from '@tiptap/extension-bubble-menu';
-  // import Link from '@tiptap/extension-link';
-  // import Highlight from '@tiptap/extension-highlight';
-  // import OrderedList from '@tiptap/extension-ordered-list';
-  // import ListItem from '@tiptap/extension-list-item';
-  // import BulletList from '@tiptap/extension-bullet-list';
-  // import Blockquote from '@tiptap/extension-blockquote';
-  // import CodeBlock from '@tiptap/extension-code-block';
-  // import Image from '@tiptap/extension-image';
-  // import Dropcursor from '@tiptap/extension-dropcursor';
 
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
@@ -64,7 +53,7 @@
           element: bubbleMenu,
         }),
         // Link,
-        // Highlight.configure({ multicolor: false }),
+        Highlight.configure({ multicolor: false }),
         FloatingMenu.configure({
           element: floatingMenu,
         }),
@@ -120,9 +109,7 @@
 </script>
 
 <div class="primo-content" id="copy-{block.id}" bind:this={element}>
-  <div
-    class="bubble-menu text-gray-800 bg-white text-xs shadow-sm "
-    bind:this={floatingMenu}>
+  <div class="menu floating-menu" bind:this={floatingMenu}>
     {#if editor}
       <CopyButton
         icon="heading"
@@ -146,9 +133,7 @@
       <CopyButton icon="image" on:click={addImage} />
     {/if}
   </div>
-  <div
-    class="bubble-menu bg-codeblack text-gray-100 border-b-2 border-primored shadow-xl"
-    bind:this={bubbleMenu}>
+  <div class="menu bubble-menu" bind:this={bubbleMenu}>
     {#if editor}
       <CopyButton icon="link" on:click={setLink} />
       <CopyButton
@@ -182,13 +167,26 @@
     outline: 0;
   }
 
-  .bubble-menu {
-    @apply rounded-sm ml-2 flex transition-opacity duration-200 text-sm transform -translate-y-2;
+  .menu {
+    font-size: var(--font-size-1);
+    display: flex;
+    border-radius: 0.125rem;
+    margin-left: 0.5rem;
+    transition: opacity 0.1s;
     z-index: 99999 !important;
+    box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
 
-  /* :global(.bubble-menu button:hover, .bubble-menu button.is-active) {
-		opacity: 1;
-	}	 */
+  .bubble-menu {
+    background-color: var(--color-gray-9);
+    color: var(--color-white);
+    border-bottom-width: 2px;
+    border-color: var(--color-primored);
+  }
+  .floating-menu {
+    transform: translateY(-0.5rem);
+    color: var(--color-gray-8);
+    background-color: var(--color-white);
+  }
 
 </style>

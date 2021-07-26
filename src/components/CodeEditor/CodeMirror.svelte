@@ -158,10 +158,7 @@
   }} />
 
 <div bind:this={element} class="codemirror-container {mode}" {style}>
-  <div
-    in:fade={{ duration: 200 }}
-    bind:this={editorNode}
-    style="min-height:100px" />
+  <div in:fade={{ duration: 200 }} bind:this={editorNode} />
 </div>
 
 <!-- {#if docs}
@@ -170,11 +167,16 @@
     <span>Docs</span>
   </a>
 {/if} -->
-<style>
+<style lang="postcss">
   .codemirror-container {
-    @apply w-full overflow-x-scroll;
+    width: 100%;
+    overflow-x: scroll;
     font-family: 'Fira Code', serif;
     height: calc(100vh - 9.5rem);
+
+    & > div {
+      min-height: 100px;
+    }
   }
 
 </style>

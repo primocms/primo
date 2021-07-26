@@ -1,37 +1,49 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
-  const dispatch = createEventDispatcher()
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
 
-  import showdown from 'showdown'
+  import showdown from 'showdown';
   const converter = new showdown.Converter();
 
-  export let field
+  export let field;
 
   function parseContent() {
     const html = converter.makeHtml(markdown);
-    field.value = html
-    dispatch('input')
+    field.value = html;
+    dispatch('input');
   }
 
-  let markdown = typeof field.value === 'string' ? converter.makeMarkdown(field.value) : ''
+  let markdown =
+    typeof field.value === 'string' ? converter.makeMarkdown(field.value) : '';
+
 </script>
 
-<label class="label" for={field.id}>
-  <span>{ field.label }</span>
-  <textarea id={field.id} rows="8" bind:value={markdown} on:input={parseContent}></textarea>
+<label for={field.id}>
+  <span>{field.label}</span>
+  <textarea
+    id={field.id}
+    rows="8"
+    bind:value={markdown}
+    on:input={parseContent} />
 </label>
 
 <style>
-  .label {
-    @apply flex flex-col mb-2 font-medium;
-  }
+  label {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
 
-  .label span {
-      @apply mb-2;
+    span {
+      margin-bottom: 0.5rem;
     }
 
-  .label textarea {
-    @apply p-2 bg-gray-800;
-    outline-color: rgb(248,68,73);
+    textarea {
+      outline-color: rgb(248, 68, 73);
+      background: var(--color-gray-8);
+      padding: 0.5rem;
+      border: 0;
+    }
   }
+
 </style>

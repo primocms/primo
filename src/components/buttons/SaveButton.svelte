@@ -1,33 +1,46 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
+  import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
-  import {Spinner} from '../misc'
+  import { Spinner } from '../misc';
 
-  export let variants = ''
-  export let type = 'button'
-  export let disabled = false
-  export let loading = false
+  export let variants = '';
+  export let type = 'button';
+  export let disabled = false;
+  export let loading = false;
+
 </script>
 
-<button class="save-button {variants}" class:disabled={disabled || loading} disabled={disabled || loading} on:click={(e) => dispatch('click', e)} {type}>
+<button
+  class={variants}
+  class:disabled={disabled || loading}
+  disabled={disabled || loading}
+  on:click={(e) => dispatch('click', e)}
+  {type}>
   {#if loading}
     <Spinner />
   {:else}
-    <slot></slot>
+    <slot />
   {/if}
 </button>
 
-<style>
-  .save-button {
-    @apply bg-primored text-white py-2 px-4 rounded font-semibold transition-colors duration-200;
+<style lang="postcss">
+  button {
+    background: var(--color-primored);
+    color: var(--color-white);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-1);
+    font-weight: 600;
+    transition: background 0.1s, color 0.1s;
+
+    &:hover {
+      background: var(--color-primored-dark);
+    }
+
+    &.disabled {
+      background: var(--color-gray-6);
+      color: var(--color-gray-9);
+    }
   }
 
-  .save-button:hover {
-      @apply bg-red-700;
-    }
-
-    .save-button.disabled {
-      @apply bg-gray-600 text-gray-900;
-    }
 </style>

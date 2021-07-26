@@ -21,73 +21,102 @@
   class="field-container {variants}"
   in:fade={{ duration: 100 }}
   class:minimal>
-  <div class="rounded-sm flex items-center">
+  <div class="type">
     <slot name="type" />
   </div>
   {#if minimal}
     <slot name="main" />
   {:else}
     <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label class="flex flex-col flex-1">
-      <span class="font-semibold text-xs">Label</span>
+    <label>
+      <span>Label</span>
       <slot name="label" />
     </label>
     <!-- svelte-ignore a11y-label-has-associated-control -->
     <div class="field">
-      <label class="flex flex-col flex-1">
-        <span class="font-semibold text-xs">ID</span>
+      <label>
+        <span>ID</span>
         <slot name="key" />
       </label>
     </div>
   {/if}
-  <div
-    class="py-1 px-2 text-gray-300 bg-gray-900 z-10 rounded flex items-center justify-end">
-    <button
-      class="mr-1"
-      disabled={isFirst}
-      title="Move up"
-      on:click={() => moveItem('up')}>
+  <div class="option-buttons">
+    <button disabled={isFirst} title="Move up" on:click={() => moveItem('up')}>
       <i class="fas fa-arrow-up" />
     </button>
     <button
-      class="mr-2"
       disabled={isLast}
       title="Move down"
       on:click={() => moveItem('down')}>
       <i class="fas fa-arrow-down" />
     </button>
-    <button
-      on:click={() => dispatch('delete')}
-      {disabled}
-      class="text-gray-500 transition-colors duration-100 hover:text-gray-400 focus:text-gray-400 rounded-sm"
-      title="delete field">
+    <button on:click={() => dispatch('delete')} {disabled} title="delete field">
       <i class="fas fa-trash" />
     </button>
   </div>
 </div>
 
-<style>
+<style lang="postcss">
   .field-container {
-    @apply grid p-2 gap-4;
-    @screen md {
-      grid-template-columns: auto 1fr 1fr auto;
+    display: grid;
+    padding: 0.5rem;
+    gap: 1rem;
+
+    .type {
+      border-radius: 1px;
+      display: flex;
+      align-items: center;
     }
 
-    select {
-      @apply w-full;
+    label {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      span {
+        font-weight: 600;
+        font-size: var(--font-size-1);
+      }
+    }
+
+    .option-buttons {
+      padding: 0.25rem 0.5rem;
+      color: var(--color-gray-3);
+      background: var(--color-gray-900);
+      z-index: 10;
+      border-radius: var(--border-radius-1);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      button {
+        border-radius: 1px;
+        transition: color 0.1s;
+        &:hover,
+        &:focus {
+          color: var(--color-gray-4);
+        }
+        &:first-child {
+          margin-right: 0.25rem;
+        }
+
+        &:last-child {
+          margin-left: 0.5rem;
+          color: var(--color-gray-5);
+        }
+      }
     }
 
     &.minimal {
-      @screen md {
-        grid-template-columns: auto 1fr auto;
-      }
+      grid-template-columns: auto 1fr auto;
     }
   }
   button[disabled] {
-    @apply text-gray-700 cursor-default;
+    color: var(--color-gray-7);
+    cursor: default;
   }
   span {
-    @apply text-gray-300;
+    color: var(--color-gray-3);
   }
 
 </style>

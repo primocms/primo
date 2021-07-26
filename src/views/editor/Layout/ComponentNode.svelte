@@ -1,17 +1,9 @@
 <script>
-  import { cloneDeep, isEqual, differenceWith } from 'lodash';
+  import { isEqual, differenceWith } from 'lodash';
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { router } from 'tinro';
-  import { getStyles, appendHtml } from '../pageUtils.js';
-  import { processors } from '../../../component';
   import { getAllFields, getTailwindConfig } from '../../../stores/helpers';
-  import components from '../../../stores/app/components';
-  import {
-    convertFieldsToData,
-    processCode,
-    wrapInStyleTags,
-  } from '../../../utils';
+  import { convertFieldsToData, processCode } from '../../../utils';
 
   export let block;
 
@@ -37,8 +29,14 @@
       html !== rawCode.html ||
       css !== rawCode.css ||
       js !== rawCode.js ||
-      differenceWith(fields, rawCode.fields, isEqual)
+      differenceWith(fields, rawCode.fields, isEqual).length > 0
     ) {
+      console.log(
+        html !== rawCode.html,
+        css !== rawCode.css,
+        js !== rawCode.js,
+        differenceWith(fields, rawCode.fields, isEqual).length > 0
+      );
       html = rawCode.html;
       css = rawCode.css;
       js = rawCode.js;
@@ -66,8 +64,6 @@
         });
       }
     }
-
-    // $components[cacheKey] = html;
   }
 
   let node;

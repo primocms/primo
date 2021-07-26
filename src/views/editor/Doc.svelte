@@ -61,17 +61,15 @@
   // prevent navigating to pages that don't exist
   async function disableLinks(_) {
     if (!element) return;
-    setTimeout(() => {
-      element.querySelectorAll('a').forEach((link) => {
-        if (window.location.host !== link.host) {
-          link.setAttribute('data-tinro-ignore', '');
-          link.onclick = (e) => {
-            e.preventDefault();
-            window.open(link.href, '_blank');
-          };
-        }
-      });
-    }, 100);
+    element.querySelectorAll('a').forEach((link) => {
+      if (window.location.host !== link.host) {
+        link.setAttribute('data-tinro-ignore', '');
+        link.onclick = (e) => {
+          e.preventDefault();
+          window.open(link.href, '_blank');
+        };
+      }
+    });
   }
   $: disableLinks($content);
 

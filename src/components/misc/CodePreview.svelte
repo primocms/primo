@@ -144,28 +144,30 @@
 
 <style>
   iframe {
-    @apply w-full border-0 transition-opacity duration-300;
+    width: 100%;
+    border: 0;
+    transition: opacity 0.2s;
   }
   .fadein {
-    @apply opacity-100 duration-300;
+    opacity: 1;
   }
   iframe.scaled {
     width: 100vw;
     transform-origin: top left;
   }
   .preview-container {
+    border: 4px solid var(--color-gray-8);
+    overflow: hidden;
+    transition: border-color 0.2s;
     will-change: border-color;
-    @apply border-4 border-gray-800 transition-colors duration-200 overflow-hidden;
     border-bottom: 0;
   }
   .preview-container.loading {
-    border-color: rgb(248, 68, 73);
-  }
-  .preview-container.loading + .preview-html {
-    @apply bg-primored text-white;
+    border-color: var(--color-primored);
   }
   .footer-buttons {
-    @apply flex flex-wrap;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .footer-buttons a,
@@ -173,11 +175,20 @@
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     min-width: 12rem;
-    @apply flex-1 outline-none bg-gray-900 border-gray-800 border text-gray-200 text-xs py-2 block text-center transition-colors duration-100;
+    flex: 1;
+    outline: 0;
+    background: var(--color-gray-9);
+    border: 1px solid var(--color-gray-8);
+    color: var(--color-gray-2);
+    font-size: var(--font-size-1);
+    padding: 0.5rem 0;
+    display: block;
+    text-align: center;
+    transition: var(--transition-colors);
   }
   .footer-buttons a:hover,
   .footer-buttons button:hover {
-    @apply bg-gray-800;
+    background: var(--color-gray-8);
   }
 
 </style>

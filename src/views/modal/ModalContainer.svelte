@@ -1,33 +1,36 @@
 <script>
-  import { fade } from 'svelte/transition'
-  import modal from '../../stores/app/modal'
-  import {switchEnabled} from '../../stores/app'
-  import Mousetrap from 'mousetrap'
+  import { fade } from 'svelte/transition';
+  import modal from '../../stores/app/modal';
+  import { switchEnabled } from '../../stores/app';
+  import Mousetrap from 'mousetrap';
 
-  export let visible
+  export let visible;
 
   Mousetrap.bind(['esc'], () => {
     if (!$modal.disabledBgClose) {
-      modal.hide()  
+      modal.hide();
     }
-  })
+  });
 
-  $: header = $modal.header
-  $: button = $modal.button
-  $: variants = $modal.variants || 'max-w-md'
+  $: header = $modal.header;
+  $: button = $modal.button;
+  $: variants = $modal.variants || 'max-w-md';
 
   function switchView() {
-    $switchEnabled = !$switchEnabled
+    $switchEnabled = !$switchEnabled;
   }
 
 </script>
 
 {#if visible}
   <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
-    <div class="modal-background" class:hovered={!$modal.disabledBgClose} on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()}></div>
+    <div
+      class="modal-background"
+      class:hovered={!$modal.disabledBgClose}
+      on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()} />
     <div class="modal-card {variants}">
       <div class="modal-card-body" class:p-3={!$modal.noPadding}>
-        <slot></slot>
+        <slot />
       </div>
       {#if $modal.footer}
         <svelte:component this={$modal.footer} />
@@ -37,10 +40,9 @@
 {/if}
 
 <style>
-
   .switch {
     @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
-    outline-color: rgb(248,68,73);
+    outline-color: rgb(248, 68, 73);
   }
 
   .switch:hover {

@@ -1,14 +1,14 @@
 <script>
-  import {fade} from 'svelte/transition'
-  import dropdown from '../../stores/app/dropdown'
-  import {loadingSite} from '../../stores/app/misc'
-  import Spinner from '../../ui/misc/Spinner.svelte'
-  import PrimoLogo from '../svg/PrimoLogo.svelte'
-  import DropdownButton from './DropdownButton.svelte'
+  import { fade } from 'svelte/transition';
+  import dropdown from '../../stores/app/dropdown';
+  import { loadingSite } from '../../stores/app/misc';
+  import Spinner from '../../ui/misc/Spinner.svelte';
+  import PrimoLogo from '../svg/PrimoLogo.svelte';
+  import DropdownButton from './DropdownButton.svelte';
 
-  export let variants = ''
+  export let variants = '';
 
-  let showingDropdown = false
+  let showingDropdown = false;
 
 </script>
 
@@ -20,8 +20,7 @@
     class:bg-primored={showingDropdown}
     class:chevron={showingDropdown}
     aria-label="See all sites"
-    on:click={() => showingDropdown = !showingDropdown}
-    >
+    on:click={() => (showingDropdown = !showingDropdown)}>
     {#if $loadingSite}
       <Spinner />
     {:else}
@@ -31,7 +30,7 @@
 {/if}
 
 {#if showingDropdown}
-  <ul xyz="fade stagger stagger-1" class="dropdown space-y-4 bg-codeblack bg-opacity-95">
+  <ul xyz="fade stagger stagger-1" class="dropdown">
     {#each $dropdown as button}
       <li class="xyz-in">
         {#if button.component}
@@ -44,45 +43,62 @@
   </ul>
 {/if}
 
-<style>
-
+<style lang="postcss">
   #primo-button {
     padding: 0.35rem;
-    @apply block h-full bg-codeblack transition-colors duration-100 w-10 bg-no-repeat bg-center outline-none;
+    display: block;
+    height: 100%;
+    background: var(--color-codeblack);
+    transition: background 0.1s;
+    width: 2.5rem;
     background-size: 2rem;
-  }
+    background-repeat: no-repeat;
+    background-position: center;
+    outline: 0;
 
-  #primo-button:hover, #primo-button:focus {
-      @apply bg-gray-800 transition-colors duration-200;
+    &:hover,
+    &:focus {
+      background: var(--color-gray-8);
     }
 
-    #primo-button.chevron {
-      @apply relative;
+    &.chevron {
+      position: relative;
     }
 
-    #primo-button.chevron:before, #primo-button.chevron:after {
-        content: " ";
-        @apply absolute h-0 w-0 border-solid border-codeblack;
-        bottom: -24px;
-        pointer-events: none;
-        left: 21px;
-        border-top-color: transparent;
-        border-left-color: transparent;
-        border-right-color: transparent;
-        border-width: 7px;
-        margin-left: -7px;
-      }
+    &.chevron:before,
+    &.chevron:after {
+      content: ' ';
+      position: absolute;
+      height: 0;
+      width: 0;
+      bottom: -16px;
+      pointer-events: none;
+      left: 21px;
 
-  .dropdown-heading {
-    @apply uppercase text-gray-100 text-xs font-bold;
+      border: 7px solid var(--color-codeblack-opaque);
+      border-top-color: transparent;
+      border-left-color: transparent;
+      border-right-color: transparent;
+      margin-left: -7px;
+    }
   }
 
-  .dropdown {
+  ul.dropdown {
+    background-color: var(--color-codeblack-opaque);
+    backdrop-filter: blur(10px);
     width: 20rem;
     max-height: calc(100vh - 5rem);
     z-index: 99;
     top: calc(100% + 0.75rem);
-    @apply overflow-scroll absolute shadow-xl rounded p-4;
+    overflow: scroll;
+    position: absolute;
+    border-radius: var(--border-radius-1);
+    padding: 1rem;
+    box-shadow: var(--box-shadow-xl);
+
+    li:not(:last-child) {
+      margin-bottom: 1rem;
+    }
   }
 
 </style>

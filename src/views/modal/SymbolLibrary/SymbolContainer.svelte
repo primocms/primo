@@ -50,7 +50,6 @@
       data,
       buildStatic: false,
     });
-    console.log({ res });
     error = res.error;
     componentApp = res.js;
   }

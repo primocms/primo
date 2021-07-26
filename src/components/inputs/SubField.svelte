@@ -1,60 +1,73 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
-  import {IconButton} from '../misc'
-  import _ from 'lodash'
+  import { IconButton } from '../misc';
+  import _ from 'lodash';
 
-  export let disabled = false
+  export let disabled = false;
 
   const dispatch = createEventDispatcher();
 
 </script>
 
-
 <div class="subfield" in:fade={{ duration: 100 }}>
   <div class="select">
-    <slot name="type"></slot>
+    <slot name="type" />
   </div>
   <div class="input-group">
-    <span class="input-group-label">
-      Label
-    </span>
-    <div class="input-group-input">
-      <slot name="label"></slot>
+    <span>Label</span>
+    <div>
+      <slot name="label" />
     </div>
   </div>
   <div class="input-group">
-    <span class="input-group-label">
-      ID
-    </span>
-    <div class="input-group-input">
-      <slot name="key"></slot>
+    <span>ID</span>
+    <div>
+      <slot name="key" />
     </div>
   </div>
-  <IconButton icon="times" variants="is-danger is-outlined" on:click={() => dispatch('delete')} {disabled} />
+  <IconButton
+    icon="times"
+    variants="is-danger is-outlined"
+    on:click={() => dispatch('delete')}
+    {disabled} />
 </div>
 
-<style>
+<style lang="postcss">
   .subfield {
-    @apply flex w-full px-3 py-2 items-center text-sm;
-  }
-  .select {
-    @apply mr-2;
-  }
-  .input-group {
-    @apply flex flex-1 items-center;
-  }
-  .input-group-label {
-    @apply p-2 font-semibold;
-  }
-  .input-group-input {
-      @apply mr-4 flex-1 flex;
+    display: flex;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    align-items: center;
+    font-size: var(--font-size-2);
+
+    .select {
+      margin-right: 0.5rem;
     }
-  :global(.input-group-input input) {
-        @apply flex-1 outline-none border-b border-gray-200 transition-colors duration-200;
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      flex: 1;
+
+      span {
+        padding: 0.5rem;
+        font-weight: 600;
       }
-      :global(.input-group-input input:focus) {
-          @apply border-primored;
-        }
+
+      div {
+        margin-right: 1rem;
+        flex: 1;
+        display: flex;
+      }
+    }
+  }
+
+  :global(.input-group > div input) {
+    @apply flex-1 outline-none border-b border-gray-200 transition-colors duration-200;
+  }
+  :global(.input-group > div input:focus) {
+    @apply border-primored;
+  }
 
 </style>

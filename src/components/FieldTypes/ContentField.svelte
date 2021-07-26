@@ -12,8 +12,8 @@
 
 </script>
 
-<label class="flex flex-col text-xl font-medium {variants}">
-  <span class="mb-2 text-sm">{field.label}</span>
+<label class={variants}>
+  <span>{field.label}</span>
   {#if value}
     <input class="input" {title} {disabled} type="text" bind:value on:input />
   {:else}
@@ -27,9 +27,24 @@
   {/if}
 </label>
 
-<style>
-  input {
-    @apply bg-gray-800 p-2;
+<style lang="postcss">
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--font-size-4);
+    font-weight: 500;
+
+    span {
+      margin-bottom: 0.5rem;
+      font-size: var(--font-size-2);
+    }
+
+    input {
+      background: var(--color-gray-8);
+      padding: 0.5rem;
+      border: 0;
+      outline-color: rgb(248, 68, 73);
+    }
   }
 
 </style>

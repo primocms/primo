@@ -16,18 +16,15 @@
 </script>
 
 <!-- svelte-ignore a11y-label-has-associated-control -->
-<label class="flex flex-col items-start text-gray-200 {variants}" {id}>
-  {#if label}<span class="mb-1 text-gray-200 font-semibold">{label}</span>{/if}
-  <div class="flex items-normal w-full">
-    {#if prefix}
-      <span class="font-medium flex items-center mr-4">{prefix}</span>
-    {/if}
+<label class={variants} {id}>
+  {#if label}<span class="label">{label}</span>{/if}
+  <div class="input-container">
+    {#if prefix}<span class="prefix">{prefix}</span>{/if}
     <input
       {autofocus}
       {value}
       {type}
       {placeholder}
-      class="inline-block flex-1"
       on:input={({ target }) => {
         value = target.value;
         dispatch('input', value);
@@ -35,9 +32,41 @@
   </div>
 </label>
 
-<style>
-  input {
-    @apply bg-gray-800 text-gray-100 font-medium rounded-sm py-2 px-3 flex-1;
+<style lang="postcss">
+  label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: var(--color-gray-2);
+
+    span.label {
+      margin-bottom: 0.25rem;
+      color: var(--color-gray-2);
+      font-weight: 600;
+    }
+
+    .input-container {
+      display: flex;
+      align-items: normal;
+      width: 100%;
+
+      span.prefix {
+        display: flex;
+        align-items: center;
+        margin-right: 1rem;
+      }
+      input {
+        display: inline-block;
+        background: var(--color-gray-8);
+        color: var(--color-gray-1);
+        outline-color: var(--color-primored);
+        font-weight: 500;
+        border-radius: 0.125rem;
+        padding: 0.5rem 0.75rem;
+        flex: 1;
+        border: 0;
+      }
+    }
   }
 
 </style>
