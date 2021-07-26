@@ -128,14 +128,6 @@
           <span>contained view</span>
         </button>
       {/if}
-      {#if !$onMobile}
-        <a target="blank" class="separate-tab" href="/preview">
-          <span>preview in separate tab</span>
-          <span class="icon ml-1">
-            <i class="fas fa-external-link-alt" />
-          </span>
-        </a>
-      {/if}
     </div>
   {/if}
 </div>
