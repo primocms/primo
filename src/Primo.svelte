@@ -35,6 +35,8 @@
   export let saving = false;
   $: $savingStore = saving;
 
+  $: console.log({ role });
+
   $: $switchEnabled = role === 'developer' ? true : false;
   $: $userRole = role;
   $: $librariesStore = libraries;
