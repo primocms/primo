@@ -99,6 +99,7 @@
     margin-top: -0.75rem;
     margin-left: -0.75rem;
     margin-right: -0.75rem;
+    margin-bottom: 0;
 
     .left-container {
       flex: 1;
