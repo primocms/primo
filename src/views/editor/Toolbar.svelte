@@ -230,10 +230,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    margin-right: 4px;
-    margin-bottom: 4px;
     background: var(--color-codeblack);
-    padding: 8px;
     border-radius: 2px;
     box-shadow: var(--box-shadow-xl);
   }

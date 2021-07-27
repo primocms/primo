@@ -125,16 +125,14 @@
     key="s"
     loading={$saving}
     on:click={savePage}
-    disabled={!$unsaved}
-    buttonStyles="mr-1 bg-gray-600" />
+    disabled={!$unsaved} />
   <ToolbarButton
     type="primo"
     title="Build"
     icon="fas fa-hammer"
     active={false}
     on:click={() => modal.show('BUILD')}
-    disabled={updatingDatabase}
-    variant="bg-primored text-gray-900 hover:bg-gray-400" />
+    disabled={updatingDatabase} />
 </Toolbar>
 
 <Doc />

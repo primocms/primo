@@ -69,6 +69,10 @@
         padding: 0.5rem 0.75rem;
         flex: 1;
         border: 0;
+
+        &:focus {
+          outline: 0;
+        }
       }
     }
   }

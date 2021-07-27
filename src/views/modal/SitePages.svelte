@@ -1,7 +1,8 @@
 <script>
   import _ from 'lodash';
   import { fade } from 'svelte/transition';
-  import { SelectOne, TextInput } from '../../components/inputs';
+  import { TextInput } from '../../components/inputs';
+  import SplitButton from '../../ui/inputs/SplitButton.svelte';
   import { PrimaryButton } from '../../components/buttons';
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
@@ -188,12 +189,9 @@
       prefix="/"
       on:input={() => (pageLabelEdited = true)}
       placeholder="about-us" />
-    <SelectOne
+    <SplitButton
       bind:selection={pageBase}
-      id="page-base"
-      variants="mb-8"
-      label="Starting Point"
-      options={['Empty', 'Duplicate']} />
+      buttons={[{ id: 'Empty' }, { id: 'Duplicate' }]} />
     <PrimaryButton
       disabled={disablePageCreation}
       id="create-page"
@@ -229,6 +227,8 @@
 
   form {
     padding: 1rem;
+
+    --TextInput-mb: 10px;
   }
 
 </style>

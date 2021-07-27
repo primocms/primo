@@ -58,10 +58,21 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
+  .button-group {
+    &:last-child {
+      button {
+        border-radius: 2px;
+      }
+    }
+  }
   .primo {
     background: var(--color-primored);
     color: var(--color-gray-1);
+
+    &:hover {
+      background: var(--color-primored-dark);
+    }
   }
 
   .key-hint {
@@ -172,16 +183,16 @@
     background: var(--color-codeblack);
     color: var(--color-white);
     font-weight: 700;
-    padding: 0 16px;
+    padding: 10px 15px;
     transition: var(--transition-colors);
     outline: 0;
     position: relative;
-  }
 
-  button:hover,
-  button:focus {
-    background: var(--color-gray-8);
-    transition: var(--transition-colors);
+    &:hover,
+    &:focus {
+      background: var(--color-gray-8);
+      transition: var(--transition-colors);
+    }
   }
 
   button.key-hint {
