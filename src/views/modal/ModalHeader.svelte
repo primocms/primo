@@ -104,7 +104,7 @@
     .left-container {
       flex: 1;
       display: flex;
-      justify-content: start;
+      justify-content: flex-start;
       height: 100%;
 
       button {
