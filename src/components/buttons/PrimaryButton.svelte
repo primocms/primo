@@ -37,8 +37,10 @@
     margin-left: var(--PrimaryButton-ml, 0);
     margin-right: var(--PrimaryButton-mr, 0);
 
-    border-bottom-right-radius: 0.25rem;
-    border-bottom-left-radius: 0.25rem;
+    border-top-right-radius: var(--PrimaryButton-round-tr, 0.25rem);
+    border-top-left-radius: var(--PrimaryButton-round-tl, 0.25rem);
+    border-bottom-right-radius: var(--PrimaryButton-round-br, 0.25rem);
+    border-bottom-left-radius: var(--PrimaryButton-round-bl, 0.25rem);
     transition: color 0.1s, background-color 0.1s;
 
     &:hover {
