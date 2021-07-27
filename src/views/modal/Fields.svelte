@@ -117,48 +117,6 @@
     }
   }
 
-  function addRepeaterItem(repeaterField) {
-    const keys = repeaterField.fields.map((f) => f.key);
-    repeaterField.value = [
-      ...repeaterField.value,
-      keys.reduce((a, b) => ((a[b] = ''), a), { id: createUniqueID() }), // turn keys into value object
-    ];
-    refreshFields();
-  }
-
-  function removeRepeaterItem(fieldId, itemId) {
-    fields = fields.map((field) =>
-      field.id !== fieldId
-        ? field
-        : {
-            ...field,
-            value: Array.isArray(field.value)
-              ? field.value.filter((item) => item.id !== itemId)
-              : field.value,
-          }
-    );
-    refreshFields();
-  }
-
-  function moveRepeaterItem(field, item, direction) {
-    const indexOfItem = findIndex(field.value, ['id', item.id]);
-    const withoutItems = field.value.filter((i) => i.id !== item.id);
-    if (direction === 'up') {
-      field.value = [
-        ...withoutItems.slice(0, indexOfItem - 1),
-        item,
-        ...withoutItems.slice(indexOfItem - 1),
-      ];
-    } else {
-      field.value = [
-        ...withoutItems.slice(0, indexOfItem + 1),
-        item,
-        ...withoutItems.slice(indexOfItem + 1),
-      ];
-    }
-    refreshFields();
-  }
-
   function refreshFields() {
     fields = fields.filter((f) => true);
     saveFields(fields);
@@ -221,11 +179,11 @@
 
 <Tabs {tabs} bind:activeTab />
 
-<div class="flex flex-col p-2 text-gray-200">
+<main>
   {#if $switchEnabled}
     {#if showingPage}
       {#each localPageFields as field (field.id)}
-        <Card variants="field-item bg-gray-900 shadow-sm mb-2">
+        <Card>
           <EditField
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
@@ -287,7 +245,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Create Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
               {#each field.fields as subfield (subfield.id)}
@@ -320,13 +278,13 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Create Subfield</button>
           {/if}
         </Card>
       {/each}
     {:else}
       {#each localSiteFields as field (field.id)}
-        <Card variants="field-item bg-gray-900 shadow-sm mb-2">
+        <Card>
           <EditField
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
@@ -388,7 +346,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Create Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
               {#each field.fields as subfield (subfield.id)}
@@ -421,13 +379,13 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Create Subfield</button>
           {/if}
         </Card>
       {/each}
     {/if}
     <button class="field-button" on:click={addField} {disabled}><i
-        class="fas fa-plus mr-2" />Add a Field</button>
+        class="fas fa-plus" />Add a Field</button>
   {:else if showingPage}
     {#each localPageFields as field}
       {#if getComponent(field)}
@@ -436,8 +394,7 @@
         </div>
       {/if}
     {:else}
-      <p
-        class="text-center h-full flex items-start p-24 justify-center text-lg mt-3">
+      <p class="empty-description">
         {#if $userRole === 'developer'}
           You'll need to create and integrate a field before you can edit
           content from here
@@ -455,8 +412,7 @@
         </div>
       {/if}
     {:else}
-      <p
-        class="text-center h-full flex items-start p-24 justify-center text-lg mt-3">
+      <p class="empty-description">
         {#if $userRole === 'developer'}
           You'll need to create and integrate a field before you can edit
           content from here
@@ -467,9 +423,26 @@
       </p>
     {/each}
   {/if}
-</div>
+</main>
 
-<style>
+<style lang="postcss">
+  main {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    color: var(--color-gray-2);
+
+    .empty-description {
+      text-align: center;
+      height: 100%;
+      display: flex;
+      align-items: flex-start;
+      padding: 6rem;
+      justify-content: center;
+      font-size: var(--font-size-3);
+      margin-top: 12px;
+    }
+  }
   textarea.info {
     width: 100%;
     background: transparent;
@@ -477,39 +450,68 @@
     padding: 1rem;
   }
   .field-item {
-    @apply p-4 shadow mb-2 bg-gray-900;
+    padding: 1rem;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 0.5rem;
+    background: var(--color-gray-9);
   }
   input,
   select {
-    @apply outline-none;
+    outline: 0;
   }
   .field-button {
-    @apply w-full bg-gray-800 text-gray-300 py-2 rounded font-medium transition-colors duration-200;
+    width: 100%;
+    background: var(--color-gray-8);
+    color: var(--color-gray-3);
+    padding: 0.5rem 0;
+    border-radius: var(--border-radius-1);
+    transition: var(--transition-colors);
   }
   .field-button:hover {
-    @apply bg-gray-900;
+    background: var(--color-gray-9);
   }
   .field-button[disabled] {
-    @apply bg-gray-500 cursor-not-allowed;
+    background: var(--color-gray-5);
+    cursor: not-allowed;
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply rounded-sm ml-4 text-sm py-1 mb-2 mt-2 bg-gray-900 text-gray-200 transition-colors duration-100 outline-none;
+    border-radius: 2px;
+    margin-left: 1rem;
+    font-size: var(--font-size-2);
+    padding: 4px 0;
+    margin: 8px 0;
+    background: var(--color-gray-9);
+    color: var(--color-gray-2);
+    transition: var(--transition-colors);
   }
   .field-button.subfield-button:hover {
-    @apply bg-gray-300;
+    background: var(--color-gray-3);
   }
   .field-button.subfield-button:focus {
-    @apply bg-gray-200;
+    background: var(--color-gray-2);
   }
   input {
-    @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
+    background: var(--color-gray-7);
+    color: var(--color-gray-2);
+    border-radius: 2px;
   }
   input:focus {
-    @apply outline-none;
+    outline: 0;
   }
   select {
-    @apply p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
+    padding: 0.5rem;
+    border-right: 4px solid transparent;
+    background: var(--color-gray-9);
+    color: var(--color-gray-2);
+    font-size: var(--font-size-2);
+    font-weight: 600;
+  }
+
+  button {
+    i {
+      margin-right: 0.5rem;
+    }
   }
 
 </style>

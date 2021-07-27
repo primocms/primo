@@ -58,15 +58,12 @@
 
 </script>
 
-<div
-  class="component-wrapper flex flex-col border border-gray-900 bg-codeblack text-white rounded"
-  id="symbol-{symbol.id}">
-  <div class="flex justify-between items-center shadow-sm">
+<div class="component-wrapper" id="symbol-{symbol.id}">
+  <header>
     <div class="component-label">
       {#if titleEditable}
-        <form class="cursor-pointer" on:submit|preventDefault={changeTitle}>
+        <form on:submit|preventDefault={changeTitle}>
           <svg
-            class="w-4 h-4 mr-1"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"><path
@@ -75,15 +72,15 @@
               fill-rule="evenodd"
               d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
               clip-rule="evenodd" /></svg>
-          <input class="cursor-pointer" type="text" bind:value={title} />
+          <input type="text" bind:value={title} />
         </form>
       {:else}<span>{title}</span>{/if}
     </div>
-    <div class="flex">
+    <div class="buttons">
       {#each buttons as button}
         <button
           title={button.title}
-          class="p-2 {button.class}"
+          class={button.class}
           class:highlight={button.highlight && !active}
           on:mouseenter={() => {
             hovering = true;
@@ -96,75 +93,105 @@
             button.onclick();
           }}>
           {#if active && button.clicked}
-            <span
-              class="mr-2 text-sm font-semibold">{button.clicked.label}</span>
+            <span>{button.clicked.label}</span>
             {@html button.clicked.svg}
           {:else}
-            {#if button.label}
-              <span class="mr-2 text-sm font-semibold">{button.label}</span>
-            {/if}
+            {#if button.label}<span>{button.label}</span>{/if}
             {@html button.svg}
           {/if}
         </button>
       {/each}
     </div>
-  </div>
+  </header>
   <IFrame {componentApp} />
 </div>
 
-<style>
+<style lang="postcss">
   .component-wrapper {
-    @apply relative shadow;
+    position: relative;
+    box-shadow: var(--box-shadow);
     height: 40vh;
     overflow: hidden;
     content-visibility: auto;
-  }
-  button {
-    @apply bg-codeblack;
-    @apply flex space-x-2 items-center transition-colors duration-100 focus:outline-none focus:opacity-75;
-  }
-  button.highlight {
-    @apply bg-primored;
-  }
-  button:hover {
-    @apply bg-gray-800;
-  }
-  .buttons {
-    @apply flex justify-end;
-  }
-  iframe {
-    @apply w-full opacity-0 transition-opacity duration-200;
-    height: 300vw;
-    transform-origin: top left;
-  }
-  .fadein {
-    @apply opacity-100;
-  }
-  .message-header {
-    @apply flex justify-between items-center bg-gray-100 p-1;
-  }
-  .component-label {
-    @apply flex items-center flex-1 pl-2;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-gray-9);
+    background: var(--color-codeblack);
+    color: var(--color-white);
+    border-radius: var(--border-radius-1);
 
-    form {
+    header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      flex: 1;
-      input {
-        width: 100%;
-        background: transparent;
-        border: 0;
-        padding: 0;
-        font-size: 0.85rem;
-      }
-      input:focus {
-        box-shadow: none;
-      }
-    }
+      box-shadow: var(--box-shadow);
 
-    span {
-      padding: 0.25rem 0;
-      font-size: 0.75rem;
+      .component-label {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        padding-left: 8px;
+
+        form {
+          display: flex;
+          align-items: center;
+          flex: 1;
+          cursor: pointer;
+          input {
+            width: 100%;
+            background: transparent;
+            border: 0;
+            padding: 0;
+            font-size: 0.85rem;
+          }
+          input:focus {
+            box-shadow: none;
+          }
+
+          svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+          }
+        }
+
+        span {
+          padding: 0.25rem 0;
+          font-size: 0.75rem;
+        }
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+
+        button {
+          background: var(--color-codeblack);
+          display: flex;
+          align-items: center;
+          padding: 8px;
+          transition: var(--transition-colors);
+
+          &:focus {
+            outline: 0;
+            opacity: 0.75;
+          }
+
+          &.highlight {
+            background: var(--color-primored);
+          }
+
+          &:hover {
+            background: var(--color-gray-8);
+          }
+
+          span {
+            margin-right: 8px;
+            font-size: var(--font-size-2);
+            font-weight: 600;
+          }
+        }
+      }
     }
   }
 

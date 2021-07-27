@@ -1,20 +1,11 @@
 <script>
-  import { Spinner } from '../../../../components/misc';
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
   import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
-  import { createSymbolPreview } from '../../../../utils';
 
   import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
-  import { styles as siteStyles, wrapper } from '../../../../stores/data/draft';
-  import { styles as pageStyles } from '../../../../stores/app/activePage';
-  import { getTailwindConfig } from '../../../../stores/helpers';
-  import { processors } from '../../../../component';
-  import { getAllFields } from '../../../../stores/helpers';
-  import components from '../../../../stores/app/components';
-  import { convertFieldsToData } from '../../../../utils';
 
   export let symbol;
   export let title = symbol.title || '';
@@ -30,52 +21,6 @@
     if (title !== symbol.title) {
       dispatch('update', { title });
     }
-  }
-
-  let iframe;
-  let iframeLoaded = false;
-
-  let scale;
-  let iframeContainer;
-  function resizePreview() {
-    const { clientWidth: parentWidth } = iframeContainer;
-    const { clientWidth: childWidth } = iframe;
-    scale = parentWidth / childWidth;
-  }
-
-  $: if (iframe) {
-    resizePreview();
-  }
-
-  let mounted = false;
-  let shouldLoadIframe = true;
-  onMount(() => {
-    mounted = true;
-    shouldLoadIframe = true;
-  });
-
-  let copied = false;
-
-  let css;
-
-  let html;
-
-  let js;
-
-  $: preview = buildPreview(html, css, js);
-  function buildPreview(html, css, js) {
-    if (!mounted || (!html && !js && !css)) return ``;
-    const parentStyles = $siteStyles.final + $pageStyles.final;
-    const previewCode = createSymbolPreview({
-      id: symbol.id,
-      html,
-      wrapper: $wrapper,
-      js,
-      css: parentStyles + css,
-      tailwind: getTailwindConfig(),
-    });
-
-    return previewCode;
   }
 
 </script>
@@ -162,16 +107,7 @@
     display: flex;
     justify-content: flex-end;
   }
-  iframe {
-    height: 300vw;
-    width: 100%;
-    transform-origin: top left;
-    opacity: 0;
-    transition-property: opacity;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms; /* is this still needed  */
-    transition-duration: 200ms;
-  }
+
   .fadein {
     opacity: 1;
   }

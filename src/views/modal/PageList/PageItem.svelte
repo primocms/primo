@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   import { TextInput } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
@@ -8,7 +8,7 @@
 
   import { router } from 'tinro';
   import modal from '../../../stores/app/modal';
-  import { buildPagePreview, buildStaticPage } from '../../../stores/helpers';
+  import { buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
   import 'requestidlecallback-polyfill';
 
@@ -20,22 +20,6 @@
   buildPreview();
   async function buildPreview() {
     preview = await buildStaticPage({ page, site: $site });
-  }
-
-  let iframeLoaded = false;
-
-  let container;
-  let iframe;
-  let scale;
-
-  function resizePreview() {
-    const { clientWidth: parentWidth } = container;
-    const { clientWidth: childWidth } = iframe;
-    scale = parentWidth / childWidth;
-  }
-
-  $: if (iframe) {
-    resizePreview();
   }
 
   function openPage(e) {
@@ -58,29 +42,19 @@
 
 </script>
 
-<svelte:window on:resize={resizePreview} />
-<li class="shadow-lg rounded overflow-hidden border-gray-900">
-  <div class="text-gray-200 bg-codeblack w-full flex justify-between px-3 py-2">
-    <div><span class="text-xs font-semibold">{page.title}</span></div>
-    <div class="flex justify-end">
-      <button
-        title="Edit"
-        on:click={() => (editingPage = !editingPage)}
-        class="p-1 text-xs hover:text-primored">
+<li>
+  <div class="page-info">
+    <div><span class="title">{page.title}</span></div>
+    <div class="buttons">
+      <button title="Edit" on:click={() => (editingPage = !editingPage)}>
         <i class="fas fa-edit" />
       </button>
       {#if page.pages && !disableAdd}
-        <button
-          title="Show sub-pages"
-          on:click={() => dispatch('list')}
-          class="p-1 text-xs hover:text-primored">
+        <button title="Show sub-pages" on:click={() => dispatch('list')}>
           <i class="fas fa-th-large" />
         </button>
       {:else if page.id !== 'index' && !disableAdd}
-        <button
-          title="Add sub-page"
-          on:click={() => dispatch('add')}
-          class="p-1 text-xs hover:text-primored">
+        <button title="Add sub-page" on:click={() => dispatch('add')}>
           <i class="fas fa-plus" />
         </button>
       {/if}
@@ -88,41 +62,37 @@
         <button
           title="Delete page"
           on:click={() => dispatch('delete')}
-          class="ml-1 p-1 delete-page text-xs text-red-400 hover:text-primored">
+          class="delete">
           <i class="fas fa-trash" />
         </button>
       {/if}
     </div>
   </div>
   {#if editingPage}
-    <div class="p-4">
-      <form
-        on:submit|preventDefault={() => {
-          editingPage = false;
-          dispatch('edit', { title, id });
-        }}
-        in:fade={{ duration: 100 }}>
+    <form
+      on:submit|preventDefault={() => {
+        editingPage = false;
+        dispatch('edit', { title, id });
+      }}
+      in:fade={{ duration: 100 }}>
+      <TextInput
+        bind:value={title}
+        id="page-label"
+        autofocus={true}
+        label="Page Label"
+        placeholder="About Us" />
+      {#if id !== 'index'}
         <TextInput
-          bind:value={title}
-          id="page-label"
-          autofocus={true}
-          variants="mb-2 text-xs"
-          label="Page Label"
-          placeholder="About Us" />
-        {#if id !== 'index'}
-          <TextInput
-            bind:value={id}
-            id="page-url"
-            variants="mb-2 text-xs"
-            label="Page URL"
-            prefix="/"
-            placeholder="about-us" />
-        {/if}
-        <PrimaryButton disabled={disableSave} id="save-page" type="submit">
-          Save
-        </PrimaryButton>
-      </form>
-    </div>
+          bind:value={id}
+          id="page-url"
+          label="Page URL"
+          prefix="/"
+          placeholder="about-us" />
+      {/if}
+      <PrimaryButton disabled={disableSave} id="save-page" type="submit">
+        Save
+      </PrimaryButton>
+    </form>
   {:else}
     <a
       tinro-ignore
@@ -130,45 +100,86 @@
       href="/{page.id}"
       on:click={openPage}
       class:active
-      bind:this={container}
       aria-label="Go to /{page.id}">
       <Preview {preview} />
     </a>
   {/if}
 </li>
 
-<style>
-  button {
-    @apply transition-colors duration-100 focus:outline-none;
+<style lang="postcss">
+  li {
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius-1);
+    overflow: hidden;
+
+    .page-info {
+      color: var(--color-gray-2);
+      background: var(--color-codeblack);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+
+      .title {
+        font-size: var(--font-size-2);
+        font-weight: 600;
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+
+        button {
+          padding: 4px;
+          font-size: var(--font-size-1);
+          transition: var(--transition-colors);
+
+          &:hover {
+            color: var(--color-primored);
+          }
+
+          &:focus {
+            outline: 0;
+          }
+        }
+
+        button.delete {
+          margin-left: 4px;
+          padding: 1px;
+          font-size: var(--font-size-1);
+          color: var(--color-gray-3);
+        }
+      }
+    }
+
+    form {
+      margin: 16px;
+    }
   }
-  .page-container.active {
-    @apply cursor-default pointer-events-none opacity-50;
-  }
-  .page-container.active:after {
-    @apply opacity-50;
-  }
+
   .page-container {
-    @apply bg-white cursor-pointer block w-full relative overflow-hidden transition-colors duration-100;
+    background: var(--color-white);
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-colors);
     height: 20vh;
-  }
 
-  /* .page-container:after {
-    content: '';
-    @apply absolute top-0 left-0 right-0 bottom-0 bg-codeblack opacity-0 transition-opacity duration-100;
-    pointer-events: all;
-  } */
+    &:hover {
+      opacity: 0.5;
+    }
 
-  .page-container:hover {
-    @apply opacity-50;
-  }
-  iframe {
-    @apply pointer-events-none opacity-0 transition-opacity duration-200;
-    width: 100vw;
-    transform-origin: top left;
-    height: 1000vh;
-  }
-  .fadein {
-    @apply opacity-100;
+    &.active {
+      cursor: default;
+      pointer-events: none;
+      opacity: 0.5;
+
+      &:after {
+        opacity: 0.5;
+      }
+    }
   }
 
 </style>

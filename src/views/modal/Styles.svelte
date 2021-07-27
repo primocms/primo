@@ -107,11 +107,10 @@
   }}
   variants="mb-4" />
 
-<div class="h-full flex flex-col">
-  <div class="grid md:grid-cols-2 flex-1">
-    <div class="flex flex-col">
-      <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} variants="mb-2" />
-      <!-- <Tabs tabs={secondaryTabs} bind:activeTab={secondaryTab} variants="secondary" /> -->
+<main>
+  <div>
+    <div class="editor-container">
+      <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} />
       {#if primaryTab.id === 'page'}
         <CodeMirror
           autofocus
@@ -132,7 +131,7 @@
           on:save={saveStyles} />
       {/if}
     </div>
-    <div class="h-96 md:h-auto">
+    <div class="preview-container">
       {#if primaryTab.id === 'page'}
         <Preview {preview} />
       {:else}
@@ -142,4 +141,32 @@
       {/if}
     </div>
   </div>
-</div>
+</main>
+
+<style lang="postcss">
+  main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+      display: grid;
+      grid-template-columns: 50% 50%;
+      flex: 1;
+
+      .editor-container {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .preview-container {
+        height: auto;
+
+        @media (max-width: 600px) {
+          height: 24rem;
+        }
+      }
+    }
+  }
+
+</style>

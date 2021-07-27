@@ -101,18 +101,14 @@
 
 </script>
 
-<div class="h-full flex flex-col">
-  <div
-    class="preview-container flex-1 bg-white"
-    class:loading
-    bind:this={container}>
+<div class="code-preview">
+  <div class="preview-container" class:loading bind:this={container}>
     <iframe
       class:scaled={view === 'large'}
       on:load={setLoading}
       class:fadein={previewLoaded}
       title="Preview HTML"
       srcdoc={iframePreview}
-      class="bg-white w-full h-full"
       bind:this={iframe} />
   </div>
   {#if !hideControls}
@@ -135,10 +131,18 @@
 <svelte:window on:resize={resizePreview} />
 
 <style>
+  .code-preview {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   iframe {
     width: 100%;
     border: 0;
     transition: opacity 0.2s;
+    background: var(--color-white);
+    height: 100%;
+    width: 100%;
   }
   .fadein {
     opacity: 1;
@@ -148,11 +152,13 @@
     transform-origin: top left;
   }
   .preview-container {
+    background: var(--color-white);
     border: 4px solid var(--color-gray-8);
     overflow: hidden;
     transition: border-color 0.2s;
     will-change: border-color;
     border-bottom: 0;
+    flex: 1;
   }
   .preview-container.loading {
     border-color: var(--color-primored);

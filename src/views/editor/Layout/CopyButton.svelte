@@ -1,8 +1,7 @@
 <script>
+  export let icon;
+  export let active = false;
 
-  export let icon
-  export let active = false
-  
 </script>
 
 <button on:click class:active>
@@ -12,23 +11,26 @@
 
 <style>
   button {
-    @apply flex items-center justify-center py-2 px-3 ring-1 ring-transparent transition-colors duration-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    transition: var(--transition-colors);
 
     i {
-      @apply opacity-100 transition-opacity duration-100;
+      opacity: 1;
+      transition: opacity 0.1s;
     }
-  }
-  button:hover {
-    @apply bg-primored text-gray-100;
 
-    /* i {
-      @apply opacity-0;
+    &:hover {
+      background: var(--color-primored);
+      color: var(--color-gray-1);
     }
-    span {
-      @apply opacity-100;
-    } */
+
+    &.active {
+      background: var(--color-primored);
+      color: var(--color-white);
+    }
   }
-  .active {
-    @apply bg-primored text-white;
-  }
+
 </style>

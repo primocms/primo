@@ -39,46 +39,64 @@
   </div>
 {/if}
 
-<style>
+<style lang="postcss">
   .switch {
-    @apply py-1 px-3 border border-primored text-primored text-sm rounded transition-colors duration-200;
-    outline-color: rgb(248, 68, 73);
-  }
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--color-primored);
+    color: var(--color-primored);
+    font-size: var(--font-size-2);
+    border-radius: var(--border-radius-1);
+    transition: var(--transition-colors);
+    outline-color: var(--color-primored);
 
-  .switch:hover {
-    @apply bg-red-700 text-white;
+    &:hover {
+      background: var(--color-primored-dark);
+      color: var(--color-white);
+    }
   }
 
   .modal {
     -webkit-overflow-scrolling: touch;
-    @apply flex flex-col items-center justify-center overflow-hidden fixed z-40 bottom-0 left-0 right-0 top-0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: fixed;
+    z-index: 40;
+    inset: 0;
   }
 
   .modal-background {
-    @apply bottom-0 left-0 right-0 top-0 absolute bg-black bg-opacity-95;
+    position: absolute;
+    inset: 0;
+    background: var(--color-codeblack-opaque);
 
     &.hovered {
-      @apply hover:opacity-90 transition-opacity duration-100 cursor-pointer;
+      opacity: 0.9;
+      transition: opacity 0.1s;
+      cursor: pointer;
     }
   }
 
   .modal-card {
-    @apply flex flex-col w-full overflow-hidden my-0 mx-auto relative rounded;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    margin: 0 auto;
     position: relative;
-    /* max-width: calc(100vw - 2rem); */
+    border-radius: var(--border-radius-1);
     max-height: calc(100vh - 2rem);
   }
 
-  .modal-card-foot {
-    @apply flex items-center justify-start p-4 relative bg-gray-100;
-  }
-
   .modal-card-body {
-    @apply bg-black flex-1 flex flex-col rounded-md overflow-y-scroll;
-  }
-
-  .modal-card-foot {
-    justify-content: flex-end !important;
+    background: var(--color-black);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: 6px;
+    overflow-y: scroll;
   }
 
   .modal {
@@ -97,7 +115,7 @@
   }
 
   .fullscreen .modal-card-body {
-    @apply overflow-scroll;
+    overflow: scroll;
   }
 
 </style>

@@ -1,53 +1,56 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { fade } from "svelte/transition";
-  import {showKeyHint,onMobile} from '../../stores/app/misc'
+  import { fade } from 'svelte/transition';
+  import { showKeyHint, onMobile } from '../../stores/app/misc';
 
   const dispatch = createEventDispatcher();
 
-  export let id = null
-  export let title = ''
-  export let buttonStyles = ''
-  export let key = null
-  export let icon = null
-  export let disabled = false
-  export let onclick = null
-  export let variant = ''
-  export let loading = false
-  export let active = false
-  export let buttons = null
-  export let type = null
-  export let tooltipVariants = ''
+  export let id = null;
+  export let title = '';
+  export let buttonStyles = '';
+  export let key = null;
+  export let icon = null;
+  export let disabled = false;
+  export let onclick = null;
+  export let variant = '';
+  export let loading = false;
+  export let active = false;
+  export let buttons = null;
+  export let type = null;
+  export let tooltipVariants = '';
 
-  let subButtonsActive = false
+  let subButtonsActive = false;
 
   $: if (icon && !icon.includes('fa-')) {
-    icon = `fas fa-${icon}`
+    icon = `fas fa-${icon}`;
   }
-  
+
 </script>
 
 <div class="button-group button-container">
   <button
     {id}
     aria-label={title}
-    class="{ buttonStyles } {variant}"
+    class="{buttonStyles} {variant}"
     class:primo={type === 'primo'}
     class:active
     class:has-subbuttons={buttons}
-    in:fade={{duration:200}}
+    in:fade={{ duration: 200 }}
     {disabled}
     on:click={() => {
-      subButtonsActive = !subButtonsActive
-      onclick ? onclick() : dispatch('click')
+      subButtonsActive = !subButtonsActive;
+      onclick ? onclick() : dispatch('click');
     }}>
     {#if icon}
       {#if key}
-        <span class="key-hint" class:active={$showKeyHint} aria-hidden>&#8984;{key.toUpperCase()}</span>
+        <span
+          class="key-hint"
+          class:active={$showKeyHint}
+          aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
-      <i class="{ !loading ? icon : 'fas fa-spinner'} w-4" />
-    {:else} 
-      <slot></slot>
+      <i class="{!loading ? icon : 'fas fa-spinner'} w-4" />
+    {:else}
+      <slot />
     {/if}
   </button>
   {#if title && !$onMobile}
@@ -57,44 +60,56 @@
 
 <style>
   .primo {
-    @apply bg-primored text-gray-100;
+    background: var(--color-primored);
+    color: var(--color-gray-1);
   }
 
   .key-hint {
-    @apply absolute w-full text-center left-0 opacity-0;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    left: 0;
+    opacity: 0;
   }
 
   .key-hint.active {
-    @apply opacity-100 transition-opacity duration-100;
+    opacity: 1;
+    transition: opacity 0.1s;
   }
 
   .key-hint.active + i {
-      @apply opacity-0 transition-opacity duration-100;
-    } 
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
 
   .button-container {
-    @apply flex justify-center relative;
+    display: flex;
+    justify-content: center;
+    position: relative;
   }
 
   .tooltip.sub-buttons {
-    @apply pointer-events-auto cursor-default p-0 bg-codeblack shadow flex;
+    pointer-events: none;
+    cursor: default;
+    padding: 0;
+    background: var(--color-codeblack);
+    box-shadow: var(--box-shadow);
+    display: flex;
     z-index: 999;
     left: 12rem;
   }
 
-  .tooltip.sub-buttons:before, .tooltip.sub-buttons:after {
+  .tooltip.sub-buttons:before,
+  .tooltip.sub-buttons:after {
     left: 5%;
-    @apply border-codeblack;
+    background: var(--color-codeblack);
     border-top-color: transparent;
     border-left-color: transparent;
     border-right-color: transparent;
   }
 
-  .has-subbuttons {
-
-  }
-
-  .has-subbuttons:hover .has-subbuttons:after, .has-subbuttons:focus .has-subbuttons:after {
+  .has-subbuttons:hover .has-subbuttons:after,
+  .has-subbuttons:focus .has-subbuttons:after {
     content: '';
     height: 1rem;
     position: absolute;
@@ -105,19 +120,37 @@
   }
 
   .tooltip {
-    @apply absolute text-center text-gray-100 font-bold bg-gray-800 px-4 py-2 text-sm pointer-events-none invisible opacity-0 transition-opacity duration-200;
+    position: absolute;
+    text-align: center;
+    color: var(--color-gray-1);
+    font-weight: 700;
+    background: var(--color-gray-8);
+    padding: 8px 16px;
+    font-size: var(--font-size-2);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s;
     left: 50%;
     transform: translateX(-50%);
     top: calc(100% + 0.75rem);
   }
 
-  .button-container:hover .tooltip, .button-container:focus .tooltip, .sub-buttons:hover, .tooltip.active {
-    @apply visible opacity-100 transition-opacity duration-200;
+  .button-container:hover .tooltip,
+  .button-container:focus .tooltip,
+  .sub-buttons:hover,
+  .tooltip.active {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.2s;
   }
 
-  .tooltip:before, .tooltip:after {
-    content: " ";
-    @apply h-0 w-0 border-solid border-gray-800;
+  .tooltip:before,
+  .tooltip:after {
+    content: ' ';
+    height: 0;
+    width: 0;
+    border: 1px solid var(--color-gray-8);
     border-top-color: transparent;
     border-left-color: transparent;
     border-right-color: transparent;
@@ -136,39 +169,59 @@
   }
 
   button {
-    @apply bg-codeblack text-white font-bold py-2 px-3 transition-colors outline-none relative;
+    background: var(--color-codeblack);
+    color: var(--color-white);
+    font-weight: 700;
+    padding: 0 16px;
+    transition: var(--transition-colors);
+    outline: 0;
+    position: relative;
   }
 
-  button:hover, button:focus {
-      @apply bg-gray-800 transition-colors duration-200;
-    }
+  button:hover,
+  button:focus {
+    background: var(--color-gray-8);
+    transition: var(--transition-colors);
+  }
 
   button.key-hint {
-    @apply opacity-100 transition-opacity duration-100;
+    opacity: 1;
+    transition: opacity 0.1s;
   }
 
   button[disabled] {
-    @apply text-gray-700 bg-codeblack cursor-default transition-colors duration-200;
+    color: var(--color-gray-7);
+    background: var(--color-codeblack);
+    cursor: default;
+    transition: var(--transition-colors);
   }
 
   button.outlined {
-    @apply border border-solid border-gray-800;
+    border: 1px solid var(--color-gray-8);
   }
 
   button.inverted {
-    @apply border-0 bg-gray-300 text-codeblack;
+    border: 0;
+    background: var(--color-gray-3);
+    color: var(--color-codeblack);
   }
 
-  button.inverted:hover, button.inverted:focus {
-    @apply bg-gray-800 text-white transition-colors duration-200;
+  button.inverted:hover,
+  button.inverted:focus {
+    background: var(--color-gray-8);
+    color: var(--color-white);
+    transition: var(--transition-colors);
   }
 
   button.primored {
-    @apply border-0 bg-primored text-gray-100;
+    border: 0;
+    background: var(--color-primored);
+    color: var(--color-gray-1);
   }
 
-  button.primored:hover, button.primored:focus {
-    @apply bg-gray-800;
+  button.primored:hover,
+  button.primored:focus {
+    background: var(--color-gray-8);
   }
 
   button i.fa-hammer {
@@ -223,4 +276,3 @@
   }
 
 </style>
-

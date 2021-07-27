@@ -74,37 +74,60 @@
   }}
   variants="mb-4" />
 
-<div class="flex flex-col">
-  <Tabs {tabs} bind:activeTab variants="mb-4" />
-  <div class="flex-1">
+<main class="flex flex-col">
+  <Tabs {tabs} bind:activeTab />
+  <div class="editors">
     {#if activeTab.id === 'page'}
-      <span
-        class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span>
+      <span class="head">{'<head>'}</span>
       <CodeMirror
         bind:value={localPageHTML.head}
         style="height:10rem"
         mode="html" />
 
-      <span
-        class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span>
+      <span class="before-body">{'Before </body>'}</span>
       <CodeMirror
         bind:value={localPageHTML.below}
         style="height:15rem"
         mode="html" />
     {:else}
-      <span
-        class="mb-1 inline-block font-semibold text-gray-200">{'<head>'}</span>
+      <span class="head">{'<head>'}</span>
       <CodeMirror
         bind:value={localSiteHTML.head}
         style="height:10rem"
         mode="html" />
 
-      <span
-        class="mb-1 mt-4 inline-block font-semibold text-gray-200">{'Before </body>'}</span>
+      <span class="before-body">{'Before </body>'}</span>
       <CodeMirror
         bind:value={localSiteHTML.below}
         style="height:15rem"
         mode="html" />
     {/if}
   </div>
-</div>
+</main>
+
+<style lang="postcss">
+  main {
+    display: flex;
+    flex-direction: column;
+
+    .editors {
+      flex: 1;
+
+      .head {
+        margin-bottom: 0.25rem;
+        display: inline-block;
+        font-weight: 600;
+        color: var(--color-gray-2);
+      }
+
+      .before-body {
+        margin-bottom: 0.25rem;
+        margin-top: 0.75rem;
+        display: inline-block;
+        font-weight: 600;
+        color: var(--color-gray-2);
+      }
+    }
+  }
+
+</style>

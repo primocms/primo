@@ -1,61 +1,72 @@
 <script>
-
-  export let label
-  export let value
-  export let disabled = false
-  export let variants = ''
-  export let options
-  export let info = null
-  export let size = 'medium'
+  export let label;
+  export let value;
+  export let disabled = false;
+  export let variants = '';
+  export let options;
+  export let info = null;
+  export let size = 'medium';
 
 </script>
 
 <label class="{variants} {size}">
   {#if label}
-    <span class="mb-2 text-sm" title={info}>
-      { label }
-      {#if info}<i class="fas fa-info-circle text-gray-300 text-xs"></i>{/if}
+    <span title={info}>
+      {label}
+      {#if info}<i class="fas fa-info-circle " />{/if}
     </span>
   {/if}
-  
-  <select
-    bind:value
-    {disabled}
-    {...$$restProps}
-    >
+
+  <select bind:value {disabled} {...$$restProps}>
     {#each options as option}
       <option value={option.id}>{option.label}</option>
     {/each}
   </select>
 </label>
 
-<style>
-  select {
-    outline-color: rgb(248,68,73);
-    @apply bg-gray-900 p-2 border-2 border-gray-200;
+<style lang="postcss">
+  label {
+    display: flex;
+    flex-direction: column;
+
+    span {
+      margin-bottom: 0.5rem;
+      font-size: var(--font-size-2);
+
+      i {
+        color: var(--color-gray-3);
+        font-size: var(--font-size-1);
+      }
+    }
+
+    select {
+      outline-color: rgb(248, 68, 73);
+      background: var(--color-gray-9);
+      padding: 0.5rem;
+      border: 2px solid var(--color-gray-2);
+    }
   }
 
-  label {
-    @apply flex flex-col font-medium;
-  }
-  
   label.small {
-    @apply text-lg;
+    font-size: var(--font-size-4);
   }
   label.small span {
-    @apply mb-1 text-xs;
+    font-size: var(--font-size-1);
+    marign-bottom: 0.25rem;
   }
   label.small select {
-    @apply px-2 py-1;
+    padding: 0.25rem 0.5rem;
   }
 
   label.medium {
-    @apply text-xl;
+    font-size: var(--font-size-3);
   }
   label.medium span {
-    @apply mb-2 text-sm;
+    font-size: var(--font-size-1);
+    margin-bottom: 0.5rme;
   }
   label.medium select {
-    @apply px-2;
+    padding: 0 0.5rem;
   }
+
 </style>

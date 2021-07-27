@@ -1,15 +1,17 @@
 <script>
-  import {TextField} from '../ui'
+  import { TextField } from '../ui';
 
-  export let field
+  export let field;
+
 </script>
 
-<div class="w-full">
-  <TextField 
-    {...field} 
-    on:input
-    bind:value={field.value}
-    type="url"
-  />
+<div>
+  <TextField {...field} on:input bind:value={field.value} type="url" />
 </div>
 
+<style>
+  div {
+    width: 100%;
+  }
+
+</style>

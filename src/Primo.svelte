@@ -127,6 +127,8 @@
     --color-codeblack: rgb(30, 30, 30);
     --color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
+    --color-black: rgb(17, 17, 17);
+
     --color-gray-1: rgb(245, 245, 245);
     --color-gray-2: rgb(229, 229, 229);
     --color-gray-3: rgb(212, 212, 212);
@@ -138,13 +140,18 @@
 
     --font-size-1: 0.75rem;
     --font-size-2: 0.875rem;
+    --font-size-3: 1.125rem;
     --font-size-4: 1.25rem;
 
+    box-shadow: 0 0 #0000 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
     --transition-colors: background-color 0.1s, border-color 0.1s, color 0.1s,
       fill 0.1s, stroke 0.1s;
+
+    --padding-container: 15px;
+    --max-width-container: 1900px;
   }
 
 </style>

@@ -38,6 +38,10 @@
     flex-direction: column;
     align-items: flex-start;
     color: var(--color-gray-2);
+    margin-top: var(--TextInput-mt, 0);
+    margin-bottom: var(--TextInput-mb, 0);
+    margin-right: var(--TextInput-mr, 0);
+    margin-left: var(--TextInput-ml, 0);
 
     span.label {
       margin-bottom: 0.25rem;

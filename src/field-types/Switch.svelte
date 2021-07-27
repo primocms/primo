@@ -1,25 +1,75 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
-  const dispatch = createEventDispatcher();
-  export let field
+  export let field;
+
+  $: console.log(field);
+
 </script>
 
-<label class="flex flex-col w-full" for={field.key}>
-  <span for={field.key}>{field.label}</span>
-  <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-    <input type="checkbox" id={field.key} on:input bind:checked={field.value} on:click={() => dispatch('input')} class="toggle-checkbox outline-none absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-    <span class="toggle-label outline-none block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></span>
+<label for={field.key}>
+  <span class="switch-label" for={field.key}>{field.label}</span>
+  <div class="switch-container">
+    <input type="checkbox" id={field.key} on:input checked />
+    <span />
   </div>
 </label>
 
+<style lang="postcss">
+  label {
+    display: flex;
+    width: 100%;
 
-<style>
-  input:checked {
-    @apply right-0 border-blue-500;
-    transition: right 0.2s;
+    .switch-label {
+      margin-right: 1rem;
+    }
+
+    .switch-container {
+      @apply relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in;
+      position: relative;
+      display: inline-block;
+      width: 3.5rem;
+      vertical-align: middle;
+      user-select: none;
+      transition: transform 0.1s;
+
+      input {
+        outline: 0;
+        position: absolute;
+        top: -4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 100%;
+        background: var(--color-white);
+        appearance: none;
+        cursor: pointer;
+        left: 0;
+        transition: transform 0.1s;
+
+        &:after {
+          content: '\d7';
+        }
+
+        &:checked {
+          transform: translateX(24px);
+
+          &:after {
+            content: '\2713';
+          }
+        }
+      }
+
+      span {
+        outline: 0;
+        display: block;
+        overflow: hidden;
+        height: 1.5rem;
+        border-radius: 1rem;
+        background: var(--color-gray-7);
+        cursor: pointer;
+      }
+    }
   }
-  input:checked + span {
-    @apply bg-blue-500;
-  }
+
 </style>
-                 

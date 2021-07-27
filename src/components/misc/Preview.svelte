@@ -26,13 +26,12 @@
 
 </script>
 
-<div class="h-full flex flex-col">
-  <div class="preview-container flex-1 bg-white" bind:this={container}>
+<div class="preview">
+  <div class="preview-container" bind:this={container}>
     <iframe
       in:fade={{ duration: 100 }}
       title="Preview HTML"
       srcdoc={preview}
-      class="bg-white w-full h-full"
       bind:this={iframe}
       on:load={() => (iframeLoaded = true)} />
   </div>
@@ -40,16 +39,30 @@
 
 <svelte:window on:resize={resizePreview} />
 
-<style>
-  iframe {
-    @apply w-full border-0 transition-opacity duration-300;
-    width: 100vw;
-    transform-origin: top left;
-  }
-  .preview-container {
-    will-change: border-color;
-    @apply border-4 border-gray-800 transition-colors duration-200 overflow-hidden;
-    border-bottom: 0;
+<style lang="postcss">
+  .preview {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .preview-container {
+      background: var(--color-white);
+      border: 4px solid var(--color-gray-8);
+      transition: var(--transition-colors);
+      overflow: hidden;
+      border-bottom: 0;
+      will-change: border-color;
+      flex: 1;
+
+      iframe {
+        background: var(--color-white);
+        border: 0;
+        transition: opacity 0.1s;
+        height: 100%;
+        width: 100vw;
+        transform-origin: top left;
+      }
+    }
   }
 
 </style>

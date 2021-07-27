@@ -1,5 +1,4 @@
 import Primo from "./Primo.svelte";
-import SitePreview from './Preview/SitePreview.svelte'
 
 import {unsaved,onMobile,userRole} from './stores/app/misc'
 import {site} from './stores/data/draft'
@@ -25,7 +24,6 @@ export {
   savedSite,
   site,
   activePage,
-  SitePreview,
   modal,
   utils,
   components,

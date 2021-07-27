@@ -59,6 +59,7 @@
 <style lang="postcss">
   .field-container {
     display: grid;
+    grid-template-columns: auto 1fr 1fr auto;
     padding: 0.5rem;
     gap: 1rem;
 

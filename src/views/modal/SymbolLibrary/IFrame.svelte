@@ -25,28 +25,41 @@
 </script>
 
 {#if !iframeLoaded}
-  <div
-    class="loading bg-gray-900 w-full h-full left-0 top-0 absolute flex justify-center items-center z-50">
+  <div class="spinner-container">
     <Spinner />
   </div>
 {/if}
-<div bind:this={container} class="container">
+<div bind:this={container} class="iframe-container">
   <iframe
     on:load={() => (iframeLoaded = true)}
     title="Preview HTML"
     srcdoc={iframePreview}
-    class="bg-white w-full h-full"
     bind:this={iframe} />
 </div>
 
-<style>
-  .container {
-    flex: 1;
+<style lang="postcss">
+  .spinner-container {
+    background: var(--color-gray-9);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
   }
-  iframe {
-    pointer-events: none;
-    width: 100vw;
-    transform-origin: top left;
+  .iframe-container {
+    background: var(--color-white);
+    flex: 1;
+
+    iframe {
+      pointer-events: none;
+      width: 100vw;
+      transform-origin: top left;
+      height: 100%;
+    }
   }
 
 </style>

@@ -1,5 +1,4 @@
 <script>
-  import axios from 'axios';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
@@ -29,23 +28,41 @@
 
 </script>
 
-<div class="flex flex-col">
-  <span class="text-xs font-semibold">{field.label}</span>
-  <div class="flex flex-col w-full">
+<div class="link">
+  <span>{field.label}</span>
+  <div class="inputs">
     <TextInput
       on:input
       bind:value={field.value.label}
       id="page-label"
-      variants="mb-2"
       label="Label"
       placeholder="About Us" />
     <TextInput
       on:input
       bind:value={field.value.url}
-      variants="mb-2"
       label="URL"
       type="url"
       placeholder="about-us" />
   </div>
 </div>
 <slot />
+
+<style lang="postcss">
+  .link {
+    display: flex;
+    flex-direction: column;
+
+    span {
+      font-size: var(--font-size-1);
+      font-weight: 600;
+    }
+
+    .inputs {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      --TextInput-mt: 0.5rem;
+    }
+  }
+
+</style>

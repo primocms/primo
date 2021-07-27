@@ -22,16 +22,28 @@
 
 <style lang="postcss">
   .primary-button {
+    --PrimaryButton-bg: var(--color-primored);
+    --PrimaryButton-color: var(--color-white);
+
+    --PrimaryButton-bg-hover: var(--color-primored-dark);
+    --PrimaryButton-color-hover: var(--color-white);
+
     width: 100%;
-    background: var(--color-codeblack);
-    color: var(--color-gray-3);
+    background: var(--PrimaryButton-bg);
+    color: var(--PrimaryButton-color);
     padding: 0.5rem;
+    margin-top: var(--PrimaryButton-mt, 0);
+    margin-bottom: var(--PrimaryButton-mb, 0);
+    margin-left: var(--PrimaryButton-ml, 0);
+    margin-right: var(--PrimaryButton-mr, 0);
+
     border-bottom-right-radius: 0.25rem;
     border-bottom-left-radius: 0.25rem;
     transition: color 0.1s, background-color 0.1s;
 
     &:hover {
-      background: var(--color-gray-9);
+      background: var(--PrimaryButton-bg-hover);
+      color: var(--PrimaryButton-color-hover);
     }
 
     &[disabled] {

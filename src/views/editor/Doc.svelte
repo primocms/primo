@@ -12,7 +12,6 @@
   } from '../../stores/data/draft';
   import {
     id,
-    wrapper as pageWrapper,
     content,
     fields as pageFields,
     html as pageHTML,

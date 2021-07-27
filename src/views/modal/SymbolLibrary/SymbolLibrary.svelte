@@ -6,17 +6,14 @@
 </script>
 
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import _ from 'lodash';
   import { Tabs } from '../../../components/misc';
-  import axios from 'axios';
-
   import ModalHeader from '../ModalHeader.svelte';
   import Container from './SymbolContainer.svelte';
   import Spinner from '../../../components/misc/Spinner.svelte';
   import { createSymbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
-  // import { sites } from '../../../../supabase/db'
   import { userRole } from '../../../stores/app';
   import libraries from '../../../stores/data/libraries';
   import modal from '../../../stores/app/modal';
@@ -161,21 +158,15 @@
 
 <ModalHeader icon="fas fa-clone" title="Components" variants="mb-2" />
 
-<Tabs {tabs} bind:activeTab variants="mt-2 mb-4" />
+<Tabs {tabs} bind:activeTab />
 
-<div class="mt-2">
+<main>
   {#if activeTab === tabs[0]}
-    <ul
-      class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
-      xyz="fade stagger stagger-2">
-      <li
-        class="xyz-in library-buttons text-gray-100 bg-codeblack grid grid-rows-2 rounded overflow-hidden">
+    <ul xyz="fade stagger stagger-1">
+      <li class="xyz-in library-buttons">
         {#if $userRole === 'developer'}
-          <button
-            on:click={addSymbol}
-            class="py-2 border-b w-full flex justify-center items-center bg-codeblack hover:bg-primored focus:outline-none focus:border-2 border-gray-800 transition-colors duration-100">
+          <button on:click={addSymbol}>
             <svg
-              class="w-4 h-4 mr-1"
               fill="currentColor"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg"><path
@@ -185,11 +176,8 @@
             <span>Create</span>
           </button>
         {/if}
-        <button
-          on:click={pasteSymbol}
-          class="py-2 w-full flex justify-center items-center bg-codeblack text-gray-100 hover:bg-primored focus:outline-none focus:border-2 border-gray-800 transition-colors duration-100">
+        <button on:click={pasteSymbol}>
           <svg
-            class="w-4 h-4 mr-1"
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"><path
@@ -217,9 +205,7 @@
       {/each}
     </ul>
   {:else}
-    <ul
-      class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
-      xyz="fade stagger stagger-1">
+    <ul xyz="fade stagger stagger-1">
       {#each $publicSymbols as symbol (getID(symbol))}
         <li class="xyz-in">
           <Container
@@ -245,21 +231,81 @@
       {/each}
     </ul>
   {/if}
-</div>
+</main>
 
-<style>
-  .library-buttons:only-child {
-    @apply grid grid-cols-2 col-span-4 grid-rows-1;
-  }
-  .library-buttons:only-child button {
-    @apply py-4 text-xl border-0 h-full;
+<style lang="postcss">
+  main {
+    margin-top: 10px;
 
-    &:first-child {
-      @apply border-r border-gray-800;
+    ul {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+
+      @media (max-width: 900px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
     }
   }
-  .library-buttons:only-child svg {
-    @apply w-6 h-6;
+  .library-buttons {
+    color: var(--color-gray-1);
+    background: var(--color-codeblack);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-radius: var(--border-radius-1);
+    overflow: hidden;
+
+    button {
+      background: var(--color-codeblack);
+      transition: var(--transition-colors);
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--color-gray-8);
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover {
+        background: var(--color-primored);
+      }
+
+      &:focus {
+        outline: 0;
+      }
+
+      &:first-child {
+        border-right: 1px solid var(--color-gray-9);
+      }
+
+      svg {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 5px;
+      }
+    }
+
+    &:only-child {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-column: span 4 / span 4;
+      grid-template-rows: 10rem;
+
+      button {
+        padding: 1rem 0;
+        font-size: var(--font-size-3);
+        border: 0;
+        height: 100%;
+      }
+
+      svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
   }
 
 </style>

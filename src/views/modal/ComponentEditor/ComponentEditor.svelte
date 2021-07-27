@@ -20,8 +20,6 @@
 
   import { css as siteCSS, html as siteHTML } from '../../../stores/data/draft';
   import {
-    styles as pageStyles,
-    wrapper as pageWrapper,
     html as pageHTML,
     css as pageCSS,
   } from '../../../stores/app/activePage';
@@ -31,7 +29,6 @@
   import { createComponent } from '../../../const';
   import { symbols } from '../../../stores/actions';
   import { getAllFields, getSymbol } from '../../../stores/helpers';
-  import { processors } from '../../../component';
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
@@ -52,12 +49,7 @@
 
   let localComponent = _.cloneDeep(component);
   function saveRawValue(property, value) {
-    // localComponent.value.raw[property] = value;
     localComponent.value[property] = value;
-  }
-
-  function saveFinalValue(property, value) {
-    // localComponent.value.final[property] = value;
   }
 
   const allFieldTypes = [
@@ -320,7 +312,7 @@
   button={{ ...header.button, onclick: () => header.button.onclick(localComponent), disabled: disableSave }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
-      <i class="fas fa-clone mr-1" />
+      <i class="fas fa-clone" />
       <span class="hidden md:inline text-gray-200 font-semibold">Add to Library</span>
     </button>
   {/if}
@@ -545,67 +537,86 @@
   </div>
   <div slot="right" class="w-full h-full overflow-hidden">
     <CodePreview view="small" {loading} {componentApp} {error} />
-    <!-- <CodePreview
-      view="small"
-      {loading}
-      html={`
-        ${$siteWrapper.head.final}
-        ${$pageWrapper.head.final}
-        <div id="component-${localComponent.id}">${finalHTML}</div>
-        ${$siteWrapper.below.final}
-        ${$pageWrapper.below.final}
-        `}
-      css={$siteStyles.final + $pageStyles.final + finalCSS}
-      js={finalJS}
-      tailwind={getCombinedTailwindConfig($pageStyles.tailwind, $siteStyles.tailwind, true)} /> -->
   </div>
 </HSplitPane>
 
-<style>
-  .repeater {
-    @appy col-start-1 col-end-3;
-  }
-
+<style lang="postcss">
   button.convert {
-    @apply py-1 px-3 mr-2 text-sm rounded transition-colors duration-200 border border-primored text-primored;
-    outline-color: rgb(248, 68, 73);
+    padding: 4px 12px;
+    margin-right: 4px;
+    font-size: var(--font-size-2);
+    border-radius: var(--border-radius);
+    transition: var(--transition-colors);
+    border: 1px solid var(--color-primored);
+    color: var(--color-primored);
+    outline-color: var(--color-primored);
+
+    i {
+      margin-right: 4px;
+    }
   }
   button.convert:hover {
-    @apply bg-red-700 text-white;
+    background: var(--color-primored-dark);
+    color: var(--color-white);
   }
   .field-item {
-    @apply p-4 shadow bg-gray-900 text-gray-200;
+    padding: 16px;
+    box-shadow: var(--box-shadow);
+    background: var(--color-gray-9);
+    color: var(--color-gray-2);
   }
   .field-button {
-    @apply w-full bg-gray-800 text-gray-300 py-2 rounded-br rounded-bl font-medium transition-colors duration-100;
+    width: 100%;
+    background: var(--color-gray-8);
+    color: var(--color-gray-3);
+    padding: 8px 0;
+    border-bottom-right-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+    transition: var(--transition-colors);
   }
   .field-button:hover {
-    @apply bg-gray-900;
+    background: var(--color-gray-9);
   }
   .field-button[disabled] {
-    @apply bg-gray-500;
-    @apply cursor-not-allowed;
+    background: var(--color-gray-5);
+    cursor: not-allowed;
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
-    @apply rounded-sm ml-4 mb-2 mt-2 text-sm py-1 bg-codeblack text-gray-200 transition-colors duration-100 outline-none;
+    border-radius: 2px;
+    margin-left: 16px;
+    margin-top: 8px;
+    font-size: var(--font-size-2);
+    background: var(--color-codeblack);
+    color: var(--color-gray-2);
+    transition: var(--transition-colors);
+    outline: 0;
   }
   .field-button.subfield-button:hover {
-    @apply bg-gray-900;
+    background: var(--color-gray-9);
   }
   .field-button.subfield-button:focus {
-    @apply bg-gray-800;
+    background: var(--color-gray-8);
   }
 
   input {
-    @apply bg-gray-700 text-gray-200 p-1 rounded-sm;
+    background: var(--color-gray-7);
+    color: var(--color-gray-2);
+    padding: 4px;
+    border-radius: 2px;
   }
   input:focus {
-    @apply outline-none;
+    outline: 0;
   }
 
   select {
-    @apply w-full p-2 border-r-4 bg-gray-900 text-gray-200 border-transparent text-sm font-semibold;
+    width: 100%;
+    padding: 8px;
+    border-right: 4px solid transparent;
+    background: var(--color-gray-9);
+    color: var(--color-gray-2);
+    font-size: var(--font-size-2);
+    font-weight: 600;
   }
 
 </style>

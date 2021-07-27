@@ -1,5 +1,6 @@
 <script>
-  import {fade} from 'svelte/transition'
+  import { fade } from 'svelte/transition';
+
 </script>
 
 <div class="spinner" in:fade>Loading...</div>
@@ -34,4 +35,5 @@
       transform: rotate(360deg);
     }
   }
+
 </style>
