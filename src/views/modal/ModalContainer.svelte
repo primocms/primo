@@ -23,7 +23,7 @@
 </script>
 
 {#if visible}
-  <div class="modal m-0 mousetrap" transition:fade={{ duration: 100 }}>
+  <div class="modal mousetrap" transition:fade={{ duration: 100 }}>
     <div
       class="modal-background"
       class:hovered={!$modal.disabledBgClose}
@@ -44,7 +44,7 @@
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    justify-content: var(--ModalContainer-justify, center);
+    justify-content: var(--ModalContainer-justify, flex-start);
     overflow: hidden;
     position: fixed;
     z-index: 40;
@@ -71,17 +71,20 @@
     position: relative;
     border-radius: var(--border-radius-1);
     max-height: 100vh;
-    padding: 1rem 1rem 0 1rem;
+    padding: 1rem;
+
+    &.fullscreen {
+      height: 100%;
+    }
   }
 
   .modal-card-body {
-    /* background: var(--color-black); */
+    border-radius: 1px;
     flex: 1;
     display: flex;
     flex-direction: column;
     border-radius: var(--border-radius-1);
     overflow-y: scroll;
-    padding: 0 15px 15px 15px;
   }
 
   .modal {

@@ -145,8 +145,7 @@
 
 <style lang="postcss">
   main {
-    --ModalContainer-max-w: 100%;
-
+    background: var(--color-black);
     height: 100%;
     display: flex;
     flex-direction: column;

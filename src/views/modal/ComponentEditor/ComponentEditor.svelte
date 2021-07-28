@@ -318,226 +318,236 @@
   {/if}
 </ModalHeader>
 
-<HSplitPane
-  leftPaneSize={editorWidth}
-  rightPaneSize={previewWidth}
-  on:resize={({ detail }) => {
-    const { left, right } = detail;
-    localStorage.setItem('editorWidth', left);
-    localStorage.setItem('previewWidth', right);
-  }}>
-  <div slot="left" class="h-full">
-    <div class="mb-4 lg:mb-0 w-full h-full">
-      <div class="flex flex-col h-full overflow-y-scroll">
-        {#if $switchEnabled}
-          {#if !disabled}
-            <Tabs {tabs} bind:activeTab variants="mb-1" />
-          {/if}
-          {#if disabled && activeTab === tabs[0]}
-            <div class="flex flex-wrap">
-              <button
-                style="min-width: 200px"
-                class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
-                on:click={loadSymbol}
-                id="edit-symbol"
-                title="Edit the Component">
-                <span class="flex items-center justify-center">
-                  <!-- <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+<main>
+  <HSplitPane
+    leftPaneSize={editorWidth}
+    rightPaneSize={previewWidth}
+    on:resize={({ detail }) => {
+      const { left, right } = detail;
+      localStorage.setItem('editorWidth', left);
+      localStorage.setItem('previewWidth', right);
+    }}>
+    <div slot="left" class="h-full">
+      <div class="mb-4 lg:mb-0 w-full h-full">
+        <div class="flex flex-col h-full overflow-y-scroll">
+          {#if $switchEnabled}
+            {#if !disabled}
+              <Tabs {tabs} bind:activeTab variants="mb-1" />
+            {/if}
+            {#if disabled && activeTab === tabs[0]}
+              <div class="flex flex-wrap">
+                <button
+                  style="min-width: 200px"
+                  class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
+                  on:click={loadSymbol}
+                  id="edit-symbol"
+                  title="Edit the Component">
+                  <span class="flex items-center justify-center">
+                    <!-- <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                     <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                   </svg> -->
-                  Edit Component
-                </span>
-              </button>
-              <button
-                style="min-width: 200px"
-                class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
-                on:click={separateFromSymbol}
-                title="Separate the Component instance from its Component"
-                id="emancipate-symbol">
-                <span class="flex items-center justify-center">
-                  <!-- <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    Edit Component
+                  </span>
+                </button>
+                <button
+                  style="min-width: 200px"
+                  class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
+                  on:click={separateFromSymbol}
+                  title="Separate the Component instance from its Component"
+                  id="emancipate-symbol">
+                  <span class="flex items-center justify-center">
+                    <!-- <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.5 2a3.5 3.5 0 101.665 6.58L8.585 10l-1.42 1.42a3.5 3.5 0 101.414 1.414l8.128-8.127a1 1 0 00-1.414-1.414L10 8.586l-1.42-1.42A3.5 3.5 0 005.5 2zM4 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 9a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
                     <path d="M12.828 11.414a1 1 0 00-1.414 1.414l3.879 3.88a1 1 0 001.414-1.415l-3.879-3.879z" />
                   </svg> -->
-                  Emancipate
-                </span>
-              </button>
-            </div>
-          {:else if !disabled && activeTab === tabs[0]}
-            <FullCodeEditor
-              variants="flex-1"
-              {disabled}
-              bind:html={rawHTML}
-              bind:css={rawCSS}
-              bind:js={rawJS}
-              on:save={() => header.button.onclick(localComponent)} />
-          {:else if activeTab === tabs[1]}
-            <div class="fields">
-              {#each fields as field, i (field.id)}
-                <Card id="field-{i}" variants="field-item">
-                  <EditField
-                    on:delete={() => deleteField(field.id)}
-                    isFirst={i === 0}
-                    isLast={i === fields.length - 1}
-                    {disabled}
-                    minimal={field.type === 'info'}
-                    on:move={({ detail: direction }) => moveEditField( { i, direction } )}>
-                    <select
-                      bind:value={field.type}
-                      slot="type"
-                      on:blur={setPlaceholderValues}
-                      {disabled}>
-                      {#each allFieldTypes as field}
-                        <option value={field.id}>{field.label}</option>
-                      {/each}
-                    </select>
-                    <textarea
-                      slot="main"
-                      class="info"
-                      bind:value={field.value} />
-                    <input
-                      class="input label-input"
-                      type="text"
-                      placeholder="Heading"
-                      bind:value={field.label}
-                      slot="label"
+                    Emancipate
+                  </span>
+                </button>
+              </div>
+            {:else if !disabled && activeTab === tabs[0]}
+              <FullCodeEditor
+                variants="flex-1"
+                {disabled}
+                bind:html={rawHTML}
+                bind:css={rawCSS}
+                bind:js={rawJS}
+                on:save={() => header.button.onclick(localComponent)} />
+            {:else if activeTab === tabs[1]}
+              <div class="fields">
+                {#each fields as field, i (field.id)}
+                  <Card id="field-{i}" variants="field-item">
+                    <EditField
+                      on:delete={() => deleteField(field.id)}
+                      isFirst={i === 0}
+                      isLast={i === fields.length - 1}
                       {disabled}
-                      on:focus={setPlaceholderValues} />
-                    <input
-                      class="input key-input"
-                      type="text"
-                      placeholder="main-heading"
-                      bind:value={field.key}
-                      slot="key"
-                      {disabled}
+                      minimal={field.type === 'info'}
+                      on:move={({ detail: direction }) => moveEditField( { i, direction } )}>
+                      <select
+                        bind:value={field.type}
+                        slot="type"
+                        on:blur={setPlaceholderValues}
+                        {disabled}>
+                        {#each allFieldTypes as field}
+                          <option value={field.id}>{field.label}</option>
+                        {/each}
+                      </select>
+                      <textarea
+                        slot="main"
+                        class="info"
+                        bind:value={field.value} />
+                      <input
+                        class="input label-input"
+                        type="text"
+                        placeholder="Heading"
+                        bind:value={field.label}
+                        slot="label"
+                        {disabled}
+                        on:focus={setPlaceholderValues} />
+                      <input
+                        class="input key-input"
+                        type="text"
+                        placeholder="main_heading"
+                        bind:value={field.key}
+                        slot="key"
+                        {disabled}
+                        on:input={updateHtmlWithFieldData} />
+                    </EditField>
+                    {#if field.type === 'group'}
+                      {#if field.fields}
+                        {#each field.fields as subfield}
+                          <EditField
+                            minimal={field.type === 'info'}
+                            variants="ml-4 text-sm"
+                            on:delete={() => deleteSubfield(field.id, subfield.id)}
+                            {disabled}>
+                            <select
+                              bind:value={subfield.type}
+                              slot="type"
+                              {disabled}>
+                              {#each $fieldTypes as field}
+                                <option value={field.id}>{field.label}</option>
+                              {/each}
+                            </select>
+                            <textarea
+                              slot="main"
+                              class="info"
+                              bind:value={field.value} />
+                            <input
+                              class="label-input"
+                              type="text"
+                              placeholder="Heading"
+                              bind:value={subfield.label}
+                              slot="label"
+                              {disabled} />
+                            <input
+                              class="key-input"
+                              type="text"
+                              placeholder="main_heading"
+                              bind:value={subfield.key}
+                              slot="key"
+                              {disabled} />
+                          </EditField>
+                        {/each}
+                      {/if}
+                      <button
+                        class="field-button subfield-button"
+                        on:click={() => addSubField(field.id)}
+                        {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+                    {:else if field.type === 'repeater'}
+                      {#if field.fields}
+                        {#each field.fields as subfield}
+                          <EditField
+                            minimal={field.type === 'info'}
+                            variants="ml-4 text-sm"
+                            on:delete={() => deleteSubfield(field.id, subfield.id)}
+                            {disabled}>
+                            <select
+                              bind:value={subfield.type}
+                              slot="type"
+                              {disabled}>
+                              {#each $fieldTypes as field}
+                                <option value={field.id}>{field.label}</option>
+                              {/each}
+                            </select>
+                            <textarea
+                              slot="main"
+                              class="info"
+                              bind:value={field.value} />
+                            <input
+                              class="label-input"
+                              type="text"
+                              placeholder="Heading"
+                              bind:value={subfield.label}
+                              slot="label"
+                              {disabled} />
+                            <input
+                              class="key-input"
+                              type="text"
+                              placeholder="main_heading"
+                              bind:value={subfield.key}
+                              slot="key"
+                              {disabled} />
+                          </EditField>
+                        {/each}
+                      {/if}
+                      <button
+                        class="field-button subfield-button"
+                        on:click={() => addSubField(field.id)}
+                        {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+                    {/if}
+                  </Card>
+                {/each}
+                <PrimaryButton on:click={addNewField} {disabled}>
+                  <i class="fas fa-plus" />Create a Field
+                </PrimaryButton>
+              </div>
+            {/if}
+          {:else}
+            <div class="space-y-2 h-full">
+              {#each fields as field}
+                {#if field.key && getFieldComponent(field)}
+                  <div
+                    class="field-item shadow"
+                    class:repeater={field.key === 'repeater'}
+                    id="field-{field.key}">
+                    <svelte:component
+                      this={getFieldComponent(field)}
+                      {field}
                       on:input={updateHtmlWithFieldData} />
-                  </EditField>
-                  {#if field.type === 'group'}
-                    {#if field.fields}
-                      {#each field.fields as subfield}
-                        <EditField
-                          minimal={field.type === 'info'}
-                          variants="ml-4 text-sm"
-                          on:delete={() => deleteSubfield(field.id, subfield.id)}
-                          {disabled}>
-                          <select
-                            bind:value={subfield.type}
-                            slot="type"
-                            {disabled}>
-                            {#each $fieldTypes as field}
-                              <option value={field.id}>{field.label}</option>
-                            {/each}
-                          </select>
-                          <textarea
-                            slot="main"
-                            class="info"
-                            bind:value={field.value} />
-                          <input
-                            class="label-input"
-                            type="text"
-                            placeholder="Heading"
-                            bind:value={subfield.label}
-                            slot="label"
-                            {disabled} />
-                          <input
-                            class="key-input"
-                            type="text"
-                            placeholder="main-heading"
-                            bind:value={subfield.key}
-                            slot="key"
-                            {disabled} />
-                        </EditField>
-                      {/each}
-                    {/if}
-                    <button
-                      class="field-button subfield-button"
-                      on:click={() => addSubField(field.id)}
-                      {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
-                  {:else if field.type === 'repeater'}
-                    {#if field.fields}
-                      {#each field.fields as subfield}
-                        <EditField
-                          minimal={field.type === 'info'}
-                          variants="ml-4 text-sm"
-                          on:delete={() => deleteSubfield(field.id, subfield.id)}
-                          {disabled}>
-                          <select
-                            bind:value={subfield.type}
-                            slot="type"
-                            {disabled}>
-                            {#each $fieldTypes as field}
-                              <option value={field.id}>{field.label}</option>
-                            {/each}
-                          </select>
-                          <textarea
-                            slot="main"
-                            class="info"
-                            bind:value={field.value} />
-                          <input
-                            class="label-input"
-                            type="text"
-                            placeholder="Heading"
-                            bind:value={subfield.label}
-                            slot="label"
-                            {disabled} />
-                          <input
-                            class="key-input"
-                            type="text"
-                            placeholder="main-heading"
-                            bind:value={subfield.key}
-                            slot="key"
-                            {disabled} />
-                        </EditField>
-                      {/each}
-                    {/if}
-                    <button
-                      class="field-button subfield-button"
-                      on:click={() => addSubField(field.id)}
-                      {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
-                  {/if}
-                </Card>
+                  </div>
+                {:else if getFieldComponent(field)}
+                  <span>This field needs a key in order to be valid</span>
+                {/if}
+              {:else}
+                <p
+                  class="text-center h-full flex items-start p-24 justify-center
+                  text-lg text-gray-200 mt-3">
+                  You'll need to create and integrate a field before you can
+                  edit this component's content
+                </p>
               {/each}
-              <PrimaryButton on:click={addNewField} {disabled}>
-                <i class="fas fa-plus" />Create a Field
-              </PrimaryButton>
             </div>
           {/if}
-        {:else}
-          <div class="space-y-2 h-full">
-            {#each fields as field}
-              {#if field.key && getFieldComponent(field)}
-                <div
-                  class="field-item shadow"
-                  class:repeater={field.key === 'repeater'}
-                  id="field-{field.key}">
-                  <svelte:component
-                    this={getFieldComponent(field)}
-                    {field}
-                    on:input={updateHtmlWithFieldData} />
-                </div>
-              {:else if getFieldComponent(field)}
-                <span>This field needs a key in order to be valid</span>
-              {/if}
-            {:else}
-              <p
-                class="text-center h-full flex items-start p-24 justify-center
-                  text-lg text-gray-200 mt-3">
-                You'll need to create and integrate a field before you can edit
-                this component's content
-              </p>
-            {/each}
-          </div>
-        {/if}
+        </div>
       </div>
     </div>
-  </div>
-  <div slot="right">
-    <CodePreview view="small" {loading} {componentApp} {error} />
-  </div>
-</HSplitPane>
+    <div slot="right">
+      <CodePreview view="small" {loading} {componentApp} {error} />
+    </div>
+  </HSplitPane>
+</main>
 
 <style lang="postcss">
+  main {
+    background: var(--color-black);
+    padding: 0.5rem;
+    flex: 1;
+
+    --PrimaryButton-bg: var(--color-gray-8);
+    --PrimaryButton-bg-hover: var(--color-gray-9);
+  }
   .fields {
     display: flex;
     flex-direction: column;
@@ -618,6 +628,7 @@
     color: var(--color-gray-2);
     padding: 4px;
     border-radius: 2px;
+    border: 0;
   }
   input:focus {
     outline: 0;
@@ -631,6 +642,7 @@
     color: var(--color-gray-2);
     font-size: var(--font-size-2);
     font-weight: 600;
+    border: 0;
   }
 
 </style>

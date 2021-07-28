@@ -158,9 +158,8 @@
 
 <ModalHeader icon="fas fa-clone" title="Components" variants="mb-2" />
 
-<Tabs {tabs} bind:activeTab />
-
 <main>
+  <Tabs {tabs} bind:activeTab />
   {#if activeTab === tabs[0]}
     <ul xyz="fade stagger stagger-1">
       <li class="xyz-in library-buttons">
@@ -235,7 +234,8 @@
 
 <style lang="postcss">
   main {
-    margin-top: 10px;
+    background: var(--color-black);
+    padding: 0.5rem;
 
     ul {
       display: grid;

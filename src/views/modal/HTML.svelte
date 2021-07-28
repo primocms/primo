@@ -90,8 +90,10 @@
 
 <style lang="postcss">
   main {
+    background: var(--color-black);
     display: flex;
     flex-direction: column;
+    padding: 0.5rem;
 
     .editors {
       flex: 1;

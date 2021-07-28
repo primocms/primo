@@ -97,12 +97,14 @@
     {:else}
       <a
         tinro-ignore
-        class="page-container"
+        class="page-link"
         href="/{page.id}"
         on:click={openPage}
         class:active
         aria-label="Go to /{page.id}">
-        <Preview {preview} />
+        <div class="page-container">
+          <Preview {preview} />
+        </div>
       </a>
     {/if}
   </div>
@@ -159,7 +161,7 @@
       height: 0;
       padding-top: calc(100% - 37px); /* include header in square */
       position: relative;
-      .page-container {
+      .page-link {
         position: absolute;
         inset: 0;
         background: var(--color-white);
@@ -180,6 +182,11 @@
           &:after {
             opacity: 0.5;
           }
+        }
+
+        .page-container {
+          height: 100%;
+          z-index: -1; /* needed for link */
         }
       }
     }

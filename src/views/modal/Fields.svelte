@@ -167,9 +167,8 @@
   }}
   variants="mb-4" />
 
-<Tabs {tabs} bind:activeTab />
-
 <main>
+  <Tabs {tabs} bind:activeTab />
   {#if $switchEnabled}
     {#if showingPage}
       {#each localPageFields as field (field.id)}
@@ -198,7 +197,7 @@
             <input
               class="input key-input"
               type="text"
-              placeholder="main-heading"
+              placeholder="main_heading"
               bind:value={field.key}
               slot="key"
               {disabled} />
@@ -225,7 +224,7 @@
                   <input
                     class="input"
                     type="text"
-                    placeholder="main-heading"
+                    placeholder="main_heading"
                     bind:value={subfield.key}
                     slot="key"
                     {disabled} />
@@ -258,7 +257,7 @@
                   <input
                     class="input"
                     type="text"
-                    placeholder="main-heading"
+                    placeholder="main_heading"
                     bind:value={subfield.key}
                     slot="key"
                     {disabled} />
@@ -299,7 +298,7 @@
             <input
               class="input key-input"
               type="text"
-              placeholder="main-heading"
+              placeholder="main_heading"
               bind:value={field.key}
               slot="key"
               {disabled} />
@@ -326,7 +325,7 @@
                   <input
                     class="input"
                     type="text"
-                    placeholder="main-heading"
+                    placeholder="main_heading"
                     bind:value={subfield.key}
                     slot="key"
                     {disabled} />
@@ -359,7 +358,7 @@
                   <input
                     class="input"
                     type="text"
-                    placeholder="main-heading"
+                    placeholder="main_heading"
                     bind:value={subfield.key}
                     slot="key"
                     {disabled} />
@@ -419,8 +418,9 @@
   main {
     display: flex;
     flex-direction: column;
-    padding: 8px;
+    padding: 0.5rem;
     color: var(--color-gray-2);
+    background: var(--color-black);
 
     .empty-description {
       color: var(--color-gray-4);
@@ -449,6 +449,7 @@
   input,
   select {
     outline: 0;
+    border: 0;
   }
   .field-button {
     width: 100%;
