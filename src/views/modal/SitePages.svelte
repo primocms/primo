@@ -142,9 +142,9 @@
     </div>
   {/if}
 
-  <ul class="page-items xyz-in" xyz="fade stagger stagger-1">
+  <ul class="page-items" xyz="fade stagger stagger-1">
     {#each listedPages as page (page.id)}
-      <li>
+      <li class="xyz-in">
         <PageItem
           {page}
           parent={currentPath[0]}
@@ -156,7 +156,7 @@
           on:list={() => listPages(page.id)} />
       </li>
     {/each}
-    <li class="create-page">
+    <li class="create-page xyz-in">
       {#if !creatingPage}
         <button on:click={() => (creatingPage = true)}>
           <svg
