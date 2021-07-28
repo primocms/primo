@@ -36,9 +36,24 @@
 
   function duplicatePage(title, url) {
     const newPage = _.cloneDeep($activePage);
+    const [newContent] = scrambleIds(newPage.content);
+    newPage.content = newContent;
     newPage.title = title;
     newPage.id = url;
     return newPage;
+
+    function scrambleIds(content) {
+      let IDs = [];
+      const newContent = content.map((block) => {
+        const newID = createUniqueID();
+        IDs.push([block.id, newID]);
+        return {
+          ...block,
+          id: newID,
+        };
+      });
+      return [newContent, IDs];
+    }
   }
 
   let creatingPage = false;
