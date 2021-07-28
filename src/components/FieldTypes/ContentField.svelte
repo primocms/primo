@@ -43,7 +43,11 @@
       background: var(--color-gray-8);
       padding: 0.5rem;
       border: 0;
-      outline-color: rgb(248, 68, 73);
+
+      &:focus {
+        outline: 0;
+        box-shadow: var(--ring);
+      }
     }
   }
 

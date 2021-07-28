@@ -42,7 +42,7 @@
 
 </script>
 
-<li>
+<div class="page-item">
   <div class="page-info">
     <div><span class="title">{page.title}</span></div>
     <div class="buttons">
@@ -68,49 +68,52 @@
       {/if}
     </div>
   </div>
-  {#if editingPage}
-    <form
-      on:submit|preventDefault={() => {
-        editingPage = false;
-        dispatch('edit', { title, id });
-      }}
-      in:fade={{ duration: 100 }}>
-      <TextInput
-        bind:value={title}
-        id="page-label"
-        autofocus={true}
-        label="Page Label"
-        placeholder="About Us" />
-      {#if id !== 'index'}
+  <div class="page-body">
+    {#if editingPage}
+      <form
+        on:submit|preventDefault={() => {
+          editingPage = false;
+          dispatch('edit', { title, id });
+        }}
+        in:fade={{ duration: 100 }}>
         <TextInput
-          bind:value={id}
-          id="page-url"
-          label="Page URL"
-          prefix="/"
-          placeholder="about-us" />
-      {/if}
-      <PrimaryButton disabled={disableSave} id="save-page" type="submit">
-        Save
-      </PrimaryButton>
-    </form>
-  {:else}
-    <a
-      tinro-ignore
-      class="page-container"
-      href="/{page.id}"
-      on:click={openPage}
-      class:active
-      aria-label="Go to /{page.id}">
-      <Preview {preview} />
-    </a>
-  {/if}
-</li>
+          bind:value={title}
+          id="page-label"
+          autofocus={true}
+          label="Page Label"
+          placeholder="About Us" />
+        {#if id !== 'index'}
+          <TextInput
+            bind:value={id}
+            id="page-url"
+            label="Page URL"
+            prefix="/"
+            placeholder="about-us" />
+        {/if}
+        <PrimaryButton disabled={disableSave} id="save-page" type="submit">
+          Save
+        </PrimaryButton>
+      </form>
+    {:else}
+      <a
+        tinro-ignore
+        class="page-container"
+        href="/{page.id}"
+        on:click={openPage}
+        class:active
+        aria-label="Go to /{page.id}">
+        <Preview {preview} />
+      </a>
+    {/if}
+  </div>
+</div>
 
 <style lang="postcss">
-  li {
+  .page-item {
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius-1);
     overflow: hidden;
+    position: relative;
 
     .page-info {
       color: var(--color-gray-2);
@@ -152,33 +155,41 @@
       }
     }
 
+    .page-body {
+      height: 0;
+      padding-top: calc(100% - 37px); /* include header in square */
+      position: relative;
+      .page-container {
+        position: absolute;
+        inset: 0;
+        background: var(--color-white);
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        transition: var(--transition-colors);
+
+        &:hover {
+          opacity: 0.5;
+        }
+
+        &.active {
+          cursor: default;
+          pointer-events: none;
+          opacity: 0.5;
+
+          &:after {
+            opacity: 0.5;
+          }
+        }
+      }
+    }
+
     form {
       margin: 16px;
-    }
-  }
+      position: absolute;
+      inset: 0;
 
-  .page-container {
-    background: var(--color-white);
-    cursor: pointer;
-    display: block;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition-colors);
-    height: 20vh;
-
-    &:hover {
-      opacity: 0.5;
-    }
-
-    &.active {
-      cursor: default;
-      pointer-events: none;
-      opacity: 0.5;
-
-      &:after {
-        opacity: 0.5;
-      }
+      --TextInput-mb: 0.5rem;
     }
   }
 

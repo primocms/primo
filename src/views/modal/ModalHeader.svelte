@@ -26,11 +26,7 @@
       xyz="small"
       class="xyz-in"
       aria-label="Close modal">
-      <svg
-        class="h-6 w-6"
-        stroke="currentColor"
-        fill="none"
-        viewBox="0 0 24 24">
+      <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -96,7 +92,6 @@
     font-size: var(--font-size-3);
     font-weight: 600;
     padding: 0.25rem 0.75rem;
-    margin-top: -0.75rem;
     margin-left: -0.75rem;
     margin-right: -0.75rem;
     margin-bottom: 0;
@@ -123,6 +118,11 @@
         &:focus {
           color: var(--color-primored);
           outline: 0;
+        }
+
+        svg {
+          width: 1.5rem;
+          height: 1.5rem;
         }
       }
     }
@@ -254,7 +254,7 @@
   .button {
     display: flex;
     align-items: center;
-    padding: 0.25rem 0.75rem;
+    padding: 0.5rem 0.75rem;
     font-size: var(--font-size-2);
     border-radius: var(--border-radius-1);
     transition: var(--transition-colors);

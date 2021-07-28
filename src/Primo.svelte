@@ -132,6 +132,7 @@
     --color-gray-1: rgb(245, 245, 245);
     --color-gray-2: rgb(229, 229, 229);
     --color-gray-3: rgb(212, 212, 212);
+    --color-gray-4: rgb(156, 163, 175);
     --color-gray-5: rgb(115, 115, 115);
     --color-gray-6: rgb(82, 82, 82);
     --color-gray-7: rgb(64, 64, 64);
@@ -152,6 +153,8 @@
 
     --padding-container: 15px;
     --max-width-container: 1900px;
+
+    --ring: 0px 0px 0px 2px var(--color-primored);
   }
 
 </style>

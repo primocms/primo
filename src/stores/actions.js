@@ -18,7 +18,6 @@ export async function hydrateSite(data) {
   stores.name.set(data.name)
   stores.pages.set(data.pages)
   styles.set(data.styles)
-  // wrapper.set(data.wrapper)
 
   css.set(data.css || DEFAULTS.css)
   html.set(data.html || DEFAULTS.html)
@@ -27,16 +26,6 @@ export async function hydrateSite(data) {
 }
 
 export async function updateActivePageWrapper(html) {
-  // const wrapper = {
-  //   head: {
-  //     raw: newPageHTML.head.raw,
-  //     final: await updateHtmlWithFieldData(newPageHTML.head.raw),
-  //   },
-  //   below: {
-  //     raw: newPageHTML.below.raw,
-  //     final: await updateHtmlWithFieldData(newPageHTML.below.raw),
-  //   },
-  // };
   pages.update(get(id), (page) => ({
     ...page,
     html,
@@ -45,17 +34,7 @@ export async function updateActivePageWrapper(html) {
 
 
 export async function updateSiteWrapper(newSiteHTML) {
-  // const final = {
-  //   head: newSiteHTML.head,
-  //   below: await updateHtmlWithFieldData(
-  //     newSiteHTML.below.raw
-  //   )
-  // }
   html.set(newSiteHTML)
-  // wrapper.set({
-  //   head: newSiteHTML.head,
-  //   below: newSiteHTML.below
-  // })
 }
 
 export async function emancipateInstances(symbol) {

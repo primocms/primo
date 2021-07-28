@@ -10,11 +10,7 @@
   import { getAllFields } from '../../stores/helpers';
   import { html as pageHTML, id } from '../../stores/app/activePage';
   import { unsaved } from '../../stores/app/misc';
-  import {
-    // wrapper as siteHTML,
-    // pages as pagesStore,
-    html as siteHTML,
-  } from '../../stores/data/draft';
+  import { html as siteHTML } from '../../stores/data/draft';
   import {
     updateSiteWrapper,
     updateActivePageWrapper,
@@ -22,8 +18,6 @@
 
   let localPageHTML = cloneDeep($pageHTML);
   let localSiteHTML = cloneDeep($siteHTML);
-
-  $: console.log({ $pageHTML, $siteHTML });
 
   const tabs = [
     {
@@ -39,17 +33,6 @@
   ];
 
   let activeTab = tabs[0];
-
-  async function updateHtmlWithFieldData(rawHTML) {
-    const allFields = getAllFields();
-    const data = await convertFieldsToData(allFields, 'all');
-    const finalHTML = await processors.html(
-      { html: rawHTML, css: '', js: '' },
-      data
-    );
-
-    return finalHTML;
-  }
 
   async function saveFinalHTML() {
     updateActivePageWrapper(localPageHTML);

@@ -36,36 +36,9 @@
 
   function duplicatePage(title, url) {
     const newPage = _.cloneDeep($activePage);
-    const [newContent, IDmap] = scrambleIds(newPage.content);
-    newPage.content = newContent;
     newPage.title = title;
     newPage.id = url;
-
-    // Replace all the old IDs in the page styles with the new IDs
-    let rawPageStyles = newPage.styles.raw;
-    let finalPageStyles = newPage.styles.final;
-    IDmap.forEach(([oldID, newID]) => {
-      newPage.styles.raw = rawPageStyles.replace(new RegExp(oldID, 'g'), newID);
-      newPage.styles.final = finalPageStyles.replace(
-        new RegExp(oldID, 'g'),
-        newID
-      );
-    });
-
     return newPage;
-
-    function scrambleIds(content) {
-      let IDs = [];
-      const newContent = content.map((block) => {
-        const newID = createUniqueID();
-        IDs.push([block.id, newID]);
-        return {
-          ...block,
-          id: newID,
-        };
-      });
-      return [newContent, IDs];
-    }
   }
 
   let creatingPage = false;
@@ -153,60 +126,101 @@
 
 <ul class="page-items xyz-in" xyz="fade stagger stagger-1">
   {#each listedPages as page (page.id)}
-    <PageItem
-      {page}
-      parent={currentPath[0]}
-      disableAdd={breadcrumbs}
-      active={$id === page.id}
-      on:edit={({ detail }) => editPage(page.id, detail)}
-      on:add={() => addSubPage(page.id)}
-      on:delete={() => deletePage(page.id)}
-      on:list={() => listPages(page.id)} />
+    <li>
+      <PageItem
+        {page}
+        parent={currentPath[0]}
+        disableAdd={breadcrumbs}
+        active={$id === page.id}
+        on:edit={({ detail }) => editPage(page.id, detail)}
+        on:add={() => addSubPage(page.id)}
+        on:delete={() => deletePage(page.id)}
+        on:list={() => listPages(page.id)} />
+    </li>
   {/each}
+  <li class="create-page">
+    {#if !creatingPage}
+      <button on:click={() => (creatingPage = true)}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+            clip-rule="evenodd" />
+        </svg>
+        <span>Create Page</span>
+      </button>
+    {:else}
+      <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
+        <TextInput
+          bind:value={pageLabel}
+          id="page-label"
+          autofocus={true}
+          variants="mb-4"
+          label="Page Label"
+          placeholder="About Us" />
+        <TextInput
+          bind:value={pageURL}
+          id="page-url"
+          variants="mb-4"
+          label="Page URL"
+          prefix="/"
+          on:input={() => (pageLabelEdited = true)}
+          placeholder="about-us" />
+        <SplitButton
+          bind:selection={pageBase}
+          buttons={[{ id: 'Empty' }, { id: 'Duplicate' }]} />
+        <PrimaryButton
+          disabled={disablePageCreation}
+          id="create-page"
+          type="submit">
+          Create
+        </PrimaryButton>
+      </form>
+    {/if}
+  </li>
 </ul>
-
-{#if !creatingPage}
-  <PrimaryButton
-    on:click={() => (creatingPage = true)}
-    id="new-page"
-    icon="fas fa-plus">
-    New Page
-  </PrimaryButton>
-{:else}
-  <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
-    <TextInput
-      bind:value={pageLabel}
-      id="page-label"
-      autofocus={true}
-      variants="mb-4"
-      label="Page Label"
-      placeholder="About Us" />
-    <TextInput
-      bind:value={pageURL}
-      id="page-url"
-      variants="mb-4"
-      label="Page URL"
-      prefix="/"
-      on:input={() => (pageLabelEdited = true)}
-      placeholder="about-us" />
-    <SplitButton
-      bind:selection={pageBase}
-      buttons={[{ id: 'Empty' }, { id: 'Duplicate' }]} />
-    <PrimaryButton
-      disabled={disablePageCreation}
-      id="create-page"
-      type="submit">
-      Create
-    </PrimaryButton>
-  </form>
-{/if}
 
 <style lang="postcss">
   ul.page-items {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 25%);
     grid-gap: 1rem;
     margin-bottom: 1rem;
+
+    li.create-page {
+      box-shadow: var(--ring);
+
+      button {
+        background: var(--color-gray-9);
+        color: var(--color-white);
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: var(--transition-colors);
+        &:hover {
+          background: var(--color-primored);
+        }
+        svg {
+          width: 1rem;
+          height: 1rem;
+          margin-bottom: 0.5rem;
+        }
+      }
+
+      form {
+        padding: 1rem;
+
+        --TextInput-mb: 10px;
+      }
+
+      --SplitButton-mb: 1rem;
+    }
   }
   .breadcrumbs {
     display: flex;
@@ -219,16 +233,10 @@
     button {
       font-weight: 600;
     }
-  }
-  .breadcrumb:not(:last-child):after {
-    content: '/';
-    @apply mx-2 no-underline;
-  }
-
-  form {
-    padding: 1rem;
-
-    --TextInput-mb: 10px;
+    .breadcrumb:not(:last-child):after {
+      content: '/';
+      @apply mx-2 no-underline;
+    }
   }
 
 </style>

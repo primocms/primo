@@ -25,7 +25,7 @@
 
 <style lang="postcss">
   .card {
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow);
     margin-bottom: 0.5rem;
 
     header {

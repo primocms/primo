@@ -9,20 +9,9 @@
   import fieldTypes from '../../stores/app/fieldTypes';
   import { switchEnabled, userRole } from '../../stores/app';
   import modal from '../../stores/app/modal';
-  import {
-    id,
-    fields as pageFields,
-    wrapper as pageHTML,
-  } from '../../stores/app/activePage';
-  import {
-    fields as siteFields,
-    wrapper as siteHTML,
-  } from '../../stores/data/draft';
-  import {
-    pages,
-    updateActivePageWrapper,
-    updateSiteWrapper,
-  } from '../../stores/actions';
+  import { id, fields as pageFields } from '../../stores/app/activePage';
+  import { fields as siteFields } from '../../stores/data/draft';
+  import { pages } from '../../stores/actions';
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
 
@@ -153,13 +142,14 @@
 
   function applyFields() {
     // TODO: clean this up, use action
+    console.log({ localPageFields, localSiteFields });
     pages.update($id, (page) => ({
       ...page,
       fields: cloneDeep(localPageFields),
     }));
     $siteFields = localSiteFields;
-    updateActivePageWrapper($pageHTML);
-    updateSiteWrapper($siteHTML);
+    // updateActivePageWrapper($pageHTML);
+    // updateSiteWrapper($siteHTML);
     modal.hide();
   }
 
@@ -245,7 +235,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
               {#each field.fields as subfield (subfield.id)}
@@ -278,7 +268,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {/if}
         </Card>
       {/each}
@@ -346,7 +336,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
               {#each field.fields as subfield (subfield.id)}
@@ -379,7 +369,7 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Create Subfield</button>
+              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {/if}
         </Card>
       {/each}
@@ -433,13 +423,14 @@
     color: var(--color-gray-2);
 
     .empty-description {
+      color: var(--color-gray-4);
+      font-size: var(--font-size-2);
       text-align: center;
       height: 100%;
       display: flex;
       align-items: flex-start;
       padding: 6rem;
       justify-content: center;
-      font-size: var(--font-size-3);
       margin-top: 12px;
     }
   }
@@ -466,6 +457,10 @@
     padding: 0.5rem 0;
     border-radius: var(--border-radius-1);
     transition: var(--transition-colors);
+
+    i {
+      margin-right: 0.5rem;
+    }
   }
   .field-button:hover {
     background: var(--color-gray-9);
@@ -475,21 +470,15 @@
     cursor: not-allowed;
   }
   .field-button.subfield-button {
-    width: calc(100% - 1rem);
+    width: calc(100% - 2rem);
     border-radius: 2px;
-    margin-left: 1rem;
     font-size: var(--font-size-2);
     padding: 4px 0;
     margin: 8px 0;
-    background: var(--color-gray-9);
+    margin-left: auto;
     color: var(--color-gray-2);
     transition: var(--transition-colors);
-  }
-  .field-button.subfield-button:hover {
-    background: var(--color-gray-3);
-  }
-  .field-button.subfield-button:focus {
-    background: var(--color-gray-2);
+    display: block;
   }
   input {
     background: var(--color-gray-7);

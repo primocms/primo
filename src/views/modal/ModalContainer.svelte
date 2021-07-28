@@ -40,27 +40,11 @@
 {/if}
 
 <style lang="postcss">
-  .switch {
-    padding: 0.25rem 0.75rem;
-    border: 1px solid var(--color-primored);
-    color: var(--color-primored);
-    font-size: var(--font-size-2);
-    border-radius: var(--border-radius-1);
-    transition: var(--transition-colors);
-    outline-color: var(--color-primored);
-
-    &:hover {
-      background: var(--color-primored-dark);
-      color: var(--color-white);
-    }
-  }
-
   .modal {
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    justify-content: var(--ModalContainer-justify, center);
     overflow: hidden;
     position: fixed;
     z-index: 40;
@@ -84,38 +68,24 @@
     flex-direction: column;
     width: 100%;
     overflow: hidden;
-    margin: 0 auto;
     position: relative;
     border-radius: var(--border-radius-1);
-    max-height: calc(100vh - 2rem);
+    max-height: 100vh;
+    padding: 1rem 1rem 0 1rem;
   }
 
   .modal-card-body {
-    background: var(--color-black);
+    /* background: var(--color-black); */
     flex: 1;
     display: flex;
     flex-direction: column;
-    border-radius: 6px;
+    border-radius: var(--border-radius-1);
     overflow-y: scroll;
+    padding: 0 15px 15px 15px;
   }
 
   .modal {
     z-index: 999;
-  }
-
-  .fullscreen {
-    width: calc(100vw - 1rem) !important;
-    height: calc(100vh - 1rem) !important;
-    position: absolute !important;
-    left: 0.5rem !important;
-    right: 0.5rem !important;
-    top: 0.5rem !important;
-    bottom: 0.5rem !important;
-    max-height: initial !important;
-  }
-
-  .fullscreen .modal-card-body {
-    overflow: scroll;
   }
 
 </style>

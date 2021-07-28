@@ -373,7 +373,7 @@
               bind:js={rawJS}
               on:save={() => header.button.onclick(localComponent)} />
           {:else if activeTab === tabs[1]}
-            <div class="flex flex-col">
+            <div class="fields">
               {#each fields as field, i (field.id)}
                 <Card id="field-{i}" variants="field-item">
                   <EditField
@@ -498,11 +498,8 @@
                   {/if}
                 </Card>
               {/each}
-              <PrimaryButton
-                variants="field-button"
-                on:click={addNewField}
-                {disabled}>
-                <i class="fas fa-plus mr-2" />Create a Field
+              <PrimaryButton on:click={addNewField} {disabled}>
+                <i class="fas fa-plus" />Create a Field
               </PrimaryButton>
             </div>
           {/if}
@@ -535,12 +532,25 @@
       </div>
     </div>
   </div>
-  <div slot="right" class="w-full h-full overflow-hidden">
+  <div slot="right">
     <CodePreview view="small" {loading} {componentApp} {error} />
   </div>
 </HSplitPane>
 
 <style lang="postcss">
+  .fields {
+    display: flex;
+    flex-direction: column;
+
+    i {
+      margin-right: 0.5rem;
+    }
+  }
+  [slot='right'] {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
   button.convert {
     padding: 4px 12px;
     margin-right: 4px;
@@ -573,6 +583,10 @@
     border-bottom-right-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     transition: var(--transition-colors);
+
+    i {
+      margin-right: 0.5rem;
+    }
   }
   .field-button:hover {
     background: var(--color-gray-9);
@@ -582,9 +596,9 @@
     cursor: not-allowed;
   }
   .field-button.subfield-button {
-    width: calc(100% - 1rem);
+    width: calc(100% - 2rem);
     border-radius: 2px;
-    margin-left: 16px;
+    margin-left: auto;
     margin-top: 8px;
     font-size: var(--font-size-2);
     background: var(--color-codeblack);

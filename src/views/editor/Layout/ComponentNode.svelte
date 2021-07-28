@@ -31,12 +31,6 @@
       js !== rawCode.js ||
       differenceWith(fields, rawCode.fields, isEqual).length > 0
     ) {
-      console.log(
-        html !== rawCode.html,
-        css !== rawCode.css,
-        js !== rawCode.js,
-        differenceWith(fields, rawCode.fields, isEqual).length > 0
-      );
       html = rawCode.html;
       css = rawCode.css;
       js = rawCode.js;

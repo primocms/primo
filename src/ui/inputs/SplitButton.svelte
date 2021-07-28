@@ -9,13 +9,19 @@
     element.querySelector('button:first-child').focus();
   });
 
+  let active = 0;
+
 </script>
 
 <div class="toggle" bind:this={element}>
-  {#each buttons as button}
+  {#each buttons as button, i}
     <button
       type="button"
-      on:click={() => (selected = button.id)}>{button.label || button.id}</button>
+      class:active={active === i}
+      on:click={() => {
+        active = i;
+        selected = button.id;
+      }}>{button.label || button.id}</button>
   {/each}
 </div>
 
@@ -24,7 +30,7 @@
     display: flex;
     margin-top: 0.25rem;
     border-radius: 0.125rem;
-    overflow: hidden;
+    margin-bottom: var(--SplitButton-mb, 0);
 
     button {
       flex: 1;
@@ -32,11 +38,13 @@
       color: var(--color-gray-1);
       padding: 0.5rem 0;
       font-weight: 500;
-    }
 
-    button:focus {
-      text-decoration: underline var(--color-primored);
-      outline-color: var(--color-primored);
+      &:focus,
+      &.active {
+        text-decoration: underline var(--color-primored);
+        box-shadow: var(--ring);
+        z-index: 1;
+      }
     }
   }
 
