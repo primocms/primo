@@ -28,6 +28,7 @@
 <style lang="postcss">
   .toggle {
     display: flex;
+    flex-wrap: wrap;
     margin-top: 0.25rem;
     border-radius: 0.125rem;
     margin-bottom: var(--SplitButton-mb, 0);
@@ -36,7 +37,7 @@
       flex: 1;
       background: var(--color-gray-7);
       color: var(--color-gray-1);
-      padding: 0.5rem 0;
+      padding: 0.5rem;
       font-weight: 500;
 
       &:focus,

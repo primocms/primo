@@ -521,11 +521,9 @@
                   <span>This field needs a key in order to be valid</span>
                 {/if}
               {:else}
-                <p
-                  class="text-center h-full flex items-start p-24 justify-center
-                  text-lg text-gray-200 mt-3">
+                <p class="empty-description">
                   You'll need to create and integrate a field before you can
-                  edit this component's content
+                  edit this component's content from here
                 </p>
               {/each}
             </div>
@@ -547,6 +545,18 @@
 
     --PrimaryButton-bg: var(--color-gray-8);
     --PrimaryButton-bg-hover: var(--color-gray-9);
+
+    .empty-description {
+      color: var(--color-gray-4);
+      font-size: var(--font-size-2);
+      text-align: center;
+      height: 100%;
+      display: flex;
+      align-items: flex-start;
+      padding: 6rem;
+      justify-content: center;
+      margin-top: 12px;
+    }
   }
   .fields {
     display: flex;

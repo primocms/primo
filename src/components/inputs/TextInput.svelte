@@ -60,7 +60,8 @@
         margin-right: 1rem;
       }
       input {
-        display: inline-block;
+        display: block;
+        width: 100%;
         background: var(--color-gray-8);
         color: var(--color-gray-1);
         outline-color: var(--color-primored);

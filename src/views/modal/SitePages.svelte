@@ -231,6 +231,14 @@
       grid-gap: 1rem;
       margin-bottom: 1rem;
 
+      @media (max-width: 900px) {
+        grid-template-columns: repeat(2, 50%);
+      }
+
+      @media (max-width: 600px) {
+        grid-template-columns: auto;
+      }
+
       li.create-page {
         box-shadow: var(--ring);
 
