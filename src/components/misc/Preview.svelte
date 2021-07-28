@@ -55,6 +55,7 @@
       flex: 1;
 
       iframe {
+        pointer-events: none;
         background: var(--color-white);
         border: 0;
         transition: opacity 0.1s;
