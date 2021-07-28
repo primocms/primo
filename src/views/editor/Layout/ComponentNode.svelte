@@ -1,9 +1,11 @@
 <script>
   import { isEqual, differenceWith } from 'lodash';
-  import { onMount, tick } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { getAllFields, getTailwindConfig } from '../../../stores/helpers';
   import { convertFieldsToData, processCode } from '../../../utils';
+
+  const dispatch = createEventDispatcher();
 
   export let block;
 
@@ -62,6 +64,21 @@
 
   let node;
   let component;
+
+  // Fade in component on mount
+  const observer = new MutationObserver(() => {
+    dispatch('mount');
+  });
+
+  $: if (node) {
+    observer.observe(node, {
+      childList: true,
+    });
+  }
+
+  $: if (error) {
+    dispatch('mount');
+  }
 
 </script>
 

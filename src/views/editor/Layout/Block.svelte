@@ -214,7 +214,6 @@
   class="primo-block"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
-  class:z-50={block.type === 'options'}
   id="block-{block.id}"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}>
@@ -250,7 +249,7 @@
     </div>
   {/if}
   {#if block.type === 'component'}
-    <ComponentNode {block} />
+    <ComponentNode {block} on:mount />
   {:else if block.type === 'content'}
     <ContentNode
       {block}

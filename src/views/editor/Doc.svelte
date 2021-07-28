@@ -23,6 +23,7 @@
     wrapInStyleTags,
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
+  import { router } from 'tinro';
 
   $: pageExists = findPage($id, $pages);
   function findPage(id, pages) {
@@ -108,6 +109,22 @@
     htmlBelow = below.html;
   }
 
+  // Fade in page when all components mounted
+  let pageMounted = false;
+  let componentsMounted = 0;
+  $: nComponents = $content.filter(
+    (block) => block.type === 'component'
+  ).length;
+
+  $: if (componentsMounted === nComponents) {
+    pageMounted = true;
+  }
+
+  $: if ($router.from !== $router.url) {
+    pageMounted = false;
+    componentsMounted = 0;
+  }
+
 </script>
 
 <svelte:head>
@@ -117,11 +134,15 @@
 <div
   bind:this={element}
   class="primo-page"
+  class:fadein={pageMounted}
   style="border-top: 48px solid rgb(20,20,20)">
   {#if pageExists}
     {#each $content as block, i (block.id)}
       {#if block.symbolID}
         <Block
+          on:mount={() => {
+            componentsMounted++;
+          }}
           block={hydrateInstance(block, $symbols, $pageFields, $siteFields)}
           {i} />
       {:else}
@@ -131,3 +152,14 @@
   {/if}
 </div>
 {@html htmlBelow}
+
+<style>
+  .primo-page {
+    opacity: 0;
+  }
+  .fadein {
+    transition: opacity 0.1s;
+    opacity: 1;
+  }
+
+</style>
