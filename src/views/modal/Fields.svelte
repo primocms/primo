@@ -15,7 +15,6 @@
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
 
-  let fields = cloneDeep($pageFields);
   let localPageFields = cloneDeep($pageFields);
   let localSiteFields = cloneDeep($siteFields);
 
@@ -32,14 +31,6 @@
     },
     ...$fieldTypes,
   ];
-
-  function saveFields(fields) {
-    if (showingPage) {
-      $pageFields = fields;
-    } else {
-      $siteFields = fields;
-    }
-  }
 
   const Field = () => ({
     id: createUniqueID(),
@@ -106,11 +97,6 @@
     }
   }
 
-  function refreshFields() {
-    fields = fields.filter((f) => true);
-    saveFields(fields);
-  }
-
   let disabled = false;
 
   const tabs = [
@@ -155,6 +141,36 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
+  function moveField({ i: indexOfItem, direction }) {
+    const activeFields = showingPage ? localPageFields : localSiteFields;
+    const item = activeFields[indexOfItem];
+    const withoutItem = activeFields.filter((_, i) => i !== indexOfItem);
+
+    if (direction !== 'up' && direction !== 'down') {
+      console.error('Direction must be up or down');
+      return;
+    }
+
+    const updatedFields = {
+      up: [
+        ...withoutItem.slice(0, indexOfItem - 1),
+        item,
+        ...withoutItem.slice(indexOfItem - 1),
+      ],
+      down: [
+        ...withoutItem.slice(0, indexOfItem + 1),
+        item,
+        ...withoutItem.slice(indexOfItem + 1),
+      ],
+    }[direction];
+
+    if (showingPage) {
+      localPageFields = updatedFields;
+    } else {
+      localSiteFields = updatedFields;
+    }
+  }
+
 </script>
 
 <ModalHeader
@@ -173,17 +189,17 @@
   <Tabs {tabs} bind:activeTab />
   {#if $switchEnabled}
     {#if showingPage}
-      {#each localPageFields as field (field.id)}
+      {#each localPageFields as field, i}
         <Card>
           <EditField
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
+            on:move={({ detail: direction }) => {
+              console.log(direction);
+              moveField({ i, direction });
+            }}
             {disabled}>
-            <select
-              bind:value={field.type}
-              slot="type"
-              on:change={refreshFields}
-              {disabled}>
+            <select bind:value={field.type} slot="type" {disabled}>
               {#each allFieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}
@@ -281,11 +297,7 @@
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
             {disabled}>
-            <select
-              bind:value={field.type}
-              slot="type"
-              on:change={refreshFields}
-              {disabled}>
+            <select bind:value={field.type} slot="type" {disabled}>
               {#each allFieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}

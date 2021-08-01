@@ -67,6 +67,7 @@
       border-radius: 1px;
       display: flex;
       align-items: center;
+      min-width: 3rem;
     }
 
     label {

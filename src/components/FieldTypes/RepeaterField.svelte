@@ -128,11 +128,12 @@
   }
 
   .fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
   .repeater-item {
+    flex: 1;
     padding: 1rem;
     background: var(--color-gray-9);
     display: flex;
