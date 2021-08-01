@@ -410,6 +410,7 @@
                         type="text"
                         placeholder="main_heading"
                         bind:value={field.key}
+                        on:input={() => (field.key = validateFieldKey(field.key))}
                         slot="key"
                         {disabled}
                         on:input={updateHtmlWithFieldData} />

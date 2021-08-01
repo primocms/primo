@@ -142,15 +142,17 @@
 
   function applyFields() {
     // TODO: clean this up, use action
-    console.log({ localPageFields, localSiteFields });
     pages.update($id, (page) => ({
       ...page,
       fields: cloneDeep(localPageFields),
     }));
     $siteFields = localSiteFields;
-    // updateActivePageWrapper($pageHTML);
-    // updateSiteWrapper($siteHTML);
     modal.hide();
+  }
+
+  function validateFieldKey(key) {
+    // replace dash and space with underscore
+    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
 </script>
@@ -199,6 +201,7 @@
               type="text"
               placeholder="main_heading"
               bind:value={field.key}
+              on:input={() => (field.key = validateFieldKey(field.key))}
               slot="key"
               {disabled} />
           </EditField>
@@ -300,6 +303,7 @@
               type="text"
               placeholder="main_heading"
               bind:value={field.key}
+              on:input={() => (field.key = validateFieldKey(field.key))}
               slot="key"
               {disabled} />
           </EditField>

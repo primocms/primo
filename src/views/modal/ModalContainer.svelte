@@ -12,8 +12,6 @@
     }
   });
 
-  $: header = $modal.header;
-  $: button = $modal.button;
   $: variants = $modal.variants || 'max-w-md';
 
   function switchView() {
@@ -44,10 +42,10 @@
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    justify-content: var(--ModalContainer-justify, flex-start);
+    justify-content: flex-start;
     overflow: hidden;
     position: fixed;
-    z-index: 40;
+    z-index: 9999;
     inset: 0;
   }
 
@@ -85,10 +83,6 @@
     flex-direction: column;
     border-radius: var(--border-radius-1);
     overflow-y: scroll;
-  }
-
-  .modal {
-    z-index: 999;
   }
 
 </style>
