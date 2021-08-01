@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import _ from 'lodash';
 
-  export let variants = 'text-sm';
+  export let child = false;
   export let disabled = false;
   export let isFirst = false;
   export let isLast = false;
@@ -18,8 +18,9 @@
 </script>
 
 <div
-  class="field-container {variants}"
+  class="field-container"
   in:fade={{ duration: 100 }}
+  class:child
   class:minimal>
   <div class="type">
     <slot name="type" />
@@ -63,6 +64,22 @@
     padding: 0.5rem;
     gap: 1rem;
 
+    &.child {
+      margin-left: 1rem;
+      padding: 0.25rem 0.5rem;
+      .type {
+        select {
+          padding: 4px 8px;
+        }
+      }
+
+      label {
+        input {
+          padding: 1px 4px;
+        }
+      }
+    }
+
     .type {
       border-radius: 1px;
       display: flex;
@@ -78,6 +95,7 @@
       span {
         font-weight: 600;
         font-size: var(--font-size-1);
+        padding-bottom: 2px;
       }
     }
 

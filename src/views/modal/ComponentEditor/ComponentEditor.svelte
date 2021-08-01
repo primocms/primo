@@ -425,7 +425,7 @@
                         {#each field.fields as subfield}
                           <EditField
                             minimal={field.type === 'info'}
-                            variants="ml-4 text-sm"
+                            child={true}
                             on:delete={() => deleteSubfield(field.id, subfield.id)}
                             {disabled}>
                             <select
@@ -466,7 +466,7 @@
                         {#each field.fields as subfield}
                           <EditField
                             minimal={field.type === 'info'}
-                            variants="ml-4 text-sm"
+                            child={true}
                             on:delete={() => deleteSubfield(field.id, subfield.id)}
                             {disabled}>
                             <select
@@ -622,9 +622,9 @@
     cursor: not-allowed;
   }
   .field-button.subfield-button {
-    width: calc(100% - 2rem);
+    width: calc(100% - 1rem);
     border-radius: 2px;
-    margin-left: auto;
+    margin-left: 1.5rem;
     margin-top: 8px;
     font-size: var(--font-size-2);
     background: var(--color-codeblack);
