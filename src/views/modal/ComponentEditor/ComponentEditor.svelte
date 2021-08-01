@@ -380,7 +380,7 @@
                 on:save={() => header.button.onclick(localComponent)} />
             {:else if activeTab === tabs[1]}
               <div class="fields">
-                {#each fields as field, i (field.id)}
+                {#each fields as field, i}
                   <Card id="field-{i}" variants="field-item">
                     <EditField
                       on:delete={() => deleteField(field.id)}
