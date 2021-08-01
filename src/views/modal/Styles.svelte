@@ -145,6 +145,7 @@
 
 <style lang="postcss">
   main {
+    padding: 0 0.5rem;
     background: var(--color-black);
     height: 100%;
     display: flex;
@@ -162,6 +163,7 @@
 
       .preview-container {
         height: auto;
+        overflow: hidden;
 
         @media (max-width: 600px) {
           height: 24rem;

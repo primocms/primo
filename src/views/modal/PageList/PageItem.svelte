@@ -103,7 +103,7 @@
         class:active
         aria-label="Go to /{page.id}">
         <div class="page-container">
-          <Preview {preview} />
+          <Preview {preview} preventClicks={true} />
         </div>
       </a>
     {/if}

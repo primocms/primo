@@ -5,6 +5,7 @@
   import { onMobile } from '../../stores/app/misc';
 
   export let preview;
+  export let preventClicks = false;
 
   let container;
   let iframe;
@@ -29,6 +30,7 @@
 <div class="preview">
   <div class="preview-container" bind:this={container}>
     <iframe
+      class:disable={preventClicks}
       in:fade={{ duration: 100 }}
       title="Preview HTML"
       srcdoc={preview}
@@ -61,6 +63,10 @@
         height: 100%;
         width: 100vw;
         transform-origin: top left;
+
+        &.disable {
+          pointer-events: none;
+        }
       }
     }
   }

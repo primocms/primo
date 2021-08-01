@@ -141,6 +141,7 @@
     position: relative;
     border: 1px solid var(--color-primored);
     border-radius: 1px;
+    min-width: 10rem;
 
     &:last-of-type {
       margin-bottom: 0;
