@@ -487,12 +487,12 @@
     cursor: not-allowed;
   }
   .field-button.subfield-button {
-    width: calc(100% - 2rem);
+    width: calc(100% - 1rem);
     border-radius: 2px;
     font-size: var(--font-size-2);
     padding: 4px 0;
     margin: 8px 0;
-    margin-left: auto;
+    margin-left: 1.5rem;
     color: var(--color-gray-2);
     transition: var(--transition-colors);
     display: block;
