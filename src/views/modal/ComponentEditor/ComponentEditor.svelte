@@ -299,6 +299,11 @@
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
+  function validateFieldKey(key) {
+    // replace dash and space with underscore
+    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
+  }
+
 </script>
 
 <ModalHeader

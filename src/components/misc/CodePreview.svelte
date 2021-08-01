@@ -1,26 +1,15 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import { slide } from 'svelte/transition';
   import { set } from 'idb-keyval';
   import { isEqual } from 'lodash';
-  import { BroadcastChannel } from 'broadcast-channel';
   import { iframePreview } from './misc';
-  import { onMobile } from '../../stores/app/misc';
 
-  export let id = '';
-  export let html = '';
-  export let css = '';
-  export let js = '';
-  export let tailwind = {};
   export let view = 'small';
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
   export let error = null;
-
-  // used in separate tab preview
-  const BC = new BroadcastChannel('preview');
-  $: BC.postMessage({ id, html, css, js });
-  $: set('preview', { id, html, css, js });
 
   let iframe;
   let previewLoaded = false;
@@ -73,20 +62,10 @@
     clearInterval(interval);
   });
 
-  // Necessary to reload tw config
-  let cachedTailwind = tailwind;
-  $: resetIframe(tailwind);
-  function resetIframe() {
-    if (!isEqual(tailwind, cachedTailwind)) {
-      cachedTailwind = tailwind;
-      iframeLoaded = false;
-    }
-  }
-
-  $: setIframeContent({ iframeLoaded, componentApp, error });
-  function setIframeContent({ iframeLoaded, componentApp, error }) {
+  $: setIframeContent({ iframeLoaded, componentApp });
+  function setIframeContent({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentApp, error });
+      iframe.contentWindow.postMessage({ componentApp });
     }
   }
 
@@ -102,6 +81,13 @@
 </script>
 
 <div class="code-preview">
+  {#if error}
+    <pre
+      transition:slide={{ duration: 100 }}
+      class="error-container">
+      {@html error}
+    </pre>
+  {/if}
   <div class="preview-container" class:loading bind:this={container}>
     <iframe
       class:scaled={view === 'large'}
@@ -130,11 +116,17 @@
 
 <svelte:window on:resize={resizePreview} />
 
-<style>
+<style lang="postcss">
   .code-preview {
     height: 100%;
     display: flex;
     flex-direction: column;
+
+    .error-container {
+      color: var(--color-white);
+      background: var(--color-primored);
+      padding: 5px;
+    }
   }
   iframe {
     width: 100%;
