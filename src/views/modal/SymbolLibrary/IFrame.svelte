@@ -31,6 +31,7 @@
 {/if}
 <div bind:this={container} class="iframe-container">
   <iframe
+    scrolling="no"
     on:load={() => (iframeLoaded = true)}
     title="Preview HTML"
     srcdoc={iframePreview}
@@ -53,8 +54,14 @@
   .iframe-container {
     background: var(--color-white);
     flex: 1;
+    padding-top: 50%;
+    height: 0;
+    position: relative;
 
     iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
       pointer-events: none;
       width: 100vw;
       transform-origin: top left;
