@@ -519,7 +519,9 @@
                   on:input={updateHtmlWithFieldData} />
               </div>
             {:else if getFieldComponent(field)}
-              <span>This field needs a key in order to be valid</span>
+              <div class="invalid-field">
+                <span>This field needs a key in order to be valid</span>
+              </div>
             {/if}
           {:else}
             <p class="empty-description">
@@ -556,6 +558,12 @@
       padding: 6rem;
       justify-content: center;
       margin-top: 12px;
+    }
+
+    .invalid-field {
+      display: block;
+      padding: 1rem;
+      color: var(--color-gray-1);
     }
   }
   .fields {
