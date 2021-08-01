@@ -1,73 +1,86 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
+
   export let field;
 
-  $: console.log(field);
+  function toggleSwitch() {
+    field.value = !field.value;
+    dispatch('input');
+  }
 
 </script>
 
-<label for={field.key}>
-  <span class="switch-label" for={field.key}>{field.label}</span>
-  <div class="switch-container">
-    <input type="checkbox" id={field.key} on:input checked />
-    <span />
-  </div>
-</label>
+<div class="label-container">
+  <label for={field.key}>
+    <span class="switch-label" for={field.key}>{field.label}</span>
+    <div class="switch-container">
+      <input type="checkbox" id={field.key} on:input={toggleSwitch} checked />
+      <span />
+    </div>
+  </label>
+</div>
 
 <style lang="postcss">
-  label {
-    display: flex;
+  .label-container {
     width: 100%;
 
-    .switch-label {
-      margin-right: 1rem;
-    }
-
-    .switch-container {
-      @apply relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in;
-      position: relative;
+    label {
       display: inline-block;
-      width: 3.5rem;
-      vertical-align: middle;
-      user-select: none;
-      transition: transform 0.1s;
 
-      input {
-        outline: 0;
-        position: absolute;
-        top: -4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        border-radius: 100%;
-        background: var(--color-white);
-        appearance: none;
-        cursor: pointer;
-        left: 0;
-        transition: transform 0.1s;
-
-        &:after {
-          content: '\d7';
-        }
-
-        &:checked {
-          transform: translateX(24px);
-
-          &:after {
-            content: '\2713';
-          }
-        }
+      .switch-label {
+        font-weight: 600;
+        margin-right: 1rem;
       }
 
-      span {
-        outline: 0;
-        display: block;
-        overflow: hidden;
-        height: 1.5rem;
-        border-radius: 1rem;
-        background: var(--color-gray-7);
-        cursor: pointer;
+      .switch-container {
+        @apply relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in;
+        position: relative;
+        display: inline-block;
+        width: 3.5rem;
+        vertical-align: middle;
+        user-select: none;
+        transition: transform 0.1s;
+
+        input {
+          color: var(--color-primored);
+          background: var(--color-white);
+          outline: 0;
+          position: absolute;
+          top: -4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 2rem;
+          height: 2rem;
+          border-radius: 100%;
+          appearance: none;
+          cursor: pointer;
+          left: 0;
+          transition: transform 0.1s;
+
+          &:after {
+            content: '\d7';
+          }
+
+          &:checked {
+            transform: translateX(24px);
+
+            &:after {
+              content: '\2713';
+            }
+          }
+        }
+
+        span {
+          outline: 0;
+          display: block;
+          overflow: hidden;
+          height: 1.5rem;
+          border-radius: 1rem;
+          background: var(--color-gray-7);
+          cursor: pointer;
+        }
       }
     }
   }
