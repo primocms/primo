@@ -1,15 +1,12 @@
 <script>
   import { onMount } from 'svelte';
+  import { findIndex } from 'lodash';
   export let buttons = [{ id: 'PLACEHOLDER' }];
   export let selected;
 
   let element;
 
-  onMount(() => {
-    element.querySelector('button:first-child').focus();
-  });
-
-  let active = 0;
+  let active = findIndex(buttons, ['id', selected]) || 0;
 
 </script>
 

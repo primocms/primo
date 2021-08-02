@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
 
+  import { find } from 'lodash';
   import SplitButton from '../ui/inputs/SplitButton.svelte';
   import TextInput from '../components/inputs/TextInput.svelte';
   import { pages } from '../stores/data/draft';
@@ -27,7 +28,15 @@
     };
   }
 
-  let selected = 'Page';
+  let selected = urlMatchesPage(field.value.url);
+
+  function urlMatchesPage(url) {
+    if (url === '/' || find($pages, ['id', url])) {
+      return 'Page';
+    } else {
+      return 'URL';
+    }
+  }
 
 </script>
 
