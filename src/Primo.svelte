@@ -13,7 +13,6 @@
   const dispatch = createEventDispatcher();
 
   import librariesStore from './stores/data/libraries';
-  import tailwind from './stores/data/tailwind';
   import { id as pageId } from './stores/app/activePage';
   import { content, styles, fields, html, css } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';

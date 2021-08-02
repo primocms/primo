@@ -1,22 +1,26 @@
 <script>
+  import { unsaved } from '../../stores/app/misc';
+  import { router } from 'tinro';
   export let button;
+
+  function warn() {
+    if ($unsaved) {
+      window.alert(
+        `Save your site before navigating away so you don't lose your changes`
+      );
+    } else {
+      router.goto(button.href);
+    }
+  }
 
 </script>
 
-{#if button.href}
-  <a href={button.href} id={button.id}>
-    <i class="{button.icon} mr-1" />
-    <span>{button.label}</span>
-  </a>
-{:else}
-  <button id={button.id} on:click={button.onClick}>
-    <i class="{button.icon} mr-1" />
-    <span>{button.label}</span>
-  </button>
-{/if}
+<button on:click={warn} href={button.href} id={button.id}>
+  <i class="{button.icon} mr-1" />
+  <span>{button.label}</span>
+</button>
 
 <style lang="postcss">
-  a,
   button {
     background: var(--color-codeblack);
     box-shadow: var(--ring);
