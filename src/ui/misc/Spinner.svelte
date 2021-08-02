@@ -1,5 +1,6 @@
 <script>
-  import {fade} from 'svelte/transition'
+  import { fade } from 'svelte/transition';
+
 </script>
 
 <div class="spinner" in:fade>Loading...</div>
@@ -15,10 +16,10 @@
     font-size: 3px;
     position: relative;
     text-indent: -9999em;
-    border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-left: 1.1em solid #ffffff;
+    border-top: 1.1em solid var(--Spinner-color-opaque, rgba(#fff, 0.2));
+    border-right: 1.1em solid var(--Spinner-color-opaque, rgba(#fff, 0.2));
+    border-bottom: 1.1em solid var(--Spinner-color-opaque, rgba(#fff, 0.2));
+    border-left: 1.1em solid var(--Spinner-color, #fff);
     will-change: transform;
     transform: translateZ(0);
     animation: load8 1.1s infinite linear;
@@ -33,4 +34,5 @@
       transform: rotate(360deg);
     }
   }
+
 </style>

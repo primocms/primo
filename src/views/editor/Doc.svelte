@@ -1,7 +1,8 @@
 <script>
-  import { onMount, tick } from 'svelte';
+  import { fade } from 'svelte/transition';
   import { find, last } from 'lodash';
   import Block from './Layout/Block.svelte';
+  import Spinner from '../../ui/misc/Spinner.svelte';
   import {
     pages,
     symbols,
@@ -56,14 +57,11 @@
   let element;
 
   // Disable the links on the page that don't navigate to a page within primo
-  // TODO: prevent navigating away from site
-  // prevent navigating to pages that don't exist
   async function disableLinks() {
     const { pathname, origin } = window.location;
     const [username, site] = pathname.split('/').slice(1);
     const homeUrl = `${origin}/${username}/${site}`;
     element.querySelectorAll('a').forEach((link) => {
-      // console.log(window.location, { link });
       if (window.location.host === link.host) {
         // link is to primo.af
 
@@ -80,14 +78,11 @@
         const [_, linkUsername, linkSite, linkPage, childPage] =
           link.pathname.split('/');
 
-        console.log({ linkUsername, linkPage, childPage });
-
         if (linkUsername !== username) {
           openLinkInNewWindow(link);
         } else {
           const pageExists = find($pages, ['id', linkPage]);
           if (!pageExists) {
-            console.log('Page does not exist', linkPage);
             openLinkInNewWindow(link);
           } else {
             link.setAttribute('data-tinro-ignore', '');
@@ -173,6 +168,11 @@
   {@html htmlHead}
 </svelte:head>
 
+{#if !pageMounted}
+  <div class="spinner-container" out:fade={{ duration: 200 }}>
+    <Spinner />
+  </div>
+{/if}
 <div
   bind:this={element}
   class="primo-page"
@@ -194,6 +194,19 @@
 {@html htmlBelow}
 
 <style>
+  .spinner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    --Spinner-color: var(--color-primored);
+    --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
+  }
   .primo-page {
     opacity: 0;
   }
