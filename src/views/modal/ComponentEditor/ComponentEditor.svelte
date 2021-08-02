@@ -272,23 +272,51 @@
     }
   }
 
-  function moveEditField({ i: indexOfItem, direction }) {
-    const item = fields[indexOfItem];
-    const withoutItem = fields.filter((_, i) => i !== indexOfItem);
-    if (direction === 'up') {
-      fields = [
-        ...withoutItem.slice(0, indexOfItem - 1),
-        item,
-        ...withoutItem.slice(indexOfItem - 1),
-      ];
-    } else if (direction === 'down') {
-      fields = [
-        ...withoutItem.slice(0, indexOfItem + 1),
-        item,
-        ...withoutItem.slice(indexOfItem + 1),
-      ];
-    } else {
+  function moveField({ i: parentIndex, direction, childIndex = null }) {
+    const activeFields = showingPage ? localPageFields : localSiteFields;
+    const parentField = activeFields[parentIndex];
+    let updatedFields = activeFields;
+
+    if (direction !== 'up' && direction !== 'down') {
       console.error('Direction must be up or down');
+      return;
+    }
+
+    if (childIndex === null) {
+      const withoutItem = activeFields.filter((_, i) => i !== parentIndex);
+      updatedFields = {
+        up: [
+          ...withoutItem.slice(0, parentIndex - 1),
+          parentField,
+          ...withoutItem.slice(parentIndex - 1),
+        ],
+        down: [
+          ...withoutItem.slice(0, parentIndex + 1),
+          parentField,
+          ...withoutItem.slice(parentIndex + 1),
+        ],
+      }[direction];
+    } else {
+      const childField = parentField.fields[childIndex];
+      const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
+      updatedFields[parentIndex].fields = {
+        up: [
+          ...withoutItem.slice(0, childIndex - 1),
+          childField,
+          ...withoutItem.slice(childIndex - 1),
+        ],
+        down: [
+          ...withoutItem.slice(0, childIndex + 1),
+          childField,
+          ...withoutItem.slice(childIndex + 1),
+        ],
+      }[direction];
+    }
+
+    if (showingPage) {
+      localPageFields = updatedFields;
+    } else {
+      localSiteFields = updatedFields;
     }
   }
 
@@ -386,7 +414,7 @@
                   isLast={i === fields.length - 1}
                   {disabled}
                   minimal={field.type === 'info'}
-                  on:move={({ detail: direction }) => moveEditField( { i, direction } )}>
+                  on:move={({ detail: direction }) => moveField( { i, direction } )}>
                   <select
                     bind:value={field.type}
                     slot="type"
@@ -417,10 +445,11 @@
                 </EditField>
                 {#if field.type === 'group'}
                   {#if field.fields}
-                    {#each field.fields as subfield}
+                    {#each field.fields as subfield, childIndex}
                       <EditField
                         minimal={field.type === 'info'}
                         child={true}
+                        on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                         on:delete={() => deleteSubfield(field.id, subfield.id)}
                         {disabled}>
                         <select
@@ -462,6 +491,7 @@
                       <EditField
                         minimal={field.type === 'info'}
                         child={true}
+                        on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                         on:delete={() => deleteSubfield(field.id, subfield.id)}
                         {disabled}>
                         <select
@@ -565,6 +595,21 @@
       padding: 1rem;
       color: var(--color-gray-1);
     }
+
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+      background-position: 100%;
+      background-repeat: no-repeat;
+      appearance: none;
+      width: 100%;
+      padding: 8px;
+      border-right: 4px solid transparent;
+      background: var(--color-gray-9);
+      color: var(--color-gray-2);
+      font-size: var(--font-size-2);
+      font-weight: 600;
+      border: 0;
+    }
   }
   .fields {
     display: flex;
@@ -650,17 +695,6 @@
   }
   input:focus {
     outline: 0;
-  }
-
-  select {
-    width: 100%;
-    padding: 8px;
-    border-right: 4px solid transparent;
-    background: var(--color-gray-9);
-    color: var(--color-gray-2);
-    font-size: var(--font-size-2);
-    font-weight: 600;
-    border: 0;
   }
 
 </style>

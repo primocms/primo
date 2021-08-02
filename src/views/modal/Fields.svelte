@@ -141,28 +141,46 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
-  function moveField({ i: indexOfItem, direction }) {
+  function moveField({ i: parentIndex, direction, childIndex = null }) {
     const activeFields = showingPage ? localPageFields : localSiteFields;
-    const item = activeFields[indexOfItem];
-    const withoutItem = activeFields.filter((_, i) => i !== indexOfItem);
+    const parentField = activeFields[parentIndex];
+    let updatedFields = activeFields;
 
     if (direction !== 'up' && direction !== 'down') {
       console.error('Direction must be up or down');
       return;
     }
 
-    const updatedFields = {
-      up: [
-        ...withoutItem.slice(0, indexOfItem - 1),
-        item,
-        ...withoutItem.slice(indexOfItem - 1),
-      ],
-      down: [
-        ...withoutItem.slice(0, indexOfItem + 1),
-        item,
-        ...withoutItem.slice(indexOfItem + 1),
-      ],
-    }[direction];
+    if (childIndex === null) {
+      const withoutItem = activeFields.filter((_, i) => i !== parentIndex);
+      updatedFields = {
+        up: [
+          ...withoutItem.slice(0, parentIndex - 1),
+          parentField,
+          ...withoutItem.slice(parentIndex - 1),
+        ],
+        down: [
+          ...withoutItem.slice(0, parentIndex + 1),
+          parentField,
+          ...withoutItem.slice(parentIndex + 1),
+        ],
+      }[direction];
+    } else {
+      const childField = parentField.fields[childIndex];
+      const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
+      updatedFields[parentIndex].fields = {
+        up: [
+          ...withoutItem.slice(0, childIndex - 1),
+          childField,
+          ...withoutItem.slice(childIndex - 1),
+        ],
+        down: [
+          ...withoutItem.slice(0, childIndex + 1),
+          childField,
+          ...withoutItem.slice(childIndex + 1),
+        ],
+      }[direction];
+    }
 
     if (showingPage) {
       localPageFields = updatedFields;
@@ -226,6 +244,7 @@
               {#each field.fields as subfield}
                 <EditField
                   fieldTypes={$fieldTypes}
+                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
@@ -256,9 +275,11 @@
               {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
-              {#each field.fields as subfield (subfield.id)}
+              {#each field.fields as subfield, childIndex}
                 <EditField
                   fieldTypes={$fieldTypes}
+                  child={true}
+                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
@@ -323,6 +344,7 @@
             {#if field.fields}
               {#each field.fields as subfield}
                 <EditField
+                  child={true}
                   fieldTypes={$fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
@@ -354,7 +376,7 @@
               {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
-              {#each field.fields as subfield (subfield.id)}
+              {#each field.fields as subfield}
                 <EditField
                   fieldTypes={$fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
@@ -437,6 +459,7 @@
     padding: 0.5rem;
     color: var(--color-gray-2);
     background: var(--color-black);
+    overflow: scroll;
 
     .empty-description {
       color: var(--color-gray-4);
@@ -448,6 +471,21 @@
       padding: 6rem;
       justify-content: center;
       margin-top: 12px;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+      background-position: 100%;
+      background-repeat: no-repeat;
+      appearance: none;
+      width: 100%;
+      padding: 8px;
+      border-right: 4px solid transparent;
+      background: var(--color-gray-9);
+      color: var(--color-gray-2);
+      font-size: var(--font-size-2);
+      font-weight: 600;
+      border: 0;
     }
   }
   textarea.info {
