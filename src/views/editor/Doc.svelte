@@ -1,17 +1,16 @@
 <script>
   import { onMount, tick } from 'svelte';
-  import { find, unionBy } from 'lodash';
+  import { find, last } from 'lodash';
   import Block from './Layout/Block.svelte';
   import {
     pages,
-    wrapper as siteWrapper,
     symbols,
     fields as siteFields,
     html as siteHTML,
     css as siteCSS,
   } from '../../stores/data/draft';
   import {
-    id,
+    id as pageID,
     content,
     fields as pageFields,
     html as pageHTML,
@@ -25,7 +24,7 @@
   import { getAllFields } from '../../stores/helpers';
   import { router } from 'tinro';
 
-  $: pageExists = findPage($id, $pages);
+  $: pageExists = findPage($pageID, $pages);
   function findPage(id, pages) {
     const [root] = id.split('/');
     const rootPage = find(pages, ['id', root]);
@@ -59,10 +58,50 @@
   // Disable the links on the page that don't navigate to a page within primo
   // TODO: prevent navigating away from site
   // prevent navigating to pages that don't exist
-  async function disableLinks(_) {
-    if (!element) return;
+  async function disableLinks() {
+    const { pathname, origin } = window.location;
+    const [username, site] = pathname.split('/').slice(1);
+    const homeUrl = `${origin}/${username}/${site}`;
     element.querySelectorAll('a').forEach((link) => {
-      if (window.location.host !== link.host) {
+      // console.log(window.location, { link });
+      if (window.location.host === link.host) {
+        // link is to primo.af
+
+        // link navigates to site home
+        if (link.pathname === '/') {
+          link.setAttribute('data-tinro-ignore', '');
+          link.onclick = (e) => {
+            e.preventDefault();
+            router.goto(homeUrl);
+          };
+          return;
+        }
+
+        const [_, linkUsername, linkSite, linkPage, childPage] =
+          link.pathname.split('/');
+
+        console.log({ linkUsername, linkPage, childPage });
+
+        if (linkUsername !== username) {
+          openLinkInNewWindow(link);
+        } else {
+          const pageExists = find($pages, ['id', linkPage]);
+          if (!pageExists) {
+            console.log('Page does not exist', linkPage);
+            openLinkInNewWindow(link);
+          } else {
+            link.setAttribute('data-tinro-ignore', '');
+            link.onclick = (e) => {
+              e.preventDefault();
+              router.goto(`${homeUrl}/${linkPage}`);
+            };
+          }
+        }
+      } else {
+        openLinkInNewWindow(link);
+      }
+
+      function openLinkInNewWindow(link) {
         link.setAttribute('data-tinro-ignore', '');
         link.onclick = (e) => {
           e.preventDefault();
@@ -71,7 +110,7 @@
       }
     });
   }
-  $: disableLinks($content);
+  $: pageMounted && disableLinks();
 
   let htmlHead = '';
   let htmlBelow = '';
@@ -116,10 +155,13 @@
     (block) => block.type === 'component'
   ).length;
 
-  $: if (componentsMounted === nComponents) {
+  $: if (element && componentsMounted >= nComponents) {
     pageMounted = true;
+  } else if (componentsMounted < nComponents) {
+    pageMounted = false;
   }
 
+  // reset pageMounted on page change
   $: if ($router.from !== $router.url) {
     pageMounted = false;
     componentsMounted = 0;
@@ -140,9 +182,7 @@
     {#each $content as block, i (block.id)}
       {#if block.symbolID}
         <Block
-          on:mount={() => {
-            componentsMounted++;
-          }}
+          on:mount={() => componentsMounted++}
           block={hydrateInstance(block, $symbols, $pageFields, $siteFields)}
           {i} />
       {:else}
