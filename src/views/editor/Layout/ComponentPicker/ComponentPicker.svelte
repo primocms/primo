@@ -105,11 +105,6 @@
       margin-right: 0.25rem;
     }
 
-    svg {
-      height: 1.5rem;
-      width: 1.5rem;
-    }
-
     &:hover {
       background-color: rgba(220, 38, 38, var(--tw-bg-opacity));
     }

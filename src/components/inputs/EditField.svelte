@@ -67,17 +67,6 @@
     &.child {
       margin-left: 1rem;
       padding: 0.25rem 0.5rem;
-      .type {
-        select {
-          padding: 4px 8px;
-        }
-      }
-
-      label {
-        input {
-          padding: 1px 4px;
-        }
-      }
     }
 
     .type {

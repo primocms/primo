@@ -21,7 +21,6 @@
   export let title = symbol.title || '';
   export let buttons = [];
   export let titleEditable;
-  export let loadPreview = true;
   export let hovering = false;
 
   function changeTitle(e) {

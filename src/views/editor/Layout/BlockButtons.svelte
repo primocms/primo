@@ -212,13 +212,6 @@
     position: absolute;
     right: 0px;
   }
-  .button-moveup-down {
-    border-bottom-left-radius: 0.25rem;
-    border-right-width: 1px;
-    border-color: rgba(239, 68, 68, var(--tw-border-opacity));
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
   .bottom {
     display: flex;
     justify-content: flex-end;

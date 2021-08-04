@@ -21,7 +21,6 @@
   <div class="input-container">
     {#if prefix}<span class="prefix">{prefix}</span>{/if}
     <input
-      {autofocus}
       {value}
       {type}
       {placeholder}

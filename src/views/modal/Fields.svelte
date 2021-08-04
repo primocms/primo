@@ -241,7 +241,7 @@
           </EditField>
           {#if field.type === 'group'}
             {#if field.fields}
-              {#each field.fields as subfield}
+              {#each field.fields as subfield, childIndex}
                 <EditField
                   fieldTypes={$fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}

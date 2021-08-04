@@ -26,7 +26,6 @@
   export let prefix = '';
   export let value = '';
   export let mode = 'html';
-  export let disabled = false;
   export let style = '';
   export let autofocus;
   export let debounce = false;

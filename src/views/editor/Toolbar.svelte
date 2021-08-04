@@ -259,15 +259,6 @@
     width: 6rem;
   }
 
-  .button-container:hover .tooltip,
-  .button-container:focus .tooltip,
-  .sub-buttons:hover,
-  .tooltip.active {
-    visibility: visible;
-    opacity: 1;
-    transition: opacity 0.2s;
-  }
-
   .tooltip:before,
   .tooltip:after {
     content: ' ';

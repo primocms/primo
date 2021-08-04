@@ -194,10 +194,10 @@
       background: var(--color-primored);
     }
 
-    &[disabled] {
+    /* &[disabled] {
       background: var(--color-gray-5);
       cursor: not-allowed;
-    }
+    } */
 
     i {
       margin-right: 0.5rem;

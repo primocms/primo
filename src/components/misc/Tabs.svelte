@@ -6,7 +6,6 @@
   export let tabs;
   export let activeTab;
   export let variants = '';
-  export let activeColor = 'rgb(248,68,73)';
 
   $: dispatch('switch', activeTab);
 

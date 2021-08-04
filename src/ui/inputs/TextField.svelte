@@ -30,7 +30,6 @@
     {value}
     {type}
     {disabled}
-    {autofocus}
     {...$$restProps}
     on:input={onInput} />
   <slot />
