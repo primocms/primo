@@ -107,9 +107,6 @@
       transition: top 1s;
     }
   }
-  .navbar-menu {
-    flex: 1;
-  }
   .left {
     width: 100%;
     display: flex;

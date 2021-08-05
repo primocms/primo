@@ -115,6 +115,7 @@
     "short-unique-id": "^3.2.3",
     "showdown": "^1.9.1",
     "svelte": "^3.32.3",
+    "svelte-bricks": "^0.1.0",
     "tinro": "^0.6.5"
   },
   "resolutions": {

@@ -9,7 +9,7 @@
 
 </script>
 
-<svelte:options tag={null} />{#if selectingComponent}
+{#if selectingComponent}
   <ComponentPicker
     on:select={({ detail: component }) => dispatch('select', component)}
     on:manage={() => dispatch('convert', 'symbol')}

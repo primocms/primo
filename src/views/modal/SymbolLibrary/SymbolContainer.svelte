@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
   import 'requestidlecallback-polyfill';
 
   const dispatch = createEventDispatcher();
@@ -22,6 +23,9 @@
   export let buttons = [];
   export let titleEditable;
   export let hovering = false;
+
+  let height = localStorage.getItem(`symbol-height-${symbol.id}`) || 0;
+  $: localStorage.setItem(`symbol-height-${symbol.id}`, height + 32);
 
   function changeTitle(e) {
     document.activeElement.blur();
@@ -57,7 +61,11 @@
 
 </script>
 
-<div class="component-wrapper" id="symbol-{symbol.id}">
+<div
+  in:fade={{ duration: 100 }}
+  class="component-wrapper"
+  id="symbol-{symbol.id}"
+  style="height:{height + 32}px">
   <header>
     <div class="component-label">
       {#if titleEditable}
@@ -102,14 +110,14 @@
       {/each}
     </div>
   </header>
-  <IFrame {componentApp} />
+  <IFrame bind:height {componentApp} />
 </div>
 
 <style lang="postcss">
   .component-wrapper {
     position: relative;
     box-shadow: var(--box-shadow);
-    height: 40vh;
+    storedheight: 40vh;
     overflow: hidden;
     content-visibility: auto;
     display: flex;
@@ -149,7 +157,7 @@
 
           svg {
             width: 16px;
-            height: 16px;
+            storedheight: 16px;
             margin-right: 4px;
           }
         }

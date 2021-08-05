@@ -4,25 +4,38 @@
   import { iframePreview } from '../../../components/misc/misc';
 
   export let componentApp;
+  export let height;
   let container;
   let iframe;
   let iframeLoaded;
+  let finishedResizing = false;
   $: componentApp && iframeLoaded && setIframeContent({ componentApp });
   function setIframeContent({ componentApp }) {
     iframe.contentWindow.postMessage({ componentApp });
+
+    setTimeout(() => {
+      iframe.height = '';
+      const newHeight =
+        iframe.contentWindow.document.body.scrollHeight * scaleRatio;
+      iframe.height = newHeight;
+      height = newHeight;
+      finishedResizing = true;
+    }, 100);
   }
 
-  function resizePreview() {
+  function setScaleRatio() {
     const { clientWidth: parentWidth } = container;
     const { clientWidth: childWidth } = iframe;
-    const scaleRatio = parentWidth / childWidth;
-    iframe.style.transform = `scale(${scaleRatio})`;
-    iframe.style.height = 100 / scaleRatio + '%';
+    scaleRatio = parentWidth / childWidth;
   }
 
-  onMount(resizePreview);
+  let scaleRatio = 1;
+
+  onMount(setScaleRatio);
 
 </script>
+
+<svelte:window on:resize={setScaleRatio} />
 
 {#if !iframeLoaded}
   <div class="spinner-container">
@@ -31,6 +44,8 @@
 {/if}
 <div bind:this={container} class="iframe-container">
   <iframe
+    class:fadein={finishedResizing}
+    style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
     scrolling="no"
     on:load={() => (iframeLoaded = true)}
     title="Preview HTML"
@@ -59,6 +74,8 @@
     position: relative;
 
     iframe {
+      opacity: 0;
+      transition: opacity 0.2s;
       position: absolute;
       top: 0;
       left: 0;
@@ -66,6 +83,10 @@
       width: 100vw;
       transform-origin: top left;
       height: 100%;
+
+      &.fadein {
+        opacity: 1;
+      }
     }
   }
 

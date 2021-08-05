@@ -3,6 +3,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import _ from 'lodash';
   import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
+  import Masonry from './Masonry.svelte';
 
   import { symbols } from '../../../../stores/data/draft';
   import { createUniqueID } from '../../../../utilities';
@@ -24,11 +25,6 @@
     };
   }
 
-  let mounted = false;
-  onMount(() => {
-    mounted = true;
-  });
-
   let element;
 
   onMount(() => {
@@ -38,6 +34,9 @@
       inline: 'center',
     });
   });
+
+  let [minColWidth, maxColWidth, gap] = [300, 800, 20];
+  let width, height;
 
 </script>
 
@@ -62,19 +61,22 @@
       <span>Manage Components</span>
     </button>
   </div>
-  {#if mounted}
-    <ul class="components" xyz="fade stagger stagger-2">
-      {#each $symbols as symbol (componentID(symbol))}
-        <li class="xyz-in">
-          <SymbolContainer
-            {symbol}
-            buttons={[{ onclick: () => {
-                  dispatch('select', createInstance(symbol));
-                }, highlight: true, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
-        </li>
-      {/each}
-    </ul>
-  {/if}
+  <Masonry
+    items={$symbols}
+    {minColWidth}
+    {maxColWidth}
+    {gap}
+    masonryWidth={10}
+    animate={false}
+    let:item
+    bind:width
+    bind:height>
+    <SymbolContainer
+      symbol={item}
+      buttons={[{ onclick: () => {
+            dispatch('select', createInstance(item));
+          }, highlight: true, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
+  </Masonry>
 </main>
 
 <style>

@@ -8,6 +8,7 @@
 <script>
   import { onMount } from 'svelte';
   import _ from 'lodash';
+  import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import { Tabs } from '../../../components/misc';
   import ModalHeader from '../ModalHeader.svelte';
   import Container from './SymbolContainer.svelte';
@@ -154,82 +155,31 @@
   let hovering = false;
   $: tabs[0]['highlighted'] = hovering;
 
+  let [minColWidth, maxColWidth, gap] = [300, 800, 20];
+  let width, height;
+
 </script>
 
 <ModalHeader icon="fas fa-clone" title="Components" variants="mb-2" />
 
 <main>
   <Tabs {tabs} bind:activeTab />
-  {#if activeTab === tabs[0]}
-    <ul xyz="fade stagger stagger-1">
-      <li class="xyz-in library-buttons">
-        {#if $userRole === 'developer'}
-          <button on:click={addSymbol}>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"><path
-                fill-rule="evenodd"
-                d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-                clip-rule="evenodd" /></svg>
-            <span>Create</span>
-          </button>
-        {/if}
-        <button on:click={pasteSymbol}>
-          <svg
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"><path
-              d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-            <path
-              d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
-          <span>Paste</span>
-        </button>
-      </li>
-      {#each $symbols as symbol (getID(symbol))}
-        <li class="xyz-in">
-          <Container
-            titleEditable
-            {symbol}
-            loadPreview={mounted}
-            on:update={({ detail }) => placeSymbol(detail)}
-            on:copy={() => copySymbol(symbol)}
-            buttons={[{ onclick: () => {
-                  const confirm = window.confirm('Are you sure you want to delete this component?');
-                  if (confirm) {
-                    deleteSymbol(symbol);
-                  }
-                }, title: 'Delete Component', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>` }, { id: 'copy', onclick: () => copySymbol(symbol), title: 'Copy Component', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>` }, { id: 'edit', onclick: () => editSymbol(symbol), title: 'Edit Component', focus: true, svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`, highlight: true }]} />
-        </li>
-      {/each}
-    </ul>
-  {:else}
-    <ul xyz="fade stagger stagger-1">
-      {#each $publicSymbols as symbol (getID(symbol))}
-        <li class="xyz-in">
-          <Container
-            {symbol}
-            titleEditable={false}
-            bind:hovering
-            on:copy={() => {
-              // window.plausible('Copy Component', { props: { id: symbol.id } });
-              copySymbol(symbol);
-            }}
-            buttons={[{ onclick: async () => {
-                  await copySymbol(symbol);
-                  await pasteSymbol();
-                }, highlight: true, label: 'Add to Site', clicked: { label: `Added`, svg: `<svg xmlns="http://www.w3.org/2000/svg" style="height:1rem;width:1rem;" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                          </svg>` }, svg: `
-                  <svg xmlns="http://www.w3.org/2000/svg" style="height:1rem;width:1rem;" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                  </svg>` }]} />
-        </li>
-      {:else}
-        <Spinner />
-      {/each}
-    </ul>
-  {/if}
+  <Masonry
+    items={activeTab === tabs[0] ? $symbols : $publicSymbols}
+    {minColWidth}
+    {maxColWidth}
+    {gap}
+    masonryWidth={10}
+    animate={false}
+    let:item
+    bind:width
+    bind:height>
+    <Container
+      symbol={item}
+      buttons={[{ onclick: () => {
+            dispatch('select', createInstance(item));
+          }, highlight: true, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
+  </Masonry>
 </main>
 
 <style lang="postcss">
