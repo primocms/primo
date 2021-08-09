@@ -107,10 +107,6 @@
   let rawCSS = localComponent.value.css;
   let rawJS = localComponent.value.js;
 
-  async function updateHtmlWithFieldData() {
-    refreshFields();
-  }
-
   let isSingleUse = false;
   $: isSingleUse =
     localComponent.type === 'component' && localComponent.symbolID === null;
@@ -188,7 +184,7 @@
             ]
           : field.fields,
     }));
-    updateHtmlWithFieldData();
+    refreshFields();
     saveRawValue('fields', fields);
   }
 
@@ -203,13 +199,13 @@
             ),
           }
     );
-    updateHtmlWithFieldData();
+    refreshFields();
     saveRawValue('fields', fields);
   }
 
   function deleteField(id) {
     fields = fields.filter((field) => field.id !== id);
-    updateHtmlWithFieldData();
+    refreshFields();
     saveRawValue('fields', fields);
   }
 
@@ -228,7 +224,7 @@
           }
         : f
     );
-    updateHtmlWithFieldData();
+    refreshFields();
   }
 
   function getFakeValue(type) {
@@ -273,9 +269,8 @@
   }
 
   function moveField({ i: parentIndex, direction, childIndex = null }) {
-    const activeFields = showingPage ? localPageFields : localSiteFields;
-    const parentField = activeFields[parentIndex];
-    let updatedFields = activeFields;
+    const parentField = fields[parentIndex];
+    let updatedFields = fields;
 
     if (direction !== 'up' && direction !== 'down') {
       console.error('Direction must be up or down');
@@ -283,7 +278,7 @@
     }
 
     if (childIndex === null) {
-      const withoutItem = activeFields.filter((_, i) => i !== parentIndex);
+      const withoutItem = fields.filter((_, i) => i !== parentIndex);
       updatedFields = {
         up: [
           ...withoutItem.slice(0, parentIndex - 1),
@@ -312,12 +307,9 @@
         ],
       }[direction];
     }
+    refreshFields();
 
-    if (showingPage) {
-      localPageFields = updatedFields;
-    } else {
-      localSiteFields = updatedFields;
-    }
+    fields = updatedFields;
   }
 
   if (localComponent.symbolID && $switchEnabled) {
@@ -441,7 +433,7 @@
                     on:input={() => (field.key = validateFieldKey(field.key))}
                     slot="key"
                     {disabled}
-                    on:input={updateHtmlWithFieldData} />
+                    on:input={refreshFields} />
                 </EditField>
                 {#if field.type === 'group'}
                   {#if field.fields}
@@ -546,7 +538,7 @@
                 <svelte:component
                   this={getFieldComponent(field)}
                   {field}
-                  on:input={updateHtmlWithFieldData} />
+                  on:input={refreshFields} />
               </div>
             {:else if getFieldComponent(field)}
               <div class="invalid-field">
