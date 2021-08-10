@@ -9,7 +9,7 @@
         `Save your site before navigating away so you don't lose your changes`
       );
     } else {
-      button.onClick();
+      if (button.onClick) button.onClick();
       router.goto(button.href);
     }
   }

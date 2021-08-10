@@ -16,6 +16,7 @@ export const iframePreview = `
             try {
               c = new App({ target: document.body })
             } catch(e) {
+              document.body.innerHTML = ''
               console.error(e.toString())
             }
           })

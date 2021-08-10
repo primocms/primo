@@ -32,7 +32,7 @@
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const slowDebounce = createDebouncer(1000);
-  const quickDebounce = createDebouncer(500);
+  const quickDebounce = createDebouncer(200);
 
   export let component = createComponent();
   export let header = {
@@ -81,26 +81,31 @@
   async function compileComponentCode({ html, css, js, fields }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    const res = await processCode({
-      code: {
-        html: `${html}
+    quickDebounce([
+      () => {
+        processCode({
+          code: {
+            html: `${html}
       <svelte:head>
         ${$pageHTML.head}
         ${$siteHTML.head}
         ${wrapInStyleTags($siteCSS + $pageCSS)}
       </svelte:head>
       `,
-        css,
-        js,
+            css,
+            js,
+          },
+          data,
+          buildStatic: false,
+        }).then((res) => {
+          error = res.error;
+          componentApp = res.js;
+          saveRawValue('html', html);
+          saveRawValue('css', css);
+          saveRawValue('js', js);
+        });
       },
-      data,
-      buildStatic: false,
-    });
-    error = res.error;
-    componentApp = res.js;
-    saveRawValue('html', html);
-    saveRawValue('css', css);
-    saveRawValue('js', js);
+    ]);
   }
 
   let rawHTML = localComponent.value.html;
