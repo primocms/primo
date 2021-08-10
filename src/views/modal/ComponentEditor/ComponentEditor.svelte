@@ -78,35 +78,50 @@
     js: rawJS,
     fields,
   });
+
+  let throttling = false;
   async function compileComponentCode({ html, css, js, fields }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    quickDebounce([
-      () => {
-        processCode({
-          code: {
-            html: `${html}
+
+    if (throttling) {
+      quickDebounce([compile]);
+    } else {
+      compile();
+    }
+
+    async function compile() {
+      console.log('running');
+      let throttled = false;
+      const timeout = setTimeout(() => {
+        throttled = true;
+      }, 100);
+      const res = await processCode({
+        code: {
+          html: `${html}
       <svelte:head>
         ${$pageHTML.head}
         ${$siteHTML.head}
         ${wrapInStyleTags($siteCSS + $pageCSS)}
       </svelte:head>
       `,
-            css,
-            js,
-          },
-          data,
-          buildStatic: false,
-        }).then((res) => {
-          error = res.error;
-          componentApp = res.js;
-          saveRawValue('html', html);
-          saveRawValue('css', css);
-          saveRawValue('js', js);
-        });
-      },
-    ]);
+          css,
+          js,
+        },
+        data,
+        buildStatic: false,
+      });
+      clearTimeout(timeout);
+      throttling = throttled;
+      error = res.error;
+      componentApp = res.js;
+      saveRawValue('html', html);
+      saveRawValue('css', css);
+      saveRawValue('js', js);
+    }
   }
+
+  $: console.log('Throttling', throttling);
 
   let rawHTML = localComponent.value.html;
   let rawCSS = localComponent.value.css;
