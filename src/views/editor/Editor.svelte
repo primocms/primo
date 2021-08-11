@@ -128,8 +128,10 @@
     disabled={!$unsaved} />
   <ToolbarButton
     type="primo"
-    title="Build"
-    icon="fas fa-hammer"
+    title="Publish"
+    label="Publish"
+    icon="fas fa-globe"
+    hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}
     disabled={updatingDatabase} />
