@@ -121,8 +121,6 @@
     }
   }
 
-  $: console.log('Throttling', throttling);
-
   let rawHTML = localComponent.value.html;
   let rawCSS = localComponent.value.css;
   let rawJS = localComponent.value.js;

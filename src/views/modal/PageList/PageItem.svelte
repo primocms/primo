@@ -15,9 +15,10 @@
   export let page;
   export let active = false;
   export let disableAdd = false;
+  export let displayOnly = false;
 
   let preview = '';
-  buildPreview();
+  $: if (page) buildPreview();
   async function buildPreview() {
     preview = await buildStaticPage({ page, site: $site });
   }
@@ -44,29 +45,34 @@
 
 <div class="page-item">
   <div class="page-info">
-    <div><span class="title">{page.title}</span></div>
-    <div class="buttons">
-      <button title="Edit" on:click={() => (editingPage = !editingPage)}>
-        <i class="fas fa-edit" />
-      </button>
-      {#if page.pages && !disableAdd}
-        <button title="Show sub-pages" on:click={() => dispatch('list')}>
-          <i class="fas fa-th-large" />
-        </button>
-      {:else if page.id !== 'index' && !disableAdd}
-        <button title="Add sub-page" on:click={() => dispatch('add')}>
-          <i class="fas fa-plus" />
-        </button>
-      {/if}
-      {#if page.id !== 'index'}
-        <button
-          title="Delete page"
-          on:click={() => dispatch('delete')}
-          class="delete">
-          <i class="fas fa-trash" />
-        </button>
-      {/if}
+    <div>
+      <span class="title">{page.title}</span>
+      <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
     </div>
+    {#if !displayOnly}
+      <div class="buttons">
+        <button title="Edit" on:click={() => (editingPage = !editingPage)}>
+          <i class="fas fa-edit" />
+        </button>
+        {#if page.pages && !disableAdd}
+          <button title="Show sub-pages" on:click={() => dispatch('list')}>
+            <i class="fas fa-th-large" />
+          </button>
+        {:else if page.id !== 'index' && !disableAdd}
+          <button title="Add sub-page" on:click={() => dispatch('add')}>
+            <i class="fas fa-plus" />
+          </button>
+        {/if}
+        {#if page.id !== 'index'}
+          <button
+            title="Delete page"
+            on:click={() => dispatch('delete')}
+            class="delete">
+            <i class="fas fa-trash" />
+          </button>
+        {/if}
+      </div>
+    {/if}
   </div>
   <div class="page-body">
     {#if editingPage}
@@ -94,6 +100,12 @@
           Save
         </PrimaryButton>
       </form>
+    {:else if displayOnly}
+      <div class="page-link">
+        <div class="page-container">
+          <Preview {preview} preventClicks={true} />
+        </div>
+      </div>
     {:else}
       <a
         tinro-ignore
@@ -128,6 +140,18 @@
       .title {
         font-size: var(--font-size-2);
         font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .subtitle {
+        font-size: var(--font-size-2);
+        font-weight: 400;
+        color: var(--color-gray-5);
+        margin-bottom: 0;
+        &:before {
+          content: '/';
+          padding-right: 1px;
+        }
       }
 
       .buttons {
@@ -170,10 +194,6 @@
         overflow: hidden;
         transition: var(--transition-colors);
 
-        &:hover {
-          opacity: 0.5;
-        }
-
         &.active {
           cursor: default;
           pointer-events: none;
@@ -185,8 +205,14 @@
         }
 
         .page-container {
+          all: unset;
           height: 100%;
           z-index: -1; /* needed for link */
+        }
+      }
+      a.page-link {
+        &:hover {
+          opacity: 0.5;
         }
       }
     }

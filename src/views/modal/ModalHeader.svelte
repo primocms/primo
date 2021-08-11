@@ -5,7 +5,7 @@
   export let variants = '';
   export let icon = '';
   export let title = '';
-  export let button;
+  export let button = null;
   export let warn = () => true;
   export let onclose = () => {};
 

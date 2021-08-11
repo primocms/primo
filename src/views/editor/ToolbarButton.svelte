@@ -7,6 +7,7 @@
 
   export let id = null;
   export let title = '';
+  export let label = null;
   export let buttonStyles = '';
   export let key = null;
   export let icon = null;
@@ -18,6 +19,7 @@
   export let buttons = null;
   export let type = null;
   export let tooltipVariants = '';
+  export let hideTooltip = false;
 
   let subButtonsActive = false;
 
@@ -48,12 +50,13 @@
           class:active={$showKeyHint}
           aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
+      {#if label}<span>{label}</span>{/if}
       <i class="{!loading ? icon : 'fas fa-spinner'} w-4" />
     {:else}
       <slot />
     {/if}
   </button>
-  {#if title && !$onMobile}
+  {#if title && !$onMobile && !hideTooltip}
     <div class="tooltip lg:block {tooltipVariants}">{title}</div>
   {/if}
 </div>
@@ -187,6 +190,26 @@
     transition: var(--transition-colors);
     outline: 0;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &[aria-label='Publish'] {
+      span {
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+      }
+      i {
+        transition: transform 0.2s;
+        transform: scale(1);
+        transform-origin: center;
+      }
+
+      &:hover i {
+        transition: transform 0.2s;
+        transform: scale(1.2);
+      }
+    }
 
     &:hover,
     &:focus {
@@ -235,24 +258,24 @@
     background: var(--color-gray-8);
   }
 
-  button i.fa-hammer {
+  /* button i.fa-paper-plane {
     transition: transform 0.2s;
-    transform: rotate(0);
+    transform: translate(0);
     transform-origin: left;
   }
 
-  button:hover i.fa-hammer {
+  button:hover i.fa-paper-plane {
     transition: transform 0.2s;
-    transform: rotate(-20deg);
+    transform: translate(-4px, 4px);
   }
 
-  button.active i.fa-hammer {
+  button.active i.fa-paper-plane {
     animation-name: hammer;
     animation-duration: 1s;
     animation-iteration-count: infinite;
     animation-timing-function: ease;
     will-change: transform;
-  }
+  } */
 
   @keyframes hammer {
     0% {

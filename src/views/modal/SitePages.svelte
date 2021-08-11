@@ -227,7 +227,7 @@
     }
     ul.page-items {
       display: grid;
-      grid-template-columns: repeat(4, 25%);
+      grid-template-columns: repeat(4, 1fr);
       grid-gap: 1rem;
       margin-bottom: 1rem;
 

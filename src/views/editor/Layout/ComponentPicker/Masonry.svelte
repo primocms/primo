@@ -71,7 +71,6 @@
 <style>
   .masonry {
     display: flex;
-    justify-content: center;
     overflow-wrap: anywhere;
     box-sizing: border-box;
   }

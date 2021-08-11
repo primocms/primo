@@ -230,6 +230,8 @@
     background: var(--color-codeblack);
     border-radius: 2px;
     box-shadow: var(--box-shadow-xl);
+    border-top-left-radius: 21px;
+    border-bottom-left-radius: 21px;
   }
 
   .switch:hover + .tooltip {
