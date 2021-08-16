@@ -20,27 +20,17 @@
     html: block.value.html,
     css: block.value.css,
     js: block.value.js,
-    fields: block.value.fields,
   });
 
   let error = '';
   async function compileComponentCode(rawCode) {
     // workaround for this function re-running anytime something changes on the page
     // (as opposed to when the code actually changes)
-    if (
-      html !== rawCode.html ||
-      css !== rawCode.css ||
-      js !== rawCode.js ||
-      differenceWith(fields, rawCode.fields, isEqual).length > 0
-    ) {
+    if (html !== rawCode.html || css !== rawCode.css || js !== rawCode.js) {
       html = rawCode.html;
       css = rawCode.css;
       js = rawCode.js;
-      fields = rawCode.fields;
-      const data = {
-        id: block.id,
-        ...convertFieldsToData(getAllFields(block.value.fields)),
-      };
+      const data = convertFieldsToData(getAllFields(block.value.fields));
       const res = await processCode({
         code: rawCode,
         data,
@@ -57,8 +47,20 @@
         const { default: App } = await import(url /* @vite-ignore */);
         component = new App({
           target: node,
+          props: data,
         });
       }
+    }
+  }
+
+  let cachedFields = [];
+  $: hydrateComponent(block.value.fields);
+  async function hydrateComponent(fields) {
+    if (!component) return;
+    if (differenceWith(fields, cachedFields, isEqual).length > 0) {
+      cachedFields = fields;
+      const data = convertFieldsToData(getAllFields(fields));
+      component.$set(data);
     }
   }
 

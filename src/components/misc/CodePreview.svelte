@@ -4,12 +4,16 @@
   import { set } from 'idb-keyval';
   import { isEqual } from 'lodash';
   import { iframePreview } from './misc';
+  import { convertFieldsToData } from '../../utils';
+  import { getAllFields } from '../../stores/helpers';
 
   export let view = 'small';
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
   export let error = null;
+  export let fields = [];
+  export let id = null;
 
   let iframe;
   let previewLoaded = false;
@@ -62,10 +66,26 @@
     clearInterval(interval);
   });
 
-  $: setIframeContent({ iframeLoaded, componentApp });
-  function setIframeContent({ iframeLoaded, componentApp }) {
+  $: props = {
+    // id,
+    ...convertFieldsToData(getAllFields(fields)),
+  };
+
+  $: setIframeApp({
+    iframeLoaded,
+    componentApp,
+    props,
+  });
+  function setIframeApp({ iframeLoaded, componentApp, props }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentApp });
+      iframe.contentWindow.postMessage({ componentApp, props });
+    }
+  }
+
+  $: setIframeData(props);
+  function setIframeData(props) {
+    if (iframeLoaded) {
+      iframe.contentWindow.postMessage({ props });
     }
   }
 

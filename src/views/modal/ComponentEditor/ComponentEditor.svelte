@@ -76,14 +76,13 @@
     html: rawHTML,
     css: rawCSS,
     js: rawJS,
-    fields,
+    // fields,
   });
 
   let throttling = false;
-  async function compileComponentCode({ html, css, js, fields }) {
+  async function compileComponentCode({ html, css, js }) {
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-
     if (throttling) {
       quickDebounce([compile]);
     } else {
@@ -91,10 +90,8 @@
     }
 
     async function compile() {
-      console.log('running');
-      let throttled = false;
       const timeout = setTimeout(() => {
-        throttled = true;
+        throttling = true;
       }, 100);
       const res = await processCode({
         code: {
@@ -111,8 +108,8 @@
         data,
         buildStatic: false,
       });
+      throttling = false;
       clearTimeout(timeout);
-      throttling = throttled;
       error = res.error;
       componentApp = res.js;
       saveRawValue('html', html);
@@ -573,7 +570,13 @@
       {/if}
     </div>
     <div slot="right">
-      <CodePreview view="small" {loading} {componentApp} {error} />
+      <CodePreview
+        view="small"
+        {loading}
+        {componentApp}
+        {fields}
+        {error}
+        id={localComponent.id} />
     </div>
   </HSplitPane>
 </main>

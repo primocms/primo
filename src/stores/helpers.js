@@ -61,53 +61,6 @@ export function getTailwindConfig(asString = false) {
   return asObj
 }
 
-export async function processContent(page, site) {
-  const savedFinal = get(components)
-  return await Promise.all(
-    page.content.map(async block => {
-      if (block.type === 'component') {
-
-        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
-        const data = convertFieldsToData(fields);
-        let component = _.cloneDeep(block)
-
-        if (block.symbolID) {
-          const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
-          component = {
-            ...symbol,
-            id: component.id
-          }
-        }
-
-        const cacheKeys = {
-          html: component.value.html + JSON.stringify(fields),
-          css: component.id + component.value.css
-        }
-
-        const [html, css, js] = await Promise.all([
-          getSavedValue(cacheKeys.html, processHTML),
-          getSavedValue(cacheKeys.css, processCSS),
-          getSavedValue(component.value.js, processJS),
-        ])
-
-        return ({
-          type: 'component',
-          id: block.id,
-          html,
-          css,
-          js
-        })
-
-        async function getSavedValue(raw, fn) {
-          const savedValue = savedFinal[raw]
-          if (savedValue) return savedValue
-          return await fn(component, { data, fields })
-        }
-
-      } else return block
-    })
-  )
-}
 
 export async function buildStaticPage({ page, site }) {
   const [ head, below, ...blocks ] = await Promise.all([
@@ -189,7 +142,8 @@ export async function buildStaticPage({ page, site }) {
     })
   ])
   const final = `
-  <html>
+  <!DOCTYPE html>
+  <html lang="en">
     <head>${head.html}</head>
     <body class="primo-page">
       ${blocks.map(block => `
@@ -280,16 +234,4 @@ async function processCSS({ id, value }) {
     [`${id}-${value.css}`]: encapsulatedCss
   }))
   return processors.css(encapsulatedCss, { tailwind })
-}
-
-async function processJS({ id, value }, { data, fields }) {
-  if (!value.js) return ''
-  const finalJS = `
-    const primo = {
-      id: '${id}',
-      data: ${JSON.stringify(data)},
-      fields: ${JSON.stringify(fields)}
-    }
-    ${value.js.replace(/(?:import )(\w+)(?: from )['"]{1}(?!http)(.+)['"]{1}/g, `import $1 from 'https://cdn.skypack.dev/$2'`)}`
-  return finalJS
 }

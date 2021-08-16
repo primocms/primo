@@ -1,10 +1,19 @@
 import _ from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
+import {site} from './stores/data/draft'
+import activePage from './stores/app/activePage'
+import {get} from 'svelte/store'
 
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
   const res = await processors.html({
-    code, data, buildStatic, format
+    code, data: {
+      ...data,
+      primo: {
+        page: get(activePage),
+        site: get(site),
+      }
+    }, buildStatic, format
   })
   return res
 }
