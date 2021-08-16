@@ -7,14 +7,22 @@ export const iframePreview = `
       <script type="module">
         let c;
 
-        function update(source) {
+        function update(source = null, props) {
+          if (c) {
+            c.$set(props);
+            return
+          }
+
           const blob = new Blob([source], { type: 'text/javascript' });
           const url = URL.createObjectURL(blob);
 
           import(url).then(({ default: App }) => {
             if (c) c.$destroy();
             try {
-              c = new App({ target: document.body })
+              c = new App({ 
+                target: document.body,
+                props
+              })
             } catch(e) {
               document.body.innerHTML = ''
               console.error(e.toString())
@@ -23,8 +31,9 @@ export const iframePreview = `
         }
 
         window.addEventListener('message', ({data}) => {
+          console.log({data})
           if (data.componentApp) {
-            update(data.componentApp)
+            update(data.componentApp, data.props)
           }
         }, false)
 		  <\/script>

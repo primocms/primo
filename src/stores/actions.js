@@ -7,10 +7,17 @@ import { unsaved } from './app/misc'
 import { focusedNode } from './app/editor'
 import { styles, html, css, fields } from './data/draft'
 import * as stores from './data/draft'
-import { timeline, undone } from './data/draft'
+import { timeline, undone, site as unsavedSite } from './data/draft'
 import { processors } from '../component'
 import { updateHtmlWithFieldData } from '../utils'
+import site from './data/site'
 import {DEFAULTS} from '../const'
+
+export async function saveSite() {
+  const finalSave = get(unsavedSite)
+  console.log({finalSave})
+  site.save(finalSave)
+}
 
 export async function hydrateSite(data) {
   content.set([])
