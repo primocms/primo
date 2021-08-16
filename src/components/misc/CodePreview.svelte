@@ -71,15 +71,21 @@
     ...convertFieldsToData(getAllFields(fields)),
   };
 
-  $: setIframeContent({
+  $: setIframeApp({
     iframeLoaded,
     componentApp,
     props,
   });
-  function setIframeContent({ iframeLoaded, componentApp, props }) {
+  function setIframeApp({ iframeLoaded, componentApp, props }) {
     if (iframeLoaded) {
-      console.log({ props });
       iframe.contentWindow.postMessage({ componentApp, props });
+    }
+  }
+
+  $: setIframeData(props);
+  function setIframeData(props) {
+    if (iframeLoaded) {
+      iframe.contentWindow.postMessage({ props });
     }
   }
 

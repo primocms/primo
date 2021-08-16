@@ -8,31 +8,29 @@ export const iframePreview = `
         let c;
 
         function update(source = null, props) {
-          if (c) {
+          if (c & !source) {
             c.$set(props);
-            return
+          } else if (source) {
+            const blob = new Blob([source], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+  
+            import(url).then(({ default: App }) => {
+              if (c) c.$destroy();
+              try {
+                c = new App({ 
+                  target: document.body,
+                  props
+                })
+              } catch(e) {
+                document.body.innerHTML = ''
+                console.error(e.toString())
+              }
+            })
           }
-
-          const blob = new Blob([source], { type: 'text/javascript' });
-          const url = URL.createObjectURL(blob);
-
-          import(url).then(({ default: App }) => {
-            if (c) c.$destroy();
-            try {
-              c = new App({ 
-                target: document.body,
-                props
-              })
-            } catch(e) {
-              document.body.innerHTML = ''
-              console.error(e.toString())
-            }
-          })
         }
 
         window.addEventListener('message', ({data}) => {
-          console.log({data})
-          if (data.componentApp) {
+          if (data.componentApp || data.props) {
             update(data.componentApp, data.props)
           }
         }, false)
