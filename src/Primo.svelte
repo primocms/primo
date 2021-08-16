@@ -24,6 +24,7 @@
   } from './stores/app/misc';
   import { DEFAULTS } from './const';
 
+  import { unsaved } from '../src/stores/app/misc';
   import { pages } from './stores/data/draft';
   import site from './stores/data/site';
   import { hydrateSite } from './stores/actions';
@@ -42,10 +43,12 @@
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
-    // tailwind.setInitial();
   }
 
-  $: dispatch('save', $site);
+  $: {
+    $unsaved = false;
+    dispatch('save', $site);
+  }
 
   $: $pageId = getPageId($router.path);
   function getPageId(path) {
