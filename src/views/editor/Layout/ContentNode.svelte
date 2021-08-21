@@ -11,6 +11,7 @@
   import Highlight from '@tiptap/extension-highlight';
 
   import BubbleMenu from '@tiptap/extension-bubble-menu';
+  import Image from '@tiptap/extension-image';
 
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
@@ -58,7 +59,7 @@
           element: floatingMenu,
         }),
         // KeyboardShortcuts,
-        // Image,
+        Image,
       ],
       content: block.value.html,
       onTransaction() {
@@ -109,7 +110,7 @@
 </script>
 
 <div class="primo-content" id="copy-{block.id}" bind:this={element}>
-  <div class="menu floating-menu" bind:this={floatingMenu}>
+  <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
     {#if editor}
       <CopyButton
         icon="heading"
@@ -133,7 +134,7 @@
       <CopyButton icon="image" on:click={addImage} />
     {/if}
   </div>
-  <div class="menu bubble-menu" bind:this={bubbleMenu}>
+  <div class="menu bubble-menu primo-reset" bind:this={bubbleMenu}>
     {#if editor}
       <CopyButton icon="link" on:click={setLink} />
       <CopyButton
