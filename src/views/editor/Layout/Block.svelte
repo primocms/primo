@@ -153,11 +153,10 @@
   }
   let sticky = false;
   let toolbarHeight = 0;
-  onMount(() => {
-    toolbarHeight = document.querySelector('#primo-toolbar').clientHeight;
-  });
 
   function blockContainer(container) {
+    const toolbar = document.querySelector('#primo-toolbar');
+    toolbarHeight = toolbar ? toolbar.clientHeight : 0;
     const node = container.children[0];
     window.addEventListener('scroll', positionBlock);
     positionBlock();

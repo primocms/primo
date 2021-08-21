@@ -31,7 +31,6 @@
 </svelte:head>
 <nav
   bind:this={element}
-  in:slide
   role="navigation"
   aria-label="toolbar"
   id="primo-toolbar"
@@ -99,16 +98,10 @@
 <style lang="postcss">
   nav {
     position: fixed;
-    top: -5rem;
+    top: 0;
     left: 0;
     right: 0;
     z-index: 999;
-    will-change: top;
-
-    &.mounted {
-      top: 0;
-      transition: top 1s;
-    }
   }
   .left {
     width: 100%;
