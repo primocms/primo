@@ -61,9 +61,9 @@
   }
 
   .buttons-container {
-    background: var(--color-codeblack);
-    border-top: 1px solid var(--color-gray-8);
-    border-bottom: 1px solid var(--color-gray-8);
+    background: var(--color-black);
+    border-top: 1px solid var(--color-codeblack);
+    border-bottom: 1px solid var(--color-codeblack);
 
     & > div {
       max-width: var(--max-width-container);

@@ -84,14 +84,17 @@
 
 </script>
 
-<div
-  bind:this={node}
-  class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
-  id="component-{block.id}"
-  transition:fade={{ duration: 100 }} />
-<div>
+{#if !error}
+  <div
+    bind:this={node}
+    class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
+    id="component-{block.id}"
+    transition:fade={{ duration: 100 }} />
+{:else}
+  <pre>
   {@html error}
-</div>
+</pre>
+{/if}
 
 <style>
   .component {
@@ -102,6 +105,14 @@
     outline-color: transparent;
     width: 100%;
     min-height: 2rem;
+  }
+
+  pre {
+    margin: 0;
+    padding: 1rem;
+    background: var(--color-black);
+    color: var(--color-gray-3);
+    border: 1px solid var(--color-gray-6);
   }
 
 </style>
