@@ -53,7 +53,8 @@
           aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
       {#if label}<span>{label}</span>{/if}
-      <i class="{!loading ? icon : 'fas fa-spinner'} w-4" />
+      {#if loading}<i class="fas fa-spinner" />{/if}
+      <i class={icon} class:hidden={loading} />
     {:else}
       <slot />
     {/if}
@@ -64,13 +65,12 @@
 </div>
 
 <style lang="postcss">
-  /* .button-group {
-    &:last-child {
-      button {
-        border-radius: 2px;
-      }
-    }
-  } */
+  .fas.fa-spinner {
+    position: absolute;
+  }
+  .hidden {
+    opacity: 0;
+  }
   .primo {
     background: var(--color-primored);
     color: var(--color-gray-1);

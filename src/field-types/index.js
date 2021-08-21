@@ -8,7 +8,7 @@ import Information from './Information.svelte'
 export default [
   {
     id: 'content',
-    label: 'Copy',
+    label: 'Content',
     component: Content
   },
   {
