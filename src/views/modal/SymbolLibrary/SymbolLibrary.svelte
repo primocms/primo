@@ -160,7 +160,7 @@
 
 </script>
 
-<ModalHeader icon="fas fa-clone" title="Components" variants="mb-2" />
+<ModalHeader icon="fas fa-clone" title="Components" />
 
 <main>
   <Tabs {tabs} bind:activeTab />

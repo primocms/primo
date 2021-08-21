@@ -25,6 +25,8 @@
   import { getAllFields } from '../../stores/helpers';
   import { router } from 'tinro';
 
+  export let element;
+
   $: pageExists = findPage($pageID, $pages);
   function findPage(id, pages) {
     const [root] = id.split('/');
@@ -53,8 +55,6 @@
       },
     };
   }
-
-  let element;
 
   // Disable the links on the page that don't navigate to a page within primo
   async function disableLinks() {
@@ -173,11 +173,7 @@
     <Spinner />
   </div>
 {/if}
-<div
-  bind:this={element}
-  class="primo-page"
-  class:fadein={pageMounted}
-  style="border-top: 48px solid rgb(20,20,20)">
+<div bind:this={element} class="primo-page" class:fadein={pageMounted}>
   {#if pageExists}
     {#each $content as block, i (block.id)}
       {#if block.symbolID}

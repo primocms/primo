@@ -11,6 +11,7 @@
   const dispatch = createEventDispatcher();
 
   export let buttons;
+  export let element;
 
   let mobileNavOpen = false;
 
@@ -29,10 +30,12 @@
     crossorigin="anonymous" />
 </svelte:head>
 <nav
+  bind:this={element}
   in:slide
   role="navigation"
   aria-label="toolbar"
   id="primo-toolbar"
+  class="primo-reset"
   class:mounted>
   <div class="menu-container">
     <div class="left">

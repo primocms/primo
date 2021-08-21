@@ -170,7 +170,7 @@
   .codemirror-container {
     width: 100%;
     overflow-x: scroll;
-    font-family: 'Fira Code', serif;
+    font-family: 'Fira Code', serif !important;
     height: calc(100vh - 9.5rem);
 
     & > div {

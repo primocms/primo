@@ -1,6 +1,6 @@
 <script>
   import _ from 'lodash';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
 
@@ -152,7 +152,10 @@
     sticky = false;
   }
   let sticky = false;
-  const toolbarHeight = 48;
+  let toolbarHeight = 0;
+  onMount(() => {
+    toolbarHeight = document.querySelector('#primo-toolbar').clientHeight;
+  });
 
   function blockContainer(container) {
     const node = container.children[0];

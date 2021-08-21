@@ -104,8 +104,7 @@
       const proceed = window.confirm('Undrafted changes will be lost. Continue?');
       return proceed;
     } else return true;
-  }}
-  variants="mb-4" />
+  }} />
 
 <main>
   <div>

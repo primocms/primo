@@ -176,13 +176,11 @@
             bind:value={pageLabel}
             id="page-label"
             autofocus={true}
-            variants="mb-4"
             label="Page Label"
             placeholder="About Us" />
           <TextInput
             bind:value={pageURL}
             id="page-url"
-            variants="mb-4"
             label="Page URL"
             prefix="/"
             on:input={() => (pageLabelEdited = true)}

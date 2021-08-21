@@ -40,7 +40,7 @@
 
 </script>
 
-<main in:fade={{ duration: 100 }} bind:this={element}>
+<main in:fade={{ duration: 100 }} bind:this={element} class="primo-reset">
   <div class="buttons">
     <button
       class="close"

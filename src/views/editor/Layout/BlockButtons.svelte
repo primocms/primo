@@ -49,7 +49,7 @@
 
 <div
   in:fade={{ duration: 100 }}
-  class="block-buttons"
+  class="block-buttons primo-reset"
   class:editable
   class:is-content={!editable}
   bind:this={node}>

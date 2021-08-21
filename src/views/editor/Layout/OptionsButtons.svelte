@@ -15,7 +15,7 @@
     on:manage={() => dispatch('convert', 'symbol')}
     on:remove={() => dispatch('remove')} />
 {:else}
-  <div class="buttons-container">
+  <div class="buttons-container primo-reset">
     <div>
       <div class="plus">
         <svg

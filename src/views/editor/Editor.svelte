@@ -98,9 +98,17 @@
     };
   }
 
+  // Add top margin to page since toolbar is fixed
+  let toolbar;
+  let page;
+  $: if (toolbar && page) {
+    page.style.marginTop = `${toolbar.clientHeight}px`;
+  }
+
 </script>
 
 <Toolbar
+  bind:element={toolbar}
   on:signOut
   buttons={$loadingSite ? [] : toolbarButtons}
   on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
@@ -137,4 +145,4 @@
     disabled={updatingDatabase} />
 </Toolbar>
 
-<Doc />
+<Doc bind:element={page} />
