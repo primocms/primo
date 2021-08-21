@@ -102,11 +102,15 @@ export async function buildStaticPage({ page, site }) {
     ...page.content.map(async block => {
       if (block.type === 'component') {
 
-        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
-        const data = convertFieldsToData(fields);
-
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
         if (!symbol) return 
+
+        // Remove fields no longer present in Symbol
+        const symbolFields = symbol.value.fields
+        const componentFields = block.value.fields.filter(field => _.find(symbolFields, ['id', field.id])) 
+        const fields = _.unionBy(componentFields, page.fields, site.fields, "key");
+        const data = convertFieldsToData(fields);
+
         const { html, css, js } = symbol.value
 
         const svelte = await processCode({ 
@@ -148,7 +152,7 @@ export async function buildStaticPage({ page, site }) {
     <body class="primo-page">
       ${blocks.map(block => `
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
-          ${block.html}
+          ${block.html || ''}
           ${
             block.js ? 
             `<script type="module">
