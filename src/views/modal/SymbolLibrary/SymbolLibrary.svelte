@@ -219,7 +219,7 @@
 <style lang="postcss">
   main {
     background: var(--color-black);
-    padding: 0.5rem;
+    padding: 0 0.5rem;
 
     ul {
       display: grid;

@@ -130,6 +130,7 @@
     --color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
     --color-black: rgb(17, 17, 17);
+    --color-black-opaque: rgba(17, 17, 17, 0.9);
 
     --color-gray-1: rgb(245, 245, 245);
     --color-gray-2: rgb(229, 229, 229);

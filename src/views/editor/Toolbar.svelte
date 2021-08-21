@@ -118,6 +118,7 @@
   .left .buttons {
     display: flex;
     flex-direction: row;
+    margin-right: 0.25rem;
   }
   .content {
     position: relative;
@@ -210,12 +211,13 @@
   .menu-container {
     display: flex;
     margin: 0 auto;
-    padding: 4px var(--padding-container);
+    /* padding: 4px var(--padding-container); */
+    padding: 4px;
     max-width: var(--max-width-container);
   }
 
   .menu-container:after {
-    background: var(--color-codeblack-opaque);
+    background: var(--color-black-opaque);
     content: '';
     z-index: -1;
     height: 100%;

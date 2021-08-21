@@ -20,6 +20,7 @@
   export let type = null;
   export let tooltipVariants = '';
   export let hideTooltip = false;
+  export let style = '';
 
   let subButtonsActive = false;
 
@@ -37,6 +38,7 @@
     class:primo={type === 'primo'}
     class:active
     class:has-subbuttons={buttons}
+    {style}
     in:fade={{ duration: 200 }}
     {disabled}
     on:click={() => {
@@ -62,13 +64,13 @@
 </div>
 
 <style lang="postcss">
-  .button-group {
+  /* .button-group {
     &:last-child {
       button {
         border-radius: 2px;
       }
     }
-  }
+  } */
   .primo {
     background: var(--color-primored);
     color: var(--color-gray-1);

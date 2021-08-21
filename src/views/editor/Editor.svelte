@@ -55,6 +55,14 @@
     ],
     [
       {
+        id: 'toolbar--components',
+        title: 'Component Library',
+        icon: 'clone',
+        onclick: () => modal.show('SYMBOL_LIBRARY'),
+      },
+    ],
+    [
+      {
         id: 'toolbar--html',
         title: 'HTML',
         icon: 'fab fa-html5',
@@ -71,12 +79,6 @@
         title: 'Fields',
         icon: 'database',
         onclick: () => modal.show('FIELDS'),
-      },
-      {
-        id: 'toolbar--components',
-        title: 'Component Library',
-        icon: 'clone',
-        onclick: () => modal.show('SYMBOL_LIBRARY'),
       },
     ],
   ];
@@ -102,7 +104,7 @@
   let toolbar;
   let page;
   $: if (toolbar && page) {
-    page.style.marginTop = `${toolbar.clientHeight}px`;
+    page.style.borderTop = `${toolbar.clientHeight}px solid var(--color-black)`;
   }
 
 </script>
@@ -139,6 +141,7 @@
     title="Publish"
     label="Publish"
     icon="fas fa-globe"
+    style="margin-left:10px"
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}
