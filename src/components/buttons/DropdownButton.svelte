@@ -23,21 +23,21 @@
 
 <style lang="postcss">
   button {
-    background: var(--color-codeblack);
-    box-shadow: var(--ring);
-    color: var(--color-gray-1);
-    font-size: var(--font-size-1);
-    display: block;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: var(--border-radius-1);
-    width: 100%;
-    text-align: center;
+    background: var(--color-codeblack) !important;
+    box-shadow: var(--ring) !important;
+    color: var(--color-gray-1) !important;
+    font-size: var(--font-size-1) !important;
+    display: block !important;
+    padding: 0.5rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: var(--border-radius-1) !important;
+    width: 100% !important;
+    text-align: center !important;
     &:not(:last-child) {
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.75rem !important;
     }
     &:hover {
-      background: var(--color-primored);
+      background: var(--color-primored) !important;
     }
   }
 
