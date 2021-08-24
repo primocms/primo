@@ -165,7 +165,7 @@
 <main>
   <Tabs {tabs} bind:activeTab />
   <Masonry
-    items={activeTab === tabs[0] ? [...$symbols, { id: 'button' }] : [...$publicSymbols, { id: 'button' }]}
+    items={activeTab === tabs[0] ? [{ id: 'button' }, ...$symbols] : [{ id: 'button' }, ...$publicSymbols]}
     {minColWidth}
     {maxColWidth}
     {gap}
@@ -242,7 +242,6 @@
     grid-template-columns: 1fr 1fr;
     border-radius: var(--border-radius-1);
     overflow: hidden;
-    margin: 2rem 1rem;
 
     button {
       background: var(--color-codeblack);
