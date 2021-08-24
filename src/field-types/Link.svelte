@@ -6,13 +6,19 @@
   import TextInput from '../components/inputs/TextInput.svelte';
   import { pages } from '../stores/data/draft';
 
-  export let field = {
-    value: {
-      label: '',
-      url: '',
-      active: false,
-    },
+  const link = {
+    label: '',
+    url: '',
+    active: false,
   };
+
+  export let field = {
+    value: link,
+  };
+
+  if (!field.value) {
+    field.value = link;
+  }
 
   $: if (typeof field.value === 'string' || !field.value) {
     field.value = {
