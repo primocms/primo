@@ -62,9 +62,8 @@
     const [username, site] = pathname.split('/').slice(1);
     const homeUrl = `${origin}/${username}/${site}`;
     element.querySelectorAll('a').forEach((link) => {
+      // link is to primo.af
       if (window.location.host === link.host) {
-        // link is to primo.af
-
         // link navigates to site home
         if (link.pathname === '/') {
           link.setAttribute('data-tinro-ignore', '');
@@ -78,17 +77,24 @@
         const [_, linkUsername, linkSite, linkPage, childPage] =
           link.pathname.split('/');
 
+        // Link goes to different site
         if (linkUsername !== username) {
           openLinkInNewWindow(link);
         } else {
-          const pageExists = find($pages, ['id', linkPage]);
+          // Link goes to current site
+          const pageExists =
+            !!find($pages, ['id', linkPage]) ||
+            !!find($pages, ['id', linkSite]);
+          console.log({ $pages, link, pageExists, linkSite, linkPage });
           if (!pageExists) {
             openLinkInNewWindow(link);
           } else {
             link.setAttribute('data-tinro-ignore', '');
             link.onclick = (e) => {
               e.preventDefault();
-              router.goto(`${homeUrl}/${linkPage}`);
+              router.goto(
+                linkPage ? `${homeUrl}/${linkPage}` : `${homeUrl}/${linkSite}`
+              );
             };
           }
         }
