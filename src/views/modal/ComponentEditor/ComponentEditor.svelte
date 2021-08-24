@@ -101,6 +101,8 @@
         ${$siteHTML.head}
         ${wrapInStyleTags($siteCSS + $pageCSS)}
       </svelte:head>
+      ${$pageHTML.below}
+      ${$siteHTML.below}
       `,
           css,
           js,
@@ -586,7 +588,6 @@
     background: var(--color-black);
     padding: 0 0.5rem;
     flex: 1;
-    overflow: hidden;
 
     --PrimaryButton-bg: var(--color-gray-8);
     --PrimaryButton-bg-hover: var(--color-gray-9);
