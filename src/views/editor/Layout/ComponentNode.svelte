@@ -2,8 +2,10 @@
   import { isEqual, differenceWith } from 'lodash';
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { getAllFields, getTailwindConfig } from '../../../stores/helpers';
+  import { getAllFields } from '../../../stores/helpers';
   import { convertFieldsToData, processCode } from '../../../utils';
+  import { fields as pageFields } from '../../../stores/app/activePage';
+  import { fields as siteFields } from '../../../stores/data/draft';
 
   const dispatch = createEventDispatcher();
 
@@ -15,7 +17,6 @@
   let html = '';
   let css = '';
   let js = '';
-  let fields = [];
   $: compileComponentCode({
     html: block.value.html,
     css: block.value.css,
@@ -53,13 +54,24 @@
     }
   }
 
-  let cachedFields = [];
-  $: hydrateComponent(block.value.fields);
-  async function hydrateComponent(fields) {
+  let cachedBlockFields = [];
+  let cachedPageFields = [];
+  let cachedSiteFields = [];
+  $: hydrateComponent(block.value.fields, $pageFields, $siteFields);
+  async function hydrateComponent(blockFields, pageFields, siteFields) {
     if (!component) return;
-    if (differenceWith(fields, cachedFields, isEqual).length > 0) {
-      cachedFields = fields;
-      const data = convertFieldsToData(getAllFields(fields));
+    const blockFieldsChanged =
+      differenceWith(blockFields, cachedBlockFields, isEqual).length > 0;
+    const pageFieldsChanged =
+      differenceWith(pageFields, cachedPageFields, isEqual).length > 0;
+    const siteFieldsChanged =
+      differenceWith(siteFields, cachedSiteFields, isEqual).length > 0;
+
+    if (blockFieldsChanged || pageFieldsChanged || siteFieldsChanged) {
+      cachedBlockFields = blockFields;
+      cachedPageFields = pageFields;
+      cachedSiteFields = siteFields;
+      const data = convertFieldsToData(getAllFields(blockFields));
       component.$set(data);
     }
   }
@@ -92,8 +104,8 @@
     transition:fade={{ duration: 100 }} />
 {:else}
   <pre>
-  {@html error}
-</pre>
+    {@html error}
+  </pre>
 {/if}
 
 <style>
