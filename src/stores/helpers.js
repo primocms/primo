@@ -9,8 +9,8 @@ import components from './app/components'
 import { wrapInStyleTags, convertFieldsToData, processCode } from '../utils'
 import { processors } from '../component'
 
-export function getAllFields(componentFields = []) {
-  const allFields = _.unionBy(componentFields, get(pageFields), get(siteFields), "key");
+export function getAllFields(componentFields = [], exclude = () => true) {
+  const allFields = _.unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
   const includeActiveLinks = allFields.map(hydrateField)
   return includeActiveLinks
 
@@ -142,13 +142,13 @@ export async function buildStaticPage({ page, site }) {
           ...svelte,
           type: 'content'
         }
-      }
+      } 
     })
   ])
   const final = `
   <!DOCTYPE html>
   <html lang="en">
-    <head>${head.html}</head>
+    <head>${head.html || ''}</head>
     <body class="primo-page">
       ${blocks.map(block => `
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
@@ -165,8 +165,8 @@ export async function buildStaticPage({ page, site }) {
           : ``}
         </div>
         ${block.css ? `<style>${block.css}</style>` : ``}
-      `).join('\n')}
-      ${below.html}
+      `).join('')}
+      ${below.html || ''}
     </body>
   </html>
   `
