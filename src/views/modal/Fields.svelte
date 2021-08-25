@@ -14,11 +14,19 @@
   import { pages } from '../../stores/actions';
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
+  import CustomFieldType from './CustomFieldType.svelte';
+  import CustomFieldDevType from './CustomFieldDevType.svelte';
 
   let localPageFields = cloneDeep($pageFields);
   let localSiteFields = cloneDeep($siteFields);
 
   const allFieldTypes = [
+    {
+      id: 'custom',
+      label: 'Custom',
+      component: CustomFieldType,
+      devComponent: CustomFieldDevType,
+    },
     {
       id: 'repeater',
       label: 'Repeater',
@@ -126,6 +134,18 @@
     }
   }
 
+  function getDevComponent(field) {
+    const fieldType = find(allFieldTypes, ['id', field.type]);
+    if (fieldType) {
+      return fieldType.devComponent;
+    } else {
+      console.warn(
+        `Field type '${field.type}' no longer exists, removing '${field.label}' field`
+      );
+      return null;
+    }
+  }
+
   function applyFields() {
     // TODO: clean this up, use action
     pages.update($id, (page) => ({
@@ -189,6 +209,8 @@
     }
   }
 
+  let onChange = () => {};
+
 </script>
 
 <ModalHeader
@@ -238,6 +260,8 @@
               slot="key"
               {disabled} />
           </EditField>
+          <!-- <svelte:component this={field.devComponent} /> -->
+          <svelte:component this={getDevComponent(field)} {field} />
           {#if field.type === 'group'}
             {#if field.fields}
               {#each field.fields as subfield, childIndex}
@@ -339,6 +363,7 @@
               slot="key"
               {disabled} />
           </EditField>
+          <svelte:component this={getDevComponent(field)} {field} />
           {#if field.type === 'group'}
             {#if field.fields}
               {#each field.fields as subfield}
@@ -416,7 +441,12 @@
     {#each localPageFields as field}
       {#if getComponent(field)}
         <div class="field-item" id="field-{field.key}">
-          <svelte:component this={getComponent(field)} {field} />
+          <svelte:component
+            this={getComponent(field)}
+            {field}
+            fields={localPageFields.filter((f) => f.id !== field.id)}
+            bind:onChange
+            on:input={onChange} />
         </div>
       {/if}
     {:else}
@@ -434,7 +464,12 @@
     {#each localSiteFields as field}
       {#if getComponent(field)}
         <div class="field-item" id="field-{field.key}">
-          <svelte:component this={getComponent(field)} {field} />
+          <svelte:component
+            this={getComponent(field)}
+            {field}
+            fields={localSiteFields.filter((f) => f.id !== field.id)}
+            bind:onChange
+            on:input={onChange} />
         </div>
       {/if}
     {:else}
