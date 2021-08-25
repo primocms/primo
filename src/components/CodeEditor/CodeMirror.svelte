@@ -174,7 +174,7 @@
     height: calc(100vh - 9.5rem);
 
     & > div {
-      min-height: 100px;
+      /* min-height: 100px; */
     }
   }
 
