@@ -187,7 +187,9 @@
       position: relative;
       .page-link {
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
         background: var(--color-white);
         display: block;
         width: 100%;
