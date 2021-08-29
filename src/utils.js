@@ -6,7 +6,9 @@ import activePage from './stores/app/activePage'
 import {get} from 'svelte/store'
 
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  const includePrimoData = code.html.includes('primo') || code.js.includes('primo')
+  // const includePrimoData = code.html.includes('primo') || code.js.includes('primo')
+  const includePrimoData = false
+
   const res = await processors.html({
     code, data: {
       ...data,
