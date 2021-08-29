@@ -44,7 +44,7 @@
       transition: background 0.1s, color 0.1s;
 
       &.selected {
-        background: var(--color-primored);
+        background: var(--primo-color-primored);
         color: var(--color-gray-1);
         outline: 0;
       }

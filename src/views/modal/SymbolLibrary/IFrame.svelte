@@ -67,7 +67,7 @@
     z-index: 50;
   }
   .iframe-container {
-    background: var(--color-white);
+    background: var(--primo-color-white);
     flex: 1;
     padding-top: 50%;
     height: 0;

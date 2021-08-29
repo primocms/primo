@@ -55,9 +55,9 @@
           border-bottom: 2px solid transparent;
 
           &.is-active {
-            background: var(--color-codeblack);
-            color: var(--color-white);
-            border-color: var(--color-codeblack);
+            background: var(--primo-color-codeblack);
+            color: var(--primo-color-white);
+            border-color: var(--primo-color-codeblack);
           }
 
           button {
@@ -85,7 +85,7 @@
           flex: 1;
           border-bottom: 2px solid transparent;
           &.is-active {
-            border-color: var(--color-primored);
+            border-color: var(--primo-color-primored);
           }
 
           button {

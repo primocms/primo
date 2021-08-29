@@ -203,7 +203,7 @@
 <style lang="postcss">
   main {
     padding: 0.5rem;
-    background: var(--color-black);
+    background: var(--primo-color-black);
     .breadcrumbs {
       display: flex;
       font-size: 0.875rem;
@@ -242,7 +242,7 @@
 
         button {
           background: var(--color-gray-9);
-          color: var(--color-white);
+          color: var(--primo-color-white);
           width: 100%;
           height: 100%;
           display: flex;
@@ -251,7 +251,7 @@
           align-items: center;
           transition: var(--transition-colors);
           &:hover {
-            background: var(--color-primored);
+            background: var(--primo-color-primored);
           }
           svg {
             width: 1rem;

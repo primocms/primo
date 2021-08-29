@@ -210,7 +210,7 @@
   }
 
   .menu-container:after {
-    background: var(--color-black-opaque);
+    background: var(--primo-color-black-opaque);
     content: '';
     z-index: -1;
     height: 100%;
@@ -225,7 +225,7 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     border-radius: 2px;
     box-shadow: var(--box-shadow-xl);
     border-top-left-radius: 21px;

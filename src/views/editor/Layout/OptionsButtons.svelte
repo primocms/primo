@@ -61,9 +61,9 @@
   }
 
   .buttons-container {
-    background: var(--color-black);
-    border-top: 1px solid var(--color-codeblack);
-    border-bottom: 1px solid var(--color-codeblack);
+    background: var(--primo-color-black);
+    border-top: 1px solid var(--primo-color-codeblack);
+    border-bottom: 1px solid var(--primo-color-codeblack);
 
     & > div {
       max-width: var(--max-width-container);
@@ -102,10 +102,10 @@
           transition: var(--transition-colors);
 
           &.is-primored {
-            background: var(--color-primored);
+            background: var(--primo-color-primored);
 
             &:hover {
-              background: var(--color-primored-dark);
+              background: var(--primo-color-primored-dark);
             }
           }
 
@@ -115,7 +115,7 @@
             border: 1px solid var(--color-gray-8);
 
             &:hover {
-              background: var(--color-primored-dark);
+              background: var(--primo-color-primored-dark);
             }
           }
 

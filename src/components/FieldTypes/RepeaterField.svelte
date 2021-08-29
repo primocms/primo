@@ -139,7 +139,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    border: 1px solid var(--color-primored);
+    border: 1px solid var(--primo-color-primored);
     border-radius: 1px;
     min-width: 10rem;
 
@@ -162,14 +162,14 @@
           outline: 0;
         }
         &:hover {
-          color: var(--color-primored);
+          color: var(--primo-color-primored);
         }
         &:last-child {
           margin-left: 0.5rem;
           color: var(--color-gray-5);
 
           &:hover {
-            color: var(--color-primored);
+            color: var(--primo-color-primored);
           }
         }
       }
@@ -184,14 +184,14 @@
   .field-button {
     width: 100%;
     background: var(--color-gray-8);
-    border: 1px solid var(--color-primored);
+    border: 1px solid var(--primo-color-primored);
     color: var(--color-gray-3);
     padding: 0.5rem 0;
     border-radius: 1px;
     transition: background 0.1s, color 0.1s;
 
     &:hover {
-      background: var(--color-primored);
+      background: var(--primo-color-primored);
     }
 
     /* &[disabled] {

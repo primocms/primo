@@ -18,7 +18,18 @@ export function getAllFields(componentFields = [], exclude = () => true) {
     if (field.type === 'link') {
       return setLinkActive(field)
     } else if (field.type === 'repeater') {
-      return field // TODO
+      return {
+        ...field,
+        value: field.value.map(item => {
+          // TODO
+          // loop through keys, 
+          // check for url & active properties
+          // const active = getActiveLink(item.link)
+          return {
+            ...item
+          }
+        })
+      } 
     } else if (field.type === 'group') {
       return field // TODO
     } else return field

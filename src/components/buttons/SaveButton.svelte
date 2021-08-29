@@ -26,15 +26,15 @@
 
 <style lang="postcss">
   button {
-    background: var(--color-primored);
-    color: var(--color-white);
+    background: var(--primo-color-primored);
+    color: var(--primo-color-white);
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius-1);
     font-weight: 600;
     transition: background 0.1s, color 0.1s;
 
     &:hover {
-      background: var(--color-primored-dark);
+      background: var(--primo-color-primored-dark);
     }
 
     &.disabled {

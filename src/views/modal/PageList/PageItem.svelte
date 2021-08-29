@@ -131,7 +131,7 @@
 
     .page-info {
       color: var(--color-gray-2);
-      background: var(--color-codeblack);
+      background: var(--primo-color-codeblack);
       width: 100%;
       display: flex;
       justify-content: space-between;
@@ -164,7 +164,7 @@
           transition: var(--transition-colors);
 
           &:hover {
-            color: var(--color-primored);
+            color: var(--primo-color-primored);
           }
 
           &:focus {
@@ -190,7 +190,7 @@
         top: 0;
         left: 0;
         right: 0;
-        background: var(--color-white);
+        background: var(--primo-color-white);
         display: block;
         width: 100%;
         overflow: hidden;

@@ -123,8 +123,8 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-gray-9);
-    background: var(--color-codeblack);
-    color: var(--color-white);
+    background: var(--primo-color-codeblack);
+    color: var(--primo-color-white);
     border-radius: var(--border-radius-1);
 
     header {
@@ -173,7 +173,7 @@
         justify-content: flex-end;
 
         button {
-          background: var(--color-codeblack);
+          background: var(--primo-color-codeblack);
           display: flex;
           align-items: center;
           padding: 8px;
@@ -185,7 +185,7 @@
           }
 
           &.highlight {
-            background: var(--color-primored);
+            background: var(--primo-color-primored);
           }
 
           &:hover {

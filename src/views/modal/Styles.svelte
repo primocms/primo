@@ -145,7 +145,7 @@
 <style lang="postcss">
   main {
     padding: 0 0.5rem;
-    background: var(--color-black);
+    background: var(--primo-color-black);
     height: 100%;
     display: flex;
     flex-direction: column;

@@ -85,7 +85,6 @@
           const pageExists =
             !!find($pages, ['id', linkPage]) ||
             !!find($pages, ['id', linkSite]);
-          console.log({ $pages, link, pageExists, linkSite, linkPage });
           if (!pageExists) {
             openLinkInNewWindow(link);
           } else {
@@ -206,7 +205,7 @@
     align-items: center;
     justify-content: center;
 
-    --Spinner-color: var(--color-primored);
+    --Spinner-color: var(--primo-color-primored);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   .primo-page {

@@ -181,14 +181,14 @@
 
   .bubble-menu {
     background-color: var(--color-gray-9);
-    color: var(--color-white);
+    color: var(--primo-color-white);
     border-bottom-width: 2px;
-    border-color: var(--color-primored);
+    border-color: var(--primo-color-primored);
   }
   .floating-menu {
     transform: translateY(-0.5rem);
     color: var(--color-gray-8);
-    background-color: var(--color-white);
+    background-color: var(--primo-color-white);
   }
 
 </style>

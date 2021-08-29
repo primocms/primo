@@ -39,7 +39,7 @@
 
       &:focus,
       &.active {
-        text-decoration: underline var(--color-primored);
+        text-decoration: underline var(--primo-color-primored);
         box-shadow: var(--ring);
         z-index: 1;
       }

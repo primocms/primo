@@ -63,7 +63,7 @@
         width: 100%;
         background: var(--color-gray-8);
         color: var(--color-gray-1);
-        outline-color: var(--color-primored);
+        outline-color: var(--primo-color-primored);
         font-weight: 500;
         border-radius: 0.125rem;
         padding: 0.5rem 0.75rem;

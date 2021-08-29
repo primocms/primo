@@ -119,7 +119,7 @@
     color: white;
 
     &:hover {
-      color: var(--color-primored);
+      color: var(--primo-color-primored);
     }
   }
 

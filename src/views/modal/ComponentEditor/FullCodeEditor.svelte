@@ -210,7 +210,7 @@
   }
 
   .tabs button {
-    color: var(--color-white);
+    color: var(--primo-color-white);
     width: 100%;
     text-align: center;
     padding: 8px 0;
@@ -244,8 +244,8 @@
   }
 
   .tabs ul li.is-active {
-    background: var(--color-codeblack);
-    color: var(--color-white);
+    background: var(--primo-color-codeblack);
+    color: var(--primo-color-white);
   }
 
 </style>

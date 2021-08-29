@@ -23,7 +23,7 @@
 
 <style lang="postcss">
   button {
-    background: var(--color-codeblack) !important;
+    background: var(--primo-color-codeblack) !important;
     box-shadow: var(--ring) !important;
     color: var(--color-gray-1) !important;
     font-size: var(--font-size-1) !important;
@@ -37,7 +37,7 @@
       margin-bottom: 0.75rem !important;
     }
     &:hover {
-      background: var(--color-primored) !important;
+      background: var(--primo-color-primored) !important;
     }
   }
 

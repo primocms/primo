@@ -585,7 +585,7 @@
 
 <style lang="postcss">
   main {
-    background: var(--color-black);
+    background: var(--primo-color-black);
     padding: 0 0.5rem;
     flex: 1;
 
@@ -644,17 +644,17 @@
     font-size: var(--font-size-2);
     border-radius: var(--border-radius);
     transition: var(--transition-colors);
-    border: 1px solid var(--color-primored);
-    color: var(--color-primored);
-    outline-color: var(--color-primored);
+    border: 1px solid var(--primo-color-primored);
+    color: var(--primo-color-primored);
+    outline-color: var(--primo-color-primored);
 
     i {
       margin-right: 4px;
     }
   }
   button.convert:hover {
-    background: var(--color-primored-dark);
-    color: var(--color-white);
+    background: var(--primo-color-primored-dark);
+    color: var(--primo-color-white);
   }
   .field-item {
     padding: 16px;
@@ -688,7 +688,7 @@
     margin-left: 1.5rem;
     margin-top: 8px;
     font-size: var(--font-size-2);
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     color: var(--color-gray-2);
     transition: var(--transition-colors);
     outline: 0;

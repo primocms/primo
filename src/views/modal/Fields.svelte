@@ -492,7 +492,7 @@
     flex-direction: column;
     padding: 0.5rem;
     color: var(--color-gray-2);
-    background: var(--color-black);
+    background: var(--primo-color-black);
     overflow: scroll;
 
     .empty-description {

@@ -123,14 +123,14 @@
 
 <style>
   :global(:root) {
-    --color-primored: rgb(248, 68, 73);
-    --color-primored-dark: rgb(186, 37, 42);
-    --color-white: white;
-    --color-codeblack: rgb(30, 30, 30);
-    --color-codeblack-opaque: rgba(30, 30, 30, 0.9);
+    --primo-color-primored: rgb(248, 68, 73);
+    --primo-color-primored-dark: rgb(186, 37, 42);
+    --primo-color-white: white;
+    --primo-color-codeblack: rgb(30, 30, 30);
+    --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
-    --color-black: rgb(17, 17, 17);
-    --color-black-opaque: rgba(17, 17, 17, 0.9);
+    --primo-color-black: rgb(17, 17, 17);
+    --primo-color-black-opaque: rgba(17, 17, 17, 0.9);
 
     --color-gray-1: rgb(245, 245, 245);
     --color-gray-2: rgb(229, 229, 229);
@@ -157,7 +157,7 @@
     --padding-container: 15px;
     --max-width-container: 1900px;
 
-    --ring: 0px 0px 0px 2px var(--color-primored);
+    --ring: 0px 0px 0px 2px var(--primo-color-primored);
   }
 
 </style>

@@ -218,7 +218,7 @@
 
 <style lang="postcss">
   main {
-    background: var(--color-black);
+    background: var(--primo-color-black);
     padding: 0 0.5rem;
 
     ul {
@@ -237,14 +237,14 @@
   }
   .library-buttons {
     color: var(--color-gray-1);
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     display: grid;
     grid-template-columns: 1fr 1fr;
     border-radius: var(--border-radius-1);
     overflow: hidden;
 
     button {
-      background: var(--color-codeblack);
+      background: var(--primo-color-codeblack);
       transition: var(--transition-colors);
       padding: 3rem 0;
       border-bottom: 1px solid var(--color-gray-8);
@@ -254,7 +254,7 @@
       align-items: center;
 
       &:hover {
-        background: var(--color-primored);
+        background: var(--primo-color-primored);
       }
 
       &:focus {

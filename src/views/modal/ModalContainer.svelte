@@ -52,7 +52,7 @@
   .modal-background {
     position: absolute;
     inset: 0;
-    background: var(--color-codeblack-opaque);
+    background: var(--primo-color-codeblack-opaque);
 
     &.hovered {
       opacity: 0.9;

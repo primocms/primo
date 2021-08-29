@@ -165,8 +165,8 @@
     justify-content: center;
     align-items: center;
     height: 2rem;
-    background-color: var(--color-primored);
-    color: var(--color-white);
+    background-color: var(--primo-color-primored);
+    color: var(--primo-color-white);
     font-size: var(--font-size-2);
     font-weight: 500;
     transition: background-color 0.1s, color 0.1s;
@@ -180,7 +180,7 @@
     }
 
     &:hover {
-      background-color: var(--color-primored-dark);
+      background-color: var(--primo-color-primored-dark);
     }
 
     &.top-right:first-child {

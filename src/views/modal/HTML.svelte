@@ -89,7 +89,7 @@
 
 <style lang="postcss">
   main {
-    background: var(--color-black);
+    background: var(--primo-color-black);
     display: flex;
     flex-direction: column;
     padding: 0.5rem;

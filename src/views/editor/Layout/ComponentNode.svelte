@@ -122,7 +122,7 @@
   pre {
     margin: 0;
     padding: 1rem;
-    background: var(--color-black);
+    background: var(--primo-color-black);
     color: var(--color-gray-3);
     border: 1px solid var(--color-gray-6);
   }

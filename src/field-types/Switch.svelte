@@ -43,8 +43,8 @@
         transition: transform 0.1s;
 
         input {
-          color: var(--color-primored);
-          background: var(--color-white);
+          color: var(--primo-color-primored);
+          background: var(--primo-color-white);
           outline: 0;
           position: absolute;
           top: -4px;

@@ -104,7 +104,7 @@
   let toolbar;
   let page;
   $: if (toolbar && page) {
-    page.style.borderTop = `${toolbar.clientHeight}px solid var(--color-black)`;
+    page.style.borderTop = `${toolbar.clientHeight}px solid var(--primo-color-black)`;
   }
 
 </script>

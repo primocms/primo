@@ -23,8 +23,8 @@
 <style lang="postcss">
   .primary-button {
     width: 100%;
-    background: var(--PrimaryButton-bg, var(--color-primored));
-    color: var(--PrimaryButton-color, var(--color-white));
+    background: var(--PrimaryButton-bg, var(--primo-color-primored));
+    color: var(--PrimaryButton-color, var(--primo-color-white));
     padding: 0.5rem;
     margin-top: var(--PrimaryButton-mt, 0);
     margin-bottom: var(--PrimaryButton-mb, 0);
@@ -38,8 +38,11 @@
     transition: color 0.1s, background-color 0.1s;
 
     &:hover {
-      background: var(--PrimaryButton-bg-hover, var(--color-primored-dark));
-      color: var(--PrimaryButton-color-hover, var(--color-white));
+      background: var(
+        --PrimaryButton-bg-hover,
+        var(--primo-color-primored-dark)
+      );
+      color: var(--PrimaryButton-color-hover, var(--primo-color-white));
     }
 
     &[disabled] {

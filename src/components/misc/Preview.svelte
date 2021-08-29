@@ -58,7 +58,7 @@
     overflow: hidden;
 
     .preview-container {
-      background: var(--color-white);
+      background: var(--primo-color-white);
       border: 4px solid var(--color-gray-8);
       transition: var(--transition-colors);
       overflow: hidden;
@@ -67,7 +67,7 @@
       flex: 1;
 
       iframe {
-        background: var(--color-white);
+        background: var(--primo-color-white);
         border: 0;
         transition: opacity 0.1s;
         height: 100%;

@@ -23,13 +23,13 @@
     }
 
     &:hover {
-      background: var(--color-primored);
+      background: var(--primo-color-primored);
       color: var(--color-gray-1);
     }
 
     &.active {
-      background: var(--color-primored);
-      color: var(--color-white);
+      background: var(--primo-color-primored);
+      color: var(--primo-color-white);
     }
   }
 

@@ -48,7 +48,7 @@
     padding: 0.35rem;
     display: block;
     height: 100%;
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     transition: background 0.1s;
     width: 2.5rem;
     background-size: 2rem;
@@ -75,7 +75,7 @@
       pointer-events: none;
       left: 21px;
 
-      border: 7px solid var(--color-codeblack-opaque);
+      border: 7px solid var(--primo-color-codeblack-opaque);
       border-top-color: transparent;
       border-left-color: transparent;
       border-right-color: transparent;
@@ -84,7 +84,7 @@
   }
 
   ul.dropdown {
-    background-color: var(--color-codeblack-opaque);
+    background-color: var(--primo-color-codeblack-opaque);
     backdrop-filter: blur(10px);
     width: 20rem;
     max-height: calc(100vh - 5rem);

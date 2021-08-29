@@ -72,11 +72,11 @@
     opacity: 0;
   }
   .primo {
-    background: var(--color-primored);
+    background: var(--primo-color-primored);
     color: var(--color-gray-1);
 
     &:hover {
-      background: var(--color-primored-dark);
+      background: var(--primo-color-primored-dark);
     }
   }
 
@@ -108,7 +108,7 @@
     pointer-events: none;
     cursor: default;
     padding: 0;
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     box-shadow: var(--box-shadow);
     display: flex;
     z-index: 999;
@@ -118,7 +118,7 @@
   .tooltip.sub-buttons:before,
   .tooltip.sub-buttons:after {
     left: 5%;
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     border-top-color: transparent;
     border-left-color: transparent;
     border-right-color: transparent;
@@ -185,8 +185,8 @@
   }
 
   button {
-    background: var(--color-codeblack);
-    color: var(--color-white);
+    background: var(--primo-color-codeblack);
+    color: var(--primo-color-white);
     font-weight: 700;
     padding: 10px 15px;
     transition: var(--transition-colors);
@@ -227,7 +227,7 @@
 
   button[disabled] {
     color: var(--color-gray-7);
-    background: var(--color-codeblack);
+    background: var(--primo-color-codeblack);
     cursor: default;
     transition: var(--transition-colors);
   }
@@ -239,19 +239,19 @@
   button.inverted {
     border: 0;
     background: var(--color-gray-3);
-    color: var(--color-codeblack);
+    color: var(--primo-color-codeblack);
   }
 
   button.inverted:hover,
   button.inverted:focus {
     background: var(--color-gray-8);
-    color: var(--color-white);
+    color: var(--primo-color-white);
     transition: var(--transition-colors);
   }
 
   button.primored {
     border: 0;
-    background: var(--color-primored);
+    background: var(--primo-color-primored);
     color: var(--color-gray-1);
   }
 
