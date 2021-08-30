@@ -12,12 +12,12 @@ export async function processCode({ code, data = {}, buildStatic = true, format 
   const res = await processors.html({
     code, data: {
       ...data,
-      ... includePrimoData ? {} : {
+      ... includePrimoData ? {
         primo: {
           page: get(activePage),
           site: get(site),
         }
-      }
+      } : {}
     }, buildStatic, format
   })
   return res
