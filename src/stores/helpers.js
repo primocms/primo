@@ -73,7 +73,7 @@ export function getTailwindConfig(asString = false) {
 }
 
 
-export async function buildStaticPage({ page, site }) {
+export async function buildStaticPage({ page, site, separateModules = false }) {
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       const fields = _.unionBy(page.fields, site.fields, "key");
@@ -131,7 +131,7 @@ export async function buildStaticPage({ page, site }) {
             js 
           },
           data,
-          format: 'iife'
+          format: 'esm'
         });
 
         return {
@@ -162,26 +162,41 @@ export async function buildStaticPage({ page, site }) {
     <head>${head.html || ''}</head>
     <body class="primo-page">
       ${blocks.map(block => `
+        ${block.css ? `<style>${block.css}</style>` : ``}
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
           ${block.html || ''}
           ${
-            block.js ? 
-            `<script type="module">
+            block.js && separateModules ? 
+            `<script type="module" async>
+              import App from './${block.id}.js';
+              new App({
+                target: document.querySelector('#block-${block.id}'),
+                hydrate: true
+              });
+            </script>`
+          : (block.js ? 
+            `<script type="module" async>
               const App = ${block.js}
               new App({
                 target: document.querySelector('#block-${block.id}'),
                 hydrate: true
-              })
-            </script>` 
-          : ``}
+              });
+          </script>` : ``)}
         </div>
-        ${block.css ? `<style>${block.css}</style>` : ``}
       `).join('')}
       ${below.html || ''}
     </body>
   </html>
   `
-  return final
+  const modules = blocks.filter(block => block.js).map(block => ({
+    id: block.id,
+    content: block.js
+  }))
+
+  return separateModules ? {
+    html: final,
+    modules
+  } : final
 }
 
 
