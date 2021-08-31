@@ -1,5 +1,6 @@
 <script>
-  import { isEqual, differenceWith } from 'lodash';
+  import _, { isEqual, differenceWith } from 'lodash';
+  import * as idb from 'idb-keyval';
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { getAllFields } from '../../../stores/helpers';
@@ -32,9 +33,10 @@
       css = rawCode.css;
       js = rawCode.js;
       const data = convertFieldsToData(getAllFields(block.value.fields));
+      const dataWithFixedImages = await replaceImagesWithBase64(data);
       const res = await processCode({
         code: rawCode,
-        data,
+        data: dataWithFixedImages,
         buildStatic: false,
       });
       if (res.error) {
@@ -48,7 +50,7 @@
         const { default: App } = await import(url /* @vite-ignore */);
         component = new App({
           target: node,
-          props: data,
+          props: dataWithFixedImages,
         });
       }
     }
@@ -72,8 +74,93 @@
       cachedPageFields = pageFields;
       cachedSiteFields = siteFields;
       const data = convertFieldsToData(getAllFields(blockFields));
-      component.$set(data);
+      const dataWithFixedImages = await replaceImagesWithBase64(data);
+      console.log({ dataWithFixedImages });
+      component.$set(dataWithFixedImages);
     }
+  }
+
+  async function replaceImagesWithBase64(data) {
+    // Modify final request by replacing all img url's beginning with 'primo:' -
+    // Download file from supabase, then convert to Base64 and replace url value
+    // let finalRequest = buildFinalRequest()
+    const modifiedData = _.cloneDeep(data);
+    await Promise.all(
+      Object.entries(data).map(async (field) => {
+        const [key, val] = field;
+        if (val.url && val.url.startsWith('primo:')) {
+          // Image type
+          const b64 = await fetchAndConvert(val.url);
+          console.log('replacing');
+          modifiedData[key] = {
+            ...modifiedData[key],
+            url: b64,
+            src: b64,
+          };
+        } else if (
+          typeof val === 'object' &&
+          !Array.isArray(val) &&
+          key !== 'page' &&
+          key !== 'site'
+        ) {
+          // Group type
+          await Promise.all(
+            Object.entries(val).map(async (subfield) => {
+              const [subfieldKey, subfieldVal] = subfield;
+              if (
+                subfieldVal &&
+                subfieldVal.url &&
+                subfieldVal.url.startsWith('primo:')
+              ) {
+                // Image type
+                const b64 = await fetchAndConvert(subfieldVal.url);
+                modifiedData[key] = {
+                  ...modifiedData[key],
+                  [subfieldKey]: {
+                    ...subfieldVal,
+                    url: b64,
+                    src: b64,
+                  },
+                };
+              }
+            })
+          );
+        } else if (Array.isArray(val)) {
+          // Repeater type
+          let newRepeaters = [];
+          await Promise.all(
+            val.map(async (subfield) => {
+              await Promise.all(
+                Object.entries(subfield).map(async (repeaterItem) => {
+                  const [repeaterKey, repeaterVal] = repeaterItem;
+                  if (repeaterVal.url && repeaterVal.url.startsWith('primo:')) {
+                    // Image type
+                    const b64 = await fetchAndConvert(repeaterVal.url);
+                    subfield = {
+                      ...subfield,
+                      [repeaterKey]: {
+                        ...repeaterVal,
+                        url: b64,
+                        src: b64,
+                      },
+                    };
+                  }
+                })
+              );
+              newRepeaters = [...newRepeaters, subfield];
+            })
+          );
+          modifiedData[key] = newRepeaters;
+        }
+      })
+    );
+    return modifiedData;
+  }
+
+  async function fetchAndConvert(url) {
+    const imageKey = url.slice(12); // remove primo:sites/
+    const cached = await idb.get(imageKey);
+    return cached || url;
   }
 
   let node;
