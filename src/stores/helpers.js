@@ -137,6 +137,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
         return {
           ...svelte,
           type: 'component',
+          symbol: symbol.id,
           id: block.id
         }
 
@@ -168,7 +169,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
           ${
             block.js && separateModules ? 
             `<script type="module" async>
-              import App from './${block.id}.js';
+              import App from './${block.symbol}.js';
               new App({
                 target: document.querySelector('#block-${block.id}'),
                 hydrate: true
@@ -188,10 +189,12 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     </body>
   </html>
   `
-  const modules = blocks.filter(block => block.js).map(block => ({
-    id: block.id,
-    content: block.js
-  }))
+  const modules = _.uniqBy(
+    blocks.filter(block => block.js).map(block => ({
+      symbol: block.symbol,
+      content: block.js
+    })), 'symbol'
+  )
 
   return separateModules ? {
     html: final,
