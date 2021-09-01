@@ -7,7 +7,7 @@
   export let preview;
   export let preventClicks = false;
 
-  let height;
+  export let height;
 
   let container;
   let iframe;
