@@ -12,9 +12,6 @@
 
   export let block;
 
-  let mounted = false;
-  onMount(() => (mounted = true));
-
   let html = '';
   let css = '';
   let js = '';
@@ -166,8 +163,10 @@
   let node;
   let component;
 
+  let mounted;
   // Fade in component on mount
   const observer = new MutationObserver(() => {
+    mounted = true;
     dispatch('mount');
   });
 
@@ -178,6 +177,7 @@
   }
 
   $: if (error) {
+    mounted = true;
     dispatch('mount');
   }
 
@@ -186,6 +186,7 @@
 {#if !error}
   <div
     bind:this={node}
+    class:fadein={mounted}
     class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
     id="component-{block.id}"
     transition:fade={{ duration: 100 }} />
@@ -204,6 +205,7 @@
     outline-color: transparent;
     width: 100%;
     min-height: 2rem;
+    opacity: 0;
   }
 
   pre {
@@ -212,6 +214,11 @@
     background: var(--primo-color-black);
     color: var(--color-gray-3);
     border: 1px solid var(--color-gray-6);
+  }
+
+  .fadein {
+    transition: opacity 0.1s;
+    opacity: 1;
   }
 
 </style>

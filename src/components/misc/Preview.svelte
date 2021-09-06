@@ -1,13 +1,11 @@
 <script>
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { pagePreview } from './misc';
-  import { onMobile } from '../../stores/app/misc';
 
   export let preview;
   export let preventClicks = false;
 
-  export let height;
+  let height;
 
   let container;
   let iframe;

@@ -149,8 +149,8 @@
   }
 
   // Fade in page when all components mounted
-  let pageMounted = false;
-  let componentsMounted = 0;
+  let pageMounted = true;
+  let componentsMounted = 1;
   $: nComponents = $content.filter(
     (block) => block.type === 'component'
   ).length;
@@ -164,8 +164,10 @@
   // reset pageMounted on page change
   $: if ($router.from !== $router.url) {
     pageMounted = false;
-    componentsMounted = 0;
+    componentsMounted = 1;
   }
+
+  $: blocksToRender = $content.slice(0, componentsMounted);
 
 </script>
 
@@ -180,7 +182,7 @@
 {/if}
 <div bind:this={element} class="primo-page" class:fadein={pageMounted}>
   {#if pageExists}
-    {#each $content as block, i (block.id)}
+    {#each blocksToRender as block, i (block.id)}
       {#if block.symbolID}
         <Block
           on:mount={() => componentsMounted++}
