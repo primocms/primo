@@ -41,8 +41,6 @@
   let id = page.id || '';
   $: disableSave = !title || !id;
 
-  let height;
-
 </script>
 
 <div class="page-item">
@@ -76,7 +74,7 @@
       </div>
     {/if}
   </div>
-  <div class="page-body" style="height:{height}px">
+  <div class="page-body">
     {#if editingPage}
       <form
         on:submit|preventDefault={() => {
@@ -105,7 +103,7 @@
     {:else if displayOnly}
       <div class="page-link">
         <div class="page-container">
-          <Preview bind:height {preview} preventClicks={true} />
+          <Preview {preview} preventClicks={true} />
         </div>
       </div>
     {:else}
@@ -117,7 +115,7 @@
         class:active
         aria-label="Go to /{page.id}">
         <div class="page-container">
-          <Preview bind:height {preview} preventClicks={true} />
+          <Preview {preview} preventClicks={true} />
         </div>
       </a>
     {/if}
@@ -184,8 +182,8 @@
     }
 
     .page-body {
-      /* height: 0;
-      padding-top: calc(100% - 37px); 
+      height: 0;
+      padding-top: calc(100% - 37px);
       /* include header in square */
       position: relative;
       .page-link {

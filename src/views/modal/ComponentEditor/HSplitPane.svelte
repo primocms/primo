@@ -261,7 +261,7 @@
     width: var(--left-panel-size);
     min-width: var(--min-left-panel-size);
     height: 100%;
-    overflow: scroll;
+    /* overflow: scroll; */
   }
   div.center {
     width: var(--center-panel-size);

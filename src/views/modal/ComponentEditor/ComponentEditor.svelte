@@ -586,8 +586,10 @@
 <style lang="postcss">
   main {
     background: var(--primo-color-black);
-    padding: 0 0.5rem;
+    padding: 0.5rem;
+    padding-top: 0;
     flex: 1;
+    overflow: hidden;
 
     --PrimaryButton-bg: var(--color-gray-8);
     --PrimaryButton-bg-hover: var(--color-gray-9);

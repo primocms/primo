@@ -238,9 +238,9 @@
       }
 
       li.create-page {
-        box-shadow: var(--ring);
-
         button {
+          box-shadow: var(--ring);
+          border-radius: var(--border-radius-1);
           background: var(--color-gray-9);
           color: var(--primo-color-white);
           width: 100%;
