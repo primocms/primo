@@ -205,6 +205,23 @@
     saveRawValue('fields', fields);
   }
 
+  // function updateSubfield(parent, self) {
+  //   console.log({ parent, self });
+  //   fields = fields.map((field) =>
+  //     field.id !== parent.id
+  //       ? field
+  //       : {
+  //           ...field,
+  //           fields: field.fields.map((subfield) =>
+  //             subfield.id === self.id ? self : subfield
+  //           ),
+  //         }
+  //   );
+  //   console.log({ localComponent });
+  //   refreshFields();
+  //   saveRawValue('fields', fields);
+  // }
+
   function deleteSubfield(fieldId, subfieldId) {
     fields = fields.map((field) =>
       field.id !== fieldId
@@ -469,6 +486,15 @@
                             <option value={field.id}>{field.label}</option>
                           {/each}
                         </select>
+                        <!-- <select
+                          value={subfield.type}
+                          on:change={({ target }) => updateSubfield( field, { ...subfield, type: target.value } )}
+                          slot="type"
+                          {disabled}>
+                          {#each $fieldTypes as field}
+                            <option value={field.id}>{field.label}</option>
+                          {/each}
+                        </select> -->
                         <textarea
                           slot="main"
                           class="info"

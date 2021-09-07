@@ -37,23 +37,41 @@
 
   function hydrateInstance(block, symbols) {
     const symbol = find(symbols, ['id', block.symbolID]);
-    // overwrite the symbol field values
     return {
       ...block,
       value: {
+        // copy the symbol's values (html,css,js,fields)
         ...symbol.value,
-        fields: symbol.value.fields.map((field) => {
-          const originalField = find(block.value.fields, ['id', field.id]) ||
-            find(symbol.value.fields, ['id', field.id]) || { value: '' };
+        // but overwrite the fields with the block's own field values (i.e. field data)
+        fields: symbol.value.fields.map((symbolField) => {
+          const originalField = find(block.value.fields, [
+            'id',
+            symbolField.id,
+          ]) ||
+            find(symbol.value.fields, ['id', symbolField.id]) || { value: '' };
           return {
-            ...field,
-            fields:
-              field.type === 'repeater' ? field.fields : originalField.fields,
+            ...symbolField,
+            fields: hydrateChildFields(originalField, symbolField),
             value: originalField.value,
           };
         }),
       },
     };
+
+    function hydrateChildFields(originalField, symbolField) {
+      if (symbolField.type === 'repeater') {
+        return symbolField.fields;
+      } else if (symbolField.type === 'group') {
+        return symbolField.fields.map((symbolChildField) => ({
+          ...symbolChildField,
+          value:
+            find(originalField.fields, ['id', symbolChildField.id])?.value ||
+            symbolChildField.value,
+        }));
+      } else {
+        return originalField.fields;
+      }
+    }
   }
 
   // Disable the links on the page that don't navigate to a page within primo

@@ -27,7 +27,7 @@
     on:input={parseContent} />
 </label>
 
-<style>
+<style lang="postcss">
   label {
     display: flex;
     flex-direction: column;
@@ -39,10 +39,14 @@
     }
 
     textarea {
-      outline-color: rgb(248, 68, 73);
+      outline: 0 !important;
       background: var(--color-gray-8);
       padding: 0.5rem;
       border: 0;
+
+      &:focus {
+        box-shadow: var(--ring);
+      }
     }
   }
 

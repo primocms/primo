@@ -72,7 +72,6 @@
       cachedSiteFields = siteFields;
       const data = convertFieldsToData(getAllFields(blockFields));
       const dataWithFixedImages = await replaceImagesWithBase64(data);
-      console.log({ dataWithFixedImages });
       component.$set(dataWithFixedImages);
     }
   }
