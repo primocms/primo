@@ -2,8 +2,6 @@
 
 import {writable,get} from 'svelte/store'
 import Mousetrap from 'mousetrap'
-// import {location,push} from 'svelte-spa-router'
-import {router} from 'tinro'
 
 const initialState = {
   type: null,

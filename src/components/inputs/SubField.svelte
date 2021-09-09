@@ -64,10 +64,13 @@
   }
 
   :global(.input-group > div input) {
-    @apply flex-1 outline-none border-b border-gray-200 transition-colors duration-200;
+    flex: 1;
+    outlin: 0;
+    border-bottom: 1px solid rgb(229, 229, 229);
+    transition: border-color 0.2s;
   }
   :global(.input-group > div input:focus) {
-    @apply border-primored;
+    border-color: var(----primo-color-primored);
   }
 
 </style>

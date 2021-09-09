@@ -9,6 +9,7 @@
   import { Editor, Extension } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
   import Highlight from '@tiptap/extension-highlight';
+  import Link from '@tiptap/extension-link';
 
   import BubbleMenu from '@tiptap/extension-bubble-menu';
   import Image from '@tiptap/extension-image';
@@ -53,12 +54,12 @@
         BubbleMenu.configure({
           element: bubbleMenu,
         }),
-        // Link,
+        Link,
         Highlight.configure({ multicolor: false }),
         FloatingMenu.configure({
           element: floatingMenu,
         }),
-        // KeyboardShortcuts,
+        KeyboardShortcuts,
         Image,
       ],
       content: block.value.html,
@@ -87,6 +88,7 @@
     setTimeout(() => {
       editor.chain().focus();
     }, 200);
+    dispatch('mount');
   });
 
   onDestroy(() => {

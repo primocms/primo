@@ -12,7 +12,7 @@
   import { defaultTabBinding } from '@codemirror/commands';
   import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
-  import emmetExt from './emmet-codemirror';
+  // import emmetExt from './emmet-codemirror';
   import extensions, { getLanguage } from './extensions';
   // import cssPeek from './css-peek';
 

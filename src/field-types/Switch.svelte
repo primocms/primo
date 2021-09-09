@@ -34,7 +34,6 @@
       }
 
       .switch-container {
-        @apply relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in;
         position: relative;
         display: inline-block;
         width: 3.5rem;

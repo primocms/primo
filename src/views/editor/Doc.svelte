@@ -23,7 +23,8 @@
     wrapInStyleTags,
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
-  import { router } from 'tinro';
+  // import { router } from 'tinro';
+  import { goto } from '$app/navigation';
 
   export let element;
 
@@ -76,6 +77,7 @@
 
   // Disable the links on the page that don't navigate to a page within primo
   async function disableLinks() {
+    if (!element) return;
     const { pathname, origin } = window.location;
     const [username, site] = pathname.split('/').slice(1);
     const homeUrl = `${origin}/${username}/${site}`;
@@ -87,7 +89,8 @@
           link.setAttribute('data-tinro-ignore', '');
           link.onclick = (e) => {
             e.preventDefault();
-            router.goto(homeUrl);
+            // router.goto(homeUrl);
+            goto(homeUrl);
           };
           return;
         }
@@ -109,9 +112,12 @@
             link.setAttribute('data-tinro-ignore', '');
             link.onclick = (e) => {
               e.preventDefault();
-              router.goto(
+              goto(
                 linkPage ? `${homeUrl}/${linkPage}` : `${homeUrl}/${linkSite}`
               );
+              // router.goto(
+              //   linkPage ? `${homeUrl}/${linkPage}` : `${homeUrl}/${linkSite}`
+              // );
             };
           }
         }
@@ -180,10 +186,10 @@
   }
 
   // reset pageMounted on page change
-  $: if ($router.from !== $router.url) {
-    pageMounted = false;
-    componentsMounted = 1;
-  }
+  // $: if ($router.from !== $router.url) {
+  //   pageMounted = false;
+  //   componentsMounted = 1;
+  // }
 
   $: blocksToRender = $content.slice(0, componentsMounted);
 
@@ -207,7 +213,7 @@
           block={hydrateInstance(block, $symbols, $pageFields, $siteFields)}
           {i} />
       {:else}
-        <Block {block} {i} />
+        <Block {block} {i} on:mount={() => componentsMounted++} />
       {/if}
     {/each}
   {/if}

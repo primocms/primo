@@ -78,3 +78,27 @@ export const pagePreview = `
     </style>
   </html>
 `
+
+
+export const currentPagePreview = `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script type="module">
+        window.addEventListener('message', ({data}) => {
+          document.querySelector('body').innerHTML = data.html
+        }, false)
+		  <\/script>
+    </head>
+    <body class="primo-page">
+    </body>
+    <style>
+        .primo-page {
+          /* height: 100vh;
+          overflow: hidden; */
+        }
+    </style>
+  </html>
+`

@@ -1,6 +1,5 @@
 <script>
   import { find, some, isEqual } from 'lodash';
-  import { router } from 'tinro';
   import Mousetrap from 'mousetrap';
 
   import { createEventDispatcher, onDestroy } from 'svelte';
@@ -28,6 +27,7 @@
   import { pages } from './stores/data/draft';
   import site from './stores/data/site';
   import { hydrateSite } from './stores/actions';
+  import { page as pageStore } from '$app/stores';
 
   export let data;
   export let libraries = [];
@@ -50,14 +50,10 @@
     dispatch('save', $site);
   }
 
-  $: $pageId = getPageId($router.path);
+  $: $pageId = getPageId($pageStore.path);
   function getPageId(path) {
-    const [user, site, root, child] = path.substr(1).split('/');
-    if (user === 'try') {
-      return root ? `${site}/${root}` : site || 'index';
-    } else {
-      return child ? `${root}/${child}` : root || 'index';
-    }
+    const [root, child] = path.substr(1).split('/');
+    return child ? `${root}/${child}` : root || 'index';
   }
 
   $: setPageContent($pageId, $pages);
@@ -158,6 +154,11 @@
     --max-width-container: 1900px;
 
     --ring: 0px 0px 0px 2px var(--primo-color-primored);
+  }
+
+  button,
+  a {
+    cursor: pointer;
   }
 
 </style>

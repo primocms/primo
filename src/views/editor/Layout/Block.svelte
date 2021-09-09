@@ -212,7 +212,7 @@
 </script>
 
 <div
-  in:fade={{ duration: 200 }}
+  in:fade={{ duration: 100 }}
   class="primo-block"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
@@ -276,6 +276,7 @@
   {:else if block.type === 'options'}
     <OptionsButtons
       deletable={!checkIfOnlyChild(block.id)}
+      on:mount
       on:select={({ detail: component }) => {
         selectOption('component', component);
       }}

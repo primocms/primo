@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { get } from 'svelte/store'
-import { router } from 'tinro'
+// import { router } from 'tinro'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
 import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
 import { getCombinedTailwindConfig } from './data/tailwind'
@@ -47,7 +47,8 @@ export function getAllFields(componentFields = [], exclude = () => true) {
   }
 
   function getActiveLink({ value }) {
-    const [currentPage] = get(router).path.split('/').slice(-1)
+    // const [currentPage] = get(router).path.split('/').slice(-1) ##
+    const currentPage = '' 
     return currentPage === value.url
   }
 }
@@ -162,7 +163,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
   <html lang="en">
     <head>${head.html || ''}</head>
     <body class="primo-page">
-      ${blocks.map(block => `
+      ${blocks.filter(Boolean).map(block => `
         ${block.css ? `<style>${block.css}</style>` : ``}
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
           ${block.html || ''}

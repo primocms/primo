@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import ComponentPicker from './ComponentPicker/ComponentPicker.svelte';
 
@@ -6,6 +7,10 @@
 
   export let deletable = true;
   let selectingComponent = false;
+
+  onMount(() => {
+    dispatch('mount');
+  });
 
 </script>
 

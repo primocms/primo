@@ -37,32 +37,41 @@
 
 <style>
   label {
-    @apply flex flex-col font-medium;
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
   }
 
   label.small {
-    @apply text-lg;
+    font-size: 1.125rem /* 18px */;
+    line-height: 1.75rem /* 28px */;
   }
   label.small span {
-    @apply mb-1 text-xs;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem /* 12px */;
+    line-height: 1rem /* 16px */;
   }
   label.small input {
-    @apply px-2 py-1;
+    padding: 0.25rem 0.5rem;
   }
 
   label.medium {
-    @apply text-xl;
+    font-size: 1.25rem /* 20px */;
+    line-height: 1.75rem /* 28px */;
   }
   label.medium span {
-    @apply mb-1 text-sm;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem /* 14px */;
+    line-height: 1.25rem /* 20px */;
   }
   label.medium input {
-    @apply p-2;
+    padding: 0.5rem;
   }
 
   input {
     outline-color: rgb(248, 68, 73);
-    @apply bg-gray-800 border-2 border-gray-900;
+    background-color: rgb(38, 38, 38);
+    border-bottom: 2px solid rgb(23, 23, 23);
   }
 
 </style>

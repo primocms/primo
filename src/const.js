@@ -277,7 +277,27 @@ export const createSite = (name) => ({
   pages: [createPage('index', 'Home Page')],
   // styles: DEFAULTS.styles,
   // wrapper: DEFAULTS.wrapper,
-  css: '',
+  css: `\
+.primo-page {
+  font-family: system-ui, sans-serif;
+  color: #222;
+}
+
+.primo-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  img {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    line-height: 1.5;
+  }
+}
+`,
   html: {
     head: '',
     below: ''

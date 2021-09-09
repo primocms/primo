@@ -4,7 +4,7 @@
 
   import { code, trash, edit } from '../../../components/svg/small';
 
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { content } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';

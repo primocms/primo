@@ -1,6 +1,7 @@
 <script>
   import { unsaved } from '../../stores/app/misc';
-  import { router } from 'tinro';
+  // import { router } from 'tinro'; ##
+  import { goto } from '$app/navigation';
   export let button;
 
   function warn() {
@@ -10,7 +11,8 @@
       );
     } else {
       if (button.onClick) button.onClick();
-      router.goto(button.href);
+      goto(button.href);
+      // router.goto(button.href); ##
     }
   }
 

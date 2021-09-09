@@ -47,6 +47,7 @@
     position: fixed;
     z-index: 9999;
     inset: 0;
+    top: 39px;
   }
 
   .modal-background {

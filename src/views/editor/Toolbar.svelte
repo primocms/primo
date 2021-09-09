@@ -102,6 +102,7 @@
     left: 0;
     right: 0;
     z-index: 999;
+    -webkit-app-region: drag;
   }
   .left {
     width: 100%;
@@ -205,7 +206,7 @@
     display: flex;
     margin: 0 auto;
     /* padding: 4px var(--padding-container); */
-    padding: 4px;
+    padding: 2px;
     max-width: var(--max-width-container);
   }
 

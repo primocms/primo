@@ -6,11 +6,13 @@
   import { PrimaryButton } from '../../../components/buttons';
   import Preview from '../../../components/misc/Preview.svelte';
 
-  import { router } from 'tinro';
+  // import { router } from 'tinro';
   import modal from '../../../stores/app/modal';
   import { buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
   import 'requestidlecallback-polyfill';
+  import { goto } from '$app/navigation';
+  import { page as pageStore } from '$app/stores';
 
   export let page;
   export let active = false;
@@ -24,16 +26,8 @@
   }
 
   function openPage(e) {
-    e.preventDefault();
     modal.hide();
-
-    const [_, user, repo] = $router.path.split('/');
-
-    if (user === 'try') {
-      router.goto(`/try/${page.id === 'index' ? '' : page.id}`);
-    } else {
-      router.goto(`/${user}/${repo}/${page.id === 'index' ? '' : page.id}`);
-    }
+    goto(`/${page.id === 'index' ? '' : page.id}`);
   }
 
   let editingPage = false;
@@ -108,9 +102,8 @@
       </div>
     {:else}
       <a
-        tinro-ignore
         class="page-link"
-        href="/{page.id}"
+        href={page.id}
         on:click={openPage}
         class:active
         aria-label="Go to /{page.id}">

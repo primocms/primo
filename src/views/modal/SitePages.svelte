@@ -230,7 +230,7 @@
       margin-bottom: 1rem;
 
       @media (max-width: 900px) {
-        grid-template-columns: repeat(2, 50%);
+        grid-template-columns: repeat(2, 1fr);
       }
 
       @media (max-width: 600px) {
@@ -239,6 +239,7 @@
 
       li.create-page {
         button {
+          padding: 3rem;
           box-shadow: var(--ring);
           border-radius: var(--border-radius-1);
           background: var(--color-gray-9);

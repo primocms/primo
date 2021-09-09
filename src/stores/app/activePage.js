@@ -79,7 +79,7 @@ export default derived(
     content, 
     css, 
     html, 
-    wrapper, 
+    // wrapper, 
     fields
   }
 })
