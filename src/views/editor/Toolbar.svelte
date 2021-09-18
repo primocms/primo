@@ -101,13 +101,14 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 999;
+    z-index: 999999999;
     -webkit-app-region: drag;
   }
   .left {
     width: 100%;
     display: flex;
     justify-content: flex-start;
+    margin-left: 70px;
   }
   .left .buttons {
     display: flex;

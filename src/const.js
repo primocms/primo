@@ -1,4 +1,10 @@
-import { createUniqueID } from './utilities'
+// import { createUniqueID } from './utilities'
+import {customAlphabet} from 'nanoid/non-secure'
+
+function createUniqueID(length = 5) {
+  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
+  return nanoid()
+}
 
 export const tailwindConfig = `{
   theme: {
@@ -272,7 +278,8 @@ export const createPage = (id = createUniqueID(), title) => ({
   fields: []
 })
 
-export const createSite = (name) => ({
+export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => ({
+  id,
   name,
   pages: [createPage('index', 'Home Page')],
   // styles: DEFAULTS.styles,
@@ -281,6 +288,7 @@ export const createSite = (name) => ({
 .primo-page {
   font-family: system-ui, sans-serif;
   color: #222;
+  background: white;
 }
 
 .primo-content {

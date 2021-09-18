@@ -125,6 +125,7 @@ export const pages = {
     } else {
       newPages = [...newPages, newpage]
     }
+    console.log({newPages})
     stores.pages.set(newPages)
   },
   delete: (pageId, path) => {

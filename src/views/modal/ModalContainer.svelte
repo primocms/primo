@@ -45,7 +45,7 @@
     justify-content: flex-start;
     overflow: hidden;
     position: fixed;
-    z-index: 9999;
+    z-index: 999999;
     inset: 0;
     top: 39px;
   }
@@ -83,7 +83,10 @@
     display: flex;
     flex-direction: column;
     border-radius: var(--border-radius-1);
-    overflow-y: scroll;
+    height: calc(
+      100vh - 6rem
+    ); /* to allow children to scroll on overflow (i.e. not grow) */
+    /* overflow-y: scroll; */ /* causes Styles to scroll by an inch */
   }
 
 </style>

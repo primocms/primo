@@ -60,7 +60,7 @@
     {/if}
   </button>
   {#if title && !$onMobile && !hideTooltip}
-    <div class="tooltip lg:block {tooltipVariants}">{title}</div>
+    <div class="tooltip {tooltipVariants}">{title}</div>
   {/if}
 </div>
 
@@ -111,7 +111,7 @@
     background: var(--primo-color-codeblack);
     box-shadow: var(--box-shadow);
     display: flex;
-    z-index: 999;
+    z-index: 999999999;
     left: 12rem;
   }
 
@@ -210,6 +210,10 @@
       &:hover i {
         transition: transform 0.2s;
         transform: scale(1.2);
+      }
+
+      &:focus {
+        background: var(--primo-color-primored-dark);
       }
     }
 

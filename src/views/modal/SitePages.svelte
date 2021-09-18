@@ -1,6 +1,7 @@
 <script>
   import _ from 'lodash';
   import { fade } from 'svelte/transition';
+  import { page } from '$app/stores';
   import { TextInput } from '../../components/inputs';
   import SplitButton from '../../ui/inputs/SplitButton.svelte';
   import { PrimaryButton } from '../../components/buttons';
@@ -15,7 +16,7 @@
   import { pages as actions } from '../../stores/actions';
   import { id } from '../../stores/app/activePage';
 
-  async function submitForm(form) {
+  async function finishCreatingPage(form) {
     let title = pageLabel;
     let url = pageURL;
     const isEmpty = pageBase === 'Empty';
@@ -23,6 +24,7 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
+    console.log({ currentPath });
     actions.add(newPage, currentPath);
     creatingPage = false;
     pageLabel = '';
@@ -84,21 +86,23 @@
     creatingPage = true;
   }
 
-  let currentPath = $id.includes('/') ? [$id.split('/')[0]] : []; // load child route
-  $: listedPages = getListedPages(currentPath, $pages);
-  $: breadcrumbs = getBreadCrumbs(currentPath, $pages);
+  let currentPath = $page.params.page ? [$page.params.page] : [];
+  $: [rootPageId, childPageId] = currentPath;
+  $: console.log({ currentPath });
+  $: console.log({ $page });
+  $: listedPages = getListedPages(childPageId, $pages);
+  $: breadcrumbs = getBreadCrumbs(childPageId, $pages);
 
-  function getListedPages(path, pages) {
-    const [rootPageId] = path;
-    if (rootPageId) {
+  function getListedPages(childPageId, pages) {
+    console.log({ childPageId, pages });
+    if (childPageId) {
       const rootPage = _.find(pages, ['id', rootPageId]);
       return rootPage.pages || [];
     } else return pages;
   }
 
-  function getBreadCrumbs(path, pages) {
-    const [rootPageId] = path;
-    if (rootPageId) {
+  function getBreadCrumbs(childPageId, pages) {
+    if (childPageId) {
       const rootPage = _.find(pages, ['id', rootPageId]);
       return [
         {
@@ -107,7 +111,7 @@
         },
         {
           label: rootPage.title,
-          path,
+          path: currentPath,
         },
       ];
     } else return null;
@@ -171,7 +175,9 @@
           <span>Create Page</span>
         </button>
       {:else}
-        <form on:submit|preventDefault={submitForm} in:fade={{ duration: 100 }}>
+        <form
+          on:submit|preventDefault={finishCreatingPage}
+          in:fade={{ duration: 100 }}>
           <TextInput
             bind:value={pageLabel}
             id="page-label"
@@ -186,7 +192,7 @@
             on:input={() => (pageLabelEdited = true)}
             placeholder="about-us" />
           <SplitButton
-            bind:selection={pageBase}
+            bind:selected={pageBase}
             buttons={[{ id: 'Empty' }, { id: 'Duplicate' }]} />
           <PrimaryButton
             disabled={disablePageCreation}
@@ -204,6 +210,7 @@
   main {
     padding: 0.5rem;
     background: var(--primo-color-black);
+    overflow-y: scroll;
     .breadcrumbs {
       display: flex;
       font-size: 0.875rem;

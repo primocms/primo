@@ -1,6 +1,6 @@
 import { get, writable, readable, derived } from 'svelte/store';
 import { createSite, createPage, DEFAULTS } from '../../const'
-import _ from 'lodash'
+import {isEqual} from 'lodash-es'
 
 export const id = writable('')
 export const name = writable('')
@@ -36,7 +36,7 @@ export const undone = writable([])
 site.subscribe(s => {
   const items = get(timeline)
   const latestUpdate = items[items.length-1]
-  if (!_.isEqual(s, latestUpdate)) {
+  if (!isEqual(s, latestUpdate)) {
     timeline.update(t => ([ ...t, s ]))
   } 
 })

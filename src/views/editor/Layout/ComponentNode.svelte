@@ -87,7 +87,6 @@
         if (val.url && val.url.startsWith('primo:')) {
           // Image type
           const b64 = await fetchAndConvert(val.url);
-          console.log('replacing');
           modifiedData[key] = {
             ...modifiedData[key],
             url: b64,

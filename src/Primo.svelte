@@ -2,7 +2,7 @@
   import { find, some, isEqual } from 'lodash';
   import Mousetrap from 'mousetrap';
 
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import Page from './views/editor/Page.svelte';
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
@@ -21,7 +21,7 @@
     loadingSite,
     onMobile,
   } from './stores/app/misc';
-  import { DEFAULTS } from './const';
+  import { DEFAULTS, createSite } from './const';
 
   import { unsaved } from '../src/stores/app/misc';
   import { pages } from './stores/data/draft';
@@ -39,27 +39,31 @@
   $: $userRole = role;
   $: $librariesStore = libraries;
 
+  // refresh draft data when passing in updated data
   let cachedData;
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
   }
 
+  // Runs when site saves (i.e when $site gets updated)
   $: {
     $unsaved = false;
     dispatch('save', $site);
+    hydrateSite($site); // sync draft with saved
   }
 
-  $: $pageId = getPageId($pageStore.path);
-  function getPageId(path) {
-    const [root, child] = path.substr(1).split('/');
-    return child ? `${root}/${child}` : root || 'index';
+  $: $pageId = getPageId($pageStore.params);
+  function getPageId(params) {
+    const { site, page = 'index' } = params;
+    const [root, child] = page.split('/');
+    return child ? `${root}/${child}` : root;
   }
 
   $: setPageContent($pageId, $pages);
   function setPageContent(id, pages) {
     const [root, child] = id.split('/');
-    const rootPage = find(pages, ['id', root || 'index']);
+    const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {
       setPageStore(rootPage);
     } else if (rootPage && child) {

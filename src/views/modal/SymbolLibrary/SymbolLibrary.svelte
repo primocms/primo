@@ -220,6 +220,8 @@
   main {
     background: var(--primo-color-black);
     padding: 0 0.5rem 0.5rem 0.5rem;
+    overflow: scroll;
+    max-height: calc(100vh - 7rem);
 
     ul {
       display: grid;

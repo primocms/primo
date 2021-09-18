@@ -5,29 +5,35 @@
   import Spinner from '../../ui/misc/Spinner.svelte';
   import PrimoLogo from '../svg/PrimoLogo.svelte';
   import DropdownButton from './DropdownButton.svelte';
+  import { unsaved } from '../../stores/app/misc';
 
   export let variants = '';
 
   let showingDropdown = false;
 
+  function warn(e) {
+    if ($unsaved) {
+      e.preventDefault();
+      window.alert(`Save your changes before navigating away from your site`);
+    }
+  }
+
 </script>
 
-{#if $dropdown.length > 0}
-  <button
-    id="primo-button"
-    transition:fade
-    class={variants}
-    class:bg-primored={showingDropdown}
-    class:chevron={showingDropdown}
-    aria-label="See all sites"
-    on:click={() => (showingDropdown = !showingDropdown)}>
-    {#if $loadingSite}
-      <Spinner />
-    {:else}
-      <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
-    {/if}
-  </button>
-{/if}
+<a
+  id="primo-button"
+  class={variants}
+  class:bg-primored={showingDropdown}
+  class:chevron={showingDropdown}
+  aria-label="See all sites"
+  href="/"
+  on:click={warn}>
+  {#if $loadingSite}
+    <Spinner />
+  {:else}
+    <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
+  {/if}
+</a>
 
 {#if showingDropdown}
   <ul xyz="fade stagger stagger-1" class="dropdown">
@@ -55,6 +61,9 @@
     background-repeat: no-repeat;
     background-position: center;
     outline: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     &:hover,
     &:focus {

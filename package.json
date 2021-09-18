@@ -98,6 +98,7 @@
     "ismobilejs": "^1.1.1",
     "js-base64": "^3.6.0",
     "jszip": "^3.6.0",
+    "lodash-es": "^4.17.21",
     "lz-string": "^1.4.4",
     "mousetrap": "^1.6.5",
     "nanoid": "^3.1.23",

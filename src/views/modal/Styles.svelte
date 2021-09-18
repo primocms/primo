@@ -162,7 +162,8 @@
 
       .preview-container {
         height: auto;
-        overflow-y: scroll;
+        max-height: calc(100vh - 7rem);
+        overflow: scroll;
 
         @media (max-width: 600px) {
           height: 24rem;

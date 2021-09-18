@@ -262,6 +262,7 @@
     min-width: var(--min-left-panel-size);
     height: 100%;
     overflow: scroll; /* Necessary to scroll content in CMS fields */
+    overflow: hidden; /* Necessary to prevent code view from scrolling 'Code' out of view */
   }
   div.center {
     width: var(--center-panel-size);

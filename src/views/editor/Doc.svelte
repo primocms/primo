@@ -168,8 +168,8 @@
       }),
     ]);
 
-    htmlHead = head.html;
-    htmlBelow = below.html;
+    htmlHead = !head.error ? head.html : '';
+    htmlBelow = !below.error ? below.html : '';
   }
 
   // Fade in page when all components mounted

@@ -1,6 +1,6 @@
 <script>
   import Mousetrap from 'mousetrap';
-  import { flatten } from 'lodash';
+  import _ from 'lodash';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -9,14 +9,16 @@
   import ToolbarButton from './ToolbarButton.svelte';
   import Doc from './Doc.svelte';
 
+  import { currentPagePreview } from '../../components/misc/misc';
   import site from '../../stores/data/site';
   import { focusedNode, switchEnabled } from '../../stores/app';
   import { undone } from '../../stores/data/draft';
   import { saving, unsaved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
-  import { id, content } from '../../stores/app/activePage';
+  import currentPage, { id, content } from '../../stores/app/activePage';
 
+  import { buildStaticPage } from '../../stores/helpers';
   let unlockingPage = false;
   let updatingDatabase = false;
 
@@ -81,6 +83,33 @@
         onclick: () => modal.show('FIELDS'),
       },
     ],
+    // [
+    //   {
+    //     id: 'toolbar--preview',
+    //     title: 'Preview',
+    //     icon: 'window-restore',
+    //     onclick: async () => {
+    //       // window.open('http://localhost:3333', '_blank');
+    //       // var wnd = window.open('about:blank', '', '_blank');
+    //       // wnd.document.write(iframePreview);
+    //       const w = window.open(
+    //         'data:text/html;charset=utf-8,' + currentPagePreview,
+    //         '',
+    //         '_blank'
+    //       );
+    //       const preview = await buildStaticPage({
+    //         page: $currentPage,
+    //         site: $site,
+    //       });
+    //       console.log({ preview });
+    //       console.log({ w });
+    //       w.postMessage({ html: preview });
+    //       // setTimeout(() => {
+    //       //   w.postMessage({ html: preview });
+    //       // }, 0);
+    //     },
+    //   },
+    // ],
   ];
 
   function savePage() {
@@ -104,7 +133,9 @@
   let toolbar;
   let page;
   $: if (toolbar && page) {
-    page.style.borderTop = `${toolbar.clientHeight}px solid var(--primo-color-black)`;
+    page.style.borderTop = `${
+      toolbar.clientHeight + 2
+    }px solid var(--primo-color-black)`;
   }
 
 </script>

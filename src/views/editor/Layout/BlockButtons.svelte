@@ -133,7 +133,7 @@
 <style lang="postcss">
   .block-buttons {
     box-shadow: inset 0 0 0 calc(4px) rgb(248, 68, 73);
-    z-index: 10;
+    z-index: 999999;
     position: absolute;
     pointer-events: none;
     inset: 0px;

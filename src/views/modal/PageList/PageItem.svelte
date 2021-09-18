@@ -35,14 +35,17 @@
   let id = page.id || '';
   $: disableSave = !title || !id;
 
+  $: pageURL = `/${$pageStore.params.site}/${page.id || ''}`;
+  $: console.log({ pageURL, page, $pageStore });
+
 </script>
 
 <div class="page-item">
   <div class="page-info">
-    <div>
+    <a href={pageURL} on:click={openPage}>
       <span class="title">{page.title}</span>
       <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
-    </div>
+    </a>
     {#if !displayOnly}
       <div class="buttons">
         <button title="Edit" on:click={() => (editingPage = !editingPage)}>
@@ -101,12 +104,7 @@
         </div>
       </div>
     {:else}
-      <a
-        class="page-link"
-        href={page.id}
-        on:click={openPage}
-        class:active
-        aria-label="Go to /{page.id}">
+      <a class="page-link" href={pageURL} on:click={openPage} class:active>
         <div class="page-container">
           <Preview {preview} preventClicks={true} />
         </div>

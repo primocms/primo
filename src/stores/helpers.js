@@ -3,7 +3,6 @@ import { get } from 'svelte/store'
 // import { router } from 'tinro'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
 import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
-import { getCombinedTailwindConfig } from './data/tailwind'
 import { symbols, wrapper } from './data/draft'
 import components from './app/components'
 import { wrapInStyleTags, convertFieldsToData, processCode } from '../utils'
@@ -55,22 +54,6 @@ export function getAllFields(componentFields = [], exclude = () => true) {
 
 export function getSymbol(symbolID) {
   return _.find(get(symbols), ['id', symbolID]);
-}
-
-export function getTailwindConfig(asString = false) {
-  const { tailwind: pageTW } = get(pageStyles)
-  const { tailwind: siteTW } = get(siteStyles)
-  const combined = getCombinedTailwindConfig(pageTW, siteTW)
-  if (asString) {
-    return combined
-  }
-  let asObj = {}
-  try {
-    asObj = new Function(`return ${combined}`)()
-  } catch (e) {
-    console.warn(e)
-  }
-  return asObj
 }
 
 
@@ -158,12 +141,18 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
       } 
     })
   ])
+
+  // happens for empty blocks
+  if (!blocks[0]) {
+    return '<div></div>'
+  }
+
   const final = `
   <!DOCTYPE html>
   <html lang="en">
     <head>${head.html || ''}</head>
     <body class="primo-page">
-      ${blocks.filter(Boolean).map(block => `
+      ${blocks.map(block => `
         ${block.css ? `<style>${block.css}</style>` : ``}
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
           ${block.html || ''}
@@ -190,6 +179,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     </body>
   </html>
   `
+
   const modules = _.uniqBy(
     blocks.filter(block => block.js).map(block => ({
       symbol: block.symbol,
@@ -248,24 +238,4 @@ export async function buildPagePreview({ page, site }) {
     })
   ])
   return res
-}
-
-async function processHTML({ value }, { data }) {
-  const final = await processors.html(value.html, data)
-  components.update(c => ({
-    ...c,
-    [value.html]: final
-  }))
-  return final
-}
-
-async function processCSS({ id, value }) {
-  if (!value.css) return ``
-  const tailwind = getTailwindConfig(true)
-  const encapsulatedCss = `#component-${id} {${value.css}}`;
-  components.update(c => ({
-    ...c,
-    [`${id}-${value.css}`]: encapsulatedCss
-  }))
-  return processors.css(encapsulatedCss, { tailwind })
 }
