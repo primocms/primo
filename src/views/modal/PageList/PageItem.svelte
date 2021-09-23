@@ -10,7 +10,6 @@
   import modal from '../../../stores/app/modal';
   import { buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
-  import 'requestidlecallback-polyfill';
   import { goto } from '$app/navigation';
   import { page as pageStore } from '$app/stores';
 

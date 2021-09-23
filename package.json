@@ -112,7 +112,6 @@
     "prosemirror-schema-basic": "^1.1.2",
     "prosemirror-schema-list": "^1.1.5",
     "prosemirror-view": "^1.18.11",
-    "requestidlecallback-polyfill": "^1.0.2",
     "short-unique-id": "^3.2.3",
     "showdown": "^1.9.1",
     "svelte": "^3.32.3",

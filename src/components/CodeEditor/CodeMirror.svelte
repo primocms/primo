@@ -16,8 +16,6 @@
   import extensions, { getLanguage } from './extensions';
   // import cssPeek from './css-peek';
 
-  import 'requestidlecallback-polyfill';
-
   const languageConf = new Compartment();
   const tabSize = new Compartment();
 

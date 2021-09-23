@@ -6,8 +6,6 @@
   import { switchEnabled, userRole } from '../../stores/app';
   import { onMobile } from '../../stores/app/misc';
   import { showKeyHint } from '../../stores/app/misc';
-  import 'requestidlecallback-polyfill';
-
   const dispatch = createEventDispatcher();
 
   export let buttons;

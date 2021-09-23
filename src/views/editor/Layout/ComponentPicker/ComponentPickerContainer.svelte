@@ -1,8 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
-  import 'requestidlecallback-polyfill';
-
   const dispatch = createEventDispatcher();
 
   import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';

@@ -1,8 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import { fade } from 'svelte/transition';
-  import 'requestidlecallback-polyfill';
-
   const dispatch = createEventDispatcher();
 
   import IFrame from './IFrame.svelte';
