@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import Editor from './Editor.svelte';
   import { unsaved } from '../../stores/app/misc';
   import site from '../../stores/data/site';

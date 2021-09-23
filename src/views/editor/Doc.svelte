@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { find, last } from 'lodash';
+  import { find, last } from 'lodash-es';
   import Block from './Layout/Block.svelte';
   import Spinner from '../../ui/misc/Spinner.svelte';
   import {
@@ -89,7 +89,6 @@
           link.setAttribute('data-tinro-ignore', '');
           link.onclick = (e) => {
             e.preventDefault();
-            // router.goto(homeUrl);
             goto(homeUrl);
           };
           return;

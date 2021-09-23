@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import Mousetrap from 'mousetrap';

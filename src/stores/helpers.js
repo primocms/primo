@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _ from 'lodash-es'
 import { get } from 'svelte/store'
 // import { router } from 'tinro'
 import { fields as siteFields, styles as siteStyles } from './data/draft'

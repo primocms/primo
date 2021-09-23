@@ -1,5 +1,5 @@
 <script>
-  import { find, some, isEqual } from 'lodash';
+  import { find, some, isEqual } from 'lodash-es';
   import Mousetrap from 'mousetrap';
 
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
@@ -106,9 +106,7 @@
     return !exists;
   }
 
-  onDestroy(() => {
-    dispatch('destroy');
-  });
+  onDestroy(() => dispatch('destroy'));
 
   $onMobile =
     isMobile(window.navigator).phone || isMobile(window.navigator).tablet;

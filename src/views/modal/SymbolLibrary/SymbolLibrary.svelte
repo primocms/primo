@@ -7,7 +7,7 @@
 
 <script>
   import { onMount } from 'svelte';
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import { Tabs } from '../../../components/misc';
   import ModalHeader from '../ModalHeader.svelte';

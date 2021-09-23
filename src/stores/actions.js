@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
 import { createUniqueID } from '../utilities'

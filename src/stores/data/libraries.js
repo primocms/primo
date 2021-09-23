@@ -1,6 +1,6 @@
 import {getContext} from 'svelte'
 import { writable, derived, get } from 'svelte/store';
-import _ from 'lodash'
+import _ from 'lodash-es'
 
 const store = writable([])
 

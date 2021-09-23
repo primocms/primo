@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { findIndex } from 'lodash';
+  import { findIndex } from 'lodash-es';
   export let buttons = [{ id: 'PLACEHOLDER' }];
   export let selected;
 

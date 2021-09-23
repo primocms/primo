@@ -1,5 +1,5 @@
 <script>
-  import _, { isEqual, differenceWith } from 'lodash';
+  import _, { isEqual, differenceWith } from 'lodash-es';
   import * as idb from 'idb-keyval';
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';

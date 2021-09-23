@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _ from 'lodash-es'
 import {writable,get,derived} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS, createPage} from '../../const'

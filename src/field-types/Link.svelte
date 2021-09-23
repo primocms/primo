@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
 
-  import { find } from 'lodash';
+  import { find } from 'lodash-es';
   import SplitButton from '../ui/inputs/SplitButton.svelte';
   import TextInput from '../components/inputs/TextInput.svelte';
   import { pages } from '../stores/data/draft';

@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 

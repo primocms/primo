@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
   import ModalHeader from '../ModalHeader.svelte';
@@ -661,6 +661,10 @@
       margin-right: 0.5rem;
     }
   }
+  [slot='left'] {
+    overflow: scroll;
+    height: 100%;
+  }
   [slot='right'] {
     width: 100%;
     height: 100%;
@@ -734,6 +738,7 @@
     padding: 4px;
     border-radius: 2px;
     border: 0;
+    padding: 0.5rem;
   }
   input:focus {
     outline: 0;

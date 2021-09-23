@@ -1,5 +1,5 @@
 <script>
-  import { cloneDeep, isEqual } from 'lodash';
+  import { cloneDeep, isEqual } from 'lodash-es';
   import { CodeMirror } from '../../components';
   import { Tabs } from '../../components/misc';
   import Preview from '../../components/misc/Preview.svelte';

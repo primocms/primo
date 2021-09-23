@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { set } from 'idb-keyval';
-  import { isEqual } from 'lodash';
+  import { isEqual } from 'lodash-es';
   import { iframePreview } from './misc';
   import { convertFieldsToData } from '../../utils';
   import { getAllFields } from '../../stores/helpers';

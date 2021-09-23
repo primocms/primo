@@ -108,7 +108,6 @@
     width: 100%;
     display: flex;
     justify-content: flex-start;
-    margin-left: 70px;
   }
   .left .buttons {
     display: flex;

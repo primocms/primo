@@ -1,5 +1,5 @@
 <script>
-  import { cloneDeep, isEqual } from 'lodash';
+  import { cloneDeep, isEqual } from 'lodash-es';
   import { Tabs } from '../../components/misc';
   import { CodeMirror } from '../../components';
   import { convertFieldsToData } from '../../utils';

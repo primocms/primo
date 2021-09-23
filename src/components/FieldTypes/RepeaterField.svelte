@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash';
+  import _ from 'lodash-es';
   import pluralize from '../../libraries/pluralize';
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';

@@ -45,9 +45,9 @@
     justify-content: flex-start;
     overflow: hidden;
     position: fixed;
-    z-index: 999999;
+    z-index: 999999999;
     inset: 0;
-    top: 39px;
+    top: 0;
   }
 
   .modal-background {
