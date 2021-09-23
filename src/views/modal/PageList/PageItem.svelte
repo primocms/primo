@@ -35,8 +35,9 @@
   let id = page.id || '';
   $: disableSave = !title || !id;
 
-  $: pageURL = `/${$pageStore.params.site}/${page.id || ''}`;
-  $: console.log({ pageURL, page, $pageStore });
+  $: pageURL = `/${$pageStore.params.site}/${
+    page.id === 'index' ? '' : page.id || ''
+  }`;
 
 </script>
 
