@@ -1,6 +1,5 @@
 export const processors = {
   html: async (raw, data) => {
-    console.log('original processor')
     const final = raw
     return final
   },
@@ -15,7 +14,6 @@ export const processors = {
 }
 
 export function registerProcessors(fns) {
-  console.log('Registering processor')
   for (const [lang, processor] of Object.entries(fns)) {
     processors[lang] = processor
   }

@@ -2,8 +2,12 @@ import {chain,debounce} from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
+  const processedCSS = await processors.css(code.css)
   const res = await processors.html({
-    code, data, buildStatic, format
+    code: {
+      ...code,
+      css: processedCSS
+    }, data, buildStatic, format
   })
   return res
 }
