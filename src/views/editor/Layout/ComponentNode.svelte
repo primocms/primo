@@ -1,6 +1,6 @@
 <script>
   import _, { isEqual, differenceWith } from 'lodash-es';
-  import * as idb from 'idb-keyval';
+  // import * as idb from 'idb-keyval';
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { getAllFields } from '../../../stores/helpers';
@@ -153,9 +153,9 @@
   }
 
   async function fetchAndConvert(url) {
-    const imageKey = url.slice(12); // remove primo:sites/
-    const cached = await idb.get(imageKey);
-    return cached || url;
+    // const imageKey = url.slice(12); // remove primo:sites/
+    // const cached = await idb.get(imageKey);
+    // return cached || url;
   }
 
   let node;

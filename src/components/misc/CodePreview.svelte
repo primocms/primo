@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
-  import { set } from 'idb-keyval';
+  // import { set } from 'idb-keyval';
   import { isEqual } from 'lodash-es';
   import { iframePreview } from './misc';
   import { convertFieldsToData } from '../../utils';
@@ -62,7 +62,7 @@
     interval = setInterval(resizePreview, 500);
   });
   onDestroy(() => {
-    set('preview', { html: '', css: '', js: '' });
+    // set('preview', { html: '', css: '', js: '' });
     clearInterval(interval);
   });
 

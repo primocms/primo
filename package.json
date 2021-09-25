@@ -94,7 +94,6 @@
     "file-saver": "^2.0.5",
     "firebase": "^8.2.7",
     "handlebars": "^4.7.6",
-    "idb-keyval": "^5.0.2",
     "ismobilejs": "^1.1.1",
     "js-base64": "^3.6.0",
     "jszip": "^3.6.0",
