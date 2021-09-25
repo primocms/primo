@@ -1,22 +1,11 @@
-import {browser} from '$app/env'
-import {chain,debounce} from 'lodash-es';
+import {chain,debounce} from "lodash";
 import { getAllFields } from './stores/helpers'
-
-let compiler
+import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  if (browser) {
-    if (!compiler) {
-      compiler = await import('./compiler')
-    }
-    console.log({code})
-    const res = await compiler.svelte({
-      code, data, buildStatic, format
-    })
-    console.log({res})
-    return res
-  } else {
-    return code
-  }
+  const res = await processors.html({
+    code, data, buildStatic, format
+  })
+  return res
 }
 
 export function convertFieldsToData(fields) {
