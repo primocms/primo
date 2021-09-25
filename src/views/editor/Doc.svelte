@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { find, last } from 'lodash-es';
+  import { find } from 'lodash-es';
   import Block from './Layout/Block.svelte';
   import Spinner from '../../ui/misc/Spinner.svelte';
   import {
@@ -23,7 +23,6 @@
     wrapInStyleTags,
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
-  // import { router } from 'tinro';
   import { goto } from '$app/navigation';
 
   export let element;

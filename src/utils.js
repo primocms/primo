@@ -1,33 +1,28 @@
-import _ from "lodash";
+import {browser} from '$app/env'
+import {chain,debounce} from 'lodash-es';
 import { getAllFields } from './stores/helpers'
-import { processors } from './component'
-import {site} from './stores/data/draft'
-import activePage from './stores/app/activePage'
-import {get} from 'svelte/store'
 
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  // const includePrimoData = code.html.includes('primo') || code.js.includes('primo')
-  const includePrimoData = false
-
-  const res = await processors.html({
-    code, data: {
-      ...data,
-      ... includePrimoData ? {
-        primo: {
-          page: get(activePage),
-          site: get(site),
-        }
-      } : {}
-    }, buildStatic, format
-  })
-  return res
+  let compiler
+  if (browser) {
+    if (!compiler) {
+      compiler = await import('./compiler')
+    }
+    const res = await compiler.svelte({
+      code, data, buildStatic, format
+    })
+    console.log({res})
+    return res
+  } else {
+    return code
+  }
 }
 
 export function convertFieldsToData(fields) {
   const parsedFields = fields.map((field) => {
     if (field.type === "group") {
       if (field.fields) {
-        field.value = _.chain(field.fields)
+        field.value = chain(field.fields)
           .keyBy("key")
           .mapValues("value")
           .value();
@@ -37,7 +32,7 @@ export function convertFieldsToData(fields) {
   })
 
 
-  return _.chain(parsedFields).keyBy("key").mapValues("value").value()
+  return chain(parsedFields).keyBy("key").mapValues("value").value()
 }
 
 export async function updateHtmlWithFieldData(rawHTML) {
@@ -53,7 +48,7 @@ export async function updateHtmlWithFieldData(rawHTML) {
 
 // Lets us debounce from reactive statements
 export function createDebouncer(time) {
-  return _.debounce((val) => {
+  return debounce((val) => {
     const [fn, arg] = val;
     fn(arg);
   }, time);

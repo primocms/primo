@@ -1,6 +1,5 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import { slide } from 'svelte/transition';
   import ToolbarButton from './ToolbarButton.svelte';
   import { PrimoButton, MobileNavButton } from '../../components/buttons';
   import { switchEnabled, userRole } from '../../stores/app';

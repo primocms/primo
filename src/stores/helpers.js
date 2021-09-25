@@ -4,9 +4,7 @@ import { get } from 'svelte/store'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
 import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
 import { symbols, wrapper } from './data/draft'
-import components from './app/components'
-import { wrapInStyleTags, convertFieldsToData, processCode } from '../utils'
-import { processors } from '../component'
+import { convertFieldsToData, processCode } from '../utils'
 
 export function getAllFields(componentFields = [], exclude = () => true) {
   const allFields = _.unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
