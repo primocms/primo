@@ -2,12 +2,13 @@ import {browser} from '$app/env'
 import {chain,debounce} from 'lodash-es';
 import { getAllFields } from './stores/helpers'
 
+let compiler
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  let compiler
   if (browser) {
     if (!compiler) {
       compiler = await import('./compiler')
     }
+    console.log({code})
     const res = await compiler.svelte({
       code, data, buildStatic, format
     })

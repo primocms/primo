@@ -15,10 +15,10 @@ export async function svelte({ code, data, buildStatic = true, format = 'esm'}) 
 
   let finalRequest = buildFinalRequest(finalData)
 
-  const cached = await idb.get(JSON.stringify(finalRequest))
-  if (cached) {
-    return cached
-  }
+  // const cached = await idb.get(JSON.stringify(finalRequest))
+  // if (cached) {
+  //   return cached
+  // }
 
   const newData = data
 
@@ -67,7 +67,7 @@ export async function svelte({ code, data, buildStatic = true, format = 'esm'}) 
     }
   } 
 
-  await idb.set(JSON.stringify(finalRequest), final)
+  // await idb.set(JSON.stringify(finalRequest), final)
   return final
 
   function buildFinalRequest(finalData) {
