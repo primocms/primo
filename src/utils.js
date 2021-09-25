@@ -1,4 +1,4 @@
-import {chain,debounce} from "lodash";
+import {chain,debounce} from "lodash-es";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
