@@ -26,7 +26,6 @@
 
   function openPage(e) {
     modal.hide();
-    goto(`/${page.id === 'index' ? '' : page.id}`);
   }
 
   let editingPage = false;
