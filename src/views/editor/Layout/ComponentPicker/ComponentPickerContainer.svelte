@@ -42,7 +42,7 @@
     <p class="component-label"><span>{title}</span></p>
     <div class="buttons">
       {#each buttons as button}
-        <button class:bg-primored={button.highlight} on:click={button.onclick}>
+        <button on:click={button.onclick}>
           <span>{button.label}</span>
           {@html button.svg}
         </button>
@@ -90,6 +90,7 @@
   }
   .component-wrapper {
     height: 40vh;
+    max-height: 50vh;
     overflow: hidden;
     position: relative;
     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),

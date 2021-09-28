@@ -1,7 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
-  import _ from 'lodash-es';
   import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
   import Masonry from './Masonry.svelte';
 
@@ -75,7 +74,7 @@
       symbol={item}
       buttons={[{ onclick: () => {
             dispatch('select', createInstance(item));
-          }, highlight: true, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
+          }, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
   </Masonry>
 </main>
 
@@ -94,21 +93,23 @@
     align-items: center;
   }
   .button {
-    background: rgb(248, 68, 73);
+    box-shadow: var(--primo-ring-primored);
     padding: 0.5rem 1rem;
     margin-bottom: 1rem;
     border-radius: 0.25rem;
     color: white;
     font-weight: 600;
     font-size: 0.75rem;
-    transition: color 0.1s;
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
 
     i {
       margin-right: 0.25rem;
     }
 
     &:hover {
-      background-color: rgba(220, 38, 38, var(--tw-bg-opacity));
+      background: var(--primo-color-primored);
     }
   }
   button.close {
