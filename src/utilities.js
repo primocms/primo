@@ -1,4 +1,3 @@
-import {browser} from '$app/env'
 import {customAlphabet} from 'nanoid/non-secure'
 
 export function createUniqueID(length = 5) {
@@ -18,38 +17,4 @@ export function move(array, from, to) {
   }
   array[to] = target;
   return array;
-}
-
-
-let prettier;
-let plugins = {}
-export async function formatCode(code, { mode, position }) {
-  let formatted
-  try {
-    // errors in here can crash the app
-    if (mode === 'javascript') {
-      mode = 'babel'
-    }
-    if (!prettier && browser) {
-      prettier = (await import('prettier'))['default']
-      plugins = await {
-        'html': (await import('prettier/esm/parser-html'))['default'],
-        'css': (await import('prettier/esm/parser-postcss'))['default'],
-        'babel': (await import('prettier/esm/parser-babel'))['default']
-      }
-    }
-  
-    formatted = prettier.formatWithCursor(code, { 
-      parser: mode,  
-      jsxBracketSameLine: true,
-      cursorOffset: position,
-      plugins: [
-        plugins[mode]
-      ]
-    })
-  } catch(e) {
-    console.warn(e)
-  }
-
-  return formatted
 }

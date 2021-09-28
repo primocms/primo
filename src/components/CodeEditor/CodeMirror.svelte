@@ -1,7 +1,8 @@
 <script>
+  import '@fontsource/fira-code/index.css';
   import { onMount, createEventDispatcher } from 'svelte';
+  import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
-  import { formatCode } from '../../utilities';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
 
@@ -10,7 +11,6 @@
   import { defaultTabBinding } from '@codemirror/commands';
   import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
-  // import emmetExt from './emmet-codemirror';
   import extensions, { getLanguage } from './extensions';
   // import cssPeek from './css-peek';
 
@@ -124,6 +124,13 @@
     ],
   });
 
+  let formatCode;
+  if (browser) {
+    import('../../libraries/prettier').then(({ default: format }) => {
+      formatCode = format;
+    });
+  }
+
   onMount(async () => {
     Editor = new EditorView({
       state,
@@ -164,12 +171,8 @@
   .codemirror-container {
     width: 100%;
     overflow-x: scroll;
-    font-family: 'Fira Code', serif !important;
+    font-family: 'Fira Code', 'Courier New', sans-serif !important;
     height: calc(100vh - 9.5rem);
-
-    & > div {
-      /* min-height: 100px; */
-    }
   }
 
 </style>
