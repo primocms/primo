@@ -1,7 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
-  import _ from 'lodash-es';
 
   export let child = false;
   export let disabled = false;

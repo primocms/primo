@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash-es';
+  import _find from 'lodash-es/find';
   import pluralize from '../../libraries/pluralize';
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
@@ -105,7 +105,7 @@
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">
             <svelte:component
-              this={_.find($fieldTypes, ['id', subfield.type]).component}
+              this={_find($fieldTypes, ['id', subfield.type]).component}
               field={subfield}
               on:input={onInput} />
           </div>
@@ -128,8 +128,8 @@
   }
 
   .fields {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
   .repeater-item {

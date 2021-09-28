@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash-es';
+  import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
   import { TextInput } from '../../components/inputs';
@@ -37,7 +37,7 @@
   }
 
   function duplicatePage(title, url) {
-    const newPage = _.cloneDeep($activePage);
+    const newPage = cloneDeep($activePage);
     const [newContent] = scrambleIds(newPage.content);
     newPage.content = newContent;
     newPage.title = title;
@@ -75,7 +75,7 @@
   }
 
   function listPages(pageId) {
-    const { pages } = _.find(listedPages, ['id', pageId]);
+    const { pages } = find(listedPages, ['id', pageId]);
     listedPages = pages;
     currentPath = [...currentPath, pageId];
   }
@@ -96,14 +96,14 @@
   function getListedPages(childPageId, pages) {
     console.log({ childPageId, pages });
     if (childPageId) {
-      const rootPage = _.find(pages, ['id', rootPageId]);
+      const rootPage = find(pages, ['id', rootPageId]);
       return rootPage.pages || [];
     } else return pages;
   }
 
   function getBreadCrumbs(childPageId, pages) {
     if (childPageId) {
-      const rootPage = _.find(pages, ['id', rootPageId]);
+      const rootPage = find(pages, ['id', rootPageId]);
       return [
         {
           label: 'Site',

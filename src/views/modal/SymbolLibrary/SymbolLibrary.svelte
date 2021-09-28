@@ -7,7 +7,7 @@
 
 <script>
   import { onMount } from 'svelte';
-  import _ from 'lodash-es';
+  import _some from 'lodash-es/some';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import { Tabs } from '../../../components/misc';
   import ModalHeader from '../ModalHeader.svelte';
@@ -54,7 +54,7 @@
   }
 
   async function placeSymbol(symbol) {
-    const exists = _.some($symbols, ['id', symbol.id]);
+    const exists = _some($symbols, ['id', symbol.id]);
     if (exists) {
       actions.update(symbol);
     } else {

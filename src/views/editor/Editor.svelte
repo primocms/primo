@@ -1,6 +1,5 @@
 <script>
   import Mousetrap from 'mousetrap';
-  import _ from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();

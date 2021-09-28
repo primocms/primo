@@ -18,7 +18,6 @@
         <li class="xyz-in" class:is-active={activeTab === tab}>
           <button
             on:click={() => (activeTab = tab)}
-            class:text-primored={tab.highlighted}
             id={tab.id ? `tab-${tab.id}` : null}>
             {#if tab.icon}<i class="fas fa-{tab.icon}" />{/if}
             {typeof tab === 'string' ? tab : tab.label}

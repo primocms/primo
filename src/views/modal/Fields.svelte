@@ -1,5 +1,5 @@
 <script>
-  import { find, findIndex, cloneDeep, isEqual } from 'lodash-es';
+  import { find, cloneDeep, isEqual } from 'lodash-es';
   import { EditField } from '../../components/inputs';
   import { Tabs } from '../../components/misc';
   import { Card } from '../../components/misc';

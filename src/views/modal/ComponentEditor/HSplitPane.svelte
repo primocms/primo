@@ -227,7 +227,7 @@
 <style>
   div.wrapper {
     width: 100%;
-    height: 100%;
+    /* height: 100%; */ /* causing overflow in ComponentEditor code view */
     /* background-color: yellow; */
     display: inline-flex;
   }

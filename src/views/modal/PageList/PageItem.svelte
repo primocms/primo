@@ -24,7 +24,7 @@
     preview = await buildStaticPage({ page, site: $site });
   }
 
-  function openPage(e) {
+  function openPage() {
     modal.hide();
   }
 

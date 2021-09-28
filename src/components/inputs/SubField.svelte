@@ -2,7 +2,6 @@
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
   import { IconButton } from '../misc';
-  import _ from 'lodash-es';
 
   export let disabled = false;
 

@@ -1,5 +1,4 @@
 <script>
-  import _ from 'lodash-es';
   import { createEventDispatcher, onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();

@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash-es';
+  import _find from 'lodash-es/find';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
@@ -14,7 +14,7 @@
   {#each field.fields as subfield}
     <div class="group-item">
       <svelte:component
-        this={_.find($fieldTypes, ['id', subfield.type]).component}
+        this={_find($fieldTypes, ['id', subfield.type]).component}
         field={subfield}
         on:input />
     </div>
