@@ -1,3 +1,4 @@
+import {browser} from '$app/env'
 import {customAlphabet} from 'nanoid/non-secure'
 
 export function createUniqueID(length = 5) {
@@ -29,7 +30,7 @@ export async function formatCode(code, { mode, position }) {
     if (mode === 'javascript') {
       mode = 'babel'
     }
-    if (!prettier) {
+    if (!prettier && browser) {
       prettier = (await import('prettier'))['default']
       plugins = await {
         'html': (await import('prettier/parser-html'))['default'],
