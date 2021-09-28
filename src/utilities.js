@@ -31,12 +31,12 @@ export async function formatCode(code, { mode, position }) {
       mode = 'babel'
     }
     if (!prettier && browser) {
-      // prettier = (await import('prettier'))['default']
-      // plugins = await {
-      //   'html': (await import('prettier/parser-html'))['default'],
-      //   'css': (await import('prettier/parser-postcss'))['default'],
-      //   'babel': (await import('prettier/parser-babel'))['default']
-      // }
+      prettier = (await import('prettier'))['default']
+      plugins = await {
+        'html': (await import('prettier/esm/parser-html'))['default'],
+        'css': (await import('prettier/esm/parser-postcss'))['default'],
+        'babel': (await import('prettier/esm/parser-babel'))['default']
+      }
     }
   
     formatted = prettier.formatWithCursor(code, { 
