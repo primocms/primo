@@ -81,13 +81,15 @@
 
   let throttling = false;
   async function compileComponentCode({ html, css, js }) {
+    disableSave = true;
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
     if (throttling) {
       quickDebounce([compile]);
     } else {
-      compile();
+      await compile();
     }
+    disableSave = false;
 
     async function compile() {
       const timeout = setTimeout(() => {
@@ -136,7 +138,7 @@
     delete newSymbol.symbolID;
     symbols.create(newSymbol);
     localComponent.symbolID = newSymbol.id;
-    header.button.onclick(localComponent);
+    saveComponent();
     loadSymbol();
   }
 
@@ -364,6 +366,12 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
+  function saveComponent() {
+    if (!disableSave) {
+      header.button.onclick(localComponent);
+    }
+  }
+
 </script>
 
 <ModalHeader
@@ -374,7 +382,7 @@
       return proceed;
     } else return true;
   }}
-  button={{ ...header.button, onclick: () => header.button.onclick(localComponent), disabled: disableSave }}>
+  button={{ ...header.button, onclick: saveComponent, disabled: disableSave }}>
   {#if isSingleUse}
     <button class="convert" on:click={convertToSymbol}>
       <i class="fas fa-clone" />
@@ -435,7 +443,7 @@
             bind:html={rawHTML}
             bind:css={rawCSS}
             bind:js={rawJS}
-            on:save={() => header.button.onclick(localComponent)} />
+            on:save={saveComponent} />
         {:else if activeTab === tabs[1]}
           <div class="fields">
             {#each fields as field, i}

@@ -2,11 +2,14 @@ import {chain,debounce} from "lodash-es";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  const processedCSS = await processors.css(code.css)
+  const {css,error} = await processors.css(code.css)
+  if (error) {
+    return {error}
+  }
   const res = await processors.html({
     code: {
       ...code,
-      css: processedCSS
+      css,
     }, data, buildStatic, format
   })
   return res

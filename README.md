@@ -1,16 +1,18 @@
 # primo
 
-Primo is a new kind of site builder that combines simple content management with accessible custom development to make it quick and easy for anyone to build, manage, and publish freaky fast websites.
+Primo is a simpler, all-in-one approach to building and managing websites. 
+
+## How it compares
 
 WordPress and proprietary site builders (Wix, Webflow, etc.) let you manage your content relatively easily, but make modifying your site’s source code a lot harder than just working directly with HTML files.
 
-Instead of placing a no-code **wall** between you and your website's code, primo creates a **bridge** to the code so it's always immediately accessible. That way you have full access to the underlying platform and full control over your site. So every tweak/integration/customization is always a click away and doesn't need to be pre-engineered by an stressed out group of people in San Fransisco.
+NextJS, Gatsby, Hugo, etc give you direct control over your site and enable more powerful functionality, but typically require a lot of upfront work and don't include a content management layer (unless you're cool with .MD files). 
 
-Effectively, isolating your site's design to its code where it belongs means that the UI can rid itself of color pickers, sliders, and complicated buttons. But more importantly, it means that the UI stays focused on the one thing that matters most to people who publish websites - **content**.
+Primo bridges these two sides by providing a built-in CMS for content management, a built-in IDE for development (using Svelte), and hosting integrations to make deploying site updates a breeze. It also includes a growing library of pre-built & fully integrated components so you can publish a freaky fast, easily-editable website in literal minutes. 
 
 ## Project Status
 
-Our team's main priority at the moment is to offer primo as a service on [primo.af](https://primo.af), but once that's out of Beta we're shifting our focus to the self-hosted version of primo so that people can use it locally and have direct control over their data.
+Primo version 2 is currently in Alpha. Where version 1 was focused on offering Primo as a hosted service, version 2 will be focused on polishing primo as a desktop and self-hosted application, with the potential to offer Primo as a hosted service again in the future should there be a demand for it.
 
 ## Contributing
 

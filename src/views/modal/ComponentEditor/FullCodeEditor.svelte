@@ -98,7 +98,6 @@
       <CodeMirror
         autofocus
         mode="html"
-        {disabled}
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => (activeTab = detail)}
@@ -112,7 +111,6 @@
         bind:selection={selections['css']}
         bind:value={css}
         mode="css"
-        {disabled}
         on:change={() => dispatch('cssChange')}
         on:save={() => dispatch('save')} />
     {:else}
@@ -122,7 +120,6 @@
         bind:selection={selections['js']}
         bind:value={js}
         mode="javascript"
-        {disabled}
         on:change={({ detail }) => dispatch('jsChange')}
         on:save={() => dispatch('save')} />
     {/if}

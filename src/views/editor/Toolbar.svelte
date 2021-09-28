@@ -4,13 +4,10 @@
   import { PrimoButton, MobileNavButton } from '../../components/buttons';
   import { switchEnabled, userRole } from '../../stores/app';
   import { onMobile } from '../../stores/app/misc';
-  import { showKeyHint } from '../../stores/app/misc';
   const dispatch = createEventDispatcher();
 
   export let buttons;
   export let element;
-
-  let mobileNavOpen = false;
 
   let mounted = false;
   onMount(() => {
