@@ -42,10 +42,11 @@
         ...value,
         html: `
         <svelte:head>
-          ${$siteHTML + $pageHTML}
+          ${$siteHTML.head + $pageHTML.head}
           ${wrapInStyleTags($siteCSS + $pageCSS)}
         </svelte:head>
         ${value.html}
+        ${$siteHTML.below + $pageHTML.below}
         `,
       },
       data,
@@ -115,7 +116,6 @@
   .component-wrapper {
     position: relative;
     box-shadow: var(--box-shadow);
-    storedheight: 40vh;
     overflow: hidden;
     content-visibility: auto;
     display: flex;
@@ -124,6 +124,7 @@
     background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
     border-radius: var(--border-radius-1);
+    max-height: 50vh;
 
     header {
       display: flex;
@@ -172,10 +173,11 @@
         justify-content: flex-end;
 
         button {
-          background: var(--primo-color-codeblack);
+          background: var(--color-gray-8);
           display: flex;
           align-items: center;
           padding: 8px;
+          gap: 8px;
           transition: var(--transition-colors);
 
           &:focus {
@@ -188,13 +190,11 @@
           }
 
           &:hover {
-            background: var(--color-gray-8);
+            background: var(--primo-color-primored);
           }
 
           span {
-            margin-right: 8px;
             font-size: var(--font-size-2);
-            font-weight: 600;
           }
         }
       }
