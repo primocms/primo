@@ -21,24 +21,30 @@ export function move(array, from, to) {
 
 
 let prettier;
-let plugin;
-export async function formatCode(code, mode) {
-  if (!prettier) {
-    prettier = (await import('prettier'))['default']
-    plugin = await {
-      'html': import('prettier/parser-html'),
-      'css': import('prettier/parser-postcss'),
-      'javascript': import('prettier/parser-babel')
-    }[mode]
-  }
-
-  let formatted = code
-
+let plugins = {}
+export async function formatCode(code, { mode, position }) {
+  let formatted
   try {
-    formatted = prettier.format(code, { 
+    // errors in here can crash the app
+    if (mode === 'javascript') {
+      mode = 'babel'
+    }
+    if (!prettier) {
+      prettier = (await import('prettier'))['default']
+      plugins = await {
+        'html': (await import('prettier/parser-html'))['default'],
+        'css': (await import('prettier/parser-postcss'))['default'],
+        'babel': (await import('prettier/parser-babel'))['default']
+      }
+    }
+  
+    formatted = prettier.formatWithCursor(code, { 
       parser: mode,  
       jsxBracketSameLine: true,
-      plugins: [plugin]
+      cursorOffset: position,
+      plugins: [
+        plugins[mode]
+      ]
     })
   } catch(e) {
     console.warn(e)

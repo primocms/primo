@@ -1,8 +1,6 @@
 <script>
-  import _ from 'lodash-es';
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
-  import Mousetrap from 'mousetrap';
   import { formatCode } from '../../utilities';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
@@ -56,14 +54,6 @@
     extensions: [
       extensions,
       languageConf.of(language),
-      // mode !== 'javascript' ? emmetExt({
-      //   theme: {
-      //     padding: '0.5rem',
-      //     background: '#111',
-      //     boxShadow: `0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)`
-      //   },
-      //   config: getEmmetConfig(mode)
-      // }) : [],
       keymap.of([
         defaultTabBinding,
         {
@@ -98,11 +88,17 @@
           key: 'mod-Enter',
           run: () => {
             const value = Editor.state.doc.toString();
-            formatCode(value, mode).then((formatted) => {
+            const position = Editor.state.selection.main.head;
+            formatCode(value, { mode, position }).then((res) => {
+              if (!res) return;
+              const { formatted, cursorOffset } = res;
               Editor.dispatch({
                 changes: [
                   { from: 0, to: Editor.state.doc.length, insert: formatted },
                 ],
+                selection: {
+                  anchor: cursorOffset,
+                },
               });
               dispatchChanges(formatted);
             });
