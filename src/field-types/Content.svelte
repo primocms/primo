@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
+  import autosize from 'autosize';
   import showdown from 'showdown';
   const converter = new showdown.Converter();
 
@@ -16,13 +17,19 @@
   let markdown =
     typeof field.value === 'string' ? converter.makeMarkdown(field.value) : '';
 
+  let element;
+
+  $: if (element) {
+    autosize(element);
+  }
+
 </script>
 
 <label for={field.id}>
   <span>{field.label}</span>
   <textarea
     id={field.id}
-    rows="8"
+    bind:this={element}
     bind:value={markdown}
     on:input={parseContent} />
 </label>

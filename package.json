@@ -86,6 +86,7 @@
     "@tiptap/extension-list-item": "^2.0.0-beta.1",
     "@tiptap/extension-ordered-list": "^2.0.0-beta.14",
     "@tiptap/starter-kit": "^2.0.0-beta.82",
+    "autosize": "^5.0.1",
     "axios": "^0.21.1",
     "broadcast-channel": "^3.4.1",
     "clipboard": "^2.0.6",
