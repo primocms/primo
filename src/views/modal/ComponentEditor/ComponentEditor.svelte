@@ -1,5 +1,5 @@
 <script>
-  import _ from 'lodash-es';
+  import { cloneDeep, find, isEqual } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
   import ModalHeader from '../ModalHeader.svelte';
@@ -47,7 +47,7 @@
     },
   };
 
-  let localComponent = _.cloneDeep(component);
+  let localComponent = cloneDeep(component);
   function saveRawValue(property, value) {
     localComponent.value[property] = value;
   }
@@ -148,7 +148,7 @@
   async function loadSymbol() {
     disabled = false;
     const symbol = getSymbol(localComponent.symbolID);
-    localComponent = _.cloneDeep(symbol);
+    localComponent = cloneDeep(symbol);
     // compileCSS(symbol.value.css); // workaround for styles breaking
     modal.show('COMPONENT_EDITOR', {
       component: symbol,
@@ -247,6 +247,12 @@
     // necessary to re-render field values in preview (since we're mutating `field`)
     fields = fields.filter(Boolean);
     saveRawValue('fields', fields);
+    console.log('refreshing');
+    compileComponentCode({
+      html: rawHTML,
+      css: rawCSS,
+      js: rawJS,
+    });
   }
 
   function setPlaceholderValues() {
@@ -294,7 +300,7 @@
   let disableSave = false;
 
   function getFieldComponent(field) {
-    const fieldType = _.find(allFieldTypes, ['id', field.type]);
+    const fieldType = find(allFieldTypes, ['id', field.type]);
     if (fieldType && fieldType.component) {
       return fieldType.component;
     } else {
@@ -363,7 +369,7 @@
 <ModalHeader
   {...header}
   warn={() => {
-    if (!_.isEqual(localComponent, component)) {
+    if (!isEqual(localComponent, component)) {
       const proceed = window.confirm('Undrafted changes will be lost. Continue?');
       return proceed;
     } else return true;
@@ -611,6 +617,7 @@
 
 <style lang="postcss">
   main {
+    display: flex; /* to help w/ positioning child items in code view */
     background: var(--primo-color-black);
     padding: 0.5rem;
     padding-top: 0;
