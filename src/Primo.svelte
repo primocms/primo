@@ -7,7 +7,6 @@
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
   import * as modals from './views/modal';
-  import isMobile from 'ismobilejs';
 
   const dispatch = createEventDispatcher();
 
@@ -107,9 +106,6 @@
   }
 
   onDestroy(() => dispatch('destroy'));
-
-  $onMobile =
-    isMobile(window.navigator).phone || isMobile(window.navigator).tablet;
 
 </script>
 
