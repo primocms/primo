@@ -1,4 +1,4 @@
-import _ from 'lodash-es'
+import { find, last, cloneDeep, some } from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
 import { id, content } from './app/activePage'
@@ -64,7 +64,7 @@ export async function emancipateInstances(symbol) {
   );
   stores.pages.set(updatedPages)
 
-  const activePageContent = _.find(updatedPages, ['id', get(id)])['content']
+  const activePageContent = find(updatedPages, ['id', get(id)])['content']
   content.set(activePageContent)
 }
 
@@ -79,7 +79,7 @@ export function undoSiteChange() {
   undone.update(u => ([...state.slice(state.length - 1), ...u]))
 
   // Set Site
-  const siteWithoutLastChange = _.last(timelineWithoutLastChange)
+  const siteWithoutLastChange = last(timelineWithoutLastChange)
 
   hydrateSite(siteWithoutLastChange)
 }
@@ -94,7 +94,7 @@ export function redoSiteChange() {
 export const symbols = {
   create: (symbol) => {
     unsaved.set(true)
-    stores.symbols.update(s => [_.cloneDeep(symbol), ...s])
+    stores.symbols.update(s => [cloneDeep(symbol), ...s])
   },
   update: (toUpdate) => {
     unsaved.set(true)
@@ -114,9 +114,9 @@ export const pages = {
   add: (newpage, path) => {
     unsaved.set(true)
     const currentPages = get(stores.pages)
-    let newPages = _.cloneDeep(currentPages)
+    let newPages = cloneDeep(currentPages)
     if (path.length > 0) {
-      const rootPage = _.find(newPages, ['id', path[0]])
+      const rootPage = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages ? [...rootPage.pages, newpage] : [newpage]
     } else {
       newPages = [...newPages, newpage]
@@ -127,9 +127,9 @@ export const pages = {
   delete: (pageId, path) => {
     unsaved.set(true)
     const currentPages = get(stores.pages)
-    let newPages = _.cloneDeep(currentPages)
+    let newPages = cloneDeep(currentPages)
     if (path.length > 0) {
-      const rootPage = _.find(newPages, ['id', path[0]])
+      const rootPage = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
     } else {
       newPages = newPages.filter(page => page.id !== pageId)
@@ -143,7 +143,7 @@ export const pages = {
         if (page.id === pageId) {
           const newPage = await fn(page)
           return newPage
-        } else if (_.some(page.pages, ['id', pageId])) {
+        } else if (some(page.pages, ['id', pageId])) {
           return {
             ...page,
             pages: page.pages.map(page => page.id === pageId ? fn(page) : page)

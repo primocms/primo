@@ -1,4 +1,4 @@
-import _ from 'lodash-es'
+import {unionBy, find, uniqBy} from 'lodash-es'
 import { get } from 'svelte/store'
 // import { router } from 'tinro'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
@@ -7,7 +7,7 @@ import { symbols, wrapper } from './data/draft'
 import { convertFieldsToData, processCode } from '../utils'
 
 export function getAllFields(componentFields = [], exclude = () => true) {
-  const allFields = _.unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
+  const allFields = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
   const includeActiveLinks = allFields.map(hydrateField)
   return includeActiveLinks
 
@@ -51,14 +51,14 @@ export function getAllFields(componentFields = [], exclude = () => true) {
 }
 
 export function getSymbol(symbolID) {
-  return _.find(get(symbols), ['id', symbolID]);
+  return find(get(symbols), ['id', symbolID]);
 }
 
 
 export async function buildStaticPage({ page, site, separateModules = false }) {
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
-      const fields = _.unionBy(page.fields, site.fields, "key");
+      const fields = unionBy(page.fields, site.fields, "key");
       const data = convertFieldsToData(fields);
       const svelte = await processCode({ 
         code: {
@@ -79,7 +79,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
       resolve(svelte)
     }),
     new Promise(async (resolve) => {
-      const fields = _.unionBy(page.fields, site.fields, "key");
+      const fields = unionBy(page.fields, site.fields, "key");
       const data = convertFieldsToData(fields);
       const svelte = await processCode({ 
         code: {
@@ -100,8 +100,8 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
         // Remove fields no longer present in Symbol
         const symbolFields = symbol.value.fields
-        const componentFields = block.value.fields.filter(field => _.find(symbolFields, ['id', field.id])) 
-        const fields = _.unionBy(componentFields, page.fields, site.fields, "key");
+        const componentFields = block.value.fields.filter(field => find(symbolFields, ['id', field.id])) 
+        const fields = unionBy(componentFields, page.fields, site.fields, "key");
         const data = convertFieldsToData(fields);
 
         const { html, css, js } = symbol.value
@@ -178,7 +178,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
   </html>
   `
 
-  const modules = _.uniqBy(
+  const modules = uniqBy(
     blocks.filter(block => block.js).map(block => ({
       symbol: block.symbol,
       content: block.js
@@ -197,7 +197,7 @@ export async function buildPagePreview({ page, site }) {
     ...page.content.map(async block => {
       if (block.type === 'component') {
 
-        const fields = _.unionBy(block.value.fields, page.fields, site.fields, "key");
+        const fields = unionBy(block.value.fields, page.fields, site.fields, "key");
         const data = convertFieldsToData(fields);
 
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
@@ -220,7 +220,7 @@ export async function buildPagePreview({ page, site }) {
       } else {
         const {html} = block.value
         // might add this back in later
-        // const fields = _.unionBy(page.fields, site.fields, "key");
+        // const fields = unionBy(page.fields, site.fields, "key");
         // const data = convertFieldsToData(fields);
         const svelte = await processCode({ 
           code: {
