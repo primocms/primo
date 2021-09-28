@@ -76,8 +76,7 @@
     "prosemirror-schema-list": "^1.1.5",
     "prosemirror-view": "^1.18.11",
     "showdown": "^1.9.1",
-    "svelte": "^3.32.3",
-    "svelte-bricks": "^0.1.0"
+    "svelte": "^3.32.3"
   },
   "resolutions": {
     "prosemirror-model": "1.9.1"
