@@ -93,10 +93,11 @@
     align-items: center;
   }
   .button {
+    background: var(--color-gray-9);
     box-shadow: var(--primo-ring-primored);
     padding: 0.5rem 1rem;
     margin-bottom: 1rem;
-    border-radius: 0.25rem;
+    border-radius: var(--primo-border-radius);
     color: white;
     font-weight: 600;
     font-size: 0.75rem;

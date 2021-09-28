@@ -68,7 +68,7 @@
     width: 100%;
     overflow: hidden;
     position: relative;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     max-height: 100vh;
     padding: 1rem;
 
@@ -82,7 +82,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     height: calc(
       100vh - 6rem
     ); /* to allow children to scroll on overflow (i.e. not grow) */

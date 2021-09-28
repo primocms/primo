@@ -242,7 +242,7 @@
     background: var(--primo-color-codeblack);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     overflow: hidden;
 
     button {

@@ -123,7 +123,7 @@
     border: 1px solid var(--color-gray-9);
     background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     max-height: 50vh;
 
     header {

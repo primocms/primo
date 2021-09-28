@@ -544,7 +544,7 @@
     background: var(--color-gray-8);
     color: var(--color-gray-3);
     padding: 0.5rem 0;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     transition: var(--transition-colors);
 
     i {

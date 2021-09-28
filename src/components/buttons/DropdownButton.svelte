@@ -30,7 +30,7 @@
     display: block !important;
     padding: 0.5rem 1rem !important;
     margin-bottom: 0.5rem !important;
-    border-radius: var(--border-radius-1) !important;
+    border-radius: var(--primo-border-radius) !important;
     width: 100% !important;
     text-align: center !important;
     &:not(:last-child) {

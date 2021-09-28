@@ -248,7 +248,7 @@
         button {
           padding: 3rem;
           box-shadow: var(--ring);
-          border-radius: var(--border-radius-1);
+          border-radius: var(--primo-border-radius);
           background: var(--color-gray-9);
           color: var(--primo-color-white);
           width: 100%;

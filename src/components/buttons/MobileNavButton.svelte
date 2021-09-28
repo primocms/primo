@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     padding: 0.5rem 0.75rem;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
 
     svg {
       fill: currentColor;

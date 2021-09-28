@@ -101,7 +101,7 @@
     top: calc(100% + 0.75rem);
     overflow: scroll;
     position: absolute;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     padding: 1rem;
     box-shadow: var(--box-shadow-xl);
 

@@ -115,7 +115,7 @@
 <style lang="postcss">
   .page-item {
     box-shadow: var(--box-shadow);
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     overflow: hidden;
     position: relative;
 

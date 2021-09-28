@@ -18,7 +18,6 @@
     saving as savingStore,
     showKeyHint,
     loadingSite,
-    onMobile,
   } from './stores/app/misc';
   import { DEFAULTS, createSite } from './const';
 
@@ -122,6 +121,8 @@
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
     --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
+
+    --primo-border-radius: 4px;
 
     --primo-color-black: rgb(17, 17, 17);
     --primo-color-black-opaque: rgba(17, 17, 17, 0.9);

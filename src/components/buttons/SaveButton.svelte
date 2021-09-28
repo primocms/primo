@@ -29,7 +29,7 @@
     background: var(--primo-color-primored);
     color: var(--primo-color-white);
     padding: 0.5rem 1rem;
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     font-weight: 600;
     transition: background 0.1s, color 0.1s;
 

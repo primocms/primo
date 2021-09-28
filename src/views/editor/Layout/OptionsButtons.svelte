@@ -34,14 +34,12 @@
       <div class="buttons" class:deletable>
         <button
           on:click={() => dispatch('convert', 'content')}
-          class="is-primored"
           on:click={() => dispatch('delete')}>
           <i class="fas fa-edit" />
           <span class="hidden md:inline">Content</span>
         </button>
         <button
           on:click={() => (selectingComponent = true)}
-          class="is-primored"
           on:click={() => dispatch('delete')}>
           <i class="fas fa-clone" />
           <span class="hidden md:inline">Component</span>
@@ -81,6 +79,7 @@
         width: 30px;
         display: flex;
         align-items: center;
+        margin-right: 0.5rem;
       }
 
       .buttons {
@@ -94,7 +93,8 @@
         }
 
         button {
-          background-color: var(--color-gray-8);
+          background: var(--color-gray-9);
+          box-shadow: var(--primo-ring-primored);
           color: var(--color-gray-1);
           font-weight: 600;
           flex: 1;
@@ -106,12 +106,8 @@
           font-size: var(--font-size-2);
           transition: var(--transition-colors);
 
-          &.is-primored {
+          &:hover {
             background: var(--primo-color-primored);
-
-            &:hover {
-              background: var(--primo-color-primored-dark);
-            }
           }
 
           &.delete {

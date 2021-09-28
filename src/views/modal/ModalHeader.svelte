@@ -103,7 +103,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: var(--border-radius-1);
+        border-radius: var(--primo-border-radius);
         color: var(--color-gray-4);
         padding-right: 0.5rem;
         transition: var(--transition-colors);
@@ -253,7 +253,7 @@
     align-items: center;
     padding: 0.5rem 0.75rem;
     font-size: var(--font-size-2);
-    border-radius: var(--border-radius-1);
+    border-radius: var(--primo-border-radius);
     transition: var(--transition-colors);
 
     &.primary {
