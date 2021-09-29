@@ -113,11 +113,6 @@
           &.delete {
             padding-left: 20px;
             padding-right: 20px;
-            border: 1px solid var(--color-gray-8);
-
-            &:hover {
-              background: var(--primo-color-primored-dark);
-            }
           }
 
           &:focus {

@@ -152,7 +152,7 @@
           }
           input:focus {
             box-shadow: none;
-            focus: 0;
+            outline: 0;
           }
 
           svg {

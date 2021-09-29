@@ -16,7 +16,7 @@ export default async function format(code, { mode, position }) {
   
     formatted = prettier.formatWithCursor(code, { 
       parser: mode,  
-      jsxBracketSameLine: true,
+      bracketSameLine: true,
       cursorOffset: position,
       plugins: [
         plugins[mode]
