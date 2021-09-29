@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import modal from '../../stores/app/modal';
   import { switchEnabled } from '../../stores/app';
@@ -6,10 +7,12 @@
 
   export let visible;
 
-  Mousetrap.bind(['esc'], () => {
-    if (!$modal.disabledBgClose) {
-      modal.hide();
-    }
+  onMount(() => {
+    Mousetrap.bind(['esc'], () => {
+      if (!$modal.disabledBgClose) {
+        modal.hide();
+      }
+    });
   });
 
   $: variants = $modal.variants || 'max-w-md';

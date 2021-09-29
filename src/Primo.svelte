@@ -94,9 +94,6 @@
       : null;
   }
 
-  Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
-  Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
-
   $: $loadingSite = checkFor404($pageId, $pages);
   function checkFor404(id, pages) {
     const [root, child] = id.split('/');
@@ -104,7 +101,10 @@
     return !exists;
   }
 
-  onDestroy(() => dispatch('destroy'));
+  onMount(() => {
+    Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
+    Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
+  });
 
 </script>
 

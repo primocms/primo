@@ -1,6 +1,7 @@
 <script>
   import Mousetrap from 'mousetrap';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { browser } from '$app/env';
 
   const dispatch = createEventDispatcher();
 
@@ -8,23 +9,20 @@
   import ToolbarButton from './ToolbarButton.svelte';
   import Doc from './Doc.svelte';
 
-  import { currentPagePreview } from '../../components/misc/misc';
-  import site from '../../stores/data/site';
   import { focusedNode, switchEnabled } from '../../stores/app';
   import { undone } from '../../stores/data/draft';
   import { saving, unsaved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
-  import currentPage, { id, content } from '../../stores/app/activePage';
 
-  import { buildStaticPage } from '../../stores/helpers';
-  let unlockingPage = false;
   let updatingDatabase = false;
 
   // setup key-bindings
-  Mousetrap.bind(['mod+s'], (e) => {
-    e.preventDefault();
-    savePage();
+  onMount(() => {
+    Mousetrap.bind(['mod+s'], (e) => {
+      e.preventDefault();
+      savePage();
+    });
   });
 
   const editorButtons = [
@@ -118,11 +116,11 @@
   $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons;
 
   // Show 'are you sure you want to leave prompt' when closing window
-  $: if ($unsaved && window.location.hostname !== 'localhost') {
+  $: if ($unsaved && window.location.hostname !== 'localhost' && browser) {
     window.onbeforeunload = function (e) {
       e.returnValue = '';
     };
-  } else {
+  } else if (browser) {
     window.onbeforeunload = function (e) {
       delete e['returnValue'];
     };
@@ -136,27 +134,29 @@
       toolbar.clientHeight + 2
     }px solid var(--primo-color-black)`;
   }
-
 </script>
 
 <Toolbar
   bind:element={toolbar}
   on:signOut
   buttons={$loadingSite ? [] : toolbarButtons}
-  on:toggleView={() => switchEnabled.set(!$switchEnabled)}>
+  on:toggleView={() => switchEnabled.set(!$switchEnabled)}
+>
   <ToolbarButton
     id="undo"
     title="Undo"
     icon="undo-alt"
     on:click={undoSiteChange}
-    buttonStyles="mr-1 bg-gray-600" />
+    buttonStyles="mr-1 bg-gray-600"
+  />
   {#if $undone.length > 0}
     <ToolbarButton
       id="redo"
       title="Redo"
       icon="redo-alt"
       on:click={redoSiteChange}
-      buttonStyles="mr-1 bg-gray-600" />
+      buttonStyles="mr-1 bg-gray-600"
+    />
   {/if}
   <ToolbarButton
     id="save"
@@ -165,7 +165,8 @@
     key="s"
     loading={$saving}
     on:click={savePage}
-    disabled={!$unsaved} />
+    disabled={!$unsaved}
+  />
   <ToolbarButton
     type="primo"
     title="Publish"
@@ -175,7 +176,8 @@
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}
-    disabled={updatingDatabase} />
+    disabled={updatingDatabase}
+  />
 </Toolbar>
 
 <Doc bind:element={page} />
