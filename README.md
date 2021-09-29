@@ -16,4 +16,4 @@ Primo version 2 is currently in Alpha. Where version 1 was focused on offering P
 
 ## Contributing
 
-We've been super excited to have a lot of people ask how they can help out on the project, but while we're focused on getting primo.af (which is closed-source for the time being) to a good place the best way for people in the community to contribute is by opening discussions for issues and ideas, getting the word out, and just using the tool as much as possible to see where its limits are.
+The best way to contribute at the moment is by using the app and staying in close contact with us on how it's working (including bugs, deficiencies, and advantages). Once the Alpha's ready, we'll have a program for Alpha testers. 
