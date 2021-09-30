@@ -268,6 +268,27 @@
     margin-left: -7px;
   }
 
+  @media (max-width: 600px) {
+    #primo-toolbar {
+      background-color: var(--color-codeblack);
+
+      .menu-container {
+        flex-direction: column;
+        justify-content: flex-start;
+        background: var(--primo-color-codeblack);
+
+        .left {
+          align-items: center;
+          background: var(--color-codeblack);
+
+          .primary-buttons {
+            justify-content: flex-start;
+          }
+        }
+      }
+    }
+  }
+
   @media (min-width: 1024px) {
     .tooltip {
       display: block;
