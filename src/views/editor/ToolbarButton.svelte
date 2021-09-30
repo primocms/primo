@@ -52,7 +52,7 @@
           class:active={$showKeyHint}
           aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
-      {#if label}<span>{label}</span>{/if}
+      {#if label}<span class="label">{label}</span>{/if}
       {#if loading}<i class="fas fa-spinner" />{/if}
       <i class={icon} class:hidden={loading} />
     {:else}
@@ -214,6 +214,12 @@
 
       &:focus {
         background: var(--primo-color-primored-dark);
+      }
+
+      @media (max-width: 600px) {
+        span {
+          display: none;
+        }
       }
     }
 
