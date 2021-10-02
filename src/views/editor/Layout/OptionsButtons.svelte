@@ -64,7 +64,7 @@
   }
 
   .buttons-container {
-    background: var(--primo-color-black);
+    background: var(--primo-color-codeblack);
     border-top: 1px solid var(--primo-color-codeblack);
     border-bottom: 1px solid var(--primo-color-codeblack);
 

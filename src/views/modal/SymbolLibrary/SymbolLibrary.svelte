@@ -8,8 +8,8 @@
 <script>
   import { onMount } from 'svelte';
   import _some from 'lodash-es/some';
+  import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
-  import { Tabs } from '../../../components/misc';
   import ModalHeader from '../ModalHeader.svelte';
   import Container from './SymbolContainer.svelte';
   import Spinner from '../../../components/misc/Spinner.svelte';
@@ -120,52 +120,41 @@
     }
   }
 
-  let mounted;
   onMount(async () => {
-    setTimeout(() => {
-      mounted = true;
-    }, 3000);
     if (!LZ) {
       LZ = (await import('lz-string')).default;
     }
   });
 
-  const tabs = [
-    {
-      id: 'site',
-      label: 'Site Library',
-      icon: 'clone',
-      highlighted: false,
-    },
-    ...$libraries,
-  ];
-
-  let activeTab = tabs[0];
-
-  async function getSymbols() {
-    // window.plausible('Get Public Library');
-    // const {data} = await sites.get({ path: 'mateo/public-library' })
-    $publicSymbols = $libraries[0]['components'];
-  }
-
-  $: if ($publicSymbols.length === 0 && activeTab === tabs[1]) {
-    getSymbols();
-  }
-
-  let hovering = false;
-  $: tabs[0]['highlighted'] = hovering;
-
   let [minColWidth, maxColWidth, gap] = [300, 800, 20];
   let width, height;
 
+  let showingPublicLibrary = false;
+
+  onMount(async () => {
+    const { data: symbols } = await axios.get(
+      'https://api.primo.af/public-library.json'
+    );
+    $publicSymbols = symbols;
+  });
+
 </script>
 
-<ModalHeader icon="fas fa-clone" title="Components" />
+{#if showingPublicLibrary}
+  <ModalHeader
+    icon="fas fa-clone"
+    title="Public Library"
+    button={{ label: 'Site Library', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = false) }} />
+{:else}
+  <ModalHeader
+    icon="fas fa-clone"
+    title="Site Library"
+    button={{ label: 'Public Library', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = true) }} />
+{/if}
 
 <main>
-  <Tabs {tabs} bind:activeTab />
   <Masonry
-    items={activeTab === tabs[0] ? [{ id: 'button' }, ...$symbols] : [{ id: 'button' }, ...$publicSymbols]}
+    items={showingPublicLibrary ? $publicSymbols : [{ id: 'button' }, ...$symbols]}
     {minColWidth}
     {maxColWidth}
     {gap}
@@ -221,21 +210,6 @@
     background: var(--primo-color-black);
     padding: 0 0.5rem 0.5rem 0.5rem;
     overflow: scroll;
-    max-height: calc(100vh - 7rem);
-
-    ul {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 15px;
-
-      @media (max-width: 900px) {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-      }
-    }
   }
   .library-buttons {
     color: var(--color-gray-1);
