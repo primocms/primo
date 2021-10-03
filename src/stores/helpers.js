@@ -142,7 +142,10 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
   // happens for empty blocks
   if (!blocks[0]) {
-    return '<div></div>'
+    return separateModules ? {
+      html: null,
+      modules: []
+    } : '<div></div>'
   }
 
   const final = `
@@ -157,7 +160,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
           ${
             block.js && separateModules ? 
             `<script type="module" async>
-              import App from './${block.symbol}.js';
+              import App from './_modules/${block.symbol}.js';
               new App({
                 target: document.querySelector('#block-${block.id}'),
                 hydrate: true
