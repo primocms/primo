@@ -2,7 +2,6 @@
   import { writable } from 'svelte/store';
   const originalButton = writable(null);
   const publicSymbols = writable([]);
-
 </script>
 
 <script>
@@ -137,24 +136,33 @@
     );
     $publicSymbols = symbols;
   });
-
 </script>
 
 {#if showingPublicLibrary}
   <ModalHeader
     icon="fas fa-clone"
     title="Public Library"
-    button={{ label: 'Site Library', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = false) }} />
+    button={{
+      label: 'Site Library',
+      icon: 'fas fa-clone',
+      onclick: () => (showingPublicLibrary = false),
+    }}
+  />
 {:else}
   <ModalHeader
     icon="fas fa-clone"
     title="Site Library"
-    button={{ label: 'Public Library', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = true) }} />
+    button={{
+      label: 'Public Library',
+      icon: 'fas fa-clone',
+      onclick: () => (showingPublicLibrary = true),
+    }}
+  />
 {/if}
 
 <main>
   <Masonry
-    items={showingPublicLibrary ? $publicSymbols : [{ id: 'button' }, ...$symbols]}
+    items={showingPublicLibrary ? $publicSymbols : $symbols}
     {minColWidth}
     {maxColWidth}
     {gap}
@@ -162,47 +170,83 @@
     animate={false}
     let:item
     bind:width
-    bind:height>
+    bind:height
+  >
     <div>
-      {#if item.value}
-        <Container
-          symbol={item}
-          titleEditable={true}
-          on:copy={() => copySymbol(item)}
-          buttons={[{ onclick: () => {
-                const confirm = window.confirm('Are you sure you want to delete this component?');
-                if (confirm) {
-                  deleteSymbol(item);
-                }
-              }, title: 'Delete Component', svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>` }, { id: 'copy', onclick: () => copySymbol(item), title: 'Copy Component', svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>` }, { id: 'edit', onclick: () => editSymbol(item), title: 'Edit Component', highlight: true, svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>` }]} />
-      {:else}
-        <div class="xyz-in library-buttons">
-          {#if $userRole === 'developer'}
-            <button on:click={addSymbol}>
-              <svg
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"><path
-                  fill-rule="evenodd"
-                  d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-                  clip-rule="evenodd" /></svg>
-              <span>Create</span>
-            </button>
-          {/if}
-          <button on:click={pasteSymbol}>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"><path
-                d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-              <path
-                d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
-            <span>Paste</span>
-          </button>
-        </div>
-      {/if}
+      <Container
+        symbol={item}
+        titleEditable={true}
+        on:copy={() => copySymbol(item)}
+        buttons={!showingPublicLibrary
+          ? [
+              {
+                onclick: () => {
+                  const confirm = window.confirm(
+                    'Are you sure you want to delete this component?'
+                  );
+                  if (confirm) {
+                    deleteSymbol(item);
+                  }
+                },
+                title: 'Delete Component',
+                svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`,
+              },
+              {
+                id: 'copy',
+                onclick: () => copySymbol(item),
+                title: 'Copy Component',
+                svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>`,
+              },
+              {
+                id: 'edit',
+                onclick: () => editSymbol(item),
+                title: 'Edit Component',
+                highlight: true,
+                svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`,
+              },
+            ]
+          : [
+              {
+                id: 'copy',
+                onclick: () => copySymbol(item),
+                title: 'Copy Component',
+                svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>`,
+              },
+            ]}
+      />
     </div>
   </Masonry>
+  <div class="footer">
+    <div class="xyz-in library-buttons">
+      {#if $userRole === 'developer'}
+        <button on:click={addSymbol}>
+          <svg
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              fill-rule="evenodd"
+              d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            /></svg
+          >
+          <span>Create</span>
+        </button>
+      {/if}
+      <button on:click={pasteSymbol}>
+        <svg
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+          ><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+          <path
+            d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"
+          /></svg
+        >
+        <span>Paste</span>
+      </button>
+    </div>
+  </div>
 </main>
 
 <style lang="postcss">
@@ -210,6 +254,11 @@
     background: var(--primo-color-black);
     padding: 0 0.5rem 0.5rem 0.5rem;
     overflow: scroll;
+  }
+  .footer {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-gray-8);
   }
   .library-buttons {
     color: var(--color-gray-1);
@@ -267,5 +316,4 @@
       }
     }
   }
-
 </style>

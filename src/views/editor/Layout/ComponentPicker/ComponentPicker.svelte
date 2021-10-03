@@ -36,7 +36,6 @@
 
   let [minColWidth, maxColWidth, gap] = [300, 800, 20];
   let width, height;
-
 </script>
 
 <main in:fade={{ duration: 100 }} bind:this={element} class="primo-reset">
@@ -46,13 +45,15 @@
       on:click={() => dispatch('remove')}
       type="button"
       xyz="small"
-      aria-label="Close modal">
+      aria-label="Close modal"
+    >
       <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M6 18L18 6M6 6l12 12" />
+          d="M6 18L18 6M6 6l12 12"
+        />
       </svg>
     </button>
     <button class="button" on:click={() => dispatch('manage')}>
@@ -69,12 +70,20 @@
     animate={false}
     let:item
     bind:width
-    bind:height>
+    bind:height
+  >
     <SymbolContainer
       symbol={item}
-      buttons={[{ onclick: () => {
+      buttons={[
+        {
+          onclick: () => {
             dispatch('select', createInstance(item));
-          }, label: 'Select', svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>` }]} />
+          },
+          label: 'Select',
+          svg: `<svg style="height:1rem;width:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>`,
+        },
+      ]}
+    />
   </Masonry>
 </main>
 
@@ -82,7 +91,7 @@
   main {
     padding: 2.5rem;
     overflow-x: scroll;
-    height: 75vh;
+    max-height: 75vh;
     background-color: rgba(30, 30, 30);
     border-width: 4px;
     border-color: rgba(248, 68, 73);
@@ -143,5 +152,4 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
-
 </style>

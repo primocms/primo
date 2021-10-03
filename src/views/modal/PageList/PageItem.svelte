@@ -36,7 +36,6 @@
   $: pageURL = `/${$pageStore.params.site}/${
     page.id === 'index' ? '' : page.id || ''
   }`;
-
 </script>
 
 <div class="page-item">
@@ -63,7 +62,8 @@
           <button
             title="Delete page"
             on:click={() => dispatch('delete')}
-            class="delete">
+            class="delete"
+          >
             <i class="fas fa-trash" />
           </button>
         {/if}
@@ -77,20 +77,23 @@
           editingPage = false;
           dispatch('edit', { title, id });
         }}
-        in:fade={{ duration: 100 }}>
+        in:fade={{ duration: 100 }}
+      >
         <TextInput
           bind:value={title}
           id="page-label"
           autofocus={true}
           label="Page Label"
-          placeholder="About Us" />
+          placeholder="About Us"
+        />
         {#if id !== 'index'}
           <TextInput
             bind:value={id}
             id="page-url"
             label="Page URL"
             prefix="/"
-            placeholder="about-us" />
+            placeholder="about-us"
+          />
         {/if}
         <PrimaryButton disabled={disableSave} id="save-page" type="submit">
           Save
@@ -123,9 +126,16 @@
       color: var(--color-gray-2);
       background: var(--primo-color-codeblack);
       width: 100%;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 0.25rem;
       padding: 8px 12px;
+
+      a {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       .title {
         font-size: var(--font-size-2);
@@ -218,5 +228,4 @@
       --TextInput-mb: 0.5rem;
     }
   }
-
 </style>

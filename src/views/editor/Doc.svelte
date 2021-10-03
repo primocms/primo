@@ -190,7 +190,6 @@
   // }
 
   $: blocksToRender = $content.slice(0, componentsMounted);
-
 </script>
 
 <svelte:head>
@@ -209,9 +208,10 @@
         <Block
           on:mount={() => componentsMounted++}
           block={hydrateInstance(block, $symbols, $pageFields, $siteFields)}
-          {i} />
+          {i}
+        />
       {:else}
-        <Block {block} {i} on:mount={() => componentsMounted++} />
+        <Block on:save {block} {i} on:mount={() => componentsMounted++} />
       {/if}
     {/each}
   {/if}
@@ -239,5 +239,4 @@
     transition: opacity 0.1s;
     opacity: 1;
   }
-
 </style>
