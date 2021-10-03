@@ -5,19 +5,18 @@
   import Spinner from '../../ui/misc/Spinner.svelte';
   import PrimoLogo from '../svg/PrimoLogo.svelte';
   import DropdownButton from './DropdownButton.svelte';
-  import { unsaved } from '../../stores/app/misc';
+  import { saved } from '../../stores/app/misc';
 
   export let variants = '';
 
   let showingDropdown = false;
 
   function warn(e) {
-    if ($unsaved) {
+    if (!$saved) {
       e.preventDefault();
       window.alert(`Save your changes before navigating away from your site`);
     }
   }
-
 </script>
 
 <a
@@ -27,7 +26,8 @@
   class:chevron={showingDropdown}
   aria-label="See all sites"
   href="/"
-  on:click={warn}>
+  on:click={warn}
+>
   {#if $loadingSite}
     <Spinner />
   {:else}
@@ -109,5 +109,4 @@
       margin-bottom: 1rem;
     }
   }
-
 </style>

@@ -1,10 +1,10 @@
 <script>
-  import { unsaved } from '../../stores/app/misc';
+  import { saved } from '../../stores/app/misc';
   import { goto } from '$app/navigation';
   export let button;
 
   function warn() {
-    if ($unsaved) {
+    if (!$saved) {
       window.alert(
         `Save your site before navigating away so you don't lose your changes`
       );
@@ -13,7 +13,6 @@
       goto(button.href);
     }
   }
-
 </script>
 
 <button on:click={warn} href={button.href} id={button.id}>
@@ -44,5 +43,4 @@
   i {
     margin-right: 5px;
   }
-
 </style>

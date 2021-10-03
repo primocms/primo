@@ -9,7 +9,7 @@
   import modal from '../../stores/app/modal';
   import { getAllFields } from '../../stores/helpers';
   import { html as pageHTML, id } from '../../stores/app/activePage';
-  import { unsaved } from '../../stores/app/misc';
+  import { saved } from '../../stores/app/misc';
   import { html as siteHTML } from '../../stores/data/draft';
   import {
     updateSiteWrapper,
@@ -37,24 +37,33 @@
   async function saveFinalHTML() {
     updateActivePageWrapper(localPageHTML);
     updateSiteWrapper(localSiteHTML);
-    $unsaved = true;
+    $saved = false;
   }
-
 </script>
 
 <ModalHeader
   icon="fab fa-html5"
   title="HTML"
-  button={{ label: `Draft`, icon: 'fas fa-check', onclick: () => {
+  button={{
+    label: `Draft`,
+    icon: 'fas fa-check',
+    onclick: () => {
       saveFinalHTML();
       modal.hide();
-    } }}
+    },
+  }}
   warn={() => {
-    if (!isEqual(localPageHTML, $pageHTML) || !isEqual(localSiteHTML, $siteHTML)) {
-      const proceed = window.confirm('Undrafted changes will be lost. Continue?');
+    if (
+      !isEqual(localPageHTML, $pageHTML) ||
+      !isEqual(localSiteHTML, $siteHTML)
+    ) {
+      const proceed = window.confirm(
+        'Undrafted changes will be lost. Continue?'
+      );
       return proceed;
     } else return true;
-  }} />
+  }}
+/>
 
 <main class="flex flex-col">
   <Tabs {tabs} bind:activeTab />
@@ -64,25 +73,29 @@
       <CodeMirror
         bind:value={localPageHTML.head}
         style="height:10rem"
-        mode="html" />
+        mode="html"
+      />
 
       <span class="before-body">{'Before </body>'}</span>
       <CodeMirror
         bind:value={localPageHTML.below}
         style="height:15rem"
-        mode="html" />
+        mode="html"
+      />
     {:else}
       <span class="head">{'<head>'}</span>
       <CodeMirror
         bind:value={localSiteHTML.head}
         style="height:10rem"
-        mode="html" />
+        mode="html"
+      />
 
       <span class="before-body">{'Before </body>'}</span>
       <CodeMirror
         bind:value={localSiteHTML.below}
         style="height:15rem"
-        mode="html" />
+        mode="html"
+      />
     {/if}
   </div>
 </main>
@@ -113,5 +126,4 @@
       }
     }
   }
-
 </style>

@@ -8,7 +8,7 @@
   import { processors } from '../../component';
 
   import activePage, { content, id } from '../../stores/app/activePage';
-  import { unsaved } from '../../stores/app/misc';
+  import { saved } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { pages } from '../../stores/actions';
 
@@ -89,22 +89,32 @@
       ...page,
       css: unsavedPageCSS,
     }));
-    $unsaved = true;
+    $saved = false;
     modal.hide();
   }
-
 </script>
 
 <ModalHeader
   icon="fab fa-css3"
   title="CSS"
-  button={{ label: `Draft`, icon: 'fas fa-check', onclick: saveStyles, loading }}
+  button={{
+    label: `Draft`,
+    icon: 'fas fa-check',
+    onclick: saveStyles,
+    loading,
+  }}
   warn={() => {
-    if (!isEqual(unsavedPageCSS, $pageCSS) || !isEqual(unsavedSiteCSS, $siteCSS)) {
-      const proceed = window.confirm('Undrafted changes will be lost. Continue?');
+    if (
+      !isEqual(unsavedPageCSS, $pageCSS) ||
+      !isEqual(unsavedSiteCSS, $siteCSS)
+    ) {
+      const proceed = window.confirm(
+        'Undrafted changes will be lost. Continue?'
+      );
       return proceed;
     } else return true;
-  }} />
+  }}
+/>
 
 <main>
   <div>
@@ -118,7 +128,8 @@
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
           on:debounce={getNewPagePreview}
-          on:save={saveStyles} />
+          on:save={saveStyles}
+        />
       {:else if primaryTab.id === 'site'}
         <CodeMirror
           autofocus
@@ -127,7 +138,8 @@
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
           on:debounce={buildSitePreview}
-          on:save={saveStyles} />
+          on:save={saveStyles}
+        />
       {/if}
     </div>
     <div class="preview-container">
@@ -171,5 +183,4 @@
       }
     }
   }
-
 </style>

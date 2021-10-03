@@ -1,7 +1,6 @@
 import {writable,get,derived} from 'svelte/store'
 import {pages} from '../data/draft'
 import {DEFAULTS, createPage} from '../../const'
-import {unsaved} from './misc'
 
 export const id = writable('index')
 
@@ -65,7 +64,6 @@ function updatePage(prop) {
     ...page,
     ...prop
   }) : page))
-  // unsaved.set(true)
 }
 
 

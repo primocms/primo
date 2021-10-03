@@ -1,6 +1,6 @@
 import Primo from "./Primo.svelte";
 
-import {unsaved,onMobile,userRole} from './stores/app/misc'
+import {saved,onMobile,userRole} from './stores/app/misc'
 import {site} from './stores/data/draft'
 import savedSite from './stores/data/site'
 import dropdown from './stores/app/dropdown'
@@ -15,7 +15,7 @@ import * as utils from './utils'
 import * as components from './components'
 
 const stores = {
-  unsaved,
+  saved,
   onMobile,
   userRole
 }

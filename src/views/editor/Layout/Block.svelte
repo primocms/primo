@@ -11,7 +11,7 @@
   import { createDebouncer } from '../../../utils';
 
   import { focusedNode } from '../../../stores/app';
-  import { onMobile, unsaved } from '../../../stores/app/misc';
+  import { onMobile, saved } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
   import { id, content } from '../../../stores/app/activePage';
   import { pages } from '../../../stores/actions';
@@ -62,7 +62,7 @@
       ...page,
       content: newContent,
     }));
-    $unsaved = true;
+    $saved = false;
   }
 
   // Constructors
@@ -202,12 +202,6 @@
       },
     };
   }
-
-  function savePage() {
-    site.save();
-    $unsaved = false;
-  }
-
 </script>
 
 <div
@@ -217,7 +211,8 @@
   class:component={block.type === 'component'}
   id="block-{block.id}"
   on:mouseenter={() => (hovering = true)}
-  on:mouseleave={() => (hovering = false)}>
+  on:mouseleave={() => (hovering = false)}
+>
   {#if (hovering || $onMobile) && block.type !== 'options'}
     <div class="block-buttons-container" use:blockContainer>
       <BlockButtons
@@ -246,7 +241,8 @@
         on:addOptionsBelow={() => {
           insertOptionsRow(i, 'below');
           dispatch('contentChanged');
-        }} />
+        }}
+      />
     </div>
   {/if}
   {#if block.type === 'component'}
@@ -254,16 +250,11 @@
   {:else if block.type === 'content'}
     <ContentNode
       {block}
-      on:save={savePage}
+      on:save
       on:focus={({ detail: selection }) => {
         focusedNode.setSelection({ id: block.id, position: i, selection });
-        // path: { section, column, block },
       }}
-      on:debounce={() => {
-        if (!$unsaved) {
-          $unsaved = true;
-        }
-      }}
+      on:debounce={() => ($saved = false)}
       on:change={({ detail: html }) => {
         updateBlock({ ...block, value: { html } });
         dispatch('contentChanged');
@@ -271,7 +262,8 @@
       on:selectionChange={({ detail: selection }) => {
         focusedNode.setSelection({ id: block.id, position: i, selection });
       }}
-      on:delete={deleteRow} />
+      on:delete={deleteRow}
+    />
   {:else if block.type === 'options'}
     <OptionsButtons
       deletable={!checkIfOnlyChild(block.id)}
@@ -280,7 +272,8 @@
         selectOption('component', component);
       }}
       on:convert={({ detail: type }) => selectOption(type)}
-      on:remove={deleteRow} />
+      on:remove={deleteRow}
+    />
   {/if}
 </div>
 
@@ -288,5 +281,4 @@
   .primo-block {
     position: relative;
   }
-
 </style>

@@ -15,15 +15,15 @@
   import { content, styles, fields, html, css } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';
   import {
+    saved,
     saving as savingStore,
     showKeyHint,
     loadingSite,
   } from './stores/app/misc';
-  import { DEFAULTS, createSite } from './const';
+  import { DEFAULTS } from './const';
 
-  import { unsaved } from '../src/stores/app/misc';
   import { pages } from './stores/data/draft';
-  import site from './stores/data/site';
+  import { site as draft } from './stores/data/draft';
   import { hydrateSite } from './stores/actions';
   import { page as pageStore } from '$app/stores';
 
@@ -37,18 +37,15 @@
   $: $userRole = role;
   $: $librariesStore = libraries;
 
+  function saveSite() {
+    dispatch('save', $draft);
+  }
+
   // refresh draft data when passing in updated data
   let cachedData;
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
-  }
-
-  // Runs when site saves (i.e when $site gets updated)
-  $: {
-    $unsaved = false;
-    dispatch('save', $site);
-    hydrateSite($site); // sync draft with saved
   }
 
   $: $pageId = getPageId($pageStore.params);
@@ -105,10 +102,9 @@
     Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
     Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
   });
-
 </script>
 
-<Page />
+<Page on:save={saveSite} />
 
 <Modal visible={!!activeModal}>
   <svelte:component this={activeModal} {...$modal.componentProps} />
@@ -159,5 +155,4 @@
   a {
     cursor: pointer;
   }
-
 </style>

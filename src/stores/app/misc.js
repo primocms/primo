@@ -2,11 +2,11 @@ import {writable} from 'svelte/store'
 
 export const saving = writable(false)
 
+export const saved = writable(true)
+
 export const switchEnabled = writable(true)
 
 export const userRole = writable('developer')
-
-export const unsaved = writable(false)
 
 export const showKeyHint = writable(false)
 

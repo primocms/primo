@@ -11,7 +11,7 @@
 
   import { focusedNode, switchEnabled } from '../../stores/app';
   import { undone } from '../../stores/data/draft';
-  import { saving, unsaved, loadingSite } from '../../stores/app/misc';
+  import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
 
@@ -116,7 +116,7 @@
   $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons;
 
   // Show 'are you sure you want to leave prompt' when closing window
-  $: if ($unsaved && window.location.hostname !== 'localhost' && browser) {
+  $: if (browser && !$saved && window.location.hostname !== 'localhost') {
     window.onbeforeunload = function (e) {
       e.returnValue = '';
     };
@@ -165,7 +165,7 @@
     key="s"
     loading={$saving}
     on:click={savePage}
-    disabled={!$unsaved}
+    disabled={$saved}
   />
   <ToolbarButton
     type="primo"
@@ -180,4 +180,4 @@
   />
 </Toolbar>
 
-<Doc bind:element={page} />
+<Doc bind:element={page} on:save />
