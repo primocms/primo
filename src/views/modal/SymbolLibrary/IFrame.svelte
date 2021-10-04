@@ -12,15 +12,16 @@
   $: componentApp && iframeLoaded && setIframeContent({ componentApp });
   function setIframeContent({ componentApp }) {
     iframe.contentWindow.postMessage({ componentApp });
-
-    setTimeout(() => {
+    setScaleRatio();
+    setTimeout(setHeight, 100);
+    function setHeight() {
       iframe.height = '';
       const newHeight =
         iframe.contentWindow.document.body.scrollHeight * scaleRatio;
       iframe.height = newHeight;
       height = newHeight;
       finishedResizing = true;
-    }, 100);
+    }
   }
 
   function setScaleRatio() {
@@ -30,8 +31,6 @@
   }
 
   let scaleRatio = 1;
-
-  onMount(setScaleRatio);
 
 </script>
 
