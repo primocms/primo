@@ -3,7 +3,7 @@
   import Mousetrap from 'mousetrap';
 
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-  import Page from './views/editor/Page.svelte';
+  import Editor from './views/editor/Editor.svelte';
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
   import * as modals from './views/modal';
@@ -104,7 +104,7 @@
   });
 </script>
 
-<Page on:save={saveSite} />
+<Editor on:save={saveSite} />
 
 <Modal visible={!!activeModal}>
   <svelte:component this={activeModal} {...$modal.componentProps} />

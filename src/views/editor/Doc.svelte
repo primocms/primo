@@ -201,7 +201,11 @@
     <Spinner />
   </div>
 {/if}
-<div bind:this={element} class="primo-page" class:fadein={pageMounted}>
+<div
+  bind:this={element}
+  class="primo-page being-edited"
+  class:fadein={pageMounted}
+>
   {#if pageExists}
     {#each blocksToRender as block, i (block.id)}
       {#if block.symbolID}

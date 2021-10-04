@@ -86,12 +86,19 @@
     creatingPage = true;
   }
 
-  let currentPath = $page.params.page ? [$page.params.page] : [];
-  $: [rootPageId, childPageId] = currentPath;
-  $: console.log({ currentPath });
-  $: console.log({ $page });
+  let currentPath = buildCurrentPath($page.path);
+  $: rootPageId = currentPath[0];
+  $: childPageId = currentPath[1];
   $: listedPages = getListedPages(childPageId, $pages);
   $: breadcrumbs = getBreadCrumbs(childPageId, $pages);
+
+  function buildCurrentPath(path) {
+    const [site, root, child] = path.slice(1).split('/');
+    if (!root || !child) {
+      // on index or top-level page
+      return [];
+    } else return [root, child];
+  }
 
   function getListedPages(childPageId, pages) {
     console.log({ childPageId, pages });
