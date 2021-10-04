@@ -193,7 +193,7 @@
 </script>
 
 <svelte:head>
-  {@html htmlHead}
+  {@html htmlHead || ''}
 </svelte:head>
 
 {#if !pageMounted}
@@ -216,7 +216,7 @@
     {/each}
   {/if}
 </div>
-{@html htmlBelow}
+{@html htmlBelow || ''}
 
 <style>
   .spinner-container {
