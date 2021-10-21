@@ -103,7 +103,9 @@
             {@html button.clicked.svg}
           {:else}
             {#if button.label}<span>{button.label}</span>{/if}
-            {@html button.svg}
+            {#if button.svg}
+              {@html button.svg}
+            {:else if button.icon}<i class={button.icon} />{/if}
           {/if}
         </button>
       {/each}
