@@ -153,7 +153,16 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
   <html lang="en">
     <head>${head.html || ''}</head>
     <body class="primo-page">
-      ${blocks.map(block => `
+      ${buildBlocks(blocks)}
+      ${below.html || ''}
+    </body>
+  </html>
+  `
+
+  function buildBlocks(blocks) {
+    return blocks.map(block => {
+      if (!block || block.type === 'options') return ''
+      return `
         ${block.css ? `<style>${block.css}</style>` : ``}
         <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
           ${block.html || ''}
@@ -175,11 +184,9 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
               });
           </script>` : ``)}
         </div>
-      `).join('')}
-      ${below.html || ''}
-    </body>
-  </html>
-  `
+      `
+    }).join('')
+  }
 
   const modules = uniqBy(
     blocks.filter(block => block.js).map(block => ({
