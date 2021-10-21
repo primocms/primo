@@ -142,6 +142,7 @@
     border: 1px solid var(--primo-color-primored);
     border-radius: 1px;
     min-width: 10rem;
+    padding-top: 2.5rem;
 
     &:last-of-type {
       margin-bottom: 0;
@@ -151,11 +152,15 @@
       position: absolute;
       top: 0;
       right: 0;
+      left: 0;
       padding: 0.25rem 0.5rem;
       color: var(--color-gray-2);
-      background: var(--color-gray-9);
       z-index: 10;
       border-radius: 1px;
+      border-bottom: 1px solid var(--color-gray-8);
+      gap: 9px;
+      display: flex;
+      justify-content: flex-end;
 
       button {
         &:focus {
