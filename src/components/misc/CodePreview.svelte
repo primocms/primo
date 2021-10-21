@@ -96,6 +96,8 @@
     iframe.srcdoc = iframePreview;
   }
 
+  let previewWidth;
+
 </script>
 
 <div class="code-preview">
@@ -106,7 +108,11 @@
       {@html error}
     </pre>
   {/if}
-  <div class="preview-container" class:loading bind:this={container}>
+  <div
+    class="preview-container"
+    class:loading
+    bind:this={container}
+    bind:clientWidth={previewWidth}>
     <iframe
       class:scaled={view === 'large'}
       on:load={setLoading}
@@ -118,6 +124,7 @@
   {#if !hideControls}
     <div class="footer-buttons">
       {#if view === 'small'}
+        <div class="preview-width">{previewWidth}</div>
         <button class="switch-view" on:click={changeView}>
           <i class="fas fa-expand-arrows-alt" />
           <span>window view</span>
@@ -176,6 +183,16 @@
   .footer-buttons {
     display: flex;
     flex-wrap: wrap;
+
+    .preview-width {
+      background: var(--primo-color-black);
+      color: var(--primo-color-white);
+      font-weight: 500;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+    }
   }
 
   .footer-buttons button {
