@@ -124,11 +124,36 @@
     ],
   });
 
-  let formatCode;
-  if (browser) {
-    import('../../libraries/prettier').then(({ default: format }) => {
-      formatCode = format;
-    });
+  let prettier;
+  let html;
+  let css;
+  let babel;
+  if (browser) fetchPrettier();
+
+  async function fetchPrettier() {
+    prettier = await import('prettier');
+    html = (await import('prettier/esm/parser-html')).default;
+    css = (await import('prettier/esm/parser-postcss')).default;
+    babel = (await import('prettier/esm/parser-babel')).default;
+  }
+
+  async function formatCode(code, { mode, position }) {
+    let formatted;
+    try {
+      if (mode === 'javascript') {
+        mode = 'babel';
+      }
+
+      formatted = prettier.formatWithCursor(code, {
+        parser: mode,
+        bracketSameLine: true,
+        cursorOffset: position,
+        plugins: [html, css, babel],
+      });
+    } catch (e) {
+      console.warn(e);
+    }
+    return formatted;
   }
 
   onMount(async () => {
@@ -149,13 +174,13 @@
   }
 
   let element;
-
 </script>
 
 <svelte:window
   on:resize={() => {
     // Editor.setSize(null, editorNode.clientHeight)
-  }} />
+  }}
+/>
 
 <div bind:this={element} class="codemirror-container {mode}" {style}>
   <div in:fade={{ duration: 200 }} bind:this={editorNode} />
@@ -174,5 +199,4 @@
     font-family: 'Fira Code', 'Courier New', sans-serif !important;
     height: calc(100vh - 9.5rem);
   }
-
 </style>

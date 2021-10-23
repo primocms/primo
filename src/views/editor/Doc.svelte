@@ -19,6 +19,7 @@
   } from '../../stores/app/activePage';
   import {
     processCode,
+    processCSS,
     convertFieldsToData,
     wrapInStyleTags,
   } from '../../utils';
@@ -143,13 +144,14 @@
     pageCSS: $pageCSS,
   });
   async function setPageHTML({ siteHTML, pageHTML, siteCSS, pageCSS }) {
+    const css = await processCSS(siteCSS + pageCSS);
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
       processCode({
         code: {
           html: `<svelte:head>
             ${siteHTML.head}${pageHTML.head}
-            ${wrapInStyleTags(siteCSS + pageCSS)}
+            ${wrapInStyleTags(css)}
           </svelte:head>`,
           css: '',
           js: '',
@@ -165,7 +167,6 @@
         data,
       }),
     ]);
-
     htmlHead = !head.error ? head.html : '';
     htmlBelow = !below.error ? below.html : '';
   }

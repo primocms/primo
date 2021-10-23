@@ -1,13 +1,20 @@
-import prettier from 'prettier'
-import html from 'prettier/esm/parser-html'
-import css from 'prettier/esm/parser-postcss'
-import babel from 'prettier/esm/parser-babel'
-
 const plugins = {
   html, css, babel
 }
 
+let prettier
+let html
+let css
+let babel 
+
 export default async function format(code, { mode, position }) {
+  if (!pretter) {
+    prettier = await import('prettier').default
+    html = await import('prettier/esm/parser-html').default;
+    css = await import('prettier/esm/parser-postcss').default
+    babel = await import('prettier/esm/parser-babel').default
+  }
+
   let formatted
   try {
     if (mode === 'javascript') {
