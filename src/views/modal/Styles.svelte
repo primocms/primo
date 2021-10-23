@@ -74,8 +74,6 @@
     localStorage.setItem('primaryTab', primaryTab.id);
   }
 
-  let view = 'large';
-
   async function saveStyles() {
     $siteCSS = unsavedSiteCSS;
     pages.update($id, (page) => ({

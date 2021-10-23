@@ -4,7 +4,7 @@ import { get } from 'svelte/store'
 import { fields as siteFields, styles as siteStyles } from './data/draft'
 import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
 import { symbols, wrapper } from './data/draft'
-import { convertFieldsToData, processCode } from '../utils'
+import { convertFieldsToData, processCode, processCSS } from '../utils'
 
 export function getAllFields(componentFields = [], exclude = () => true) {
   const allFields = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
@@ -58,6 +58,7 @@ export function getSymbol(symbolID) {
 export async function buildStaticPage({ page, site, separateModules = false }) {
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
+      const css = await processCSS(site.css + page.css)
       const fields = unionBy(page.fields, site.fields, "key");
       const data = convertFieldsToData(fields);
       const svelte = await processCode({ 
@@ -65,17 +66,13 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
           html: `<svelte:head>
           ${site.html?.head}
           ${page.html?.head}
-          <style>
-          ${site.css}
-          ${page.css}
-          </style>
-          </svelte:head>`, 
-          css: '', 
+          <style>${css}</style>
+          </svelte:head>
+          `, 
           js: ''
         },
         data,
         format: 'esm'});
-
       resolve(svelte)
     }),
     new Promise(async (resolve) => {
