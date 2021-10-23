@@ -2,7 +2,7 @@ import {chain,debounce} from "lodash-es";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
-  const {css,error} = await processors.css(code.css)
+  const {css,error} = await processors.css(code.css || '')
   if (error) {
     return {error}
   }
@@ -13,6 +13,15 @@ export async function processCode({ code, data = {}, buildStatic = true, format 
     }, data, buildStatic, format
   })
   return res
+}
+
+export async function processCSS(raw) {
+  const {css,error} = await processors.css(raw)
+  if (error) {
+    console.log('CSS Error:', error)
+    return raw
+  }
+  return css
 }
 
 export function convertFieldsToData(fields) {
