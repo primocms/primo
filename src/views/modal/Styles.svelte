@@ -1,5 +1,5 @@
 <script>
-  import { cloneDeep, isEqual } from 'lodash-es';
+  import { cloneDeep, isEqual, find } from 'lodash-es';
   import { CodeMirror } from '../../components';
   import { Tabs } from '../../components/misc';
   import Preview from '../../components/misc/Preview.svelte';
@@ -66,20 +66,13 @@
     },
   ];
 
-  let primaryTab = primaryTabs[0];
+  let primaryTab =
+    find(primaryTabs, ['id', localStorage.getItem('primaryTab')]) ||
+    primaryTabs[0];
 
-  const secondaryTabs = [
-    {
-      id: 'styles',
-      label: 'CSS',
-    },
-    {
-      id: 'tw',
-      label: 'Tailwind Config',
-    },
-  ];
-
-  let secondaryTab = secondaryTabs[0];
+  $: {
+    localStorage.setItem('primaryTab', primaryTab.id);
+  }
 
   let view = 'large';
 
