@@ -2,6 +2,8 @@
 
 Primo is a simpler, all-in-one approach to building and managing websites. 
 
+![screenshot](./screenshot.png)
+
 ## How it compares
 
 WordPress and proprietary site builders (Wix, Webflow, etc.) let you manage your content relatively easily, but make modifying your site’s source code a lot harder than just working directly with HTML files.
