@@ -111,7 +111,6 @@
           const newValue = view.state.doc.toString();
           value = newValue.replace(prefix, '');
           if (debounce) {
-            dispatch('debounce', value);
             slowDebounce([dispatchChanges, value]);
           } else {
             dispatchChanges(value);

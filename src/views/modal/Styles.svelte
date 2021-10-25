@@ -118,7 +118,7 @@
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
-          on:debounce={getNewPagePreview}
+          on:change={getNewPagePreview}
           on:save={saveStyles}
         />
       {:else if primaryTab.id === 'site'}
@@ -128,7 +128,7 @@
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
-          on:debounce={buildSitePreview}
+          on:change={buildSitePreview}
           on:save={saveStyles}
         />
       {/if}
