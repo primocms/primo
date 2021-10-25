@@ -8,7 +8,6 @@
   import ContentNode from './ContentNode.svelte';
   import ComponentNode from './ComponentNode.svelte';
   import BlockButtons from './BlockButtons.svelte';
-  import { createDebouncer } from '../../../utils';
 
   import { focusedNode } from '../../../stores/app';
   import { onMobile, saved } from '../../../stores/app/misc';
@@ -19,6 +18,8 @@
 
   export let block;
   export let i;
+
+  let node
 
   function hasOptionsAbove(rowIndex, rows) {
     const rowAbove = rows[rowIndex - 1];
@@ -205,8 +206,9 @@
 </script>
 
 <div
+  bind:this={node}
   in:fade={{ duration: 100 }}
-  class="primo-block {block.type}"
+  class="primo-section {block.type}"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
   id="{block.id}"
@@ -246,10 +248,11 @@
     </div>
   {/if}
   {#if block.type === 'component'}
-    <ComponentNode {block} on:mount />
+    <ComponentNode {block} {node} on:mount />
   {:else if block.type === 'content'}
     <ContentNode
       {block}
+      {node}
       on:save
       on:focus={({ detail: selection }) => {
         focusedNode.setSelection({ id: block.id, position: i, selection });
@@ -278,7 +281,16 @@
 </div>
 
 <style>
-  .primo-block {
+  .primo-section {
     position: relative;
+  }
+  .component {
+    position: relative;
+    outline: 5px solid transparent;
+    outline-offset: -5px;
+    transition: outline-color 0.2s;
+    outline-color: transparent;
+    width: 100%;
+    min-height: 2rem;
   }
 </style>

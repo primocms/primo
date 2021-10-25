@@ -1,7 +1,6 @@
 <script>
   import _, { isEqual, differenceWith } from 'lodash-es';
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { fade } from 'svelte/transition';
+  import { createEventDispatcher } from 'svelte';
   import { getAllFields } from '../../../stores/helpers';
   import { convertFieldsToData, processCode } from '../../../utils';
   import { fields as pageFields } from '../../../stores/app/activePage';
@@ -10,6 +9,7 @@
   const dispatch = createEventDispatcher();
 
   export let block;
+  export let node;
 
   let html = '';
   let css = '';
@@ -157,7 +157,6 @@
     // return cached || url;
   }
 
-  let node;
   let component;
 
   let mounted;
@@ -180,31 +179,13 @@
 
 </script>
 
-{#if !error}
-  <div
-    bind:this={node}
-    class:fadein={mounted}
-    class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
-    id="{block.id}"
-    transition:fade={{ duration: 100 }} />
-{:else}
+{#if error}
   <pre>
     {@html error}
   </pre>
 {/if}
 
 <style>
-  .component {
-    position: relative;
-    outline: 5px solid transparent;
-    outline-offset: -5px;
-    transition: outline-color 0.2s;
-    outline-color: transparent;
-    width: 100%;
-    min-height: 2rem;
-    opacity: 0;
-  }
-
   pre {
     margin: 0;
     padding: 1rem;
@@ -212,10 +193,4 @@
     color: var(--color-gray-3);
     border: 1px solid var(--color-gray-6);
   }
-
-  .fadein {
-    transition: opacity 0.1s;
-    opacity: 1;
-  }
-
 </style>
