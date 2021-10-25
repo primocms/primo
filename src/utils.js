@@ -102,7 +102,7 @@ export function buildPagePreview(content, tailwind) {
   for (let block of content) {
     if (block.type === 'component') {
       html += `
-      <div class="block" id="block-${block.id}">
+      <div class="block" id="${block.id}">
         <div class="primo-component" id="component-${block.id}">
           <div>${block.value.final.html}</div>
           <script type="module">${block.value.final.js}</script>
@@ -111,7 +111,7 @@ export function buildPagePreview(content, tailwind) {
       `
     } else if (block.type === 'content') {
       html += `
-        <div class="block" id="block-${block.id}">
+        <div class="block" id="${block.id}">
           <div class="primo-content" id="content-${block.id}">
             ${block.value.html}
           </div>

@@ -131,7 +131,8 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
         });
         return {
           ...svelte,
-          type: 'content'
+          type: 'content',
+          id: block.id
         }
       } 
     })
@@ -159,16 +160,17 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
   function buildBlocks(blocks) {
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
+      const { id, type } = block
       return `
         ${block.css ? `<style>${block.css}</style>` : ``}
-        <div class="primo-block ${block.type === 'component' ? 'primo-component' : 'primo-content'}" id="block-${block.id}">
+        <div class="primo-section ${type}" id="${id}">
           ${block.html || ''}
           ${
             block.js && separateModules ? 
             `<script type="module" async>
               import App from './_modules/${block.symbol}.js';
               new App({
-                target: document.querySelector('#block-${block.id}'),
+                target: document.querySelector('#${id}'),
                 hydrate: true
               });
             </script>`
@@ -176,7 +178,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
             `<script type="module" async>
               const App = ${block.js}
               new App({
-                target: document.querySelector('#block-${block.id}'),
+                target: document.querySelector('#${id}'),
                 hydrate: true
               });
           </script>` : ``)}

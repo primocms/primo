@@ -206,10 +206,10 @@
 
 <div
   in:fade={{ duration: 100 }}
-  class="primo-block"
+  class="primo-block {block.type}"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
-  id="block-{block.id}"
+  id="{block.id}"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >

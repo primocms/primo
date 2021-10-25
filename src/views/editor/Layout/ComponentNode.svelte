@@ -185,7 +185,7 @@
     bind:this={node}
     class:fadein={mounted}
     class="component {block.symbolID ? `symbol-${block.symbolID}` : ''}"
-    id="component-{block.id}"
+    id="{block.id}"
     transition:fade={{ duration: 100 }} />
 {:else}
   <pre>

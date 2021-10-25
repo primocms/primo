@@ -112,7 +112,7 @@
 
 </script>
 
-<div class="primo-content" id="copy-{block.id}" bind:this={element}>
+<div class="primo-section content" id="{block.id}" bind:this={element}>
   <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
     {#if editor}
       <CopyButton
@@ -157,15 +157,15 @@
 </div>
 
 <style>
-  .primo-content {
+  .primo-section {
     caret-color: rgb(248, 68, 73);
   }
 
-  :global(.primo-content ::selection, ::-moz-selection) {
+  :global(.primo-section ::selection, ::-moz-selection) {
     background: rgb(248, 68, 73);
   }
 
-  :global(.primo-content .ProseMirror) {
+  :global(.primo-section .ProseMirror) {
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;
