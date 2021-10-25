@@ -201,7 +201,7 @@
     margin: 0 auto;
     /* padding: 4px var(--padding-container); */
     padding: 2px;
-    max-width: var(--max-width-container);
+    max-width: var(--max-width);
   }
 
   .menu-container:after {

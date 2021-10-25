@@ -534,6 +534,9 @@
     margin-bottom: 0.5rem;
     background: var(--color-gray-9);
   }
+  .input {
+    padding: 0.25rem 0.5rem;
+  }
   input,
   select {
     outline: 0;

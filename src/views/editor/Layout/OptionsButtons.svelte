@@ -69,7 +69,7 @@
     border-bottom: 1px solid var(--primo-color-codeblack);
 
     & > div {
-      max-width: var(--max-width-container);
+      max-width: var(--max-width);
       margin: 0 auto;
       padding: 10px var(--padding-container);
       display: flex;
