@@ -208,51 +208,48 @@
 <div
   bind:this={node}
   in:fade={{ duration: 100 }}
-  class="primo-section {block.type}"
+  class="primo-section has-{block.type}"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
-  id="{block.id}"
+  id="{block.id}-section"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >
-  {#if (hovering || $onMobile) && block.type !== 'options'}
-    <div class="block-buttons-container" use:blockContainer>
-      <BlockButtons
-        {i}
-        editable={block.type === 'component'}
-        bind:node={buttons}
-        on:delete={() => {
-          deleteRow();
-          dispatch('contentChanged');
-        }}
-        on:edit={editComponent}
-        optionsAbove={hasOptionsAbove(i, $content)}
-        optionsBelow={hasOptionsBelow(i, $content)}
-        on:moveUp={() => {
-          moveBlock(i, 'up');
-          dispatch('contentChanged');
-        }}
-        on:moveDown={() => {
-          moveBlock(i, 'down');
-          dispatch('contentChanged');
-        }}
-        on:addOptionsAbove={() => {
-          insertOptionsRow(i, 'above');
-          dispatch('contentChanged');
-        }}
-        on:addOptionsBelow={() => {
-          insertOptionsRow(i, 'below');
-          dispatch('contentChanged');
-        }}
-      />
-    </div>
-  {/if}
+  <div class="block-buttons-container" class:visible={(hovering || $onMobile) && block.type !== 'options'} use:blockContainer>
+    <BlockButtons
+      {i}
+      editable={block.type === 'component'}
+      bind:node={buttons}
+      on:delete={() => {
+        deleteRow();
+        dispatch('contentChanged');
+      }}
+      on:edit={editComponent}
+      optionsAbove={hasOptionsAbove(i, $content)}
+      optionsBelow={hasOptionsBelow(i, $content)}
+      on:moveUp={() => {
+        moveBlock(i, 'up');
+        dispatch('contentChanged');
+      }}
+      on:moveDown={() => {
+        moveBlock(i, 'down');
+        dispatch('contentChanged');
+      }}
+      on:addOptionsAbove={() => {
+        insertOptionsRow(i, 'above');
+        dispatch('contentChanged');
+      }}
+      on:addOptionsBelow={() => {
+        insertOptionsRow(i, 'below');
+        dispatch('contentChanged');
+      }}
+    />
+  </div>
   {#if block.type === 'component'}
     <ComponentNode {block} {node} on:mount />
   {:else if block.type === 'content'}
     <ContentNode
       {block}
-      {node}
       on:save
       on:focus={({ detail: selection }) => {
         focusedNode.setSelection({ id: block.id, position: i, selection });
@@ -280,7 +277,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   .primo-section {
     position: relative;
   }
@@ -292,5 +289,12 @@
     outline-color: transparent;
     width: 100%;
     min-height: 2rem;
+  }
+  .block-buttons-container {
+    display: none;
+
+    &.visible {
+      display: block;
+    }
   }
 </style>
