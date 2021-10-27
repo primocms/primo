@@ -6,16 +6,6 @@ function createUniqueID(length = 5) {
   return nanoid()
 }
 
-export const tailwindConfig = `{
-  theme: {
-    container: {
-      center: true,
-      padding: '2rem'
-    }
-  },
-  variants: {}
-}`
-
 
 export const defaultStyles = {
   raw: `
@@ -163,15 +153,6 @@ export const defaultStyles = {
   }
 }
   `,
-  tailwind: `{
-  theme: {
-    container: {
-      center: true,
-      padding: '2rem'
-    }
-  },
-  variants: {}
-}`
 }
 
 export const createComponent = () => ({
@@ -218,33 +199,8 @@ export const DEFAULTS = {
       below: ''
     },
     css: '',
-    // styles: {
-    //   raw: '',
-    //   final: '',
-    //   tailwind: ''
-    // },
-    // wrapper: {
-    //   head: {
-    //     raw: '',
-    //     final: ''
-    //   },
-    //   below: {
-    //     raw: '',
-    //     final: ''
-    //   }
-    // },
     fields: []
   },
-  // wrapper: {
-  //   head: {
-  //     raw: '',
-  //     final: ''
-  //   },
-  //   below: {
-  //     raw: '',
-  //     final: ''
-  //   }
-  // },
   html: {
     head: '',
     below: ''
@@ -264,12 +220,6 @@ export const createPage = (id = createUniqueID(), title) => ({
       type: 'options',
     }
   ],
-  // styles: {
-  //   raw: '',
-  //   final: '',
-  //   tailwind: defaultStyles.tailwind
-  // },
-  // wrapper: DEFAULTS.wrapper,
   css: '',
   html: {
     head: '',
@@ -282,28 +232,142 @@ export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => 
   id,
   name,
   pages: [createPage('index', 'Home Page')],
-  // styles: DEFAULTS.styles,
-  // wrapper: DEFAULTS.wrapper,
   css: `\
-.primo-page {
-  font-family: system-ui, sans-serif;
-  color: #222;
-  background: white;
-}
+  @import url("https://unpkg.com/tailwindcss@2.2.17/dist/base.css");
 
-.primo-content {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-
-  img {
-    width: 100%;
-    margin-bottom: 1rem;
+  html {
+  
+    /* Colors */
+    --color-accent: #154BF4;
+    --color-dark: #3E3D43;
+    --color-light: #FCFCFD;
+    --color-shade: #CBCACE;
+    --color-white: #FFF;
+  
+    /* Default property values */
+    --background: var(--color-white);
+    --color: var(--color-dark);
+    --padding: 2rem;
+    --border: 1px solid var(--color-shade);
+    --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.04);
+    --border-radius: 8px;
+    --max-width: 1200px;
+    --border-color: var(--color-shade);
+    --transition-time: 0.1s;
+    --transition: var(--transition-time) color,
+      var(--transition-time) background-color,
+        var(--transition-time) border-color,
+          var(--transition-time) text-decoration-color,
+            var(--transition-time) box-shadow, var(--transtion-time) transform;
+  
+    /* Elements */
+    --heading-color: #252428;
+    --heading-font-size: 39px;
+    --heading-line-height: 48px;
+    --heading-font-weight: 800;
+  
+    --subheading-color: #3E3D43;
+  
+    --button-color: white;
+    --button-background: var(--color-accent);
+    --button-border-radius: 4px;
+    --button-padding: 8px 20px;
+  
   }
-
-  p {
-    line-height: 1.5;
+  
+  .primo-page {
+    font-family: system-ui, sans-serif;
+    color: var(--color);
+    font-size: 1rem;
+    background: var(--background);
   }
+  
+  .primo-section.content {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--padding);
+  
+    & > * {
+      max-width: 700px;
+    }
+  
+    img {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  
+    p {
+      padding: 0.25rem 0;
+      line-height: 1.5;
+    }
+  
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+  
+    h2 {
+      font-size: 2.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+  
+    h3 {
+      font-size: 1.75rem; 
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+  
+    ul {
+      list-style: disc;
+      padding: 0.5rem 0;
+      padding-left: 1.25rem;
+    }
+  
+    ol {
+      list-style: decimal;
+      padding: 0.5rem 0;
+      padding-left: 1.25rem;
+    }
+  }
+  
+  .page-container {
+    max-width: var(--max-width, 1200px);
+    margin: 0 auto;
+    padding: 6rem 2rem;
+  }
+  
+  .body {
+    font-size: var(--body-font-size);
+  }
+  
+  .heading {
+    font-size: var(--heading-font-size, 49px);
+    line-height: var(--heading-line-height, 1);
+    font-weight: var(--heading-font-weight, 700);
+    color: var(--heading-color, #252428);
+  }
+  
+  .button {
+    color: var(--color-white, white);
+    background: var(--color-accent, #154BF4);
+    border: 2px solid transparent;
+    border-radius: 5px;
+    padding: 8px 20px;
+    transition: var(--transition);
+  
+    &:hover {
+      box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
+    }
+  
+    &.is-inverted {
+      background: var(--color-white);
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+  }
+  
 }
 `,
   html: {
@@ -318,8 +382,6 @@ export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => 
 export const createNewSite = ({ id = '00000', name = 'website' }) => ({
   name,
   pages: [createPage('index', 'Home Page')],
-  // styles: DEFAULTS.styles,
-  // wrapper: DEFAULTS.wrapper,
   css: '',
   html: {
     head: '',
