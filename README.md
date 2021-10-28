@@ -4,6 +4,17 @@ Primo is a simpler, all-in-one approach to building and managing websites.
 
 ![screenshot](./screenshot.png)
 
+## How to use primo
+
+### primo Desktop
+Create and manage sites locally & offline. Sites can be downloaded or deployed directly to available hosts. Each site is stored as a small JSON file in your directory of choice. 
+* [Download for Mac](https://github.com/primo-af/primo-desktop/releases/download/v0.1.1/primo-darwin-x64-1.0.0.zip)
+* [Download for Windows](https://github.com/primo-af/primo-desktop/releases/download/v0.1.0-alpha-windows/primo.exe)
+
+### primo Server
+Create and manage sites from primo Desktop and any device/browser & invite collaborators for individual sites. Can be deployed to Vercel with a Supabase backend in a few minutes.
+* [Deploy with Vercel & Supabase](https://github.com/primo-af/primo-server#setup)
+
 ## How it compares
 
 WordPress and proprietary site builders (Wix, Webflow, etc.) let you manage your content relatively easily, but make modifying your site’s source code a lot harder than just working directly with HTML files.
