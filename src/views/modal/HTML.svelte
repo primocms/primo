@@ -65,7 +65,7 @@
   }}
 />
 
-<main class="flex flex-col">
+<main>
   <Tabs {tabs} bind:activeTab />
   <div class="editors">
     {#if activeTab.id === 'page'}

@@ -1,5 +1,6 @@
 'use strict'
 
+import {modalTypes as initialModalTypes} from './modalTypes'
 import {writable,get} from 'svelte/store'
 import Mousetrap from 'mousetrap'
 
@@ -20,58 +21,7 @@ const initialState = {
 }
 
 const modalTypes = {
-  'COMPONENT_EDITOR' : {
-    route: 'component',
-    header: {
-      title: 'Create Component',
-      icon: 'fas fa-code'
-    },
-    variants: 'fullscreen',
-    disabledBgClose: true
-  },
-  'SYMBOL_LIBRARY' : {
-    route: 'symbols',
-    header: {
-      title: 'Component Library',
-      icon: 'fas fa-clone'
-    },
-    variants: 'fullscreen',
-  },
-  'SITE_PAGES' : {
-    route: 'pages',
-    header: {
-      title: 'Pages',
-      icon: 'fas fa-th-large'
-    },
-    variants: 'max-w-xl'
-  },
-  'FIELDS' : {
-    route: 'fields',
-    // header: {
-    //   title: 'Page Data',
-    //   icon: 'fas fa-database'
-    // },
-    variants: 'max-w-3xl',
-    disabledBgClose: true
-  },
-  'STYLES' : {
-    route: 'css',
-    header: {
-      title: 'CSS',
-      icon: 'fab fa-css3'
-    },
-    variants: 'fullscreen',
-    disabledBgClose: true
-  },
-  'WRAPPER' : {
-    route: 'html',
-    header: {
-      title: 'HTML',
-      icon: 'fab fa-html5'
-    },
-    variants: 'max-w-2xl',
-    disabledBgClose: true
-  },
+  ...initialModalTypes
 }
 
 const store = writable(initialState)

@@ -3,6 +3,7 @@
   const dispatch = createEventDispatcher();
   import CopyButton from './CopyButton.svelte';
 
+  import modal from '../../../stores/app/modal'
   import { createDebouncer } from '../../../utils';
   const slowDebounce = createDebouncer(500);
 
@@ -97,10 +98,13 @@
   });
 
   function setLink() {
-    const url = window.prompt('URL');
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
-    }
+    modal.show('DIALOG', {
+      message: 'Set link URL',
+      onSubmit: (val) => {
+        editor.chain().focus().setLink({ href: val }).run();
+        modal.hide()
+      }
+    })
   }
 
   function addImage() {

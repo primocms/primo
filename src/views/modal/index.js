@@ -4,6 +4,7 @@ import SitePages from './SitePages.svelte'
 import CSS from './Styles.svelte'
 import Fields from './Fields.svelte'
 import HTML from './HTML.svelte'
+import Dialog from './Dialog.svelte'
 
 export {
   ComponentEditor,
@@ -11,5 +12,6 @@ export {
   SitePages,
   CSS,
   Fields,
-  HTML
+  HTML,
+  Dialog
 }
