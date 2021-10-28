@@ -301,6 +301,10 @@ html {
     line-height: 1.5;
   }
 
+  a {
+    text-decoration: underline;
+  }
+
   h1 {
     font-size: 3rem;
     font-weight: 700;
