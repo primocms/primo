@@ -13,7 +13,7 @@ Create and manage sites locally & offline. Sites can be downloaded or deployed d
 
 ### primo Server
 Create and manage sites from primo Desktop and any device/browser & invite collaborators for individual sites. Can be deployed to Vercel with a Supabase backend in a few minutes.
-* [Setup with Vercel & Supabase](https://github.com/primo-af/primo-server#setup)
+* [Deploy with Vercel & Supabase](https://github.com/primo-af/primo-server#setup)
 
 ## How it compares
 
