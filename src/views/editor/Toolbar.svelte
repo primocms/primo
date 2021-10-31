@@ -40,6 +40,7 @@
           {/each}
         </div>
       {/each}
+      <a href="https://docs.primo.af" class="toolbar-link text-link" target="blank">Docs</a>
     </div>
     <div class="primary-buttons">
       {#if $userRole === 'developer'}
@@ -202,6 +203,18 @@
     /* padding: 4px var(--padding-container); */
     padding: 2px;
     max-width: var(--max-width);
+
+    .toolbar-link {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      color: var(--color-gray-1);
+      text-decoration: underline transparent;
+      
+      &:hover {
+        text-decoration-color: var(--primo-color-primored);
+      }
+    }
   }
 
   .menu-container:after {
