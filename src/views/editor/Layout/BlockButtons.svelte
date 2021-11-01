@@ -4,33 +4,36 @@
 
   import { code, trash, edit } from '../../../components/svg/small';
 
-  import { createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { content } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';
 
   let modKeydown = false;
-  Mousetrap.bind(
-    'mod',
-    () => {
-      modKeydown = true;
-    },
-    'keydown'
-  );
-  Mousetrap.bind(
-    'mod',
-    () => {
-      modKeydown = false;
-    },
-    'keyup'
-  );
-  Mousetrap.bind(
-    'mod+e',
-    () => {
-      dispatch('edit');
-    },
-    'keydown'
-  );
+  onMount(() => {
+    Mousetrap.bind(
+      'mod',
+      () => {
+        modKeydown = true;
+      },
+      'keydown'
+    );
+    Mousetrap.bind(
+      'mod',
+      () => {
+        modKeydown = false;
+      },
+      'keyup'
+    );
+    Mousetrap.bind(
+      'mod+e',
+      () => {
+        dispatch('edit');
+      },
+      'keydown'
+    );
+  })
+
   const dispatch = createEventDispatcher();
 
   export let i;
