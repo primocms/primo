@@ -52,11 +52,13 @@
           class:active={$showKeyHint}
           aria-hidden>&#8984;{key.toUpperCase()}</span>
       {/if}
+      <i class={icon} class:hidden={loading} />
       {#if label}<span class="label">{label}</span>{/if}
       {#if loading}<i class="fas fa-spinner" />{/if}
-      <i class={icon} class:hidden={loading} />
     {:else}
-      <slot />
+      <slot>
+        <span>{label}</span>
+      </slot>
     {/if}
   </button>
   {#if title && !$onMobile && !hideTooltip}
@@ -65,6 +67,20 @@
 </div>
 
 <style lang="postcss">
+
+  .button-group {
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  button {
+    font-size: 0.85rem;
+    i {
+      /* font-size: 0.75rem; */
+      margin-right: 0.5rem;
+    }
+  }
+
   .fas.fa-spinner {
     position: absolute;
   }
@@ -188,7 +204,7 @@
     background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
     font-weight: 700;
-    padding: 10px 15px;
+    padding: 0.5rem 1rem;
     transition: var(--transition-colors);
     outline: 0;
     position: relative;
@@ -237,7 +253,7 @@
 
   button[disabled] {
     color: var(--color-gray-7);
-    background: var(--primo-color-codeblack);
+    background: #262626;
     cursor: default;
     transition: var(--transition-colors);
   }

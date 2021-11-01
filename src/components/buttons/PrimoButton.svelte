@@ -2,7 +2,7 @@
   import { fade } from 'svelte/transition';
   import dropdown from '../../stores/app/dropdown';
   import { loadingSite } from '../../stores/app/misc';
-  import Spinner from '../../ui/misc/Spinner.svelte';
+  import Spinner from '../../components/misc/Spinner.svelte';
   import PrimoLogo from '../svg/PrimoLogo.svelte';
   import DropdownButton from './DropdownButton.svelte';
   import { saved } from '../../stores/app/misc';
@@ -51,7 +51,8 @@
 
 <style lang="postcss">
   #primo-button {
-    padding: 0.35rem;
+    margin-right: 0.25rem;
+    padding: 0.25rem 0.5rem;
     display: block;
     height: 100%;
     background: var(--primo-color-codeblack);

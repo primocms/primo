@@ -124,20 +124,20 @@
     align-items: center;
     width: 50px;
     height: 26px;
-  }
 
-  .switch svg {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    width: 50%;
-    justify-content: center;
-  }
+    svg {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      width: 50%;
+      justify-content: center;
+    }
 
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
   }
 
   .slider {
@@ -200,11 +200,11 @@
   .menu-container {
     display: flex;
     margin: 0 auto;
-    /* padding: 4px var(--padding-container); */
-    padding: 2px;
+    padding: 0.25rem 0;
     max-width: var(--max-width);
 
     .toolbar-link {
+      font-size: 0.85rem;
       display: flex;
       align-items: center;
       padding: 0 0.75rem;

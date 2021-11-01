@@ -10,7 +10,8 @@
   import Doc from './Doc.svelte';
 
   import { focusedNode, switchEnabled } from '../../stores/app';
-  import { undone } from '../../stores/data/draft';
+  import { undone, fields as siteFields } from '../../stores/data/draft';
+  import { fields as pageFields } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
@@ -25,28 +26,32 @@
     });
   });
 
-  const editorButtons = [
+  $: hasFields = $siteFields ? [...$siteFields, ...$pageFields].length > 0 : false
+
+  $: editorButtons = [
     [
       {
         id: 'pages',
         title: 'Pages',
+        label: 'Pages',
         icon: 'th-large',
         onclick: () => modal.show('SITE_PAGES'),
       },
     ],
-    [
+    hasFields ? [
       {
         title: 'Content',
-        icon: 'database',
+        label: 'Content',
         onclick: () => modal.show('FIELDS'),
       },
-    ],
+    ] : [],
   ];
 
   const developerButtons = [
     [
       {
         id: 'toolbar--pages',
+        label: 'Pages',
         title: 'Pages',
         icon: 'th-large',
         onclick: () => modal.show('SITE_PAGES'),
@@ -56,6 +61,7 @@
       {
         id: 'toolbar--components',
         title: 'Component Library',
+        label: 'Components',
         icon: 'clone',
         onclick: () => modal.show('SYMBOL_LIBRARY'),
       },
@@ -64,19 +70,19 @@
       {
         id: 'toolbar--html',
         title: 'HTML',
-        icon: 'fab fa-html5',
+        label: 'HTML',
         onclick: () => modal.show('WRAPPER'),
       },
       {
         id: 'toolbar--css',
         title: 'CSS',
-        icon: 'fab fa-css3',
+        label: 'CSS',
         onclick: () => modal.show('STYLES'),
       },
       {
         id: 'toolbar--fields',
         title: 'Fields',
-        icon: 'database',
+        label: 'Fields',
         onclick: () => modal.show('FIELDS'),
       },
     ],
@@ -172,7 +178,7 @@
     title="Publish"
     label="Publish"
     icon="fas fa-globe"
-    style="margin-left:10px"
+    style="margin-left:0.25rem;"
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}

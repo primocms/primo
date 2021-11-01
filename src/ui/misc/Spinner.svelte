@@ -13,7 +13,7 @@
     height: 10em;
   }
   .spinner {
-    font-size: 3px;
+    font-size: 2px;
     position: relative;
     text-indent: -9999em;
     border-top: 1.1em solid var(--Spinner-color-opaque, rgba(#fff, 0.2));
