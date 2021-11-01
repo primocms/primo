@@ -69,7 +69,8 @@
     <div class="component-label">
       {#if titleEditable}
         <form on:submit|preventDefault={changeTitle}>
-          <svg
+          <label>
+            <svg
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"><path
@@ -79,6 +80,7 @@
               d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
               clip-rule="evenodd" /></svg>
           <input type="text" bind:value={title} />
+          </label>
         </form>
       {:else}<span>{title}</span>{/if}
     </div>
@@ -144,7 +146,10 @@
           display: flex;
           align-items: center;
           flex: 1;
-          cursor: pointer;
+          label {
+            display: flex;
+            cursor: pointer;
+          }
           input {
             width: 100%;
             background: transparent;
