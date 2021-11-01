@@ -131,6 +131,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    grid-row-gap: 2rem;
   }
   .repeater-item {
     flex: 1;
@@ -139,7 +140,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    border: 1px solid var(--primo-color-primored);
+    border: 1px solid var(--color-gray-8);
     border-radius: 1px;
     min-width: 10rem;
     padding-top: 2.5rem;
