@@ -50,13 +50,18 @@
     editor = new Editor({
       // autofocus: true,
       element: node,
-      extensions: [
+      extensions: [ 
         StarterKit,
         // ...defaultExtensions(),
         BubbleMenu.configure({
           element: bubbleMenu,
         }),
-        Link,
+        Link.configure({
+          HTMLAttributes: {
+            class: 'link',
+          },
+          openOnClick: false
+        }),
         Highlight.configure({ multicolor: false }),
         FloatingMenu.configure({
           element: floatingMenu,
