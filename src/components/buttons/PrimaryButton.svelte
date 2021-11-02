@@ -7,6 +7,7 @@
   export let type = 'button';
   export let disabled = false;
   export let icon = null;
+  export let label = ''
 
 </script>
 
@@ -17,7 +18,9 @@
   on:click={(e) => dispatch('click', e)}
   {type}>
   {#if icon}<i class={icon} />{/if}
-  <slot />
+  <slot>
+    {label}
+  </slot>
 </button>
 
 <style lang="postcss">

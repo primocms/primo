@@ -2,7 +2,7 @@
   import { find, some, isEqual } from 'lodash-es';
   import Mousetrap from 'mousetrap';
 
-  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import Editor from './views/editor/Editor.svelte';
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
@@ -20,14 +20,14 @@
     showKeyHint,
     loadingSite,
   } from './stores/app/misc';
-  import { DEFAULTS } from './const';
+  import { DEFAULTS, createSite } from './const';
 
   import { pages } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite } from './stores/actions';
   import { page as pageStore } from '$app/stores';
 
-  export let data;
+  export let data = createSite();
   export let libraries = [];
   export let role = 'developer';
   export let saving = false;
