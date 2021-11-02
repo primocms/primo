@@ -104,7 +104,7 @@
 
   function setLink() {
     modal.show('DIALOG', {
-      message: 'Set link URL',
+      component: 'LINK',
       onSubmit: (val) => {
         editor.chain().focus().setLink({ href: val }).run();
         modal.hide()
@@ -113,11 +113,13 @@
   }
 
   function addImage() {
-    const src = window.prompt('URL');
-    const alt = window.prompt('Enter a description for the image');
-    if (src) {
-      editor.chain().focus().setImage({ src, alt }).run();
-    }
+    modal.show('DIALOG', {
+      component: 'IMAGE',
+      onSubmit: ({ url, alt }) => {
+        editor.chain().focus().setImage({ src: url, alt }).run();
+        modal.hide()
+      }
+    })
   }
 
 </script>

@@ -49,6 +49,6 @@ export const modalTypes = {
       title: 'HTML',
       icon: 'fab fa-html5'
     },
-    variants: 'max-w-2xl'
+    variants: 'small'
   },
 }

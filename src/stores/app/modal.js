@@ -68,7 +68,7 @@ export default {
         ...options,
         component,
         header: options.header,
-        variants: options.width ? `max-w-${options.width}` : '',
+        variants: options.width ? `${options.width}` : '',
         componentProps
       }
     }

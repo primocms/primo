@@ -1,15 +1,20 @@
 <script>
-  export let message = ''
-  export let onSubmit
+  import Image from './Dialogs/Image.svelte'
+  export let component
+  export let onSubmit 
 
   let value = ''
 </script>
 
 <main>
-  <div class="message">{message}</div>
-  <form on:submit|preventDefault={() => onSubmit(value)}>
-    <input type="url" bind:value autofocus>
-  </form>
+  {#if component === 'IMAGE'}
+    <Image on:submit={({detail}) => onSubmit(detail)} />
+  {:else if component === 'LINK'}
+    <div class="message">{message}</div>
+    <form on:submit|preventDefault={() => onSubmit(value)}>
+      <input type="url" bind:value autofocus>
+    </form>
+  {/if}
 </main>
 
 <style lang="postcss">
