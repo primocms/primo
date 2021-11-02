@@ -15,8 +15,8 @@
   }
 </script>
 
-{#if href}
-   <a href="/{site.id}" on:click={warn}>
+{#if button.href}
+   <a href={button.href} on:click={warn}>
     <i class="{button.icon} mr-1" />
     <span>{button.label}</span>
   </a>
