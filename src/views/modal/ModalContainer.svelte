@@ -15,7 +15,7 @@
     });
   });
 
-  $: variants = $modal.variants || 'max-w-md';
+  $: variants = $modal.variants || '';
 
   function switchView() {
     $switchEnabled = !$switchEnabled;
@@ -24,12 +24,12 @@
 </script>
 
 {#if visible}
-  <div class="modal mousetrap primo-reset" transition:fade={{ duration: 100 }}>
+  <div class="modal mousetrap primo-reset {variants}" transition:fade={{ duration: 100 }}>
     <div
       class="modal-background"
       class:hovered={!$modal.disabledBgClose}
       on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()} />
-    <div class="modal-card {variants}">
+    <div class="modal-card">
       <div class="modal-card-body" class:p-3={!$modal.noPadding}>
         <slot />
       </div>
@@ -51,15 +51,20 @@
     z-index: 999999999;
     inset: 0;
     top: 0;
+
+    &.small .modal-card {
+      max-width: 30rem;
+      margin: 0 auto;
+    }
   }
 
   .modal-background {
     position: absolute;
     inset: 0;
-    background: var(--primo-color-codeblack-opaque);
+    background: var(--primo-color-black);
 
     &.hovered {
-      opacity: 0.9;
+      opacity: 0.95;
       transition: opacity 0.1s;
       cursor: pointer;
     }
