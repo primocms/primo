@@ -1,4 +1,5 @@
 <script>
+  import {slide} from 'svelte/transition'
   import { onMount, createEventDispatcher } from 'svelte';
   import ToolbarButton from './ToolbarButton.svelte';
   import { PrimoButton, MobileNavButton } from '../../components/buttons';
@@ -16,89 +17,94 @@
 
 </script>
 
-<svelte:head>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css"
-    integrity="sha256-+N4/V/SbAFiW1MPBCXnfnP9QSN3+Keu+NlB+0ev/YKQ="
-    crossorigin="anonymous" />
-</svelte:head>
 <nav
-  bind:this={element}
-  role="navigation"
-  aria-label="toolbar"
-  id="primo-toolbar"
-  class="primo-reset"
-  class:mounted>
-  <div class="menu-container">
-    <div class="left">
-      <PrimoButton variants="py-2" on:signOut />
-      {#each buttons as group}
-        <div class="buttons">
-          {#each group as button}
-            <ToolbarButton {...button} />
-          {/each}
-        </div>
-      {/each}
-      <a href="https://docs.primo.af" class="toolbar-link text-link" target="blank">Docs</a>
-    </div>
-    <div class="primary-buttons">
-      {#if $userRole === 'developer'}
-        <div class="content" id="ide-toggle">
-          <label class="switch">
-            <input
-              type="checkbox"
-              bind:checked={$switchEnabled}
-              on:click={() => dispatch('toggleView')} />
-            <span class="slider" class:code={$switchEnabled}>
-              <svg
-                id="cms"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor">
-                <path
-                  d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                <path
-                  fill-rule="evenodd"
-                  d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                  clip-rule="evenodd" />
-              </svg>
-              <svg
-                id="ide"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor">
-                <path
-                  fill-rule="evenodd"
-                  d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-                  clip-rule="evenodd" />
-              </svg>
-            </span>
-            <span class="sr-only">Switch to
-              {$switchEnabled ? 'CMS' : 'IDE'}</span>
-          </label>
-          {#if !$onMobile}
-            <div class="tooltip">
-              Switch to
-              {$switchEnabled ? 'CMS' : 'IDE'}
-            </div>
-          {/if}
-        </div>
-      {/if}
-      <slot />
-    </div>
+bind:this={element}
+role="navigation"
+aria-label="toolbar"
+id="primo-toolbar"
+class="primo-reset"
+class:mounted>
+<div class="menu-container">
+  <div class="left">
+    <PrimoButton variants="py-2" on:signOut />
+    {#each buttons as group}
+      <div class="buttons">
+        {#each group as button}
+          <ToolbarButton {...button} />
+        {/each}
+      </div>
+    {/each}
+    <a href="https://docs.primo.af" class="toolbar-link text-link" target="blank">
+      <span>Docs</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Pro 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) --><path fill="currentColor" d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM474.67,0H316a28,28,0,0,0-28,28V46.71A28,28,0,0,0,316.79,73.9L384,72,135.06,319.09l-.06.06a24,24,0,0,0,0,33.94l23.94,23.85.06.06a24,24,0,0,0,33.91-.09L440,128l-1.88,67.22V196a28,28,0,0,0,28,28H484a28,28,0,0,0,28-28V37.33h0A37.33,37.33,0,0,0,474.67,0Z"/></svg>
+    </a>
   </div>
+  <div class="primary-buttons">
+    {#if $userRole === 'developer'}
+      <div class="content" id="ide-toggle">
+        <label class="switch">
+          <input
+            type="checkbox"
+            bind:checked={$switchEnabled}
+            on:click={() => dispatch('toggleView')} />
+          <span class="slider" class:code={$switchEnabled}>
+            <svg
+              id="cms"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor">
+              <path
+                d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+              <path
+                fill-rule="evenodd"
+                d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                clip-rule="evenodd" />
+            </svg>
+            <svg
+              id="ide"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
+                clip-rule="evenodd" />
+            </svg>
+          </span>
+          <span class="sr-only">Switch to
+            {$switchEnabled ? 'CMS' : 'IDE'}</span>
+        </label>
+        {#if !$onMobile}
+          <div class="tooltip">
+            Switch to
+            {$switchEnabled ? 'CMS' : 'IDE'}
+          </div>
+        {/if}
+      </div>
+    {/if}
+    <slot />
+  </div>
+</div>
 </nav>
+
 
 <style lang="postcss">
   nav {
     position: fixed;
-    top: 0;
     left: 0;
     right: 0;
+    top: -3rem;
     z-index: 999999999;
     -webkit-app-region: drag;
+    transition: 0.2s top;
+    transition-delay: 1s;
+    will-change: top;
+
+    &.mounted {
+      top: 0;
+    }
   }
+
   .left {
     width: 100%;
     display: flex;
@@ -213,6 +219,13 @@
       
       &:hover {
         text-decoration-color: var(--primo-color-primored);
+      }
+
+      svg {
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-left: 0.25rem;
+        color: var(--primo-color-white);
       }
     }
   }

@@ -34,7 +34,7 @@
         id: 'pages',
         title: 'Pages',
         label: 'Pages',
-        icon: 'th-large',
+        icon: 'pages',
         onclick: () => modal.show('SITE_PAGES'),
       },
     ],
@@ -53,7 +53,7 @@
         id: 'toolbar--pages',
         label: 'Pages',
         title: 'Pages',
-        icon: 'th-large',
+        icon: 'pages',
         onclick: () => modal.show('SITE_PAGES'),
       },
     ],
@@ -151,17 +151,15 @@
   <ToolbarButton
     id="undo"
     title="Undo"
-    icon="undo-alt"
+    icon="undo"
     on:click={undoSiteChange}
-    buttonStyles="mr-1 bg-gray-600"
   />
   {#if $undone.length > 0}
     <ToolbarButton
       id="redo"
       title="Redo"
-      icon="redo-alt"
+      icon="redo"
       on:click={redoSiteChange}
-      buttonStyles="mr-1 bg-gray-600"
     />
   {/if}
   <ToolbarButton
@@ -177,8 +175,8 @@
     type="primo"
     title="Publish"
     label="Publish"
-    icon="fas fa-globe"
-    style="margin-left:0.25rem;"
+    icon="globe"
+    style="margin-left:0.25rem;margin-right: 0.25rem;"
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}

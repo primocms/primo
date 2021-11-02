@@ -1,5 +1,4 @@
 <script>
-  import { fade } from 'svelte/transition';
   import dropdown from '../../stores/app/dropdown';
   import { loadingSite } from '../../stores/app/misc';
   import Spinner from '../../components/misc/Spinner.svelte';
@@ -19,21 +18,21 @@
   }
 </script>
 
-<a
+<button
   id="primo-button"
   class={variants}
   class:bg-primored={showingDropdown}
   class:chevron={showingDropdown}
   aria-label="See all sites"
   href="/"
-  on:click={warn}
+  on:click={() => showingDropdown = !showingDropdown}
 >
   {#if $loadingSite}
     <Spinner />
   {:else}
     <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
   {/if}
-</a>
+</button>
 
 {#if showingDropdown}
   <ul xyz="fade stagger stagger-1" class="dropdown">
@@ -53,6 +52,7 @@
   #primo-button {
     margin-right: 0.25rem;
     padding: 0.25rem 0.5rem;
+    border-radius: var(--primo-border-radius);
     display: block;
     height: 100%;
     background: var(--primo-color-codeblack);
@@ -81,7 +81,7 @@
       position: absolute;
       height: 0;
       width: 0;
-      bottom: -16px;
+      bottom: -19px;
       pointer-events: none;
       left: 21px;
 

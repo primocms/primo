@@ -223,7 +223,7 @@
 </div>
 {@html htmlBelow || ''}
 
-<style>
+<style lang="postcss">
   .spinner-container {
     position: fixed;
     top: 0;
@@ -239,9 +239,14 @@
   }
   .primo-page {
     opacity: 0;
-  }
-  .fadein {
-    transition: opacity 0.1s;
-    opacity: 1;
+    border-top: 0;
+    transition: border-top 0.2s; /* match transition time in Toolbar.svelte */
+    transition-delay: 1s;
+
+    &.fadein {
+      transition-property: opacity, border-top;
+      transition-duration: 0.2s;
+      opacity: 1;
+    }
   }
 </style>

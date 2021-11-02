@@ -1,7 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
+  import Spinner from '../../components/misc/Spinner.svelte'
   import { showKeyHint, onMobile } from '../../stores/app/misc';
+  import svg from '../../svg'
 
   const dispatch = createEventDispatcher();
 
@@ -24,66 +26,65 @@
 
   let subButtonsActive = false;
 
-  $: if (icon && !icon.includes('fa-')) {
-    icon = `fas fa-${icon}`;
-  }
-
 </script>
 
-<div class="button-group button-container">
-  <button
-    {id}
-    aria-label={title}
-    class="{buttonStyles} {variant}"
-    class:primo={type === 'primo'}
-    class:active
-    class:has-subbuttons={buttons}
-    {style}
-    in:fade={{ duration: 200 }}
-    {disabled}
-    on:click={() => {
-      subButtonsActive = !subButtonsActive;
-      onclick ? onclick() : dispatch('click');
-    }}>
-    {#if icon}
-      {#if key}
-        <span
-          class="key-hint"
-          class:active={$showKeyHint}
-          aria-hidden>&#8984;{key.toUpperCase()}</span>
-      {/if}
-      <i class={icon} class:hidden={loading} />
-      {#if label}<span class="label">{label}</span>{/if}
-      {#if loading}<i class="fas fa-spinner" />{/if}
-    {:else}
-      <slot>
-        <span>{label}</span>
-      </slot>
-    {/if}
-  </button>
-  {#if title && !$onMobile && !hideTooltip}
-    <div class="tooltip {tooltipVariants}">{title}</div>
+<button
+{id}
+aria-label={title}
+class="{buttonStyles} {variant}"
+class:primo={type === 'primo'}
+class:active
+class:has-subbuttons={buttons}
+{style}
+in:fade={{ duration: 200 }}
+{disabled}
+on:click={() => {
+  subButtonsActive = !subButtonsActive;
+  onclick ? onclick() : dispatch('click');
+}}>
+{#if icon}
+  {#if key}
+    <span
+      class="key-hint"
+      class:active={$showKeyHint}
+      aria-hidden>&#8984;{key.toUpperCase()}</span>
   {/if}
-</div>
+  <div class="icon" class:hidden={loading || $showKeyHint && key}>{@html svg(icon)}</div>
+  {#if label}<span class="label">{label}</span>{/if}
+  {#if loading}<Spinner />{/if}
+{:else}
+  <slot>
+    <span>{label}</span>
+  </slot>
+{/if}
+</button>
 
 <style lang="postcss">
-
-  .button-group {
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
   button {
     font-size: 0.85rem;
-    i {
-      /* font-size: 0.75rem; */
-      margin-right: 0.5rem;
+    user-select: none;
+
+    &:first-child {
+      border-top-left-radius: var(--primo-border-radius);
+      border-bottom-left-radius: var(--primo-border-radius);
+    }
+
+    &:last-child {
+      border-top-right-radius: var(--primo-border-radius);
+      border-bottom-right-radius: var(--primo-border-radius);
+    }
+
+    .icon {
+      pointer-events: none;
+      fill: var(--primo-color-white);
+      width: 0.75rem;
+    }
+
+    .icon + span {
+      margin-left: 0.5rem;
     }
   }
 
-  .fas.fa-spinner {
-    position: absolute;
-  }
   .hidden {
     opacity: 0;
   }
@@ -97,6 +98,7 @@
   }
 
   .key-hint {
+    pointer-events: none;
     position: absolute;
     width: 100%;
     text-align: center;
@@ -118,54 +120,6 @@
     display: flex;
     justify-content: center;
     position: relative;
-  }
-
-  .tooltip.sub-buttons {
-    pointer-events: none;
-    cursor: default;
-    padding: 0;
-    background: var(--primo-color-codeblack);
-    box-shadow: var(--box-shadow);
-    display: flex;
-    z-index: 999999999;
-    left: 12rem;
-  }
-
-  .tooltip.sub-buttons:before,
-  .tooltip.sub-buttons:after {
-    left: 5%;
-    background: var(--primo-color-codeblack);
-    border-top-color: transparent;
-    border-left-color: transparent;
-    border-right-color: transparent;
-  }
-
-  .has-subbuttons:hover .has-subbuttons:after,
-  .has-subbuttons:focus .has-subbuttons:after {
-    content: '';
-    height: 1rem;
-    position: absolute;
-    left: 0;
-    cursor: default;
-    bottom: -1rem;
-    right: -1rem;
-  }
-
-  .tooltip {
-    position: absolute;
-    text-align: center;
-    color: var(--color-gray-1);
-    font-weight: 700;
-    background: var(--color-gray-8);
-    padding: 8px 16px;
-    font-size: var(--font-size-2);
-    pointer-events: none;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.2s;
-    left: 50%;
-    transform: translateX(-50%);
-    top: calc(100% + 0.75rem);
   }
 
   .button-container:hover .tooltip,
@@ -212,6 +166,13 @@
     align-items: center;
     justify-content: center;
 
+
+    &:hover,
+    &:focus {
+      box-shadow: var(--primo-ring-primored);
+      z-index: 2;
+    }
+
     &[aria-label='Publish'] {
       span {
         font-size: 0.85rem;
@@ -238,12 +199,6 @@
         }
       }
     }
-
-    &:hover,
-    &:focus {
-      background: var(--color-gray-8);
-      transition: var(--transition-colors);
-    }
   }
 
   button.key-hint {
@@ -252,10 +207,13 @@
   }
 
   button[disabled] {
-    color: var(--color-gray-7);
-    background: #262626;
+    opacity: 0.1;
     cursor: default;
     transition: var(--transition-colors);
+
+    &:hover, &:focus {
+      box-shadow: none;
+    }
   }
 
   button.outlined {
