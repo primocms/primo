@@ -147,6 +147,7 @@
           align-items: center;
           flex: 1;
           label {
+            width: 100%;
             display: flex;
             cursor: pointer;
           }
