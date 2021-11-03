@@ -176,7 +176,7 @@
     title="Publish"
     label="Publish"
     icon="globe"
-    style="margin-left:0.25rem;margin-right: 0.25rem;"
+    style="margin-left:0.25rem;"
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}

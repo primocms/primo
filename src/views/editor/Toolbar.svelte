@@ -206,8 +206,8 @@ class:mounted>
   .menu-container {
     display: flex;
     margin: 0 auto;
-    padding: 0.25rem 0;
-    max-width: var(--max-width);
+    padding: 0.5rem var(--padding, 1rem);
+    max-width: var(--max-width, 1200px);
 
     .toolbar-link {
       font-size: 0.85rem;
