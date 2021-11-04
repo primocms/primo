@@ -78,7 +78,7 @@
     position: relative;
     border-radius: var(--primo-border-radius);
     max-height: 100vh;
-    padding: 1rem;
+    /* padding: 1rem; */ /* pushes content out of sight on windows */
     height: 100%; /* make component editor full height when in cms) */
 
     &.fullscreen {
