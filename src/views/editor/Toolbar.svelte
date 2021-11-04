@@ -24,6 +24,7 @@ aria-label="toolbar"
 id="primo-toolbar"
 class="primo-reset"
 class:mounted>
+<div id="primo-desktop-toolbar"></div>
 <div class="menu-container">
   <div class="left">
     <PrimoButton variants="py-2" on:signOut />
@@ -95,10 +96,16 @@ class:mounted>
     right: 0;
     top: -3rem;
     z-index: 999999999;
-    -webkit-app-region: drag;
     transition: 0.2s top;
     transition-delay: 1s;
     will-change: top;
+
+    #primo-desktop-toolbar {
+      display: none;
+      height: 1.5rem;
+      -webkit-app-region: drag;
+      background-color: var(--color-codeblack);
+    }
 
     &.mounted {
       top: 0;
