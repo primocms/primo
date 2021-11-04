@@ -52,7 +52,6 @@
       element: node,
       extensions: [ 
         StarterKit,
-        // ...defaultExtensions(),
         BubbleMenu.configure({
           element: bubbleMenu,
         }),
