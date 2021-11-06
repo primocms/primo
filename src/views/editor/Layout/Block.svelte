@@ -211,7 +211,7 @@
   class="primo-section has-{block.type}"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
-  id="{block.id}-section"
+  id="{block.id}"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >
