@@ -57,7 +57,7 @@
 
     .preview-container {
       background: var(--primo-color-white);
-      border: 4px solid var(--color-gray-8);
+      border: 2px solid var(--color-gray-8);
       transition: var(--transition-colors);
       overflow: hidden;
       border-bottom: 0;
