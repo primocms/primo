@@ -24,7 +24,7 @@
 </script>
 
 {#if visible}
-  <div class="modal mousetrap primo-reset {variants}" transition:fade={{ duration: 100 }}>
+  <div id="primo-modal" class="modal mousetrap primo-reset {variants}" transition:fade={{ duration: 100 }}>
     <div
       class="modal-background"
       class:hovered={!$modal.disabledBgClose}

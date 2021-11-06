@@ -94,7 +94,7 @@ class:mounted>
     position: fixed;
     left: 0;
     right: 0;
-    top: -3rem;
+    top: -5rem;
     z-index: 999999999;
     transition: 0.2s top;
     transition-delay: 1s;
@@ -102,9 +102,10 @@ class:mounted>
 
     #primo-desktop-toolbar {
       display: none;
-      height: 1.5rem;
+      height: 30px;
       -webkit-app-region: drag;
       background-color: var(--color-codeblack);
+      border-bottom: 1px solid #222;
     }
 
     &.mounted {

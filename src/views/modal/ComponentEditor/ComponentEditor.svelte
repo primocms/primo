@@ -249,7 +249,6 @@
     // necessary to re-render field values in preview (since we're mutating `field`)
     fields = fields.filter(Boolean);
     saveRawValue('fields', fields);
-    console.log('refreshing');
     compileComponentCode({
       html: rawHTML,
       css: rawCSS,
