@@ -170,7 +170,7 @@
   }
   .preview-container {
     background: var(--primo-color-white);
-    border: 4px solid var(--color-gray-8);
+    border: 2px solid var(--color-gray-8);
     overflow: hidden;
     transition: border-color 0.2s;
     will-change: border-color;
