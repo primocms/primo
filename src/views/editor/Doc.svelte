@@ -25,6 +25,7 @@
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
   import { goto } from '$app/navigation';
+  import {navigating} from '$app/stores'
 
   export let element;
 
@@ -79,53 +80,43 @@
   async function disableLinks() {
     if (!element) return;
     const { pathname, origin } = window.location;
-    const [username, site] = pathname.split('/').slice(1);
-    const homeUrl = `${origin}/${username}/${site}`;
+    const [site] = pathname.split('/').slice(1);
+    const homeUrl = `${origin}/${site}`;
     element.querySelectorAll('a').forEach((link) => {
+
       // link is to primo.af
       if (window.location.host === link.host) {
+
         // link navigates to site home
         if (link.pathname === '/') {
-          link.setAttribute('data-tinro-ignore', '');
           link.onclick = (e) => {
             e.preventDefault();
             goto(homeUrl);
           };
           return;
+        } 
+
+        link.onclick = e => {
+          e.preventDefault()
         }
 
-        const [_, linkUsername, linkSite, linkPage, childPage] =
-          link.pathname.split('/');
+        const [ linkPage ] = link.pathname.split('/').slice(1);
 
-        // Link goes to different site
-        if (linkUsername !== username) {
-          openLinkInNewWindow(link);
-        } else {
-          // Link goes to current site
-          const pageExists =
-            !!find($pages, ['id', linkPage]) ||
-            !!find($pages, ['id', linkSite]);
-          if (!pageExists) {
-            openLinkInNewWindow(link);
-          } else {
-            link.setAttribute('data-tinro-ignore', '');
-            link.onclick = (e) => {
-              e.preventDefault();
-              goto(
-                linkPage ? `${homeUrl}/${linkPage}` : `${homeUrl}/${linkSite}`
-              );
-              // router.goto(
-              //   linkPage ? `${homeUrl}/${linkPage}` : `${homeUrl}/${linkSite}`
-              // );
-            };
-          }
-        }
+        // Link goes to current site
+        const pageExists = !!find($pages, ['id', linkPage])
+
+        link.onclick = (e) => {
+          e.preventDefault();
+          if (pageExists) {
+            goto(`${homeUrl}/${linkPage}`);
+          } 
+        };
+
       } else {
         openLinkInNewWindow(link);
       }
 
       function openLinkInNewWindow(link) {
-        link.setAttribute('data-tinro-ignore', '');
         link.onclick = (e) => {
           e.preventDefault();
           window.open(link.href, '_blank');
@@ -172,7 +163,7 @@
   }
 
   // Fade in page when all components mounted
-  let pageMounted = true;
+  let pageMounted = false;
   let componentsMounted = 1;
   $: nComponents = $content.filter(
     (block) => block.type === 'component'
@@ -185,10 +176,10 @@
   }
 
   // reset pageMounted on page change
-  // $: if ($router.from !== $router.url) {
-  //   pageMounted = false;
-  //   componentsMounted = 1;
-  // }
+  $: if ($navigating && ($navigating.from.path !== $navigating.to.path)) {
+    pageMounted = false;
+    componentsMounted = 1;
+  }
 
   $: blocksToRender = $content.slice(0, componentsMounted);
 </script>
