@@ -2,12 +2,14 @@
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
+  import {goto} from '$app/navigation'
   import { TextInput } from '../../components/inputs';
   import SplitButton from '../../ui/inputs/SplitButton.svelte';
   import { PrimaryButton } from '../../components/buttons';
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
   import { createUniqueID } from '../../utilities';
+  import modal from '../../stores/app/modal';
 
   import { createPage } from '../../const';
   import { makeValidUrl } from '../../utils';
@@ -24,7 +26,8 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
-    console.log({ currentPath });
+    goto(url)
+    modal.hide()
     actions.add(newPage, currentPath);
     creatingPage = false;
     pageLabel = '';
