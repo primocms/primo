@@ -122,15 +122,10 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
       } else if (block.type === 'content') {
         const {html} = block.value
-        const svelte = await processCode({ 
-          code: {
-            html, 
-            css: '', 
-            js: '' 
-          }
-        });
         return {
-          ...svelte,
+          html,
+          css: '',
+          js: '',
           type: 'content',
           id: block.id
         }
