@@ -81,7 +81,7 @@
       position: absolute;
       height: 0;
       width: 0;
-      bottom: -21px;
+      bottom: -24px;
       pointer-events: none;
       left: 21px;
 
