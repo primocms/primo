@@ -39,7 +39,7 @@
     {#each $dropdown as button}
       <li class="xyz-in">
         {#if button.component}
-          <svelte:component this={button.component} {...button.props} />
+          <svelte:component this={button.component} {...button.props} on:toggle={() => showingDropdown = !showingDropdown} />
         {:else}
           <DropdownButton {button} />
         {/if}
