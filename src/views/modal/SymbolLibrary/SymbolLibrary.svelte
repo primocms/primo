@@ -204,7 +204,7 @@
     {:else}
     <Container
       symbol={item}
-      titleEditable={true}
+      titleEditable={!showingPublicLibrary}
       on:copy={() => copySymbol(item)}
       buttons={!showingPublicLibrary ? [{ onclick: () => {
                 const confirm = window.confirm('Are you sure you want to delete this component?');
