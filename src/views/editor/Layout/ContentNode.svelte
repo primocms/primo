@@ -11,10 +11,8 @@
   import StarterKit from '@tiptap/starter-kit';
   import Highlight from '@tiptap/extension-highlight';
   import Link from '@tiptap/extension-link';
-
   import BubbleMenu from '@tiptap/extension-bubble-menu';
   import Image from '@tiptap/extension-image';
-
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
   export let block;

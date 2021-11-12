@@ -88,7 +88,7 @@
       {#each buttons as button}
         <button
           title={button.title}
-          class={button.class}
+          class:selected={active}
           class:highlight={button.highlight && !active}
           on:mouseenter={() => {
             hovering = true;
@@ -104,7 +104,7 @@
             <span>{button.clicked.label}</span>
             {@html button.clicked.svg}
           {:else}
-            {#if button.label}<span>{button.label}</span>{/if}
+            {#if button.label}<span class="label">{button.label}</span>{/if}
             {#if button.svg}
               {@html button.svg}
             {:else if button.icon}<i class={button.icon} />{/if}
@@ -184,13 +184,23 @@
           background: var(--color-gray-8);
           display: flex;
           align-items: center;
-          padding: 8px;
-          gap: 8px;
+          padding: 0.5rem;
+          gap: 0.5rem;
           transition: var(--transition-colors);
+          font-size: 0.75rem;
+
+          &.selected {
+            pointer-events: none;
+            opacity: 0.75;
+            outline: 0;
+          }
+
+          .label {
+            margin-right: 0.25rem;
+          }
 
           &:focus {
             outline: 0;
-            opacity: 0.75;
           }
 
           &.highlight {

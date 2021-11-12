@@ -249,7 +249,7 @@ html {
   --color: var(--color-dark);
   --padding: 2rem;
   --border: 1px solid var(--color-shade);
-  --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.04);
+  --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.2); 
   --border-radius: 8px;
   --max-width: 1200px;
   --border-color: var(--color-shade);
@@ -294,6 +294,8 @@ html {
   img {
     width: 100%;
     margin-bottom: 1rem;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
   }
 
   p {
@@ -339,7 +341,7 @@ html {
 .page-container {
   max-width: var(--max-width, 1200px);
   margin: 0 auto;
-  padding: 6rem 2rem;
+  padding: var(--padding, 1rem); 
 }
 
 .body {

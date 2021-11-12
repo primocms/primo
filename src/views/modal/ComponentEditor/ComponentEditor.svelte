@@ -15,6 +15,7 @@
     convertFieldsToData,
     createDebouncer,
     processCode,
+    processCSS,
     wrapInStyleTags,
   } from '../../../utils';
 
@@ -92,6 +93,7 @@
     disableSave = false;
 
     async function compile() {
+      const parentCSS = await processCSS($siteCSS + $pageCSS)
       const timeout = setTimeout(() => {
         throttling = true;
       }, 100);
@@ -101,7 +103,7 @@
       <svelte:head>
         ${$pageHTML.head}
         ${$siteHTML.head}
-        ${wrapInStyleTags($siteCSS + $pageCSS)}
+        ${wrapInStyleTags(parentCSS)}
       </svelte:head>
       ${$pageHTML.below}
       ${$siteHTML.below}
