@@ -12,20 +12,24 @@
 
 </script>
 
-<label class={variants}>
-  <span>{field.label}</span>
-  {#if value}
+
+{#if value}
+  <label class={variants}>
+    <span>{field.label}</span>
     <input class="input" {title} {disabled} type="text" bind:value on:input />
-  {:else}
+  </label>
+{:else}
+  <label class={variants}>
+    <span>{field.label}</span>
     <input
-      class="input"
-      {title}
-      {disabled}
-      type="text"
-      bind:value={field.value}
-      on:input />
-  {/if}
-</label>
+    class="input"
+    {title}
+    {disabled}
+    type="text"
+    bind:value={field.value}
+    on:input />
+  </label>
+{/if}
 
 <style lang="postcss">
   label {

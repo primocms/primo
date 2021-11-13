@@ -99,7 +99,6 @@ class:mounted>
     transition: 0.2s top;
     transition-delay: 1s;
     will-change: top;
-    padding-top: 4px;
 
     #primo-desktop-toolbar {
       display: none;

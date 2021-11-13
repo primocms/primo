@@ -8,7 +8,6 @@
   export let disabled = false;
   export let variants = '';
   export let size = 'medium';
-  export let autofocus = false;
 
   function onInput({ target }) {
     const { value: inputValue } = target;

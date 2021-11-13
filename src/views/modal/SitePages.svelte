@@ -26,7 +26,6 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
-    goto(url)
     modal.hide()
     actions.add(newPage, currentPath);
     creatingPage = false;
@@ -104,7 +103,6 @@
   }
 
   function getListedPages(childPageId, pages) {
-    console.log({ childPageId, pages });
     if (childPageId) {
       const rootPage = find(pages, ['id', rootPageId]);
       return rootPage.pages || [];

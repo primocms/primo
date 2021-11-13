@@ -20,8 +20,6 @@
   export let active = false;
   export let buttons = null;
   export let type = null;
-  export let tooltipVariants = '';
-  export let hideTooltip = false;
   export let style = '';
 
   let subButtonsActive = false;
@@ -110,42 +108,10 @@ on:click={() => {
     opacity: 1;
     transition: opacity 0.1s;
   }
-
-  .key-hint.active + i {
-    opacity: 0;
-    transition: opacity 0.1s;
-  }
-
   .button-container {
     display: flex;
     justify-content: center;
     position: relative;
-  }
-
-  .button-container:hover .tooltip,
-  .button-container:focus .tooltip,
-  .sub-buttons:hover,
-  .tooltip.active {
-    visibility: visible;
-    opacity: 1;
-    transition: opacity 0.2s;
-  }
-
-  .tooltip:before,
-  .tooltip:after {
-    content: ' ';
-    height: 0;
-    width: 0;
-    border: 1px solid var(--color-gray-8);
-    border-top-color: transparent;
-    border-left-color: transparent;
-    border-right-color: transparent;
-    bottom: 100%;
-    left: 50%;
-    position: absolute;
-    pointer-events: none;
-    border-width: 7px;
-    margin-left: -7px;
   }
 
   :global(.heading2) {
@@ -173,32 +139,6 @@ on:click={() => {
       z-index: 2;
     }
 
-    &[aria-label='Publish'] {
-      span {
-        font-size: 0.85rem;
-        margin-right: 0.5rem;
-      }
-      i {
-        transition: transform 0.2s;
-        transform: scale(1);
-        transform-origin: center;
-      }
-
-      &:hover i {
-        transition: transform 0.2s;
-        transform: scale(1.2);
-      }
-
-      &:focus {
-        background: var(--primo-color-primored-dark);
-      }
-
-      @media (max-width: 600px) {
-        span {
-          display: none;
-        }
-      }
-    }
   }
 
   button.key-hint {
@@ -242,48 +182,6 @@ on:click={() => {
   button.primored:hover,
   button.primored:focus {
     background: var(--color-gray-8);
-  }
-
-  /* button i.fa-paper-plane {
-    transition: transform 0.2s;
-    transform: translate(0);
-    transform-origin: left;
-  }
-
-  button:hover i.fa-paper-plane {
-    transition: transform 0.2s;
-    transform: translate(-4px, 4px);
-  }
-
-  button.active i.fa-paper-plane {
-    animation-name: hammer;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-timing-function: ease;
-    will-change: transform;
-  } */
-
-  @keyframes hammer {
-    0% {
-      transform: rotate(0deg);
-    }
-    20% {
-      transform: rotate(-20deg);
-    }
-    50% {
-      transform: rotate(45deg);
-    }
-    100% {
-      transform: rotate(0deg);
-    }
-  }
-
-  i.fa-spinner {
-    animation-name: spin;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-    will-change: transform;
   }
 
   @keyframes spin {

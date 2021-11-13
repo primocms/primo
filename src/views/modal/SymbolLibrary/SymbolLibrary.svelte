@@ -256,11 +256,6 @@
     display: grid;
     gap: 1rem;
   }
-  header {
-    padding-top: 1rem;
-    margin-top: 1rem;
-    border-top: 1px solid var(--color-gray-8);
-  }
   .library-buttons {
     color: var(--color-gray-1);
     background: var(--primo-color-codeblack);

@@ -43,7 +43,7 @@
         const blob = new Blob([res.js], { type: 'text/javascript' });
         const url = URL.createObjectURL(blob);
 
-        const { default: App } = await import(url /* @vite-ignore */);
+        const { default: App } = await import(/* @vite-ignore */ url);
         component = new App({
           target: node,
           props: dataWithFixedImages,

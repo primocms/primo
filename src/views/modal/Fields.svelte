@@ -14,19 +14,19 @@
   import { pages } from '../../stores/actions';
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
-  import CustomFieldType from './CustomFieldType.svelte';
-  import CustomFieldDevType from './CustomFieldDevType.svelte';
+  // import CustomFieldType from './CustomFieldType.svelte';
+  // import CustomFieldDevType from './CustomFieldDevType.svelte';
 
   let localPageFields = cloneDeep($pageFields);
   let localSiteFields = cloneDeep($siteFields);
 
   const allFieldTypes = [
-    {
-      id: 'custom',
-      label: 'Custom',
-      component: CustomFieldType,
-      devComponent: CustomFieldDevType,
-    },
+    // {
+    //   id: 'custom',
+    //   label: 'Custom',
+    //   component: CustomFieldType,
+    //   devComponent: CustomFieldDevType,
+    // },
     {
       id: 'repeater',
       label: 'Repeater',

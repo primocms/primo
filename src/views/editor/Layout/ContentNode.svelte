@@ -166,15 +166,15 @@
 </div>
 
 <style>
-  .primo-section {
+  .content {
     caret-color: rgb(248, 68, 73);
   }
 
-  :global(.primo-section ::selection, ::-moz-selection) {
+  :global(.content ::selection, ::-moz-selection) {
     background: rgb(248, 68, 73);
   }
 
-  :global(.primo-section .ProseMirror) {
+  :global(.content .ProseMirror) {
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;

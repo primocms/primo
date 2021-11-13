@@ -537,7 +537,7 @@
                     {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
                 {:else if field.type === 'repeater'}
                   {#if field.fields}
-                    {#each field.fields as subfield}
+                    {#each field.fields as subfield, childIndex}
                       <EditField
                         minimal={field.type === 'info'}
                         child={true}

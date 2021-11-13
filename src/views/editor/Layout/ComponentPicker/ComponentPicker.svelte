@@ -87,7 +87,7 @@
   </Masonry>
 </main>
 
-<style>
+<style lang="postcss">
   main {
     padding: 2.5rem;
     overflow-x: scroll;
@@ -131,25 +131,6 @@
 
     &:hover {
       color: var(--primo-color-primored);
-    }
-  }
-
-  .components {
-    display: grid;
-    gap: 1rem;
-    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
-      var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  }
-
-  @media (min-width: 768px) {
-    .components {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .components {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 </style>

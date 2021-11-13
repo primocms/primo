@@ -100,7 +100,7 @@
           </span>
         {/if}
         {#if value.url}
-          <img src={imagePreview} alt="Image preview" />
+          <img src={imagePreview} alt="Preview" />
         {/if}
         <label class="image-upload">
           <svg
@@ -152,6 +152,7 @@
       <div class="inputs">
         <label class="image-input">
           <span>URL</span>
+          <!-- svelte-ignore a11y-autofocus -->
           <input
             autofocus
             on:input={(e) => {
@@ -176,12 +177,6 @@
 <slot />
 
 <style lang="postcss">
-  .field-label {
-    font-size: var(--font-size-1);
-    font-weight: 600;
-    display: inline-block;
-    padding-bottom: 0.25rem;
-  }
   .image-info {
     display: flex;
     flex-direction: column;
@@ -264,9 +259,7 @@
       border-bottom-right-radius: 0.25rem;
     }
 
-    &.uploading {
-      border-color: rgba(248, 68, 73, var(--tw-border-opacity));
-    }
+
 
     img {
       position: absolute;

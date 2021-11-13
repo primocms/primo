@@ -125,7 +125,6 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--color-gray-9);
-    background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
     border-radius: var(--primo-border-radius);
     max-height: 50vh;
@@ -135,6 +134,7 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: var(--box-shadow);
+      background: var(--primo-color-codeblack);
 
       .component-label {
         display: flex;

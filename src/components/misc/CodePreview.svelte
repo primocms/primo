@@ -11,7 +11,6 @@
   export let componentApp;
   export let error = null;
   export let fields = [];
-  export let id = null;
 
   let iframe;
   let previewLoaded = false;
@@ -210,7 +209,6 @@
     text-align: center;
     transition: var(--transition-colors);
   }
-  .footer-buttons a:hover,
   .footer-buttons button:hover {
     background: var(--color-gray-8);
   }

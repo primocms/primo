@@ -155,8 +155,4 @@
     --ring: 0px 0px 0px 2px var(--primo-color-primored);
   }
 
-  button,
-  a {
-    cursor: pointer;
-  }
 </style>
