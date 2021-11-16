@@ -26,7 +26,6 @@
     const newPage = isEmpty
       ? createPage(url, title)
       : duplicatePage(title, url);
-    modal.hide()
     actions.add(newPage, currentPath);
     creatingPage = false;
     pageLabel = '';

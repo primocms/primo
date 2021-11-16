@@ -214,6 +214,12 @@
 </div>
 {@html htmlBelow || ''}
 
+{#if blocksToRender.length <= 1 && blocksToRender.length !== 0 && blocksToRender[0]['type'] === 'options'}
+<div class="empty-state">
+  if you're seeing this, <br>your website is empty
+</div>
+{/if}
+
 <style lang="postcss">
   .spinner-container {
     position: fixed;
@@ -239,5 +245,16 @@
       transition-duration: 0.2s;
       opacity: 1;
     }
+  }
+
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-gray-4);
+    pointer-events: none;
+    z-index: -2;
   }
 </style>

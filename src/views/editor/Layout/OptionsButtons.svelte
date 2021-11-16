@@ -73,8 +73,9 @@
 
       button {
         background: var(--color-gray-9);
-        box-shadow: var(--primo-ring-primored);
+        border: 0.25rem solid var(--color-gray-8);
         color: var(--color-gray-1);
+        padding: 1rem 0;
         font-weight: 600;
         flex: 1;
         border-radius: 2px;
@@ -86,7 +87,7 @@
         transition: var(--transition-colors);
 
         &:hover {
-          background: var(--primo-color-primored);
+          border-color: var(--primo-color-primored);
         }
 
         &.delete {

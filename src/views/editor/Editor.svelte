@@ -11,12 +11,12 @@
 
   import { focusedNode, switchEnabled } from '../../stores/app';
   import { undone, fields as siteFields } from '../../stores/data/draft';
-  import { fields as pageFields } from '../../stores/app/activePage';
+  import { fields as pageFields, content } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
 
-  let updatingDatabase = false;
+  $: pageEmpty = $content.length <= 1 && $content.length > 0 && $content[0]['type'] === 'options';
 
   // setup key-bindings
   onMount(() => {
@@ -173,14 +173,14 @@
   />
   <ToolbarButton
     type="primo"
-    title="Publish"
+    title={pageEmpty ? 'Add a content block or component to your page to publish it' : 'Publish'}
     label="Publish"
     icon="globe"
     style="margin-left:0.25rem;"
     hideTooltip={true}
     active={false}
     on:click={() => modal.show('BUILD')}
-    disabled={updatingDatabase}
+    disabled={pageEmpty}
   />
 </Toolbar>
 

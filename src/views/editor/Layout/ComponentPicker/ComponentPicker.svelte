@@ -92,9 +92,7 @@
     padding: 2.5rem;
     overflow-x: scroll;
     max-height: 75vh;
-    background-color: rgba(30, 30, 30);
-    border-width: 4px;
-    border-color: rgba(248, 68, 73);
+    background-color: var(--primo-color-codeblack);
   }
   .buttons {
     display: flex;

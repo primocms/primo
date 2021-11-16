@@ -1,8 +1,8 @@
 <script>
-  import {slide} from 'svelte/transition'
   import { onMount, createEventDispatcher } from 'svelte';
   import ToolbarButton from './ToolbarButton.svelte';
-  import { PrimoButton, MobileNavButton } from '../../components/buttons';
+  import { PrimoButton } from '../../components/buttons';
+  import { name } from '../../stores/data/draft';
   import { switchEnabled, userRole } from '../../stores/app';
   import { onMobile } from '../../stores/app/misc';
   const dispatch = createEventDispatcher();
@@ -24,7 +24,11 @@ aria-label="toolbar"
 id="primo-toolbar"
 class="primo-reset"
 class:mounted>
-<div id="primo-desktop-toolbar"></div>
+<div id="primo-desktop-toolbar">
+  <div>
+    {$name}
+  </div>
+</div>
 <div class="menu-container">
   <div class="left">
     <PrimoButton variants="py-2" on:signOut />
@@ -106,6 +110,17 @@ class:mounted>
       -webkit-app-region: drag;
       background-color: var(--color-codeblack);
       border-bottom: 1px solid #222;
+
+      div {
+        margin: 0 auto;
+        max-width: var(--max-width, 1200px);
+        color: var(--color-gray-3);
+        font-size: 0.75rem;
+        padding: 0 var(--padding, 1rem);
+        display: flex;
+        align-items: center;
+        height: 100%;
+      }
     }
 
     &.mounted {

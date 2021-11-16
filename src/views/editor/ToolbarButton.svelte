@@ -72,6 +72,13 @@ on:click={() => {
       border-bottom-right-radius: var(--primo-border-radius);
     }
 
+    &[disabled] {
+      background: none;
+      border-left: 1px solid var(--color-gray-8);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
     .icon {
       pointer-events: none;
       fill: var(--primo-color-white);

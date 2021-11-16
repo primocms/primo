@@ -12,11 +12,9 @@
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import ModalHeader from '../ModalHeader.svelte';
   import Container from './SymbolContainer.svelte';
-  import Spinner from '../../../components/misc/Spinner.svelte';
   import { createSymbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
   import { userRole } from '../../../stores/app';
-  import libraries from '../../../stores/data/libraries';
   import modal from '../../../stores/app/modal';
   import { symbols } from '../../../stores/data/draft';
   import {
@@ -133,7 +131,7 @@
     }
   });
 
-  let [minColWidth, maxColWidth, gap] = [300, 800, 20];
+  let [minColWidth, maxColWidth, gap] = [500, 800, 20];
   let width, height;
 
   let showingPublicLibrary = false;
