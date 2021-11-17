@@ -282,7 +282,7 @@ html {
   background: var(--background);
 }
 
-.primo-section.content {
+.primo-section .content {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--padding);

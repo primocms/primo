@@ -204,11 +204,13 @@
   }
 
   let mounted = false
-  if (block.type !== 'component') {
+  if (block.type === 'content') {
     // delay mount to line up with components
     setTimeout(() => {
       mounted = true
     }, 1000)
+  } else if (block.type !== 'component') {
+    mounted = true
   }
 </script>
 
@@ -217,8 +219,6 @@
   in:fade={{duration:100}}
   class:visible={mounted}
   class="primo-section has-{block.type}"
-  class:content={block.type === 'content'}
-  class:component={block.type === 'component'}
   id="{block.id}"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}

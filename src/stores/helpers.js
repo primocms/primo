@@ -166,25 +166,27 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
       const { id, type } = block
       return `
         ${block.css ? `<style>${block.css}</style>` : ``}
-        <div class="primo-section ${type}" id="${id}">
-          ${block.html || ''}
-          ${
-            block.js && separateModules ? 
-            `<script type="module" async>
-              import App from './_modules/${block.symbol}.js';
-              new App({
-                target: document.querySelector('#${id}'),
-                hydrate: true
-              });
-            </script>`
-          : (block.js ? 
-            `<script type="module" async>
-              const App = ${block.js}
-              new App({
-                target: document.querySelector('#${id}'),
-                hydrate: true
-              });
-          </script>` : ``)}
+        <div class="primo-section has-${type}" id="${id}">
+          <div class="${type}">
+            ${block.html || ''}
+            ${
+              block.js && separateModules ? 
+              `<script type="module" async>
+                import App from './_modules/${block.symbol}.js';
+                new App({
+                  target: document.querySelector('#${id}'),
+                  hydrate: true
+                });
+              </script>`
+            : (block.js ? 
+              `<script type="module" async>
+                const App = ${block.js}
+                new App({
+                  target: document.querySelector('#${id}'),
+                  hydrate: true
+                });
+            </script>` : ``)}
+          </div>
         </div>
       `
     }).join('')
