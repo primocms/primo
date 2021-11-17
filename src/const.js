@@ -179,21 +179,16 @@ export const createSymbol = () => ({
 })
 
 export const DEFAULTS = {
-  content: [
-    {
-      id: createUniqueID(),
-      type: 'options',
-    }
-  ],
   page: {
     id: '',
-    title: '',
-    content: [
+    name: '',
+    sections: [
       {
         id: createUniqueID(),
         type: 'options',
       }
     ],
+    pages: [],
     html: {
       head: '',
       below: ''
@@ -211,21 +206,10 @@ export const DEFAULTS = {
   symbols: []
 }
 
-export const createPage = (id = createUniqueID(), title) => ({
+export const createPage = (id = createUniqueID(), name) => ({
+  ...DEFAULTS.page,
   id,
-  title,
-  content: [
-    {
-      id: createUniqueID(),
-      type: 'options',
-    }
-  ],
-  css: '',
-  html: {
-    head: '',
-    below: ''
-  },
-  fields: []
+  name
 })
 
 export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => ({
