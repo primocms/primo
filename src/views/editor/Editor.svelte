@@ -9,7 +9,7 @@
   import ToolbarButton from './ToolbarButton.svelte';
   import Doc from './Doc.svelte';
 
-  import { focusedNode, switchEnabled } from '../../stores/app';
+  import { switchEnabled } from '../../stores/app';
   import { undone, fields as siteFields } from '../../stores/data/draft';
   import { fields as pageFields, sections } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
