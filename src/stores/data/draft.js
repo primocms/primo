@@ -1,12 +1,10 @@
-import { get, writable, readable, derived } from 'svelte/store';
-import { createSite, createPage, DEFAULTS } from '../../const'
+import { get, writable, derived } from 'svelte/store';
+import { createPage, DEFAULTS } from '../../const'
 import {isEqual} from 'lodash-es'
 
 export const id = writable('')
 export const name = writable('')
 export const pages = writable([ createPage() ])
-export const styles = writable(DEFAULTS.styles)
-export const wrapper = writable(DEFAULTS.wrapper)
 export const fields = writable([])
 export const symbols = writable([])
 
@@ -21,8 +19,6 @@ export const site = derived(
     id, 
     name,
     pages,
-    // styles, 
-    // wrapper, 
     html,
     css,
     fields, 

@@ -2,7 +2,7 @@
   import { find, some, isEqual } from 'lodash-es';
   import Mousetrap from 'mousetrap';
 
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import Editor from './views/editor/Editor.svelte';
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
@@ -12,7 +12,7 @@
 
   import librariesStore from './stores/data/libraries';
   import { id as pageId } from './stores/app/activePage';
-  import { content, styles, fields, html, css } from './stores/app/activePage';
+  import { content, fields, html, css } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';
   import {
     saved,
@@ -21,6 +21,7 @@
     loadingSite,
   } from './stores/app/misc';
   import { DEFAULTS, createSite } from './const';
+  import {resetActivePage} from './stores/helpers'
 
   import { pages } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
@@ -70,7 +71,6 @@
 
     function setPageStore(page) {
       content.set(page.content);
-      styles.set(page.styles);
       fields.set(page.fields);
       html.set(page.html || DEFAULTS.html);
       css.set(page.css || DEFAULTS.css);
@@ -101,6 +101,10 @@
   onMount(() => {
     Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
     Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
+
+    return () => {
+      resetActivePage()
+    }
   });
 </script>
 

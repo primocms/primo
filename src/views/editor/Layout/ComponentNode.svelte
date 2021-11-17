@@ -159,10 +159,8 @@
 
   let component;
 
-  let mounted;
   // Fade in component on mount
   const observer = new MutationObserver(() => {
-    mounted = true;
     dispatch('mount');
   });
 
@@ -173,7 +171,6 @@
   }
 
   $: if (error) {
-    mounted = true;
     dispatch('mount');
   }
 

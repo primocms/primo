@@ -14,7 +14,6 @@
   import modal from '../../../stores/app/modal';
   import { id, content } from '../../../stores/app/activePage';
   import { pages } from '../../../stores/actions';
-  import site from '../../../stores/data/site';
 
   export let block;
   export let i;
@@ -203,11 +202,20 @@
       },
     };
   }
+
+  let mounted = false
+  if (block.type !== 'component') {
+    // delay mount to line up with components
+    setTimeout(() => {
+      mounted = true
+    }, 1000)
+  }
 </script>
 
 <div
   bind:this={node}
-  in:fade={{ duration: 100 }}
+  in:fade={{duration:100}}
+  class:visible={mounted}
   class="primo-section has-{block.type}"
   class:content={block.type === 'content'}
   class:component={block.type === 'component'}
@@ -246,7 +254,7 @@
     />
   </div>
   {#if block.type === 'component'}
-    <ComponentNode {block} {node} on:mount />
+    <ComponentNode {block} {node} on:mount={() => {mounted = true; dispatch('mount')}} />
   {:else if block.type === 'content'}
     <ContentNode
       {block}
@@ -280,6 +288,13 @@
 <style lang="postcss">
   .primo-section {
     position: relative;
+    opacity: 0;
+    transition: 0.2s opacity;
+
+    &.visible {
+      transition: 0.2s opacity;
+      opacity: 1;
+    }
   }
   .component {
     position: relative;

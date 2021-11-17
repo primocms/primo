@@ -3,7 +3,7 @@ import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
 import { id, content } from './app/activePage'
 import { saved } from './app/misc'
-import { styles, html, css, fields } from './data/draft'
+import { html, css, fields } from './data/draft'
 import * as stores from './data/draft'
 import { timeline, undone, site as unsavedSite } from './data/draft'
 import site from './data/site'
@@ -20,7 +20,6 @@ export async function hydrateSite(data) {
   stores.id.set(data.id)
   stores.name.set(data.name)
   stores.pages.set(data.pages)
-  styles.set(data.styles)
 
   css.set(data.css || DEFAULTS.css)
   html.set(data.html || DEFAULTS.html)

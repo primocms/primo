@@ -1,10 +1,18 @@
 import {unionBy, find, uniqBy} from 'lodash-es'
 import { get } from 'svelte/store'
-// import { router } from 'tinro'
-import { fields as siteFields, styles as siteStyles } from './data/draft'
-import { fields as pageFields, styles as pageStyles, content } from './app/activePage'
-import { symbols, wrapper } from './data/draft'
+import { fields as siteFields } from './data/draft'
+import { id, fields as pageFields, css as pageCSS, html as pageHTML, content } from './app/activePage'
+import { symbols } from './data/draft'
 import { convertFieldsToData, processCode, processCSS } from '../utils'
+import {DEFAULTS} from '../const'
+
+export function resetActivePage() {
+  id.set('index')
+  content.set(DEFAULTS.content)
+  pageFields.set(DEFAULTS.fields)
+  pageHTML.set(DEFAULTS.html)
+  pageCSS.set(DEFAULTS.css)
+}
 
 export function getAllFields(componentFields = [], exclude = () => true) {
   const allFields = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);

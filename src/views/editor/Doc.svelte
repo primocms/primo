@@ -91,7 +91,7 @@
         if (link.pathname === '/') {
           link.onclick = (e) => {
             e.preventDefault();
-            goto(homeUrl);
+            // goto(homeUrl);
           };
           return;
         } 
@@ -164,7 +164,7 @@
 
   // Fade in page when all components mounted
   let pageMounted = false;
-  let componentsMounted = 1;
+  let componentsMounted = 0;
   $: nComponents = $content.filter(
     (block) => block.type === 'component'
   ).length;
@@ -178,10 +178,11 @@
   // reset pageMounted on page change
   $: if ($navigating && ($navigating.from.path !== $navigating.to.path)) {
     pageMounted = false;
-    componentsMounted = 1;
+    componentsMounted = 0;
   }
 
-  $: blocksToRender = $content.slice(0, componentsMounted);
+  $: pageIsEmpty = $content.length <= 1 && $content.length !== 0 && $content[0]['type'] === 'options'
+
 </script>
 
 <svelte:head>
@@ -196,10 +197,9 @@
 <div
   bind:this={element}
   class="primo-page being-edited"
-  class:fadein={pageMounted}
 >
   {#if pageExists}
-    {#each blocksToRender as block, i (block.id)}
+    {#each $content as block, i (block.id)}
       {#if block.symbolID}
         <Block
           on:mount={() => componentsMounted++}
@@ -214,7 +214,7 @@
 </div>
 {@html htmlBelow || ''}
 
-{#if blocksToRender.length <= 1 && blocksToRender.length !== 0 && blocksToRender[0]['type'] === 'options'}
+{#if pageIsEmpty}
 <div class="empty-state">
   if you're seeing this, <br>your website is empty
 </div>
@@ -235,16 +235,9 @@
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   .primo-page {
-    opacity: 0;
     border-top: 0;
     transition: border-top 0.2s; /* match transition time in Toolbar.svelte */
     transition-delay: 1s;
-
-    &.fadein {
-      transition-property: opacity, border-top;
-      transition-duration: 0.2s;
-      opacity: 1;
-    }
   }
 
   .empty-state {
