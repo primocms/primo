@@ -4,6 +4,7 @@
   import { PrimoButton } from '../../components/buttons';
   import { name } from '../../stores/data/draft';
   import { switchEnabled, userRole } from '../../stores/app';
+  import { id as pageID } from '../../stores/app/activePage';
   import { onMobile } from '../../stores/app/misc';
   const dispatch = createEventDispatcher();
 
@@ -26,7 +27,7 @@ class="primo-reset"
 class:mounted>
 <div id="primo-desktop-toolbar">
   <div>
-    {$name}
+    {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
   </div>
 </div>
 <div class="menu-container">
@@ -120,6 +121,11 @@ class:mounted>
         display: flex;
         align-items: center;
         height: 100%;
+
+        span {
+          margin-left: 0.25rem;
+          color: var(--color-gray-5);
+        }
       }
     }
 
