@@ -6,13 +6,11 @@
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
 
-  import { keymap } from '@codemirror/view';
-  import { basicSetup, EditorView } from '@codemirror/basic-setup';
-  import { defaultTabBinding } from '@codemirror/commands';
+  import { EditorView, keymap } from '@codemirror/view';
+  import { standardKeymap, indentWithTab } from '@codemirror/commands';
   import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
   import extensions, { getLanguage } from './extensions';
-  // import cssPeek from './css-peek';
 
   const languageConf = new Compartment();
   const tabSize = new Compartment();
@@ -28,22 +26,6 @@
   export let selection = 0;
 
   const language = getLanguage(mode);
-  function getEmmetConfig(type) {
-    switch (type) {
-      case 'css':
-        return {
-          type: 'stylesheet',
-          syntax: 'css',
-        };
-      case 'html':
-        return {
-          type: 'markup',
-          syntax: 'html',
-        };
-      default:
-        throw `Invalid type: ${type}. Expected 'stylesheet' or 'markup'`;
-    }
-  }
 
   var Editor;
   const state = EditorState.create({
@@ -52,10 +34,11 @@
     },
     doc: prefix + value,
     extensions: [
-      extensions,
+      ...extensions,
       languageConf.of(language),
       keymap.of([
-        defaultTabBinding,
+        standardKeymap,
+        indentWithTab,
         {
           key: 'mod-1',
           run: () => {

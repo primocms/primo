@@ -1,7 +1,5 @@
 import { highlightSpecialChars, drawSelection, highlightActiveLine, keymap } from '@codemirror/view';
-export { EditorView } from '@codemirror/view';
 import { EditorState } from '@codemirror/state';
-export { EditorState } from '@codemirror/state';
 import { history, historyKeymap } from '@codemirror/history';
 import { foldGutter, foldKeymap } from '@codemirror/fold';
 import { indentOnInput } from '@codemirror/language';
