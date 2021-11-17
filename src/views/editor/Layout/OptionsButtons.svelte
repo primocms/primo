@@ -12,6 +12,11 @@
     dispatch('mount');
   });
 
+  let element
+  $: if (element) {
+    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
+  }
+
 </script>
 
 {#if selectingComponent}
@@ -20,7 +25,7 @@
     on:manage={() => dispatch('convert', 'symbol')}
     on:remove={() => dispatch('remove')} />
 {:else}
-  <div class="buttons-container primo-reset">
+  <div class="buttons-container primo-reset" bind:this={element}>
     <div class="buttons" class:deletable>
       <button
         on:click={() => dispatch('convert', 'content')}

@@ -12,7 +12,7 @@
 
   import librariesStore from './stores/data/libraries';
   import { id as pageId } from './stores/app/activePage';
-  import { content, fields, html, css } from './stores/app/activePage';
+  import { sections, fields, html, css } from './stores/app/activePage';
   import { switchEnabled, userRole } from './stores/app';
   import {
     saved,
@@ -70,7 +70,7 @@
     }
 
     function setPageStore(page) {
-      content.set(page.content);
+      sections.set(page.sections);
       fields.set(page.fields);
       html.set(page.html || DEFAULTS.html);
       css.set(page.css || DEFAULTS.css);

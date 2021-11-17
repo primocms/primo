@@ -3,19 +3,20 @@ import {DEFAULTS, createPage} from '../../const'
 
 
 export const id = writable('index')
-export const content = writable(DEFAULTS.content)
+export const sections = writable(DEFAULTS.page.sections)
 export const html = writable(DEFAULTS.html)
 export const css = writable(DEFAULTS.css)
 export const fields = writable(DEFAULTS.fields)
 
 
+
 // conveniently get the entire site
 export default derived(
-  [ content, css, html, fields ], 
-  ([content, css, html, fields]) => {
+  [ sections, css, html, fields ], 
+  ([sections, css, html, fields]) => {
   return {
     // ...createSite(),
-    content, 
+    sections, 
     css, 
     html, 
     fields

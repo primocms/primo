@@ -1,7 +1,7 @@
 import { find, last, cloneDeep, some } from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
-import { id, content } from './app/activePage'
+import { id, sections } from './app/activePage'
 import { saved } from './app/misc'
 import { html, css, fields } from './data/draft'
 import * as stores from './data/draft'
@@ -16,7 +16,7 @@ export async function saveSite() {
 }
 
 export async function hydrateSite(data) {
-  content.set([])
+  sections.set([])
   stores.id.set(data.id)
   stores.name.set(data.name)
   stores.pages.set(data.pages)
@@ -64,7 +64,7 @@ export async function emancipateInstances(symbol) {
   stores.pages.set(updatedPages)
 
   const activePageContent = find(updatedPages, ['id', get(id)])['content']
-  content.set(activePageContent)
+  sections.set(activePageContent)
 }
 
 export function undoSiteChange() {

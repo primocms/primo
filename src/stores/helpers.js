@@ -1,14 +1,14 @@
 import {unionBy, find, uniqBy} from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
-import { id, fields as pageFields, css as pageCSS, html as pageHTML, content } from './app/activePage'
+import { id, fields as pageFields, css as pageCSS, html as pageHTML, sections } from './app/activePage'
 import { symbols } from './data/draft'
 import { convertFieldsToData, processCode, processCSS } from '../utils'
 import {DEFAULTS} from '../const'
 
 export function resetActivePage() {
   id.set('index')
-  content.set(DEFAULTS.content)
+  sections.set(DEFAULTS.page.sections)
   pageFields.set(DEFAULTS.fields)
   pageHTML.set(DEFAULTS.html)
   pageCSS.set(DEFAULTS.css)
@@ -97,7 +97,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
       resolve(svelte) 
     }),
-    ...page.content.map(async block => {
+    ...page.sections.map(async block => {
       if (block.type === 'component') {
 
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
@@ -208,7 +208,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
 export async function buildPagePreview({ page, site }) {
   const res = await Promise.all([
-    ...page.content.map(async block => {
+    ...page.sections.map(async block => {
       if (block.type === 'component') {
 
         const fields = unionBy(block.value.fields, page.fields, site.fields, "key");

@@ -1,13 +1,11 @@
 <script>
-  import { cloneDeep, isEqual, find } from 'lodash-es';
+  import { isEqual, find } from 'lodash-es';
   import { CodeMirror } from '../../components';
   import { Tabs } from '../../components/misc';
   import Preview from '../../components/misc/Preview.svelte';
-  import { wrapInStyleTags, processCode } from '../../utils';
   import ModalHeader from './ModalHeader.svelte';
-  import { processors } from '../../component';
 
-  import activePage, { content, id } from '../../stores/app/activePage';
+  import activePage, { id } from '../../stores/app/activePage';
   import { saved } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { pages } from '../../stores/actions';

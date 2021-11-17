@@ -12,7 +12,7 @@
   } from '../../stores/data/draft';
   import {
     id as pageID,
-    content,
+    sections,
     fields as pageFields,
     html as pageHTML,
     css as pageCSS,
@@ -165,7 +165,7 @@
   // Fade in page when all components mounted
   let pageMounted = false;
   let componentsMounted = 0;
-  $: nComponents = $content.filter(
+  $: nComponents = $sections.filter(
     (block) => block.type === 'component'
   ).length;
 
@@ -181,7 +181,7 @@
     componentsMounted = 0;
   }
 
-  $: pageIsEmpty = $content.length <= 1 && $content.length !== 0 && $content[0]['type'] === 'options'
+  $: pageIsEmpty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
 
 </script>
 
@@ -199,7 +199,7 @@
   class="primo-page being-edited"
 >
   {#if pageExists}
-    {#each $content as block, i (block.id)}
+    {#each $sections as block, i (block.id)}
       {#if block.symbolID}
         <Block
           on:mount={() => componentsMounted++}
@@ -230,6 +230,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 5;
 
     --Spinner-color: var(--primo-color-primored);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);

@@ -6,7 +6,7 @@
 
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { content } from '../../../stores/app/activePage';
+  import { sections } from '../../../stores/app/activePage';
   import { switchEnabled } from '../../../stores/app';
 
   let modKeydown = false;
@@ -46,7 +46,7 @@
   const iconStyles = `width:15px;position: relative;top: 1px;fill:#f7fafc;`;
 
   $: isFirst = i === 0;
-  $: isLast = i === $content.length - 1;
+  $: isLast = i === $sections.length - 1;
 
 </script>
 
@@ -141,7 +141,6 @@
     box-shadow: inset 0 0 0 calc(4px) rgb(248, 68, 73);
     z-index: 999999;
     position: absolute;
-    pointer-events: none;
     inset: 0px;
   }
 
@@ -166,7 +165,6 @@
 
   button {
     padding: 0 1rem;
-    pointer-events: all;
     display: flex;
     justify-content: center;
     align-items: center;

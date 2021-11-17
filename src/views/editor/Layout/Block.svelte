@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
 
@@ -12,11 +12,11 @@
   import { focusedNode } from '../../../stores/app';
   import { onMobile, saved } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
-  import { id, content } from '../../../stores/app/activePage';
+  import { id, sections } from '../../../stores/app/activePage';
   import { pages } from '../../../stores/actions';
 
-  export let block;
-  export let i;
+  export let block
+  export let i
 
   let node
 
@@ -35,11 +35,11 @@
   }
 
   function checkIfOnlyChild() {
-    return $content.length <= 1;
+    return $sections.length <= 1;
   }
 
   function deleteRow() {
-    const onlyChild = $content.length <= 1;
+    const onlyChild = $sections.length <= 1;
     if (onlyChild) {
       updateBlock(OptionsRow());
     } else {
@@ -48,8 +48,8 @@
   }
 
   function updateBlock(newBlock) {
-    updateContent(
-      $content
+    updateSections(
+      $sections
         .map((exitingBlock) =>
           exitingBlock.id === block.id ? newBlock : exitingBlock
         )
@@ -57,10 +57,10 @@
     );
   }
 
-  function updateContent(newContent) {
+  function updateSections(newSections) {
     pages.update($id, (page) => ({
       ...page,
-      content: newContent,
+      sections: newSections,
     }));
     $saved = false;
   }
@@ -86,25 +86,25 @@
   function insertOptionsRow(i, position) {
     hovering = false;
     if (position === 'above') {
-      updateContent([
-        ...$content.slice(0, i),
+      updateSections([
+        ...$sections.slice(0, i),
         OptionsRow(),
-        ...$content.slice(i),
+        ...$sections.slice(i),
       ]);
     } else {
-      updateContent([
-        ...$content.slice(0, i + 1),
+      updateSections([
+        ...$sections.slice(0, i + 1),
         OptionsRow(),
-        ...$content.slice(i + 1),
+        ...$sections.slice(i + 1),
       ]);
     }
   }
 
   function moveBlock(i, direction) {
     if (direction === 'up') {
-      updateContent(move($content, i, i - 1));
+      updateSections(move($sections, i, i - 1));
     } else {
-      updateContent(move($content, i, i + 1));
+      updateSections(move($sections, i, i + 1));
     }
   }
 
@@ -153,55 +153,16 @@
   let sticky = false;
   let toolbarHeight = 0;
 
-  function blockContainer(container) {
-    const toolbar = document.querySelector('#primo-toolbar');
-    toolbarHeight = toolbar ? toolbar.clientHeight : 0;
-    const node = container.children[0];
+  let container
+  let toolbar
+  $: if (container) {
+    toolbar = document.querySelector('#primo-toolbar');
     window.addEventListener('scroll', positionBlock);
     positionBlock();
-
-    function positionBlock() {
-      const { top } = node.getBoundingClientRect();
-      const { top: parentTop, bottom: parentBottom } =
-        container.getBoundingClientRect();
-      const topButtons = node.querySelector('.top');
-
-      const shouldSticky = top < toolbarHeight && hovering;
-      const outOfView = parentBottom <= toolbarHeight;
-      const belowToolbar = parentTop > toolbarHeight || (!hovering && sticky);
-
-      if (shouldSticky) {
-        // not yet sticky, top is above the toolbar
-        stickyButtons(topButtons);
-      } else if (belowToolbar || outOfView) {
-        // currently sticky, top is below toolbar
-        resetButtons(topButtons);
-      }
-
-      if (node.style.position === 'fixed') {
-        sticky = true;
-      } else {
-        sticky = false;
-      }
-    }
-
-    function stickyButtons(node) {
-      node.style.position = 'fixed';
-      node.style.top = `${toolbarHeight}px`;
-    }
-
-    function resetButtons(node) {
-      node.style.position = 'absolute';
-      node.style.top = '0px';
-      sticky = false;
-    }
-
-    return {
-      destroy() {
-        window.removeEventListener('scroll', positionBlock);
-      },
-    };
   }
+  onDestroy(() => {
+    window.removeEventListener('scroll', positionBlock);
+  })
 
   let mounted = false
   if (block.type === 'content') {
@@ -212,6 +173,44 @@
   } else if (block.type !== 'component') {
     mounted = true
   }
+
+  async function positionBlock() {
+    if (!node || !container || !hovering) return
+    toolbarHeight = toolbar ? toolbar.clientHeight : 0;
+    const { top } = node.getBoundingClientRect();
+    const { top: parentTop, bottom: parentBottom } = container.getBoundingClientRect();
+    const topButtons = node.querySelector('.top');
+
+    const shouldSticky = top < toolbarHeight && hovering;
+    const outOfView = parentBottom <= toolbarHeight;
+    const belowToolbar = parentTop > toolbarHeight || (!hovering && sticky);
+
+    if (shouldSticky) {
+      // not yet sticky, top is above the toolbar
+      stickyButtons(topButtons);
+    } else if (belowToolbar || outOfView) {
+      // currently sticky, top is below toolbar
+      resetButtons(topButtons);
+    }
+
+    if (node.style.position === 'fixed') {
+      sticky = true;
+    } else {
+      sticky = false;
+    }
+
+    function stickyButtons(node) {
+      node.style.position = 'fixed';
+      node.style.top = `${toolbarHeight}px`; // toolbarHeight missing 8px for some reason
+    }
+
+    function resetButtons(node) {
+      node.style.position = 'absolute';
+      node.style.top = '0px';
+      sticky = false;
+    }
+  }
+  
 </script>
 
 <div
@@ -223,7 +222,7 @@
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >
-  <div class="block-buttons-container" class:visible={(hovering || $onMobile) && block.type !== 'options'} use:blockContainer>
+  <div bind:this={container} class="block-buttons-container" class:visible={(hovering || $onMobile) && block.type !== 'options'}>
     <BlockButtons
       {i}
       editable={block.type === 'component'}
@@ -233,8 +232,8 @@
         dispatch('contentChanged');
       }}
       on:edit={editComponent}
-      optionsAbove={hasOptionsAbove(i, $content)}
-      optionsBelow={hasOptionsBelow(i, $content)}
+      optionsAbove={hasOptionsAbove(i, $sections)}
+      optionsBelow={hasOptionsBelow(i, $sections)}
       on:moveUp={() => {
         moveBlock(i, 'up');
         dispatch('contentChanged');
@@ -288,13 +287,6 @@
 <style lang="postcss">
   .primo-section {
     position: relative;
-    opacity: 0;
-    transition: 0.2s opacity;
-
-    &.visible {
-      transition: 0.2s opacity;
-      opacity: 1;
-    }
   }
   .component {
     position: relative;
@@ -306,10 +298,17 @@
     min-height: 2rem;
   }
   .block-buttons-container {
-    display: none;
+    z-index: 999;
+    opacity: 0;
+    transition: 0.1s opacity;
+    pointer-events: none;
 
     &.visible {
-      display: block;
+      opacity: 1;
+
+      :global(button) {
+        pointer-events: all;
+      }
     }
   }
 </style>

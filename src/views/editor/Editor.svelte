@@ -11,12 +11,12 @@
 
   import { focusedNode, switchEnabled } from '../../stores/app';
   import { undone, fields as siteFields } from '../../stores/data/draft';
-  import { fields as pageFields, content } from '../../stores/app/activePage';
+  import { fields as pageFields, sections } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
   import { undoSiteChange, redoSiteChange } from '../../stores/actions';
 
-  $: pageEmpty = $content.length <= 1 && $content.length > 0 && $content[0]['type'] === 'options';
+  $: pageEmpty = $sections && $sections.length <= 1 && $sections.length > 0 && $sections[0]['type'] === 'options';
 
   // setup key-bindings
   onMount(() => {

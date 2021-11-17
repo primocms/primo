@@ -65,6 +65,7 @@
   class="component-wrapper"
   id="symbol-{symbol.id}"
   style="height:{height + 32}px">
+  <IFrame bind:height {componentApp} />
   <header>
     <div class="component-label">
       {#if titleEditable}
@@ -113,7 +114,6 @@
       {/each}
     </div>
   </header>
-  <IFrame bind:height {componentApp} />
 </div>
 
 <style lang="postcss">
@@ -128,6 +128,7 @@
     color: var(--primo-color-white);
     border-radius: var(--primo-border-radius);
     max-height: 50vh;
+    min-height: 5rem;
 
     header {
       display: flex;
@@ -135,18 +136,24 @@
       align-items: center;
       box-shadow: var(--box-shadow);
       background: var(--primo-color-codeblack);
+      position: absolute;
+      bottom: 0;
+      z-index: 1;
+      width: 100%;
 
       .component-label {
         display: flex;
         align-items: center;
         flex: 1;
-        padding-left: 8px;
+        padding: 0.5rem 0.25rem;
 
         form {
           display: flex;
           align-items: center;
           flex: 1;
+
           label {
+            font-size: 0.75rem;
             width: 100%;
             display: flex;
             cursor: pointer;
@@ -156,7 +163,7 @@
             background: transparent;
             border: 0;
             padding: 0;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
           }
           input:focus {
             box-shadow: none;
