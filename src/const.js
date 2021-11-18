@@ -277,7 +277,7 @@ html {
 
   img {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem 0;
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
   }
