@@ -248,7 +248,7 @@ html {
   --heading-color: #252428;
   --heading-font-size: 39px;
   --heading-line-height: 48px;
-  --heading-font-weight: 800;
+  --heading-font-weight: 700;
 
   --subheading-color: #3E3D43;
 
@@ -266,7 +266,7 @@ html {
   background: var(--background);
 }
 
-.primo-section .content {
+.primo-section .primo-content {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--padding);
@@ -277,7 +277,7 @@ html {
 
   img {
     width: 100%;
-    margin-bottom: 2rem 0;
+    margin: 2rem 0;
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
   }
@@ -325,7 +325,7 @@ html {
 .page-container {
   max-width: var(--max-width, 1200px);
   margin: 0 auto;
-  padding: var(--padding, 1rem); 
+  padding: 3rem var(--padding, 1rem); 
 }
 
 .body {
@@ -351,7 +351,7 @@ html {
     box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
   }
 
-  &.is-inverted {
+  &.inverted {
     background: var(--color-white);
     color: var(--color-accent);
     border-color: var(--color-accent);
