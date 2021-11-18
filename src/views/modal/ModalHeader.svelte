@@ -1,6 +1,6 @@
 <script>
   import modal from '../../stores/app/modal';
-  import { switchEnabled, userRole } from '../../stores/app/misc';
+  import { showingIDE, userRole } from '../../stores/app/misc';
 
   export let variants = '';
   export let icon = '';
@@ -46,13 +46,13 @@
     {#if $userRole === 'developer' && $modal.showSwitch}
       <div class="content xyz-in">
         <label class="switch">
-          <input type="checkbox" bind:checked={$switchEnabled} />
-          <span class="slider round" class:code={$switchEnabled}>
+          <input type="checkbox" bind:checked={$showingIDE} />
+          <span class="slider round" class:code={$showingIDE}>
             <i class="fas fa-code" />
             <i class="fas fa-edit" />
           </span>
           <span class="sr-only">Switch to
-            {$switchEnabled ? 'CMS' : 'IDE'}</span>
+            {$showingIDE ? 'CMS' : 'IDE'}</span>
         </label>
       </div>
     {/if}

@@ -3,7 +3,7 @@
   import ToolbarButton from './ToolbarButton.svelte';
   import { PrimoButton } from '../../components/buttons';
   import { name } from '../../stores/data/draft';
-  import { switchEnabled, userRole } from '../../stores/app';
+  import { showingIDE, userRole } from '../../stores/app';
   import { id as pageID } from '../../stores/app/activePage';
   import { onMobile } from '../../stores/app/misc';
   const dispatch = createEventDispatcher();
@@ -51,9 +51,9 @@ class:mounted>
         <label class="switch">
           <input
             type="checkbox"
-            bind:checked={$switchEnabled}
+            bind:checked={$showingIDE}
             on:click={() => dispatch('toggleView')} />
-          <span class="slider" class:code={$switchEnabled}>
+          <span class="slider" class:code={$showingIDE}>
             <svg
               id="cms"
               xmlns="http://www.w3.org/2000/svg"
@@ -78,12 +78,12 @@ class:mounted>
             </svg>
           </span>
           <span class="sr-only">Switch to
-            {$switchEnabled ? 'CMS' : 'IDE'}</span>
+            {$showingIDE ? 'CMS' : 'IDE'}</span>
         </label>
         {#if !$onMobile}
           <div class="tooltip">
             Switch to
-            {$switchEnabled ? 'CMS' : 'IDE'}
+            {$showingIDE ? 'CMS' : 'IDE'}
           </div>
         {/if}
       </div>
@@ -99,10 +99,10 @@ class:mounted>
     position: fixed;
     left: 0;
     right: 0;
-    top: -5rem;
+    top: -10rem;
     z-index: 999999999;
     transition: 0.2s top;
-    transition-delay: 1s;
+    transition-delay: 0.5s;
     will-change: top;
 
     #primo-desktop-toolbar {

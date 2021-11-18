@@ -9,7 +9,7 @@
   import ToolbarButton from './ToolbarButton.svelte';
   import Doc from './Doc.svelte';
 
-  import { switchEnabled } from '../../stores/app';
+  import { showingIDE } from '../../stores/app';
   import { undone, fields as siteFields } from '../../stores/data/draft';
   import { fields as pageFields, sections } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
@@ -119,7 +119,7 @@
     dispatch('save');
   }
 
-  $: toolbarButtons = $switchEnabled ? developerButtons : editorButtons;
+  $: toolbarButtons = $showingIDE ? developerButtons : editorButtons;
 
   // Show 'are you sure you want to leave prompt' when closing window
   $: if (browser && !$saved && window.location.hostname !== 'localhost') {
@@ -146,7 +146,7 @@
   bind:element={toolbar}
   on:signOut
   buttons={$loadingSite ? [] : toolbarButtons}
-  on:toggleView={() => switchEnabled.set(!$switchEnabled)}
+  on:toggleView={() => showingIDE.set(!$showingIDE)}
 >
   <ToolbarButton
     id="undo"

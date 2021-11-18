@@ -7,7 +7,7 @@
 
   import ModalHeader from './ModalHeader.svelte';
   import fieldTypes from '../../stores/app/fieldTypes';
-  import { switchEnabled, userRole } from '../../stores/app';
+  import { showingIDE, userRole } from '../../stores/app';
   import modal from '../../stores/app/modal';
   import { id, fields as pageFields } from '../../stores/app/activePage';
   import { fields as siteFields } from '../../stores/data/draft';
@@ -215,7 +215,7 @@
 
 <ModalHeader
   icon="fas fa-database"
-  title={$switchEnabled ? 'Fields' : 'Content'}
+  title={$showingIDE ? 'Fields' : 'Content'}
   button={{ label: `Draft`, icon: 'fas fa-check', onclick: applyFields }}
   warn={() => {
     if (!isEqual(localPageFields, $pageFields) || !isEqual(localSiteFields, $siteFields)) {
@@ -226,7 +226,7 @@
 
 <main>
   <Tabs {tabs} bind:activeTab />
-  {#if $switchEnabled}
+  {#if $showingIDE}
     {#if showingPage}
       {#each localPageFields as field, i}
         <Card>

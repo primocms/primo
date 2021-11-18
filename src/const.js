@@ -217,7 +217,7 @@ export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => 
   name,
   pages: [createPage('index', 'Home Page')],
   css: `\
-@import url("https://unpkg.com/tailwindcss@2.2.17/dist/base.css");
+@import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
 
 html {
 

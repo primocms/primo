@@ -42,6 +42,7 @@
     margin-left: var(--TextInput-ml, 0);
 
     span.label {
+      font-size: var(--TextInput-label-font-size, 1rem);
       margin-bottom: 0.25rem;
       color: var(--color-gray-2);
       font-weight: 600;

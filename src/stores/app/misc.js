@@ -4,7 +4,7 @@ export const saving = writable(false)
 
 export const saved = writable(true)
 
-export const switchEnabled = writable(true)
+export const showingIDE = writable(false)
 
 export const userRole = writable('developer')
 

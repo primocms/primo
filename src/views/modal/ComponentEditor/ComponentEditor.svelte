@@ -24,7 +24,7 @@
     html as pageHTML,
     css as pageCSS,
   } from '../../../stores/app/activePage';
-  import { switchEnabled } from '../../../stores/app';
+  import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
   import modal from '../../../stores/app/modal';
   import { createComponent } from '../../../const';
@@ -355,7 +355,7 @@
     fields = updatedFields;
   }
 
-  if (localComponent.symbolID && $switchEnabled) {
+  if (localComponent.symbolID && $showingIDE) {
     loadSymbol();
   }
 
@@ -402,7 +402,7 @@
       localStorage.setItem('previewWidth', right);
     }}>
     <div slot="left">
-      {#if $switchEnabled}
+      {#if $showingIDE}
         {#if !disabled}
           <Tabs {tabs} bind:activeTab variants="mb-1" />
         {/if}

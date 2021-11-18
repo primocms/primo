@@ -13,7 +13,7 @@
   import librariesStore from './stores/data/libraries';
   import { id as pageId } from './stores/app/activePage';
   import { sections, fields, html, css } from './stores/app/activePage';
-  import { switchEnabled, userRole } from './stores/app';
+  import { showingIDE, userRole } from './stores/app';
   import {
     saved,
     saving as savingStore,
@@ -34,7 +34,7 @@
   export let saving = false;
   $: $savingStore = saving;
 
-  $: $switchEnabled = role === 'developer' ? true : false;
+  // $: $showingIDE = role === 'developer' ? true : false;
   $: $userRole = role;
   $: $librariesStore = libraries;
 

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import modal from '../../stores/app/modal';
-  import { switchEnabled } from '../../stores/app';
+  import { showingIDE } from '../../stores/app';
   import Mousetrap from 'mousetrap';
 
   export let visible;
@@ -18,7 +18,7 @@
   $: variants = $modal.variants || '';
 
   function switchView() {
-    $switchEnabled = !$switchEnabled;
+    $showingIDE = !$showingIDE;
   }
 
 </script>

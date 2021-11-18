@@ -7,7 +7,7 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
   import { sections } from '../../../stores/app/activePage';
-  import { switchEnabled } from '../../../stores/app';
+  import { showingIDE } from '../../../stores/app';
 
   let modKeydown = false;
   onMount(() => {
@@ -63,7 +63,7 @@
           {#if modKeydown}
             <span>&#8984; E</span>
           {:else}
-            {#if $switchEnabled}
+            {#if $showingIDE}
               {@html code(iconStyles)}
               <span>Edit Code</span>
             {:else}
@@ -152,6 +152,7 @@
     left: 0px;
   }
   .button-delete {
+    border-left: 1px solid var(--primo-color-primored-dark);
     border-bottom-right-radius: 0.25rem;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
