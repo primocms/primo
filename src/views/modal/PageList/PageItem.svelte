@@ -29,9 +29,9 @@
   }
 
   let editingPage = false;
-  let title = page.title || '';
+  let name = page.name || '';
   let id = page.id || '';
-  $: disableSave = !title || !id;
+  $: disableSave = !name || !id;
 
   $: pageURL = `/${$pageStore.params.site}/${
     page.id === 'index' ? '' : page.id || ''
@@ -41,7 +41,7 @@
 <div class="page-item">
   <div class="page-info">
     <a href={pageURL} on:click={openPage}>
-      <span class="title">{page.title}</span>
+      <span class="title">{page.name}</span>
       <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
     </a>
     {#if !displayOnly}
@@ -49,7 +49,7 @@
         <button title="Edit" on:click={() => (editingPage = !editingPage)}>
           <i class="fas fa-edit" />
         </button>
-        {#if page.pages && !disableAdd}
+        {#if page.pages && page.pages.length > 0 && !disableAdd}
           <button title="Show sub-pages" on:click={() => dispatch('list')}>
             <i class="fas fa-th-large" />
           </button>
@@ -75,12 +75,12 @@
       <form
         on:submit|preventDefault={() => {
           editingPage = false;
-          dispatch('edit', { title, id });
+          dispatch('edit', { name, id });
         }}
         in:fade={{ duration: 100 }}
       >
         <TextInput
-          bind:value={title}
+          bind:value={name}
           id="page-label"
           autofocus={true}
           label="Page Label"
@@ -157,6 +157,7 @@
       .buttons {
         display: flex;
         justify-content: flex-end;
+        gap: 0.25rem;
 
         button {
           padding: 4px;
@@ -182,10 +183,12 @@
     }
 
     .page-body {
+      border-top: 1px solid var(--color-gray-9);
       height: 0;
       padding-top: calc(100% - 37px);
       /* include header in square */
       position: relative;
+
       .page-link {
         position: absolute;
         top: 0;
@@ -196,7 +199,8 @@
         width: 100%;
         overflow: hidden;
         transition: var(--transition-colors);
-
+        min-height: 10rem;
+        
         &.active {
           cursor: default;
           pointer-events: none;
@@ -221,11 +225,14 @@
     }
 
     form {
-      margin: 16px;
+      background: var(--primo-color-codeblack);
+      padding: 1rem;
       position: absolute;
       inset: 0;
+      bottom: initial;
 
-      --TextInput-mb: 0.5rem;
+      --TextInput-label-font-size: 0.75rem;
+      --TextInput-mb: 0.75rem;
     }
   }
 </style>

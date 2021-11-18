@@ -2,14 +2,11 @@
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
-  import {goto} from '$app/navigation'
   import { TextInput } from '../../components/inputs';
-  import SplitButton from '../../ui/inputs/SplitButton.svelte';
   import { PrimaryButton } from '../../components/buttons';
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
   import { createUniqueID } from '../../utilities';
-  import modal from '../../stores/app/modal';
 
   import { createPage } from '../../const';
   import { makeValidUrl } from '../../utils';
@@ -18,36 +15,38 @@
   import { pages as actions } from '../../stores/actions';
   import { id } from '../../stores/app/activePage';
 
-  async function finishCreatingPage(form) {
-    let title = pageLabel;
+  let shouldDuplicatePage = true
+
+  async function finishCreatingPage() {
+    let name = pageName;
     let url = pageURL;
-    const isEmpty = pageBase === 'Empty';
+    const isEmpty = !shouldDuplicatePage;
     url = currentPath[0] ? `${currentPath[0]}/${url}` : url; // prepend parent page to id (i.e. about/team)
     const newPage = isEmpty
-      ? createPage(url, title)
-      : duplicatePage(title, url);
+      ? createPage(url, name)
+      : duplicatePage(name, url);
     actions.add(newPage, currentPath);
     creatingPage = false;
-    pageLabel = '';
+    pageName = '';
     pageURL = '';
-    pageBase = null;
+    shouldDuplicatePage = true;
   }
 
   async function deletePage(pageId) {
     actions.delete(pageId, currentPath);
   }
 
-  function duplicatePage(title, url) {
+  function duplicatePage(name, url) {
     const newPage = cloneDeep($activePage);
-    const [newContent] = scrambleIds(newPage.content);
-    newPage.content = newContent;
-    newPage.title = title;
+    const [newSections] = scrambleIds(newPage.sections);
+    newPage.sections = newSections;
+    newPage.name = name;
     newPage.id = url;
     return newPage;
 
-    function scrambleIds(content) {
+    function scrambleIds(sections) {
       let IDs = [];
-      const newContent = content.map((block) => {
+      const newSections = sections.map((block) => {
         const newID = createUniqueID();
         IDs.push([block.id, newID]);
         return {
@@ -55,7 +54,7 @@
           id: newID,
         };
       });
-      return [newContent, IDs];
+      return [newSections, IDs];
     }
   }
 
@@ -117,22 +116,21 @@
           path: [],
         },
         {
-          label: rootPage.title,
+          label: rootPage.name,
           path: currentPath,
         },
       ];
     } else return null;
   }
 
-  let pageLabel = '';
+  let pageName = '';
   let pageURL = '';
   $: if (!pageLabelEdited) {
-    pageURL = makeValidUrl(pageLabel);
+    pageURL = makeValidUrl(pageName);
   }
   $: validateUrl(pageURL);
   let pageLabelEdited = false;
-  let pageBase;
-  $: disablePageCreation = !pageLabel || !pageURL;
+  $: disablePageCreation = !pageName || !pageURL;
 
 </script>
 
@@ -186,7 +184,7 @@
           on:submit|preventDefault={finishCreatingPage}
           in:fade={{ duration: 100 }}>
           <TextInput
-            bind:value={pageLabel}
+            bind:value={pageName}
             id="page-label"
             autofocus={true}
             label="Page Label"
@@ -198,9 +196,12 @@
             prefix="/"
             on:input={() => (pageLabelEdited = true)}
             placeholder="about-us" />
-          <SplitButton
-            bind:selected={pageBase}
-            buttons={[{ id: 'Empty' }, { id: 'Duplicate' }]} />
+          <div id="duplicate">
+            <label>
+              <input bind:checked={shouldDuplicatePage} type="checkbox">
+              <span>Duplicate current page</span>
+            </label>
+          </div>
           <PrimaryButton
             disabled={disablePageCreation}
             id="create-page"
@@ -215,7 +216,7 @@
 
 <style lang="postcss">
   main {
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
     background: var(--primo-color-black);
     overflow-y: scroll;
     .breadcrumbs {
@@ -256,7 +257,7 @@
           padding: 3rem;
           border: 2px solid var(--primo-color-primored);
           border-radius: var(--primo-border-radius);
-          background: var(--color-gray-9);
+          background: var(--primo-color-black);
           color: var(--primo-color-white);
           width: 100%;
           height: 100%;
@@ -264,9 +265,13 @@
           flex-direction: column;
           justify-content: center;
           align-items: center;
-          transition: var(--transition-colors);
+          transition: 0.1s filter, 0.1s color;
+          
           &:hover {
-            background: var(--primo-color-primored);
+            filter: brightness(1.1);
+            svg {
+              color: var(--primo-color-primored);
+            }
           }
           svg {
             width: 1rem;
@@ -276,9 +281,20 @@
         }
 
         form {
+          background: var(--primo-color-codeblack);
           padding: 1rem;
 
-          --TextInput-mb: 10px;
+          --TextInput-label-font-size: 0.75rem;
+          --TextInput-mb: 0.75rem;
+
+          #duplicate {
+            color: var(--primo-color-white);
+            margin-bottom: 1rem;
+
+            input {
+              margin-right: 0.5rem;
+            }
+          }
         }
 
         --SplitButton-mb: 1rem;
