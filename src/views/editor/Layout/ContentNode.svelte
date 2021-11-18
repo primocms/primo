@@ -121,7 +121,7 @@
 
 </script>
 
-<div bind:this={node} class="content" id="{block.id}-content">
+<div bind:this={node} class="primo-content">
   <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
     {#if editor}
       <CopyButton
@@ -166,15 +166,15 @@
 </div>
 
 <style>
-  .content {
+  .primo-content {
     caret-color: rgb(248, 68, 73);
   }
 
-  :global(.content ::selection, ::-moz-selection) {
+  :global(.primo-content ::selection, ::-moz-selection) {
     background: rgb(248, 68, 73);
   }
 
-  :global(.content .ProseMirror) {
+  :global(.primo-content .ProseMirror) {
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;

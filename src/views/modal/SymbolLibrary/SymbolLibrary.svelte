@@ -14,6 +14,7 @@
   import { userRole } from '../../../stores/app';
   import modal from '../../../stores/app/modal';
   import { symbols } from '../../../stores/data/draft';
+  import Spinner from '../../../components/misc/Spinner.svelte'
   import {
     symbols as actions,
     emancipateInstances,
@@ -146,7 +147,7 @@
     const { data: symbols } = await axios.get(
       'https://api.primo.af/public-library.json'
     );
-    $publicSymbols = symbols;
+    $publicSymbols = symbols || [];
   });
 
 </script>
@@ -272,6 +273,11 @@
       ] : []} />
 
   </Masonry>
+  {#if showingPublicLibrary && $publicSymbols.length === 0}
+    <div class="spinner-container">
+      <Spinner />
+    </div>
+  {/if}
 </main>
 
 <style lang="postcss">
@@ -331,6 +337,12 @@
       color: var(--color-gray-3);
       max-width: 30rem;
     }
+  }
+
+  .spinner-container {
+    padding: 3rem;
+    display: flex;
+    justify-content: center;
   }
 
   .library-buttons {

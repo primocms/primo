@@ -122,7 +122,7 @@
     {:else}
       <IFrame bind:height {componentApp} />
     {/if}
-    <header bind:this={header}>
+    <header bind:this={header} class:has-action={action}>
       <div class="component-label">
         {#if titleEditable}
           <form on:submit|preventDefault={changeTitle}>
@@ -144,7 +144,12 @@
             </label>
           </form>
         {:else if title}
-          <span>{title}</span>
+          <div class="action-title">
+            <span>{title}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+          </div>
         {/if}
       </div>
       <div class="buttons">
@@ -239,6 +244,16 @@
 
       :global(svg) {
         width: 1rem;
+      }
+
+      &.has-action {
+        pointer-events: none;
+      }
+
+      .action-title {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
       }
 
       .component-label {

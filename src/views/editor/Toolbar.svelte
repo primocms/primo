@@ -110,27 +110,22 @@ class:mounted>
       height: 30px;
       -webkit-app-region: drag;
       background-color: var(--color-codeblack);
-      border-bottom: 1px solid #222;
       user-select: none;
+      border-bottom: 1px solid var(--color-gray-9);
 
       div {
-        margin: 0 auto;
-        max-width: var(--max-width, 1200px);
         color: var(--color-gray-3);
         font-size: 0.75rem;
-        padding: 0 var(--padding, 1rem);
         display: flex;
         align-items: center;
         height: 100%;
+        padding-left: 5rem;
 
         span {
           margin-left: 0.25rem;
           color: var(--color-gray-5);
         }
 
-        @media (max-width: 1200px) {
-          padding-left: 4rem;
-        }
       }
     }
 
