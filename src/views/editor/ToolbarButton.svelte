@@ -74,7 +74,6 @@ on:click={() => {
 
     &[disabled] {
       background: none;
-      border-left: 1px solid var(--color-gray-8);
       opacity: 0.35;
       pointer-events: none;
     }
@@ -142,7 +141,7 @@ on:click={() => {
 
     &:hover,
     &:focus {
-      box-shadow: var(--primo-ring-primored);
+      background: transparent;
       z-index: 2;
     }
 

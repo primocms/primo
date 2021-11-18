@@ -9,6 +9,7 @@
   export let masonryWidth = 0;
   export let masonryHeight = 0;
   export let animate = true;
+  export let style = ''
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
     fallback(node) {
@@ -47,7 +48,7 @@
   class="masonry"
   bind:clientWidth={masonryWidth}
   bind:clientHeight={masonryHeight}
-  style="gap: {gap}px;">
+  style="gap: {gap}px; {style}">
   {#each itemsToCols as col}
     <div class="col" style="gap: {gap}px; max-width: {maxColWidth}px;">
       {#if animate}

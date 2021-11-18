@@ -111,15 +111,6 @@
   async function selectOption(option, payload = null) {
     if (option === 'component') {
       updateBlock(payload);
-    } else if (option === 'symbol') {
-      modal.show('SYMBOL_LIBRARY', {
-        button: {
-          onclick: (component) => {
-            updateBlock(component);
-            modal.hide();
-          },
-        },
-      });
     } else if (option === 'content') {
       updateBlock(ContentRow());
     } else {
@@ -155,14 +146,13 @@
 
   let container
   let toolbar
-  $: if (container) {
+  $: if (container && hovering) {
     toolbar = document.querySelector('#primo-toolbar');
     window.addEventListener('scroll', positionBlock);
     positionBlock();
-  }
-  onDestroy(() => {
+  } else if (!hovering) {
     window.removeEventListener('scroll', positionBlock);
-  })
+  }
 
   let mounted = false
   if (block.type === 'content') {

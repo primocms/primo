@@ -39,10 +39,12 @@ export async function updateSiteWrapper(newSiteHTML) {
   html.set(newSiteHTML)
 }
 
+// when a Symbol is deleted from the Site Library, 
+// it's instances on the page are emancipated
 export async function emancipateInstances(symbol) {
   const updatedPages = await Promise.all(
     get(stores.pages).map(async (page) => {
-      const updatedContent = await page.content.map(block => {
+      const updatedSections = await page.sections.map(block => {
         if (block.symbolID === symbol.id) {
           const symbol = getSymbol(block.symbolID)
           return {
@@ -57,14 +59,14 @@ export async function emancipateInstances(symbol) {
       })
       return {
         ...page,
-        content: updatedContent,
+        sections: updatedSections,
       };
     })
   );
   stores.pages.set(updatedPages)
 
-  const activePageContent = find(updatedPages, ['id', get(id)])['content']
-  sections.set(activePageContent)
+  const activePageSections = find(updatedPages, ['id', get(id)])['sections']
+  sections.set(activePageSections)
 }
 
 export function undoSiteChange() {

@@ -9,9 +9,6 @@
 
   const dispatch = createEventDispatcher();
 
-  const componentID = (component) =>
-    component.id + component.value.html + component.value.css;
-
   function createInstance(symbol) {
     const instanceID = createUniqueID();
     return {
@@ -34,7 +31,7 @@
     });
   });
 
-  let [minColWidth, maxColWidth, gap] = [300, 800, 20];
+  let [minColWidth, maxColWidth, gap] = [300, 800, 30];
   let width, height;
 </script>
 

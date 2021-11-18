@@ -67,10 +67,9 @@
   }
   .iframe-container {
     background: var(--primo-color-white);
-    flex: 1;
-    padding-top: 50%;
-    height: 0;
-    position: relative;
+    position: absolute;
+    inset: 0;
+    height: 100%;
 
     iframe {
       opacity: 0;

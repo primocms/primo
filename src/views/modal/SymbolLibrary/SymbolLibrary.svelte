@@ -1,8 +1,6 @@
 <script context="module">
   import { writable } from 'svelte/store';
-  const originalButton = writable(null);
   const publicSymbols = writable([]);
-
 </script>
 
 <script>
@@ -10,7 +8,6 @@
   import _some from 'lodash-es/some';
   import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
-  import ModalHeader from '../ModalHeader.svelte';
   import Container from './SymbolContainer.svelte';
   import { createSymbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
@@ -22,9 +19,7 @@
     emancipateInstances,
   } from '../../../stores/actions';
 
-  export let button;
-
-  if (button) originalButton.set(button); // save the button originally passed in so it doesn't get lost when editing the symbol
+  export let onselect = null
 
   function editSymbol(symbol) {
     modal.show(
@@ -39,7 +34,6 @@
             icon: 'fas fa-check',
             onclick: (symbol) => {
               placeSymbol(symbol);
-              // actions.update(symbol)
               modal.show('SYMBOL_LIBRARY');
             },
           },
@@ -125,13 +119,25 @@
     }
   }
 
+  function createInstance(symbol) {
+    const instanceID = createUniqueID();
+    return {
+      type: 'component',
+      id: instanceID,
+      symbolID: symbol.id,
+      value: {
+        fields: symbol.value.fields,
+      },
+    };
+  }
+
   onMount(async () => {
     if (!LZ) {
       LZ = (await import('lz-string')).default;
     }
   });
 
-  let [minColWidth, maxColWidth, gap] = [500, 800, 20];
+  let [minColWidth, maxColWidth, gap] = [350, 800, 30];
   let width, height;
 
   let showingPublicLibrary = false;
@@ -145,36 +151,30 @@
 
 </script>
 
-{#if showingPublicLibrary}
-  <ModalHeader
-    icon="fas fa-clone"
-    title="Primo Components"
-    button={{ label: 'Component Library', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = false) }} />
-{:else}
-  <ModalHeader
-    icon="fas fa-clone"
-    title="Component Library"
-    button={{ label: 'Primo Components', icon: 'fas fa-clone', onclick: () => (showingPublicLibrary = true) }} />
-{/if}
-
 <main>
-  <Masonry
-    items={showingPublicLibrary ? $publicSymbols : [
-      {
-        label: 'Create',
-        onclick: ''
-      },
-      ...$symbols
-    ]}
-    {minColWidth}
-    {maxColWidth}
-    {gap}
-    masonryWidth={10}
-    animate={false}
-    let:item
-    bind:width
-    bind:height>
-    {#if item.label}
+  <div class="buttons">
+    <button
+      class="close"
+      on:click={modal.hide}
+      type="button"
+      xyz="small"
+      aria-label="Close modal"
+    >
+      <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  </div>
+  <header class="tabs">
+    <button on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
+    <button on:click={() => showingPublicLibrary = true} class:active={showingPublicLibrary}>Primo Library</button>
+  </header>
+  {#if !showingPublicLibrary}
     <div class="xyz-in library-buttons">
       {#if $userRole === 'developer'}
         <button on:click={addSymbol} style="border-right:1px solid var(--color-gray-9)">
@@ -199,11 +199,49 @@
         <span>Paste</span>
       </button>
     </div>
-    {:else}
+    {#if $symbols.length === 0}
+      <div id="empty-state">
+        <span>
+          You don't have any Components in your Site Library. <br>You can develop Components from scratch, paste them in from another site, or add some from the Primo Library.
+        </span>
+      </div>
+    {/if}
+  {/if}
+  <Masonry
+    style="overflow:scroll"
+    items={showingPublicLibrary ? $publicSymbols : $symbols}
+    {minColWidth}
+    {maxColWidth}
+    {gap}
+    masonryWidth={10}
+    animate={false}
+    let:item
+    bind:width
+    bind:height>
     <Container
-      symbol={item}
       titleEditable={!showingPublicLibrary}
+      symbol={item}
       on:copy={() => copySymbol(item)}
+      action={showingPublicLibrary ? {
+        onclick: () => copySymbolToSite(item), 
+        title: 'Duplicate', 
+        icon: 'fas fa-plus', 
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+              </svg>`,
+        label: 'Add to Site Library',
+        clicked: {
+          label: 'Added',
+          icon: 'fas fa-check'
+        }
+      } : (onselect ? {
+        onclick: () => onselect(createInstance(item)), 
+        label: 'Add to Page', 
+        icon: 'fas fa-plus', 
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+              </svg>`
+      } : null)}
       buttons={!showingPublicLibrary ? [
         { 
           onclick: () => {
@@ -213,67 +251,106 @@
             }
           }, 
           title: 'Delete Component', 
-          svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>` 
+          svg: `<svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>` 
         }, 
         { 
           id: 'copy', 
           onclick: () => copySymbol(item), 
           title: 'Copy Component', 
-          svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"></path><path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"></path></svg>` 
+          svg: `<svg viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.14286 10.2857V11.1786C7.14286 11.4744 6.90301 11.7143 6.60714 11.7143H0.535714C0.239844 11.7143 0 11.4744 0 11.1786V2.96428C0 2.66841 0.239844 2.42856 0.535714 2.42856H2.14286V9.03571C2.14286 9.72497 2.70359 10.2857 3.39286 10.2857H7.14286ZM7.14286 2.60713V0.285706H3.39286C3.09699 0.285706 2.85714 0.525549 2.85714 0.82142V9.03571C2.85714 9.33158 3.09699 9.57142 3.39286 9.57142H9.46429C9.76016 9.57142 10 9.33158 10 9.03571V3.14285H7.67857C7.38393 3.14285 7.14286 2.90178 7.14286 2.60713ZM9.8431 1.91452L8.37118 0.442603C8.27072 0.342144 8.13446 0.285706 7.99239 0.285706L7.85714 0.285706V2.42856H10V2.29332C10 2.15124 9.94356 2.01499 9.8431 1.91452Z" fill="white"/>
+                </svg>
+                ` 
         }, 
         { 
           id: 'edit', 
           onclick: () => editSymbol(item), 
           title: 'Edit Component', 
           highlight: true, 
-          svg: `<svg style="width:1rem;height:1rem;" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>` 
+          svg: `<svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>` 
         }
-      ] : [
-        { 
-          id: 'copy', 
-          onclick: () => copySymbolToSite(item), 
-          title: 'Duplicate', 
-          icon: 'fas fa-plus', 
-          label: 'Add to Site' ,
-          clicked: {
-            label: 'Added to Site',
-            svg: ''
-          }
-        }
-      ]} />
-    {/if}
+      ] : []} />
 
   </Masonry>
 </main>
 
 <style lang="postcss">
+  button.close {
+    transform: translateX(-2rem);
+    height: 2rem;
+    width: 2rem;
+    color: var(--primo-color-white);
+
+    &:hover {
+      color: var(--primo-color-primored);
+    }
+  }
+
   main {
     background: var(--primo-color-black);
-    padding: 0 0.5rem 0.5rem 0.5rem;
+    padding: 1rem 3rem;
     overflow: scroll;
     display: grid;
+    grid-template-rows: auto auto;
     gap: 1rem;
   }
+
+  header.tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--color-gray-8);
+    margin-bottom: 0.5rem;
+
+    button {
+      color: var(--primo-color-white);
+      border-bottom: 2px solid transparent;
+      transition: 0.1s solid border-color;
+      padding-bottom: 0.25rem;
+
+      span {
+        color: var(--color-gray-5);
+      }
+
+      &.active {
+        border-color: var(--primo-color-primored);
+      }
+    }
+  }
+  
+  #empty-state {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    height: 50vh;
+
+    span {
+      text-align: center;
+      color: var(--color-gray-3);
+      max-width: 30rem;
+    }
+  }
+
   .library-buttons {
     color: var(--color-gray-1);
-    background: var(--primo-color-codeblack);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-radius: var(--primo-border-radius);
-    overflow: hidden;
+    display: flex;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
 
     button {
       background: var(--primo-color-codeblack);
       transition: var(--transition-colors);
-      padding: 3rem 0;
-      border-bottom: 1px solid var(--color-gray-8);
-      width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
 
       &:hover {
-        background: var(--primo-color-primored);
+        background: transparent;
       }
 
       &:focus {

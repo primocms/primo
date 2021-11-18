@@ -111,6 +111,7 @@ class:mounted>
       -webkit-app-region: drag;
       background-color: var(--color-codeblack);
       border-bottom: 1px solid #222;
+      user-select: none;
 
       div {
         margin: 0 auto;
@@ -125,6 +126,10 @@ class:mounted>
         span {
           margin-left: 0.25rem;
           color: var(--color-gray-5);
+        }
+
+        @media (max-width: 1200px) {
+          padding-left: 4rem;
         }
       }
     }
@@ -142,7 +147,7 @@ class:mounted>
   .left .buttons {
     display: flex;
     flex-direction: row;
-    margin-right: 0.25rem;
+    margin-right: 0.5rem;
   }
   .content {
     position: relative;
@@ -242,7 +247,6 @@ class:mounted>
       font-size: 0.85rem;
       display: flex;
       align-items: center;
-      padding: 0 0.75rem;
       color: var(--color-gray-1);
       text-decoration: underline transparent;
       
