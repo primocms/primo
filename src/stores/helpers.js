@@ -167,7 +167,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
       return `
         ${block.css ? `<style>${block.css}</style>` : ``}
         <div class="primo-section has-${type}" id="${id}">
-          <div class="${type}">
+          <div class="primo-${type}">
             ${block.html || ''}
             ${
               block.js && separateModules ? 
