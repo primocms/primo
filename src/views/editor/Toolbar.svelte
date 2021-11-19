@@ -239,6 +239,7 @@ class:mounted>
     max-width: var(--max-width, 1200px);
 
     .toolbar-link {
+      margin-left: 0.5rem;
       font-size: 0.85rem;
       display: flex;
       align-items: center;
