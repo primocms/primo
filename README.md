@@ -29,6 +29,6 @@ Primo is currently in public Alpha. The early version of it was only available a
 
 ## Contributing
 
-The best way to contribute at the moment is by using the app and staying in close contact with us (on Discord, Github Discussions, or Email) on how it's working (including bugs, deficiencies, and advantages). Feel free to file bugs as issues and start a Discussion to bring up new ideas. 
+The best way to contribute at the moment is by using the app and staying in close contact with us (on Discord, Github Discussions, or Email) on how it's working (including bugs, deficiencies, and advantages). Feel free to file bugs as issues and start a Discussion to bring up new ideas. PRs are welcome. 
 
 At the moment, this is just where the core primo editor lives, so it won't run on its own. To run the primo in development, see [primo Desktop](https://github.com/primo-af/primo-desktop). 
