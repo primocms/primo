@@ -1,6 +1,6 @@
 # primo
 
-Primo is a simpler, all-in-one approach to building and managing websites. 
+primo is an all-in-one app for building and managing static sites with Svelte.
 
 ![screenshot](./screenshot.png)
 
@@ -25,10 +25,10 @@ Primo bridges these two sides by providing a built-in CMS for content management
 
 ## Project Status
 
-Primo version 2 is currently in Alpha. Where version 1 was focused on offering Primo as a hosted service, version 2 will be focused on polishing primo as a desktop and self-hosted application, with the potential to offer Primo as a hosted service again in the future should there be a demand for it.
+Primo is currently in public Alpha. The early version of it was only available as a [free] service, but once we realized what a bad idea it was to be responsible for thousands of free websites, we dropped the service to focus on building desktop & self-hosted server versions of primo. We would recommend waiting until the Beta to use Primo in production, but for now it should be stable enough for personal projects. 
 
 ## Contributing
 
-The best way to contribute at the moment is by using the app and staying in close contact with us on how it's working (including bugs, deficiencies, and advantages). Feel free to file bugs as issues and start a Discussion to bring up new ideas. 
+The best way to contribute at the moment is by using the app and staying in close contact with us (on Discord, Github Discussions, or Email) on how it's working (including bugs, deficiencies, and advantages). Feel free to file bugs as issues and start a Discussion to bring up new ideas. PRs are welcome. 
 
 At the moment, this is just where the core primo editor lives, so it won't run on its own. To run the primo in development, see [primo Desktop](https://github.com/primo-af/primo-desktop). 
