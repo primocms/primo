@@ -156,6 +156,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     <body class="primo-page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
+      ${buildModules(blocks)}
     </body>
   </html>
   `
@@ -169,26 +170,30 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
         <div class="primo-section has-${type}" id="${id}">
           <div class="primo-${type}">
             ${block.html || ''}
-            ${
-              block.js && separateModules ? 
-              `<script type="module" async>
-                import App from './_modules/${block.symbol}.js';
-                new App({
-                  target: document.querySelector('#${id}'),
-                  hydrate: true
-                });
-              </script>`
-            : (block.js ? 
-              `<script type="module" async>
-                const App = ${block.js}
-                new App({
-                  target: document.querySelector('#${id}'),
-                  hydrate: true
-                });
-            </script>` : ``)}
           </div>
         </div>
       `
+    }).join('')
+  }
+
+  function buildModules(blocks) {
+    return blocks.filter(block => block.js).map(block => {
+      const { id, type } = block
+      return separateModules ? 
+        `<script type="module" async>
+          import App from './_modules/${block.symbol}.js';
+          new App({
+            target: document.querySelector('#${id}'),
+            hydrate: true
+          });
+        </script>`
+      : `<script type="module" async>
+            const App = ${block.js}
+            new App({
+              target: document.querySelector('#${id}'),
+              hydrate: true
+            });
+        </script>`
     }).join('')
   }
 
