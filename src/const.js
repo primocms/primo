@@ -320,6 +320,12 @@ html {
     padding: 0.5rem 0;
     padding-left: 1.25rem;
   }
+
+  blockquote {
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+  }
 }
 
 .page-container {
