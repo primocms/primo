@@ -64,6 +64,7 @@ export function getSymbol(symbolID) {
 
 
 export async function buildStaticPage({ page, site, separateModules = false }) {
+  if (!page.sections) return null // ensure data fits current structure
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       const css = await processCSS(site.css + page.css)
@@ -212,6 +213,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
 
 
 export async function buildPagePreview({ page, site }) {
+  if (!page.sections) return null
   const res = await Promise.all([
     ...page.sections.map(async block => {
       if (block.type === 'component') {
