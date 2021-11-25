@@ -1,6 +1,6 @@
 <!-- <svelte:options tag='block-buttons' /> -->
 <script>
-  import Mousetrap from 'mousetrap';
+  import * as Mousetrap from 'mousetrap';
 
   import { code, trash, edit } from '../../../components/svg/small';
 

@@ -1,6 +1,6 @@
 <script>
   import { find, some, isEqual } from 'lodash-es';
-  import Mousetrap from 'mousetrap';
+  import * as Mousetrap from 'mousetrap';
 
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import Editor from './views/editor/Editor.svelte';

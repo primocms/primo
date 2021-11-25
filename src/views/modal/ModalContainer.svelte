@@ -3,7 +3,7 @@
   import { fade } from 'svelte/transition';
   import modal from '../../stores/app/modal';
   import { showingIDE } from '../../stores/app';
-  import Mousetrap from 'mousetrap';
+  import * as Mousetrap from 'mousetrap';
 
   export let visible;
 

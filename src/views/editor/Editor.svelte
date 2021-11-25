@@ -1,5 +1,5 @@
 <script>
-  import Mousetrap from 'mousetrap';
+  import * as Mousetrap from 'mousetrap';
   import { createEventDispatcher, onMount } from 'svelte';
   import { browser } from '$app/env';
 
