@@ -1,5 +1,6 @@
 <script>
   import Image from './Dialogs/Image.svelte'
+  import Feedback from './Dialogs/Feedback.svelte'
   export let component
   export let onSubmit 
 
@@ -15,6 +16,8 @@
       <!-- svelte-ignore a11y-autofocus -->
       <input type="url" bind:value autofocus>
     </form>
+  {:else if component === 'FEEDBACK'}
+    <Feedback />
   {/if}
 </main>
 
@@ -25,10 +28,6 @@
     display: flex;
     flex-direction: column;
     padding: 0.5rem;
-  }
-
-  .message {
-
   }
 
   form {

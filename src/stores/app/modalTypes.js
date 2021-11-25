@@ -44,11 +44,6 @@ export const modalTypes = {
     }
   },
   'DIALOG' : {
-    component: Dialog,
-    header: {
-      title: 'HTML',
-      icon: 'fab fa-html5'
-    },
-    variants: 'small'
+    component: Dialog
   },
 }
