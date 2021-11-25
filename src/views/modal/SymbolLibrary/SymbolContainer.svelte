@@ -122,7 +122,7 @@
     {:else}
       <IFrame bind:height {componentApp} />
     {/if}
-    <header bind:this={header} class:has-action={action}>
+    <header bind:this={header} class:has-action={action && buttons.length === 0}>
       <div class="component-label">
         {#if titleEditable}
           <form on:submit|preventDefault={changeTitle}>
