@@ -277,6 +277,7 @@
 <style lang="postcss">
   .primo-section {
     position: relative;
+    min-height: 5rem;
   }
   .component {
     position: relative;

@@ -250,5 +250,6 @@
     color: var(--color-gray-4);
     pointer-events: none;
     z-index: -2;
+    font-family: Satoshi, sans-serif;
   }
 </style>
