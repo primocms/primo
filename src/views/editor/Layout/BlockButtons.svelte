@@ -151,15 +151,15 @@
     display: flex;
     left: 0px;
   }
+  
   .button-delete {
     border-left: 1px solid var(--primo-color-primored-dark);
     border-bottom-right-radius: 0.25rem;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
+
   .button-span {
-    border-right-width: 1px;
-    border-color: rgba(239, 68, 68, var(--tw-border-opacity));
     padding-left: 0.5rem /* 8px */;
     padding-right: 0.5rem /* 8px */;
   }
