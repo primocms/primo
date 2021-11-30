@@ -21,7 +21,7 @@ WordPress and proprietary site builders (Wix, Webflow, etc.) let you manage your
 
 NextJS, Gatsby, Hugo, etc give you direct control over your site and enable more powerful functionality, but typically require a lot of upfront work and don't include a content management layer (unless you're cool with .MD files). 
 
-Primo bridges these two sides by providing a built-in CMS for content management, a built-in IDE for development (using Svelte), and hosting integrations to make deploying site updates a breeze. It also includes a growing library of pre-built & fully integrated components so you can publish a freaky fast, easily-editable website in literal minutes. 
+Primo bridges these two sides by providing a built-in CMS for content management, a built-in IDE for development (using Svelte), and hosting integrations to make deploying site updates a breeze. It also includes a growing library of pre-built & fully integrated components. 
 
 ## Project Status
 
