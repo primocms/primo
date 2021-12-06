@@ -1,38 +1,41 @@
 <script>
-  import { fade } from 'svelte/transition';
-
+  import { fade } from 'svelte/transition'
 </script>
 
-<div class="spinner" in:fade>Loading...</div>
+<svg in:fade xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+  <path
+    fill="currentColor"
+    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+  />
+</svg>
 
 <style>
-  .spinner,
-  .spinner:after {
-    border-radius: 50%;
-    width: 10em;
-    height: 10em;
+  svg {
+    width: var(--Spinner-size, 2rem);
+    height: var(--Spinner-size, 2rem);
+    margin-top: var(--Spinner-mt, 0);
+    margin-bottom: var(--Spinner-mb, 0);
+    margin-right: var(--Spinner-mr, 0);
+    margin-left: var(--Spinner-ml, 0);
+    animation: spin 1s linear infinite;
+    color: var(--color-white);
+
+    circle {
+      opacity: 0.25;
+    }
+
+    path {
+      opacity: 0.75;
+    }
   }
-  .spinner {
-    font-size: 2px;
-    position: relative;
-    text-indent: -9999em;
-    border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-    border-left: 1.1em solid #ffffff;
-    will-change: transform;
-    transform: translateZ(0);
-    animation: load8 1.1s infinite linear;
-  }
-  @keyframes load8 {
-    0% {
-      -webkit-transform: rotate(0deg);
+
+  @keyframes spin {
+    from {
       transform: rotate(0deg);
     }
-    100% {
-      -webkit-transform: rotate(360deg);
+    to {
       transform: rotate(360deg);
     }
   }
-
 </style>

@@ -47,9 +47,13 @@ on:click={() => {
       class:active={$showKeyHint}
       aria-hidden>&#8984;{key.toUpperCase()}</span>
   {/if}
-  <div class="icon" class:hidden={loading || $showKeyHint && key}>{@html svg(icon)}</div>
-  {#if label}<span class="label">{label}</span>{/if}
-  {#if loading}<Spinner />{/if}
+  {#if loading}
+    <Spinner />
+  {:else if label && icon}
+    <span class="label">{label}</span>
+  {:else if icon}
+    <div class="icon" class:hidden={$showKeyHint && key}>{@html svg(icon)}</div>
+  {/if}
 {:else}
   <slot>
     <span>{label}</span>
@@ -61,6 +65,8 @@ on:click={() => {
   button {
     font-size: 0.85rem;
     user-select: none;
+
+    --Spinner-size: 0.75rem;
 
     &:first-child {
       border-top-left-radius: var(--primo-border-radius);
@@ -137,7 +143,7 @@ on:click={() => {
     display: flex;
     align-items: center;
     justify-content: center;
-
+    gap: 0.5rem;
 
     &:hover,
     &:focus {
