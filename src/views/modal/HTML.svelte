@@ -12,8 +12,8 @@
   import { saved } from '../../stores/app/misc';
   import { html as siteHTML } from '../../stores/data/draft';
   import {
-    updateSiteWrapper,
-    updateActivePageWrapper,
+    updateSiteHTML,
+    updateActivePageHTML,
   } from '../../stores/actions';
 
   let localPageHTML = cloneDeep($pageHTML);
@@ -35,8 +35,8 @@
   let activeTab = tabs[0];
 
   async function saveFinalHTML() {
-    updateActivePageWrapper(localPageHTML);
-    updateSiteWrapper(localSiteHTML);
+    updateActivePageHTML(localPageHTML);
+    updateSiteHTML(localSiteHTML);
     $saved = false;
   }
 </script>

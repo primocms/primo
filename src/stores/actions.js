@@ -27,7 +27,7 @@ export async function hydrateSite(data) {
   stores.symbols.set(data.symbols)
 }
 
-export async function updateActivePageWrapper(html) {
+export async function updateActivePageHTML(html) {
   pages.update(get(id), (page) => ({
     ...page,
     html,
@@ -35,7 +35,7 @@ export async function updateActivePageWrapper(html) {
 }
 
 
-export async function updateSiteWrapper(newSiteHTML) {
+export async function updateSiteHTML(newSiteHTML) {
   html.set(newSiteHTML)
 }
 
