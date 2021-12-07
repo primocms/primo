@@ -1,7 +1,9 @@
 <script>
   import axios from 'axios'
+  import platform from 'platform'
   import modal from '../../../stores/app/modal'
   import PrimaryButton from '../../../components/buttons/PrimaryButton.svelte'
+  import * as primo from '@primo-app/primo/package.json'
 
   let form
 
@@ -50,6 +52,10 @@ aria-label="Close modal"
         <span>Email address (if you'd like us to follow up)</span>
         <input type="email" class="primo-input" name="email">
       </label>
+      <div class="hidden">
+        <input type="platform" class="primo-input" name="platform" value="{platform.os}">
+        <input type="version" class="primo-input" name="version" value="Desktop: {__DESKTOP_VERSION__}  Primo: {primo.version}">
+      </div>
       <PrimaryButton type="submit">Submit</PrimaryButton>
     </form>
   </main>
@@ -79,6 +85,10 @@ aria-label="Close modal"
     &:hover {
       color: var(--primo-color-primored);
     }
+  }
+
+  .hidden {
+    display: none;
   }
 
   main {
