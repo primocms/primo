@@ -37,6 +37,7 @@ export function convertFieldsToData(fields) {
     return field;
   })
 
+  if (!parsedFields.length) return {}
 
   return chain(parsedFields).keyBy("key").mapValues("value").value()
 }

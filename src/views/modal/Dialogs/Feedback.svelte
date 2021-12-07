@@ -3,7 +3,7 @@
   import platform from 'platform'
   import modal from '../../../stores/app/modal'
   import PrimaryButton from '../../../components/buttons/PrimaryButton.svelte'
-  import * as primo from '@primo-app/primo/package.json'
+  import * as primo from '../../../../package.json'
 
   let form
 
