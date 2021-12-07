@@ -5,7 +5,7 @@
 
 <script>
   import { onMount } from 'svelte';
-  import _some from 'lodash-es/some';
+  import {some as _some} from 'lodash-es';
   import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import Container from './SymbolContainer.svelte';
