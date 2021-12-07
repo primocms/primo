@@ -1,5 +1,5 @@
 <script>
-  import _find from 'lodash-es/find';
+  import { find as _find } from 'lodash-es'
   import pluralize from '../../libraries/pluralize';
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
