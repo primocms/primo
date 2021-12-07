@@ -9,6 +9,8 @@
 
   let submitted = false
   let successful = false
+
+  let version = __DESKTOP_VERSION__ ? `Desktop: ${__DESKTOP_VERSION__}` : `Server: ${__SERVER_VERSION__}`
 </script>
 
 <button
@@ -54,7 +56,7 @@ aria-label="Close modal"
       </label>
       <div class="hidden">
         <input type="platform" class="primo-input" name="platform" value="{platform.os}">
-        <input type="version" class="primo-input" name="version" value="Desktop: {__DESKTOP_VERSION__}  Primo: {primo.version}">
+        <input type="version" class="primo-input" name="version" value="{version}  Primo: {primo.version}">
       </div>
       <PrimaryButton type="submit">Submit</PrimaryButton>
     </form>
