@@ -1,4 +1,4 @@
-import {chain,debounce} from "lodash-es";
+import _ from "lodash";
 import { getAllFields } from './stores/helpers'
 import { processors } from './component'
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
@@ -28,7 +28,7 @@ export function convertFieldsToData(fields) {
   const parsedFields = fields.map((field) => {
     if (field.type === "group") {
       if (field.fields) {
-        field.value = chain(field.fields)
+        field.value = _.chain(field.fields)
           .keyBy("key")
           .mapValues("value")
           .value();
@@ -39,7 +39,7 @@ export function convertFieldsToData(fields) {
 
   if (!parsedFields.length) return {}
 
-  return chain(parsedFields).keyBy("key").mapValues("value").value()
+  return _.chain(parsedFields).keyBy("key").mapValues("value").value()
 }
 
 export async function updateHtmlWithFieldData(rawHTML) {
@@ -55,7 +55,7 @@ export async function updateHtmlWithFieldData(rawHTML) {
 
 // Lets us debounce from reactive statements
 export function createDebouncer(time) {
-  return debounce((val) => {
+  return _.debounce((val) => {
     const [fn, arg] = val;
     fn(arg);
   }, time);

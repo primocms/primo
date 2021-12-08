@@ -61,6 +61,7 @@
     "browser-image-compression": "^1.0.16",
     "idb-keyval": "^6.0.2",
     "js-base64": "^3.6.0",
+    "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "lz-string": "^1.4.4",
     "mini-svg-data-uri": "^1.4.3",
