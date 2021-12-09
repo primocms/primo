@@ -10,7 +10,13 @@
   let submitted = false
   let successful = false
 
-  let version = __DESKTOP_VERSION__ ? `Desktop: ${__DESKTOP_VERSION__}` : `Server: ${__SERVER_VERSION__}`
+  let version
+  try {
+    version = `Desktop: ${__DESKTOP_VERSION__}`
+  } catch(e) {
+    version = `Server: ${__SERVER_VERSION__}`
+  }
+
 </script>
 
 <button
