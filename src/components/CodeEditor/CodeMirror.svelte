@@ -1,4 +1,5 @@
 <script>
+  import {autocompletion} from '@codemirror/autocomplete'
   import '@fontsource/fira-code/index.css';
   import { onMount, createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
@@ -35,6 +36,7 @@
     doc: prefix + value,
     extensions: [
       ...extensions,
+      autocompletion(),
       languageConf.of(language),
       keymap.of([
         standardKeymap,
