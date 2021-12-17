@@ -1,6 +1,6 @@
 # primo
 
-primo is an all-in-one app for developing and managing static sites with Svelte. It offers the user-friendliness of a site builder, *with* the flexibility and power offfered by code (specifically, Svelte). 
+primo is an all-in-one app for developing and managing static sites with Svelte. It offers the user-friendliness of a site builder, *with* the flexibility and power offfered by HTML, CSS, and JavaScript (and specifically, Svelte). 
 
 ![screenshot](./screenshot.png)
 
