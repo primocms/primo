@@ -1,10 +1,10 @@
 import { writable, get } from 'svelte/store';
-import { createSite } from '../../const'
+import { Site } from '../../const'
 
 import {fields,symbols,pages,id,name,html,css} from './draft'
 
 let site
-const {subscribe,set} = writable(createSite())
+const {subscribe,set} = writable(Site())
 subscribe(s => {
   site = s
 })

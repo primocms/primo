@@ -1,5 +1,5 @@
 import {writable,get,derived} from 'svelte/store'
-import {DEFAULTS, createPage} from '../../const'
+import {DEFAULTS} from '../../const'
 
 
 export const id = writable('index')
@@ -15,7 +15,6 @@ export default derived(
   [ sections, css, html, fields ], 
   ([sections, css, html, fields]) => {
   return {
-    // ...createSite(),
     sections, 
     css, 
     html, 

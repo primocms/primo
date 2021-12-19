@@ -9,7 +9,7 @@
   import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import Container from './SymbolContainer.svelte';
-  import { createSymbol } from '../../../const';
+  import { Symbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
   import { userRole } from '../../../stores/app';
   import modal from '../../../stores/app/modal';
@@ -56,7 +56,7 @@
   }
 
   async function addSymbol() {
-    const symbol = createSymbol();
+    const symbol = Symbol();
     editSymbol(symbol);
   }
 

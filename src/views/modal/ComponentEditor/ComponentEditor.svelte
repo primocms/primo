@@ -10,6 +10,7 @@
   import { CodePreview } from '../../../components/misc';
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../../components/FieldTypes/GroupField.svelte';
+  import {Field} from '../../../const'
 
   import {
     convertFieldsToData,
@@ -27,7 +28,7 @@
   import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
   import modal from '../../../stores/app/modal';
-  import { createComponent } from '../../../const';
+  import { Component } from '../../../const';
   import { symbols } from '../../../stores/actions';
   import { getAllFields, getSymbol } from '../../../stores/helpers';
 
@@ -35,7 +36,7 @@
   const slowDebounce = createDebouncer(1000);
   const quickDebounce = createDebouncer(200);
 
-  export let component = createComponent();
+  export let component = Component();
   export let header = {
     label: 'Create Component',
     icon: 'fas fa-code',
@@ -173,19 +174,8 @@
   }
 
   function addNewField() {
-    fields = [...fields, createField()];
+    fields = [...fields, Field()];
     saveRawValue('fields', fields);
-
-    function createField() {
-      return {
-        id: createUniqueID(),
-        key: '',
-        label: '',
-        value: '',
-        type: 'text',
-        fields: [],
-      };
-    }
   }
 
   function addSubField(id) {
@@ -195,36 +185,13 @@
         field.id === id
           ? [
               ...field.fields,
-              {
-                id: createUniqueID(),
-                key: '',
-                label: '',
-                value: '',
-                type: 'text',
-              },
+              Field(),
             ]
           : field.fields,
     }));
     refreshFields();
     saveRawValue('fields', fields);
   }
-
-  // function updateSubfield(parent, self) {
-  //   console.log({ parent, self });
-  //   fields = fields.map((field) =>
-  //     field.id !== parent.id
-  //       ? field
-  //       : {
-  //           ...field,
-  //           fields: field.fields.map((subfield) =>
-  //             subfield.id === self.id ? self : subfield
-  //           ),
-  //         }
-  //   );
-  //   console.log({ localComponent });
-  //   refreshFields();
-  //   saveRawValue('fields', fields);
-  // }
 
   function deleteSubfield(fieldId, subfieldId) {
     fields = fields.map((field) =>

@@ -1,7 +1,7 @@
 // import { createUniqueID } from './utilities'
 import {customAlphabet} from 'nanoid/non-secure'
 
-function createUniqueID(length = 5) {
+function createUniqueID(length:number = 5): string {
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
   return nanoid()
 }
@@ -155,7 +155,16 @@ export const defaultStyles = {
   `,
 }
 
-export const createComponent = () => ({
+export const Field = () => ({
+  id: createUniqueID(),
+  key: '',
+  label: '',
+  value: '',
+  type: 'text',
+  fields: [],
+})
+
+export const Component = () => ({
   type: 'component',
   id: createUniqueID(),
   symbolID: null,
@@ -167,7 +176,7 @@ export const createComponent = () => ({
   }
 })
 
-export const createSymbol = () => ({
+export const Symbol = () => ({
   type: 'symbol',
   id: createUniqueID(),
   value: {
@@ -203,19 +212,21 @@ export const DEFAULTS = {
   css: '',
   styles: defaultStyles,
   fields: [],
-  symbols: []
+  symbols: [],
 }
 
-export const createPage = (id = createUniqueID(), name) => ({
+export const Page = (id = createUniqueID(), name) => ({
   ...DEFAULTS.page,
   id,
   name
 })
 
-export const createSite = ({ id, name} = { id: 'default', name: 'Default' }) => ({
+export const Site = ({ id, name} = { id: 'default', name: 'Default' }) => ({
   id,
   name,
-  pages: [createPage('index', 'Home Page')],
+  pages: [
+    Page('index', 'Home Page')
+  ],
   css: `\
 @import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
 
@@ -370,18 +381,27 @@ html {
     below: ''
   },
   fields: [],
-  symbols: []
-})
-
-
-export const createNewSite = ({ id = '00000', name = 'website' }) => ({
-  name,
-  pages: [createPage('index', 'Home Page')],
-  css: '',
-  html: {
-    head: '',
-    below: ''
-  },
-  fields: [],
-  symbols: []
+  symbols: [],
+  languages: {
+    'en': {
+      pages: [
+        {
+          id: 'index',
+          name: 'Casa',
+          sections: [
+            {
+              id: 'ddkjed',
+              data: {
+                'dkjldd': 'Some field value in english'
+              }
+            },
+            {
+              id: 'dkleke',
+              html: '<h1>something in english</h1>'
+            }
+          ]
+        }
+      ]
+    }
+  }
 })

@@ -8,7 +8,7 @@
   import ModalHeader from './ModalHeader.svelte';
   import { createUniqueID } from '../../utilities';
 
-  import { createPage } from '../../const';
+  import { Page } from '../../const';
   import { makeValidUrl } from '../../utils';
   import { pages } from '../../stores/data/draft';
   import activePage from '../../stores/app/activePage';
@@ -23,7 +23,7 @@
     const isEmpty = !shouldDuplicatePage;
     url = currentPath[0] ? `${currentPath[0]}/${url}` : url; // prepend parent page to id (i.e. about/team)
     const newPage = isEmpty
-      ? createPage(url, name)
+      ? Page(url, name)
       : duplicatePage(name, url);
     actions.add(newPage, currentPath);
     creatingPage = false;

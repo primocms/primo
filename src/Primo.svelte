@@ -20,7 +20,7 @@
     showKeyHint,
     loadingSite,
   } from './stores/app/misc';
-  import { DEFAULTS, createSite } from './const';
+  import { DEFAULTS, Site } from './const';
   import {resetActivePage} from './stores/helpers'
 
   import { pages } from './stores/data/draft';
@@ -28,7 +28,7 @@
   import { hydrateSite } from './stores/actions';
   import { page as pageStore } from '$app/stores';
 
-  export let data = createSite();
+  export let data = Site();
   export let libraries = [];
   export let role = 'developer';
   export let saving = false;
