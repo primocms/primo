@@ -86,7 +86,7 @@
     creatingPage = true;
   }
 
-  let currentPath = buildCurrentPath($page.path);
+  let currentPath = buildCurrentPath($page.url.pathname);
   $: rootPageId = currentPath[0];
   $: childPageId = currentPath[1];
   $: listedPages = getListedPages(childPageId, $pages);
