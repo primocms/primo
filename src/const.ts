@@ -381,27 +381,5 @@ html {
     below: ''
   },
   fields: [],
-  symbols: [],
-  languages: {
-    'en': {
-      pages: [
-        {
-          id: 'index',
-          name: 'Casa',
-          sections: [
-            {
-              id: 'ddkjed',
-              data: {
-                'dkjldd': 'Some field value in english'
-              }
-            },
-            {
-              id: 'dkleke',
-              html: '<h1>something in english</h1>'
-            }
-          ]
-        }
-      ]
-    }
-  }
+  symbols: []
 })
