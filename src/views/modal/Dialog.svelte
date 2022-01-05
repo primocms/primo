@@ -2,6 +2,7 @@
   import Image from './Dialogs/Image.svelte'
   import Feedback from './Dialogs/Feedback.svelte'
   export let component
+  export let componentProps = {}
   export let onSubmit 
 
   let value = ''
@@ -18,6 +19,8 @@
     </form>
   {:else if component === 'FEEDBACK'}
     <Feedback />
+  {:else if typeof(component) !== 'string'}
+    <svelte:component this={component} {...componentProps} />
   {/if}
 </main>
 
