@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { find, some, isEqual } from 'lodash-es';
   import * as Mousetrap from 'mousetrap';
 
@@ -10,7 +10,6 @@
 
   const dispatch = createEventDispatcher();
 
-  import librariesStore from './stores/data/libraries';
   import { id as pageId } from './stores/app/activePage';
   import { sections, fields, html, css } from './stores/app/activePage';
   import { userRole } from './stores/app';
@@ -28,36 +27,34 @@
   import { hydrateSite } from './stores/actions';
   import { page as pageStore } from '$app/stores';
 
-  export let data = Site();
-  export let libraries = [];
-  export let role = 'developer';
-  export let saving = false;
+  import type { Site as SiteType, Page as PageType } from './const'
+
+  export let data:SiteType = Site();
+  export let role:'developer'|'content' = 'developer';
+  export let saving:boolean = false;
   $: $savingStore = saving;
-
-  // $: $showingIDE = role === 'developer' ? true : false;
   $: $userRole = role;
-  $: $librariesStore = libraries;
 
-  function saveSite() {
+  function saveSite(): void {
     dispatch('save', $draft);
   }
 
   // refresh draft data when passing in updated data
-  let cachedData;
+  let cachedData:Site|undefined;
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
   }
 
   $: $pageId = getPageId($pageStore.params);
-  function getPageId(params) {
-    const { site, page = 'index' } = params;
+  function getPageId(params:{ page:string }): string {
+    const { page = 'index' } = params;
     const [root, child] = page.split('/');
     return child ? `${root}/${child}` : root;
   }
 
   $: setPageContent($pageId, $pages);
-  function setPageContent(id, pages) {
+  function setPageContent(id:string, pages:Array<PageType>): void {
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {
@@ -92,20 +89,18 @@
   }
 
   $: $loadingSite = checkFor404($pageId, $pages);
-  function checkFor404(id, pages) {
+  function checkFor404(id:string, pages:Array<PageType>) {
     const [root, child] = id.split('/');
-    const exists = some(pages, ['id', root]) || some(pages, ['id', child]);
+    const exists:boolean = some(pages, ['id', root]) || some(pages, ['id', child]);
     return !exists;
   }
 
   onMount(() => {
     Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
     Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
-
-    return () => {
-      resetActivePage()
-    }
   });
+
+  onDestroy(resetActivePage)
 </script>
 
 <Editor on:save={saveSite} />
