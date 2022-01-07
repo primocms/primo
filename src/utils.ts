@@ -1,6 +1,6 @@
 import _ from "lodash-es";
 import { processors } from './component'
-export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}) {
+export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}: { code:any, data:object, buildStatic?:boolean, format?:string}) {
   const {css,error} = await processors.css(code.css || '')
   if (error) {
     return {error}

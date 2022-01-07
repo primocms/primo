@@ -155,7 +155,7 @@ export const defaultStyles = {
   `,
 }
 
-type Field = {
+export type Field = {
   id: string,
   key: string,
   label: string,
@@ -173,7 +173,7 @@ export const Field = (): Field => ({
   fields: [],
 })
 
-type Component = {
+export type Component = {
   type: 'component',
   id: string,
   symbolID: string | null,
@@ -197,7 +197,7 @@ export const Component = (): Component => ({
   }
 })
 
-type Symbol = {
+export type Symbol = {
   type: 'symbol',
   id: string,
   symbolID: string | null,
@@ -248,7 +248,7 @@ export const DEFAULTS = {
   symbols: [],
 }
 
-type Page = {
+export type Page = {
   id: string,
   name: string,
   sections: any[],
@@ -267,7 +267,7 @@ export const Page = (id = createUniqueID(), name): Page => ({
   name
 })
 
-type Site = {
+export type Site = {
   id: string,
   name: string,
   pages: any[],

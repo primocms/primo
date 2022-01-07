@@ -18,7 +18,3 @@ export function registerProcessors(fns) {
     processors[lang] = processor
   }
 }
-
-export function registerComponentTypes(fns) {
-  // TODO
-}

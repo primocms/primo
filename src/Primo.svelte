@@ -13,7 +13,7 @@
   import librariesStore from './stores/data/libraries';
   import { id as pageId } from './stores/app/activePage';
   import { sections, fields, html, css } from './stores/app/activePage';
-  import { showingIDE, userRole } from './stores/app';
+  import { userRole } from './stores/app';
   import {
     saved,
     saving as savingStore,
