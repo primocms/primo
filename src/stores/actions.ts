@@ -5,17 +5,11 @@ import { id, sections } from './app/activePage'
 import { saved } from './app/misc'
 import { html, css, fields } from './data/draft'
 import * as stores from './data/draft'
-import { timeline, undone, site as unsavedSite } from './data/draft'
-import site from './data/site'
+import { timeline, undone } from './data/draft'
 import {DEFAULTS} from '../const'
+import type { Site, Symbol, Page } from '../const'
 
-export async function saveSite() {
-  const finalSave = get(unsavedSite)
-  console.log({finalSave})
-  site.save(finalSave)
-}
-
-export async function hydrateSite(data) {
+export async function hydrateSite(data:Site): Promise<void> {
   sections.set([])
   stores.id.set(data.id)
   stores.name.set(data.name)
@@ -27,7 +21,7 @@ export async function hydrateSite(data) {
   stores.symbols.set(data.symbols)
 }
 
-export async function updateActivePageHTML(html) {
+export async function updateActivePageHTML(html:string): Promise<void> {
   pages.update(get(id), (page) => ({
     ...page,
     html,
@@ -35,13 +29,13 @@ export async function updateActivePageHTML(html) {
 }
 
 
-export async function updateSiteHTML(newSiteHTML) {
+export async function updateSiteHTML(newSiteHTML:{ head:string, below:string }): Promise<void> {
   html.set(newSiteHTML)
 }
 
 // when a Symbol is deleted from the Site Library, 
 // it's instances on the page are emancipated
-export async function emancipateInstances(symbol) {
+export async function emancipateInstances(symbol:Symbol): Promise<void> {
   const updatedPages = await Promise.all(
     get(stores.pages).map(async (page) => {
       const updatedSections = await page.sections.map(block => {
@@ -69,7 +63,7 @@ export async function emancipateInstances(symbol) {
   sections.set(activePageSections)
 }
 
-export function undoSiteChange() {
+export function undoSiteChange(): void {
   const state = get(timeline)
 
   // Set timeline back
@@ -85,25 +79,24 @@ export function undoSiteChange() {
   hydrateSite(siteWithoutLastChange)
 }
 
-export function redoSiteChange() {
+export function redoSiteChange(): void {
   const restoredState = [...get(timeline), ...get(undone)]
   timeline.set(restoredState)
   hydrateSite(restoredState[restoredState.length - 1])
 }
 
-// experimenting with exporting objects to make things cleaner
 export const symbols = {
-  create: (symbol) => {
+  create: (symbol:Symbol): void => {
     saved.set(false)
     stores.symbols.update(s => [cloneDeep(symbol), ...s])
   },
-  update: (toUpdate) => {
+  update: (toUpdate:Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.map(s => s.id === toUpdate.id ? toUpdate : s)
     })
   },
-  delete: (toDelete) => {
+  delete: (toDelete:Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
@@ -112,22 +105,22 @@ export const symbols = {
 }
 
 export const pages = {
-  add: (newpage, path) => {
+  add: (newpage:Page, path:string): void => {
     saved.set(false)
-    const currentPages = get(stores.pages)
-    let newPages = cloneDeep(currentPages)
+    const currentPages:Array<Page> = get(stores.pages)
+    let newPages:Array<Page> = cloneDeep(currentPages)
     if (path.length > 0) {
-      const rootPage = find(newPages, ['id', path[0]])
+      const rootPage:Page = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages ? [...rootPage.pages, newpage] : [newpage]
     } else {
       newPages = [...newPages, newpage]
     }
     stores.pages.set(newPages)
   },
-  delete: (pageId, path) => {
+  delete: (pageId:string, path:string): void => {
     saved.set(false)
-    const currentPages = get(stores.pages)
-    let newPages = cloneDeep(currentPages)
+    const currentPages:Array<Page> = get(stores.pages)
+    let newPages:Array<Page> = cloneDeep(currentPages)
     if (path.length > 0) {
       const rootPage = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
@@ -136,7 +129,7 @@ export const pages = {
     }
     stores.pages.set(newPages)
   },
-  update: async (pageId, fn) => {
+  update: async (pageId:string, fn = (p) => {}) => {
     saved.set(false)
     const newPages = await Promise.all(
       get(stores.pages).map(async page => {
