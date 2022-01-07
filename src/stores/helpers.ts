@@ -5,6 +5,7 @@ import { id, fields as pageFields, css as pageCSS, html as pageHTML, sections } 
 import { symbols } from './data/draft'
 import { convertFieldsToData, processCode, processCSS } from '../utils'
 import {DEFAULTS} from '../const'
+import type { Page, Site, Symbol } from '../const'
 
 export function resetActivePage() {
   id.set('index')
@@ -14,9 +15,9 @@ export function resetActivePage() {
   pageCSS.set(DEFAULTS.css)
 }
 
-export function getAllFields(componentFields = [], exclude = () => true) {
-  const allFields = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
-  const includeActiveLinks = allFields.map(hydrateField)
+export function getAllFields(componentFields:any[] = [], exclude = () => true) {
+  const allFields: any[] = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
+  const includeActiveLinks: any[] = allFields.map(hydrateField)
   return includeActiveLinks
 
   function hydrateField(field) {
@@ -58,19 +59,18 @@ export function getAllFields(componentFields = [], exclude = () => true) {
   }
 }
 
-export function getSymbol(symbolID) {
+export function getSymbol(symbolID): Symbol {
   return find(get(symbols), ['id', symbolID]);
 }
 
-
-export async function buildStaticPage({ page, site, separateModules = false }) {
+export async function buildStaticPage({ page, site, separateModules = false }: { page:Page, site:Site, separateModules:boolean }) {
   if (!page.sections) return null // ensure data fits current structure
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
-      const css = await processCSS(site.css + page.css)
-      const fields = unionBy(page.fields, site.fields, "key");
-      const data = convertFieldsToData(fields);
-      const svelte = await processCode({ 
+      const css:string = await processCSS(site.css + page.css)
+      const fields:any[] = unionBy(page.fields, site.fields, "key")
+      const data:object = convertFieldsToData(fields)
+      const svelte:{ css:string, html:string, js:string } = await processCode({ 
         code: {
           html: `<svelte:head>
           ${site.html?.head}
@@ -105,12 +105,12 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
         if (!symbol) return 
 
         // Remove fields no longer present in Symbol
-        const symbolFields = symbol.value.fields
-        const componentFields = block.value.fields.filter(field => find(symbolFields, ['id', field.id])) 
-        const fields = unionBy(componentFields, page.fields, site.fields, "key");
-        const data = convertFieldsToData(fields);
+        const symbolFields:any[] = symbol.value.fields
+        const componentFields:any[] = block.value.fields.filter(field => find(symbolFields, ['id', field.id])) 
+        const fields:any[] = unionBy(componentFields, page.fields, site.fields, "key");
+        const data:object = convertFieldsToData(fields);
 
-        const { html, css, js } = symbol.value
+        const { html, css, js }: { html:string, css:string, js:string } = symbol.value
 
         const svelte = await processCode({ 
           code: {
@@ -162,7 +162,7 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
   </html>
   `
 
-  function buildBlocks(blocks) {
+  function buildBlocks(blocks:any[]): string {
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type } = block
@@ -177,9 +177,9 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     }).join('')
   }
 
-  function buildModules(blocks) {
+  function buildModules(blocks:any[]): string {
     return blocks.filter(block => block.js).map(block => {
-      const { id, type } = block
+      const { id } = block
       return separateModules ? 
         `<script type="module" async>
           import App from './_modules/${block.symbol}.js';
@@ -198,7 +198,12 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     }).join('')
   }
 
-  const modules = uniqBy(
+  type Module = {
+    symbol: string,
+    content: string
+  }
+
+  const modules:Array<Module> = uniqBy(
     blocks.filter(block => block.js).map(block => ({
       symbol: block.symbol,
       content: block.js
@@ -209,52 +214,4 @@ export async function buildStaticPage({ page, site, separateModules = false }) {
     html: final,
     modules
   } : final
-}
-
-
-export async function buildPagePreview({ page, site }) {
-  if (!page.sections) return null
-  const res = await Promise.all([
-    ...page.sections.map(async block => {
-      if (block.type === 'component') {
-
-        const fields = unionBy(block.value.fields, page.fields, site.fields, "key");
-        const data = convertFieldsToData(fields);
-
-        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
-        if (!symbol) return 
-        const { html, css, js } = symbol.value
-
-        const svelte = await processCode({ 
-          code: {
-            html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
-            ${html}
-            `, 
-            css, 
-            js 
-          },
-          data
-        });
-
-        return svelte
-
-      } else {
-        const {html} = block.value
-        // might add this back in later
-        // const fields = unionBy(page.fields, site.fields, "key");
-        // const data = convertFieldsToData(fields);
-        const svelte = await processCode({ 
-          code: {
-            html: `<svelte:head><style>${site.css}${page.css}</style></svelte:head>
-            ${html}
-            `, 
-            css: '', 
-            js: '' 
-          }
-        });
-        return svelte
-      }
-    })
-  ])
-  return res
 }
