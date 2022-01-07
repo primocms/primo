@@ -14,9 +14,9 @@
   "author": "Mateo Morris",
   "license": "AGPL",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview"
+    "dev": "cd demo && npm run dev",
+    "build": "cd demo && npm run build",
+    "serve": "cd demo && npm run serve"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
