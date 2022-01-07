@@ -1,0 +1,13 @@
+.primo-reset {
+  @tailwind base;
+  font-family: 'Satoshi', sans-serif !important;
+
+  button,
+  button * {
+    cursor: pointer;
+  }
+}
+
+body {
+  margin: 0;
+}

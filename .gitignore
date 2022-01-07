@@ -1,7 +1,7 @@
-node_modules
-container/node_modules
-container/public/build/
-container/public/preview/
-.vscode
-.idea
+.env 
 .DS_Store
+.vercel_build_output
+
+node_modules
+desktop/out
+desktop/build
