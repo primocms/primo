@@ -1,5 +1,5 @@
 import * as idb from 'idb-keyval';
-import _ from 'lodash'
+import _ from 'lodash-es'
 import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
 
