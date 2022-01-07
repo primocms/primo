@@ -155,7 +155,16 @@ export const defaultStyles = {
   `,
 }
 
-export const Field = () => ({
+type Field = {
+  id: string,
+  key: string,
+  label: string,
+  value: string,
+  type: string,
+  fields: any[]
+}
+
+export const Field = (): Field => ({
   id: createUniqueID(),
   key: '',
   label: '',
@@ -164,7 +173,19 @@ export const Field = () => ({
   fields: [],
 })
 
-export const Component = () => ({
+type Component = {
+  type: 'component',
+  id: string,
+  symbolID: string | null,
+  value: {
+    html: string,
+    css: string,
+    js: string,
+    fields: any[]
+  }
+}
+
+export const Component = (): Component => ({
   type: 'component',
   id: createUniqueID(),
   symbolID: null,
@@ -175,6 +196,18 @@ export const Component = () => ({
     fields: []
   }
 })
+
+type Symbol = {
+  type: 'symbol',
+  id: string,
+  symbolID: string | null,
+  value: {
+    html: string,
+    css: string,
+    js: string,
+    fields: any[]
+  }
+}
 
 export const Symbol = () => ({
   type: 'symbol',
@@ -215,13 +248,39 @@ export const DEFAULTS = {
   symbols: [],
 }
 
-export const Page = (id = createUniqueID(), name) => ({
+type Page = {
+  id: string,
+  name: string,
+  sections: any[],
+  pages: any[],
+  html: {
+    head: string,
+    below: string
+  },
+  css: string,
+  fields: any[]
+}
+
+export const Page = (id = createUniqueID(), name): Page => ({
   ...DEFAULTS.page,
   id,
   name
 })
 
-export const Site = ({ id, name} = { id: 'default', name: 'Default' }) => ({
+type Site = {
+  id: string,
+  name: string,
+  pages: any[],
+  html: {
+    head: string,
+    below: string
+  },
+  css: string,
+  fields: any[],
+  symbols: any[]
+}
+
+export const Site = ({ id, name} = { id: 'default', name: 'Default' }): Site => ({
   id,
   name,
   pages: [
