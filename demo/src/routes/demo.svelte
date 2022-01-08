@@ -1,18 +1,11 @@
 <script>
 	import '../reset.css';
-	import axios from 'axios';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
 	import Primo, { modal as primoModal, registerProcessors } from '@primo-app/primo';
 	import { saved } from '@primo-app/primo/src/stores/app/misc';
 	import Build from './_Build.svelte';
 	import * as primo from '@primo-app/primo/package.json';
-
-	if (browser) {
-		import('../compiler/processors').then(({ html, css }) => {
-			registerProcessors({ html, css });
-		});
-	}
 
 	primoModal.register([
 		{
