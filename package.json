@@ -1,0 +1,15 @@
+{
+  "name": "primo",
+  "description": "primo",
+  "repository": "https://github.com/primo-af/primo.git",
+  "scripts": {
+    "install": "concurrently --kill-others \"cd desktop && npm install\" \"cd server && npm install\"",
+    "dev": "concurrently --kill-others \"cd desktop && npm run start\" \"cd server && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0",
+    "i": "^0.3.7",
+    "npm": "^8.3.0"
+  },
+  "dependencies": {}
+}
