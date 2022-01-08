@@ -5,3 +5,6 @@ container/public/preview/
 .vscode
 .idea
 .DS_Store
+.svelte-kit
+desktop/build
+desktop/out
