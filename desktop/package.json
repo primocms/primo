@@ -13,7 +13,7 @@
     "make": "electron-forge make",
     "make-windows": "electron-packager . --platform=win32 --overwrite",
     "publish": "electron-forge publish",
-    "dev": "npm link @primo-app/primo && svelte-kit dev -p 3333",
+    "dev": "svelte-kit dev -p 3333",
     "build": "svelte-kit build",
     "preview": "svelte-kit preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
