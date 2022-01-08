@@ -11,5 +11,7 @@
     "i": "^0.3.7",
     "npm": "^8.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@primo-app/primo": "file:editor"
+  }
 }
