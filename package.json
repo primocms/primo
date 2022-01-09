@@ -4,7 +4,8 @@
   "repository": "https://github.com/primo-af/primo.git",
   "scripts": {
     "install": "concurrently --kill-others \"cd desktop && npm install\" \"cd server && npm install\"",
-    "dev": "concurrently --kill-others \"cd desktop && npm run start\" \"cd server && npm run dev\""
+    "dev": "concurrently --kill-others \"cd desktop && npm run start\" \"cd server && npm run dev\"",
+    "demo": "cd demo && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^7.0.0",

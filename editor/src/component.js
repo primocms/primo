@@ -1,6 +1,6 @@
-let registered = false
-
 const compilers = {}
+
+let checked = 0
 
 export const processors = {
   html: async (raw, data) => {
@@ -12,7 +12,10 @@ export const processors = {
           const res = await compiler(raw)
           resolve(res)
         } else {
-          setTimeout(checkIfRegistered, 100)
+          checked++
+          if (checked < 100) {
+            setTimeout(checkIfRegistered, 100)
+          }
         }
       }
     })
@@ -26,8 +29,10 @@ export const processors = {
           const res = await compiler(raw)
           resolve(res)
         } else {
-          console.log('waiting')
-          setTimeout(checkIfRegistered, 100)
+          checked++
+          if (checked < 100) {
+            setTimeout(checkIfRegistered, 100)
+          }
         }
       }
     })
