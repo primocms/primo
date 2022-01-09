@@ -6,7 +6,7 @@
     "install": "concurrently --kill-others \"cd desktop && npm install\" \"cd server && npm install\"",
     "dev": "concurrently --kill-others \"cd desktop && npm run start\" \"cd server && npm run dev\"",
     "demo": "cd demo && npm run dev",
-    "test:integration": "npm run demo && cd tests && cypress open",
+    "test:integration": "concurrently --kill-others \"npm run demo\" \"cd tests && cypress open\"",
     "test:unit": "cd tests && vitest"
   },
   "devDependencies": {
