@@ -6,7 +6,7 @@ export function createUniqueID(length = 5) {
 }
 
 // https://stackoverflow.com/a/21071454
-export function move(array, from, to) {
+export function move(array: Array<any>, from: number, to: number) {
   if( to === from ) return array;
 
   var target = array[from];                         

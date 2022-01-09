@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 import preprocess from 'svelte-preprocess';
 import vercel from '@sveltejs/adapter-vercel';
 
@@ -15,7 +17,10 @@ const config = {
       },
       define: {
 					'__DESKTOP_VERSION__': JSON.stringify(process.env.npm_package_version),
-			}
+			},
+			test: {
+				// ...
+			},
 		}
 	},
 	preprocess: preprocess({

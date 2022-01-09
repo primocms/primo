@@ -6,13 +6,15 @@
     "install": "concurrently --kill-others \"cd desktop && npm install\" \"cd server && npm install\"",
     "dev": "concurrently --kill-others \"cd desktop && npm run start\" \"cd server && npm run dev\"",
     "demo": "cd demo && npm run dev",
-    "test": "cypress open"
+    "test:integration": "npm run demo && cd tests && cypress open",
+    "test:unit": "cd tests && vitest"
   },
   "devDependencies": {
     "concurrently": "^7.0.0",
     "cypress": "^9.2.0",
     "i": "^0.3.7",
-    "npm": "^8.3.0"
+    "npm": "^8.3.0",
+    "vitest": "0.0.139"
   },
   "dependencies": {
     "@primo-app/primo": "file:editor"

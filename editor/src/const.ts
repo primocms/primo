@@ -164,13 +164,14 @@ export type Field = {
   fields: any[]
 }
 
-export const Field = (): Field => ({
+export const Field = (f = {}): Field => ({
   id: createUniqueID(),
   key: '',
   label: '',
   value: '',
   type: 'text',
   fields: [],
+  ...f
 })
 
 export type Component = {
