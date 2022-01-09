@@ -25,10 +25,12 @@
 		}
 	]);
 
-	let data =
-		browser && localStorage.getItem('demo-site')
+	let data;
+	$: if (browser) {
+		data = localStorage.getItem('demo-site')
 			? JSON.parse(localStorage.getItem('demo-site'))
-			: null;
+			: undefined;
+	}
 	onMount(async () => {
 		// const res = await axios.get('https://try-primo-template-mateomorris.vercel.app/primo.json');
 		// console.log(res);
@@ -51,7 +53,7 @@
 	<Primo {data} {role} {saving} on:save={async ({ detail: data }) => saveData(data)} />
 {/if}
 <div id="app-version">
-	<span>try primo v{__DESKTOP_VERSION__}</span>
+	<span>primo demo v{__DESKTOP_VERSION__}</span>
 	<span>primo v{primo.version}</span>
 </div>
 
