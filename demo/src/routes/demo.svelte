@@ -2,10 +2,20 @@
 	import '../reset.css';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
-	import Primo, { modal as primoModal, registerProcessors } from '@primo-app/primo';
+	// import ImageField from '../extensions/FieldTypes/ImageField.svelte'
+	import Primo, { modal as primoModal, fieldTypes, PrimoFieldTypes } from '@primo-app/primo';
 	import { saved } from '@primo-app/primo/src/stores/app/misc';
 	import Build from './_Build.svelte';
 	import * as primo from '@primo-app/primo/package.json';
+
+	fieldTypes.register([
+		// {
+		// 	id: 'image',
+		// 	label: 'Image',
+		// 	component: ImageField
+		// },
+		...PrimoFieldTypes
+	]);
 
 	primoModal.register([
 		{
