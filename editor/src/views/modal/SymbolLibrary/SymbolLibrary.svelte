@@ -172,7 +172,7 @@
     </button>
   </div>
   <header class="tabs">
-    <button on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
+    <button id ="Site Library" on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
     <button on:click={() => showingPublicLibrary = true} class:active={showingPublicLibrary}>Primo Library</button>
   </header>
   {#if !showingPublicLibrary}
