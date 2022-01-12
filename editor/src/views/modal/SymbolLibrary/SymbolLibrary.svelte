@@ -172,13 +172,13 @@
     </button>
   </div>
   <header class="tabs">
-    <button id ="Site Library" on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
+    <button id ="site-library" on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
     <button on:click={() => showingPublicLibrary = true} class:active={showingPublicLibrary}>Primo Library</button>
   </header>
   {#if !showingPublicLibrary}
     <div class="xyz-in library-buttons">
       {#if $userRole === 'developer'}
-        <button on:click={addSymbol} style="border-right:1px solid var(--color-gray-9)">
+        <button on:click={addSymbol} style="border-right:1px solid var(--color-gray-9)" id="create-symbol">
           <svg
             fill="currentColor"
             viewBox="0 0 20 20"
@@ -189,7 +189,7 @@
           <span>Create</span>
         </button>
       {/if}
-      <button on:click={pasteSymbol}>
+      <button on:click={pasteSymbol} id="paste-symbol">
         <svg
           fill="currentColor"
           viewBox="0 0 20 20"

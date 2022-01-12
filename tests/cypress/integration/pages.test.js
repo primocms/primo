@@ -1,4 +1,4 @@
-describe('Interact with pages', () => {
+describe('Pages', () => {
     it('visit the page', () => {
         cy.visit('http://localhost:3000/demo')
     })
