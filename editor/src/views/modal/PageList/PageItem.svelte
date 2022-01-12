@@ -33,6 +33,8 @@
   let id = page.id || '';
   $: disableSave = !name || !id;
 
+  $: console.log({$pageStore})
+
   $: pageURL = `/${$pageStore.params.site}/${
     page.id === 'index' ? '' : page.id || ''
   }`;

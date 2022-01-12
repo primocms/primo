@@ -1,18 +1,20 @@
 /// <reference types="cypress" />
 
-describe('example to-do app', () => {
+describe('Component Editor', () => {
 
-  it('Renders the toolbar', () => {
-    cy.visit('http://localhost:3000/demo')
-    cy.get('#primo-toolbar')
-  })
+  context('IDE', () => {
 
-  context('Component Editor', () => {
+
+    it('Renders the toolbar', () => {
+      cy.visit('http://localhost:3000/demo')
+      cy.get('#primo-toolbar')
+    })
+
     beforeEach(() => {
       // open the component editor
     })
 
-    it('creates a component', () => {
+    it('adds HTML', () => {
       cy.get('.primo-section .buttons button:last-child').click() // Select component option
       cy.get('.library-buttons button:first-child').click() // 'Create Component'
       cy.get('#primo-modal .switch').click() // Switch to IDE
@@ -21,11 +23,29 @@ describe('example to-do app', () => {
       const HTMLEditor = () => cy.get('.left > .tabs > .codemirror-container > .s-B2X_fEQqhJxq > .cm-editor > .cm-scroller > .cm-content > .cm-activeLine')
       HTMLEditor().click() // Click in HTML (todo: add id)
       HTMLEditor().type(`<h1>T`)
-      getIframeBody('iframe[title="Preview HTML"]').find('h1').should('have.text', 'T').click()
+      getIframeBody('iframe[title="Preview HTML"]').find('h1').should('have.text', 'T')
+
+    })
+
+    it('adds CSS', () => {
 
       // CSS 
+      const CSSEditor = () => cy.get('.center > .tabs > .codemirror-container > .s-B2X_fEQqhJxq > .cm-editor > .cm-scroller > .cm-content > .cm-activeLine')
+      CSSEditor().click() // Click in CSS (todo: add id)
+      CSSEditor().type(`h1 { color: blue }`, { parseSpecialCharSequences: false })
+      getIframeBody('iframe[title="Preview HTML"]').find('h1.svelte-p3s2lp')
 
-      // JS 
+    })
+
+    it('adds JS', () => {
+      const JSEditor = () => cy.get('.right > .tabs > .codemirror-container > .s-B2X_fEQqhJxq > .cm-editor > .cm-scroller > .cm-content > .cm-activeLine')
+      JSEditor().click() // Click in JS (todo: add id)
+      JSEditor().type(`document.querySelector('h1.svelte-p3s2lp').innerText = 'replaced with JS'`)
+      getIframeBody('iframe[title="Preview HTML"]').find('h1.svelte-p3s2lp').should('have.text', 'replaced with JS')
+
+    })
+
+    it('integrates fields', () => {
 
       // Integrate fields
     })

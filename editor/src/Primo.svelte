@@ -55,15 +55,17 @@
     hydrateSite(data);
   }
 
-  $: $pageId = getPageId($pageStore.params);
-  function getPageId(params:{ page:string }): string {
-    const { page = 'index' } = params;
-    const [root, child] = page.split('/');
+  $: $pageId = getPageId($pageStore.params.page);
+  function getPageId(pagePath:string): string {
+    if (pagePath === '') pagePath = 'index'
+    const [root, child] = pagePath.split('/');
+    console.log({root, child})
     return child ? `${root}/${child}` : root;
   }
 
   $: setPageContent($pageId, $pages);
   function setPageContent(id:string, pages:Array<PageType>): void {
+    console.log(id)
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {

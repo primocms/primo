@@ -20,11 +20,10 @@
   async function finishCreatingPage() {
     let name = pageName;
     let url = pageURL;
-    const isEmpty = !shouldDuplicatePage;
     url = currentPath[0] ? `${currentPath[0]}/${url}` : url; // prepend parent page to id (i.e. about/team)
-    const newPage = isEmpty
-      ? Page(url, name)
-      : duplicatePage(name, url);
+    const newPage = shouldDuplicatePage
+      ? duplicatePage(name, url)
+      : Page(url, name)
     actions.add(newPage, currentPath);
     creatingPage = false;
     pageName = '';
@@ -81,19 +80,20 @@
   }
 
   function addSubPage(pageId) {
+    listPages(pageId)
     currentPath = [...currentPath, pageId];
-    listedPages = [];
     creatingPage = true;
   }
 
-  let currentPath = buildCurrentPath($page.url.pathname);
+  $: console.log({currentPath})
+  let currentPath = buildCurrentPath($page.params.page);
   $: rootPageId = currentPath[0];
   $: childPageId = currentPath[1];
   $: listedPages = getListedPages(childPageId, $pages);
   $: breadcrumbs = getBreadCrumbs(childPageId, $pages);
 
-  function buildCurrentPath(path) {
-    const [site, root, child] = path.slice(1).split('/');
+  function buildCurrentPath(pagePath) {
+    const [root, child] = pagePath.split('/');
     if (!root || !child) {
       // on index or top-level page
       return [];
@@ -101,6 +101,7 @@
   }
 
   function getListedPages(childPageId, pages) {
+    console.log({childPageId, rootPageId, pages})
     if (childPageId) {
       const rootPage = find(pages, ['id', rootPageId]);
       return rootPage.pages || [];
@@ -108,6 +109,7 @@
   }
 
   function getBreadCrumbs(childPageId, pages) {
+    console.log({childPageId, pages})
     if (childPageId) {
       const rootPage = find(pages, ['id', rootPageId]);
       return [
@@ -199,7 +201,7 @@
           <div id="duplicate">
             <label>
               <input bind:checked={shouldDuplicatePage} type="checkbox">
-              <span>Duplicate current page</span>
+              <span>Duplicate active page</span>
             </label>
           </div>
           <PrimaryButton
