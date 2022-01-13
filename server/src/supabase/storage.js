@@ -84,7 +84,7 @@ export async function downloadSiteData(id) {
   const {data} = await supabase
     .storage
     .from(bucketID)
-    .download(`${id}/site.json`)
+    .download(`${id}/site.json?${Date.now()}`) // bust the cache (i.e. prevent outdated data)
   const json = await data.text()
   return JSON.parse(json)
 }
