@@ -37,6 +37,7 @@
   ])
 
   let currentPath
+  let data
   async function fetchSite(fullPath) {
     if (currentPath === fullPath) return
     currentPath = fullPath
@@ -58,7 +59,9 @@
     }
   }
 
-  onDestroy(() => setActiveEditor(siteID, false))
+  onDestroy(() => {
+    if (data) setActiveEditor(siteID, false)
+  })
 
   async function saveData(updatedSite) {
     saving = true
@@ -80,7 +83,6 @@
 
   $: siteID = $page.params.site
 
-  let data
   $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
 </script>
 

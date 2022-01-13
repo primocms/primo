@@ -37,6 +37,7 @@
     font-weight: 500;
     border-radius: 0.25rem;
     transition: 0.1s background;
+    background: transparent;
 
     &.outlined {
       border: 2px solid var(--primo-color-primored);
