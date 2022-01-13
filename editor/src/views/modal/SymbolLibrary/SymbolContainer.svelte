@@ -254,6 +254,11 @@
         display: flex;
         justify-content: space-between;
         width: 100%;
+
+        svg {
+          width: 1rem;
+          height: 1rem;
+        }
       }
 
       .component-label {
@@ -270,7 +275,9 @@
           label {
             font-size: 0.85rem;
             width: 100%;
+            height: 2rem;
             display: flex;
+            align-items: center;
             cursor: pointer;
           }
 
@@ -286,8 +293,8 @@
           }
 
           svg {
+            height: 0.75rem;
             width: 0.75rem;
-            margin-right: 4px;
           }
         }
 

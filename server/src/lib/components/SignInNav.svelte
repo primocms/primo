@@ -14,7 +14,7 @@
     >
     <button class="link" on:click={() => show('USER_SETTINGS')}>Settings</button
     >
-    <a class="link" href="https://docs.primo.af">
+    <a class="link with-icon" href="https://docs.primo.af">
       <span>Docs</span>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
         ><path
@@ -44,10 +44,17 @@
 
       svg {
         width: 0.5rem;
-        margin-left: 0.5rem;
       }
+
       &:hover {
         border-color: var(--primo-color-primored);
+      }
+
+      &.with-icon {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 0.5rem;
+        place-items: center;
       }
     }
 
@@ -58,6 +65,10 @@
 
       .link {
         margin-right: 1rem;
+
+        &:last-child {
+          margin-right: 0;
+        }
       }
     }
   }

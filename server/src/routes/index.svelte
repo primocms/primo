@@ -291,10 +291,11 @@
             }
 
             .site-name {
-              display: flex;
 
               a {
-                display: flex;
+                display: grid;
+                grid-template-columns: auto auto;
+                place-items: center flex-start;
 
                 &:hover {
                   color: var(--primo-color-primored);
@@ -303,6 +304,7 @@
                 svg {
                   width: 1.5rem;
                   margin-top: 3px;
+                  justify-self: flex-end;
                 }
               }
 
