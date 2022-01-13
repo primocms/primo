@@ -58,6 +58,8 @@
     }
   }
 
+  onDestroy(() => setActiveEditor(siteID, false))
+
   async function saveData(updatedSite) {
     saving = true
     const success = await actions.sites.save(updatedSite, $sitePassword)
