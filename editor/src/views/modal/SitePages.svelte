@@ -85,14 +85,13 @@
     creatingPage = true;
   }
 
-  $: console.log({currentPath})
   let currentPath = buildCurrentPath($page.params.page);
   $: rootPageId = currentPath[0];
   $: childPageId = currentPath[1];
   $: listedPages = getListedPages(childPageId, $pages);
   $: breadcrumbs = getBreadCrumbs(childPageId, $pages);
 
-  function buildCurrentPath(pagePath) {
+  function buildCurrentPath(pagePath = '') {
     const [root, child] = pagePath.split('/');
     if (!root || !child) {
       // on index or top-level page

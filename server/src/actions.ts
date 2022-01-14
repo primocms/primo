@@ -4,7 +4,7 @@ import * as supabaseDB from './supabase/db'
 import {sites as dbSites} from './supabase/db'
 import * as supabaseStorage from './supabase/storage'
 import * as stores from './stores'
-import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+import { buildStaticPage } from '../../editor/src/stores/helpers'
 
 export const sites = {
   get: async (siteID, password) => {

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte'
-  import { createUniqueID } from '@primo-app/primo/src/utilities'
+  import { createUniqueID } from '../../../../../editor/src/utilities'
   import Tabs from '$lib/ui/Tabs.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import CopyButton from '$lib/ui/CopyButton.svelte'

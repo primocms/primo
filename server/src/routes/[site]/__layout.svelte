@@ -6,15 +6,15 @@
     PrimoFieldTypes,
     fieldTypes,
     stores,
-  } from '@primo-app/primo'
-  import modal from '@primo-app/primo/src/stores/app/modal'
+  } from '../../../../editor/src/index.js'
+  import modal from '../../../../editor/src/stores/app/modal'
   import Build from '../../extensions/Build.svelte'
   import ImageField from '../../extensions/FieldTypes/ImageField.svelte'
   import * as actions from '../../actions'
   import user from '../../stores/user'
   import { sitePassword } from '../../stores/misc'
   import { page } from '$app/stores'
-  import * as primo from '@primo-app/primo/package.json'
+  import * as primo from '../../../../editor/package.json'
   import { setActiveEditor } from '../../supabase/helpers'
   import LockAlert from '$lib/components/LockAlert.svelte'
 

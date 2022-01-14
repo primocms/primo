@@ -6,10 +6,10 @@
   import beautify from 'js-beautify'
   import Hosting from '$lib/components/Hosting.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { site, modal } from '@primo-app/primo'
-  import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+  import { site, modal } from '../../../editor/src/index.js'
+  import { buildStaticPage } from '../../../editor/src/stores/helpers'
   import hosts from '../stores/hosts'
-  import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
+  import ModalHeader from '../../../editor/src/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
   // import { addDeploymentToSite } from '$lib/actions'
 

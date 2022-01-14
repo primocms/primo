@@ -3,11 +3,11 @@
 	import JSZip from 'jszip';
 	import { saveAs } from 'file-saver';
 	import { html as beautifyHTML } from 'js-beautify';
-	import { site, modal } from '@primo-app/primo';
-	import { buildStaticPage } from '@primo-app/primo/src/stores/helpers';
-	import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte';
+	import { site, modal } from '../../../editor/src/index.js';
+	import { buildStaticPage } from '../../../editor/src/stores/helpers';
+	import ModalHeader from '../../../editor/src/views/modal/ModalHeader.svelte';
 	import { page } from '$app/stores';
-	import Button from '@primo-app/primo/src/components/buttons/PrimaryButton.svelte';
+	import Button from '../../../editor/src/components/buttons/PrimaryButton.svelte';
 
 	const siteID = $page.params.site;
 

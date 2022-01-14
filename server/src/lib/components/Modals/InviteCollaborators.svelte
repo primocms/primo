@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition'
-  import { createUniqueID } from '@primo-app/primo/src/utilities'
+  import { createUniqueID } from '../../../../../editor/src/utilities'
   import supabase from '../../../supabase/core'
   import { config, users } from '../../../supabase/db'
   import user from '../../../stores/user'

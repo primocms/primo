@@ -21,10 +21,10 @@
   },
   "type": "module",
   "dependencies": {
-    "@primo-app/primo": "^1.3.83",
     "@supabase/supabase-js": "^1.22.6",
     "@sveltejs/kit": "next",
     "file-saver": "^2.0.5",
+    "idb-keyval": "^6.1.0",
     "javascript-time-ago": "^2.3.8",
     "js-beautify": "^1.14.0",
     "jszip": "^3.7.1",
