@@ -38,16 +38,18 @@
 
   let currentPath
   let data
+  let siteLocked = false
   async function fetchSite(fullPath) {
     if (currentPath === fullPath) return
     currentPath = fullPath
     const res = await actions.sites.get(siteID, $sitePassword)
     if (res?.active_editor && res.active_editor !== $user.email) {
+      siteLocked = true
       modal.show('DIALOG', {
         component: LockAlert,
         componentProps: {
           email: res.active_editor,
-          canGoToDashboard: false,
+          canGoToDashboard: false
         },
         options: {
           disableClose: true,
@@ -58,10 +60,6 @@
       data = res
     }
   }
-
-  onDestroy(() => {
-    if (data) setActiveEditor(siteID, false)
-  })
 
   async function saveData(updatedSite) {
     saving = true
@@ -84,6 +82,10 @@
   $: siteID = $page.params.site
 
   $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
+
+  onDestroy(() => {
+    if (!siteLocked) setActiveEditor(siteID, false)
+  })
 </script>
 
 {#if browser}

@@ -64,7 +64,6 @@
 
   $: setPageContent($pageId, $pages);
   function setPageContent(id:string, pages:Array<PageType>): void {
-    console.log('setting')
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {
