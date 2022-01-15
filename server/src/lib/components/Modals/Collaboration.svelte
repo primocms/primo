@@ -1,8 +1,8 @@
 <script lang="ts">
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import CopyButton from '$lib/ui/CopyButton.svelte'
-  import SplitButton from '../../../../../editor/src/ui/inputs/SplitButton.svelte'
-  import { createUniqueID } from '../../../../../editor/src/utilities'
+  import SplitButton from '@primo-app/primo/src/ui/inputs/SplitButton.svelte'
+  import { createUniqueID } from '@primo-app/primo/src/utilities'
   import { sites } from '../../../supabase/db'
   import { page } from '$app/stores'
 

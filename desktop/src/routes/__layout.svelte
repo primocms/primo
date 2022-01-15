@@ -8,8 +8,8 @@
     registerProcessors,
     fieldTypes,
     PrimoFieldTypes,
-  } from '../../../editor/src/index.js'
-  import * as primo from '../../../editor/package.json'
+  } from '@primo-app/primo'
+  import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
 
   if (browser) {

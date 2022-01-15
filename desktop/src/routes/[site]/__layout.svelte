@@ -11,7 +11,7 @@
     fieldTypes,
     modal,
     stores,
-  } from '../../../../editor/src/index.js'
+  } from '@primo-app/primo'
   import { find } from 'lodash-es'
   import sites from '../../stores/sites'
   import cloudSites from '../../stores/cloudSites'

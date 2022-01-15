@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import sites from '../../stores/sites'
-  import { stores } from '../../../../editor/src/index.js'
+  import { stores } from '@primo-app/primo'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
   import { setActiveEditor } from '../../supabase/helpers'

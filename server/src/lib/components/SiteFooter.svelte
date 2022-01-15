@@ -1,5 +1,5 @@
 <script>
-  import * as primo from '../../../../editor/package.json'
+  import * as primo from '@primo-app/primo/package.json'
 
   const date = new Date()
   const month = date.toLocaleString('default', { month: 'long' })

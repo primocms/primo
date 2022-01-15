@@ -2,7 +2,7 @@
   import '$lib/assets/reset.css'
   import { browser } from '$app/env'
   import { goto } from '$app/navigation'
-  import { registerProcessors, dropdown } from '../../../editor/src/index.js'
+  import { registerProcessors, dropdown } from '@primo-app/primo'
   import user from '../stores/user'
   import { watchForAutoLogin, signOut } from '../supabase/auth'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'

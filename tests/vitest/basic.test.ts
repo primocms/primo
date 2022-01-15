@@ -1,7 +1,7 @@
 import { assert, expect, it, suite, test, describe } from 'vitest'
-import { move } from '../../editor/src/utilities'
-import { convertFieldsToData, makeValidUrl } from '../../editor/src/utils'
-import { Field } from '../../editor/src/const'
+import { move } from '@primo-app/primo/src/utilities'
+import { convertFieldsToData, makeValidUrl } from '@primo-app/primo/src/utils'
+import { Field } from '@primo-app/primo/src/const'
 
 describe('Utility functions', () => {
   test('move', async() => {
