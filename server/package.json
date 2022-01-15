@@ -21,7 +21,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@primo-app/primo": "^1.3.83",
+    "@primo-app/primo": "^1.3.84",
     "@supabase/supabase-js": "^1.22.6",
     "@sveltejs/kit": "next",
     "file-saver": "^2.0.5",
