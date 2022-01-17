@@ -4,7 +4,7 @@ import {users, config} from '../../supabase/db'
 import {getNumberOfUsers} from '../../supabase/admin'
 
 export async function post(req) {
-  const nUsers = (await users.get()).length
+  const nUsers = await getNumberOfUsers()
   if (nUsers === 0) {
     await createUser(true)
     return {
@@ -34,7 +34,7 @@ export async function post(req) {
   }
 }
 
-export async function get(req) {
+export async function get() {
   const nUsers = await getNumberOfUsers()
   return {
     body: {

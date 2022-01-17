@@ -29,7 +29,6 @@ export async function getNumberOfUsers() {
 }
 
 export async function validateInvitationKey(key) {
-  console.log({key})
   const {data,error} = await supabaseAdmin
     .from('config')
     .select('*')
