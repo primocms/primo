@@ -85,6 +85,7 @@
 
   onDestroy(() => {
     if (browser && !siteLocked) setActiveEditor(siteID, false)
+    else if (siteLocked) modal.hide()
   })
 </script>
 
