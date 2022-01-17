@@ -84,7 +84,7 @@
   $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
 
   onDestroy(() => {
-    if (!siteLocked) setActiveEditor(siteID, false)
+    if (browser && !siteLocked) setActiveEditor(siteID, false)
   })
 </script>
 
