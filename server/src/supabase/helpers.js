@@ -21,7 +21,6 @@ export async function setActiveEditor(siteID, lock = true) {
   // waits ten seconds, then removes the active editor
   // when that returns, the function repeats
   if (lock) {
-    console.log('setting active editor', siteID, get(user).email)
     if (siteBeingEdited === siteID) return
     siteBeingEdited = siteID
     await Promise.all([
@@ -37,7 +36,6 @@ export async function setActiveEditor(siteID, lock = true) {
       setActiveEditor(siteID)
     }
   } else {
-    console.log('removing active editor')
     siteBeingEdited = null
     await sites.update(siteID, {
       'active_editor': ''

@@ -53,8 +53,6 @@
 		$saved = true;
 	}
 
-	$: console.log({ data });
-
 	let saving = false;
 </script>
 
