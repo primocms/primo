@@ -57,7 +57,6 @@ export const sites = {
     await supabaseDB.sites.update(id, props)
   },
   save: async (updatedSite, password) => {
-    console.log({updatedSite, password})
     stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
 
     if (password) {
