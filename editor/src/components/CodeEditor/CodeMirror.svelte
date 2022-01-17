@@ -35,7 +35,6 @@
     },
     doc: prefix + value,
     extensions: [
-      ...extensions,
       autocompletion(),
       languageConf.of(language),
       keymap.of([
@@ -105,6 +104,7 @@
       }),
       MainTheme,
       tabSize.of(EditorState.tabSize.of(2)),
+      ...extensions,
     ],
   });
 
