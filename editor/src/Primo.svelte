@@ -78,8 +78,8 @@
     function setPageStore(page) {
       sections.set(page.sections);
       fields.set(page.fields);
-      html.set(page.html || DEFAULTS.html);
-      css.set(page.css || DEFAULTS.css);
+      html.set(page.html);
+      css.set(page.css);
     }
   }
 

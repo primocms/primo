@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
+  import {locale} from '../../stores/app/misc'
   import { convertFieldsToData } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
 
@@ -92,7 +93,7 @@
       return;
     }
     iframeLoaded = false;
-    iframe.srcdoc = iframePreview;
+    iframe.srcdoc = iframePreview($locale);
   }
 
   let previewWidth;
@@ -117,7 +118,7 @@
       on:load={setLoading}
       class:fadein={previewLoaded}
       title="Preview HTML"
-      srcdoc={iframePreview}
+      srcdoc={iframePreview($locale)}
       bind:this={iframe} />
   </div>
   {#if !hideControls}

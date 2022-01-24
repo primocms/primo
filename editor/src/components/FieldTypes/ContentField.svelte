@@ -4,7 +4,8 @@
   const dispatch = createEventDispatcher();
 
   export let field;
-
+  export let onChange
+  
   export let value = null;
   export let disabled = false;
   export let title = null;
@@ -16,7 +17,10 @@
 {#if value}
   <label class={variants}>
     <span>{field.label}</span>
-    <input class="input" {title} {disabled} type="text" bind:value on:input />
+    <input class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
+      onChange()
+      dispatch('input', detail)
+    }} />
   </label>
 {:else}
   <label class={variants}>

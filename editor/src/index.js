@@ -1,7 +1,7 @@
 import Primo from "./Primo.svelte";
 
 import {saved,onMobile,userRole} from './stores/app/misc'
-import {site} from './stores/data/draft'
+import {site, content} from './stores/data/draft'
 import savedSite from './stores/data/site'
 import dropdown from './stores/app/dropdown'
 import activePage from './stores/app/activePage'
@@ -23,6 +23,7 @@ const stores = {
 export {
   savedSite,
   site,
+  content,
   activePage,
   modal,
   utils,

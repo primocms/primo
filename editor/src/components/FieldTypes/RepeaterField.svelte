@@ -1,7 +1,7 @@
 <script>
   import { find as _find } from 'lodash-es'
   import pluralize from '../../libraries/pluralize';
-  import { fade } from 'svelte/transition';
+  import {locale} from '../../stores/app/misc'
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
@@ -12,7 +12,6 @@
   export let field;
 
   function addRepeaterItem() {
-    const keys = field.fields.map((f) => f.key);
     fieldValues = [...fieldValues, createSubfield()];
     onInput();
   }
@@ -50,7 +49,7 @@
     }));
   }
 
-  let fieldValues = Array.isArray(field.value)
+  $: fieldValues = Array.isArray(field.value)
     ? field.value.map((value) => [
         ...field.fields.map((subfield) => ({
           ...subfield,
@@ -71,14 +70,13 @@
 
 </script>
 
-<Card variants="pb-4" id="repeater-{field.key}">
-  <header class="">{field.label}</header>
+<Card id="repeater-{field.key}">
+  <header>{field.label}</header>
   <div class="fields">
     {#each fieldValues as fieldValue, i}
       <div
         class="repeater-item"
-        id="repeater-{field.key}-{i}"
-        in:fade={{ duration: 100 }}>
+        id="repeater-{field.key}-{i}">
         <div class="item-options">
           {#if i !== 0}
             <button
@@ -100,7 +98,7 @@
             <i class="fas fa-trash" />
           </button>
         </div>
-        {#each fieldValue as subfield}
+        {#each fieldValue as subfield (subfield.id)}
           <div
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">

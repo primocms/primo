@@ -1,115 +1,248 @@
-import axios from 'axios'
-import {find} from 'lodash-es'
-import * as supabaseDB from './supabase/db'
-import {sites as dbSites} from './supabase/db'
-import * as supabaseStorage from './supabase/storage'
-import * as stores from './stores'
-import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+import { find, last, cloneDeep, some, chain } from 'lodash-es'
+import { get } from 'svelte/store'
+import { getSymbol } from './helpers'
+import { id as activePageID, sections } from './app/activePage'
+import { saved, locale } from './app/misc'
+import * as stores from './data/draft'
+import { content, html, css, fields, timeline, undone, site as unsavedSite } from './data/draft'
+import type { Site, Symbol, Page } from '../const'
 
-export const sites = {
-  get: async (siteID, password) => {
-    if (password) {
-      const [ dbRes, apiRes ] = await Promise.all([
-        dbSites.get({id: siteID}), 
-        axios.get(`/api/${siteID}.json?password=${password}`)
-      ])
-      return {
-        ...dbRes,
-        ...JSON.parse(apiRes.data)
-      }
-    } else {
-      // const res = await dbSites.get({id: siteID})
-      const [ dbRes, storageRes ] = await Promise.all([
-        dbSites.get({id: siteID}),
-        supabaseStorage.downloadSiteData(siteID)
-      ]) 
+export async function hydrateSite(data:Site): Promise<void> {
+  sections.set([])
+  stores.id.set(data.id)
+  stores.name.set(data.name)
+  stores.pages.set(data.pages)
 
-      return {
-        ...dbRes,
-        ...storageRes
-      }
-    }
-  },
-  initialize: async () => {
-    const sites = await supabaseDB.sites.get({query: `id, name, password`})
-    if (sites) {
-      stores.sites.set(sites)
-    }
-  },
-  create: async (newSite) => {
-    await Promise.all([
-      supabaseDB.sites.create({
-        name: newSite.name,
-        id: newSite.id
-      }),
-      supabaseStorage.uploadSiteData({
-        id: newSite.id,
-        data: newSite
-      }),
-      supabaseStorage.uploadPagePreview({
-        path: `${newSite.id}/preview.html`,
-        preview: ''
+  css.set(data.css)
+  html.set(data.html)
+  fields.set(data.fields)
+  stores.symbols.set(data.symbols)
+  stores.content.set(data.content)
+}
+
+export async function updateActivePageHTML(html:string): Promise<void> {
+  pages.update(get(id), (page) => ({
+    ...page,
+    html,
+  }));
+}
+
+
+export async function updateSiteHTML(newSiteHTML:{ head:string, below:string }): Promise<void> {
+  html.set(newSiteHTML)
+}
+
+// when a Symbol is deleted from the Site Library, 
+// it's instances on the page are emancipated
+export async function emancipateInstances(symbol:Symbol): Promise<void> {
+  const updatedPages = await Promise.all(
+    get(stores.pages).map(async (page) => {
+      const updatedSections = await page.sections.map(block => {
+        if (block.symbolID === symbol.id) {
+          const symbol = getSymbol(block.symbolID)
+          return {
+            ...block,
+            symbolID: null,
+            value: {
+              ...symbol.value,
+              fields: block.value.fields
+            }
+          }
+        } else return block
       })
-    ])
-    stores.sites.update(sites => [ ...sites, newSite ])
-  },
-  update: async (id, props) => {
-    await supabaseDB.sites.update(id, props)
-  },
-  save: async (updatedSite, password) => {
-    stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
+      return {
+        ...page,
+        sections: updatedSections,
+      };
+    })
+  );
+  stores.pages.set(updatedPages)
 
-    if (password) {
-      const {data:success} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, updatedSite)
-      return success
-    } else {
-      const homepage = find(updatedSite.pages, ['id', 'index'])
-      const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-      const [ res1, res2 ] = await Promise.all([
-        supabaseStorage.updateSiteData({
-          id: updatedSite.id,
-          data: updatedSite
-        }),
-        supabaseStorage.updatePagePreview({
-          path: `${updatedSite.id}/preview.html`,
-          preview
-        })
-      ])
-      return res1.error || res2.error ? false : true
-    }
+  const activePageSections = find(updatedPages, ['id', get(activePageID)])['sections']
+  sections.set(activePageSections)
+}
+
+export function undoSiteChange(): void {
+  const state = get(timeline)
+
+  // Set timeline back
+  const timelineWithoutLastChange = state.slice(0, state.length - 1)
+  timeline.set(timelineWithoutLastChange)
+
+  // Save removed states
+  undone.update(u => ([...state.slice(state.length - 1), ...u]))
+
+  // Set Site
+  const siteWithoutLastChange = last(timelineWithoutLastChange)
+
+  hydrateSite(siteWithoutLastChange)
+}
+
+export function redoSiteChange(): void {
+  const restoredState = [...get(timeline), ...get(undone)]
+  timeline.set(restoredState)
+  hydrateSite(restoredState[restoredState.length - 1])
+}
+
+export const symbols = {
+  create: (symbol:Symbol): void => {
+    saved.set(false)
+    stores.symbols.update(s => [cloneDeep(symbol), ...s])
   },
-  delete: async (id) => {
-    stores.sites.update(sites => sites.filter(s => s.id !== id))
-    await Promise.all([
-      supabaseDB.sites.delete(id),
-      supabaseStorage.deleteSiteData(id)
-    ])
+  update: (toUpdate:Symbol): void => {
+    saved.set(false)
+    stores.symbols.update(symbols => {
+      return symbols.map(s => s.id === toUpdate.id ? toUpdate : s)
+    })
   },
-  validatePassword: async (siteID, password) => {
-    try {
-      const {data:json} = await axios.get(`/api/${siteID}.json?password=${password}`)
-      const data = JSON.parse(json)
-      return data ? true : false
-    } catch(e) {
-      return false
-    }
-    // return !!data.id
+  delete: (toDelete:Symbol): void => {
+    saved.set(false)
+    stores.symbols.update(symbols => {
+      return symbols.filter(s => s.id !== toDelete.id)
+    })
   }
 }
 
-export const hosts = {
-  initialize: async () => {
-    const hosts = await supabaseDB.hosts.get()
-    if (hosts) {
-      stores.hosts.set(hosts)
+export const pages = {
+  add: (newpage:Page, path:string): void => {
+    saved.set(false)
+    const currentPages:Array<Page> = get(stores.pages)
+    let newPages:Array<Page> = cloneDeep(currentPages)
+    if (path.length > 0) {
+      const rootPage:Page = find(newPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages ? [...rootPage.pages, newpage] : [newpage]
+    } else {
+      newPages = [...newPages, newpage]
     }
+    stores.pages.set(newPages)
   },
-  create: async (provider) => {
-    stores.hosts.update(hosts => [ ...hosts, provider ])
-    await supabaseDB.hosts.create(provider)
+  delete: (pageId:string, path:string): void => {
+    saved.set(false)
+    const currentPages:Array<Page> = get(stores.pages)
+    let newPages:Array<Page> = cloneDeep(currentPages)
+    if (path.length > 0) {
+      const rootPage = find(newPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
+    } else {
+      newPages = newPages.filter(page => page.id !== pageId)
+    }
+    stores.pages.set(newPages)
   },
-  delete: async (name) => {
-    stores.hosts.update(hosts => hosts.filter(p => p.name !== name))
-    await supabaseDB.hosts.delete(name)
+  update: async (pageId:string, fn = (p) => {}) => {
+    saved.set(false)
+    const newPages = await Promise.all(
+      get(stores.pages).map(async page => {
+        if (page.id === pageId) {
+          const newPage = await fn(page)
+          return newPage
+        } else if (some(page.pages, ['id', pageId])) {
+          return {
+            ...page,
+            pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
+          }
+        } else return page
+      })
+    )
+    stores.pages.set(newPages)
   }
+}
+
+export async function updateContent(blockID, updatedValue, activeLocale = get(locale)) {
+  const currentContent = get(content)
+  const pageID = get(activePageID)
+  const localeExists = !!currentContent[activeLocale]
+  const pageExists = localeExists ? !!currentContent[activeLocale][pageID] : false
+  const blockExists = pageExists ? !!currentContent[activeLocale][pageID][blockID] : false
+
+  if (!updatedValue) { // Delete block from all locales
+    const updatedPage = currentContent[activeLocale][pageID]
+    delete updatedPage[blockID]
+    content.update(content => {
+      for (const [ locale, pages ] of Object.entries(content)) {
+        content[locale] = {
+          ...pages,
+          [pageID]: updatedPage
+        }
+      }
+      return content
+    })
+    return
+  }
+
+  if (blockExists) {
+    content.update(content => ({
+      ...content,
+      [activeLocale]: {
+        ...content[activeLocale],
+        [pageID]: {
+          ...content[activeLocale][pageID],
+          [blockID]: updatedValue
+        }
+      }
+    }))
+  } else {
+    // create matching block in all locales
+    for(let [ locale, pages ] of Object.entries(currentContent)) {
+      content.update(c => ({
+        ...c,
+        [locale]: {
+          ...c[locale],
+          [pageID]: {
+            ...c[locale][pageID],
+            [blockID]: updatedValue
+          }
+        }
+      }))
+    }
+  }
+}
+
+export async function saveFields(newPageFields, newSiteFields) {
+  pages.update(get(activePageID), (page) => ({
+    ...page,
+    fields: cloneDeep(newPageFields),
+  }));
+  fields.set(newSiteFields);
+
+  const activeLocale = get(locale)
+  const pageID = get(activePageID)
+  const pageData = chain(
+    newPageFields.map(
+      field => ({
+        key: field.key,
+        value: field.value
+      })
+    ))
+    .keyBy("key")
+    .mapValues("value")
+    .value();
+  const siteData = chain(
+    newSiteFields.map(
+      field => ({
+        key: field.key,
+        value: field.value
+      })
+    ))
+    .keyBy("key")
+    .mapValues("value")
+    .value();
+  content.update(content => ({
+    ...content,
+    [activeLocale]: {
+      ...content[activeLocale],
+      ...siteData,
+      [pageID]: {
+        ...content[activeLocale][pageID],
+        ...pageData
+      }
+    }
+  }))
+}
+
+
+export async function addLocale(key) {
+  content.update(s => ({
+    ...s,
+    [key]: s.en
+  }))
 }

@@ -13,3 +13,5 @@ export const showKeyHint = writable(false)
 export const loadingSite = writable(true)
 
 export const onMobile = writable(false)
+
+export const locale = writable('en') 

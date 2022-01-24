@@ -1,12 +1,11 @@
 import {writable,get,derived} from 'svelte/store'
-import {DEFAULTS} from '../../const'
-
+import {Page} from '../../const'
 
 export const id = writable('index')
-export const sections = writable(DEFAULTS.page.sections)
-export const html = writable(DEFAULTS.html)
-export const css = writable(DEFAULTS.css)
-export const fields = writable(DEFAULTS.fields)
+export const sections = writable([])
+export const html = writable(Page().code.html)
+export const css = writable(Page().code.css)
+export const fields = writable(Page().fields)
 
 
 
