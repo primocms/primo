@@ -1,18 +1,20 @@
 import {unionBy, find, uniqBy} from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
-import { id, fields as pageFields, css as pageCSS, html as pageHTML, sections } from './app/activePage'
+import { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
 import { symbols } from './data/draft'
 import { convertFieldsToData, processCode, processCSS } from '../utils'
 import {DEFAULTS} from '../const'
-import type { Page, Site, Symbol } from '../const'
+import type { Page as PageType, Site, Symbol } from '../const'
+import { Page } from '../const'
 
 export function resetActivePage() {
   id.set('index')
   sections.set([])
   pageFields.set([])
-  pageHTML.set(Page().code.html)
-  pageCSS.set(Page().code.css)
+  // pageHTML.set(Page().code.html)
+  // pageCSS.set(Page().code.css)
+  pageCode.set(Page().code)
 }
 
 export function getAllFields(componentFields:any[] = [], exclude = () => true) {
@@ -67,6 +69,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   if (!page.sections) return null // ensure data fits current structure
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
+      console.log({site, page})
       const css:string = await processCSS(site.css + page.css)
       const fields:any[] = unionBy(page.fields, site.fields, "key")
       const data:object = convertFieldsToData(fields)
@@ -163,6 +166,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   `
 
   function buildBlocks(blocks:any[]): string {
+    console.log({blocks})
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type, css } = block

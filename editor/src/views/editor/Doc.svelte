@@ -8,16 +8,18 @@
     pages,
     symbols,
     fields as siteFields,
-    html as siteHTML,
-    css as siteCSS,
+    code as siteCode
+    // html as siteHTML,
+    // css as siteCSS,
   } from '../../stores/data/draft';
   import {locale} from '../../stores/app/misc'
   import {
     id as pageID,
     sections,
     fields as pageFields,
-    html as pageHTML,
-    css as pageCSS,
+    // html as pageHTML,
+    // css as pageCSS,
+    code as pageCode
   } from '../../stores/app/activePage';
   import {
     processCode,
@@ -131,19 +133,17 @@
   let htmlHead = '';
   let htmlBelow = '';
   $: setPageHTML({
-    siteHTML: $siteHTML,
-    pageHTML: $pageHTML,
-    siteCSS: $siteCSS,
-    pageCSS: $pageCSS,
+    pageCode: $pageCode,
+    siteCode: $siteCode
   });
-  async function setPageHTML({ siteHTML, pageHTML, siteCSS, pageCSS }) {
-    const css = await processCSS(siteCSS + pageCSS);
+  async function setPageHTML({ pageCode, siteCode }) {
+    const css = await processCSS(siteCode.css + pageCode.css);
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
       processCode({
         code: {
           html: `<svelte:head>
-            ${siteHTML?.head}${pageHTML?.head}
+            ${siteCode.html.head}${pageCode.html.head}
             ${wrapInStyleTags(css)}
           </svelte:head>`,
           css: '',
@@ -153,7 +153,7 @@
       }),
       processCode({
         code: {
-          html: siteHTML.below + pageHTML.below,
+          html: siteCode.html.below + pageCode.html.below,
           css: '',
           js: '',
         },
@@ -184,7 +184,6 @@
   }
 
   $: pageIsEmpty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
-
 </script>
 
 <svelte:head>

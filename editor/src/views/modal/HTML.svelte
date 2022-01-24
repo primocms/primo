@@ -2,22 +2,19 @@
   import { cloneDeep, isEqual } from 'lodash-es';
   import { Tabs } from '../../components/misc';
   import { CodeMirror } from '../../components';
-  import { convertFieldsToData } from '../../utils';
   import ModalHeader from './ModalHeader.svelte';
-  import { processors } from '../../component';
 
   import modal from '../../stores/app/modal';
-  import { getAllFields } from '../../stores/helpers';
-  import { html as pageHTML, id } from '../../stores/app/activePage';
+  import { code as pageCode } from '../../stores/app/activePage';
   import { saved } from '../../stores/app/misc';
-  import { html as siteHTML } from '../../stores/data/draft';
+  import { code as siteCode } from '../../stores/data/draft';
   import {
     updateSiteHTML,
     updateActivePageHTML,
   } from '../../stores/actions';
 
-  let localPageHTML = cloneDeep($pageHTML);
-  let localSiteHTML = cloneDeep($siteHTML);
+  let localPageHTML = cloneDeep($pageCode.html);
+  let localSiteHTML = cloneDeep($siteCode.html);
 
   const tabs = [
     {
@@ -54,8 +51,8 @@
   }}
   warn={() => {
     if (
-      !isEqual(localPageHTML, $pageHTML) ||
-      !isEqual(localSiteHTML, $siteHTML)
+      !isEqual(localPageHTML, $pageCode.html) ||
+      !isEqual(localSiteHTML, $siteCode.html)
     ) {
       const proceed = window.confirm(
         'Undrafted changes will be lost. Continue?'

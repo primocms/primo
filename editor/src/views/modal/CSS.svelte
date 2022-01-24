@@ -5,21 +5,27 @@
   import Preview from '../../components/misc/Preview.svelte';
   import ModalHeader from './ModalHeader.svelte';
 
-  import activePage, { id } from '../../stores/app/activePage';
+  import activePage from '../../stores/app/activePage';
   import { saved } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
-  import { pages } from '../../stores/actions';
+  import { updateActivePageCSS, updateSiteCSS } from '../../stores/actions';
 
-  import { css as pageCSS } from '../../stores/app/activePage';
+  import { code as pageCode } from '../../stores/app/activePage';
   import {
     site,
     pages as pagesStore,
-    css as siteCSS,
+    // css as siteCSS,
+    code as siteCode
   } from '../../stores/data/draft';
   import { buildStaticPage } from '../../stores/helpers';
 
-  let unsavedPageCSS = $pageCSS;
-  let unsavedSiteCSS = $siteCSS;
+  console.log($activePage)
+  console.log($site)
+  $: console.log($activePage)
+  $: console.log($site)
+
+  let unsavedPageCSS = $pageCode.css;
+  let unsavedSiteCSS = $siteCode.css;
 
   let preview = '';
   getNewPagePreview();
@@ -27,7 +33,10 @@
     preview = await buildStaticPage({
       page: {
         ...$activePage,
-        css: unsavedPageCSS,
+        code: {
+          ...$activePage.code,
+          css: unsavedPageCSS,
+        }
       },
       site: $site,
     });
@@ -73,11 +82,8 @@
   }
 
   async function saveStyles() {
-    $siteCSS = unsavedSiteCSS;
-    pages.update($id, (page) => ({
-      ...page,
-      css: unsavedPageCSS,
-    }));
+    updateActivePageCSS(unsavedPageCSS)
+    updateSiteCSS(unsavedPageCSS)
     $saved = false;
     modal.hide();
   }
@@ -94,8 +100,8 @@
   }}
   warn={() => {
     if (
-      !isEqual(unsavedPageCSS, $pageCSS) ||
-      !isEqual(unsavedSiteCSS, $siteCSS)
+      !isEqual(unsavedPageCSS, $pageCode.css) ||
+      !isEqual(unsavedSiteCSS, $siteCode.css)
     ) {
       const proceed = window.confirm(
         'Undrafted changes will be lost. Continue?'

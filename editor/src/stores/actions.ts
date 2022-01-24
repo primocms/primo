@@ -4,32 +4,49 @@ import { getSymbol } from './helpers'
 import { id as activePageID, sections } from './app/activePage'
 import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
-import { content, html, css, fields, timeline, undone, site as unsavedSite } from './data/draft'
+import { content, code, fields, timeline, undone, site as unsavedSite } from './data/draft'
 import type { Site, Symbol, Page } from '../const'
 
 export async function hydrateSite(data:Site): Promise<void> {
+  console.log({data})
   sections.set([])
   stores.id.set(data.id)
   stores.name.set(data.name)
   stores.pages.set(data.pages)
 
-  css.set(data.css)
-  html.set(data.html)
+  code.set(data.code)
   fields.set(data.fields)
   stores.symbols.set(data.symbols)
   stores.content.set(data.content)
 }
 
 export async function updateActivePageHTML(html:string): Promise<void> {
-  pages.update(get(id), (page) => ({
+  pages.update(get(activePageID), (page) => ({
     ...page,
-    html,
+    code: {
+      ...page.code,
+      html
+    }
+  }));
+}
+
+export async function updateActivePageCSS(css:string): Promise<void> {
+  pages.update(get(activePageID), (page) => ({
+    ...page,
+    code: {
+      ...page.code,
+      css
+    }
   }));
 }
 
 
 export async function updateSiteHTML(newSiteHTML:{ head:string, below:string }): Promise<void> {
   html.set(newSiteHTML)
+}
+
+export async function updateSiteCSS(newSiteCSS:string): Promise<void> {
+  css.set(newSiteCSS)
 }
 
 // when a Symbol is deleted from the Site Library, 
@@ -43,10 +60,7 @@ export async function emancipateInstances(symbol:Symbol): Promise<void> {
           return {
             ...block,
             symbolID: null,
-            value: {
-              ...symbol.value,
-              fields: block.value.fields
-            }
+            fields: block.fields
           }
         } else return block
       })

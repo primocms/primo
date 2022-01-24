@@ -8,20 +8,20 @@ export const pages = writable([ Page() ])
 export const fields = writable([])
 export const symbols = writable([])
 
-export const html = writable(Site().code.html)
-export const css = writable(Site().code.css)
+// export const html = writable(Site().code.html)
+// export const css = writable(Site().code.css)
+export const code = writable(Site().code)
 export const content = writable(Site().content)
 
 // conveniently get the entire site
 export const site = derived(
-  [ id, name, pages, html, css, fields, symbols, content ], 
-  ([ id, name, pages, html, css, fields, symbols, content]) => {
+  [ id, name, pages, code, fields, symbols, content ], 
+  ([ id, name, pages, code, fields, symbols, content]) => {
   return {
     id, 
     name,
     pages,
-    html,
-    css,
+    code,
     fields, 
     symbols,
     content
@@ -29,14 +29,13 @@ export const site = derived(
 })
 
 export default derived(
-  [ id, name, pages, html, css, fields, symbols, content ], 
-  ([ id, name, pages, html, css, fields, symbols, content]) => {
+  [ id, name, pages, code, fields, symbols, content ], 
+  ([ id, name, pages, code, fields, symbols, content]) => {
   return {
     id, 
     name,
     pages,
-    html,
-    css,
+    code,
     fields, 
     symbols,
     content

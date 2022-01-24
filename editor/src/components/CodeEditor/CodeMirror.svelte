@@ -22,7 +22,6 @@
   export let value = '';
   export let mode = 'html';
   export let style = '';
-  export let autofocus;
   export let debounce = false;
   export let selection = 0;
 
@@ -145,10 +144,6 @@
       state,
       parent: editorNode,
     });
-
-    if (autofocus) {
-      Editor.focus();
-    }
   });
 
   let editorNode;

@@ -259,7 +259,12 @@ export const Page = (id = createUniqueID(), name = ''): Page => ({
   ...DEFAULTS.page,
   id,
   name,
-  sections: [],
+  sections: [
+    {
+      id: createUniqueID(),
+      type: 'options',
+    }
+  ],
   code: {
     html: {
       head: '',
@@ -301,152 +306,152 @@ export const Site = ({ id, name} = { id: 'default', name: 'Default' }): Site => 
       below: ''
     },
     css: `\
-    @import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
-    
-    html {
-    
-      /* Colors */
-      --color-accent: #154BF4;
-      --color-dark: #3E3D43;
-      --color-light: #FCFCFD;
-      --color-shade: #CBCACE;
-      --color-white: #FFF;
-    
-      /* Default property values */
-      --background: var(--color-white);
-      --color: var(--color-dark);
-      --padding: 2rem;
-      --border: 1px solid var(--color-shade);
-      --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.2); 
-      --border-radius: 8px;
-      --max-width: 1200px;
-      --border-color: var(--color-shade);
-      --transition-time: 0.1s;
-      --transition: var(--transition-time) color,
-        var(--transition-time) background-color,
-          var(--transition-time) border-color,
-            var(--transition-time) text-decoration-color,
-              var(--transition-time) box-shadow, var(--transtion-time) transform;
-    
-      /* Elements */
-      --heading-color: #252428;
-      --heading-font-size: 39px;
-      --heading-line-height: 48px;
-      --heading-font-weight: 700;
-    
-      --subheading-color: #3E3D43;
-    
-      --button-color: white;
-      --button-background: var(--color-accent);
-      --button-border-radius: 4px;
-      --button-padding: 8px 20px;
-    
-    }
-    
-    .primo-page {
-      font-family: system-ui, sans-serif;
-      color: var(--color);
-      font-size: 1rem;
-      background: var(--background);
-    }
-    
-    .primo-section .primo-content {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: var(--padding);
-    
-      & > * {
-        max-width: 700px;
-      }
-    
-      img {
-        width: 100%;
-        margin: 2rem 0;
-        box-shadow: var(--box-shadow);
-        border-radius: var(--border-radius);
-      }
-    
-      p {
-        padding: 0.25rem 0;
-        line-height: 1.5;
-      }
-    
-      a {
-        text-decoration: underline;
-      }
-    
-      h1 {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-      }
-    
-      h2 {
-        font-size: 2.25rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-      }
-    
-      h3 {
-        font-size: 1.75rem; 
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-    
-      ul {
-        list-style: disc;
-        padding: 0.5rem 0;
-        padding-left: 1.25rem;
-      }
-    
-      ol {
-        list-style: decimal;
-        padding: 0.5rem 0;
-        padding-left: 1.25rem;
-      }
-    
-      blockquote {
-        padding: 2rem;
-        box-shadow: var(--box-shadow);
-        border-radius: var(--border-radius);
-      }
-    }
-    
-    .page-container {
-      max-width: var(--max-width, 1200px);
-      margin: 0 auto;
-      padding: 3rem var(--padding, 1rem); 
-    }
-    
-    .body {
-      font-size: var(--body-font-size);
-    }
-    
-    .heading {
-      font-size: var(--heading-font-size, 49px);
-      line-height: var(--heading-line-height, 1);
-      font-weight: var(--heading-font-weight, 700);
-      color: var(--heading-color, #252428);
-    }
-    
-    .button {
-      color: var(--color-white, white);
-      background: var(--color-accent, #154BF4);
-      border: 2px solid transparent;
-      border-radius: 5px;
-      padding: 8px 20px;
-      transition: var(--transition);
-    
-      &:hover {
-        box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
-      }
-    
-      &.inverted {
-        background: var(--color-white);
-        color: var(--color-accent);
-        border-color: var(--color-accent);
-      }
-    }
+@import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
+
+html {
+
+  /* Colors */
+  --color-accent: #154BF4;
+  --color-dark: #3E3D43;
+  --color-light: #FCFCFD;
+  --color-shade: #CBCACE;
+  --color-white: #FFF;
+
+  /* Default property values */
+  --background: var(--color-white);
+  --color: var(--color-dark);
+  --padding: 2rem;
+  --border: 1px solid var(--color-shade);
+  --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.2); 
+  --border-radius: 8px;
+  --max-width: 1200px;
+  --border-color: var(--color-shade);
+  --transition-time: 0.1s;
+  --transition: var(--transition-time) color,
+    var(--transition-time) background-color,
+      var(--transition-time) border-color,
+        var(--transition-time) text-decoration-color,
+          var(--transition-time) box-shadow, var(--transtion-time) transform;
+
+  /* Elements */
+  --heading-color: #252428;
+  --heading-font-size: 39px;
+  --heading-line-height: 48px;
+  --heading-font-weight: 700;
+
+  --subheading-color: #3E3D43;
+
+  --button-color: white;
+  --button-background: var(--color-accent);
+  --button-border-radius: 4px;
+  --button-padding: 8px 20px;
+
+}
+
+.primo-page {
+  font-family: system-ui, sans-serif;
+  color: var(--color);
+  font-size: 1rem;
+  background: var(--background);
+}
+
+.primo-section .primo-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--padding);
+
+  & > * {
+    max-width: 700px;
+  }
+
+  img {
+    width: 100%;
+    margin: 2rem 0;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+  }
+
+  p {
+    padding: 0.25rem 0;
+    line-height: 1.5;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem; 
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  ul {
+    list-style: disc;
+    padding: 0.5rem 0;
+    padding-left: 1.25rem;
+  }
+
+  ol {
+    list-style: decimal;
+    padding: 0.5rem 0;
+    padding-left: 1.25rem;
+  }
+
+  blockquote {
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+  }
+}
+
+.page-container {
+  max-width: var(--max-width, 1200px);
+  margin: 0 auto;
+  padding: 3rem var(--padding, 1rem); 
+}
+
+.body {
+  font-size: var(--body-font-size);
+}
+
+.heading {
+  font-size: var(--heading-font-size, 49px);
+  line-height: var(--heading-line-height, 1);
+  font-weight: var(--heading-font-weight, 700);
+  color: var(--heading-color, #252428);
+}
+
+.button {
+  color: var(--color-white, white);
+  background: var(--color-accent, #154BF4);
+  border: 2px solid transparent;
+  border-radius: 5px;
+  padding: 8px 20px;
+  transition: var(--transition);
+
+  &:hover {
+    box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  &.inverted {
+    background: var(--color-white);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+}
     
     `,
     js: ''

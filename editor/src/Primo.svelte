@@ -11,7 +11,7 @@
   const dispatch = createEventDispatcher();
 
   import { id as pageId } from './stores/app/activePage';
-  import { sections, fields, html, css } from './stores/app/activePage';
+  import { sections, fields, code } from './stores/app/activePage';
   import { userRole } from './stores/app';
   import {
     saved,
@@ -78,8 +78,7 @@
     function setPageStore(page) {
       sections.set(page.sections);
       fields.set(page.fields);
-      html.set(page.html);
-      css.set(page.css);
+      code.set(page.code);
     }
   }
 

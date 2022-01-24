@@ -10,10 +10,11 @@
     processCode,
     wrapInStyleTags,
   } from '../../../utils';
-  import { html as siteHTML, css as siteCSS } from '../../../stores/data/draft';
+  import { code as siteCode } from '../../../stores/data/draft';
   import {
-    html as pageHTML,
-    css as pageCSS,
+    // html as pageHTML,
+    // css as pageCSS,
+    code as pageCode
   } from '../../../stores/app/activePage';
 
   export let titleEditable = true
@@ -44,11 +45,11 @@
         ...value,
         html: `
         <svelte:head>
-          ${$siteHTML.head + $pageHTML.head}
-          ${wrapInStyleTags($siteCSS + $pageCSS)}
+          ${$siteCode.html.head + $pageCode.html.head}
+          ${wrapInStyleTags($siteCode.css + $pageCode.css)}
         </svelte:head>
         ${value.html}
-        ${$siteHTML.below + $pageHTML.below}
+        ${$siteCode.html.below + $pageCode.html.below}
         `,
       },
       data,

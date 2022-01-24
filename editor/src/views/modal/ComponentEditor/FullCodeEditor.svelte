@@ -96,17 +96,14 @@
     </div>
     {#if activeTab === 0}
       <CodeMirror
-        autofocus
         mode="html"
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => (activeTab = detail)}
         on:change={() => dispatch('htmlChange')}
-        on:save={() => dispatch('save')}
-        docs="https://handlebarsjs.com/guide/" />
+        on:save={() => dispatch('save')} />
     {:else if activeTab === 1}
       <CodeMirror
-        autofocus
         on:tab-switch={({ detail }) => (activeTab = detail)}
         bind:selection={selections['css']}
         bind:value={css}
@@ -115,7 +112,6 @@
         on:save={() => dispatch('save')} />
     {:else}
       <CodeMirror
-        autofocus
         on:tab-switch={({ detail }) => (activeTab = detail)}
         bind:selection={selections['js']}
         bind:value={js}
@@ -135,7 +131,6 @@
       <CodeMirror
         autofocus
         mode="html"
-        {disabled}
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => toggleTab(detail)}
@@ -155,7 +150,6 @@
         bind:selection={selections['css']}
         bind:value={css}
         mode="css"
-        {disabled}
         on:change={() => dispatch('cssChange')}
         on:save />
     </div>
@@ -171,7 +165,6 @@
         bind:selection={selections['js']}
         bind:value={js}
         mode="javascript"
-        {disabled}
         on:change={() => dispatch('jsChange')}
         on:save />
     </div>

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
@@ -21,11 +21,12 @@
   } from '../../../utils';
   import { locale } from '../../../stores/app/misc';
 
-  import { content, css as siteCSS, html as siteHTML } from '../../../stores/data/draft';
+  import { content, code as siteCode } from '../../../stores/data/draft';
   import {
     id as pageID,
-    html as pageHTML,
-    css as pageCSS,
+    // html as pageHTML,
+    // css as pageCSS,
+    code as pageCode
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
@@ -55,7 +56,7 @@
   $: $locale, setupComponent()
   function setupComponent() {
     localComponent = getFieldValues(localComponent)
-    fields = localComponent.value.fields
+    fields = localComponent.fields
   }
 
   function getFieldValues(component) {
@@ -64,7 +65,7 @@
       ...component,
       value: {
         ...component.value,
-        fields: component.value.fields.map(field => ({
+        fields: component.fields.map(field => ({
           ...field,
           value: component.content?.[$locale]?.[field.key] || $content[$locale][$pageID][component.id][field.key]
         }))
@@ -120,7 +121,7 @@ function saveLocalValue(property, value) {
     disableSave = false;
 
     async function compile() {
-      const parentCSS = await processCSS($siteCSS + $pageCSS)
+      const parentCSS = await processCSS($siteCode.css + $pageCode.css)
       const timeout = setTimeout(() => {
         throttling = true;
       }, 100);
@@ -128,12 +129,12 @@ function saveLocalValue(property, value) {
         code: {
           html: `${html}
       <svelte:head>
-        ${$pageHTML.head}
-        ${$siteHTML.head}
+        ${$pageCode.html.head}
+        ${$siteCode.html.head}
         ${wrapInStyleTags(parentCSS)}
       </svelte:head>
-      ${$pageHTML.below}
-      ${$siteHTML.below}
+      ${$pageCode.html.below}
+      ${$siteCode.html.below}
       `,
           css,
           js,
@@ -429,7 +430,6 @@ function saveLocalValue(property, value) {
         {:else if !disabled && activeTab === tabs[0]}
           <FullCodeEditor
             variants="flex-1"
-            {disabled}
             bind:html={rawHTML}
             bind:css={rawCSS}
             bind:js={rawJS}
