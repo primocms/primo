@@ -24,8 +24,6 @@
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
     id as pageID,
-    // html as pageHTML,
-    // css as pageCSS,
     code as pageCode
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
@@ -51,34 +49,67 @@
     },
   };
 
-  let localComponent = getFieldValues(component)
+  let localComponent = cloneDeep(component)
+  let localContent = cloneDeep($content)
 
   $: $locale, setupComponent()
   function setupComponent() {
-    localComponent = getFieldValues(localComponent)
-    fields = localComponent.fields
+    localComponent = getComponentFieldValues(localComponent)
+    fields = getFieldValues(localComponent.fields)
   }
 
-  function getFieldValues(component) {
-    console.log(component)
+  function getComponentFieldValues(component) {
     return cloneDeep({
       ...component,
-      value: {
-        ...component.value,
-        fields: component.fields.map(field => ({
-          ...field,
-          value: component.content?.[$locale]?.[field.key] || $content[$locale][$pageID][component.id][field.key]
-        }))
-      },
-      content: component.content || {}
+      fields: getFieldValues(component.fields)
     })
   }
 
+  function getFieldValues(fields) {
+    return fields.map(field => ({
+      ...field,
+      value: localContent[$locale]?.[$pageID][component.id]?.[field.key] || (
+        field.type === 'repeater' ? [] : (
+          field.type === 'group' ? {} : ''
+        )
+      )
+    }))
+  }
 
-function saveLocalValue(property, value) {
-    localComponent.value[property] = value;
+  // TODO: 
+  // Refactor template to use svelte:component (to enable nested repeaters)
+  // Ensure component is not recompiled when changing content
+  // Configure saving component & getting content out of fields
+  // Configure modifying symbols & adding fake placeholder content
+
+  $: console.log({
+    localComponent,
+    localContent
+  })
+
+  function saveLocalContent() {
+    // TODO: make this simpler w/ lodash method
+    localContent = {
+      ...localContent,
+      [$locale]: {
+        ...localContent[$locale],
+        [$pageID]: {
+          ...localContent[$locale][$pageID],
+          [component.id]: {
+            ...localContent[$locale][$pageID][component.id],
+            ..._chain(fields).keyBy('key').mapValues('value').value()
+          }
+        }
+      }
+    }
+  }
+
+  function saveLocalValue(property:'html'|'css'|'js'|'fields', value:any) {
     if (property === 'fields') {
-      localComponent['content'][$locale] = _chain(value).keyBy('key').mapValues('value').value()
+      localComponent.fields = getFieldValues(value)
+      fields = getFieldValues(value)
+    } else {
+      localComponent.code[property] = value
     }
   }
 
@@ -98,7 +129,10 @@ function saveLocalValue(property, value) {
 
   let loading = false;
 
-  let fields = localComponent.value.fields;
+  let rawHTML = localComponent.code.html;
+  let rawCSS = localComponent.code.css;
+  let rawJS = localComponent.code.js;
+  let fields = localComponent.fields;
 
   let componentApp;
   let error;
@@ -106,25 +140,19 @@ function saveLocalValue(property, value) {
     html: rawHTML,
     css: rawCSS,
     js: rawJS,
+    fields
   });
 
-  let throttling = false;
-  async function compileComponentCode({ html, css, js }) {
+  let disableSave = false;
+  async function compileComponentCode({ html, css, js, fields }) {
     disableSave = true;
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
-    if (throttling) {
-      quickDebounce([compile]);
-    } else {
-      await compile();
-    }
+    await compile();
     disableSave = false;
 
     async function compile() {
       const parentCSS = await processCSS($siteCode.css + $pageCode.css)
-      const timeout = setTimeout(() => {
-        throttling = true;
-      }, 100);
       const res = await processCode({
         code: {
           html: `${html}
@@ -142,8 +170,6 @@ function saveLocalValue(property, value) {
         data,
         buildStatic: false,
       });
-      throttling = false;
-      clearTimeout(timeout);
       error = res.error;
       componentApp = res.js;
       saveLocalValue('html', html);
@@ -152,61 +178,15 @@ function saveLocalValue(property, value) {
     }
   }
 
-  let rawHTML = localComponent.value.html;
-  let rawCSS = localComponent.value.css;
-  let rawJS = localComponent.value.js;
-
-  let isSingleUse = false;
-  $: isSingleUse =
-    localComponent.type === 'component' && localComponent.symbolID === null;
-  function convertToSymbol() {
-    const newSymbol = {
-      ...localComponent,
-      id: createUniqueID(),
-      type: 'symbol',
-    };
-    delete newSymbol.symbolID;
-    symbols.create(newSymbol);
-    localComponent.symbolID = newSymbol.id;
-    saveComponent();
-    loadSymbol();
-  }
-
-  function separateFromSymbol() {
-    localComponent.symbolID = null;
-    disabled = false;
-  }
-
-  async function loadSymbol() {
-    disabled = false;
-    const symbol = getSymbol(localComponent.symbolID);
-    localComponent = cloneDeep(symbol);
-    // compileCSS(symbol.value.css); // workaround for styles breaking
-    modal.show('COMPONENT_EDITOR', {
-      component: symbol,
-      header: {
-        title: `Edit ${symbol.title || 'Component'}`,
-        icon: 'fas fa-th-large',
-        button: {
-          icon: 'fas fa-check',
-          label: `Draft`,
-          onclick: async (symbol) => {
-            loading = true;
-            symbols.update(symbol);
-            modal.hide();
-          },
-        },
-      },
-    });
-  }
-
   function addNewField() {
-    fields = [...fields, Field()];
-    saveLocalValue('fields', fields);
+    saveLocalValue('fields', [
+      ...fields,
+      Field()
+    ]);
   }
 
   function addSubField(id) {
-    fields = fields.map((field) => ({
+    saveLocalValue('fields', fields.map((field) => ({
       ...field,
       fields:
         field.id === id
@@ -215,13 +195,11 @@ function saveLocalValue(property, value) {
               Field(),
             ]
           : field.fields,
-    }));
-    refreshFields();
-    saveLocalValue('fields', fields);
+    })));
   }
 
   function deleteSubfield(fieldId, subfieldId) {
-    fields = fields.map((field) =>
+    saveLocalValue('fields', fields.map((field) =>
       field.id !== fieldId
         ? field
         : {
@@ -230,51 +208,11 @@ function saveLocalValue(property, value) {
               (subfield) => subfield.id !== subfieldId
             ),
           }
-    );
-    refreshFields();
-    saveLocalValue('fields', fields);
+    ));
   }
 
   function deleteField(id) {
-    fields = fields.filter((field) => field.id !== id);
-    refreshFields();
-    saveLocalValue('fields', fields);
-  }
-
-  function refreshFields() {
-    // necessary to re-render field values in preview (since we're mutating `field`)
-    fields = fields.filter(Boolean);
-    saveLocalValue('fields', fields);
-    compileComponentCode({
-      html: rawHTML,
-      css: rawCSS,
-      js: rawJS,
-    });
-  }
-
-  function setPlaceholderValues() {
-    fields = fields.map((f) =>
-      !f.value
-        ? {
-            ...f,
-            value: getFakeValue(f.type),
-          }
-        : f
-    );
-    refreshFields();
-  }
-
-  function getFakeValue(type) {
-    return (
-      {
-        text: '',
-        content: '',
-        image: {
-          url: 'https://source.unsplash.com/900x600',
-          alt: '',
-        },
-      }[type] || ''
-    );
+    saveLocalValue('fields', fields.filter((field) => field.id !== id));
   }
 
   const tabs = [
@@ -291,10 +229,6 @@ function saveLocalValue(property, value) {
   ];
 
   let activeTab = tabs[0];
-
-  let disabled = false;
-  $: disabled = !!localComponent.symbolID;
-  let disableSave = false;
 
   function getFieldComponent(field) {
     const fieldType = find(allFieldTypes, ['id', field.type]);
@@ -344,14 +278,7 @@ function saveLocalValue(property, value) {
         ],
       }[direction];
     }
-    refreshFields();
-
-    fields = updatedFields;
-  }
-
-  // Immediately load the symbol (refactor TODO)
-  $: if (localComponent.symbolID && $showingIDE) {
-    loadSymbol();
+    saveLocalValue('fields', updatedFields)
   }
 
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
@@ -360,6 +287,10 @@ function saveLocalValue(property, value) {
   function validateFieldKey(key) {
     // replace dash and space with underscore
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
+  }
+
+  function refreshPreview() {
+    fields = fields.filter(Boolean)
   }
 
   function saveComponent() {
@@ -379,12 +310,6 @@ function saveLocalValue(property, value) {
     } else return true;
   }}
   button={{ ...header.button, onclick: saveComponent, disabled: disableSave }}>
-  {#if isSingleUse}
-    <button class="convert" on:click={convertToSymbol}>
-      <i class="fas fa-clone" />
-      <span class="hidden md:inline text-gray-200 font-semibold">Add to Library</span>
-    </button>
-  {/if}
 </ModalHeader>
 
 <main>
@@ -398,36 +323,8 @@ function saveLocalValue(property, value) {
     }}>
     <div slot="left" lang={$locale}>
       {#if $showingIDE}
-        {#if !disabled}
-          <Tabs {tabs} bind:activeTab variants="mb-1" />
-        {/if}
-        {#if disabled && activeTab === tabs[0]}
-          <div class="flex flex-wrap">
-            <button
-              style="min-width: 200px"
-              on:click={loadSymbol}
-              id="edit-symbol"
-              title="Edit the Component">
-              <span class="flex items-center justify-center">
-                Edit Component
-              </span>
-            </button>
-            <button
-              style="min-width: 200px"
-              class="m-1 border-2 border-primored py-6 rounded text-gray-100 font-semibold hover:bg-primored"
-              on:click={separateFromSymbol}
-              title="Separate the Component instance from its Component"
-              id="emancipate-symbol">
-              <span class="flex items-center justify-center">
-                <!-- <svg class="mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.5 2a3.5 3.5 0 101.665 6.58L8.585 10l-1.42 1.42a3.5 3.5 0 101.414 1.414l8.128-8.127a1 1 0 00-1.414-1.414L10 8.586l-1.42-1.42A3.5 3.5 0 005.5 2zM4 5.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm0 9a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
-              <path d="M12.828 11.414a1 1 0 00-1.414 1.414l3.879 3.88a1 1 0 001.414-1.415l-3.879-3.879z" />
-            </svg> -->
-                Emancipate
-              </span>
-            </button>
-          </div>
-        {:else if !disabled && activeTab === tabs[0]}
+        <Tabs {tabs} bind:activeTab variants="mb-1" />
+        {#if activeTab === tabs[0]}
           <FullCodeEditor
             variants="flex-1"
             bind:html={rawHTML}
@@ -437,19 +334,16 @@ function saveLocalValue(property, value) {
         {:else if activeTab === tabs[1]}
           <div class="fields">
             {#each fields as field, i}
-              <Card id="field-{i}" variants="field-item">
+              <Card id="field-{i}">
                 <EditField
                   on:delete={() => deleteField(field.id)}
                   isFirst={i === 0}
                   isLast={i === fields.length - 1}
-                  {disabled}
                   minimal={field.type === 'info'}
                   on:move={({ detail: direction }) => moveField( { i, direction } )}>
                   <select
                     bind:value={field.type}
-                    slot="type"
-                    on:blur={setPlaceholderValues}
-                    {disabled}>
+                    slot="type">
                     {#each allFieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
@@ -460,18 +354,14 @@ function saveLocalValue(property, value) {
                     type="text"
                     placeholder="Heading"
                     bind:value={field.label}
-                    slot="label"
-                    {disabled}
-                    on:focus={setPlaceholderValues} />
+                    slot="label" />
                   <input
                     class="input key-input"
                     type="text"
                     placeholder="main_heading"
                     bind:value={field.key}
                     on:input={() => (field.key = validateFieldKey(field.key))}
-                    slot="key"
-                    {disabled}
-                    on:input={refreshFields} />
+                    slot="key" />
                 </EditField>
                 {#if field.type === 'group'}
                   {#if field.fields}
@@ -480,25 +370,14 @@ function saveLocalValue(property, value) {
                         minimal={field.type === 'info'}
                         child={true}
                         on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                        on:delete={() => deleteSubfield(field.id, subfield.id)}
-                        {disabled}>
+                        on:delete={() => deleteSubfield(field.id, subfield.id)}>
                         <select
                           bind:value={subfield.type}
-                          slot="type"
-                          {disabled}>
+                          slot="type">
                           {#each $fieldTypes as field}
                             <option value={field.id}>{field.label}</option>
                           {/each}
                         </select>
-                        <!-- <select
-                          value={subfield.type}
-                          on:change={({ target }) => updateSubfield( field, { ...subfield, type: target.value } )}
-                          slot="type"
-                          {disabled}>
-                          {#each $fieldTypes as field}
-                            <option value={field.id}>{field.label}</option>
-                          {/each}
-                        </select> -->
                         <textarea
                           slot="main"
                           class="info"
@@ -508,22 +387,19 @@ function saveLocalValue(property, value) {
                           type="text"
                           placeholder="Heading"
                           bind:value={subfield.label}
-                          slot="label"
-                          {disabled} />
+                          slot="label" />
                         <input
                           class="key-input"
                           type="text"
                           placeholder="main_heading"
                           bind:value={subfield.key}
-                          slot="key"
-                          {disabled} />
+                          slot="key" />
                       </EditField>
                     {/each}
                   {/if}
                   <button
                     class="field-button subfield-button"
-                    on:click={() => addSubField(field.id)}
-                    {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+                    on:click={() => addSubField(field.id)}><i class="fas fa-plus mr-2" />Create Subfield</button>
                 {:else if field.type === 'repeater'}
                   {#if field.fields}
                     {#each field.fields as subfield, childIndex (subfield.id)}
@@ -531,12 +407,10 @@ function saveLocalValue(property, value) {
                         minimal={field.type === 'info'}
                         child={true}
                         on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                        on:delete={() => deleteSubfield(field.id, subfield.id)}
-                        {disabled}>
+                        on:delete={() => deleteSubfield(field.id, subfield.id)}>
                         <select
                           bind:value={subfield.type}
-                          slot="type"
-                          {disabled}>
+                          slot="type">
                           {#each $fieldTypes as field}
                             <option value={field.id}>{field.label}</option>
                           {/each}
@@ -550,26 +424,23 @@ function saveLocalValue(property, value) {
                           type="text"
                           placeholder="Heading"
                           bind:value={subfield.label}
-                          slot="label"
-                          {disabled} />
+                          slot="label" />
                         <input
                           class="key-input"
                           type="text"
                           placeholder="main_heading"
                           bind:value={subfield.key}
-                          slot="key"
-                          {disabled} />
+                          slot="key" />
                       </EditField>
                     {/each}
                   {/if}
                   <button
                     class="field-button subfield-button"
-                    on:click={() => addSubField(field.id)}
-                    {disabled}><i class="fas fa-plus mr-2" />Create Subfield</button>
+                    on:click={() => addSubField(field.id)}><i class="fas fa-plus mr-2" />Create Subfield</button>
                 {/if}
               </Card>
             {/each}
-            <PrimaryButton on:click={addNewField} {disabled}>
+            <PrimaryButton on:click={addNewField}>
               <i class="fas fa-plus" />Create a Field
             </PrimaryButton>
           </div>
@@ -584,9 +455,12 @@ function saveLocalValue(property, value) {
                 class:repeater={field.key === 'repeater'}
                 id="field-{field.key}">
                 <svelte:component
+                  on:input={() => {
+                    refreshPreview()
+                    saveLocalContent()
+                  }}
                   this={getFieldComponent(field)}
-                  {field}
-                  on:input={refreshFields} />
+                  {field} />
               </div>
             {:else if getFieldComponent(field)}
               <div class="invalid-field">
@@ -608,8 +482,7 @@ function saveLocalValue(property, value) {
         {loading}
         {componentApp}
         {fields}
-        {error}
-        id={localComponent.id} />
+        {error} />
     </div>
   </HSplitPane>
 </main>

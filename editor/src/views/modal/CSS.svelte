@@ -117,7 +117,6 @@
       <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} />
       {#if primaryTab.id === 'page'}
         <CodeMirror
-          autofocus
           bind:value={unsavedPageCSS}
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
@@ -127,7 +126,6 @@
         />
       {:else if primaryTab.id === 'site'}
         <CodeMirror
-          autofocus
           bind:value={unsavedSiteCSS}
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"

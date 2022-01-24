@@ -129,14 +129,12 @@
         <span>HTML</span>
       </button>
       <CodeMirror
-        autofocus
         mode="html"
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => toggleTab(detail)}
         on:change={() => dispatch('htmlChange')}
-        on:save
-        docs="https://handlebarsjs.com/guide/" />
+        on:save />
     </div>
     <div slot="center" class="tabs">
       <button
@@ -145,7 +143,6 @@
         <span>CSS</span>
       </button>
       <CodeMirror
-        autofocus
         on:tab-switch={({ detail }) => toggleTab(detail)}
         bind:selection={selections['css']}
         bind:value={css}
@@ -160,7 +157,6 @@
         <span>JS</span>
       </button>
       <CodeMirror
-        autofocus
         on:tab-switch={({ detail }) => toggleTab(detail)}
         bind:selection={selections['js']}
         bind:value={js}

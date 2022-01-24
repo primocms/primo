@@ -146,6 +146,7 @@
     modal.show('COMPONENT_EDITOR', {
       component: block,
       header: {
+        showSwitch: true,
         title: 'Edit Component',
         icon: 'fas fa-code',
         button: {
