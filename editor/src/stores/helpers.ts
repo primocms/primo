@@ -9,10 +9,10 @@ import type { Page, Site, Symbol } from '../const'
 
 export function resetActivePage() {
   id.set('index')
-  sections.set(DEFAULTS.page.sections)
-  pageFields.set(DEFAULTS.fields)
-  pageHTML.set(DEFAULTS.html)
-  pageCSS.set(DEFAULTS.css)
+  sections.set([])
+  pageFields.set([])
+  pageHTML.set(Page().code.html)
+  pageCSS.set(Page().code.css)
 }
 
 export function getAllFields(componentFields:any[] = [], exclude = () => true) {
@@ -165,15 +165,32 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   function buildBlocks(blocks:any[]): string {
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
-      const { id, type } = block
+      const { id, type, css } = block
+      const html = block.html || site.content.en[page.id][id] || ''
+
+      // if content type, attach module to replace html w/ downloaded replacement
       return `
-        ${block.css ? `<style>${block.css}</style>` : ``}
-        <div class="primo-section has-${type}" id="${id}">
-          <div class="primo-${type}">
-            ${block.html || ''}
-          </div>
+      ${css ? `<style>${css}</style>` : ``}
+      <div class="primo-section has-${type}" id="${id}">
+        <div class="primo-${type}">
+          ${html}
         </div>
-      `
+      </div>
+      ${
+        type === 'content' ?
+        `
+        <script type="module" async>
+          // import active language json, hydrate block
+          const urlSearchParams = new URLSearchParams(window.location.search);
+          const {lang = 'en'} = Object.fromEntries(urlSearchParams.entries());
+          const file = '/' + lang + '.json'
+          fetch(file).then(res => res.json()).then(content => {
+            document.querySelector('#${id} > .primo-${type}').innerHTML = content['${page.id}']['${block.id}']
+          })
+        </script>
+        ` : ''
+      }
+    `
     }).join('')
   }
 
@@ -183,15 +200,22 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
       return separateModules ? 
         `<script type="module" async>
           import App from './_modules/${block.symbol}.js';
-          new App({
-            target: document.querySelector('#${id}'),
-            hydrate: true
-          });
+          const urlSearchParams = new URLSearchParams(window.location.search);
+          const {lang = 'en'} = Object.fromEntries(urlSearchParams.entries());
+          const file = '/' + lang + '.json'
+          fetch(file).then(res => res.json()).then(content => {
+            new App({
+              target: document.querySelector('#${block.id}'),
+              hydrate: true,
+              props: content['${page.id}']['${block.id}']
+            });
+          })
+          // fetch primo.json, extract language json, pass into app, listen to localstorage changes for locale change
         </script>`
       : `<script type="module" async>
-            const App = ${block.js}
+            const App = ${block.js};
             new App({
-              target: document.querySelector('#${id}'),
+              target: document.querySelector('#${block.id}'),
               hydrate: true
             });
         </script>`

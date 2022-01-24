@@ -1,5 +1,5 @@
 import { get, writable, derived } from 'svelte/store';
-import { Page, DEFAULTS } from '../../const'
+import { Page, Site } from '../../const'
 import {isEqual} from 'lodash-es'
 
 export const id = writable('')
@@ -8,13 +8,14 @@ export const pages = writable([ Page() ])
 export const fields = writable([])
 export const symbols = writable([])
 
-export const html = writable(DEFAULTS.html)
-export const css = writable(DEFAULTS.css)
+export const html = writable(Site().code.html)
+export const css = writable(Site().code.css)
+export const content = writable(Site().content)
 
 // conveniently get the entire site
 export const site = derived(
-  [ id, name, pages, html, css, fields, symbols ], 
-  ([ id, name, pages, html, css, fields, symbols]) => {
+  [ id, name, pages, html, css, fields, symbols, content ], 
+  ([ id, name, pages, html, css, fields, symbols, content]) => {
   return {
     id, 
     name,
@@ -22,7 +23,23 @@ export const site = derived(
     html,
     css,
     fields, 
-    symbols
+    symbols,
+    content
+  }
+})
+
+export default derived(
+  [ id, name, pages, html, css, fields, symbols, content ], 
+  ([ id, name, pages, html, css, fields, symbols, content]) => {
+  return {
+    id, 
+    name,
+    pages,
+    html,
+    css,
+    fields, 
+    symbols,
+    content
   }
 })
 

@@ -1,12 +1,10 @@
-import { find, last, cloneDeep, some } from 'lodash-es'
+import { find, last, cloneDeep, some, chain } from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
-import { id, sections } from './app/activePage'
-import { saved } from './app/misc'
-import { html, css, fields } from './data/draft'
+import { id as activePageID, sections } from './app/activePage'
+import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
-import { timeline, undone } from './data/draft'
-import {DEFAULTS} from '../const'
+import { content, html, css, fields, timeline, undone, site as unsavedSite } from './data/draft'
 import type { Site, Symbol, Page } from '../const'
 
 export async function hydrateSite(data:Site): Promise<void> {
@@ -15,10 +13,11 @@ export async function hydrateSite(data:Site): Promise<void> {
   stores.name.set(data.name)
   stores.pages.set(data.pages)
 
-  css.set(data.css || DEFAULTS.css)
-  html.set(data.html || DEFAULTS.html)
+  css.set(data.css)
+  html.set(data.html)
   fields.set(data.fields)
   stores.symbols.set(data.symbols)
+  stores.content.set(data.content)
 }
 
 export async function updateActivePageHTML(html:string): Promise<void> {
@@ -59,7 +58,7 @@ export async function emancipateInstances(symbol:Symbol): Promise<void> {
   );
   stores.pages.set(updatedPages)
 
-  const activePageSections = find(updatedPages, ['id', get(id)])['sections']
+  const activePageSections = find(updatedPages, ['id', get(activePageID)])['sections']
   sections.set(activePageSections)
 }
 
@@ -146,6 +145,98 @@ export const pages = {
     )
     stores.pages.set(newPages)
   }
+}
+
+export async function updateContent(blockID, updatedValue, activeLocale = get(locale)) {
+  const currentContent = get(content)
+  const pageID = get(activePageID)
+  const localeExists = !!currentContent[activeLocale]
+  const pageExists = localeExists ? !!currentContent[activeLocale][pageID] : false
+  const blockExists = pageExists ? !!currentContent[activeLocale][pageID][blockID] : false
+
+  if (!updatedValue) { // Delete block from all locales
+    const updatedPage = currentContent[activeLocale][pageID]
+    delete updatedPage[blockID]
+    content.update(content => {
+      for (const [ locale, pages ] of Object.entries(content)) {
+        content[locale] = {
+          ...pages,
+          [pageID]: updatedPage
+        }
+      }
+      return content
+    })
+    return
+  }
+
+  if (blockExists) {
+    content.update(content => ({
+      ...content,
+      [activeLocale]: {
+        ...content[activeLocale],
+        [pageID]: {
+          ...content[activeLocale][pageID],
+          [blockID]: updatedValue
+        }
+      }
+    }))
+  } else {
+    // create matching block in all locales
+    for(let [ locale, pages ] of Object.entries(currentContent)) {
+      content.update(c => ({
+        ...c,
+        [locale]: {
+          ...c[locale],
+          [pageID]: {
+            ...c[locale][pageID],
+            [blockID]: updatedValue
+          }
+        }
+      }))
+    }
+  }
+}
+
+export async function saveFields(newPageFields, newSiteFields) {
+  pages.update(get(activePageID), (page) => ({
+    ...page,
+    fields: cloneDeep(newPageFields),
+  }));
+  fields.set(newSiteFields);
+
+  const activeLocale = get(locale)
+  const pageID = get(activePageID)
+  const pageData = chain(
+    newPageFields.map(
+      field => ({
+        key: field.key,
+        value: field.value
+      })
+    ))
+    .keyBy("key")
+    .mapValues("value")
+    .value();
+  const siteData = chain(
+    newSiteFields.map(
+      field => ({
+        key: field.key,
+        value: field.value
+      })
+    ))
+    .keyBy("key")
+    .mapValues("value")
+    .value();
+  content.update(content => ({
+    ...content,
+    [activeLocale]: {
+      ...content[activeLocale],
+      ...siteData,
+      [pageID]: {
+        ...content[activeLocale][pageID],
+        ...pageData
+      }
+    }
+  }))
 }
 
 
