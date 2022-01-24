@@ -1,6 +1,7 @@
 <script>
   import modal from '../../stores/app/modal';
   import { showingIDE, userRole } from '../../stores/app/misc';
+  import LocaleSelector from '../../views/editor/LocaleSelector.svelte'
 
   export let variants = '';
   export let icon = '';
@@ -43,6 +44,9 @@
   </div>
   <div class="right-container">
     <slot />
+     {#if !$showingIDE}
+      <LocaleSelector align="left" />
+    {/if}
     {#if $userRole === 'developer' && $modal.showSwitch}
       <div class="content xyz-in">
         <label class="switch">

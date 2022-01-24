@@ -59,7 +59,6 @@
     border-bottom: 1px solid var(--primo-color-codeblack);
 
     .buttons {
-      max-width: var(--max-width);
       padding: 0.5rem var(--padding, 1rem);
       margin: 0 auto;
       display: flex;

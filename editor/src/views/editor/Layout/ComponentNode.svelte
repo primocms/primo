@@ -1,15 +1,26 @@
 <script>
-  import _, { isEqual, differenceWith } from 'lodash-es';
+  import _, { isEqual, differenceWith, keyBy } from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
-  import { getAllFields } from '../../../stores/helpers';
-  import { convertFieldsToData, processCode } from '../../../utils';
-  import { fields as pageFields } from '../../../stores/app/activePage';
-  import { fields as siteFields } from '../../../stores/data/draft';
+  import { processCode } from '../../../utils';
+  import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
+  import site, { fields as siteFields } from '../../../stores/data/draft';
+  import {locale} from '../../../stores/app/misc'
 
   const dispatch = createEventDispatcher();
 
   export let block;
   export let node;
+
+  $: activeLocale = $site.content[$locale]
+
+  $: componentContent = activeLocale?.[$pageID]?.[block.id] || {}
+  $: pageContent = activeLocale[pageID]
+  $: siteContent = activeLocale
+
+  $: componentData = buildData(componentContent, block.value.fields)
+
+  $: allContent = [ componentContent, pageContent, siteContent ]
+  $: allFields = [ block.value.fields, $pageFields, $siteFields ]
 
   let html = '';
   let css = '';
@@ -28,11 +39,9 @@
       html = rawCode.html;
       css = rawCode.css;
       js = rawCode.js;
-      const data = convertFieldsToData(getAllFields(block.value.fields));
-      const dataWithFixedImages = await replaceImagesWithBase64(data);
       const res = await processCode({
         code: rawCode,
-        data: dataWithFixedImages,
+        data: componentData,
         buildStatic: false,
       });
       if (res.error) {
@@ -46,115 +55,29 @@
         const { default: App } = await import(/* @vite-ignore */ url);
         component = new App({
           target: node,
-          props: dataWithFixedImages,
+          props: componentData,
         });
       }
     }
   }
 
-  let cachedBlockFields = [];
-  let cachedPageFields = [];
-  let cachedSiteFields = [];
-  $: hydrateComponent(block.value.fields, $pageFields, $siteFields);
-  async function hydrateComponent(blockFields, pageFields, siteFields) {
-    if (!component) return;
-    const blockFieldsChanged =
-      differenceWith(blockFields, cachedBlockFields, isEqual).length > 0;
-    const pageFieldsChanged =
-      differenceWith(pageFields, cachedPageFields, isEqual).length > 0;
-    const siteFieldsChanged =
-      differenceWith(siteFields, cachedSiteFields, isEqual).length > 0;
-
-    if (blockFieldsChanged || pageFieldsChanged || siteFieldsChanged) {
-      cachedBlockFields = blockFields;
-      cachedPageFields = pageFields;
-      cachedSiteFields = siteFields;
-      const data = convertFieldsToData(getAllFields(blockFields));
-      const dataWithFixedImages = await replaceImagesWithBase64(data);
-      component.$set(dataWithFixedImages);
-    }
+  $: hydrateComponent(allContent, allFields);
+  async function hydrateComponent(content, fields) {
+    if (!component) return
+    component.$set(componentData);
   }
 
-  async function replaceImagesWithBase64(data) {
-    // Modify final request by replacing all img url's beginning with 'primo:' -
-    // Download file from supabase, then convert to Base64 and replace url value
-    // let finalRequest = buildFinalRequest()
-    const modifiedData = _.cloneDeep(data);
-    await Promise.all(
-      Object.entries(data).map(async (field) => {
-        const [key, val] = field;
-        if (val.url && val.url.startsWith('primo:')) {
-          // Image type
-          const b64 = await fetchAndConvert(val.url);
-          modifiedData[key] = {
-            ...modifiedData[key],
-            url: b64,
-            src: b64,
-          };
-        } else if (
-          typeof val === 'object' &&
-          !Array.isArray(val) &&
-          key !== 'page' &&
-          key !== 'site'
-        ) {
-          // Group type
-          await Promise.all(
-            Object.entries(val).map(async (subfield) => {
-              const [subfieldKey, subfieldVal] = subfield;
-              if (
-                subfieldVal &&
-                subfieldVal.url &&
-                subfieldVal.url.startsWith('primo:')
-              ) {
-                // Image type
-                const b64 = await fetchAndConvert(subfieldVal.url);
-                modifiedData[key] = {
-                  ...modifiedData[key],
-                  [subfieldKey]: {
-                    ...subfieldVal,
-                    url: b64,
-                    src: b64,
-                  },
-                };
-              }
-            })
-          );
-        } else if (Array.isArray(val)) {
-          // Repeater type
-          let newRepeaters = [];
-          await Promise.all(
-            val.map(async (subfield) => {
-              await Promise.all(
-                Object.entries(subfield).map(async (repeaterItem) => {
-                  const [repeaterKey, repeaterVal] = repeaterItem;
-                  if (repeaterVal.url && repeaterVal.url.startsWith('primo:')) {
-                    // Image type
-                    const b64 = await fetchAndConvert(repeaterVal.url);
-                    subfield = {
-                      ...subfield,
-                      [repeaterKey]: {
-                        ...repeaterVal,
-                        url: b64,
-                        src: b64,
-                      },
-                    };
-                  }
-                })
-              );
-              newRepeaters = [...newRepeaters, subfield];
-            })
-          );
-          modifiedData[key] = newRepeaters;
-        }
-      })
-    );
-    return modifiedData;
-  }
+  function buildData(content, fields) {
+    const keyValues = fields.map(field => ({
+      key: field.key,
+      value: content[field.key]
+    }))
 
-  async function fetchAndConvert(url) {
-    // const imageKey = url.slice(12); // remove primo:sites/
-    // const cached = await idb.get(imageKey);
-    // return cached || url;
+    const asObj = _.chain(keyValues)
+      .keyBy('key')
+      .mapValues('value')
+      .value();
+    return asObj
   }
 
   let component;

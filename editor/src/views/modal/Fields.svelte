@@ -8,17 +8,22 @@
   import ModalHeader from './ModalHeader.svelte';
   import fieldTypes from '../../stores/app/fieldTypes';
   import { showingIDE, userRole } from '../../stores/app';
+  import { locale } from '../../stores/app/misc';
+  import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
   import { id, fields as pageFields } from '../../stores/app/activePage';
-  import { fields as siteFields } from '../../stores/data/draft';
-  import { pages } from '../../stores/actions';
+  import { fields as siteFields, content } from '../../stores/data/draft';
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
-  // import CustomFieldType from './CustomFieldType.svelte';
-  // import CustomFieldDevType from './CustomFieldDevType.svelte';
 
-  let localPageFields = cloneDeep($pageFields);
-  let localSiteFields = cloneDeep($siteFields);
+  let localPageFields = cloneDeep($pageFields).map(field => ({
+    ...field,
+    value: $content[$locale][$id][field.key]
+  }));
+  let localSiteFields = cloneDeep($siteFields).map(field => ({
+    ...field,
+    value: $content[$locale][field.key]
+  }));
 
   const allFieldTypes = [
     // {
@@ -146,16 +151,6 @@
     }
   }
 
-  function applyFields() {
-    // TODO: clean this up, use action
-    pages.update($id, (page) => ({
-      ...page,
-      fields: cloneDeep(localPageFields),
-    }));
-    $siteFields = localSiteFields;
-    modal.hide();
-  }
-
   function validateFieldKey(key) {
     // replace dash and space with underscore
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
@@ -207,6 +202,11 @@
     } else {
       localSiteFields = updatedFields;
     }
+  }
+  
+    function applyFields() {
+    saveFields(localPageFields, localSiteFields)
+    modal.hide();
   }
 
   let onChange = () => {};

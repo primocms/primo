@@ -1,6 +1,8 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
+  import _find from 'lodash-es/find'
   import ToolbarButton from './ToolbarButton.svelte';
+  import LocaleSelector from './LocaleSelector.svelte'
   import { PrimoButton } from '../../components/buttons';
   import { name } from '../../stores/data/draft';
   import { showingIDE, userRole } from '../../stores/app';
@@ -51,6 +53,9 @@ class:mounted>
     </button>
   </div>
   <div class="primary-buttons">
+    {#if !$showingIDE}
+      <LocaleSelector />
+    {/if}
     {#if $userRole === 'developer'}
       <div class="content" id="ide-toggle">
         <label class="switch">
@@ -143,6 +148,10 @@ class:mounted>
     width: 100%;
     display: flex;
     justify-content: flex-start;
+    
+    select {
+      padding: 0 0.5rem;
+    }
   }
   .left .buttons {
     display: flex;
@@ -241,7 +250,6 @@ class:mounted>
     display: flex;
     margin: 0 auto;
     padding: 0.5rem var(--padding, 1rem);
-    max-width: var(--max-width, 1200px);
 
     .toolbar-link {
       margin: 0 0.5rem;

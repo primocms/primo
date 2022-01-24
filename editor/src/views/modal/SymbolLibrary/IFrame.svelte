@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import {locale} from '../../../stores/app/misc'
   import Spinner from '../../../components/misc/Spinner.svelte';
   import { iframePreview } from '../../../components/misc/misc';
 
@@ -48,7 +48,7 @@
     scrolling="no"
     on:load={() => (iframeLoaded = true)}
     title="Preview HTML"
-    srcdoc={iframePreview}
+    srcdoc={iframePreview($locale)}
     bind:this={iframe} />
 </div>
 
