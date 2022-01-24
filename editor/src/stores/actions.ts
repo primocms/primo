@@ -147,3 +147,11 @@ export const pages = {
     stores.pages.set(newPages)
   }
 }
+
+
+export async function addLocale(key) {
+  content.update(s => ({
+    ...s,
+    [key]: s.en
+  }))
+}
