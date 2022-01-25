@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain, capitalize } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
   import ModalHeader from '../ModalHeader.svelte';
@@ -144,6 +144,20 @@
     disableSave = true;
     const allFields = getAllFields(fields);
     const data = convertFieldsToData(allFields);
+
+    // automatically create fields for keys without fields
+    // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
+    // account for keys passed down from page/site fields
+    // allow user to delete fields, even if the key is still used in the html (i.e. don't recreate them)
+    const keys = html.match(/(?<=\{\s*).*?(?=\s*\})/gs) || []// extract keys 
+    const notInFields = keys.map(s => s.replace(/\s/g, '')).filter(s => !find(fields, ['key', s]))
+    notInFields.forEach(key => {
+      addNewField({ 
+        key,
+        label: capitalize(key)
+      })
+    })
+
     await compile();
     disableSave = false;
 
@@ -174,10 +188,10 @@
     }
   }
 
-  function addNewField() {
+  function addNewField(field = {}) {
     saveLocalValue('fields', [
       ...fields,
-      Field()
+      Field(field)
     ]);
   }
 
