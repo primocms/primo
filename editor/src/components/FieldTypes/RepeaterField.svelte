@@ -8,8 +8,24 @@
   import { createUniqueID } from '../../utilities';
   import { Card } from '../misc';
   import fieldTypes from '../../stores/app/fieldTypes';
+  // import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
+  import GroupField from './GroupField.svelte';
 
   export let field;
+
+  const allFieldTypes = [
+    // {
+    //   id: 'repeater',
+    //   label: 'Repeater',
+    //   component: RepeaterField,
+    // },
+    {
+      id: 'group',
+      label: 'Group',
+      component: GroupField,
+    },
+    ...$fieldTypes,
+  ];
 
   function addRepeaterItem() {
     fieldValues = [...fieldValues, createSubfield()];
@@ -102,10 +118,14 @@
           <div
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">
-            <svelte:component
-              this={_find($fieldTypes, ['id', subfield.type]).component}
-              field={subfield}
-              on:input={onInput} />
+            {#if subfield.type === 'repeater'}
+              <svelte:self field={subfield} on:input={onInput} />
+            {:else}
+              <svelte:component
+                this={_find(allFieldTypes, ['id', subfield.type]).component}
+                field={subfield}
+                on:input={onInput} />
+            {/if}
           </div>
         {/each}
       </div>

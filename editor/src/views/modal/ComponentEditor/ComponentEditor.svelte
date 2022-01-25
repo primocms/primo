@@ -11,6 +11,7 @@
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../../components/FieldTypes/GroupField.svelte';
   import {Field} from '../../../const'
+  import FieldItem from './FieldItem.svelte'
 
   import {
     convertFieldsToData,
@@ -77,15 +78,10 @@
   }
 
   // TODO: 
-  // Refactor template to use svelte:component (to enable nested repeaters)
+  // IN PROGRESS: Refactor template to use svelte:self (to enable nested repeaters)
   // Ensure component is not recompiled when changing content
   // Configure saving component & getting content out of fields
   // Configure modifying symbols & adding fake placeholder content
-
-  $: console.log({
-    localComponent,
-    localContent
-  })
 
   function saveLocalContent() {
     // TODO: make this simpler w/ lodash method
@@ -185,7 +181,62 @@
     ]);
   }
 
-  function addSubField(id) {
+  function createSubfield({detail:id}) {
+    const idPath = getFieldPath(fields, id)
+    console.log({idPath})
+
+    // TODO: add new subfield to field based on 
+    // e.g.: 
+    // given `idPath = ['eidkd','odkew','ooapde']`
+    /* 
+    fields = [
+      {
+        id: 'eidkd',
+        fields: [
+          {
+            id: 'odkew',
+            fields: [
+              {
+                id: 'ooapde',
+                fields: []
+              }
+            ],
+            ...
+          }
+        ],
+        ...,
+      },
+      ...
+    ]
+    */
+    // should be updated to:
+    /* 
+    fields = [
+      {
+        id: 'eidkd',
+        fields: [
+          {
+            id: 'odkew',
+            fields: [
+              {
+                id: 'ooapde',
+                fields: [
+                  {
+                    id: 'newrandomid',
+                    fields: []
+                  }
+                ]
+              }
+            ],
+            ...
+          }
+        ],
+        ...,
+      },
+      ...
+    ]
+    */
+
     saveLocalValue('fields', fields.map((field) => ({
       ...field,
       fields:
@@ -196,23 +247,36 @@
             ]
           : field.fields,
     })));
+
+    function getFieldPath(fields, id) {
+      for (const field of fields) {
+        const result = getFieldPath(field.fields, id)
+        if (result) {
+          result.unshift(field.id);
+          return result
+        } else if (field.id === id) {
+          return [id]
+        } 
+      }
+    }
   }
 
-  function deleteSubfield(fieldId, subfieldId) {
-    saveLocalValue('fields', fields.map((field) =>
-      field.id !== fieldId
-        ? field
-        : {
-            ...field,
-            fields: field.fields.filter(
-              (subfield) => subfield.id !== subfieldId
-            ),
-          }
-    ));
-  }
+  // function deleteSubfield(fieldId, subfieldId) {
+  //   saveLocalValue('fields', fields.map((field) =>
+  //     field.id !== fieldId
+  //       ? field
+  //       : {
+  //           ...field,
+  //           fields: field.fields.filter(
+  //             (subfield) => subfield.id !== subfieldId
+  //           ),
+  //         }
+  //   ));
+  // }
 
-  function deleteField(id) {
-    saveLocalValue('fields', fields.filter((field) => field.id !== id));
+  function deleteField({ detail: fieldID }) {
+    saveLocalValue('fields', fields.filter((field) => field.id !== fieldID));
+    // TODO: handle deleting subfields ()
   }
 
   const tabs = [
@@ -239,55 +303,59 @@
     }
   }
 
-  function moveField({ i: parentIndex, direction, childIndex = null }) {
-    const parentField = fields[parentIndex];
-    let updatedFields = fields;
+  function moveField({detail}) {
+    const { id, direction } = detail
 
-    if (direction !== 'up' && direction !== 'down') {
-      console.error('Direction must be up or down');
-      return;
-    }
+    // TODO: find field from ID, move direction
 
-    if (childIndex === null) {
-      const withoutItem = fields.filter((_, i) => i !== parentIndex);
-      updatedFields = {
-        up: [
-          ...withoutItem.slice(0, parentIndex - 1),
-          parentField,
-          ...withoutItem.slice(parentIndex - 1),
-        ],
-        down: [
-          ...withoutItem.slice(0, parentIndex + 1),
-          parentField,
-          ...withoutItem.slice(parentIndex + 1),
-        ],
-      }[direction];
-    } else {
-      const childField = parentField.fields[childIndex];
-      const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
-      updatedFields[parentIndex].fields = {
-        up: [
-          ...withoutItem.slice(0, childIndex - 1),
-          childField,
-          ...withoutItem.slice(childIndex - 1),
-        ],
-        down: [
-          ...withoutItem.slice(0, childIndex + 1),
-          childField,
-          ...withoutItem.slice(childIndex + 1),
-        ],
-      }[direction];
-    }
-    saveLocalValue('fields', updatedFields)
+    // const parentField = fields[parentIndex];
+    // let updatedFields = fields;
+
+    // if (direction !== 'up' && direction !== 'down') {
+    //   console.error('Direction must be up or down');
+    //   return;
+    // }
+
+    // if (childIndex === null) {
+    //   const withoutItem = fields.filter((_, i) => i !== parentIndex);
+    //   updatedFields = {
+    //     up: [
+    //       ...withoutItem.slice(0, parentIndex - 1),
+    //       parentField,
+    //       ...withoutItem.slice(parentIndex - 1),
+    //     ],
+    //     down: [
+    //       ...withoutItem.slice(0, parentIndex + 1),
+    //       parentField,
+    //       ...withoutItem.slice(parentIndex + 1),
+    //     ],
+    //   }[direction];
+    // } else {
+    //   const childField = parentField.fields[childIndex];
+    //   const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
+    //   updatedFields[parentIndex].fields = {
+    //     up: [
+    //       ...withoutItem.slice(0, childIndex - 1),
+    //       childField,
+    //       ...withoutItem.slice(childIndex - 1),
+    //     ],
+    //     down: [
+    //       ...withoutItem.slice(0, childIndex + 1),
+    //       childField,
+    //       ...withoutItem.slice(childIndex + 1),
+    //     ],
+    //   }[direction];
+    // }
+    // saveLocalValue('fields', updatedFields)
   }
 
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
-  function validateFieldKey(key) {
-    // replace dash and space with underscore
-    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
-  }
+  // function validateFieldKey(key) {
+  //   // replace dash and space with underscore
+  //   return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
+  // }
 
   function refreshPreview() {
     fields = fields.filter(Boolean)
@@ -323,7 +391,7 @@
     }}>
     <div slot="left" lang={$locale}>
       {#if $showingIDE}
-        <Tabs {tabs} bind:activeTab variants="mb-1" />
+        <Tabs {tabs} bind:activeTab />
         {#if activeTab === tabs[0]}
           <FullCodeEditor
             variants="flex-1"
@@ -335,109 +403,16 @@
           <div class="fields">
             {#each fields as field, i}
               <Card id="field-{i}">
-                <EditField
-                  on:delete={() => deleteField(field.id)}
+                <FieldItem 
+                  bind:fields
+                  {field} 
+                  {i}
                   isFirst={i === 0}
                   isLast={i === fields.length - 1}
-                  minimal={field.type === 'info'}
-                  on:move={({ detail: direction }) => moveField( { i, direction } )}>
-                  <select
-                    bind:value={field.type}
-                    slot="type">
-                    {#each allFieldTypes as field}
-                      <option value={field.id}>{field.label}</option>
-                    {/each}
-                  </select>
-                  <textarea slot="main" class="info" bind:value={field.value} />
-                  <input
-                    class="input label-input"
-                    type="text"
-                    placeholder="Heading"
-                    bind:value={field.label}
-                    slot="label" />
-                  <input
-                    class="input key-input"
-                    type="text"
-                    placeholder="main_heading"
-                    bind:value={field.key}
-                    on:input={() => (field.key = validateFieldKey(field.key))}
-                    slot="key" />
-                </EditField>
-                {#if field.type === 'group'}
-                  {#if field.fields}
-                    {#each field.fields as subfield, childIndex (subfield.id)}
-                      <EditField
-                        minimal={field.type === 'info'}
-                        child={true}
-                        on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                        on:delete={() => deleteSubfield(field.id, subfield.id)}>
-                        <select
-                          bind:value={subfield.type}
-                          slot="type">
-                          {#each $fieldTypes as field}
-                            <option value={field.id}>{field.label}</option>
-                          {/each}
-                        </select>
-                        <textarea
-                          slot="main"
-                          class="info"
-                          bind:value={field.value} />
-                        <input
-                          class="label-input"
-                          type="text"
-                          placeholder="Heading"
-                          bind:value={subfield.label}
-                          slot="label" />
-                        <input
-                          class="key-input"
-                          type="text"
-                          placeholder="main_heading"
-                          bind:value={subfield.key}
-                          slot="key" />
-                      </EditField>
-                    {/each}
-                  {/if}
-                  <button
-                    class="field-button subfield-button"
-                    on:click={() => addSubField(field.id)}><i class="fas fa-plus mr-2" />Create Subfield</button>
-                {:else if field.type === 'repeater'}
-                  {#if field.fields}
-                    {#each field.fields as subfield, childIndex (subfield.id)}
-                      <EditField
-                        minimal={field.type === 'info'}
-                        child={true}
-                        on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                        on:delete={() => deleteSubfield(field.id, subfield.id)}>
-                        <select
-                          bind:value={subfield.type}
-                          slot="type">
-                          {#each $fieldTypes as field}
-                            <option value={field.id}>{field.label}</option>
-                          {/each}
-                        </select>
-                        <textarea
-                          slot="main"
-                          class="info"
-                          bind:value={field.value} />
-                        <input
-                          class="label-input"
-                          type="text"
-                          placeholder="Heading"
-                          bind:value={subfield.label}
-                          slot="label" />
-                        <input
-                          class="key-input"
-                          type="text"
-                          placeholder="main_heading"
-                          bind:value={subfield.key}
-                          slot="key" />
-                      </EditField>
-                    {/each}
-                  {/if}
-                  <button
-                    class="field-button subfield-button"
-                    on:click={() => addSubField(field.id)}><i class="fas fa-plus mr-2" />Create Subfield</button>
-                {/if}
+                  on:delete={deleteField}
+                  on:move={moveField}
+                  on:createsubfield={createSubfield}
+                />
               </Card>
             {/each}
             <PrimaryButton on:click={addNewField}>
@@ -451,7 +426,7 @@
           {#each fields as field} 
             {#if field.key && getFieldComponent(field)}
               <div
-                class="field-item shadow"
+                class="field-item"
                 class:repeater={field.key === 'repeater'}
                 id="field-{field.key}">
                 <svelte:component
@@ -510,113 +485,6 @@
       justify-content: center;
       margin-top: 12px;
     }
-
-    .invalid-field {
-      display: block;
-      padding: 1rem;
-      color: var(--color-gray-1);
-    }
-
-    select {
-      width: 100%;
-      padding: 8px;
-      border-right: 4px solid transparent;
-      background: var(--color-gray-9);
-      color: var(--color-gray-2);
-      font-size: var(--font-size-2);
-      font-weight: 600;
-      border: 0;
-    }
-  }
-  .fields {
-    display: flex;
-    flex-direction: column;
-
-    i {
-      margin-right: 0.5rem;
-    }
-  }
-  [slot='left'] {
-    overflow: scroll;
-    height: 100%;
-  }
-  [slot='right'] {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  button.convert {
-    padding: 4px 12px;
-    margin-right: 4px;
-    font-size: var(--font-size-2);
-    border-radius: var(--border-radius);
-    transition: var(--transition-colors);
-    border: 1px solid var(--primo-color-primored);
-    color: var(--primo-color-primored);
-    outline-color: var(--primo-color-primored);
-
-    i {
-      margin-right: 4px;
-    }
-  }
-  button.convert:hover {
-    background: var(--primo-color-primored-dark);
-    color: var(--primo-color-white);
-  }
-  .field-item {
-    padding: 16px;
-    box-shadow: var(--box-shadow);
-    background: var(--color-gray-9);
-    color: var(--color-gray-2);
-  }
-  .field-button {
-    width: 100%;
-    background: var(--color-gray-8);
-    color: var(--color-gray-3);
-    padding: 8px 0;
-    border-bottom-right-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
-    transition: var(--transition-colors);
-
-    i {
-      margin-right: 0.5rem;
-    }
-  }
-  .field-button:hover {
-    background: var(--color-gray-9);
-  }
-  .field-button[disabled] {
-    background: var(--color-gray-5);
-    cursor: not-allowed;
-  }
-  .field-button.subfield-button {
-    width: calc(100% - 1rem);
-    border-radius: 2px;
-    margin-left: 1.5rem;
-    margin-top: 8px;
-    font-size: var(--font-size-2);
-    background: var(--primo-color-codeblack);
-    color: var(--color-gray-2);
-    transition: var(--transition-colors);
-    outline: 0;
-  }
-  .field-button.subfield-button:hover {
-    background: var(--color-gray-9);
-  }
-  .field-button.subfield-button:focus {
-    background: var(--color-gray-8);
-  }
-
-  input {
-    background: var(--color-gray-7);
-    color: var(--color-gray-2);
-    padding: 4px;
-    border-radius: 2px;
-    border: 0;
-    padding: 0.5rem;
-  }
-  input:focus {
-    outline: 0;
   }
 
 </style>
