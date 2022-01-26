@@ -39,7 +39,7 @@
   {isLast}
   minimal={field.type === 'info'}
   on:delete={() => dispatch('delete', field.id)}
-  on:move={({ detail: direction }) => dispatch('move', { id: field.id, direction })}>
+  on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
     bind:value={field.type}
     slot="type">
@@ -69,6 +69,7 @@
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete={() => dispatch('delete', subfield.id)}
+    on:move
     on:createsubfield
   />
 {/each}

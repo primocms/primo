@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cloneDeep, find, isEqual, chain as _chain, capitalize } from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { createUniqueID } from '../../../utilities';
   import ModalHeader from '../ModalHeader.svelte';
@@ -149,14 +149,15 @@
     // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
     // account for keys passed down from page/site fields
     // allow user to delete fields, even if the key is still used in the html (i.e. don't recreate them)
-    const keys = html.match(/(?<=\{\s*).*?(?=\s*\})/gs) || []// extract keys 
-    const notInFields = keys.map(s => s.replace(/\s/g, '')).filter(s => !find(fields, ['key', s]))
-    notInFields.forEach(key => {
-      addNewField({ 
-        key,
-        label: capitalize(key)
-      })
-    })
+
+    // const keys = html.match(/(?<=\{\s*).*?(?=\s*\})/gs) || []// extract keys 
+    // const notInFields = keys.map(s => s.replace(/\s/g, '')).filter(s => !find(fields, ['key', s]))
+    // notInFields.forEach(key => {
+    //   addNewField({ 
+    //     key,
+    //     label: capitalize(key)
+    //   })
+    // })
 
     await compile();
     disableSave = false;
@@ -201,7 +202,7 @@
 
     // TODO: add new subfield to field based on 
     // e.g.: 
-    // given `idPath = ['eidkd','odkew','ooapde']`
+    // given `idPath = [0,'fields', 0]`
     /* 
     fields = [
       {
@@ -261,19 +262,19 @@
             ]
           : field.fields,
     })));
+  }
 
-    function getFieldPath(fields, id) {
-      for (const field of fields) {
+  function getFieldPath(fields, id) {
+      for (const [i, field] of fields.entries()) {
         const result = getFieldPath(field.fields, id)
         if (result) {
-          result.unshift(field.id);
+          result.unshift(i, 'fields');
           return result
         } else if (field.id === id) {
-          return [id]
+          return [i]
         } 
       }
     }
-  }
 
   // function deleteSubfield(fieldId, subfieldId) {
   //   saveLocalValue('fields', fields.map((field) =>
@@ -318,49 +319,41 @@
   }
 
   function moveField({detail}) {
-    const { id, direction } = detail
+    const { field, direction } = detail
+    const idPath = getFieldPath(fields, field.id)
 
-    // TODO: find field from ID, move direction
+    let updatedFields = cloneDeep(fields)
 
-    // const parentField = fields[parentIndex];
-    // let updatedFields = fields;
+    handleFieldMove(fields)
 
-    // if (direction !== 'up' && direction !== 'down') {
-    //   console.error('Direction must be up or down');
-    //   return;
-    // }
+    function handleFieldMove(fieldsToModify) {
+      const indexToMove = fieldsToModify.findIndex(f => f.id === field.id)
+      if (indexToMove > -1) { // field is at this level
+        const withoutItem = fieldsToModify.filter((_, i) => i !== indexToMove);
+        const newFields = {
+            up: [
+              ...withoutItem.slice(0, indexToMove - 1),
+              field,
+              ...withoutItem.slice(indexToMove - 1),
+            ],
+            down: [
+              ...withoutItem.slice(0, indexToMove + 1),
+              field,
+              ...withoutItem.slice(indexToMove + 1),
+            ],
+          }[direction]
+        if (idPath.length === 1) {
+          updatedFields = newFields
+        } else {
+          const path = idPath.slice(0, -1) // modify 'fields' containing field being moved
+          _set(updatedFields, path, newFields)
+        }
+      } else { // field is lower
+        fieldsToModify.forEach(field => handleFieldMove(field.fields));
+      }
+    }
 
-    // if (childIndex === null) {
-    //   const withoutItem = fields.filter((_, i) => i !== parentIndex);
-    //   updatedFields = {
-    //     up: [
-    //       ...withoutItem.slice(0, parentIndex - 1),
-    //       parentField,
-    //       ...withoutItem.slice(parentIndex - 1),
-    //     ],
-    //     down: [
-    //       ...withoutItem.slice(0, parentIndex + 1),
-    //       parentField,
-    //       ...withoutItem.slice(parentIndex + 1),
-    //     ],
-    //   }[direction];
-    // } else {
-    //   const childField = parentField.fields[childIndex];
-    //   const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
-    //   updatedFields[parentIndex].fields = {
-    //     up: [
-    //       ...withoutItem.slice(0, childIndex - 1),
-    //       childField,
-    //       ...withoutItem.slice(childIndex - 1),
-    //     ],
-    //     down: [
-    //       ...withoutItem.slice(0, childIndex + 1),
-    //       childField,
-    //       ...withoutItem.slice(childIndex + 1),
-    //     ],
-    //   }[direction];
-    // }
-    // saveLocalValue('fields', updatedFields)
+    saveLocalValue('fields', updatedFields)
   }
 
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
