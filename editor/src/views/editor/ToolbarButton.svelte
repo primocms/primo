@@ -89,10 +89,6 @@ on:click={() => {
       fill: var(--primo-color-white);
       width: 0.75rem;
     }
-
-    .icon + span {
-      margin-left: 0.5rem;
-    }
   }
 
   .hidden {

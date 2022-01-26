@@ -79,12 +79,6 @@
 {/if}
 
 <style lang="postcss">
-  .invalid-field {
-    display: block;
-    padding: 1rem;
-    color: var(--color-gray-1);
-  }
-
   select {
     width: 100%;
     padding: 8px;
@@ -94,48 +88,6 @@
     font-size: var(--font-size-2);
     font-weight: 600;
     border: 0;
-  }
-
-  .fields {
-    display: flex;
-    flex-direction: column;
-
-    i {
-      margin-right: 0.5rem;
-    }
-  }
-  [slot='left'] {
-    overflow: scroll;
-    height: 100%;
-  }
-  [slot='right'] {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-  button.convert {
-    padding: 4px 12px;
-    margin-right: 4px;
-    font-size: var(--font-size-2);
-    border-radius: var(--border-radius);
-    transition: var(--transition-colors);
-    border: 1px solid var(--primo-color-primored);
-    color: var(--primo-color-primored);
-    outline-color: var(--primo-color-primored);
-
-    i {
-      margin-right: 4px;
-    }
-  }
-  button.convert:hover {
-    background: var(--primo-color-primored-dark);
-    color: var(--primo-color-white);
-  }
-  .field-item {
-    padding: 16px;
-    box-shadow: var(--box-shadow);
-    background: var(--color-gray-9);
-    color: var(--color-gray-2);
   }
   .field-button {
     width: 100%;
@@ -152,10 +104,6 @@
   }
   .field-button:hover {
     background: var(--color-gray-9);
-  }
-  .field-button[disabled] {
-    background: var(--color-gray-5);
-    cursor: not-allowed;
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);

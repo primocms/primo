@@ -148,10 +148,6 @@ class:mounted>
     width: 100%;
     display: flex;
     justify-content: flex-start;
-    
-    select {
-      padding: 0 0.5rem;
-    }
   }
   .left .buttons {
     display: flex;
