@@ -426,6 +426,7 @@
   main {
     display: flex; /* to help w/ positioning child items in code view */
     background: var(--primo-color-black);
+    color: var(--color-gray-2);
     padding: 0.5rem;
     padding-top: 0;
     flex: 1;
@@ -445,6 +446,13 @@
       justify-content: center;
       margin-top: 12px;
     }
+  }
+
+  .field-item {
+    padding: 1rem;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 0.5rem;
+    background: var(--color-gray-9);
   }
 
 </style>
