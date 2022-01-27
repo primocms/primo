@@ -265,16 +265,16 @@
   }
 
   function getFieldPath(fields, id) {
-      for (const [i, field] of fields.entries()) {
-        const result = getFieldPath(field.fields, id)
-        if (result) {
-          result.unshift(i, 'fields');
-          return result
-        } else if (field.id === id) {
-          return [i]
-        } 
-      }
+    for (const [i, field] of fields.entries()) {
+      const result = getFieldPath(field.fields, id)
+      if (result) {
+        result.unshift(i, 'fields');
+        return result
+      } else if (field.id === id) {
+        return [i]
+      } 
     }
+  }
 
   // function deleteSubfield(fieldId, subfieldId) {
   //   saveLocalValue('fields', fields.map((field) =>
@@ -342,7 +342,7 @@
               ...withoutItem.slice(indexToMove + 1),
             ],
           }[direction]
-        if (idPath.length === 1) {
+        if (idPath.length === 1) { // field is at root level
           updatedFields = newFields
         } else {
           const path = idPath.slice(0, -1) // modify 'fields' containing field being moved
