@@ -12,23 +12,22 @@
   export let node;
 
   $: activeLocale = $site.content[$locale]
-
-  $: componentContent = activeLocale?.[$pageID]?.[block.id] || {}
-  $: pageContent = activeLocale[pageID]
   $: siteContent = activeLocale
+  $: pageContent = activeLocale[$pageID]
+  $: componentContent = pageContent?.[block.id] || {}
 
-  $: componentData = buildData(componentContent, block.value.fields)
+  $: componentData = buildData(componentContent, block.fields)
 
   $: allContent = [ componentContent, pageContent, siteContent ]
-  $: allFields = [ block.value.fields, $pageFields, $siteFields ]
+  $: allFields = [ block.fields, $pageFields, $siteFields ]
 
   let html = '';
   let css = '';
   let js = '';
   $: compileComponentCode({
-    html: block.value.html,
-    css: block.value.css,
-    js: block.value.js,
+    html: block.code.html,
+    css: block.code.css,
+    js: block.code.js,
   });
 
   let error = '';

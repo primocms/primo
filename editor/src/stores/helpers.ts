@@ -108,12 +108,12 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
         if (!symbol) return 
 
         // Remove fields no longer present in Symbol
-        const symbolFields:any[] = symbol.value.fields
-        const componentFields:any[] = block.value.fields.filter(field => find(symbolFields, ['id', field.id])) 
+        const symbolFields:any[] = symbol.fields
+        const componentFields:any[] = block.fields.filter(field => find(symbolFields, ['id', field.id])) 
         const fields:any[] = unionBy(componentFields, page.fields, site.fields, "key");
         const data:object = convertFieldsToData(fields);
 
-        const { html, css, js }: { html:string, css:string, js:string } = symbol.value
+        const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 
         const svelte = await processCode({ 
           code: {

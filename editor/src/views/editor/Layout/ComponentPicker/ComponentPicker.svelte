@@ -15,9 +15,7 @@
       type: 'component',
       id: instanceID,
       symbolID: symbol.id,
-      value: {
-        fields: symbol.value.fields,
-      },
+      fields: symbol.fields
     };
   }
 

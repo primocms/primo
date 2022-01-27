@@ -59,18 +59,22 @@
   type="text"
   placeholder="heading"
   bind:value={field.key}
-  on:input={() => (field.key = validateFieldKey(field.key))}
+  on:input={() => {
+    dispatch('input')
+    field.key = validateFieldKey(field.key)
+  }}
   slot="key" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
-    field={subfield} 
+    bind:field={subfield} 
     {i} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete={() => dispatch('delete', subfield.id)}
     on:move
     on:createsubfield
+    on:input
     level={level+1}
   />
 {/each}

@@ -65,10 +65,6 @@
     actions.delete(symbol);
   }
 
-  function getID(symbol) {
-    return symbol.id + symbol.value.html + symbol.value.css;
-  }
-
   let LZ;
   async function copySymbol(symbol) {
     if (!navigator.clipboard) {
@@ -122,12 +118,10 @@
   function createInstance(symbol) {
     const instanceID = createUniqueID();
     return {
+      ...symbol,
       type: 'component',
       id: instanceID,
-      symbolID: symbol.id,
-      value: {
-        fields: symbol.value.fields,
-      },
+      symbolID: symbol.id
     };
   }
 

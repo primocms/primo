@@ -51,7 +51,21 @@
   };
 
   let localComponent = cloneDeep(component)
-  let localContent = cloneDeep($content)
+  let localContent = getComponentContent($content)
+
+  function getComponentContent(siteContent) {
+    return _chain(Object.entries(siteContent)) 
+      .map(item => {
+        const [ locale, pages ] = item
+        return {
+          locale,
+          content: {}
+        }
+      })
+      .keyBy('locale')
+      .mapValues('content')
+      .value()
+  }
 
   $: $locale, setupComponent()
   function setupComponent() {
@@ -69,7 +83,7 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: localContent[$locale]?.[$pageID][component.id]?.[field.key] || (
+      value: localContent[field.key] || (
         field.type === 'repeater' ? [] : (
           field.type === 'group' ? {} : ''
         )
@@ -84,18 +98,11 @@
   // Configure modifying symbols & adding fake placeholder content
 
   function saveLocalContent() {
-    // TODO: make this simpler w/ lodash method
     localContent = {
       ...localContent,
       [$locale]: {
         ...localContent[$locale],
-        [$pageID]: {
-          ...localContent[$locale][$pageID],
-          [component.id]: {
-            ...localContent[$locale][$pageID][component.id],
-            ..._chain(fields).keyBy('key').mapValues('value').value()
-          }
-        }
+        ..._chain(fields).keyBy('key').mapValues('value').value()
       }
     }
   }
@@ -323,9 +330,24 @@
 
   function saveComponent() {
     if (!disableSave) {
-      header.button.onclick(localComponent);
+      const component = extractComponent(localComponent)
+      header.button.onclick(component);
     }
   }
+
+  function extractComponent(component) {
+    return {
+      ...component,
+      content: localContent,
+      fields: fields.map(field => ({
+        id: field.id,
+        key: field.key,
+        label: field.label,
+        type: field.type,
+        fields: field.fields
+      }))
+    }
+  } 
 
 </script>
 
@@ -364,14 +386,13 @@
             {#each fields as field, i}
               <Card id="field-{i}">
                 <FieldItem 
-                  bind:fields
-                  {field} 
-                  {i}
+                  bind:field
                   isFirst={i === 0}
                   isLast={i === fields.length - 1}
                   on:delete={deleteField}
                   on:move={moveField}
                   on:createsubfield={createSubfield}
+                  on:input={() => fields = fields.filter(Boolean)}
                 />
               </Card>
             {/each}

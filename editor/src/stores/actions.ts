@@ -174,7 +174,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
     content.update(content => {
       for (const [ locale, pages ] of Object.entries(content)) {
         content[locale] = {
-          ...pages,
+          ...pages, // idk why TS is complaining about this
           [pageID]: updatedPage
         }
       }

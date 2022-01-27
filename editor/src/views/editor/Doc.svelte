@@ -49,12 +49,12 @@
         // copy the symbol's values (html,css,js,fields)
         ...symbol.value,
         // but overwrite the fields with the block's own field values (i.e. field data)
-        fields: symbol.value.fields.map((symbolField) => {
-          const originalField = find(block.value.fields, [
+        fields: symbol.fields.map((symbolField) => {
+          const originalField = find(block.fields, [
             'id',
             symbolField.id,
           ]) ||
-            find(symbol.value.fields, ['id', symbolField.id]) || { value: '' };
+            find(symbol.fields, ['id', symbolField.id]) || { value: '' };
           return {
             ...symbolField,
             fields: hydrateChildFields(originalField, symbolField),

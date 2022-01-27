@@ -132,7 +132,7 @@
 
   async function selectOption(option, payload = null) {
     if (option === 'component') {
-      const data = getDataFromFields(payload.value.fields)
+      const data = getDataFromFields(payload.fields)
       updateContent(payload.id, data)
       updateBlock(payload);
     } else if (option === 'content') {

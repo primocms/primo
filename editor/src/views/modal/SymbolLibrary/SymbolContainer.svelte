@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
+  import { chain as _chain } from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
 
@@ -36,25 +37,36 @@
 
   let componentApp;
   let error;
-  compileComponentCode(symbol.value);
-  async function compileComponentCode(value) {
-    const allFields = getAllFields(value.fields);
-    const data = convertFieldsToData(allFields);
+  compileComponentCode(symbol);
+  async function compileComponentCode(symbol) {
+    // const allFields = getAllFields(symbol.fields);
+    // const data = convertFieldsToData(allFields);
+    // TODO: add dummy data
+
+    const data = _chain(symbol.fields.map(field => ({
+      ...field,
+      value: 'Some dummy text'
+    })))
+      .keyBy('key')
+      .mapValues('value')
+      .value();
+
     const res = await processCode({
       code: {
-        ...value,
+        ...symbol.code,
         html: `
         <svelte:head>
           ${$siteCode.html.head + $pageCode.html.head}
           ${wrapInStyleTags($siteCode.css + $pageCode.css)}
         </svelte:head>
-        ${value.html}
+        ${symbol.code.html}
         ${$siteCode.html.below + $pageCode.html.below}
         `,
       },
       data,
       buildStatic: false,
     });
+
     error = res.error;
     componentApp = res.js;
   }
