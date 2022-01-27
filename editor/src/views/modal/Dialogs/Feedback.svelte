@@ -41,7 +41,7 @@ aria-label="Close modal"
     <h1>Feedback</h1>
     <p>Let us know if something broke, if there's something you want to do that you can't do (yet), or even if you're just enjoying primo.</p>
     <form bind:this={form} on:submit|preventDefault={() => {
-      var data = new FormData(form);
+      var data = new window.FormData(form);
       axios.post('https://formspree.io/f/xknywogb', data).then(res => {
         console.log({res})
         if (res.data?.ok) {
@@ -54,7 +54,7 @@ aria-label="Close modal"
     }}>
       <label>
         <span>Message *</span>
-        <textarea autofocus required name="message"></textarea>
+        <textarea required name="message"></textarea>
       </label>
       <label>
         <span>Email address (if you'd like us to follow up)</span>

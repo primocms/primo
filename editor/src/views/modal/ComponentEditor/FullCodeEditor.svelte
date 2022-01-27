@@ -6,8 +6,6 @@
   import { CodeMirror } from '../../../components';
   import { onMobile } from '../../../stores/app/misc';
 
-  export let disabled = false;
-
   export let variants = '';
 
   export let html = '';

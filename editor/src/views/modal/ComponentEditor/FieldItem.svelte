@@ -7,9 +7,7 @@
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../../components/FieldTypes/GroupField.svelte';
 
-  export let fields
   export let field
-  export let i
   export let isFirst
   export let isLast
 
