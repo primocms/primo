@@ -10,6 +10,7 @@
   export let field
   export let isFirst
   export let isLast
+  export let level = 0
 
   const allFieldTypes = [
     {
@@ -33,6 +34,7 @@
 </script>
 
 <EditField
+  {level}
   {isFirst}
   {isLast}
   minimal={field.type === 'info'}
@@ -69,10 +71,12 @@
     on:delete={() => dispatch('delete', subfield.id)}
     on:move
     on:createsubfield
+    level={level+1}
   />
 {/each}
 {#if field.type === 'repeater' || field.type === 'group'}
   <button
+    style="margin-left: {1.5 + level}rem"
     class="field-button subfield-button"
     on:click={() => dispatch('createsubfield', field)}><i class="fas fa-plus" />Create Subfield</button>
 {/if}

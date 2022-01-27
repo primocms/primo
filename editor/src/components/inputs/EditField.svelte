@@ -2,6 +2,7 @@
   import { fade } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
 
+  export let level = 0
   export let child = false;
   export let disabled = false;
   export let isFirst = false;
@@ -17,6 +18,7 @@
 </script>
 
 <div
+  style="margin-left: {level}rem"
   class="field-container"
   in:fade={{ duration: 100 }}
   class:child
