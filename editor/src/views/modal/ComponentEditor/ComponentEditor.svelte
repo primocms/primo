@@ -196,72 +196,25 @@
     ]);
   }
 
-  function createSubfield({detail:id}) {
-    const idPath = getFieldPath(fields, id)
-    console.log({idPath})
+  function createSubfield({detail:field}) {
+    const idPath = getFieldPath(fields, field.id)
+    let updatedFields = cloneDeep(fields)
+    handleSubfieldCreation(fields)
 
-    // TODO: add new subfield to field based on 
-    // e.g.: 
-    // given `idPath = [0,'fields', 0]`
-    /* 
-    fields = [
-      {
-        id: 'eidkd',
-        fields: [
-          {
-            id: 'odkew',
-            fields: [
-              {
-                id: 'ooapde',
-                fields: []
-              }
-            ],
-            ...
-          }
-        ],
-        ...,
-      },
-      ...
-    ]
-    */
-    // should be updated to:
-    /* 
-    fields = [
-      {
-        id: 'eidkd',
-        fields: [
-          {
-            id: 'odkew',
-            fields: [
-              {
-                id: 'ooapde',
-                fields: [
-                  {
-                    id: 'newrandomid',
-                    fields: []
-                  }
-                ]
-              }
-            ],
-            ...
-          }
-        ],
-        ...,
-      },
-      ...
-    ]
-    */
+    function handleSubfieldCreation(fieldsToModify) {
+      if (find(fieldsToModify, ['id', field.id])) { // field is at this level
+        const newField = cloneDeep(field)
+        newField.fields = [
+          ...newField.fields,
+          Field()
+        ]
+        _set(updatedFields, idPath, newField)
+      } else { // field is lower
+        fieldsToModify.forEach(field => handleSubfieldCreation(field.fields));
+      }
+    }
 
-    saveLocalValue('fields', fields.map((field) => ({
-      ...field,
-      fields:
-        field.id === id
-          ? [
-              ...field.fields,
-              Field(),
-            ]
-          : field.fields,
-    })));
+    saveLocalValue('fields', updatedFields);
   }
 
   function getFieldPath(fields, id) {

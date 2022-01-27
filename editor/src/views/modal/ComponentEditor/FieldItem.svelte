@@ -74,7 +74,7 @@
 {#if field.type === 'repeater' || field.type === 'group'}
   <button
     class="field-button subfield-button"
-    on:click={() => dispatch('createsubfield', field.id)}><i class="fas fa-plus mr-2" />Create Subfield</button>
+    on:click={() => dispatch('createsubfield', field)}><i class="fas fa-plus" />Create Subfield</button>
 {/if}
 
 <style lang="postcss">
