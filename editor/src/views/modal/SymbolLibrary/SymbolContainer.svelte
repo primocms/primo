@@ -127,6 +127,7 @@
       <div class="component-label">
         {#if titleEditable}
           <form on:submit|preventDefault={changeTitle}>
+            <!-- svelte-ignore a11y-label-has-associated-control -->
             <label on:click={() => editingTitle = true}>
               {#if title || editingTitle}
               <input type="text" bind:value={title} size={title.length} />
