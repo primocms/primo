@@ -249,6 +249,38 @@
   //   ));
   // }
 
+
+  function deleteSubfield({detail}) {
+    const{subfield, field} = detail
+    const idPath = getFieldPath(fields, field.id)
+
+    console.log('subfield:', subfield.id)
+    console.log('field:', field.id)
+    console.log('idPath:', idPath)
+    console.log('fields:', fields)
+
+    let updatedFields = cloneDeep(fields)
+
+    handleDeleteSubfield(fields)
+
+    function handleDeleteSubfield(fieldToDelete) {
+
+      console.log('fieldToDelete:', fieldToDelete)
+
+      if (find(fieldToDelete, ['id', field.id])) { // field is at this level
+        const newField = cloneDeep(field)
+        newField.fields = newField.fields.filter(
+          (fields) => fields.id !== subfield.id
+        )
+        _set(updatedFields, idPath, newField)
+      } else { // field is lower
+        fieldToDelete.forEach(field => handleDeleteSubfield(field.fields));
+      }
+
+    saveLocalValue('fields', updatedFields);
+  }
+}
+
   function deleteField({ detail: fieldID }) {
     saveLocalValue('fields', fields.filter((field) => field.id !== fieldID));
     // TODO: handle deleting subfields ()
@@ -392,6 +424,7 @@
                   on:delete={deleteField}
                   on:move={moveField}
                   on:createsubfield={createSubfield}
+                  on:deleteSubfield ={deleteSubfield}
                   on:input={() => fields = fields.filter(Boolean)}
                 />
               </Card>

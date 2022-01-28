@@ -71,7 +71,7 @@
     {i} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
-    on:delete={() => dispatch('delete', subfield.id)}
+    on:delete={() => dispatch('deleteSubfield', {subfield, field})}
     on:move
     on:createsubfield
     on:input
