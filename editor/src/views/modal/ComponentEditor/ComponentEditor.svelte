@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set } from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set, get as _get} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { LoremIpsum } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
@@ -53,7 +53,7 @@
 
   let localComponent = cloneDeep(component)
   let localContent = component.type === 'symbol' ? null : getComponentContent($content)
-  $: console.log({localComponent})
+  // $: console.log({localComponent})
 
   function getComponentContent(siteContent) {
     return _chain(Object.entries(siteContent)) 
@@ -260,46 +260,47 @@
 
 
   function deleteSubfield({detail:field}) {
-
     let subfield = cloneDeep(field)
-
-    // const{subfield, field} = detail
     const idPath = getFieldPath(fields, field.id)
-
-    console.log('subfield:', subfield.id)
-    console.log('field:', field)
-    console.log('idPath:', idPath)
-    console.log('fields:', fields)
-
     let updatedFields = cloneDeep(fields)
 
     // get parent field of subfield, set equal to `field`
 
+    let parentfield = _get(updatedFields, idPath.slice(0, -2))
+    console.log('parentfield:', parentfield)
+
     handleDeleteSubfield(fields)
 
     function handleDeleteSubfield(fieldsToModify) {
-
-      console.log('fieldsToModify:', fieldsToModify)
-
-      if (find(fieldsToModify, ['id', field.id])) { // field is at this level
-        const newField = cloneDeep(field)
-        newField.fields = newField.fields.filter(
-          (field) => field.id !== subfield.id
+      if(!parentfield){
+        // console.log('no parentfield')
+        // console.log('subfield:', subfield)
+        // subfield = subfield.fields.filter(
+        //   (f) => f.id !== subfield.id
+        // )
+        // _set(updatedFields, idPath, subfield)
+        // console.log('updatedFields:', updatedFields)
+      }
+      else if (find(fieldsToModify, ['id', parentfield.id])) {
+        const newField = cloneDeep(parentfield)
+        console.log('newField:', newField)
+       console.log('found field')
+       newField.fields = newField.fields.filter(
+         (field) => field.id != subfield.id
         )
-        console.log({newField})
-        _set(updatedFields, idPath, newField)
-      } else { // field is lower
+        _set(updatedFields, idPath.slice(0, -2), newField)
+      }
+      else {
         fieldsToModify.forEach(field => handleDeleteSubfield(field.fields));
       }
-
-    saveLocalValue('fields', updatedFields);
+      saveLocalValue('fields', updatedFields);
+    }
   }
-}
-
-  function deleteField({ detail: field }) {
-    saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
-    // TODO: handle deleting subfields ()
-  }
+  // function deleteField(field) {
+  //   console.log('field:', field)
+  //   saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
+  //   // TODO: handle deleting subfields ()
+  // }
 
   const tabs = [
     {
