@@ -30,6 +30,7 @@
   import { getAllFields } from '../../stores/helpers';
   import { goto } from '$app/navigation';
   import {navigating} from '$app/stores'
+  import {cloneDeep} from 'lodash-es'
 
   export let element;
 
@@ -44,39 +45,9 @@
   function hydrateInstance(block, symbols) {
     const symbol = find(symbols, ['id', block.symbolID]);
     return {
-      ...block,
-      value: {
-        // copy the symbol's values (html,css,js,fields)
-        ...symbol.value,
-        // but overwrite the fields with the block's own field values (i.e. field data)
-        fields: symbol.fields.map((symbolField) => {
-          const originalField = find(block.fields, [
-            'id',
-            symbolField.id,
-          ]) ||
-            find(symbol.fields, ['id', symbolField.id]) || { value: '' };
-          return {
-            ...symbolField,
-            fields: hydrateChildFields(originalField, symbolField),
-            value: $content[$locale][$pageID][block.id][originalField.key]
-          };
-        }),
-      },
-    };
-
-    function hydrateChildFields(originalField, symbolField) {
-      if (symbolField.type === 'repeater') {
-        return symbolField.fields;
-      } else if (symbolField.type === 'group') {
-        return symbolField.fields.map((symbolChildField) => ({
-          ...symbolChildField,
-          value:
-            find(originalField.fields, ['id', symbolChildField.id])?.value ||
-            symbolChildField.value,
-        }));
-      } else {
-        return originalField.fields;
-      }
+      ...symbol,
+      id: block.id,
+      type: block.type
     }
   }
 
@@ -205,7 +176,7 @@
       {#if block.symbolID}
         <Block
           on:mount={() => componentsMounted++}
-          block={hydrateInstance(block, $symbols, $pageFields, $siteFields, $locale)}
+          {block}
           {i}
         />
       {:else}

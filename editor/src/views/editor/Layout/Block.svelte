@@ -14,7 +14,7 @@
   import { onMobile, saved } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
   import { id, sections } from '../../../stores/app/activePage';
-  import { pages, updateContent } from '../../../stores/actions';
+  import { pages, updateContent, symbols } from '../../../stores/actions';
 
   export let content
   export let block
@@ -34,10 +34,6 @@
     if (rowBelow && rowBelow.type === 'options') {
       return true;
     } else return false;
-  }
-
-  function checkIfOnlyChild() {
-    return $sections.length <= 1;
   }
 
   function deleteRow() {
@@ -146,13 +142,18 @@
     modal.show('COMPONENT_EDITOR', {
       component: block,
       header: {
-        showSwitch: true,
         title: 'Edit Component',
         icon: 'fas fa-code',
         button: {
           icon: 'fas fa-check',
           label: 'Draft',
           onclick: (component) => {
+            symbols.update({
+              type: 'symbol',
+              id: component.symbolID,
+              code: component.code,
+              fields: component.fields
+            });
             Object.entries(component.content).forEach(field => {
               const [ localeID, localeContent ] = field
               updateContent(component.id, localeContent, localeID)
@@ -161,6 +162,9 @@
           },
         },
       },
+    },
+    {
+      showSwitch: true
     });
   }
 
@@ -291,7 +295,7 @@
     />
   {:else if block.type === 'options'}
     <OptionsButtons
-      deletable={!checkIfOnlyChild(block.id)}
+      deletable={$sections.length <= 1}
       on:mount
       on:select={({ detail: component }) => {
         selectOption('component', component);

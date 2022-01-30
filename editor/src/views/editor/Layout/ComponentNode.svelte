@@ -1,9 +1,9 @@
 <script>
-  import _, { isEqual, differenceWith, keyBy } from 'lodash-es';
+  import _ from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
   import { processCode } from '../../../utils';
   import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
-  import site, { fields as siteFields } from '../../../stores/data/draft';
+  import site, { fields as siteFields, symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
 
   const dispatch = createEventDispatcher();
@@ -11,9 +11,10 @@
   export let block;
   export let node;
 
-  $: activeLocale = $site.content[$locale]
-  $: siteContent = activeLocale
-  $: pageContent = activeLocale[$pageID]
+  $: symbol = _.find($symbols, ['id', block.symbolID])
+
+  $: siteContent = $site.content[$locale]
+  $: pageContent = siteContent[$pageID]
   $: componentContent = pageContent?.[block.id] || {}
 
   $: componentData = buildData(componentContent, block.fields)
@@ -24,11 +25,7 @@
   let html = '';
   let css = '';
   let js = '';
-  $: compileComponentCode({
-    html: block.code.html,
-    css: block.code.css,
-    js: block.code.js,
-  });
+  $: compileComponentCode(symbol.code);
 
   let error = '';
   async function compileComponentCode(rawCode) {
