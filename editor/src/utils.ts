@@ -1,5 +1,7 @@
 import _ from "lodash-es";
 import { processors } from './component'
+import { LoremIpsum as lipsum } from "lorem-ipsum";
+
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}: { code:any, data:object, buildStatic?:boolean, format?:string}) {
   const {css,error} = await processors.css(code.css || '')
   if (error) {
@@ -60,4 +62,19 @@ export const makeValidUrl = (str:string = ''): string => {
   } else {
     return ''
   }
+}
+
+
+const lorem = new lipsum({
+  sentencesPerParagraph: {
+    max: 8,
+    min: 4
+  },
+  wordsPerSentence: {
+    max: 16,
+    min: 4
+  }
+});
+export const LoremIpsum = (nSentences = 1) => {
+  return lorem.generateSentences(nSentences)
 }

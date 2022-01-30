@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { createUniqueID } from '../../../utilities';
+  import { LoremIpsum } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { EditField } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
@@ -31,13 +31,14 @@
   import fieldTypes from '../../../stores/app/fieldTypes';
   import modal from '../../../stores/app/modal';
   import { Component } from '../../../const';
+  import type { Component as ComponentType, Symbol as SymbolType } from '../../../const';
   import { symbols } from '../../../stores/actions';
   import { getAllFields, getSymbol } from '../../../stores/helpers';
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const quickDebounce = createDebouncer(200);
 
-  export let component = Component();
+  export let component:ComponentType|SymbolType = Component();
   export let header = {
     label: 'Create Component',
     icon: 'fas fa-code',
@@ -51,7 +52,8 @@
   };
 
   let localComponent = cloneDeep(component)
-  let localContent = getComponentContent($content)
+  let localContent = component.type === 'symbol' ? null : getComponentContent($content)
+  $: console.log({localComponent})
 
   function getComponentContent(siteContent) {
     return _chain(Object.entries(siteContent)) 
@@ -59,7 +61,7 @@
         const [ locale, pages ] = item
         return {
           locale,
-          content: {}
+          content: pages[$pageID][component.id] || {}
         }
       })
       .keyBy('locale')
@@ -83,19 +85,26 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: localContent[field.key] || (
-        field.type === 'repeater' ? [] : (
-          field.type === 'group' ? {} : ''
-        )
-      )
+      value: component.type === 'symbol' ? getSymbolValue(field) : getComponentValue(field)
     }))
+
+    function getComponentValue(field) {
+      const val = localContent[$locale][field.key]
+      if (val) return val
+      else if (field.type === 'repeater') return []
+      else if (field.type === 'group') return {}
+      else return ''
+    }
+
+    function getSymbolValue(field) {
+      if (field.type === 'repeater') return []
+      else if (field.type === 'group') return {}
+      else return LoremIpsum()
+    }
   }
 
   // TODO: 
-  // IN PROGRESS: Refactor template to use svelte:self (to enable nested repeaters)
   // Ensure component is not recompiled when changing content
-  // Configure saving component & getting content out of fields
-  // Configure modifying symbols & adding fake placeholder content
 
   function saveLocalContent() {
     localContent = {
@@ -250,39 +259,45 @@
   // }
 
 
-  function deleteSubfield({detail}) {
-    const{subfield, field} = detail
+  function deleteSubfield({detail:field}) {
+
+    let subfield = cloneDeep(field)
+
+    // const{subfield, field} = detail
     const idPath = getFieldPath(fields, field.id)
 
     console.log('subfield:', subfield.id)
-    console.log('field:', field.id)
+    console.log('field:', field)
     console.log('idPath:', idPath)
     console.log('fields:', fields)
 
     let updatedFields = cloneDeep(fields)
 
+    // get parent field of subfield, set equal to `field`
+
     handleDeleteSubfield(fields)
 
-    function handleDeleteSubfield(fieldToDelete) {
+    function handleDeleteSubfield(fieldsToModify) {
 
-      console.log('fieldToDelete:', fieldToDelete)
+      console.log('fieldsToModify:', fieldsToModify)
 
-      if (find(fieldToDelete, ['id', field.id])) { // field is at this level
+      if (find(fieldsToModify, ['id', field.id])) { // field is at this level
         const newField = cloneDeep(field)
         newField.fields = newField.fields.filter(
-          (fields) => fields.id !== subfield.id
+          (field) => field.id !== subfield.id
         )
+        console.log({newField})
         _set(updatedFields, idPath, newField)
       } else { // field is lower
-        fieldToDelete.forEach(field => handleDeleteSubfield(field.fields));
+        fieldsToModify.forEach(field => handleDeleteSubfield(field.fields));
       }
 
     saveLocalValue('fields', updatedFields);
   }
 }
 
-  function deleteField({ detail: fieldID }) {
-    saveLocalValue('fields', fields.filter((field) => field.id !== fieldID));
+  function deleteField({ detail: field }) {
+    saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
     // TODO: handle deleting subfields ()
   }
 
@@ -421,10 +436,9 @@
                   bind:field
                   isFirst={i === 0}
                   isLast={i === fields.length - 1}
-                  on:delete={deleteField}
+                  on:delete={deleteSubfield}
                   on:move={moveField}
                   on:createsubfield={createSubfield}
-                  on:deleteSubfield ={deleteSubfield}
                   on:input={() => fields = fields.filter(Boolean)}
                 />
               </Card>
