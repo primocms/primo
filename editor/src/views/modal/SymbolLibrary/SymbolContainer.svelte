@@ -3,6 +3,18 @@
   import { chain as _chain } from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
+  import { LoremIpsum } from "lorem-ipsum";
+
+  const lorem = new LoremIpsum({
+    sentencesPerParagraph: {
+      max: 8,
+      min: 4
+    },
+    wordsPerSentence: {
+      max: 16,
+      min: 4
+    }
+  });
 
   import IFrame from './IFrame.svelte';
   import { getAllFields } from '../../../stores/helpers';
@@ -45,7 +57,7 @@
 
     const data = _chain(symbol.fields.map(field => ({
       ...field,
-      value: 'Some dummy text'
+      value: lorem.generateSentences(1)
     })))
       .keyBy('key')
       .mapValues('value')
