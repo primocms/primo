@@ -250,23 +250,17 @@
 
     // get parent field of subfield, set equal to `field`
 
-    let parentfield = _get(updatedFields, idPath.slice(0, -2))
-    console.log('parentfield:', parentfield)
+    let parentField = _get(updatedFields, idPath.slice(0, -2))
+    if (!parentField) {
+      saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
+    } else {
+      handleDeleteSubfield(fields)
+    }
 
-    handleDeleteSubfield(fields)
 
     function handleDeleteSubfield(fieldsToModify) {
-      if(!parentfield){
-        // console.log('no parentfield')
-        // console.log('subfield:', subfield)
-        // subfield = subfield.fields.filter(
-        //   (f) => f.id !== subfield.id
-        // )
-        // _set(updatedFields, idPath, subfield)
-        // console.log('updatedFields:', updatedFields)
-      }
-      else if (find(fieldsToModify, ['id', parentfield.id])) {
-        const newField = cloneDeep(parentfield)
+      if (find(fieldsToModify, ['id', parentField.id])) {
+        const newField = cloneDeep(parentField)
         console.log('newField:', newField)
        console.log('found field')
        newField.fields = newField.fields.filter(
@@ -280,11 +274,6 @@
       saveLocalValue('fields', updatedFields);
     }
   }
-  // function deleteField(field) {
-  //   console.log('field:', field)
-  //   saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
-  //   // TODO: handle deleting subfields ()
-  // }
 
   const tabs = [
     {
