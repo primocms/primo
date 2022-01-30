@@ -229,34 +229,16 @@
     }
   }
 
-  // function deleteSubfield(fieldId, subfieldId) {
-  //   saveLocalValue('fields', fields.map((field) =>
-  //     field.id !== fieldId
-  //       ? field
-  //       : {
-  //           ...field,
-  //           fields: field.fields.filter(
-  //             (subfield) => subfield.id !== subfieldId
-  //           ),
-  //         }
-  //   ));
-  // }
-
-
-  function deleteSubfield({detail:field}) {
-    let subfield = cloneDeep(field)
+  function deleteField({detail:field}) {
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
 
-    // get parent field of subfield, set equal to `field`
-
     let parentField = _get(updatedFields, idPath.slice(0, -2))
-    if (!parentField) {
-      saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
-    } else {
+    if (parentField) {
       handleDeleteSubfield(fields)
+    } else {
+      saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
     }
-
 
     function handleDeleteSubfield(fieldsToModify) {
       if (find(fieldsToModify, ['id', parentField.id])) {
@@ -264,7 +246,7 @@
         console.log('newField:', newField)
        console.log('found field')
        newField.fields = newField.fields.filter(
-         (field) => field.id != subfield.id
+         (f) => f.id != field.id
         )
         _set(updatedFields, idPath.slice(0, -2), newField)
       }
@@ -411,7 +393,7 @@
                   bind:field
                   isFirst={i === 0}
                   isLast={i === fields.length - 1}
-                  on:delete={deleteSubfield}
+                  on:delete={deleteField}
                   on:move={moveField}
                   on:createsubfield={createSubfield}
                   on:input={() => fields = fields.filter(Boolean)}
