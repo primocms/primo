@@ -523,4 +523,8 @@
     background: var(--color-gray-9);
   }
 
+  [slot="right"] {
+    width: 100%;
+  }
+
 </style>
