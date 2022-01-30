@@ -4,6 +4,7 @@
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
+  import {hydrateFieldsWithPlaceholders} from '../../../utils'
 
   const lorem = new LoremIpsum({
     sentencesPerParagraph: {
@@ -17,9 +18,7 @@
   });
 
   import IFrame from './IFrame.svelte';
-  import { getAllFields } from '../../../stores/helpers';
   import {
-    convertFieldsToData,
     processCode,
     wrapInStyleTags,
   } from '../../../utils';
@@ -55,10 +54,7 @@
     // const data = convertFieldsToData(allFields);
     // TODO: add dummy data
 
-    const data = _chain(symbol.fields.map(field => ({
-      ...field,
-      value: lorem.generateSentences(1)
-    })))
+    const data = _chain(hydrateFieldsWithPlaceholders(symbol.fields))
       .keyBy('key')
       .mapValues('value')
       .value();

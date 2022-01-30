@@ -1,4 +1,5 @@
 <script>
+  // Based on https://github.com/Readiz/svelte-split-pane
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   let leftSeparator, rightSeparator;
@@ -157,6 +158,8 @@
   export let rightPaneSize = $$slots.center ? '33%' : '66%';
   export let minRightPaneSize = '1.5rem';
 
+  export let styleLeft = ''
+
   $: leftPaneSize && resetSize();
   $: rightPaneSize && resetSize();
 
@@ -175,7 +178,7 @@
   --min-right-panel-size: {minRightPaneSize};
   ">
   {#if $$slots.center}
-    <div bind:this={left} class="left" class:transitioning>
+    <div bind:this={left} style={styleLeft} class="left" class:transitioning>
       <slot name="left">
         <div style="background-color: red;">Left Contents goes here...</div>
       </slot>
@@ -205,7 +208,7 @@
       </slot>
     </div>
   {:else}
-    <div bind:this={left} class="left" class:transitioning>
+    <div bind:this={left} class="left" style={styleLeft} class:transitioning>
       <slot name="left">
         <div style="background-color: red;">Left Contents goes here...</div>
       </slot>
