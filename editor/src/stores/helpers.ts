@@ -70,14 +70,14 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       console.log({site, page})
-      const css:string = await processCSS(site.css + page.css)
+      const css:string = await processCSS(site.code.css + page.code.css)
       const fields:any[] = unionBy(page.fields, site.fields, "key")
       const data:object = convertFieldsToData(fields)
       const svelte:{ css:string, html:string, js:string } = await processCode({ 
         code: {
           html: `<svelte:head>
-          ${site.html?.head}
-          ${page.html?.head}
+          ${site.code.html?.head}
+          ${page.code.html?.head}
           <style>${css}</style>
           </svelte:head>
           `, 
@@ -92,7 +92,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
       const data = convertFieldsToData(fields);
       const svelte = await processCode({ 
         code: {
-          html: site.html?.below + page.html?.below, 
+          html: site.code.html?.below + page.code.html?.below, 
           css: '', 
           js: ''
         },
@@ -107,11 +107,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
         if (!symbol) return 
 
-        // Remove fields no longer present in Symbol
-        const symbolFields:any[] = symbol.fields
-        const componentFields:any[] = block.fields.filter(field => find(symbolFields, ['id', field.id])) 
-        const fields:any[] = unionBy(componentFields, page.fields, site.fields, "key");
-        const data:object = convertFieldsToData(fields);
+        const data:object = site.content['en'][page.id][block.id]
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 
