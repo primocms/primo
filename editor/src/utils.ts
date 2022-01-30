@@ -1,4 +1,4 @@
-import _ from "lodash-es";
+import _, { chain as _chain } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum";
 
@@ -77,4 +77,22 @@ const lorem = new lipsum({
 });
 export const LoremIpsum = (nSentences = 1) => {
   return lorem.generateSentences(nSentences)
+}
+
+
+export function hydrateFieldsWithPlaceholders(fields) {
+  return fields.map(field => ({
+    ...field,
+    value: getSymbolValue(field)
+  }))
+
+  function getSymbolValue(field) {
+    if (field.type === 'repeater') return getRepeaterValue(field.fields)
+    else if (field.type === 'group') return {}
+    else return LoremIpsum()
+
+    function getRepeaterValue(subfields) {
+      return Array.from(Array(10)).map(i => _chain(subfields).map(s => ({ ...s, value: getSymbolValue(s) })).keyBy('key').mapValues('value').value())
+    }
+  }
 }

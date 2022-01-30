@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { LoremIpsum } from '../../../utils';
+  import { hydrateFieldsWithPlaceholders, LoremIpsum } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { EditField } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
@@ -84,7 +84,7 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? getSymbolValue(field) : getComponentValue(field)
+      value: component.type === 'symbol' ? hydrateFieldsWithPlaceholders(field) : getComponentValue(field)
     }))
 
     function getComponentValue(field) {
@@ -93,16 +93,6 @@
       else if (field.type === 'repeater') return []
       else if (field.type === 'group') return {}
       else return ''
-    }
-
-    function getSymbolValue(field) {
-      if (field.type === 'repeater') return getRepeaterValue(field.fields)
-      else if (field.type === 'group') return {}
-      else return LoremIpsum()
-
-      function getRepeaterValue(subfields) {
-        return Array.from(Array(10)).map(i => _chain(subfields).map(s => ({ ...s, value: getSymbolValue(s) })).keyBy('key').mapValues('value').value())
-      }
     }
   }
 
