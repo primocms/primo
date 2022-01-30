@@ -162,7 +162,6 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   `
 
   function buildBlocks(blocks:any[]): string {
-    console.log({blocks})
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type, css } = block
