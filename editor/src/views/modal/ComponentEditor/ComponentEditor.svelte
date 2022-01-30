@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { cloneDeep, find, isEqual, chain as _chain, capitalize, set as _set } from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain, set as _set } from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { hydrateFieldsWithPlaceholders, LoremIpsum } from '../../../utils';
+  import { hydrateFieldsWithPlaceholders, getPlaceholderValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
-  import { EditField } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
   import FullCodeEditor from './FullCodeEditor.svelte';
@@ -67,33 +66,25 @@
       .mapValues('content')
       .value()
   }
-
+  
   $: $locale, setupComponent()
   function setupComponent() {
     localComponent = getComponentFieldValues(localComponent)
-    fields = getFieldValues(localComponent.fields)
+    fields = component.type === 'symbol' ? hydrateFieldsWithPlaceholders(fields) : getFieldValues(localComponent.fields)
   }
 
   function getComponentFieldValues(component) {
     return cloneDeep({
       ...component,
-      fields: getFieldValues(component.fields)
+      fields: component.type === 'symbol' ? hydrateFieldsWithPlaceholders(component.fields) : getFieldValues(component.fields)
     })
   }
 
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? hydrateFieldsWithPlaceholders(field) : getComponentValue(field)
+      value: localContent[$locale][field.key] || getPlaceholderValue(field)
     }))
-
-    function getComponentValue(field) {
-      const val = localContent[$locale][field.key]
-      if (val) return val
-      else if (field.type === 'repeater') return []
-      else if (field.type === 'group') return {}
-      else return ''
-    }
   }
 
   // TODO: 
@@ -406,6 +397,7 @@
   <HSplitPane
     leftPaneSize={editorWidth}
     rightPaneSize={previewWidth}
+    styleLeft="overflow: { $showingIDE ? 'hidden' : 'scroll' }"
     on:resize={({ detail }) => {
       const { left, right } = detail;
       localStorage.setItem('editorWidth', left);

@@ -83,16 +83,16 @@ export const LoremIpsum = (nSentences = 1) => {
 export function hydrateFieldsWithPlaceholders(fields) {
   return fields.map(field => ({
     ...field,
-    value: getSymbolValue(field)
+    value: getPlaceholderValue(field)
   }))
+}
 
-  function getSymbolValue(field) {
-    if (field.type === 'repeater') return getRepeaterValue(field.fields)
-    else if (field.type === 'group') return {}
-    else return LoremIpsum()
+export function getPlaceholderValue(field) {
+  if (field.type === 'repeater') return getRepeaterValue(field.fields)
+  else if (field.type === 'group') return {}
+  else return LoremIpsum()
 
-    function getRepeaterValue(subfields) {
-      return Array.from(Array(10)).map(i => _chain(subfields).map(s => ({ ...s, value: getSymbolValue(s) })).keyBy('key').mapValues('value').value())
-    }
+  function getRepeaterValue(subfields) {
+    return Array.from(Array(3)).map(i => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
   }
 }
