@@ -5,6 +5,7 @@
   import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
   import site, { fields as siteFields, symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
+  import {hydrateFieldsWithPlaceholders} from '../../../utils'
 
   const dispatch = createEventDispatcher();
 
@@ -64,16 +65,14 @@
   }
 
   function buildData(content, fields) {
-    const keyValues = fields.map(field => ({
-      key: field.key,
-      value: content[field.key]
-    }))
-
-    const asObj = _.chain(keyValues)
+    return _.chain(fields)
+      .map(field => ({
+        key: field.key,
+        value: content[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
+      }))
       .keyBy('key')
       .mapValues('value')
       .value();
-    return asObj
   }
 
   let component;
