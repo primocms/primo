@@ -53,7 +53,6 @@
 
   let localComponent = cloneDeep(component)
   let localContent = component.type === 'symbol' ? null : getComponentContent($content)
-  $: console.log({localComponent})
 
   function getComponentContent(siteContent) {
     return _chain(Object.entries(siteContent)) 
@@ -97,9 +96,13 @@
     }
 
     function getSymbolValue(field) {
-      if (field.type === 'repeater') return []
+      if (field.type === 'repeater') return getRepeaterValue(field.fields)
       else if (field.type === 'group') return {}
       else return LoremIpsum()
+
+      function getRepeaterValue(subfields) {
+        return Array.from(Array(10)).map(i => _chain(subfields).map(s => ({ ...s, value: getSymbolValue(s) })).keyBy('key').mapValues('value').value())
+      }
     }
   }
 
