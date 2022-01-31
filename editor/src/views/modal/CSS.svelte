@@ -19,11 +19,6 @@
   } from '../../stores/data/draft';
   import { buildStaticPage } from '../../stores/helpers';
 
-  console.log($activePage)
-  console.log($site)
-  $: console.log($activePage)
-  $: console.log($site)
-
   let unsavedPageCSS = $pageCode.css;
   let unsavedSiteCSS = $siteCode.css;
 
@@ -51,7 +46,10 @@
           page,
           site: {
             ...$site,
-            css: unsavedSiteCSS,
+            code: {
+              ...$site.code,
+              css: unsavedSiteCSS
+            },
           },
         })
       )
@@ -83,7 +81,7 @@
 
   async function saveStyles() {
     updateActivePageCSS(unsavedPageCSS)
-    updateSiteCSS(unsavedPageCSS)
+    updateSiteCSS(unsavedSiteCSS)
     $saved = false;
     modal.hide();
   }

@@ -69,7 +69,6 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
   if (!page.sections) return null // ensure data fits current structure
   const [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
-      console.log({site, page})
       const css:string = await processCSS(site.code.css + page.code.css)
       const fields:any[] = unionBy(page.fields, site.fields, "key")
       const data:object = convertFieldsToData(fields)

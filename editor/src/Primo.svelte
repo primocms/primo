@@ -10,8 +10,7 @@
 
   const dispatch = createEventDispatcher();
 
-  import { id as pageId } from './stores/app/activePage';
-  import { sections, fields, code } from './stores/app/activePage';
+  import { id as pageId, sections, fields, code } from './stores/app/activePage';
   import { userRole } from './stores/app';
   import {
     saved,
@@ -66,6 +65,7 @@
   function setPageContent(id:string, pages:Array<PageType>): void {
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
+    console.log({rootPage})
     if (rootPage && !child) {
       setPageStore(rootPage);
     } else if (rootPage && child) {
