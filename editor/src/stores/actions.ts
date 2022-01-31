@@ -41,12 +41,18 @@ export async function updateActivePageCSS(css:string): Promise<void> {
 }
 
 
-export async function updateSiteHTML(newSiteHTML:{ head:string, below:string }): Promise<void> {
-  html.set(newSiteHTML)
+export async function updateSiteHTML(html:{ head:string, below:string }): Promise<void> {
+  code.update(c => ({
+    ...c,
+    html
+  }))
 }
 
-export async function updateSiteCSS(newSiteCSS:string): Promise<void> {
-  css.set(newSiteCSS)
+export async function updateSiteCSS(css:string): Promise<void> {
+  code.update(c => ({
+    ...c,
+    css
+  }))
 }
 
 // when a Symbol is deleted from the Site Library, 
