@@ -5,6 +5,9 @@
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
   import {hydrateFieldsWithPlaceholders} from '../../../utils'
+  import {locale} from '../../../stores/app/misc'
+  import {content} from '../../../stores/data/draft'
+  import {id as pageID} from '../../../stores/app/activePage'
 
   const lorem = new LoremIpsum({
     sentencesPerParagraph: {
@@ -50,14 +53,18 @@
   let error;
   compileComponentCode(symbol);
   async function compileComponentCode(symbol) {
-    // const allFields = getAllFields(symbol.fields);
-    // const data = convertFieldsToData(allFields);
     // TODO: add dummy data
 
-    const data = _chain(hydrateFieldsWithPlaceholders(symbol.fields))
+    const componentData = _chain(hydrateFieldsWithPlaceholders(symbol.fields))
       .keyBy('key')
       .mapValues('value')
       .value();
+
+      const data = {
+      ...$content[$locale],
+      ...$content[$locale][$pageID],
+      ...componentData
+    }
 
     const res = await processCode({
       code: {
