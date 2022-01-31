@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import { processCode } from '../../../utils';
   import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
-  import site, { fields as siteFields, symbols } from '../../../stores/data/draft';
+  import { content, fields as siteFields, symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {hydrateFieldsWithPlaceholders} from '../../../utils'
 
@@ -14,9 +14,9 @@
 
   $: symbol = _.find($symbols, ['id', block.symbolID])
 
-  $: siteContent = $site.content[$locale]
+  $: siteContent = $content[$locale]
   $: pageContent = siteContent[$pageID]
-  $: componentContent = pageContent?.[block.id] || {}
+  $: componentContent = pageContent[block.id] || {}
 
   $: componentData = buildData(componentContent, block.fields)
 
@@ -64,15 +64,21 @@
     component.$set(componentData);
   }
 
-  function buildData(content, fields) {
-    return _.chain(fields)
+  function buildData(componentContent, fields) {
+    const componentData = _.chain(fields)
       .map(field => ({
         key: field.key,
-        value: content[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
+        value: componentContent[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
       }))
       .keyBy('key')
       .mapValues('value')
       .value();
+
+    return {
+      ...$content[$locale],
+      ...$content[$locale][$pageID],
+      ...componentData
+    }
   }
 
   let component;

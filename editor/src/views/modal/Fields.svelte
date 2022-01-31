@@ -204,7 +204,7 @@
     }
   }
   
-    function applyFields() {
+  function applyFields() {
     saveFields(localPageFields, localSiteFields)
     modal.hide();
   }

@@ -143,7 +143,11 @@
   async function compileComponentCode({ html, css, js, fields }) {
     disableSave = true;
     const allFields = getAllFields(fields);
-    const data = convertFieldsToData(allFields);
+    const data = {
+      ...$content[$locale],
+      ...$content[$locale][pageID],
+      ...convertFieldsToData(allFields),
+    }
 
     // automatically create fields for keys without fields
     // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
