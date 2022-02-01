@@ -65,7 +65,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
-  await idb.set(JSON.stringify(finalRequest), final)
+  // await idb.set(JSON.stringify(finalRequest), final)
   return final
 
   function buildFinalRequest(data) {
