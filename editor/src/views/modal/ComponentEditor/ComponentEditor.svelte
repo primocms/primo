@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { hydrateFieldsWithPlaceholders, getPlaceholderValue } from '../../../utils';
+  import { hydrateFieldsWithPlaceholders, getPlaceholderValue, getEmptyValues } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
@@ -59,7 +59,7 @@
         const [ locale, pages ] = item
         return {
           locale,
-          content: pages[$pageID][component.id] || {}
+          content: pages[$pageID]?.[component.id] || {}
         }
       })
       .keyBy('locale')
@@ -83,7 +83,7 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: localContent[$locale][field.key] || getPlaceholderValue(field)
+      value: localContent[$locale][field.key] || getEmptyValues(field)
     }))
   }
 
@@ -404,8 +404,8 @@
                 />
               </Card>
             {/each}
-            <PrimaryButton on:click={addNewField}>
-              <i class="fas fa-plus" />Create a Field
+            <PrimaryButton icon="fas fa-plus" on:click={addNewField}>
+              Create a Field
             </PrimaryButton>
           </div>
         {/if}

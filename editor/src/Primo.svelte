@@ -65,7 +65,6 @@
   function setPageContent(id:string, pages:Array<PageType>): void {
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
-    console.log({rootPage})
     if (rootPage && !child) {
       setPageStore(rootPage);
     } else if (rootPage && child) {
