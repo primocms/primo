@@ -295,7 +295,7 @@
     />
   {:else if block.type === 'options'}
     <OptionsButtons
-      deletable={$sections.length <= 1}
+      deletable={$sections.length > 1}
       on:mount
       on:select={({ detail: component }) => {
         selectOption('component', component);
