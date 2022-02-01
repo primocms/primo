@@ -134,9 +134,18 @@
   let showingPublicLibrary = false;
 
   onMount(async () => {
-    const { data: symbols } = await axios.get(
+    let { data: symbols } = await axios.get(
       'https://api.primo.af/public-library.json'
     );
+    symbols = symbols.map(symbol => ({
+      ...symbol,
+      fields: symbol.value.fields,
+      code: {
+        html: symbol.value.html,
+        css: symbol.value.css,
+        js: symbol.value.js,
+      }
+    }))
     $publicSymbols = symbols || [];
   });
 
