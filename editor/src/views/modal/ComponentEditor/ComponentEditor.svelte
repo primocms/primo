@@ -70,20 +70,20 @@
   $: $locale, setupComponent()
   function setupComponent() {
     localComponent = getComponentFieldValues(localComponent)
-    fields = component.type === 'symbol' ? hydrateFieldsWithPlaceholders(fields) : getFieldValues(localComponent.fields)
+    fields = getFieldValues(localComponent.fields)
   }
 
   function getComponentFieldValues(component) {
     return cloneDeep({
       ...component,
-      fields: component.type === 'symbol' ? hydrateFieldsWithPlaceholders(component.fields) : getFieldValues(component.fields)
+      fields: getFieldValues(component.fields)
     })
   }
 
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: localContent[$locale][field.key] || getEmptyValues(field)
+      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[$locale][field.key] || getEmptyValues(field))
     }))
   }
 
@@ -332,7 +332,11 @@
   }
 
   function refreshPreview() {
-    fields = fields.filter(Boolean)
+    compileComponentCode({
+      html: rawHTML,
+      css: rawCSS,
+      js: rawJS
+    })
   }
 
   function saveComponent() {
@@ -400,7 +404,7 @@
                   on:delete={deleteField}
                   on:move={moveField}
                   on:createsubfield={createSubfield}
-                  on:input={() => fields = fields.filter(Boolean)}
+                  on:input={refreshPreview}
                 />
               </Card>
             {/each}
@@ -420,7 +424,7 @@
                 id="field-{field.key}">
                 <svelte:component
                   on:input={() => {
-                    refreshPreview()
+                    fields = fields.filter(Boolean) // to trigger setting `data`
                     saveLocalContent()
                   }}
                   this={getFieldComponent(field)}

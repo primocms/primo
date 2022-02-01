@@ -19,6 +19,7 @@
     symbols as actions,
     emancipateInstances,
   } from '../../../stores/actions';
+  import ModalHeader from '../../modal/ModalHeader.svelte'
 
   export let onselect = null
 
@@ -115,7 +116,6 @@
   function createInstance(symbol) {
     const instanceID = createUniqueID();
     return {
-      ...symbol,
       type: 'component',
       id: instanceID,
       symbolID: symbol.id
@@ -151,25 +151,8 @@
 
 </script>
 
+<ModalHeader />
 <main>
-  <div class="buttons">
-    <button
-      class="close"
-      on:click={modal.hide}
-      type="button"
-      xyz="small"
-      aria-label="Close modal"
-    >
-      <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
-  </div>
   <header class="tabs">
     <button id ="site-library" on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
     <button on:click={() => showingPublicLibrary = true} class:active={showingPublicLibrary}>Primo Library</button>

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { createEventDispatcher } from 'svelte';
   import modal from '../../../stores/app/modal'
+  import {showingIDE, userRole} from '../../../stores/app/misc'
 
   const dispatch = createEventDispatcher();
 
@@ -27,12 +28,17 @@
       <span>Add Content</span>
     </button>
     <button
-      on:click={() => modal.show('SYMBOL_LIBRARY', {
-        onselect: (component) => {
-          modal.hide()
-          dispatch('select', component)
-        }
-      })}
+      on:click={() => {
+          $showingIDE = $userRole === 'developer' // so that 'Create Component' opens up IDE
+          modal.show('SYMBOL_LIBRARY', {
+            onselect: (component) => {
+              modal.hide()
+              dispatch('select', component)
+            }
+          }, {
+            hideLocaleSelector: true
+          })
+      }}
       on:click={() => dispatch('delete')}>
       <i class="fas fa-clone" />
       <span>Add Component</span>

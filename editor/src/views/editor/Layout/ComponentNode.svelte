@@ -18,10 +18,10 @@
   $: pageContent = siteContent[$pageID]
   $: componentContent = pageContent?.[block.id] || {}
 
-  $: componentData = buildData(componentContent, block.fields)
+  $: componentData = buildData(componentContent, symbol.fields)
 
   $: allContent = [ componentContent, pageContent, siteContent ]
-  $: allFields = [ block.fields, $pageFields, $siteFields ]
+  $: allFields = [ symbol.fields, $pageFields, $siteFields ]
 
   let html = '';
   let css = '';
@@ -58,10 +58,10 @@
     }
   }
 
-  $: hydrateComponent(allContent, allFields);
-  async function hydrateComponent(content, fields) {
+  $: hydrateComponent(componentData);
+  async function hydrateComponent(data) {
     if (!component) return
-    component.$set(componentData);
+    component.$set(data);
   }
 
   function buildData(componentContent, fields) {

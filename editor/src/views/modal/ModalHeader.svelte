@@ -44,7 +44,7 @@
   </div>
   <div class="right-container">
     <slot />
-     {#if !$showingIDE}
+     {#if !$showingIDE && !$modal.hideLocaleSelector}
       <LocaleSelector align="left" />
     {/if}
     {#if $userRole === 'developer' && $modal.showSwitch}

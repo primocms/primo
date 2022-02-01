@@ -47,7 +47,8 @@
     return {
       ...symbol,
       id: block.id,
-      type: block.type
+      type: block.type,
+      symbolID: block.symbolID
     }
   }
 
@@ -176,7 +177,7 @@
       {#if block.symbolID}
         <Block
           on:mount={() => componentsMounted++}
-          {block}
+          block={hydrateInstance(block, $symbols)}
           {i}
         />
       {:else}
