@@ -41,6 +41,7 @@
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
+    on:change={() => dispatch('input')}
     bind:value={field.type}
     slot="type">
     {#each allFieldTypes as field}

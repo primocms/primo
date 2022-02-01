@@ -1,4 +1,4 @@
-import _, { chain as _chain } from "lodash-es";
+import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum";
 
@@ -90,7 +90,23 @@ export function hydrateFieldsWithPlaceholders(fields) {
 export function getPlaceholderValue(field) {
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
   else if (field.type === 'group') return {}
-  else return LoremIpsum()
+  else if (field.type === 'image') return {
+    url: 'https://picsum.photos/600/400?blur=10',
+    src: 'https://picsum.photos/600/400?blur=10',
+    alt: 'Placeholder image',
+    size: null
+  }
+  else if (field.type === 'text') return _capitalize(lorem.generateWords(3))
+  else if (field.type === 'content') return lorem.generateSentences(2)
+  else if (field.type === 'link') return {
+    label: lorem.generateWords(1),
+    url: '/'
+  }
+  else if (field.type === 'url') return '/'
+  else {
+    console.warn('No placeholder set for field type', field.type)
+    return ''
+  }
 
   function getRepeaterValue(subfields) {
     return Array.from(Array(3)).map(i => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
@@ -107,5 +123,21 @@ export function hydrateFieldsWithEmptyValues(fields) {
 export function getEmptyValues(field) {
   if (field.type === 'repeater') return []
   else if (field.type === 'group') return {}
-  else return ''
+  else if (field.type === 'image') return {
+    url: '',
+    src: '',
+    alt: '',
+    size: null
+  }
+  else if (field.type === 'text') return ''
+  else if (field.type === 'content') return ''
+  else if (field.type === 'link') return {
+    label: '',
+    url: '/'
+  }
+  else if (field.type === 'url') return '/'
+  else {
+    console.warn('No placeholder set for field type', field.type)
+    return ''
+  }
 }
