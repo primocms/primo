@@ -8,7 +8,6 @@ import { content, code, fields, timeline, undone, site as unsavedSite } from './
 import type { Site, Symbol, Page } from '../const'
 
 export async function hydrateSite(data:Site): Promise<void> {
-  console.log({data})
   sections.set([])
   stores.id.set(data.id)
   stores.name.set(data.name)

@@ -87,9 +87,6 @@
     }))
   }
 
-  // TODO: 
-  // Ensure component is not recompiled when changing content
-
   function saveLocalContent() {
     localContent = {
       ...localContent,
@@ -142,11 +139,20 @@
   let disableSave = false;
   async function compileComponentCode({ html, css, js, fields }) {
     disableSave = true;
-    const allFields = getAllFields(fields);
+
+    // TODO: 
+    // Ensure component is not recompiled when changing content
+
+    // prevent 'unexpected token' error from passing page id with dash
+    const siteContent = _chain(Object.entries($content[$locale]).map(([page, sections]) => ({
+      page: validateKey(page), 
+      sections
+    }))).keyBy('page').mapValues('sections').value()
+
     const data = {
-      ...$content[$locale],
-      ...$content[$locale][pageID],
-      ...convertFieldsToData(allFields),
+      ...siteContent,
+      ...$content[$locale][$pageID],
+      ...convertFieldsToData(fields),
     }
 
     // automatically create fields for keys without fields
@@ -326,10 +332,10 @@
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
-  // function validateFieldKey(key) {
-  //   // replace dash and space with underscore
-  //   return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
-  // }
+  function validateKey(key) {
+    // replace dash and space with underscore
+    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
+  }
 
   function refreshPreview() {
     fields = fields.filter(Boolean)
