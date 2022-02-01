@@ -3,15 +3,13 @@
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
   import {locale} from '../../stores/app/misc'
-  import { convertFieldsToData } from '../../utils';
-  import { getAllFields } from '../../stores/helpers';
 
   export let view = 'small';
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
   export let error = null;
-  export let fields = [];
+  export let data = {}
 
   let iframe;
   let previewLoaded = false;
@@ -60,21 +58,16 @@
     interval = setInterval(resizePreview, 500);
   });
   onDestroy(() => {
-    // set('preview', { html: '', css: '', js: '' });
     clearInterval(interval);
   });
 
-  $: props = {
-    // id,
-    ...convertFieldsToData(getAllFields(fields)),
-  };
+  $: props = data
 
   $: setIframeApp({
     iframeLoaded,
-    componentApp,
-    props,
+    componentApp
   });
-  function setIframeApp({ iframeLoaded, componentApp, props }) {
+  function setIframeApp({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
       iframe.contentWindow.postMessage({ componentApp, props });
     }

@@ -132,28 +132,26 @@
   $: compileComponentCode({
     html: rawHTML,
     css: rawCSS,
-    js: rawJS,
-    fields
+    js: rawJS
   });
 
-  let disableSave = false;
-  async function compileComponentCode({ html, css, js, fields }) {
-    disableSave = true;
-
-    // TODO: 
-    // Ensure component is not recompiled when changing content
-
+  $: data = getComponentData(fields)
+  function getComponentData(fields) {
     // prevent 'unexpected token' error from passing page id with dash
     const siteContent = _chain(Object.entries($content[$locale]).map(([page, sections]) => ({
       page: validateKey(page), 
       sections
     }))).keyBy('page').mapValues('sections').value()
-
-    const data = {
+    return {
       ...siteContent,
       ...$content[$locale][$pageID],
       ...convertFieldsToData(fields),
     }
+  }
+
+  let disableSave = false;
+  async function compileComponentCode({ html, css, js }) {
+    disableSave = true;
 
     // automatically create fields for keys without fields
     // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
@@ -253,11 +251,7 @@
     function handleDeleteSubfield(fieldsToModify) {
       if (find(fieldsToModify, ['id', parentField.id])) {
         const newField = cloneDeep(parentField)
-        console.log('newField:', newField)
-       console.log('found field')
-       newField.fields = newField.fields.filter(
-         (f) => f.id != field.id
-        )
+        newField.fields = newField.fields.filter((f) => f.id != field.id)
         _set(updatedFields, idPath.slice(0, -2), newField)
       }
       else {
@@ -451,7 +445,7 @@
         view="small"
         {loading}
         {componentApp}
-        {fields}
+        {data}
         {error} />
     </div>
   </HSplitPane>

@@ -8,7 +8,7 @@ export const iframePreview = (locale = 'en') => `
         let c;
 
         function update(source = null, props) {
-          if (c & !source) {
+          if (c && !source && props) {
             c.$set(props);
           } else if (source) {
             const blob = new Blob([source], { type: 'text/javascript' });
