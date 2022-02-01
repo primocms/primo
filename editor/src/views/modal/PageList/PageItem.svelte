@@ -6,11 +6,9 @@
   import { PrimaryButton } from '../../../components/buttons';
   import Preview from '../../../components/misc/Preview.svelte';
 
-  // import { router } from 'tinro';
   import modal from '../../../stores/app/modal';
   import { buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
-  import { goto } from '$app/navigation';
   import { page as pageStore } from '$app/stores';
 
   export let page;
@@ -32,8 +30,6 @@
   let name = page.name || '';
   let id = page.id || '';
   $: disableSave = !name || !id;
-
-  $: console.log({$pageStore})
 
   $: pageURL = `/${$pageStore.params.site}/${
     page.id === 'index' ? '' : page.id || ''

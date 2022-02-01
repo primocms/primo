@@ -100,7 +100,6 @@
   }
 
   function getListedPages(childPageId, pages) {
-    console.log({childPageId, rootPageId, pages})
     if (childPageId) {
       const rootPage = find(pages, ['id', rootPageId]);
       return rootPage.pages || [];
@@ -108,7 +107,6 @@
   }
 
   function getBreadCrumbs(childPageId, pages) {
-    console.log({childPageId, pages})
     if (childPageId) {
       const rootPage = find(pages, ['id', rootPageId]);
       return [

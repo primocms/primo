@@ -60,7 +60,7 @@
       .mapValues('value')
       .value();
 
-      const data = {
+    const data = {
       ...$content[$locale],
       ...$content[$locale][$pageID],
       ...componentData

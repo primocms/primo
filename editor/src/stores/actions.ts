@@ -124,17 +124,29 @@ export const symbols = {
 }
 
 export const pages = {
-  add: (newpage:Page, path:string): void => {
+  add: (newPage:Page, path:string): void => {
     saved.set(false)
     const currentPages:Array<Page> = get(stores.pages)
-    let newPages:Array<Page> = cloneDeep(currentPages)
+    let updatedPages:Array<Page> = cloneDeep(currentPages)
     if (path.length > 0) {
-      const rootPage:Page = find(newPages, ['id', path[0]])
-      rootPage.pages = rootPage.pages ? [...rootPage.pages, newpage] : [newpage]
+      const rootPage:Page = find(updatedPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
     } else {
-      newPages = [...newPages, newpage]
+      updatedPages = [...updatedPages, newPage]
     }
-    stores.pages.set(newPages)
+
+    // const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+    //   locale,
+    //   content: {
+    //     ...pages,
+    //     [newPage.id]: chain(newPage.sections).keyBy('id').mapValues(() => ({})).value()
+    //   }
+    // }))).keyBy('locale').mapValues('content').value()
+
+    // console.log({updatedContent})
+
+    // stores.content.set(updatedContent)
+    stores.pages.set(updatedPages)
   },
   delete: (pageId:string, path:string): void => {
     saved.set(false)

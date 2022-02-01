@@ -96,3 +96,16 @@ export function getPlaceholderValue(field) {
     return Array.from(Array(3)).map(i => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
   }
 }
+
+export function hydrateFieldsWithEmptyValues(fields) {
+  return fields.map(field => ({
+    ...field,
+    value: getPlaceholderValue(field)
+  }))
+}
+
+export function getEmptyValues(field) {
+  if (field.type === 'repeater') return []
+  else if (field.type === 'group') return {}
+  else return ''
+}

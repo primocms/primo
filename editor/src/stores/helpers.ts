@@ -1,9 +1,9 @@
-import {unionBy, find, uniqBy} from 'lodash-es'
+import {unionBy, find, uniqBy, chain as _chain} from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
 import { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
 import { symbols } from './data/draft'
-import { convertFieldsToData, processCode, processCSS } from '../utils'
+import { convertFieldsToData, processCode, processCSS, hydrateFieldsWithPlaceholders } from '../utils'
 import {DEFAULTS} from '../const'
 import type { Page as PageType, Site, Symbol } from '../const'
 import { Page } from '../const'
@@ -106,7 +106,8 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
         const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
         if (!symbol) return 
 
-        const data:object = site.content['en'][page.id][block.id]
+        const pageData = site.content['en'][page.id]
+        const data:object = pageData ? pageData[block.id] : _chain(hydrateFieldsWithPlaceholders(block.fields)).keyBy('key').mapValues('value').value();
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 

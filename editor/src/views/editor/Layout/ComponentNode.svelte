@@ -16,7 +16,7 @@
 
   $: siteContent = $content[$locale]
   $: pageContent = siteContent[$pageID]
-  $: componentContent = pageContent[block.id] || {}
+  $: componentContent = pageContent?.[block.id] || {}
 
   $: componentData = buildData(componentContent, block.fields)
 
