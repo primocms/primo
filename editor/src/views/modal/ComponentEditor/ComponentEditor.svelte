@@ -1,7 +1,8 @@
 <script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { hydrateFieldsWithPlaceholders, getPlaceholderValue, getEmptyValues } from '../../../utils';
+  import { getPlaceholderValue, getEmptyValues } from '../../../utils';
+  import {replaceDashWithUnderscore} from '../../../utilities'
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
@@ -139,7 +140,7 @@
   function getComponentData(fields) {
     // prevent 'unexpected token' error from passing page id with dash
     const siteContent = _chain(Object.entries($content[$locale]).map(([page, sections]) => ({
-      page: validateKey(page), 
+      page: replaceDashWithUnderscore(page), 
       sections
     }))).keyBy('page').mapValues('sections').value()
     return {
@@ -325,11 +326,6 @@
 
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
-
-  function validateKey(key) {
-    // replace dash and space with underscore
-    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
-  }
 
   function refreshPreview() {
     compileComponentCode({

@@ -39,7 +39,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   let final 
 
   if (res.error) {
-    console.log({res})
+    console.log('Compilation error:', res.error)
     final = {
       error: escapeHtml(res.error)
     }

@@ -187,6 +187,7 @@ export const Component = (): Component => ({
 export type Symbol = {
   type: 'symbol',
   id: string,
+  name: string,
   code: {
     html: string,
     css: string,
@@ -198,6 +199,7 @@ export type Symbol = {
 export const Symbol = (): Symbol => ({
   type: 'symbol',
   id: createUniqueID(),
+  name: '',
   code: {
     css: '',
     html: '',

@@ -6,6 +6,7 @@
   import { content, fields as siteFields, symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {hydrateFieldsWithPlaceholders} from '../../../utils'
+  import {replaceDashWithUnderscore} from '../../../utilities'
 
   const dispatch = createEventDispatcher();
 
@@ -19,9 +20,6 @@
   $: componentContent = pageContent?.[block.id] || {}
 
   $: componentData = buildData(componentContent, symbol.fields)
-
-  $: allContent = [ componentContent, pageContent, siteContent ]
-  $: allFields = [ symbol.fields, $pageFields, $siteFields ]
 
   let html = '';
   let css = '';
@@ -74,9 +72,15 @@
       .mapValues('value')
       .value();
 
+    // prevent 'unexpected token' error from passing page id with dash
+    const siteContent = _.chain(Object.entries($content[$locale]).map(([page, sections]) => ({
+      page: replaceDashWithUnderscore(page), 
+      sections
+    }))).keyBy('page').mapValues('sections').value()
+
     return {
-      ...$content[$locale],
-      ...$content[$locale][$pageID],
+      ...siteContent,
+      ...siteContent[$pageID],
       ...componentData
     }
   }

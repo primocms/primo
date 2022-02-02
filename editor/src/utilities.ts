@@ -18,3 +18,7 @@ export function move(array: Array<any>, from: number, to: number) {
   array[to] = target;
   return array;
 }
+
+export function replaceDashWithUnderscore(str) {
+  return str.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
+}

@@ -16,7 +16,6 @@
   import { id, sections } from '../../../stores/app/activePage';
   import { pages, updateContent, symbols } from '../../../stores/actions';
 
-  export let content
   export let block
   export let i
 
@@ -270,7 +269,7 @@
     />
   </div>
   {#if block.type === 'component'}
-    <ComponentNode {content} {block} {node} on:mount={() => {mounted = true; dispatch('mount')}} />
+    <ComponentNode {block} {node} on:mount={() => {mounted = true; dispatch('mount')}} />
   {:else if block.type === 'content'}
     <ContentNode
       {block}

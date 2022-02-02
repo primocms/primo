@@ -99,9 +99,6 @@
         dispatch('blur');
       },
     });
-    setTimeout(() => {
-      editor.chain().focus();
-    }, 200);
     dispatch('mount');
   });
 
