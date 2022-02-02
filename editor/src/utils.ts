@@ -148,8 +148,17 @@ export function validateSiteStructure(site): Site {
 
   console.log({site})
 
-  if (defined_structure(site, ['html'])) return convertSite(site) 
-  else return site
+  let validated
+  try {
+    if (defined_structure(site, ['html'])) validated = convertSite(site) 
+    else if (defined_structure(site, ['content'])) validated = site
+    else validated = null
+  } catch(e) {
+    console.warn('Site is invalid')
+    validated = null
+  }
+
+  return validated
 
   function convertSite(site) {
 
@@ -198,7 +207,7 @@ export function validateSiteStructure(site): Site {
       })
 
       function convertSections(sections, cb) {
-        return sections.map(section => {
+        return sections.filter(s => s.type !== 'options').map(section => {
           cb({
             id: section.id,
             content: section.value.fields ? _.chain(section.value.fields).keyBy('key').mapValues('value').value() : section.value.html
