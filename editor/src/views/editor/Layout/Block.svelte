@@ -69,10 +69,7 @@
   function ContentRow() {
     return {
       id: createUniqueID(),
-      type: 'content',
-      value: {
-        html: '',
-      },
+      type: 'content'
     };
   }
 
