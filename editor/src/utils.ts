@@ -1,6 +1,7 @@
 import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum";
+import type {Site, Page, Field} from './const'
 
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}: { code:any, data:object, buildStatic?:boolean, format?:string}) {
   const {css,error} = await processors.css(code.css || '')
@@ -140,4 +141,126 @@ export function getEmptyValues(field) {
     console.warn('No placeholder set for field type', field.type)
     return ''
   }
+}
+
+
+export function validateSiteStructure(site): Site {
+
+  console.log({site})
+
+  if (defined_structure(site, ['html'])) return convertSite(site) 
+  else return site
+
+  function convertSite(site) {
+
+    const siteContent = {}
+    const updated:Site = {
+      id: site.id,
+      name: site.name,
+      pages: convertPages(site.pages, (page) => {
+        siteContent[page.id] = page.content
+      }),
+      code: convertCode(site),
+      symbols: convertSymbols(site),
+      fields: convertFields(site.fields, (field) => {
+        siteContent[field.id] = field.content
+      }),
+      content: {
+        en: null
+      }
+    }
+    updated.content['en'] = siteContent
+
+    console.log({updated})
+
+    return updated
+
+    function convertPages(pages = [], fn = (_) => {}) {
+      return pages.map((page):Page => {
+        const pageContent = {}
+        const updatedPage = {
+          id: page.id,
+          name: page.name,
+          sections: convertSections(page.sections, (section) => {
+            pageContent[section.id] = section.content
+          }),
+          code: convertCode(page),
+          fields: convertFields(page.fields, (field) => {
+            pageContent[field.id] = field.content
+          }),
+          pages: convertPages(page.pages)
+        }
+        fn({
+          id: page.id,
+          content: pageContent
+        })
+        return updatedPage
+      })
+
+      function convertSections(sections, cb) {
+        return sections.map(section => {
+          cb({
+            id: section.id,
+            content: section.value.fields ? _.chain(section.value.fields).keyBy('key').mapValues('value').value() : section.value.html
+          })
+          return {
+            id: section.id,
+            type: section.type,
+            ...(section.symbolID ? { symbolID : section.symbolID } : {})
+          }
+        })
+      }
+    }
+
+    function convertFields(fields = [], fn:Function = () => {}): Array<Field> {
+      return fields.map(field => {
+        fn({
+          id: field.key,
+          content: field.value
+        })
+        return {
+          id: field.id,
+          key: field.key,
+          label: field.label,
+          type: field.type,
+          fields: convertFields(field.fields)
+        }
+      })
+    }
+
+    function convertCode(obj) {
+      return {
+        html: obj.html,
+        css: obj.css,
+        js: obj.js || ''
+      }
+    }
+  
+    function convertSymbols(site) {
+      return site.symbols.map(symbol => ({
+        type: 'symbol',
+        id: symbol.id,
+        name: symbol.title || '',
+        code: {
+          html: symbol.value.html,
+          css: symbol.value.css,
+          js: symbol.value.js
+        },
+        fields: convertFields(symbol.value.fields)
+      }))
+    }
+  }
+
+}
+
+
+// https://stackoverflow.com/questions/24924464/how-to-check-if-object-structure-exists
+function defined_structure(obj, attrs) {
+  var tmp = obj;
+  for(let i=0; i<attrs.length; ++i) {
+      if(tmp[attrs[i]] == undefined)
+          return false;
+      tmp = tmp[attrs[i]];
+  }
+  return true;
 }

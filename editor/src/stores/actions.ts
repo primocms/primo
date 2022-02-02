@@ -6,17 +6,20 @@ import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
 import { content, code, fields, timeline, undone, site as unsavedSite } from './data/draft'
 import type { Site, Symbol, Page } from '../const'
+import { validateSiteStructure } from '../utils'
 
 export async function hydrateSite(data:Site): Promise<void> {
+  const site = validateSiteStructure(data)
+  
   sections.set([])
-  stores.id.set(data.id)
-  stores.name.set(data.name)
-  stores.pages.set(data.pages)
+  stores.id.set(site.id)
+  stores.name.set(site.name)
+  stores.pages.set(site.pages)
 
-  code.set(data.code)
-  fields.set(data.fields)
-  stores.symbols.set(data.symbols)
-  stores.content.set(data.content)
+  code.set(site.code)
+  fields.set(site.fields)
+  stores.symbols.set(site.symbols)
+  stores.content.set(site.content)
 }
 
 export async function updateActivePageHTML(html:string): Promise<void> {
