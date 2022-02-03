@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "dist/index.js",
   "svelte": "src/index.js",
@@ -57,6 +57,7 @@
     "js-base64": "^3.6.0",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
+    "lorem-ipsum": "^2.0.4",
     "lz-string": "^1.4.4",
     "mini-svg-data-uri": "^1.4.3",
     "mousetrap": "^1.6.5",
