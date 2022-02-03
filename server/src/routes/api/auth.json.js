@@ -3,7 +3,8 @@ import {signUp} from '../../supabase/auth'
 import {users, config} from '../../supabase/db'
 import {getNumberOfUsers} from '../../supabase/admin'
 
-export async function post(req) {
+export async function post({ request }) {
+  const payload = await request.json()
   const nUsers = await getNumberOfUsers()
   if (nUsers === 0) {
     await createUser(true)
@@ -14,7 +15,7 @@ export async function post(req) {
     }
   }
 
-  return await authorizeRequest(req, async () => {
+  return await authorizeRequest(request, async () => {
     await createUser()
     await config.update('invitation-key', '')
     return {
@@ -25,12 +26,12 @@ export async function post(req) {
   })
 
   async function createUser(admin = false) {
-    await signUp(req.body)
+    await signUp(payload)
     await users.create( admin ? 
     {
-      ...req.body,
+      ...payload,
       role: 'admin'
-    } : req.body)
+    } : payload)
   }
 }
 
