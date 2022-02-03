@@ -1,6 +1,6 @@
 <script>
   import {fly} from 'svelte/transition'
-  import _find from 'lodash-es/find'
+  import {find as _find} from 'lodash-es'
   import { locale } from '../../stores/app/misc';
   import {addLocale} from '../../stores/actions'
   import {locales as availableLocales} from '../../const'

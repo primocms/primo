@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store'
 import { browser } from '$app/env'
 import { get, set } from 'idb-keyval'
-import _find from 'lodash-es/find.js'
+import {find as _find} from 'lodash-es'
 
 const store = writable([])
 

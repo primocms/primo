@@ -1,6 +1,6 @@
 <script>
   import { onMount, createEventDispatcher } from 'svelte';
-  import _find from 'lodash-es/find'
+  import {find as _find} from 'lodash-es'
   import ToolbarButton from './ToolbarButton.svelte';
   import LocaleSelector from './LocaleSelector.svelte'
   import { PrimoButton } from '../../components/buttons';

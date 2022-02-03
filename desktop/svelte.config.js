@@ -13,8 +13,6 @@ const config = {
       fallback: 'index.html'
     }),
     router: true,
-		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte',
     vite: {
       server: {
         fs: {
