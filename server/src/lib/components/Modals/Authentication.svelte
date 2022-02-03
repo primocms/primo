@@ -367,11 +367,6 @@
         button:hover {
           color: var(--color-primored);
         }
-
-        .switch {
-          margin-left: auto;
-          text-decoration: underline;
-        }
       }
 
       --Spinner-size: 1rem;
@@ -385,12 +380,12 @@
       }
     }
 
-    hr {
+    /* hr {
       margin: 1rem 0;
       border-color: var(--color-gray-8);
-    }
+    } */
 
-    .providers {
+    /* .providers {
       --color-link: var(--color-gray-8);
       --color-link-hover: var(--color-primored-dark);
 
@@ -398,6 +393,6 @@
         margin-right: 0.5rem;
         width: 1.25rem;
       }
-    }
+    } */
   }
 </style>

@@ -72,14 +72,4 @@
       }
     }
   }
-
-  .button {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--color-gray-7);
-    border-radius: var(--primo-border-radius);
-
-    &:hover {
-      box-shadow: var(--primo-ring-primored);
-    }
-  }
 </style>

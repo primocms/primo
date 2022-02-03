@@ -223,26 +223,11 @@
       padding: 2rem;
       min-height: 100vh;
     }
-
-    hr {
-      margin: 2rem 0;
-      border-color: var(--color-gray-9);
-    }
-
     .sites-container {
       display: grid;
       gap: 1rem;
 
-      span.info {
-        padding: 1rem;
-        color: white;
-        background: var(--color-gray-9);
-      }
-
       header {
-        h2 {
-          color: white;
-        }
         a {
           text-decoration: underline;
           color: var(--color-gray-4);
