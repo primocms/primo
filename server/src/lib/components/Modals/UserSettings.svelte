@@ -105,12 +105,6 @@
     & > * {
       margin: 0.5rem 0;
     }
-
-    hr {
-      border-color: var(--color-gray-8);
-      margin: 1.5rem 0;
-    }
-
     --space-y: 1rem;
   }
 </style>

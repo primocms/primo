@@ -68,10 +68,6 @@
     &:hover {
       background: var(--primo-color-primored);
     }
-    &[disabled] {
-      opacity: 0.5;
-      pointer-events: none;
-    }
   }
 
   label input {

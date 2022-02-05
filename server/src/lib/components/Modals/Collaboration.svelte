@@ -97,12 +97,6 @@
 
     --TextInput-mb: 1rem;
 
-    .subheading {
-      font-size: 1rem;
-      font-weight: 600;
-      padding-bottom: 0.25rem;
-    }
-
     .description {
       display: flex;
       margin-top: 1rem;

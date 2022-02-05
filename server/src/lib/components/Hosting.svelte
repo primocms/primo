@@ -296,16 +296,9 @@
     padding: 1rem;
     background: var(--primo-color-codeblack);
     .icon-item {
-      i {
-        margin-right: 5px;
-      }
       a {
         text-decoration: underline;
       }
-    }
-    .box-footer {
-      font-size: 0.75rem;
-      color: var(--primo-color-gray-5);
     }
     .user {
       display: grid;
@@ -318,11 +311,6 @@
     }
     a {
       text-decoration: underline;
-    }
-    .hosts {
-      width: 100%;
-      display: grid;
-      gap: 0.5rem;
     }
     &.host-account {
       width: 100%;
@@ -342,23 +330,6 @@
         border-bottom: 1px solid var(--primo-color-gray-9);
         margin-bottom: 1rem;
       }
-      img {
-        width: 3rem;
-        height: 3rem;
-        object-fit: contain;
-        border-radius: 50%;
-      }
-      .user-details {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-
-        .footer {
-          margin-top: 0.25rem;
-          font-size: 0.75rem;
-          color: var(--primo-color-gray-5);
-        }
-      }
     }
     /* .deployment {
       display: flex;
@@ -369,9 +340,6 @@
         color: var(--primo-color-gray-3);
       }
     } */
-    .link {
-      align-self: flex-end;
-    }
   }
 
   .boxes {
@@ -403,17 +371,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      svg {
-        width: 6rem;
-        height: 100%;
-        padding: 1rem 0;
-      }
       &:not([disabled]):hover {
         box-shadow: 0 0 0 3px var(--primo-color-primored);
-      }
-      &[disabled] {
-        cursor: initial;
-        opacity: 0.5;
       }
     }
   }
@@ -430,25 +389,6 @@
       font-size: 0.75rem;
       text-decoration: underline;
       margin-bottom: 0.5rem;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-
-      input {
-        border: 0;
-        width: 100%;
-        background: var(--primo-color-gray-8);
-        color: var(--primo-color-gray-1);
-      }
-    }
-    .submit-button {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1rem;
     }
   }
 </style>

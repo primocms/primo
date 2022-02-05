@@ -313,9 +313,6 @@
     color: var(--color-gray-1);
     font-weight: 600;
     transition: color 0.1s;
-    a {
-      text-decoration: underline;
-    }
   }
 
   .subtitle {
