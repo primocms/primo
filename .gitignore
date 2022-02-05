@@ -6,5 +6,6 @@ node_modules
 desktop/out
 desktop/build
 desktop/.svelte-kit
+desktop/dist
 
 server/.svelte-kit

@@ -1,5 +1,5 @@
 <script>
-  import '$lib/assets/reset.css'
+  import '../reset.css'
   import { browser } from '$app/env'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
