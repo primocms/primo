@@ -14,7 +14,6 @@
       "entitlements": "entitlements.plist",
       "category": "public.app-category.developer-tools"
     },
-    "afterSign": "notarize.js",
     "dmg": {
       "sign": false
     },
@@ -33,10 +32,6 @@
     "dist": "electron-builder",
     "electron": "electron .",
     "start": "concurrently \"npm:dev\" \"electron .\"",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "make-windows": "electron-packager . --platform=win32 --overwrite",
-    "publish": "electron-forge publish",
     "dev": "svelte-kit dev -p 3333",
     "build": "svelte-kit build",
     "preview": "svelte-kit preview",
