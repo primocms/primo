@@ -21,19 +21,18 @@
 
 </script>
 
+<div id="primo-desktop-toolbar-overlay">
+  <div>
+    {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
+  </div>
+</div>
 <nav
-bind:this={element}
 role="navigation"
 aria-label="toolbar"
 id="primo-toolbar"
 class="primo-reset"
 class:mounted>
-<div id="primo-desktop-toolbar">
-  <div>
-    {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
-  </div>
-</div>
-<div class="menu-container">
+<div class="menu-container" bind:this={element}>
   <div class="left">
     <PrimoButton variants="py-2" on:signOut />
     {#each buttons as group}
@@ -105,39 +104,40 @@ class:mounted>
 
 
 <style lang="postcss">
-  nav {
+  #primo-desktop-toolbar-overlay {
+    display: block !important;
+    height: 30px;
+    -webkit-app-region: drag;
+    background-color: var(--color-codeblack);
+    user-select: none;
+    border-bottom: 1px solid var(--color-gray-9);
+
+    div {
+      color: var(--color-gray-3);
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding-left: 5rem;
+
+      span {
+        margin-left: 0.25rem;
+        color: var(--color-gray-5);
+      }
+
+    }
+  }
+  
+  #primo-toolbar {
     position: fixed;
     left: 0;
     right: 0;
     top: -10rem;
     z-index: 999999999;
+    padding-top: 40px;
     transition: 0.2s top;
     transition-delay: 0.5s;
     will-change: top;
-
-    #primo-desktop-toolbar {
-      display: none;
-      height: 30px;
-      -webkit-app-region: drag;
-      background-color: var(--color-codeblack);
-      user-select: none;
-      border-bottom: 1px solid var(--color-gray-9);
-
-      div {
-        color: var(--color-gray-3);
-        font-size: 0.75rem;
-        display: flex;
-        align-items: center;
-        height: 100%;
-        padding-left: 5rem;
-
-        span {
-          margin-left: 0.25rem;
-          color: var(--color-gray-5);
-        }
-
-      }
-    }
 
     &.mounted {
       top: 0;
