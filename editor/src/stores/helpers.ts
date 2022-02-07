@@ -112,7 +112,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
         const pageData = site.content[locale][page.id]
         const componentData = pageData ? pageData[section.id] : _chain(hydrateFieldsWithPlaceholders(section.fields)).keyBy('key').mapValues('value').value();
 
-        if (!componentData) return null // component has been placed but not filled out
+        if (!componentData) return null // component has been placed but not filled out with content
         const data = getComponentData(componentData, symbol.fields)
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code

@@ -27,6 +27,7 @@
     generatedPreview = await buildStaticPage({
       page: homepage,
       site,
+      separateModules: false
     })
 
     if (!generatedPreview) {

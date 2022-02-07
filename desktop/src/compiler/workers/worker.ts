@@ -1,7 +1,9 @@
 import PromiseWorker from 'promise-worker';
+import {find as _find} from 'lodash-es'
 import {rollup} from "../lib/rollup-browser";
 import registerPromiseWorker from 'promise-worker/register'
 import * as svelte from 'svelte/compiler'
+import {locales} from '@primo-app/primo/src/const'
 
 const CDN_URL = "https://cdn.jsdelivr.net/npm";
 
@@ -9,7 +11,7 @@ async function fetch_package(url) {
     return (await fetch(url)).text();
 }
 
-registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format = 'esm'}) {
+registerPromiseWorker(async function ({code,site,locale,hydrated,buildStatic = true, format = 'esm'}) {
 
     const final = {
         ssr: '',
@@ -21,6 +23,23 @@ registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format 
 
     function generate_lookup(code) {
         component_lookup.set(`./App.svelte`, code);
+        component_lookup.set('./LocaleSelector.svelte', `
+            <script>
+                console.log(${JSON.stringify(site)})
+                const currentLocale = window.location.pathname.split('/').slice(1)[0]
+                let locale = ${JSON.stringify(locales.map(l => l.key))}.includes(currentLocale) ? currentLocale : 'en'
+                function navigateToLocale(e) {
+                    window.location.href = '/' + e.target.value
+                }
+            </script>
+            <select value={locale} on:change={navigateToLocale}>
+                ${
+                    Object.keys(site.content).map(option => `
+                        <option ${locale === option ? 'selected' : ''} value="${option}">${_find(locales, ['key', option])['name']}</option>
+                    `).join('')
+                }
+            </select>
+        `)
         component_lookup.set(`./H.svelte`, `
             <script>
                 import {onMount} from 'svelte'
@@ -117,12 +136,8 @@ registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format 
                         // relative imports from a remote package
                         if (importee.startsWith("."))
                             return new URL(importee, importer).href;
-    
-                        // bare named module imports (importing an npm package)
-                        if (importer === './App.svelte') {
-                            return `https://cdn.skypack.dev/${importee}`
-                        }
                         
+                        // bare named module imports (importing an npm package)
                         if (importer.startsWith('https://cdn.skypack.dev/')) {
                             return `https://cdn.skypack.dev${importee}`
                         }
@@ -157,6 +172,13 @@ registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format 
                         if (/.*\.svelte/.test(id)) {
                             try {
                                 const res = svelte.compile(code, svelteOptions)
+                                // temporary workaround for handling when LocaleSelector.svelte breaks because of race condition
+                                // TODO: find cause & remove workaround
+                                if(res.vars?.[0]?.['name'] === 'undefined') {
+                                    console.warn('Used temporary workaround to hide component')
+                                    const newRes = svelte.compile('<div></div>', svelteOptions)
+                                    return newRes.js.code
+                                }
                                 const warnings = res.warnings.filter(w => !w.message.startsWith(`Component has unused export`)).filter(w => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
                                 if (warnings[0]) {
                                     final.error = warnings[0].toString()

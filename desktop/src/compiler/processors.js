@@ -1,29 +1,16 @@
-import * as idb from 'idb-keyval';
 import _ from 'lodash'
 import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
+import {get} from 'svelte/store'
+import {site} from '@primo-app/primo/src/stores/data/draft'
+import {locale} from '@primo-app/primo/src/stores/app/misc'
 
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 
-// Clear out storage to avoid mucking it up
-// idb.clear()
-
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
-  const finalData = _.cloneDeep(data)
-
-  let finalRequest = buildFinalRequest(finalData)
-
-  const cached = await idb.get(JSON.stringify(finalRequest))
-  if (cached) {
-    return cached
-  }
-
-  // const newData = await replaceImagesWithBase64(data)
-  const newData = data
-
-  finalRequest = buildFinalRequest(newData)
+  const finalRequest = buildFinalRequest(data)
 
   let res
   try {
@@ -38,7 +25,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   let final 
 
   if (res.error) {
-    console.log({res})
+    console.log(res.error)
     final = {
       error: escapeHtml(res.error)
     }
@@ -68,7 +55,6 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
-  await idb.set(JSON.stringify(finalRequest), final)
   return final
 
   function buildFinalRequest(finalData) {
@@ -100,7 +86,9 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
       code: finalCode,
       hydrated,
       buildStatic,
-      format
+      format,
+      site: get(site),
+      locale: get(locale)
     }
   }
 }

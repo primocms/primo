@@ -28,20 +28,11 @@
 
   import type { Site as SiteType, Page as PageType } from './const'
 
-	import { browser } from '$app/env';
-  import {registerProcessors} from './component'
-
   export let data:SiteType = Site();
   export let role:'developer'|'content' = 'developer';
   export let saving:boolean = false;
   $: $savingStore = saving;
   $: $userRole = role;
-
-	if (browser) {
-		import('./compiler/processors').then(({ html, css }) => {
-			registerProcessors({ html, css });
-		});
-	}
 
   function saveSite(): void {
     dispatch('save', $draft);
