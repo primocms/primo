@@ -131,19 +131,6 @@
         --color-link: var(--color-primored);
       }
     }
-
-    details {
-      margin-bottom: 1.5rem;
-
-      summary {
-        margin-bottom: 0.5rem;
-        &:focus {
-          outline: 0;
-          cursor: pointer;
-          font-size: var(--font-size-2);
-        }
-      }
-    }
   }
   #upload-json {
     margin-bottom: 0.5rem;
