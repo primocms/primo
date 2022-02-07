@@ -69,7 +69,7 @@
       setPageStore(rootPage);
     } else if (rootPage && child) {
       const childPage = find(rootPage.pages, ['id', id]);
-      setPageStore(childPage);
+      if (childPage) setPageStore(childPage)
     } else {
       console.warn('Could not navigate to page', id);
     }

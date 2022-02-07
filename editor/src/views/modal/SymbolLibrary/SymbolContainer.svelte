@@ -4,10 +4,11 @@
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
-  import {hydrateFieldsWithPlaceholders} from '../../../utils'
   import {locale} from '../../../stores/app/misc'
   import {content} from '../../../stores/data/draft'
   import {id as pageID} from '../../../stores/app/activePage'
+  import {getComponentData} from '../../../stores/helpers'
+  import {hydrateFieldsWithPlaceholders} from '../../../utils'
 
   const lorem = new LoremIpsum({
     sentencesPerParagraph: {
@@ -53,18 +54,7 @@
   let error;
   compileComponentCode(symbol);
   async function compileComponentCode(symbol) {
-    // TODO: add dummy data
-
-    const componentData = _chain(hydrateFieldsWithPlaceholders(symbol.fields))
-      .keyBy('key')
-      .mapValues('value')
-      .value();
-
-    const data = {
-      ...$content[$locale],
-      ...$content[$locale][$pageID],
-      ...componentData
-    }
+    const data = getComponentData(hydrateFieldsWithPlaceholders(symbol.fields), symbol.fields)
 
     const res = await processCode({
       code: {

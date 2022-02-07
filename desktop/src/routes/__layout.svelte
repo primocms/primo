@@ -45,7 +45,7 @@
   <span>primo v{primo.version}</span>
 </div>
 
-<style global>
+<style global lang="postcss">
   .primo-reset {
     font-family: 'Satoshi', sans-serif !important;
   }
@@ -72,10 +72,10 @@
     position: fixed;
     bottom: 0.5rem;
     left: 0.5rem;
+  }
 
-    span:first-child {
-      margin-right: 0.5rem;
-    }
+  #app-version span:first-child {
+    margin-right: 0.5rem;
   }
 
   .primo-reset {

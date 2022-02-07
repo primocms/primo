@@ -3,10 +3,10 @@
   import { createEventDispatcher } from 'svelte';
   import { processCode } from '../../../utils';
   import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
-  import { content, fields as siteFields, symbols } from '../../../stores/data/draft';
+  import { content, fields as siteFields, symbols, pages } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {hydrateFieldsWithPlaceholders} from '../../../utils'
-  import {replaceDashWithUnderscore} from '../../../utilities'
+  import {getComponentData} from '../../../stores/helpers'
 
   const dispatch = createEventDispatcher();
 
@@ -19,7 +19,7 @@
   $: pageContent = siteContent[$pageID]
   $: componentContent = pageContent?.[block.id] || {}
 
-  $: componentData = buildData(componentContent, symbol.fields)
+  $: componentData = getComponentData(componentContent, symbol.fields)
 
   let html = '';
   let css = '';
@@ -62,28 +62,6 @@
     component.$set(data);
   }
 
-  function buildData(componentContent, fields) {
-    const componentData = _.chain(fields)
-      .map(field => ({
-        key: field.key,
-        value: componentContent[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
-      }))
-      .keyBy('key')
-      .mapValues('value')
-      .value();
-
-    // prevent 'unexpected token' error from passing page id with dash
-    const siteContent = _.chain(Object.entries($content[$locale]).map(([page, sections]) => ({
-      page: replaceDashWithUnderscore(page), 
-      sections
-    }))).keyBy('page').mapValues('sections').value()
-
-    return {
-      ...siteContent,
-      ...siteContent[$pageID],
-      ...componentData
-    }
-  }
 
   let component;
 

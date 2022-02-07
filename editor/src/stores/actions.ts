@@ -10,7 +10,7 @@ import { validateSiteStructure } from '../utils'
 
 export async function hydrateSite(data:Site): Promise<void> {
   const site = validateSiteStructure(data)
-  
+  if (!site) return
   sections.set([])
   stores.id.set(site.id)
   stores.name.set(site.name)

@@ -26,7 +26,7 @@
   let bubbleMenu;
   let editor;
 
-  let content = $site.content[$locale][$pageID][block.id]
+  let content = $site.content[$locale]?.[$pageID]?.[block.id] || ''
   $: updateNodeContent($locale, $pageID, block.id) 
   function updateNodeContent(locale, pageID, blockID) {
     if (!editor) return
@@ -100,6 +100,7 @@
       },
     });
     dispatch('mount');
+    editor.chain().focus().run()
   });
 
   onDestroy(() => {

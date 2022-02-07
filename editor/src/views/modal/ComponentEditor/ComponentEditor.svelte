@@ -2,7 +2,6 @@
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { getPlaceholderValue, getEmptyValues } from '../../../utils';
-  import {replaceDashWithUnderscore} from '../../../utilities'
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
@@ -32,8 +31,7 @@
   import modal from '../../../stores/app/modal';
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType } from '../../../const';
-  import { symbols } from '../../../stores/actions';
-  import { getAllFields, getSymbol } from '../../../stores/helpers';
+  import { getComponentData } from '../../../stores/helpers';
 
   // This is the only way I could figure out how to get lodash's debouncer to work correctly
   const quickDebounce = createDebouncer(200);
@@ -136,19 +134,7 @@
     js: rawJS
   });
 
-  $: data = getComponentData(fields)
-  function getComponentData(fields) {
-    // prevent 'unexpected token' error from passing page id with dash
-    const siteContent = _chain(Object.entries($content[$locale]).map(([page, sections]) => ({
-      page: replaceDashWithUnderscore(page), 
-      sections
-    }))).keyBy('page').mapValues('sections').value()
-    return {
-      ...siteContent,
-      ...$content[$locale][$pageID],
-      ...convertFieldsToData(fields),
-    }
-  }
+  $: data = getComponentData(convertFieldsToData(fields), fields)
 
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
