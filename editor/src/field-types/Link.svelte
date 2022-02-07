@@ -61,7 +61,7 @@
         <select bind:value={field.value.url}>
           {#each $pages as page}
             <option value={page.id === 'index' ? '/' : page.id}>
-              {page.title}
+              {page.name}
               <pre>({page.id === 'index' ? '/' : page.id})</pre>
             </option>
           {/each}
