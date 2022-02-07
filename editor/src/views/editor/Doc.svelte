@@ -30,7 +30,6 @@
   import { getAllFields } from '../../stores/helpers';
   import { goto } from '$app/navigation';
   import {navigating} from '$app/stores'
-  import {cloneDeep} from 'lodash-es'
 
   export let element;
 

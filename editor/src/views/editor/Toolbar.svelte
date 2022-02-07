@@ -31,8 +31,9 @@ role="navigation"
 aria-label="toolbar"
 id="primo-toolbar"
 class="primo-reset"
+bind:this={element}
 class:mounted>
-<div class="menu-container" bind:this={element}>
+<div class="menu-container">
   <div class="left">
     <PrimoButton variants="py-2" on:signOut />
     {#each buttons as group}
