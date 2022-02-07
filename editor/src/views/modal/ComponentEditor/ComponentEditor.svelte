@@ -136,6 +136,16 @@
 
   $: data = getComponentData(convertFieldsToData(fields), fields)
 
+  // ensure placeholder values always conform to type
+  // TODO: do for remaining fields
+  $: fields = fields.map(field => {
+    if (component.type === 'symbol' && field.type === 'link' && !field.value.url) return {
+      ...field,
+      value: getPlaceholderValue(field) 
+    }
+    else return field 
+  })
+
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
     disableSave = true;
