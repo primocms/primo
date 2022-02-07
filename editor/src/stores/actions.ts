@@ -1,4 +1,4 @@
-import { find, last, cloneDeep, some, chain } from 'lodash-es'
+import { find, last, cloneDeep, some, chain, unset } from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
 import { id as activePageID, sections } from './app/activePage'
@@ -58,30 +58,35 @@ export async function updateSiteCSS(css:string): Promise<void> {
 }
 
 // when a Symbol is deleted from the Site Library, 
-// it's instances on the page are emancipated
-export async function emancipateInstances(symbol:Symbol): Promise<void> {
-  const updatedPages = await Promise.all(
-    get(stores.pages).map(async (page) => {
-      const updatedSections = await page.sections.map(block => {
-        if (block.symbolID === symbol.id) {
-          const symbol = getSymbol(block.symbolID)
-          return {
-            ...block,
-            symbolID: null,
-            fields: block.fields
-          }
-        } else return block
-      })
-      return {
-        ...page,
-        sections: updatedSections,
-      };
-    })
-  );
-  stores.pages.set(updatedPages)
+// delete every instance of it on the site as well (and their content)
+export async function deleteInstances(symbol:Symbol): Promise<void> {
 
-  const activePageSections = find(updatedPages, ['id', get(activePageID)])['sections']
-  sections.set(activePageSections)
+  // remove from page sections
+  const sectionsToDeleteFromContent = []
+  const updatedPages = cloneDeep(get(stores.pages)).map(removeInstancesFromPage)
+  function removeInstancesFromPage(page) {
+    const updatedSections = page.sections.filter(section => {
+      if (section.symbolID === symbol.id) {
+        const sectionPath = [ page.id, section.id ]
+        sectionsToDeleteFromContent.push(sectionPath)
+      } else return true
+    })
+    return {
+      ...page,
+      sections: updatedSections,
+      pages: page.pages.map(removeInstancesFromPage)
+    };
+  }
+
+  // remove sections from content tree
+  const updatedSiteContent = cloneDeep(get(stores.site).content)
+  const locales = Object.keys(get(stores.site).content)
+  locales.forEach(locale => {
+    sectionsToDeleteFromContent.forEach(path => unset(updatedSiteContent, [ locale, ...path ]))
+  })
+
+  stores.content.set(updatedSiteContent)
+  stores.pages.set(updatedPages)
 }
 
 export function undoSiteChange(): void {

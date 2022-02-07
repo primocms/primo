@@ -11,13 +11,14 @@
   import Container from './SymbolContainer.svelte';
   import { Symbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
+  import {convertSymbols} from '../../../utils'
   import { userRole } from '../../../stores/app';
   import modal from '../../../stores/app/modal';
   import { symbols } from '../../../stores/data/draft';
   import Spinner from '../../../components/misc/Spinner.svelte'
   import {
     symbols as actions,
-    emancipateInstances,
+    deleteInstances,
   } from '../../../stores/actions';
   import ModalHeader from '../../modal/ModalHeader.svelte'
 
@@ -59,7 +60,7 @@
   }
 
   async function deleteSymbol(symbol) {
-    await emancipateInstances(symbol);
+    await deleteInstances(symbol);
     actions.delete(symbol);
   }
 
@@ -137,15 +138,7 @@
     let { data: symbols } = await axios.get(
       'https://api.primo.af/public-library.json'
     );
-    symbols = symbols.map(symbol => ({
-      ...symbol,
-      fields: symbol.value.fields,
-      code: {
-        html: symbol.value.html,
-        css: symbol.value.css,
-        js: symbol.value.js,
-      }
-    }))
+    symbols = convertSymbols(symbols)
     $publicSymbols = symbols || [];
   });
 
@@ -228,7 +221,7 @@
       buttons={!showingPublicLibrary ? [
         { 
           onclick: () => {
-            const confirm = window.confirm('Are you sure you want to delete this component?');
+            const confirm = window.confirm('This will delete ALL instances of this component across your site. Continue?');
             if (confirm) {
               deleteSymbol(item);
             }
