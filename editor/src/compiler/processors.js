@@ -2,6 +2,8 @@ import * as idb from 'idb-keyval';
 import _ from 'lodash'
 import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
+import {get} from 'svelte/store'
+import {site} from '../stores/data/draft'
 
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
@@ -10,7 +12,7 @@ import postCSSWorker from './workers/postcss.worker?worker'
 const PostCSSWorker = new postCSSWorker
 const cssPromiseWorker = new PromiseWorker(PostCSSWorker);
 
-export async function html({ code, data, buildStatic = true, format = 'esm'}) {
+export async function html({ code, data, buildStatic = true, format = 'esm', locale}) {
 
   const finalData = _.cloneDeep(data)
 
@@ -101,7 +103,9 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
       code: finalCode,
       hydrated,
       buildStatic,
-      format
+      format,
+      site: get(site),
+      locale
     }
   }
 }

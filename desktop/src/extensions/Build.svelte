@@ -171,45 +171,61 @@
         path: `primo.json`,
         content: JSON.stringify(site),
       },
-      [
-        {
-          path: `edit/index.html`,
-          content: primoPage,
-        },
-        // {
-        //   path: 'robots.txt',
-        //   content: `
-        //   # Example 3: Block all but AdsBot crawlers
-        //   User-agent: *
-        //   Disallow: /`
-        // },
-      ],
+      // [
+      //   {
+      //     path: `edit/index.html`,
+      //     content: primoPage,
+      //   },
+      //   // {
+      //   //   path: 'robots.txt',
+      //   //   content: `
+      //   //   # Example 3: Block all but AdsBot crawlers
+      //   //   User-agent: *
+      //   //   Disallow: /`
+      //   // },
+      // ],
     ])
 
     return buildSiteTree(pages, site)
 
     async function buildPageTree({ page, site }) {
-      const { id } = page
-      const { html, modules } = await buildStaticPage({
+
+      const { modules } = await buildStaticPage({
         page,
         site,
-        separateModules: true,
+        separateModules: true
       })
-      const formattedHTML = await beautify.html(html)
 
-      return await Promise.all([
-        {
-          path: `${id === 'index' ? `index.html` : `${id}/index.html`}`,
-          content: formattedHTML,
-        },
+      const pages = await Promise.all(Object.keys(site.content).map(async (locale) => {
+
+        const { html } = await buildStaticPage({
+          page,
+          site,
+          separateModules: true,
+          locale
+        })
+        const formattedHTML = await beautify.html(html)
+
+        const path = locale === 'en' ? (`${page.id === 'index' ? `index.html` : `${page.id}/index.html`}`) : (`${page.id === 'index' ? `${locale}/index.html` : `${locale}/${page.id}/index.html`}`)
+
+        return await Promise.all([
+          {
+            path,
+            content: formattedHTML,
+          },
+          ...(page.pages
+            ? page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
+            : []),
+        ])
+      }))
+
+      return [
+        ...flattenDeep(pages),
         ...modules.map((module) => ({
           path: `_modules/${module.symbol}.js`,
           content: module.content,
         })),
-        ...(page.pages
-          ? page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
-          : []),
-      ])
+      ]
     }
 
     async function buildSiteTree(pages, site) {

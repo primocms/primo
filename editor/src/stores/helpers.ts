@@ -1,10 +1,11 @@
 import {unionBy, find, uniqBy, chain as _chain} from 'lodash-es'
+import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
 import { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
-import { symbols } from './data/draft'
+import { symbols, pages, content } from './data/draft'
+import {locale} from './app/misc'
 import { convertFieldsToData, processCode, processCSS, hydrateFieldsWithPlaceholders } from '../utils'
-import {replaceDashWithUnderscore} from '../utilities'
 import {DEFAULTS} from '../const'
 import type { Page as PageType, Site, Symbol } from '../const'
 import { Page } from '../const'
@@ -66,13 +67,14 @@ export function getSymbol(symbolID): Symbol {
   return find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site, separateModules = false }: { page:Page, site:Site, separateModules:boolean }) {
+export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page:Page, site:Site, locale?:string, separateModules?:boolean }) {
   if (!page.sections) return null // ensure data fits current structure
-  const [ head, below, ...blocks ] = await Promise.all([
+  let [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       const css:string = await processCSS(site.code.css + page.code.css)
       const fields:any[] = unionBy(page.fields, site.fields, "key")
       const data:object = convertFieldsToData(fields)
+      // TODO: fix
       const svelte:{ css:string, html:string, js:string } = await processCode({ 
         code: {
           html: `<svelte:head>
@@ -101,26 +103,17 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
 
       resolve(svelte) 
     }),
-    ...page.sections.map(async block => {
-      if (block.type === 'component') {
+    ...page.sections.map(async section => {
+      if (section.type === 'component') {
 
-        const symbol = site.symbols.filter(s => s.id === block.symbolID)[0]
+        const symbol = site.symbols.filter(s => s.id === section.symbolID)[0]
         if (!symbol) return 
 
-        // prevent 'unexpected token' error from passing page id with dash
-        const siteContent = _chain(Object.entries(site.content['en']).map(([page, sections]) => ({
-          page: replaceDashWithUnderscore(page), 
-          sections
-        }))).keyBy('page').mapValues('sections').value()
+        const pageData = site.content[locale][page.id]
+        const componentData = pageData ? pageData[section.id] : _chain(hydrateFieldsWithPlaceholders(section.fields)).keyBy('key').mapValues('value').value();
 
-        const pageData = site.content['en'][page.id]
-        const componentData = pageData ? pageData[block.id] : _chain(hydrateFieldsWithPlaceholders(block.fields)).keyBy('key').mapValues('value').value();
-
-        const data = {
-          ...siteContent,
-          ...pageData,
-          ...componentData
-        }
+        if (!componentData) return null // component has been placed but not filled out
+        const data = getComponentData(componentData, symbol.fields)
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 
@@ -131,27 +124,30 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
             js 
           },
           data,
-          format: 'esm'
+          format: 'esm',
+          locale
         });
 
         return {
           ...svelte,
           type: 'component',
           symbol: symbol.id,
-          id: block.id
+          id: section.id
         }
 
-      } else if (block.type === 'content') {
+      } else if (section.type === 'content') {
         return {
-          html: site.content['en'][page.id][block.id],
+          html: site.content[locale][page.id][section.id],
           css: '',
           js: '',
           type: 'content',
-          id: block.id
+          id: section.id
         }
       } 
     })
   ])
+
+  blocks = blocks.filter(Boolean) // remove empty blocks
 
   // happens for empty blocks
   if (!blocks[0]) {
@@ -163,7 +159,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
 
   const final = `
   <!DOCTYPE html>
-  <html lang="en">
+  <html lang="${locale}">
     <head>${head.html || ''}</head>
     <body class="primo-page">
       ${buildBlocks(blocks)}
@@ -177,9 +173,7 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type, css } = block
-      const html = block.html || site.content.en[page.id][id] || ''
-
-      // if content type, attach module to replace html w/ downloaded replacement
+      const html = block.html || site.content[locale][page.id][id] || ''
       return `
       ${css ? `<style>${css}</style>` : ``}
       <div class="primo-section has-${type}" id="${id}">
@@ -187,40 +181,21 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
           ${html}
         </div>
       </div>
-      ${
-        type === 'content' ?
-        `
-        <script type="module" async>
-          // import active language json, hydrate block
-          const urlSearchParams = new URLSearchParams(window.location.search);
-          const {lang = 'en'} = Object.fromEntries(urlSearchParams.entries());
-          const file = '/' + lang + '.json'
-          fetch(file).then(res => res.json()).then(content => {
-            document.querySelector('#${id} > .primo-${type}').innerHTML = content['${page.id}']['${block.id}']
-          })
-        </script>
-        ` : ''
-      }
     `
     }).join('')
   }
 
   function buildModules(blocks:any[]): string {
     return blocks.filter(block => block.js).map(block => {
-      const { id } = block
       return separateModules ? 
         `<script type="module" async>
-          import App from './_modules/${block.symbol}.js';
-          const urlSearchParams = new URLSearchParams(window.location.search);
-          const {lang = 'en'} = Object.fromEntries(urlSearchParams.entries());
-          const file = '/' + lang + '.json'
-          fetch(file).then(res => res.json()).then(content => {
-            new App({
-              target: document.querySelector('#${block.id}'),
-              hydrate: true,
-              props: content['${page.id}']['${block.id}']
-            });
-          })
+          import App from '/_modules/${block.symbol}.js';
+          const content = ${JSON.stringify(site.content[locale][page.id][block.id])}
+          new App({
+            target: document.querySelector('#${block.id}'),
+            hydrate: true,
+            props: content
+          });
           // fetch primo.json, extract language json, pass into app, listen to localstorage changes for locale change
         </script>`
       : `<script type="module" async>
@@ -249,4 +224,31 @@ export async function buildStaticPage({ page, site, separateModules = false }: {
     html: final,
     modules
   } : final
+}
+
+
+export function getComponentData(componentContent, fields) {
+  const componentData = _.chain(fields)
+    .map(field => ({
+      key: field.key,
+      value: componentContent[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
+    }))
+    .keyBy('key')
+    .mapValues('value')
+    .value();
+
+  const pageIDs = _.flattenDeep(get(pages).map(page => {
+    if (page.pages.length === 0) {
+      return [page.id]
+    } else return [ page.id, ...page.pages.map(p => p.id) ]
+  }))
+
+  // remove pages from data object
+  const siteContent = _.chain(Object.entries(get(content)[get(locale)]).filter(([page]) => !pageIDs.includes(page))).keyBy('page').mapValues('sections').value()
+
+  return {
+    ...siteContent,
+    ...siteContent[get(id)],
+    ...componentData
+  }
 }

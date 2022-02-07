@@ -1,6 +1,8 @@
 import {rollup} from "../lib/rollup-browser";
 import registerPromiseWorker from 'promise-worker/register'
 import * as svelte from 'svelte/compiler'
+import {locales} from '../../const'
+import {find as _find} from 'lodash-es'
 
 const CDN_URL = "https://cdn.jsdelivr.net/npm";
 
@@ -8,7 +10,7 @@ async function fetch_package(url) {
     return (await fetch(url)).text();
 }
 
-registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format = 'esm'}) {
+registerPromiseWorker(async function ({code,site,hydrated,buildStatic = true, format = 'esm', locale}) {
 
     const final = {
         ssr: '',
@@ -20,6 +22,22 @@ registerPromiseWorker(async function ({code,hydrated,buildStatic = true, format 
 
     function generate_lookup(code) {
         component_lookup.set(`./App.svelte`, code);
+        component_lookup.set('./LocaleSelector.svelte', `
+            <script>
+                const currentLocale = window.location.pathname.split('/').slice(1)[0]
+                let locale = ${JSON.stringify(locales.map(l => l.key))}.includes(currentLocale) ? currentLocale : 'en'
+                function navigateToLocale(e) {
+                    window.location.href = '/' + e.target.value
+                }
+            </script>
+            <select value={locale} on:change={navigateToLocale}>
+                ${
+                    Object.keys(site.content).map(option => `
+                        <option ${locale === option ? 'selected' : ''} value="${option}">${_find(locales, ['key', option])['name']}</option>
+                    `).join('')
+                }
+            </select>
+        `)
         component_lookup.set(`./H.svelte`, `
             <script>
                 import {onMount} from 'svelte'

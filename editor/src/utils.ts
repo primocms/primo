@@ -3,7 +3,7 @@ import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum";
 import type {Site, Page, Field} from './const'
 
-export async function processCode({ code, data = {}, buildStatic = true, format = 'esm'}: { code:any, data:object, buildStatic?:boolean, format?:string}) {
+export async function processCode({ code, data = {}, buildStatic = true, format = 'esm', locale = 'en'}: { code:any, data:object, buildStatic?:boolean, format?:string, locale?:string}) {
   const {css,error} = await processors.css(code.css || '')
   if (error) {
     return {error}
@@ -12,7 +12,7 @@ export async function processCode({ code, data = {}, buildStatic = true, format 
     code: {
       ...code,
       css,
-    }, data, buildStatic, format
+    }, data, buildStatic, format, locale
   })
   return res
 }
@@ -145,8 +145,6 @@ export function getEmptyValues(field) {
 
 
 export function validateSiteStructure(site): Site {
-
-  console.log({site})
 
   let validated
   try {
