@@ -90,7 +90,7 @@ export function hydrateFieldsWithPlaceholders(fields) {
 
 export function getPlaceholderValue(field) {
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
-  else if (field.type === 'group') return {}
+  else if (field.type === 'group') return getGroupValue(field)
   else if (field.type === 'image') return {
     url: 'https://picsum.photos/600/400?blur=10',
     src: 'https://picsum.photos/600/400?blur=10',
@@ -111,6 +111,10 @@ export function getPlaceholderValue(field) {
 
   function getRepeaterValue(subfields) {
     return Array.from(Array(3)).map(_ => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
+  }
+
+  function getGroupValue(field) {
+    return _chain(field.fields).keyBy('key').mapValues((field) => getPlaceholderValue(field)).value()
   }
 }
 
@@ -168,7 +172,7 @@ export function validateSiteStructure(site): Site {
         siteContent[page.id] = page.content
       }),
       code: convertCode(site),
-      symbols: convertSymbols(site),
+      symbols: convertSymbols(site.symbols),
       fields: convertFields(site.fields, (field) => {
         siteContent[field.id] = field.content
       }),
@@ -219,22 +223,6 @@ export function validateSiteStructure(site): Site {
       }
     }
 
-    function convertFields(fields = [], fn:Function = () => {}): Array<Field> {
-      return fields.map(field => {
-        fn({
-          id: field.key,
-          content: field.value
-        })
-        return {
-          id: field.id,
-          key: field.key,
-          label: field.label,
-          type: field.type,
-          fields: convertFields(field.fields)
-        }
-      })
-    }
-
     function convertCode(obj) {
       return {
         html: obj.html,
@@ -242,22 +230,38 @@ export function validateSiteStructure(site): Site {
         js: obj.js || ''
       }
     }
-  
-    function convertSymbols(site) {
-      return site.symbols.map(symbol => ({
-        type: 'symbol',
-        id: symbol.id,
-        name: symbol.title || '',
-        code: {
-          html: symbol.value.html,
-          css: symbol.value.css,
-          js: symbol.value.js
-        },
-        fields: convertFields(symbol.value.fields)
-      }))
-    }
   }
 
+}
+
+export function convertSymbols(symbols) {
+  return symbols.map(symbol => ({
+    type: 'symbol',
+    id: symbol.id,
+    name: symbol.title || '',
+    code: {
+      html: symbol.value.html,
+      css: symbol.value.css,
+      js: symbol.value.js
+    },
+    fields: convertFields(symbol.value.fields)
+  }))
+}
+
+export function convertFields(fields = [], fn:Function = () => {}): Array<Field> {
+  return fields.map(field => {
+    fn({
+      id: field.key,
+      content: field.value
+    })
+    return {
+      id: field.id,
+      key: field.key,
+      label: field.label,
+      type: field.type,
+      fields: convertFields(field.fields)
+    }
+  })
 }
 
 

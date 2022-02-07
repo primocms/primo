@@ -4,9 +4,6 @@
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
-  import {locale} from '../../../stores/app/misc'
-  import {content} from '../../../stores/data/draft'
-  import {id as pageID} from '../../../stores/app/activePage'
   import {getComponentData} from '../../../stores/helpers'
   import {hydrateFieldsWithPlaceholders} from '../../../utils'
 
