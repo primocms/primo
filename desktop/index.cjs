@@ -1,4 +1,4 @@
-const { autoUpdater } = require('electron')
+const { app, autoUpdater, dialog } = require('electron')
 
 const isDev = require('electron-is-dev');
 const checkInternetConnected = require('check-internet-connected');
