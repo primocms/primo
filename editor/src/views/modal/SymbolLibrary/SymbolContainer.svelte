@@ -32,7 +32,7 @@
 
   export let titleEditable = true
   export let symbol;
-  export let title = symbol.title || '';
+  export let name = symbol.name || '';
   export let buttons = [];
   export let hovering = false;
   export let action = null
@@ -40,9 +40,9 @@
   let height = localStorage.getItem(`symbol-height-${symbol.id}`) || 0;
   $: localStorage.setItem(`symbol-height-${symbol.id}`, height + 32);
 
-  function changeTitle(e) {
+  function changeName() {
     document.activeElement.blur();
-    symbol.title = title;
+    symbol.name = name;
     dispatch('update', symbol);
     editingTitle = false
   }
@@ -95,10 +95,10 @@
     class:active
     >
     <IFrame bind:height {componentApp} />
-    {#if title}
+    {#if name}
       <header>
         <div class="component-label">
-          <span>{title}</span>
+          <span>{name}</span>
         </div>
         {@html action.svg}
       </header>
@@ -140,11 +140,11 @@
     <header bind:this={header} class:has-action={action && buttons.length === 0}>
       <div class="component-label">
         {#if titleEditable}
-          <form on:submit|preventDefault={changeTitle}>
+          <form on:submit|preventDefault={changeName}>
             <!-- svelte-ignore a11y-label-has-associated-control -->
             <label on:click={() => editingTitle = true}>
-              {#if title || editingTitle}
-              <input type="text" bind:value={title} size={title.length} />
+              {#if name || editingTitle}
+              <input type="text" bind:value={name} size={name.length} />
               {/if}
               {#if !editingTitle}
                 <svg
@@ -159,9 +159,9 @@
               {/if}
             </label>
           </form>
-        {:else if title}
-          <div class="action-title">
-            <span>{title}</span>
+        {:else if name}
+          <div class="action-name">
+            <span>{name}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
@@ -266,7 +266,7 @@
         pointer-events: none;
       }
 
-      .action-title {
+      .action-name {
         display: flex;
         justify-content: space-between;
         width: 100%;
