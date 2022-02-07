@@ -14,7 +14,6 @@
 
   import {
     convertFieldsToData,
-    createDebouncer,
     processCode,
     processCSS,
     wrapInStyleTags,
@@ -28,13 +27,9 @@
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
-  import modal from '../../../stores/app/modal';
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType } from '../../../const';
   import { getComponentData } from '../../../stores/helpers';
-
-  // This is the only way I could figure out how to get lodash's debouncer to work correctly
-  const quickDebounce = createDebouncer(200);
 
   export let component:ComponentType|SymbolType = Component();
   export let header = {
@@ -53,7 +48,7 @@
   let localContent = component.type === 'symbol' ? null : getComponentContent($content)
 
   function getComponentContent(siteContent) {
-    return _chain(Object.entries(siteContent)) 
+    const componentContent = _chain(Object.entries(siteContent)) 
       .map(item => {
         const [ locale, pages ] = item
         return {
@@ -64,6 +59,7 @@
       .keyBy('locale')
       .mapValues('content')
       .value()
+    return getComponentData(componentContent, localComponent.fields)
   }
   
   $: $locale, setupComponent()

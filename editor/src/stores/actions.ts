@@ -236,46 +236,13 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
   }
 }
 
-export async function saveFields(newPageFields, newSiteFields) {
+export async function saveFields(newPageFields, newSiteFields, newContent) {
   pages.update(get(activePageID), (page) => ({
     ...page,
     fields: cloneDeep(newPageFields),
   }));
   fields.set(newSiteFields);
-
-  const activeLocale = get(locale)
-  const pageID = get(activePageID)
-  const pageData = chain(
-    newPageFields.map(
-      field => ({
-        key: field.key,
-        value: field.value
-      })
-    ))
-    .keyBy("key")
-    .mapValues("value")
-    .value();
-  const siteData = chain(
-    newSiteFields.map(
-      field => ({
-        key: field.key,
-        value: field.value
-      })
-    ))
-    .keyBy("key")
-    .mapValues("value")
-    .value();
-  content.update(content => ({
-    ...content,
-    [activeLocale]: {
-      ...content[activeLocale],
-      ...siteData,
-      [pageID]: {
-        ...content[activeLocale][pageID],
-        ...pageData
-      }
-    }
-  }))
+  content.set(newContent)
 }
 
 

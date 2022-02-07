@@ -244,11 +244,10 @@ export function getComponentData(componentContent, fields) {
   }))
 
   // remove pages from data object
-  const siteContent = _.chain(Object.entries(get(content)[get(locale)]).filter(([page]) => !pageIDs.includes(page))).keyBy('page').mapValues('sections').value()
-
+  const siteContent = _.chain(Object.entries(get(content)[get(locale)]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
   return {
     ...siteContent,
-    ...siteContent[get(id)],
+    ...get(content)[get(locale)][get(id)], // Page content
     ...componentData
   }
 }

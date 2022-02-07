@@ -1,9 +1,10 @@
 <script>
-  import { find, cloneDeep, isEqual } from 'lodash-es';
+  import { find, cloneDeep, isEqual, chain as _chain } from 'lodash-es';
   import { EditField } from '../../components/inputs';
   import { Tabs } from '../../components/misc';
   import { Card } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
+  import {getEmptyValues} from '../../utils'
 
   import ModalHeader from './ModalHeader.svelte';
   import fieldTypes from '../../stores/app/fieldTypes';
@@ -11,19 +12,22 @@
   import { locale } from '../../stores/app/misc';
   import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
-  import { id, fields as pageFields } from '../../stores/app/activePage';
+  import { id as pageID, fields as pageFields } from '../../stores/app/activePage';
   import { fields as siteFields, content } from '../../stores/data/draft';
   import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../components/FieldTypes/GroupField.svelte';
 
+  let localContent = cloneDeep($content)
+
   let localPageFields = cloneDeep($pageFields).map(field => ({
     ...field,
-    value: $content[$locale][$id][field.key]
+    value: localContent[$locale][$pageID][field.key]
   }));
   let localSiteFields = cloneDeep($siteFields).map(field => ({
     ...field,
-    value: $content[$locale][field.key]
+    value: localContent[$locale][field.key]
   }));
+
 
   const allFieldTypes = [
     // {
@@ -108,6 +112,35 @@
     } else {
       localSiteFields = localSiteFields.filter((field) => field.id !== id);
     }
+  }
+
+  $: $locale, setupFields()
+  function setupFields() {
+    localPageFields = getFieldValues(localPageFields)
+    localSiteFields = getFieldValues(localSiteFields)
+  }
+
+  function getFieldValues(fields) {
+    return fields.map(field => ({
+      ...field,
+      value: (localContent[$locale][field.key] || getEmptyValues(field))
+    }))
+  }
+
+  function saveLocalContent() {
+    // TODO: use _set to mutate the object instead of reassigning it on every keypress
+    localContent = {
+      ...localContent,
+      [$locale]: {
+        ...localContent[$locale],
+        ..._chain(localSiteFields).keyBy('key').mapValues('value').value(),
+        [$pageID]: {
+          ...localContent[$locale][$pageID],
+          ..._chain(localPageFields).keyBy('key').mapValues('value').value()
+        }
+      }
+    }
+    console.log(localContent)
   }
 
   let disabled = false;
@@ -205,7 +238,7 @@
   }
   
   function applyFields() {
-    saveFields(localPageFields, localSiteFields)
+    saveFields(localPageFields, localSiteFields, localContent)
     modal.hide();
   }
 
@@ -445,8 +478,7 @@
             this={getComponent(field)}
             {field}
             fields={localPageFields.filter((f) => f.id !== field.id)}
-            bind:onChange
-            on:input={onChange} />
+            on:input={saveLocalContent} />
         </div>
       {/if}
     {:else}
@@ -468,8 +500,7 @@
             this={getComponent(field)}
             {field}
             fields={localSiteFields.filter((f) => f.id !== field.id)}
-            bind:onChange
-            on:input={onChange} />
+            on:input={saveLocalContent} />
         </div>
       {/if}
     {:else}

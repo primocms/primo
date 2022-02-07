@@ -83,7 +83,9 @@
         id: 'toolbar--fields',
         title: 'Fields',
         label: 'Fields',
-        onclick: () => modal.show('FIELDS'),
+        onclick: () => modal.show('FIELDS', {}, {
+          showSwitch: true
+        }),
       },
     ],
     // [
