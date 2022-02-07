@@ -16,7 +16,7 @@
 
   let searchText = ''
   $: filteredAvailableLocales = ((text) => {
-    return text.length > 3 ? availableLocales.filter(l => !locales.includes(l.key)).filter(match) : []
+    return text.length > 0 ? availableLocales.filter(l => !locales.includes(l.key)).filter(match) : availableLocales
     function match(locale) {
       return locale.key.match(text.toLowerCase()) || locale.name.toLowerCase().match(text.toLowerCase())
     }
