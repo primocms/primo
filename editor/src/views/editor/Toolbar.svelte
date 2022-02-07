@@ -111,6 +111,11 @@ class:mounted>
     background-color: var(--color-codeblack);
     user-select: none;
     border-bottom: 1px solid var(--color-gray-9);
+    z-index: 9999999999; /* should be above #primo-toolbar */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
 
     div {
       color: var(--color-gray-3);
