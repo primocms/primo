@@ -256,16 +256,6 @@
 </main>
 
 <style lang="postcss">
-  button.close {
-    transform: translateX(-2rem);
-    height: 2rem;
-    width: 2rem;
-    color: var(--primo-color-white);
-
-    &:hover {
-      color: var(--primo-color-primored);
-    }
-  }
 
   main {
     background: var(--primo-color-black);
