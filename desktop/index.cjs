@@ -38,11 +38,7 @@ if (!isDev) {
   })
 
   autoUpdater.on('error', e => {
-    console.log(e)
-    dialog.showMessageBox({
-      title: 'Error here',
-      message: e.message
-    })
+    console.log(e.message)
     console.error('There was a problem updating the application')
     console.error(e)
   })
