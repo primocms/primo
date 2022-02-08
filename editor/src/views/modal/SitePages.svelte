@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
@@ -9,6 +9,7 @@
   import { createUniqueID } from '../../utilities';
 
   import { Page } from '../../const';
+  import type { Page as PageType } from '../../const'
   import { makeValidUrl } from '../../utils';
   import { pages } from '../../stores/data/draft';
   import activePage from '../../stores/app/activePage';
@@ -35,8 +36,11 @@
     actions.delete(pageId, currentPath);
   }
 
-  function duplicatePage(name, url) {
-    const newPage = cloneDeep($activePage);
+  function duplicatePage(name, url): PageType {
+    const newPage:PageType = cloneDeep({
+      ...Page(url, name),
+      ...$activePage
+    });
     const [newSections] = scrambleIds(newPage.sections);
     newPage.sections = newSections;
     newPage.name = name;
@@ -45,11 +49,11 @@
 
     function scrambleIds(sections) {
       let IDs = [];
-      const newSections = sections.map((block) => {
+      const newSections = sections.map((section) => {
         const newID = createUniqueID();
-        IDs.push([block.id, newID]);
+        IDs.push([section.id, newID]);
         return {
-          ...block,
+          ...section,
           id: newID,
         };
       });
