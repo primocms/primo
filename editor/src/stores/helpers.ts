@@ -3,11 +3,11 @@ import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
 import { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
-import { symbols, pages, content } from './data/draft'
+import { site as siteStore, symbols, pages, content } from './data/draft'
 import {locale} from './app/misc'
 import { convertFieldsToData, processCode, processCSS, hydrateFieldsWithPlaceholders } from '../utils'
 import {DEFAULTS} from '../const'
-import type { Page as PageType, Site, Symbol } from '../const'
+import type { Page as PageType, Site, Symbol, Field } from '../const'
 import { Page } from '../const'
 
 export function resetActivePage() {
@@ -72,8 +72,6 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   let [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       const css:string = await processCSS(site.code.css + page.code.css)
-      const fields:any[] = unionBy(page.fields, site.fields, "key")
-      const data:object = convertFieldsToData(fields)
       // TODO: fix
       const svelte:{ css:string, html:string, js:string } = await processCode({ 
         code: {
@@ -85,20 +83,18 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           `, 
           js: ''
         },
-        data,
+        data: getComponentData({}, [], site),
         format: 'esm'});
       resolve(svelte)
     }),
     new Promise(async (resolve) => {
-      const fields = unionBy(page.fields, site.fields, "key");
-      const data = convertFieldsToData(fields);
       const svelte = await processCode({ 
         code: {
           html: site.code.html?.below + page.code.html?.below, 
           css: '', 
           js: ''
         },
-        data
+        data: getComponentData({}, [], site)
       });
 
       resolve(svelte) 
@@ -110,10 +106,10 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
         if (!symbol) return 
 
         const pageData = site.content[locale][page.id]
-        const componentData = pageData ? pageData[section.id] : _chain(hydrateFieldsWithPlaceholders(section.fields)).keyBy('key').mapValues('value').value();
+        const componentData = pageData ? pageData[section.id] : _chain(hydrateFieldsWithPlaceholders(symbol.fields)).keyBy('key').mapValues('value').value();
 
         if (!componentData) return null // component has been placed but not filled out with content
-        const data = getComponentData(componentData, symbol.fields)
+        const data = getComponentData(componentData, symbol.fields, site)
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 
@@ -227,7 +223,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
 }
 
 
-export function getComponentData(componentContent, fields) {
+export function getComponentData(componentContent:object, fields:Array<Field>, site:Site = get(siteStore)): object {
   const componentData = _.chain(fields)
     .map(field => ({
       key: field.key,
@@ -237,17 +233,13 @@ export function getComponentData(componentContent, fields) {
     .mapValues('value')
     .value();
 
-  const pageIDs = _.flattenDeep(get(pages).map(page => {
-    if (page.pages.length === 0) {
-      return [page.id]
-    } else return [ page.id, ...page.pages.map(p => p.id) ]
-  }))
+  const pageIDs = _.flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
 
   // remove pages from data object
-  const siteContent = _.chain(Object.entries(get(content)[get(locale)]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  const siteContent = _.chain(Object.entries(site.content[get(locale)]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
   return {
     ...siteContent,
-    ...get(content)[get(locale)][get(id)], // Page content
+    ...site.content[get(locale)][get(id)], // Page content
     ...componentData
   }
 }
