@@ -104,24 +104,6 @@
     }
   }
 
-  function getDataFromFields(fields) {
-    const parsedFields = fields.map((field) => {
-      if (field.type === "group") {
-        if (field.fields) {
-          field.value = _.chain(field.fields)
-            .keyBy("key")
-            .mapValues("value")
-            .value();
-        }
-      }
-      return field;
-    })
-
-    if (!parsedFields.length) return {}
-
-    return _.chain(parsedFields).keyBy("key").mapValues("value").value()
-  }
-
   async function selectOption(option, payload = null) {
     if (option === 'component') {
       updateBlock(payload);

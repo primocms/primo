@@ -88,7 +88,7 @@ export function hydrateFieldsWithPlaceholders(fields) {
   }))
 }
 
-export function getPlaceholderValue(field) {
+export function getPlaceholderValue(field:Field) {
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
   else if (field.type === 'group') return getGroupValue(field)
   else if (field.type === 'image') return {
@@ -118,16 +118,16 @@ export function getPlaceholderValue(field) {
   }
 }
 
-export function hydrateFieldsWithEmptyValues(fields) {
+export function hydrateFieldsWithEmptyValues(fields:Array<Field>) {
   return fields.map(field => ({
     ...field,
     value: getPlaceholderValue(field)
   }))
 }
 
-export function getEmptyValues(field) {
+export function getEmptyValue(field:Field) {
   if (field.type === 'repeater') return []
-  else if (field.type === 'group') return {}
+  else if (field.type === 'group') return getGroupValue(field)
   else if (field.type === 'image') return {
     url: '',
     src: '',
@@ -138,14 +138,19 @@ export function getEmptyValues(field) {
   else if (field.type === 'content') return ''
   else if (field.type === 'link') return {
     label: '',
-    url: '/'
+    url: ''
   }
-  else if (field.type === 'url') return '/'
+  else if (field.type === 'url') return ''
   else {
     console.warn('No placeholder set for field type', field.type)
     return ''
   }
+
+  function getGroupValue(field) {
+    return _chain(field.fields).keyBy('key').mapValues((field) => getPlaceholderValue(field)).value()
+  }
 }
+
 
 
 export function validateSiteStructure(site): Site {

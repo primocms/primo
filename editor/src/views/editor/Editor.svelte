@@ -14,7 +14,7 @@
   import { fields as pageFields, sections } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
-  import { undoSiteChange, redoSiteChange } from '../../stores/actions';
+  import { undoSiteChange, redoSiteChange, changeLocale } from '../../stores/actions';
 
   $: pageEmpty = $sections && $sections.length <= 1 && $sections.length > 0 && $sections[0]['type'] === 'options';
 
@@ -23,6 +23,11 @@
     Mousetrap.bind(['mod+s'], (e) => {
       e.preventDefault();
       savePage();
+    });
+
+    Mousetrap.bind(['mod+l'], (e) => {
+      e.preventDefault();
+      changeLocale()
     });
   });
 
@@ -35,7 +40,7 @@
         title: 'Pages',
         label: 'Pages',
         icon: 'pages',
-        onclick: () => modal.show('SITE_PAGES'),
+        onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
     ],
     hasFields ? [
@@ -54,7 +59,7 @@
         label: 'Pages',
         title: 'Pages',
         icon: 'pages',
-        onclick: () => modal.show('SITE_PAGES'),
+        onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
     ],
     [

@@ -175,13 +175,13 @@ export const Field = (f = {}): Field => ({
 export type Component = {
   type: 'component',
   id: string,
-  componentID: string | null
+  symbolID: string | null
 }
 
 export const Component = (): Component => ({
   type: 'component',
   id: createUniqueID(),
-  componentID: null
+  symbolID: null
 })
 
 export type Symbol = {

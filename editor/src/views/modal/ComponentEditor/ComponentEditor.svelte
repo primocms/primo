@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
-  import { getPlaceholderValue, getEmptyValues } from '../../../utils';
+  import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
@@ -13,7 +13,6 @@
   import FieldItem from './FieldItem.svelte'
 
   import {
-    convertFieldsToData,
     processCode,
     processCSS,
     wrapInStyleTags,
@@ -22,13 +21,12 @@
 
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
-    id as pageID,
     code as pageCode
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
   import { Component } from '../../../const';
-  import type { Component as ComponentType, Symbol as SymbolType } from '../../../const';
+  import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
   import { getComponentData } from '../../../stores/helpers';
 
   export let component:ComponentType|SymbolType = Component();
@@ -44,41 +42,36 @@
     },
   };
 
-  let localComponent = cloneDeep(component)
-  let localContent = component.type === 'symbol' ? null : getComponentContent($content)
+  let localComponent:SymbolType = cloneDeep(component) // local copy of component to modify & save 
 
-  function getComponentContent(siteContent) {
+  let localContent = component.type === 'symbol' ? null : getComponentContent($content) // local copy of component content to modify & save
+
+  // parse component-specific content out of site content tree (keeping separate locales)
+  function getComponentContent(siteContent): object {
     return _chain(Object.entries(siteContent)) 
-      .map(([locale, pages]) => ({
+      .map(([locale]) => ({
         locale,
-        content: getComponentData((pages[$pageID]?.[component.id] || {}), localComponent.fields) 
+        content: getComponentData({ component, loc: locale, fallback: 'empty' })
       }))
       .keyBy('locale')
       .mapValues('content')
       .value()
   }
   
-  $: $locale, setupComponent()
-  function setupComponent() {
-    localComponent = getComponentFieldValues(localComponent)
-    fields = getFieldValues(localComponent.fields)
+  $: setupComponent($locale) // swap content out of on-screen fields
+  function setupComponent(loc) {
+    fields = getFieldValues(fields, loc)
   }
 
-  function getComponentFieldValues(component) {
-    return cloneDeep({
-      ...component,
-      fields: getFieldValues(component.fields)
-    })
-  }
-
-  function getFieldValues(fields) {
+  // hydrate fields with content (placeholder if passed component is a Symbol)
+  function getFieldValues(fields:Array<FieldType>, loc:string): Array<any> {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[$locale]?.[field.key] || getEmptyValues(field))
+      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[loc]?.[field.key] || getEmptyValue(field))
     }))
   }
 
-  function saveLocalContent() {
+  function saveLocalContent(): void {
     localContent = {
       ...localContent,
       [$locale]: {
@@ -88,10 +81,10 @@
     }
   }
 
-  function saveLocalValue(property:'html'|'css'|'js'|'fields', value:any) {
+  function saveLocalValue(property:'html'|'css'|'js'|'fields', value:any): void {
     if (property === 'fields') {
-      localComponent.fields = getFieldValues(value)
-      fields = getFieldValues(value)
+      localComponent.fields = value
+      fields = getFieldValues(value, $locale)
     } else {
       localComponent.code[property] = value
     }
@@ -113,22 +106,27 @@
 
   let loading = false;
 
+  // raw code bound to code editor
   let rawHTML = localComponent.code.html;
   let rawCSS = localComponent.code.css;
   let rawJS = localComponent.code.js;
-  let fields = localComponent.fields;
 
-  let componentApp;
-  let error;
+  // changing codes triggers compilation
   $: compileComponentCode({
     html: rawHTML,
     css: rawCSS,
     js: rawJS
   });
 
-  $: data = getComponentData(convertFieldsToData(fields), fields)
+  // on-screen fields
+  let fields = localComponent.fields;
 
-  // ensure placeholder values always conform to type
+  let componentApp; // holds compiled component
+  let compilationError; // holds compilation error
+
+
+
+  // ensure placeholder values always conform to form
   // TODO: do for remaining fields
   $: fields = fields.map(field => {
     if (component.type === 'symbol' && field.type === 'link' && !field.value.url) return {
@@ -137,6 +135,7 @@
     }
     else return field 
   })
+
 
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
@@ -175,10 +174,10 @@
           css,
           js,
         },
-        data,
+        data: localContent[$locale],
         buildStatic: false,
       });
-      error = res.error;
+      compilationError = res.error;
       componentApp = res.js;
       saveLocalValue('html', html);
       saveLocalValue('css', css);
@@ -186,10 +185,12 @@
     }
   }
 
-  function addNewField(field = {}) {
+  // Functionality for handling fields
+
+  function addNewField(fieldProps = {}) {
     saveLocalValue('fields', [
       ...fields,
-      Field(field)
+      Field(fieldProps)
     ]);
   }
 
@@ -214,18 +215,6 @@
     saveLocalValue('fields', updatedFields);
   }
 
-  function getFieldPath(fields, id) {
-    for (const [i, field] of fields.entries()) {
-      const result = getFieldPath(field.fields, id)
-      if (result) {
-        result.unshift(i, 'fields');
-        return result
-      } else if (field.id === id) {
-        return [i]
-      } 
-    }
-  }
-
   function deleteField({detail:field}) {
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
@@ -247,30 +236,6 @@
         fieldsToModify.forEach(field => handleDeleteSubfield(field.fields));
       }
       saveLocalValue('fields', updatedFields);
-    }
-  }
-
-  const tabs = [
-    {
-      id: 'code',
-      label: 'Code',
-      icon: 'code',
-    },
-    {
-      id: 'fields',
-      label: 'Fields',
-      icon: 'database',
-    },
-  ];
-
-  let activeTab = tabs[0];
-
-  function getFieldComponent(field) {
-    const fieldType = find(allFieldTypes, ['id', field.type]);
-    if (fieldType && fieldType.component) {
-      return fieldType.component;
-    } else {
-      return null;
     }
   }
 
@@ -312,6 +277,42 @@
     saveLocalValue('fields', updatedFields)
   }
 
+  function getFieldPath(fields, id) {
+    for (const [i, field] of fields.entries()) {
+      const result = getFieldPath(field.fields, id)
+      if (result) {
+        result.unshift(i, 'fields');
+        return result
+      } else if (field.id === id) {
+        return [i]
+      } 
+    }
+  }
+
+  const tabs = [
+    {
+      id: 'code',
+      label: 'Code',
+      icon: 'code',
+    },
+    {
+      id: 'fields',
+      label: 'Fields',
+      icon: 'database',
+    },
+  ];
+
+  let activeTab = tabs[0];
+
+  function getFieldComponent(field) {
+    const fieldType = find(allFieldTypes, ['id', field.type]);
+    if (fieldType && fieldType.component) {
+      return fieldType.component;
+    } else {
+      return null;
+    }
+  }
+
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
@@ -324,14 +325,8 @@
   }
 
   function saveComponent() {
-    if (!disableSave) {
-      const component = extractComponent(localComponent)
-      header.button.onclick(component);
-    }
-  }
 
-  function extractComponent(component) {
-    return {
+    const ExtractedComponent = (component) => ({
       ...component,
       content: localContent,
       fields: fields.map(field => ({
@@ -341,8 +336,13 @@
         type: field.type,
         fields: field.fields
       }))
+    })
+
+    if (!disableSave) {
+      const component = ExtractedComponent(localComponent)
+      header.button.onclick(component);
     }
-  } 
+  }
 
 </script>
 
@@ -433,8 +433,8 @@
         view="small"
         {loading}
         {componentApp}
-        {data}
-        {error} />
+        data={localContent[$locale]}
+        error={compilationError} />
     </div>
   </HSplitPane>
 </main>

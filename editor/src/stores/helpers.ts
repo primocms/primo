@@ -1,13 +1,13 @@
-import {unionBy, find, uniqBy, chain as _chain} from 'lodash-es'
+import {unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep} from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { fields as siteFields } from './data/draft'
-import { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
-import { site as siteStore, symbols, pages, content } from './data/draft'
+import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
+import { site as activeSite, symbols } from './data/draft'
 import {locale} from './app/misc'
-import { convertFieldsToData, processCode, processCSS, hydrateFieldsWithPlaceholders } from '../utils'
+import { processCode, processCSS, getPlaceholderValue, getEmptyValue } from '../utils'
 import {DEFAULTS} from '../const'
-import type { Page as PageType, Site, Symbol, Field } from '../const'
+import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
 import { Page } from '../const'
 
 export function resetActivePage() {
@@ -63,11 +63,11 @@ export function getAllFields(componentFields:any[] = [], exclude = () => true) {
   }
 }
 
-export function getSymbol(symbolID): Symbol {
-  return find(get(symbols), ['id', symbolID]);
+export function getSymbol(symbolID): SymbolType {
+  return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page:Page, site:Site, locale?:string, separateModules?:boolean }) {
+export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page:PageType, site:SiteType, locale?:string, separateModules?:boolean }) {
   if (!page.sections) return null // ensure data fits current structure
   let [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
@@ -83,7 +83,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           `, 
           js: ''
         },
-        data: getComponentData({}, [], site),
+        data: getPageData({ page, site, loc: locale }),
         format: 'esm'});
       resolve(svelte)
     }),
@@ -94,7 +94,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           css: '', 
           js: ''
         },
-        data: getComponentData({}, [], site)
+        data: getPageData({ page, site, loc: locale })
       });
 
       resolve(svelte) 
@@ -102,14 +102,19 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     ...page.sections.map(async section => {
       if (section.type === 'component') {
 
-        const symbol = site.symbols.filter(s => s.id === section.symbolID)[0]
-        if (!symbol) return 
+        const componentHasContent = site.content[locale][page.id]?.[section.id]
 
-        const pageData = site.content[locale][page.id]
-        const componentData = pageData ? pageData[section.id] : _chain(hydrateFieldsWithPlaceholders(symbol.fields)).keyBy('key').mapValues('value').value();
+        if (!componentHasContent) {
+          console.log('COMPONENT DOES NOT HAVE CONTENT', section)
+        }
 
-        if (!componentData) return null // component has been placed but not filled out with content
-        const data = getComponentData(componentData, symbol.fields, site)
+        if (!componentHasContent) return null // component has been placed but not filled out with content
+        const data = getComponentData({
+          component: section,
+          page,
+          site,
+          loc: locale
+        })
 
         const { html, css, js }: { html:string, css:string, js:string } = symbol.code
 
@@ -222,24 +227,64 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   } : final
 }
 
-
-export function getComponentData(componentContent:object, fields:Array<Field>, site:Site = get(siteStore)): object {
-  const componentData = _.chain(fields)
+// Include page/site content alongside the component's content
+export function getComponentData({
+  component,
+  page = get(activePage),
+  site = get(activeSite),
+  loc = get(locale),
+  fallback = 'placeholder'
+}: {
+  component: ComponentType | SymbolType,
+  page?: PageType,
+  site?: SiteType,
+  loc?: string,
+  fallback?: 'placeholder' | 'empty'
+}): object {
+  const symbol = component.type === 'symbol' ? component : _find(site.symbols, ['id', component.symbolID])
+  const componentData = _chain(symbol.fields)
     .map(field => ({
       key: field.key,
-      value: componentContent[field.key] || hydrateFieldsWithPlaceholders([field])[0]['value']
+      value: site.content[loc][page.id][component.id]?.[field.key] || (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
     }))
     .keyBy('key')
     .mapValues('value')
     .value();
 
-  const pageIDs = _.flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
+  // remove pages from data object (not accessed from component)
+  const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
+  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
-  // remove pages from data object
-  const siteContent = _.chain(Object.entries(site.content[get(locale)]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
   return {
     ...siteContent,
-    ...site.content[get(locale)][get(id)], // Page content
+    ...site.content[loc][page.id], // Page content
     ...componentData
+  }
+}
+
+export function getPageData({
+  page = get(activePage),
+  site = get(activeSite),
+  loc = get(locale),
+  fallback = 'placeholder'
+}: {
+  page?: PageType,
+  site?: SiteType,
+  loc?: string,
+  fallback?: 'placeholder' | 'empty'
+}): object {
+
+  // TODO: hydrate page/site fields
+
+  // remove pages from data object (not accessed from component)
+  const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
+  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+
+  console.log('Site', siteContent)
+  console.log('Page', site.content[loc][page.id])
+
+  return {
+    ...siteContent,
+    ...site.content[loc][page.id], // Page content
   }
 }

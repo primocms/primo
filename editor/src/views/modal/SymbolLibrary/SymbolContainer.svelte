@@ -51,7 +51,7 @@
   let error;
   compileComponentCode(symbol);
   async function compileComponentCode(symbol) {
-    const data = getComponentData(hydrateFieldsWithPlaceholders(symbol.fields), symbol.fields)
+    const data = getComponentData({ component: symbol })
 
     const res = await processCode({
       code: {

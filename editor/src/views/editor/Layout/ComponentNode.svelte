@@ -2,10 +2,8 @@
   import _ from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
   import { processCode } from '../../../utils';
-  import { id as pageID, fields as pageFields } from '../../../stores/app/activePage';
-  import { content, fields as siteFields, symbols, pages } from '../../../stores/data/draft';
+  import { symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
-  import {hydrateFieldsWithPlaceholders} from '../../../utils'
   import {getComponentData} from '../../../stores/helpers'
 
   const dispatch = createEventDispatcher();
@@ -14,12 +12,7 @@
   export let node;
 
   $: symbol = _.find($symbols, ['id', block.symbolID])
-
-  $: siteContent = $content[$locale]
-  $: pageContent = siteContent[$pageID]
-  $: componentContent = pageContent?.[block.id] || {}
-
-  $: componentData = getComponentData(componentContent, symbol.fields)
+  $: componentData = getComponentData({ component: block, loc: $locale })
 
   let html = '';
   let css = '';

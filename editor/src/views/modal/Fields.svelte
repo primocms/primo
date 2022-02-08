@@ -4,7 +4,7 @@
   import { Tabs } from '../../components/misc';
   import { Card } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
-  import {getEmptyValues} from '../../utils'
+  import {getEmptyValue} from '../../utils'
 
   import ModalHeader from './ModalHeader.svelte';
   import fieldTypes from '../../stores/app/fieldTypes';
@@ -123,7 +123,7 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: (localContent[$locale][field.key] || getEmptyValues(field))
+      value: (localContent[$locale][field.key] || getEmptyValue(field))
     }))
   }
 
