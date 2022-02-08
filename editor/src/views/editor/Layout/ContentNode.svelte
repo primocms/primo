@@ -7,6 +7,7 @@
   import {id as pageID} from '../../../stores/app/activePage'
   import modal from '../../../stores/app/modal'
   import {locale} from '../../../stores/app/misc'
+  import {changeLocale} from '../../../stores/actions'
   import { createDebouncer } from '../../../utils';
   const slowDebounce = createDebouncer(500);
 
@@ -48,6 +49,10 @@
         },
         'Mod-s': () => {
           dispatch('save');
+          return true;
+        },
+        'Mod-l': () => {
+          changeLocale()
           return true;
         },
       };

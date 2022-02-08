@@ -252,3 +252,12 @@ export async function addLocale(key) {
     [key]: s.en
   }))
 }
+
+export async function changeLocale() {
+  const locales = Object.keys(get(content))
+  const loc = get(locale)
+  locales.reduce((a, b, i) => {
+    if (a === loc) locale.set(b) // switch to next locale
+    else if (i === locales.length - 1) locale.set(locales[0]) // switch to first locale
+  })
+}
