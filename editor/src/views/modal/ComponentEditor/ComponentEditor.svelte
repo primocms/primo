@@ -48,18 +48,14 @@
   let localContent = component.type === 'symbol' ? null : getComponentContent($content)
 
   function getComponentContent(siteContent) {
-    const componentContent = _chain(Object.entries(siteContent)) 
-      .map(item => {
-        const [ locale, pages ] = item
-        return {
-          locale,
-          content: pages[$pageID]?.[component.id] || {}
-        }
-      })
+    return _chain(Object.entries(siteContent)) 
+      .map(([locale, pages]) => ({
+        locale,
+        content: getComponentData((pages[$pageID]?.[component.id] || {}), localComponent.fields) 
+      }))
       .keyBy('locale')
       .mapValues('content')
       .value()
-    return getComponentData(componentContent, localComponent.fields)
   }
   
   $: $locale, setupComponent()
@@ -78,7 +74,7 @@
   function getFieldValues(fields) {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[$locale][field.key] || getEmptyValues(field))
+      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[$locale]?.[field.key] || getEmptyValues(field))
     }))
   }
 
