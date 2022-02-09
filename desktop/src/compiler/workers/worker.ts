@@ -5,6 +5,8 @@ import registerPromiseWorker from 'promise-worker/register'
 import * as svelte from 'svelte/compiler'
 import {locales} from '@primo-app/primo/src/const'
 
+// Based on https://github.com/pngwn/REPLicant
+
 const CDN_URL = "https://cdn.jsdelivr.net/npm";
 
 async function fetch_package(url) {
