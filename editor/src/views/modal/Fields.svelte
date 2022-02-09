@@ -261,7 +261,7 @@
   <Tabs {tabs} bind:activeTab />
   {#if $showingIDE}
     {#if showingPage}
-      {#each localPageFields as field, i}
+      {#each localPageFields as field, i (field.id)}
         <Card>
           <EditField
             minimal={field.type === 'info'}
@@ -297,7 +297,7 @@
           <svelte:component this={getDevComponent(field)} {field} />
           {#if field.type === 'group'}
             {#if field.fields}
-              {#each field.fields as subfield, childIndex}
+              {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
                   fieldTypes={$fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
@@ -331,7 +331,7 @@
               {disabled}><i class="fas fa-plus" />Add a Subfield</button>
           {:else if field.type === 'repeater'}
             {#if field.fields}
-              {#each field.fields as subfield, childIndex}
+              {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
                   fieldTypes={$fieldTypes}
                   child={true}

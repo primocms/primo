@@ -21,13 +21,14 @@
 
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
+    id as pageID,
     code as pageCode
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
   import fieldTypes from '../../../stores/app/fieldTypes';
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
-  import { getComponentData } from '../../../stores/helpers';
+  import { getPageData } from '../../../stores/helpers';
 
   export let component:ComponentType|SymbolType = Component();
   export let header = {
@@ -44,14 +45,21 @@
 
   let localComponent:SymbolType = cloneDeep(component) // local copy of component to modify & save 
 
-  let localContent = component.type === 'symbol' ? null : getComponentContent($content) // local copy of component content to modify & save
+  let localContent = component.type === 'symbol' ? {} : getComponentContent($content) // local copy of component content to modify & save
+  
+  // component data w/ page/site data included (for compilation)
+  $: data = {
+    ...localContent[$locale],
+    ...getPageData({ loc: $locale })
+  }
+
 
   // parse component-specific content out of site content tree (keeping separate locales)
   function getComponentContent(siteContent): object {
     return _chain(Object.entries(siteContent)) 
       .map(([locale]) => ({
         locale,
-        content: getComponentData({ component, loc: locale, fallback: 'empty' })
+        content: $content[locale][$pageID][localComponent.id]
       }))
       .keyBy('locale')
       .mapValues('content')
@@ -174,7 +182,7 @@
           css,
           js,
         },
-        data: localContent[$locale],
+        data,
         buildStatic: false,
       });
       compilationError = res.error;
@@ -399,8 +407,7 @@
         {/if}
       {:else}
         <div>
-          <!-- use key so repeater fields update when changing locale -->
-          {#each fields as field} 
+          {#each fields as field (`${field.id}-${$locale}`)} 
             {#if field.key && getFieldComponent(field)}
               <div
                 class="field-item"
@@ -433,7 +440,7 @@
         view="small"
         {loading}
         {componentApp}
-        data={localContent[$locale]}
+        {data}
         error={compilationError} />
     </div>
   </HSplitPane>
