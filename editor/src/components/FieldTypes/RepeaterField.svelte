@@ -70,6 +70,7 @@
         ...field.fields.map((subfield) => ({
           ...subfield,
           value: value[subfield.key],
+          _key: createUniqueID()
         })),
       ])
     : [];
@@ -114,7 +115,7 @@
             <i class="fas fa-trash" />
           </button>
         </div>
-        {#each fieldValue as subfield (subfield.id)}
+        {#each fieldValue as subfield (subfield._key)}
           <div
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">
