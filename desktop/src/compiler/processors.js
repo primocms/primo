@@ -4,6 +4,7 @@ import svelteWorker from './workers/worker?worker'
 import {get} from 'svelte/store'
 import {site} from '@primo-app/primo/src/stores/data/draft'
 import {locale} from '@primo-app/primo/src/stores/app/misc'
+import * as idb from 'idb-keyval'
 
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
@@ -11,6 +12,18 @@ const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   const finalRequest = buildFinalRequest(data)
+
+  let cacheKey
+  if (buildStatic) {
+    cacheKey = JSON.stringify({
+      code, 
+      data: Object.keys(data),
+      buildStatic,
+      format
+    })
+    const cached = await idb.get(cacheKey) 
+    if (cached) return cached
+  }
 
   let res
   try {
@@ -40,9 +53,8 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   } else if (buildStatic) {   
     const blob = new Blob([res.ssr], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
-
     const {default:App} = await import(url/* @vite-ignore */)
-    const rendered = App.render()
+    const rendered = App.render(data)
     final = {
       html: rendered.html || rendered.head,
       css: rendered.css.code,
@@ -55,6 +67,10 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
+  if (!buildStatic) {
+    idb.set(cacheKey, final)
+  }
+
   return final
 
   function buildFinalRequest(finalData) {
@@ -64,7 +80,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     const dataAsVariables = `\
     ${Object.entries(finalData)
       .filter(field => field[0])
-      .map(field => `export let ${field[0]} = ${JSON.stringify(field[1])};`)
+      .map(field => `export let ${field[0]};`)
       .join(` \n`)
     }
    `
