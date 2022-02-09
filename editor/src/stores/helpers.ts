@@ -1,9 +1,8 @@
 import {unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep} from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
-import { fields as siteFields } from './data/draft'
+import { site as activeSite, symbols, fields as siteFields } from './data/draft'
 import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
-import { site as activeSite, symbols } from './data/draft'
 import {locale} from './app/misc'
 import { processCode, processCSS, getPlaceholderValue, getEmptyValue, LoremIpsum} from '../utils'
 import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
@@ -13,8 +12,6 @@ export function resetActivePage() {
   id.set('index')
   sections.set([])
   pageFields.set([])
-  // pageHTML.set(Page().code.html)
-  // pageCSS.set(Page().code.css)
   pageCode.set(Page().code)
 }
 
@@ -191,13 +188,15 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
       return separateModules ? 
         `<script type="module" async>
           import App from '/_modules/${block.symbol}.js';
-          const content = ${JSON.stringify(site.content[locale][page.id][block.id])}
-          new App({
-            target: document.querySelector('#${block.id}'),
-            hydrate: true,
-            props: content
-          });
-          // fetch primo.json, extract language json, pass into app, listen to localstorage changes for locale change
+          fetch('/${locale }.json').then(res => res.json()).then(data => {
+            const content = data['${page.id}']['${block.id}'];
+            console.log({content})
+            new App({
+              target: document.querySelector('#${block.id}'),
+              hydrate: true,
+              props: content
+            });
+          })
         </script>`
       : `<script type="module" async>
             const App = ${block.js};
@@ -257,7 +256,7 @@ export function getComponentData({
 
   return {
     ...siteContent,
-    ...site.content[loc][page.id], // Page content
+    ...site.content[loc][page.id], // Page content (TODO: strip out section IDs, only include page keys)
     ...componentData
   }
 }
@@ -279,9 +278,6 @@ export function getPageData({
   // remove pages from data object (not accessed from component)
   const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
   const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
-
-  console.log('Site', siteContent)
-  console.log('Page', site.content[loc][page.id])
 
   return {
     ...siteContent,
