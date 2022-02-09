@@ -61,7 +61,7 @@
     clearInterval(interval);
   });
 
-  $: props = data
+  $: componentData = data
 
   $: setIframeApp({
     iframeLoaded,
@@ -69,14 +69,14 @@
   });
   function setIframeApp({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentApp, props });
+      iframe.contentWindow.postMessage({ componentApp, componentData });
     }
   }
 
-  $: setIframeData(props);
-  function setIframeData(props) {
+  $: setIframeData(componentData);
+  function setIframeData(componentData) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ props });
+      iframe.contentWindow.postMessage({ componentData });
     }
   }
 

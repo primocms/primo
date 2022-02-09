@@ -4,14 +4,16 @@
   import { iframePreview } from '../../../components/misc/misc';
 
   export let componentApp;
+  export let componentData = {}
   export let height;
+
   let container;
   let iframe;
   let iframeLoaded;
   let finishedResizing = false;
-  $: componentApp && iframeLoaded && setIframeContent({ componentApp });
-  function setIframeContent({ componentApp }) {
-    iframe.contentWindow.postMessage({ componentApp });
+  $: componentApp && iframeLoaded && setIframeContent({ componentApp, componentData });
+  function setIframeContent({ componentApp, componentData }) {
+    iframe.contentWindow.postMessage({ componentApp, componentData });
     setScaleRatio();
     setTimeout(setHeight, 100);
     function setHeight() {
@@ -21,6 +23,13 @@
       iframe.height = newHeight;
       height = newHeight;
       finishedResizing = true;
+    }
+  }
+
+  $: setIframeData(componentData);
+  function setIframeData(componentData) {
+    if (iframeLoaded) {
+      iframe.contentWindow.postMessage({ componentData });
     }
   }
 

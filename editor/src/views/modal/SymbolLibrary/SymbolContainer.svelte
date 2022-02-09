@@ -48,10 +48,11 @@
   }
 
   let componentApp;
+  let componentData
   let error;
   compileComponentCode(symbol);
   async function compileComponentCode(symbol) {
-    const data = getComponentData({ component: symbol })
+    componentData = getComponentData({ component: symbol })
 
     const res = await processCode({
       code: {
@@ -65,7 +66,7 @@
         ${$siteCode.html.below + $pageCode.html.below}
         `,
       },
-      data,
+      data: componentData,
       buildStatic: false,
     });
 
@@ -94,7 +95,7 @@
     }}
     class:active
     >
-    <IFrame bind:height {componentApp} />
+    <IFrame bind:height {componentApp} {componentData} />
     {#if name}
       <header>
         <div class="component-label">
@@ -124,7 +125,7 @@
         active = true
         action.onclick()
       }} class="primary-action" class:active style="height: calc(100% - {header ? header.clientHeight : 0}px">
-        <IFrame bind:height {componentApp} />
+        <IFrame bind:height {componentApp} {componentData} />
         <div class="overlay">
           {#if !active}
             <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -135,7 +136,7 @@
         </div>
       </button>
     {:else}
-      <IFrame bind:height {componentApp} />
+      <IFrame bind:height {componentApp} {componentData} />
     {/if}
     <header bind:this={header} class:has-action={action && buttons.length === 0}>
       <div class="component-label">

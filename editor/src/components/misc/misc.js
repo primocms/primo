@@ -30,8 +30,8 @@ export const iframePreview = (locale = 'en') => `
         }
 
         window.addEventListener('message', ({data}) => {
-          if (data.componentApp || data.props) {
-            update(data.componentApp, data.props)
+          if (data.componentApp || data.componentData) {
+            update(data.componentApp, data.componentData)
           }
         }, false)
 		  <\/script>
@@ -51,7 +51,6 @@ export const pagePreview = `
         let c;
 
         function update(source) {
-          console.log({source})
           source.forEach(async (item, i) => {
             if (item.svelte.error) return
             const div = document.createElement("div")
