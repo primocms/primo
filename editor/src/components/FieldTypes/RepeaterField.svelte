@@ -1,7 +1,6 @@
 <script>
   import { find as _find } from 'lodash-es'
   import pluralize from '../../libraries/pluralize';
-  import {locale} from '../../stores/app/misc'
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
@@ -69,8 +68,7 @@
     ? field.value.map((value) => [
         ...field.fields.map((subfield) => ({
           ...subfield,
-          value: value[subfield.key],
-          _key: createUniqueID()
+          value: value[subfield.key]
         })),
       ])
     : [];
