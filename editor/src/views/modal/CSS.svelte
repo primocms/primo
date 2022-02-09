@@ -23,8 +23,8 @@
   let unsavedSiteCSS = $siteCode.css;
 
   let preview = '';
-  getNewPagePreview();
-  async function getNewPagePreview() {
+  updatePagePreview();
+  async function updatePagePreview() {
     preview = await buildStaticPage({
       page: {
         ...$activePage,
@@ -33,27 +33,14 @@
           css: unsavedPageCSS,
         }
       },
-      site: $site,
+      site: {
+        ...$site,
+        code: {
+          ...$site.code,
+          css: unsavedSiteCSS
+        }
+      },
     });
-  }
-
-  let allPages = [];
-  buildSitePreview();
-  async function buildSitePreview() {
-    allPages = await Promise.all(
-      $pagesStore.map((page) =>
-        buildStaticPage({
-          page,
-          site: {
-            ...$site,
-            code: {
-              ...$site.code,
-              css: unsavedSiteCSS
-            },
-          },
-        })
-      )
-    );
   }
 
   let loading = false;
@@ -119,7 +106,7 @@
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
-          on:change={getNewPagePreview}
+          on:change={updatePagePreview}
           on:save={saveStyles}
         />
       {:else if primaryTab.id === 'site'}
@@ -128,19 +115,13 @@
           mode="css"
           docs="https://adam-marsden.co.uk/css-cheat-sheet"
           debounce={true}
-          on:change={buildSitePreview}
+          on:change={updatePagePreview}
           on:save={saveStyles}
         />
       {/if}
     </div>
     <div class="preview-container">
-      {#if primaryTab.id === 'page'}
-        <Preview {preview} />
-      {:else}
-        {#each allPages as preview}
-          <Preview {preview} />
-        {/each}
-      {/if}
+      <Preview {preview} />
     </div>
   </div>
 </main>
