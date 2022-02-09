@@ -222,6 +222,10 @@
 
       return [
         ...flattenDeep(pages),
+        ...Object.entries(site.content).map(([locale, content]) => ({
+          path: `${locale}.json`,
+          content: JSON.stringify(content)
+        })),
         ...modules.map((module) => ({
           path: `_modules/${module.symbol}.js`,
           content: module.content,
