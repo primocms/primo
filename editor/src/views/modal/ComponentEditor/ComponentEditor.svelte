@@ -44,15 +44,17 @@
   };
 
   let localComponent:SymbolType = cloneDeep(component) // local copy of component to modify & save 
-
   let localContent = component.type === 'symbol' ? {} : getComponentContent($content) // local copy of component content to modify & save
   
   // component data w/ page/site data included (for compilation)
   $: data = {
-    ...localContent[$locale],
+    ...(localContent[$locale] || getSymbolPlaceholders(fields)),
     ...getPageData({ loc: $locale })
   }
 
+  function getSymbolPlaceholders(fields) {
+    return _chain(fields).keyBy('key').mapValues(f => getPlaceholderValue(f)).value()
+  }
 
   // parse component-specific content out of site content tree (keeping separate locales)
   function getComponentContent(siteContent): object {
@@ -137,7 +139,7 @@
   // ensure placeholder values always conform to form
   // TODO: do for remaining fields
   $: fields = fields.map(field => {
-    if (component.type === 'symbol' && field.type === 'link' && !field.value.url) return {
+    if (component.type === 'symbol' && field.type === 'link' && !field.value?.url) return {
       ...field,
       value: getPlaceholderValue(field) 
     }
