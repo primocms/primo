@@ -8,6 +8,7 @@
   import Hosting from '$lib/components/Hosting.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { site, modal } from '@primo-app/primo'
+  import { locales } from '@primo-app/primo/src/const'
   import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
   import hosts from '../stores/hosts'
   import sites from '../stores/sites'
@@ -270,15 +271,17 @@
       {#if deployment}
         <div class="boxes">
           <div class="box">
-            <div class="deployment">
-              Published to
-              <a
-                href={activeDeployment ? activeDeployment.url : deployment.url}
-                rel="external"
-                target="blank"
-                >{activeDeployment ? activeDeployment.url : deployment.url}</a
-              >
-            </div>
+            {#each Object.keys($site.content) as locale}
+              <div class="deployment">
+                {(find(locales, ['key', locale])['name'])} site published to
+                <a
+                  href="{activeDeployment ? activeDeployment.url : deployment.url}/{locale !== 'en' ? locale : ''}"
+                  rel="external"
+                  target="blank"
+                  >{activeDeployment ? activeDeployment.url : deployment.url}/{locale !== 'en' ? locale : ''}</a
+                >
+              </div>
+            {/each}
           </div>
         </div>
       {:else if activeDeployment}
