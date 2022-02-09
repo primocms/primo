@@ -14,11 +14,10 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   const finalRequest = buildFinalRequest(data)
 
   let cacheKey
-  if (buildStatic) {
+  if (!buildStatic) {
     cacheKey = JSON.stringify({
       code, 
       data: Object.keys(data),
-      buildStatic,
       format
     })
     const cached = await idb.get(cacheKey) 
