@@ -5,8 +5,7 @@ import { fields as siteFields } from './data/draft'
 import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
 import { site as activeSite, symbols } from './data/draft'
 import {locale} from './app/misc'
-import { processCode, processCSS, getPlaceholderValue, getEmptyValue } from '../utils'
-import {DEFAULTS} from '../const'
+import { processCode, processCSS, getPlaceholderValue, getEmptyValue, LoremIpsum} from '../utils'
 import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
 import { Page } from '../const'
 
@@ -102,13 +101,14 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     ...page.sections.map(async section => {
       if (section.type === 'component') {
 
+        const symbol = _find(site.symbols, ['id', section.symbolID])
         const componentHasContent = site.content[locale][page.id]?.[section.id]
 
         if (!componentHasContent) {
           console.log('COMPONENT DOES NOT HAVE CONTENT', section)
         }
 
-        if (!componentHasContent) return null // component has been placed but not filled out with content
+        // if (!componentHasContent) return null // component has been placed but not filled out with content
         const data = getComponentData({
           component: section,
           page,
@@ -138,7 +138,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
 
       } else if (section.type === 'content') {
         return {
-          html: site.content[locale][page.id][section.id],
+          html: site.content[locale]?.[page.id]?.[section.id] || LoremIpsum(2),
           css: '',
           js: '',
           type: 'content',
@@ -174,7 +174,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type, css } = block
-      const html = block.html || site.content[locale][page.id][id] || ''
+      const html = block.html || site.content[locale]?.[page.id]?.[id] || ''
       return `
       ${css ? `<style>${css}</style>` : ``}
       <div class="primo-section has-${type}" id="${id}">
@@ -245,7 +245,7 @@ export function getComponentData({
   const componentData = _chain(symbol.fields)
     .map(field => ({
       key: field.key,
-      value: site.content[loc][page.id][component.id]?.[field.key] || (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
+      value: site.content[loc][page.id]?.[component.id]?.[field.key] || (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
     }))
     .keyBy('key')
     .mapValues('value')
