@@ -5,6 +5,7 @@
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { makeValidUrl } from '$lib/utils'
   import { Site } from '@primo-app/primo/src/const'
+  import {validateSiteStructure} from '@primo-app/primo/src/utils'
 
   export let onSuccess = (newSite) => {}
   let loading
@@ -45,7 +46,14 @@
     reader.onload = async function ({ target }) {
       console.log('loaded')
       if (typeof target.result !== 'string') return
-      siteData = JSON.parse(target.result)
+      const uploaded = JSON.parse(target.result)
+      const converted = validateSiteStructure(uploaded)
+
+      if (converted) siteData = converted
+      else {
+        duplicateFileIsValid = false
+      }
+
       duplicatingSite = true
     }
     reader.readAsText(target.files[0])

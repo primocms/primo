@@ -196,7 +196,7 @@ export function validateSiteStructure(site): Site {
         const pageContent = {}
         const updatedPage = {
           id: page.id,
-          name: page.name,
+          name: page.name || page.title || '',
           sections: convertSections(page.sections, (section) => {
             pageContent[section.id] = section.content
           }),
