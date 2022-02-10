@@ -2,7 +2,7 @@
   import _ from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
   import { processCode } from '../../../utils';
-  import { symbols } from '../../../stores/data/draft';
+  import { symbols, content } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {getComponentData} from '../../../stores/helpers'
 
@@ -12,7 +12,12 @@
   export let node;
 
   $: symbol = _.find($symbols, ['id', block.symbolID])
-  $: componentData = getComponentData({ component: block, loc: $locale })
+  $: $content, $locale, block, setComponentData()
+
+  let componentData
+  function setComponentData() {
+    componentData = getComponentData({ component: block, loc: $locale })
+  }
 
   let html = '';
   let css = '';
@@ -52,7 +57,13 @@
   $: hydrateComponent(componentData);
   async function hydrateComponent(data) {
     if (!component) return
-    component.$set(data);
+    else if (error) {
+      error = null
+      compileComponentCode(symbol.code)
+    } else {
+      // TODO: re-render the component if `data` doesn't match its fields (e.g. when removing a component field to add to the page)
+      component.$set(data);
+    }
   }
 
 
