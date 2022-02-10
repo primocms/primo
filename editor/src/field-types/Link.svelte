@@ -5,6 +5,7 @@
   import SplitButton from '../ui/inputs/SplitButton.svelte';
   import TextInput from '../components/inputs/TextInput.svelte';
   import { pages } from '../stores/data/draft';
+  import {locale} from '../stores/app/misc'
 
   const link = {
     label: '',
@@ -37,11 +38,21 @@
   let selected = urlMatchesPage(field.value.url);
 
   function urlMatchesPage(url) {
-    if (url === '/' || find($pages, ['id', url])) {
+    if (url.startsWith('/')) {
       return 'Page';
     } else {
       return 'URL';
     }
+  }
+
+  function getPageUrl(page, loc) {
+    const prefix = loc === 'en' ? '/' : `/${loc}/`
+    let url
+    if (page.id === 'index') {
+      return prefix
+    } else {
+      return prefix + page.id
+    } 
   }
 
 </script>
@@ -60,9 +71,9 @@
       {#if selected === 'Page'}
         <select bind:value={field.value.url}>
           {#each $pages as page}
-            <option value={page.id === 'index' ? '/' : page.id}>
+            <option value={getPageUrl(page, $locale)}>
               {page.name}
-              <pre>({page.id === 'index' ? '/' : page.id})</pre>
+              <pre>({getPageUrl(page, $locale)})</pre>
             </option>
           {/each}
         </select>
