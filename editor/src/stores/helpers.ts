@@ -189,7 +189,11 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
         `<script type="module" async>
           import App from '/_modules/${block.symbol}.js';
           fetch('/${locale }.json').then(res => res.json()).then(data => {
-            const content = data['${page.id}']['${block.id}'];
+            const content = {
+              ...data,
+              ...data['${page.id}'],
+              ...data['${page.id}']['${block.id}']
+            };
             console.log({content})
             new App({
               target: document.querySelector('#${block.id}'),
@@ -278,6 +282,8 @@ export function getPageData({
   // remove pages from data object (not accessed from component)
   const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
   const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+
+  // TODO: remove sections from page content (only keep field keys)
 
   return {
     ...siteContent,
