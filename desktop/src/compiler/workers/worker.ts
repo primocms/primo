@@ -30,8 +30,9 @@ registerPromiseWorker(async function ({code,site,locale,hydrated,buildStatic = t
                 const currentLocale = window.location.pathname.split('/').slice(1)[0]
                 let locale = ${JSON.stringify(locales.map(l => l.key))}.includes(currentLocale) ? currentLocale : 'en'
                 function navigateToLocale(e) {
+                    const loc = e.target.value
                     if (!['localhost', '-'].includes(window.location.hostname)) {
-                        window.location.href = '/' + e.target.value
+                        window.location.href = '/' + (loc === 'en' ? '' : loc)
                     }
                 }
             </script>
