@@ -29,6 +29,19 @@
   }));
 
 
+  $: syncLocales($content)
+  function syncLocales(content) {
+    // runs when adding new locale from Fields
+    Object.keys(content).forEach((loc) => {
+      if (!localContent[loc]) {
+        localContent = {
+          ...localContent,
+          [loc]: localContent['en']
+        }
+      }
+    })
+  }
+
   const allFieldTypes = [
     // {
     //   id: 'custom',
@@ -373,6 +386,10 @@
           <EditField
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
+            on:move={({ detail: direction }) => {
+              console.log(direction);
+              moveField({ i, direction });
+            }}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
               {#each allFieldTypes as field}
@@ -436,6 +453,7 @@
               {#each field.fields as subfield}
                 <EditField
                   fieldTypes={$fieldTypes}
+                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
