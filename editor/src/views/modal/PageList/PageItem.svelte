@@ -22,7 +22,9 @@
     preview = await buildStaticPage({ page, site: $site });
   }
 
-  function openPage() {
+  // Svelte bug: it takes a second to handle links properly (i.e. reloads page when clicked shortly after mounting)
+  // workaround: manage site from [...site].svelte instead of across index.svelte and [...site.svelte] 
+  function openPage(e) {
     modal.hide();
   }
 
@@ -31,7 +33,7 @@
   let id = page.id || '';
   $: disableSave = !name || !id;
 
-  $: pageURL = `/${$pageStore.params.site}/${
+  const pageURL = `/${$pageStore.params.site}/${
     page.id === 'index' ? '' : page.id || ''
   }`;
 </script>

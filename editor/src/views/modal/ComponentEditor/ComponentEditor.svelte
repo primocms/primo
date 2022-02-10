@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get} from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get, differenceWith as _differenceWith} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
@@ -48,8 +48,9 @@
   
   // component data w/ page/site data included (for compilation)
   $: data = {
-    ...(localContent[$locale] || getSymbolPlaceholders(fields)),
-    ...getPageData({ loc: $locale })
+    ...getPageData({ loc: $locale }),
+    ...getSymbolPlaceholders(fields),
+    ...(localContent[$locale])
   }
 
   function getSymbolPlaceholders(fields) {
@@ -61,7 +62,7 @@
     return _chain(Object.entries(siteContent)) 
       .map(([locale]) => ({
         locale,
-        content: $content[locale][$pageID][localComponent.id]
+        content: $content[locale][$pageID][localComponent.id] || {}
       }))
       .keyBy('locale')
       .mapValues('content')
@@ -80,6 +81,58 @@
       value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[loc]?.[field.key] || getEmptyValue(field))
     }))
   }
+
+
+  // Ensure all content keys match field keys
+  $: syncFieldKeys(fields) 
+
+  $: syncLocales($content)
+
+  function syncLocales(content) {
+    // runs when adding new locale from ComponentEditor
+    Object.keys(content).forEach((loc) => {
+      if (!localContent[loc]) {
+        localContent = {
+          ...localContent,
+          [loc]: localContent['en']
+        }
+      }
+    })
+  }
+
+  function syncFieldKeys(fields) {
+    removeNonexistantKeys() // delete keys from content that do not appear in fields
+    addMissingKeys() // add keys that do
+
+    function addMissingKeys() {
+      let updatedContent = cloneDeep(localContent)
+      fields.forEach(field => {
+        if (localContent[$locale][field.key] === undefined) {
+          console.log('DOES NOT EXIST, adding', field.key)
+          Object.keys(localContent).forEach(loc => {
+            updatedContent[loc][field.key] = getEmptyValue(field)
+          })
+        }
+      })
+      localContent = updatedContent
+    }
+
+    // Remove content when field deleted
+    function removeNonexistantKeys() {
+      let updatedContent = cloneDeep(localContent)
+      Object.keys(localContent[$locale]).forEach((key) => {
+        if (!find(fields, ['key', key])) {
+          console.log('Value does not exist, deleting', key)
+          Object.keys(localContent).forEach(loc => {
+            delete updatedContent[loc][key]
+          })
+        } 
+      })
+      localContent = updatedContent
+      refreshPreview()
+    }
+  }
+
 
   function saveLocalContent(): void {
     localContent = {
