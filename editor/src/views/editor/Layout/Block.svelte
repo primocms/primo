@@ -132,7 +132,7 @@
             });
             Object.entries(component.content).forEach(field => {
               const [ localeID, localeContent ] = field
-              updateContent(component.id, localeContent, localeID)
+              if (localeContent) updateContent(component.id, localeContent, localeID)
             })
             modal.hide();
           },
