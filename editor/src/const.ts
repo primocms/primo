@@ -463,10 +463,6 @@ html {
     'en': { // locale
       'index': { // page
       },
-    },
-    'es': { // locale
-      'index': { // page
-      },
     }
   },
   symbols: []

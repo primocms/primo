@@ -7,7 +7,6 @@
     content,
     pages,
     symbols,
-    fields as siteFields,
     code as siteCode
     // html as siteHTML,
     // css as siteCSS,

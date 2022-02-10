@@ -6,7 +6,6 @@
   import sites from '../stores/sites'
   import cloudSites, { connected } from '../stores/cloudSites'
   import config from '../stores/config'
-  import store from '../stores/config'
 
   let loading
   function createSite() {
@@ -89,6 +88,7 @@
                         class="reset-input"
                         type="text"
                         bind:value={site.name}
+                        autofocus
                       />
                     </form>
                   {:else}

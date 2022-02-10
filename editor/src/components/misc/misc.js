@@ -9,6 +9,7 @@ export const iframePreview = (locale = 'en') => `
 
         function update(source = null, props) {
           if (c && !source && props) {
+            // TODO: re-render component when passing only a subset of existing props (i.e. when a prop has been deleted)
             c.$set(props);
           } else if (source) {
             const blob = new Blob([source], { type: 'text/javascript' });

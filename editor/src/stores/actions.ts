@@ -221,7 +221,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
     }))
   } else {
     // create matching block in all locales
-    for(let [ locale, pages ] of Object.entries(currentContent)) {
+    for(let locale of Object.keys(currentContent)) {
       content.update(c => ({
         ...c,
         [locale]: {
