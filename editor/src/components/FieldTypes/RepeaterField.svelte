@@ -113,7 +113,7 @@
             <i class="fas fa-trash" />
           </button>
         </div>
-        {#each fieldValue as subfield (subfield._key)}
+        {#each fieldValue as subfield}
           <div
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">
