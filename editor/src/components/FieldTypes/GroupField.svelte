@@ -1,12 +1,20 @@
 <script>
-  import { find as _find } from 'lodash-es'
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
-
+  import { find as _find, chain as _chain } from 'lodash-es'
   import fieldTypes from '../../stores/app/fieldTypes';
   import { Card } from '../misc';
+  import {createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
 
   export let field;
+
+  function setFieldValue() {
+    field.value = _chain(field.fields).keyBy('key').mapValues('value').value()
+  }
+
+  function onInput() {
+    setFieldValue()
+    dispatch('input');
+  }
 
 </script>
 
@@ -16,7 +24,7 @@
       <svelte:component
         this={_find($fieldTypes, ['id', subfield.type]).component}
         field={subfield}
-        on:input />
+        on:input={onInput} />
     </div>
   {/each}
 </Card>
