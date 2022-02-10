@@ -44,7 +44,6 @@
     console.log('reading')
     var reader = new window.FileReader()
     reader.onload = async function ({ target }) {
-      console.log('loaded')
       if (typeof target.result !== 'string') return
       const uploaded = JSON.parse(target.result)
       const converted = validateSiteStructure(uploaded)
@@ -104,6 +103,12 @@
           </svg>
           <span>Duplicate from primo.json</span>
         </label>
+        <div class="info">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+          </svg>
+          <span>(Optional) Create your new site from a primo site file, by default your start from scratch</span>
+        </div>
       </div>
       {#if duplicateFileIsValid}
         <div class="submit">
@@ -165,6 +170,30 @@
       svg {
         height: 0.75rem;
         width: 0.75rem;
+      }
+    }
+
+    .info {
+      position: relative;
+      padding-left: 0.5rem;
+
+      svg {
+        height: 0.75rem;
+        width: 0.75rem;
+      }
+
+      svg:hover + span {
+        opacity: 1;
+      }
+      span {
+        font-size: 0.75rem;
+        position: absolute;
+        background: var(--color-gray-8);
+        padding: 1rem;
+        width: 13rem;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s;
       }
     }
   }
