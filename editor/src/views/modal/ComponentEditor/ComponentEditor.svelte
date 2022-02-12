@@ -84,9 +84,8 @@
 
 
   // Ensure all content keys match field keys
-  $: syncFieldKeys(fields) 
-
-  $: syncLocales($content)
+  $: component.type !== 'symbol' && syncFieldKeys(fields) 
+  $: component.type !== 'symbol' && syncLocales($content)
 
   function syncLocales(content) {
     // runs when adding new locale from ComponentEditor
