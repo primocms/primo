@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'
   import SignInNav from '$lib/components/SignInNav.svelte'
   import SiteFooter from '$lib/components/SiteFooter.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
@@ -7,9 +6,6 @@
   import sites from '../stores/sites'
   import user from '../stores/user'
   import * as actions from '../actions'
-  // import mixpanel from 'mixpanel-browser'
-
-  // mixpanel.track('Dashboard')
 
   function beginInvitation(site): void {
     show({
