@@ -7,10 +7,11 @@ export async function post({ request }) {
   const payload = await request.json()
   const nUsers = await getNumberOfUsers()
   if (nUsers === 0) {
-    await createUser(true)
+    const supabase = await createUser(true)
     return {
       body: {
-        success: true
+        success: true,
+        supabase
       }
     }
   }
@@ -26,12 +27,13 @@ export async function post({ request }) {
   })
 
   async function createUser(admin = false) {
-    await signUp(payload)
+    const supabase = await signUp(payload)
     await users.create( admin ? 
     {
       ...payload,
       role: 'admin'
     } : payload)
+    return supabase
   }
 }
 

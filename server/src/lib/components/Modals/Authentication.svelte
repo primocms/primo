@@ -18,15 +18,20 @@
 
   export let onSignIn = () => {}
 
+  let loading = true
   if (browser) {
     axios.get('/api/auth.json').then(({ data }) => {
+      loading = false
       if (!data.initialized) {
         signingUp = true
+        smallMessage = `Welcome to your new Primo Server! Enter the email address & password you'll use to administrate this server`
       }
+    }).catch(e => {
+      console.log({e})
+      largeMessage = `Could not connect to your Supabase instance. Ensure you've followed the setup directions in the <a style="text-decoration:underline" href="https://github.com/primo-af/primo/tree/master/server">Primo Server repo</a>.`
     })
   }
 
-  let loading
 
   let collaboratorRole = $page.url.searchParams.get('role')
   $sitePassword = $page.url.searchParams.get('password')
@@ -41,12 +46,12 @@
   }
 
   async function signUpWithPassword() {
-    loginError = `You've been invited to collaborate on this server. Sign up with any email address and password to continue.`
+    smallMessage = `You've been invited to collaborate on this server. Sign up with any email address and password to continue.`
     signingUp = true
   }
 
   async function signIntoPageWithPassword() {
-    loginMessage = `Signing you in...`
+    largeMessage = `Signing you in...`
     const validated = await actions.sites.validatePassword(
       $page.params.site,
       $sitePassword
@@ -58,13 +63,13 @@
         signedIn: true,
       }))
     } else {
-      loginMessage = `Could not validate your password, please ask the site admin for a new collaboration link`
+      largeMessage = `Could not validate your password, please ask the site admin for a new collaboration link`
     }
   }
 
-  let loginMessage
+  let largeMessage
   let headerMessage
-  let loginError
+  let smallMessage
   let loadingEmail
 
   let email,
@@ -74,25 +79,31 @@
 
   async function signUp() {
     loadingEmail = true
-    loginError = null
-    loginMessage = null
+    smallMessage = null
+    largeMessage = null
     const res = await createUser({
       email,
       password,
       role: collaboratorRole,
       invitationKey,
     })
+    console.log({res})
     if (!res) {
-      loginMessage =
-        'Could not sign up. Ask the server Admin to send you a new invitation link.'
-    } else {
+      largeMessage = 'Could not sign up. Ask the server Admin to send you a new invitation link.'
+    } else if (res.supabase.error) {
+      largeMessage = res.supabase.error
+    } else if (!res.supabase.session) {
+      largeMessage = 'It looks like email confirmations are still on for this Supabase instance.<br><br>Turn it off (Authentication > Settings) & refresh to continue.'
+    } else if (res.success) {
       signIn()
+    } else {
+      largeMessage = 'Something strange happened. Please let us know about it in a Github issue or in our Discord'
     }
     loadingEmail = false
   }
 
   async function signIn() {
-    loginError = ''
+    smallMessage = ''
     loadingEmail = true
 
     if (!$user.signedIn) {
@@ -100,9 +111,9 @@
       user.update((u) => ({ ...u, signedIn: true }))
       const role = find(await users.get(), ['email', email])['role']
       if (error) {
-        loginError = error.message
+        smallMessage = error.message
       } else if (signInWithMagicLink) {
-        loginMessage = `A magic link has been sent to <strong>${email}</strong>.<br>When you click on it, you'll be logged into primo.`
+        largeMessage = `A magic link has been sent to <strong>${email}</strong>.<br>When you click on it, you'll be logged into primo.`
       } else if (res) {
         user.update((u) => ({
           ...u,
@@ -116,9 +127,9 @@
   async function resetPassword() {
     const { error } = await auth.resetPassword(email)
     if (error) {
-      loginError = error.message
+      smallMessage = error.message
     } else {
-      loginMessage = `A link has been sent to <strong>${email}</strong> with instructions to reset your password`
+      largeMessage = `A link has been sent to <strong>${email}</strong> with instructions to reset your password`
     }
   }
 
@@ -136,9 +147,9 @@
       </a>
     </div>
 
-    {#if loginMessage}
+    {#if largeMessage}
       <div in:fade class="login-message">
-        {@html loginMessage}
+        {@html largeMessage}
       </div>
     {:else if loading}
       <div class="spinner">
@@ -146,8 +157,8 @@
       </div>
     {:else}
       <div class="login-form">
-        {#if loginError}
-          <span class="login-error" in:fade>{@html loginError}</span>
+        {#if smallMessage}
+          <span class="login-error" in:fade>{@html smallMessage}</span>
         {/if}
         {#if headerMessage}
           <div class="header-message">
@@ -288,19 +299,18 @@
       line-height: 1.25rem;
       text-align: center;
       font-weight: 600;
+    }
 
-      .spinner {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 0.5rem;
-      }
+    .spinner {
+      display: flex;
+      justify-content: center;
+      padding: 2rem 0;
     }
 
     .login-error {
       display: block;
-      padding: 1rem;
+      padding: 1rem 0;
       border-radius: 0.25rem;
-      font-weight: 600;
       margin-bottom: 1rem;
       border: 2px solid var(--color-caution);
     }
