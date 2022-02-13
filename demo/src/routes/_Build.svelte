@@ -128,27 +128,9 @@
 </main>
 
 <style lang="postcss">
-	.title {
-		margin-bottom: 0.5rem;
-		color: var(--color-gray-1);
-		font-weight: 600;
-		transition: color 0.1s;
-		a {
-			text-decoration: underline;
-		}
-	}
-
 	.link {
 		text-decoration: underline;
 	}
-
-	.subtitle {
-		color: var(--color-gray-2);
-		margin-bottom: 1rem;
-		font-size: var(--font-size-2);
-		line-height: 1.5;
-	}
-
 	.content {
 		padding: 2rem 0;
 		max-width: 600px;
@@ -167,40 +149,6 @@
 			place-items: flex-start normal;
 			max-width: 600px;
 			margin: 0 auto;
-
-			.boxes {
-				margin-bottom: 1rem;
-			}
-
-			.box {
-				padding: 1rem;
-				background: var(--color-gray-9);
-				color: var(--color-gray-2);
-				display: flex;
-				flex-direction: column;
-
-				&:not(:last-child) {
-					border-bottom: 1px solid var(--color-gray-8);
-				}
-
-				.deployment {
-					padding: 0.5rem 0;
-					display: flex;
-					flex-direction: column;
-
-					a {
-						text-decoration: underline;
-						transition: color 0.1s;
-						&:hover {
-							color: var(--color-primored);
-						}
-					}
-
-					&:not(:last-child) {
-						border-bottom: 1px solid var(--color-gray-8);
-					}
-				}
-			}
 		}
 	}
 

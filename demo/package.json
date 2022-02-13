@@ -1,8 +1,8 @@
 {
-  "name": "try.primo",
+  "name": "primo-demo",
   "version": "0.0.1",
   "scripts": {
-    "dev": "npm link @primo-app/primo && svelte-kit dev",
+    "dev": "svelte-kit dev",
     "build": "svelte-kit build",
     "preview": "svelte-kit preview",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. .",
@@ -19,11 +19,11 @@
     "prettier-plugin-svelte": "^2.4.0",
     "svelte": "^3.42.6",
     "svelte-preprocess": "^4.9.8",
-    "tailwindcss": "^2.2.19"
+    "tailwindcss": "^2.2.19",
+    "typescript": "^4.5.4"
   },
   "type": "module",
   "dependencies": {
-    "@primo-app/primo": "^1.3.83",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.0.3",
     "js-beautify": "^1.14.0",
