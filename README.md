@@ -30,7 +30,7 @@ Before deploying your Primo Server, you'll need to sign up for [Supabase](https:
 1. Create a new project
 1. When it's ready, select 'SQL' from the sidebar navigation
 1. Click **+ New query** 
-1. Paste in the contents of [`./primo_schema.sql`](https://raw.githubusercontent.com/primo-af/primo-server/master/primo_schema.sql) and click 'RUN' ![query](./setup-query.png)
+1. Paste in the contents of [`./primo_schema.sql`](https://raw.githubusercontent.com/primo-af/primo-server/master/primo_schema.sql) and click 'RUN'
 1. Disable Email confirmations (Authentication > Settings > Email Auth)
 
 
