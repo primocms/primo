@@ -63,4 +63,5 @@
   }
 </script>
 
+<Modal />
 <slot />
