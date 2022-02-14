@@ -74,100 +74,98 @@
                 <SiteThumbnail {site} />
               </a>
               <div class="site-info">
-                <div>
-                  <div class="site-name">
-                    {#if siteBeingEdited === site.id}
-                      <form
-                        on:submit|preventDefault={() =>
-                          (siteBeingEdited = null)}
-                      >
-                        <input
-                          on:blur={() => (siteBeingEdited = null)}
-                          class="reset-input"
-                          type="text"
-                          bind:value={site.name}
-                        />
-                      </form>
-                    {:else}
-                      <a
-                        href={site.id}
-                        on:mouseenter={() => (hoveredItem = i)}
-                        on:mouseleave={() => (hoveredItem = null)}
-                      >
-                        <span>{site.name}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          class="s-Uap-jPRb-uiE"
-                          ><path
-                            fill-rule="evenodd"
-                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                            clip-rule="evenodd"
-                            class="s-Uap-jPRb-uiE"
-                          /></svg
-                        >
-                      </a>
-                    {/if}
-                  </div>
-                  <span class="site-url">{site.id}</span>
-                  <div class="buttons">
-                    <button
-                      on:click={() => beginInvitation(site)}
-                      class="site-button"
+                <div class="site-name">
+                  {#if siteBeingEdited === site.id}
+                    <form
+                      on:submit|preventDefault={() =>
+                        (siteBeingEdited = null)}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                        />
-                      </svg>
-                      <span>Invite</span>
-                    </button>
-                    <button
-                      class="site-button"
-                      on:click={() => (siteBeingEdited = site.id)}
+                      <input
+                        on:blur={() => (siteBeingEdited = null)}
+                        class="reset-input"
+                        type="text"
+                        bind:value={site.name}
+                      />
+                    </form>
+                  {:else}
+                    <a
+                      href={site.id}
+                      on:mouseenter={() => (hoveredItem = i)}
+                      on:mouseleave={() => (hoveredItem = null)}
                     >
+                      <span>{site.name}</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
-                      >
-                        <path
-                          d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      <span>Rename</span>
-                    </button>
-                    <button
-                      class="site-button"
-                      on:click={() => deleteSiteItem(site.id)}
-                    >
-                      <svg
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
+                        class="s-Uap-jPRb-uiE"
                         ><path
                           fill-rule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                           clip-rule="evenodd"
+                          class="s-Uap-jPRb-uiE"
                         /></svg
                       >
-                      <span>Delete</span>
-                    </button>
-                  </div>
+                    </a>
+                  {/if}
+                </div>
+                <span class="site-url">{site.id}</span>
+                <div class="buttons">
+                  <button
+                    on:click={() => beginInvitation(site)}
+                    class="site-button"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    <span>Invite</span>
+                  </button>
+                  <button
+                    class="site-button"
+                    on:click={() => (siteBeingEdited = site.id)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
+                      />
+                      <path
+                        fill-rule="evenodd"
+                        d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <span>Rename</span>
+                  </button>
+                  <button
+                    class="site-button"
+                    on:click={() => deleteSiteItem(site.id)}
+                  >
+                    <svg
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                      ><path
+                        fill-rule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clip-rule="evenodd"
+                      /></svg
+                    >
+                    <span>Delete</span>
+                  </button>
                 </div>
               </div>
             </li>
@@ -261,15 +259,10 @@
 
           .site-info {
             color: var(--color-gray-1);
-            display: grid;
-            gap: 0.5rem;
-
-            & > div {
-              display: flex;
-              flex-direction: column;
-              justify-content: flex-start;
-              padding: 1.5rem;
-            }
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 1.5rem;
 
             .site-name {
 
@@ -381,6 +374,10 @@
     transition: color 0.1s, background-color 0.1s;
     &:focus {
       outline: 2px solid var(--primo-color-primored);
+    }
+    &:disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
   }
 
