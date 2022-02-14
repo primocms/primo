@@ -50,7 +50,7 @@
     position: fixed;
     z-index: 999999999;
     inset: 0;
-    top: 0;
+    top: 28px;
 
     &.small .modal-card {
       max-width: 30rem;
