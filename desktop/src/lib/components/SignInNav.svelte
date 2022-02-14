@@ -9,7 +9,7 @@
     <Logo />
   </div>
   <nav>
-    <a class="link" href="https://docs.primo.af" rel="external">
+    <a class="link" href="https://docs.primo.af" target="blank">
       <span>Docs</span>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
         ><!-- Font Awesome Pro 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) --><path
