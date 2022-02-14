@@ -13,6 +13,16 @@
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
+    dropdown.set([
+      {
+        label: 'Back to Dashboard',
+        icon: 'fas fa-arrow-left',
+        href: '/',
+      },
+      {
+        component: SiteButtons,
+      },
+    ])
   }
 
   watchForAutoLogin(async (event, session) => {
@@ -35,17 +45,6 @@
       console.warn('NEW AUTH EVENT', event)
     }
   })
-
-  dropdown.set([
-    {
-      label: 'Back to Dashboard',
-      icon: 'fas fa-arrow-left',
-      href: '/',
-    },
-    {
-      component: SiteButtons,
-    },
-  ])
 
   $: if (!$user.signedIn) {
     show({
