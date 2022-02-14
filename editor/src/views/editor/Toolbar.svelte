@@ -1,5 +1,5 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher, getContext } from 'svelte';
   import {find as _find} from 'lodash-es'
   import ToolbarButton from './ToolbarButton.svelte';
   import LocaleSelector from './LocaleSelector.svelte'
@@ -35,7 +35,9 @@ bind:this={element}
 class:mounted>
 <div class="menu-container">
   <div class="left">
-    <PrimoButton variants="py-2" on:signOut />
+    {#if !getContext('hidePrimoButton')}
+      <PrimoButton on:signOut />
+    {/if}
     {#each buttons as group}
       <div class="buttons">
         {#each group as button}
@@ -112,7 +114,7 @@ class:mounted>
     background-color: var(--color-codeblack);
     user-select: none;
     border-bottom: 1px solid var(--color-gray-9);
-    z-index: 9999999999; /* should be above #primo-toolbar */
+    z-index: 999999999; /* should be above #primo-toolbar */
     position: fixed;
     top: 0;
     left: 0;
@@ -139,7 +141,7 @@ class:mounted>
     left: 0;
     right: 0;
     top: -10rem;
-    z-index: 999999999;
+    z-index: 99999999;
     padding-top: 40px;
     transition: 0.2s top;
     transition-delay: 0.5s;
