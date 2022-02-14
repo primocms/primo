@@ -18,6 +18,5 @@
     "npm": "^8.3.0",
     "vitest": "0.0.139"
   },
-  "dependencies": {},
-  "version": "1.4.15"
+  "dependencies": {}
 }
