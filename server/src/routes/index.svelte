@@ -39,8 +39,11 @@
   }
 
   async function editSite(site) {
-    actions.sites.update(site.id, {
-      name: site.name,
+    actions.sites.update({
+      id: site.id,
+      props: {
+        name: site.name
+      }
     })
   }
 
@@ -52,7 +55,6 @@
   let hoveredItem = null
 </script>
 
-<Modal />
 <main class="primo-reset">
   {#if $user.signedIn}
     <div class="container">

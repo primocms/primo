@@ -38,19 +38,23 @@ export async function validateInvitationKey(key) {
 }
 
 export async function saveSite(updatedSite) {
+  // TODO: make preview work from server (can't compile)
   const homepage = _find(updatedSite.pages, ['id', 'index'])
-  const preview = await buildStaticPage({ page: homepage, site: updatedSite })
+  // const preview = await buildStaticPage({ page: homepage, site: updatedSite })
+  // console.log(2)
   const [ res1, res2 ] = await Promise.all([
     updateSiteData({
       id: updatedSite.id,
       data: updatedSite
     }),
-    updatePagePreview({
-      path: `${updatedSite.id}/preview.html`,
-      preview
-    })
+    // updatePagePreview({
+    //   path: `${updatedSite.id}/preview.html`,
+    //   preview
+    // })
   ])
-  return res1.error || res2.error ? false : true
+  console.log(3)
+  // return res1.error || res2.error ? false : true
+  return res1.error ? false : true
 
   async function updateSiteData({ id, data }) {
     const json = JSON.stringify(data)

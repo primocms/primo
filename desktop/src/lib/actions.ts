@@ -11,8 +11,11 @@ export const cloudSites = {
       const res = await axios.post(
         `${serverConfig.url}/api/${site.id}`,
         {
-          site,
-          token: serverConfig.token,
+          action: 'SAVE_SITE',
+          payload: {
+            site,
+            token: serverConfig.token,
+          }
         },
         {
           headers: {

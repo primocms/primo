@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy } from 'svelte'
+  import { onDestroy, setContext } from 'svelte'
   import { browser } from '$app/env'
   import Primo, {
     modal as primoModal,
@@ -15,26 +15,35 @@
   import { sitePassword } from '../../stores/misc'
   import { page } from '$app/stores'
   import * as primo from '@primo-app/primo/package.json'
-  import { setActiveEditor } from '../../supabase/helpers'
   import LockAlert from '$lib/components/LockAlert.svelte'
 
-  primoModal.register([
-    {
-      id: 'BUILD',
-      component: Build,
-      componentProps: {
-        siteName: 'Website', // TODO - change
-      },
-      options: {
-        route: 'build',
-        width: 'md',
-        header: {
-          title: 'Build to Github',
-          icon: 'fab fa-github',
+  if (browser) {
+    primoModal.register([
+      {
+        id: 'BUILD',
+        component: Build,
+        componentProps: {
+          siteName: 'Website', // TODO - change
+        },
+        options: {
+          route: 'build',
+          width: 'md',
+          header: {
+            title: 'Build to Github',
+            icon: 'fab fa-github',
+          },
         },
       },
-    },
-  ])
+    ])
+    fieldTypes.register([
+      {
+        id: 'image',
+        label: 'Image',
+        component: ImageField,
+      },
+      ...PrimoFieldTypes,
+    ])
+  }
 
   let currentPath
   let data
@@ -56,7 +65,10 @@
         },
       })
     } else if (res) {
-      setActiveEditor(siteID)
+      actions.setActiveEditor({
+        siteID,
+        password: $sitePassword
+      })
       data = res
     }
   }
@@ -68,23 +80,21 @@
     saving = false
   }
 
-  fieldTypes.register([
-    {
-      id: 'image',
-      label: 'Image',
-      component: ImageField,
-    },
-    ...PrimoFieldTypes,
-  ])
-
   let saving = false
 
   $: siteID = $page.params.site
 
   $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
 
+  $: if (browser && $sitePassword) {
+    setContext('hidePrimoButton', true)
+  }
+
   onDestroy(() => {
-    if (browser && !siteLocked) setActiveEditor(siteID, false)
+    if (browser && !siteLocked) actions.setActiveEditor({
+      siteID,
+      lock: false
+    })
     else if (siteLocked) modal.hide()
   })
 </script>

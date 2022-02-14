@@ -1,5 +1,7 @@
 import axios from 'axios'
 import {find} from 'lodash-es'
+import {get} from 'svelte/store'
+import supabase from './supabase/core'
 import * as supabaseDB from './supabase/db'
 import {sites as dbSites} from './supabase/db'
 import * as supabaseStorage from './supabase/storage'
@@ -53,14 +55,17 @@ export const sites = {
     ])
     stores.sites.update(sites => [ ...sites, newSite ])
   },
-  update: async (id, props) => {
+  update: async ({ id, props }) => {
     await supabaseDB.sites.update(id, props)
   },
   save: async (updatedSite, password) => {
     stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
 
     if (password) {
-      const {data:success} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, updatedSite)
+      const {data:success} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, {
+        action: 'SAVE_SITE',
+        payload: updatedSite
+      })
       return success
     } else {
       const homepage = find(updatedSite.pages, ['id', 'index'])
@@ -111,5 +116,44 @@ export const hosts = {
   delete: async (name) => {
     stores.hosts.update(hosts => hosts.filter(p => p.name !== name))
     await supabaseDB.hosts.delete(name)
+  }
+}
+
+
+let siteBeingEdited = null
+export async function setActiveEditor({ siteID, lock = true, password = null }) {
+  // Set the active editor and fire `remove_active_editor`, 
+  // which triggers a Supabase Postgres function which 
+  // waits ten seconds, then removes the active editor
+  // when that returns, the function repeats
+  console.log('set it', siteID, lock, password)
+  if (lock) {
+    if (siteBeingEdited === siteID) return
+    siteBeingEdited = siteID
+    if (password) {
+      await axios.post(`/api/${siteID}.json?password=${password}`, { action: 'SET_ACTIVE_EDITOR', payload: { siteID } })
+    } else {
+      await Promise.all([
+        supabaseDB.sites.update(siteID, {
+          'active_editor': get(stores.user).email
+        }),
+        supabase.rpc('remove_active_editor', {
+          site: siteID,
+        })
+      ])
+    }
+    if (siteBeingEdited === siteID) {
+      siteBeingEdited = null
+      setActiveEditor({ siteID, lock, password})
+    }
+  } else {
+    siteBeingEdited = null
+    if (password) {
+      axios.post(`/api/${siteID}.json?password=${password}`, { action: 'REMOVE_ACTIVE_EDITOR', payload: { siteID } })
+    } else {
+      supabaseDB.sites.update(siteID, {
+        'active_editor': ''
+      })
+    }
   }
 }

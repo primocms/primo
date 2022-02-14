@@ -1,4 +1,3 @@
-import * as supabaseDB from '../../supabase/db'
 import supabaseAdmin, {saveSite} from '../../supabase/admin'
 import { authorizeRequest } from './_auth'
 
@@ -14,11 +13,29 @@ export async function get(req) {
   })
 }
 
-export async function post(req) {
-  return await authorizeRequest(req, async () => {
-    const res = await saveSite(req.body)
-    return {
-      body:  res ? 'true' : 'false'
+export async function post(event) {
+  return await authorizeRequest(event, async () => {
+    const {action, payload} = await event.request.json()
+
+    if (action === 'SET_ACTIVE_EDITOR') {
+      const res = await Promise.all([
+        supabaseAdmin.from('sites').update({ active_editor: 'an invited user' }).eq('id', payload.siteID),
+        supabaseAdmin.rpc('remove_active_editor', { site: payload.siteID })
+      ])
+      return {
+        body: 'true'
+      }
+    } else if (action === 'REMOVE_ACTIVE_EDITOR') {
+      await supabaseAdmin.from('sites').update({ active_editor: '' }).eq('id', payload.siteID)
+      return {
+        body: 'true'
+      }
+    } else if (action === 'SAVE_SITE') {
+      const res = await saveSite(payload)
+      return {
+        body:  res ? 'true' : 'false'
+      }
     }
+
   })
 }
