@@ -21,7 +21,7 @@
 
 </script>
 
-<div id="primo-desktop-toolbar-overlay">
+<div id="primo-toolbar-overlay">
   <div>
     {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
   </div>
@@ -105,7 +105,7 @@ class:mounted>
 
 
 <style lang="postcss">
-  #primo-desktop-toolbar-overlay {
+  #primo-toolbar-overlay {
     display: block !important;
     height: 30px;
     -webkit-app-region: drag;
@@ -124,8 +124,8 @@ class:mounted>
       display: flex;
       align-items: center;
       height: 100%;
-      padding-left: 5rem;
-
+      padding: 0.5rem var(--padding, 1rem);
+      
       span {
         margin-left: 0.25rem;
         color: var(--color-gray-5);
