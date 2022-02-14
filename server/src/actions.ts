@@ -126,7 +126,6 @@ export async function setActiveEditor({ siteID, lock = true, password = null }) 
   // which triggers a Supabase Postgres function which 
   // waits ten seconds, then removes the active editor
   // when that returns, the function repeats
-  console.log('set it', siteID, lock, password)
   if (lock) {
     if (siteBeingEdited === siteID) return
     siteBeingEdited = siteID
