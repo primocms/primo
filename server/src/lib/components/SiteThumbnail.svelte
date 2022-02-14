@@ -23,17 +23,17 @@
   }
 
   async function getPreview(site) {
-    generatedPreview =
+    try {
+      generatedPreview =
       (await downloadPagePreview(site.id)) ||
       (await buildStaticPage({
         page: _find(site.pages, ['id', 'index']),
         site,
       }))
-
-    if (!generatedPreview) {
-      valid = false
-    } else {
+    } catch(e) {
+      generatedPreview = '<div></div>'
       valid = true
+      console.warn('Could not retrieve site preview')
     }
   }
 
