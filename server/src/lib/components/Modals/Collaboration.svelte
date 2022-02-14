@@ -30,11 +30,14 @@
   }
 
   function createLink() {
-    link = `https://${$page.host}/${site.id}?role=${role}&password=${password}`
+    link = `https://${$page.url.host}/${site.id}?role=${role}&password=${password}`
   }
 
   async function savePass(password) {
-    await sites.update(site.id, { password })
+    await sites.update({
+      id: site.id,
+      props: { password }
+    })
   }
 </script>
 
@@ -45,7 +48,7 @@
       {#if showingLink}
         <div class="share-link">
           Anybody with this <strong>secret link</strong> will be able to publish
-          changes to your site.
+          changes to this site.
         </div>
         <CopyButton label={link} />
       {:else}
