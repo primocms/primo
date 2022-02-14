@@ -65,6 +65,11 @@
     background: var(--primo-color-black);
     z-index: 1;
   }
+
+  #primo-toolbar-overlay > div {
+    padding-left: 5rem !important;
+  }
+
   #app-version {
     font-family: 'Satoshi', sans-serif;
     font-size: 0.75rem;
@@ -195,5 +200,11 @@ white-space: nowrap;
 border-width: 0;
 }
 
+button {
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  } 
+}
 
 </style>
