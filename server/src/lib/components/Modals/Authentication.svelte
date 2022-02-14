@@ -90,12 +90,13 @@
     console.log({res})
     if (!res) {
       largeMessage = 'Could not sign up. Ask the server Admin to send you a new invitation link.'
+    } else if (res.success && !res.supabase) {
+      window.history.pushState('',document.title,window.location.origin); // remove query params from url
+      signIn()
     } else if (res.supabase.error) {
       largeMessage = res.supabase.error
     } else if (!res.supabase.session) {
       largeMessage = 'It looks like email confirmations are still on for this Supabase instance.<br><br>Turn it off (Authentication > Settings) & refresh to continue.'
-    } else if (res.success) {
-      signIn()
     } else {
       largeMessage = 'Something strange happened. Please let us know about it in a Github issue or in our Discord'
     }
