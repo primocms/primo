@@ -1,6 +1,4 @@
-import {get, writable} from 'svelte/store'
-import { browser } from '$app/env'
-import user from '.././stores/user'
+import {writable} from 'svelte/store'
 
 const site = {
   id: '',

@@ -1,7 +1,7 @@
 import { authorizeRequest } from './_auth'
 import {signUp} from '../../supabase/auth'
 import {users, config} from '../../supabase/db'
-import {getNumberOfUsers} from '../../supabase/admin'
+import supabaseAdmin, {getNumberOfUsers} from '../../supabase/admin'
 
 export async function post({ request }) {
   const payload = await request.json()
@@ -28,11 +28,10 @@ export async function post({ request }) {
 
   async function createUser(admin = false) {
     const supabase = await signUp(payload)
-    await users.create( admin ? 
-    {
-      ...payload,
-      role: 'admin'
-    } : payload)
+    await supabaseAdmin.from('users').insert([{
+      email: payload.email,
+      role: payload.role || (admin ? 'admin' : 'developer')
+    }])
     return supabase
   }
 }
