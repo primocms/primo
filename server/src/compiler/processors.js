@@ -4,6 +4,7 @@ import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
 import {get} from 'svelte/store'
 import {site} from '@primo-app/primo/src/stores/data/draft'
+import {locale} from '@primo-app/primo/src/stores/app/misc'
 
 import postCSSWorker from './workers/postcss.worker?worker'
 const PostCSSWorker = new postCSSWorker
@@ -14,14 +15,18 @@ const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
-  let finalRequest = buildFinalRequest(data)
+  const finalRequest = buildFinalRequest(data)
 
-  // const cached = await idb.get(JSON.stringify(finalRequest))
-  // if (cached) {
-  //   return cached
-  // }
-
-  finalRequest = buildFinalRequest(data)
+  let cacheKey
+  if (!buildStatic) {
+    cacheKey = JSON.stringify({
+      code, 
+      data: Object.keys(data),
+      format
+    })
+    const cached = await idb.get(cacheKey) 
+    if (cached) return cached
+  }
 
   let res
   try {
@@ -36,6 +41,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   let final 
 
   if (res.error) {
+    console.log(data, res.error)
     final = {
       error: escapeHtml(res.error)
     }
@@ -50,9 +56,8 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   } else if (buildStatic) {   
     const blob = new Blob([res.ssr], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
-
     const {default:App} = await import(url/* @vite-ignore */)
-    const rendered = App.render()
+    const rendered = App.render(data)
     final = {
       html: rendered.html || rendered.head,
       css: rendered.css.code,
@@ -65,16 +70,20 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
-  // await idb.set(JSON.stringify(finalRequest), final)
+  if (!buildStatic) {
+    idb.set(cacheKey, final)
+  }
+
   return final
 
-  function buildFinalRequest(data) {
+  function buildFinalRequest(finalData) {
 
+    // export const primo = ${JSON.stringify(finalData)}
 
     const dataAsVariables = `\
-    ${Object.entries(data)
+    ${Object.entries(finalData)
       .filter(field => field[0])
-      .map(field => `export let ${field[0]} = ${JSON.stringify(field[1])};`)
+      .map(field => `export let ${field[0]};`)
       .join(` \n`)
     }
    `
@@ -97,11 +106,13 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
       hydrated,
       buildStatic,
       format,
-      site: get(site)
+      site: get(site),
+      locale: get(locale)
     }
   }
-
 }
+
+
 
 
 export async function css(raw) {
