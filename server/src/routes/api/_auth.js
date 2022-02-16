@@ -16,7 +16,7 @@ export async function authorizeRequest(event, callback) {
     }
   } 
 
-  const authorization = event.headers.get('authorization')
+  const authorization = event.request.headers.get('authorization')
 
   if (!authorization) return { body: 'Must authorize request' }
   
