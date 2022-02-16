@@ -3,8 +3,8 @@ import {signUp} from '../../supabase/auth'
 import {users, config} from '../../supabase/db'
 import supabaseAdmin, {getNumberOfUsers} from '../../supabase/admin'
 
-export async function post({ request }) {
-  const payload = await request.json()
+export async function post(event) {
+  const payload = await event.request.json()
   const nUsers = await getNumberOfUsers()
   if (nUsers === 0) {
     const supabase = await createUser(true)
@@ -16,7 +16,7 @@ export async function post({ request }) {
     }
   }
 
-  return await authorizeRequest(request, async () => {
+  return await authorizeRequest(event, async () => {
     await createUser()
     await config.update('invitation-key', '')
     return {

@@ -1,8 +1,8 @@
 import supabaseAdmin from '../../supabase/admin'
 import { authorizeRequest } from './_auth'
 
-export async function get(req) {
-  return await authorizeRequest(req, async () => {
+export async function get(event) {
+  return await authorizeRequest(event, async () => {
     let finalSites = []
     const {data:sites} = await supabaseAdmin.from('sites').select('*')
     await Promise.all(
