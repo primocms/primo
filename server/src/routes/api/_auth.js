@@ -23,7 +23,12 @@ export async function authorizeRequest(event, callback) {
   const token = authorization.replace('Basic ', '')
   const storedToken = await getServerToken()
 
-  if (token === storedToken) return callback()
+  if (token === storedToken) return {
+    headers: {
+      "Access-Control-Allow-Origin": "*"
+    },
+    ...callback()
+  }
   else return {
     body: null
   }
