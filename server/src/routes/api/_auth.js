@@ -25,7 +25,9 @@ export async function authorizeRequest(event, callback) {
 
   if (token === storedToken) return {
     headers: {
-      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, GET",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
     },
     ...callback()
   }
