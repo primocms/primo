@@ -106,23 +106,21 @@
   async function signIn() {
     smallMessage = ''
     loadingEmail = true
-
     if (!$user.signedIn) {
       const { error, user: res } = await auth.signIn({ email, password })
-      user.update((u) => ({ ...u, signedIn: true }))
-      const role = find(await users.get(), ['email', email])['role']
       if (error) {
         smallMessage = error.message
-      } else if (signInWithMagicLink) {
-        largeMessage = `A magic link has been sent to <strong>${email}</strong>.<br>When you click on it, you'll be logged into primo.`
       } else if (res) {
+        const role = find(await users.get(), ['email', email])['role']
         user.update((u) => ({
           ...u,
+          signedIn: true,
           admin: role === 'admin',
           role: role === 'admin' ? 'developer' : role,
         }))
       }
     }
+    loadingEmail = false
   }
 
   async function resetPassword() {

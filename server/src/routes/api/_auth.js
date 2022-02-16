@@ -1,8 +1,8 @@
 import {getServerToken, validateSitePassword, validateInvitationKey} from '../../supabase/admin'
 
 export async function authorizeRequest(event, callback) {
-  const key = event.url?.searchParams?.get('key')
-  const password = event.url?.searchParams?.get('password')
+  const key = getQueryParam(event.url, 'key')
+  const password = getQueryParam(event.url, 'password')
 
   if (key) {
     const valid = await validateInvitationKey(key)
@@ -16,7 +16,7 @@ export async function authorizeRequest(event, callback) {
     }
   } 
 
-  const authorization = event.request.headers.get('authorization')
+  const authorization = event.headers.get('authorization')
 
   if (!authorization) return { body: 'Must authorize request' }
   
@@ -26,5 +26,10 @@ export async function authorizeRequest(event, callback) {
   if (token === storedToken) return callback()
   else return {
     body: null
+  }
+
+  function getQueryParam(url, key) {
+    const urlParams = new URLSearchParams(`?${url.split('?')[1]}`);
+    return urlParams.get(key)
   }
 }
