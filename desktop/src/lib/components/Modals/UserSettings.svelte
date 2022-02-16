@@ -100,11 +100,11 @@
           label="API Token"
         />
         <span>{serverErrorMessage}</span>
-        <PrimaryButton {loading} type="submit" disabled={connectedToServer}
-          >{connectedToServer
-            ? 'Successfully Connected'
-            : 'Connect to Server'}</PrimaryButton
-        >
+        {#if connectedToServer}
+          <span>Connected to {serverConfig.url}</span>
+        {:else}
+          <PrimaryButton {loading} type="submit">Connect to Server</PrimaryButton>
+        {/if}
       </form>
     {:else if activeTab.label === 'Advanced'}
       <h1 class="primo-heading-lg">
