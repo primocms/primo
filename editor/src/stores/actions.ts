@@ -142,17 +142,15 @@ export const pages = {
       updatedPages = [...updatedPages, newPage]
     }
 
-    // const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
-    //   locale,
-    //   content: {
-    //     ...pages,
-    //     [newPage.id]: chain(newPage.sections).keyBy('id').mapValues(() => ({})).value()
-    //   }
-    // }))).keyBy('locale').mapValues('content').value()
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+      locale,
+      content: {
+        ...pages,
+        [newPage.id]: chain(newPage.sections).keyBy('id').mapValues(() => ({})).value()
+      }
+    }))).keyBy('locale').mapValues('content').value()
 
-    // console.log({updatedContent})
-
-    // stores.content.set(updatedContent)
+    stores.content.set(updatedContent)
     stores.pages.set(updatedPages)
   },
   delete: (pageId:string, path:string): void => {
