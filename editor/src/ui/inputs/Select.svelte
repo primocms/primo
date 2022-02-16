@@ -52,7 +52,7 @@
   }
   label.small span {
     font-size: var(--font-size-1);
-    marign-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
   }
   label.small select {
     padding: 0.25rem 0.5rem;

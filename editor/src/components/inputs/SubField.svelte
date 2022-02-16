@@ -64,7 +64,7 @@
 
   :global(.input-group > div input) {
     flex: 1;
-    outlin: 0;
+    outline: 0;
     border-bottom: 1px solid rgb(229, 229, 229);
     transition: border-color 0.2s;
   }
