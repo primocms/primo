@@ -3,13 +3,6 @@ import {getServerToken, validateSitePassword, validateInvitationKey} from '../..
 export async function authorizeRequest(event, callback) {
   const key = event.url?.searchParams.get('key')
   const password = event.url?.searchParams.get('password')
-  
-  return {
-    headers: {
-			"Access-Control-Allow-Origin": "*",
-		},
-    body: 'success'
-  }
 
   if (key) {
     const valid = await validateInvitationKey(key)
@@ -30,13 +23,11 @@ export async function authorizeRequest(event, callback) {
   const token = authorization.replace('Basic ', '')
   const storedToken = await getServerToken()
 
-  console.log('GOT HERE', token === storedToken)
-
   if (token === storedToken) return {
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, GET",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+			'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
+      'Access-Control-Allow-Headers': 'Authorization'
     },
     ...callback()
   }
