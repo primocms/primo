@@ -74,8 +74,7 @@
 
   let email,
     password = ''
-  $: signInWithMagicLink = !signingUp && email && !password
-  $: disabled = !signInWithMagicLink && (!email || password.length <= 3)
+  $: disabled = (!email || password.length <= 3)
 
   async function signUp() {
     loadingEmail = true
@@ -194,35 +193,31 @@
             </div>
           </div>
 
-          {#key signInWithMagicLink}
-            <PrimaryButton
-              disabled={disabled || loadingEmail}
-              loading={loadingEmail}
-              on:click={signingUp ? signUp : signIn}
-              type="submit"
+          <PrimaryButton
+            disabled={disabled || loadingEmail}
+            loading={loadingEmail}
+            on:click={signingUp ? signUp : signIn}
+            type="submit"
+          >
+            <svg
+              slot="icon"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+              ><path
+                d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
+              /><path
+                d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
+              /></svg
             >
-              <svg
-                slot="icon"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-                ><path
-                  d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
-                /><path
-                  d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
-                /></svg
-              >
-              <span slot="label">
-                {#if signingUp}
-                  <span>Sign up with Email</span>
-                {:else if signInWithMagicLink}
-                  <span>Sign in with magic link</span>
-                {:else}
-                  <span>Sign in</span>
-                {/if}
-              </span>
-            </PrimaryButton>
-          {/key}
+            <span slot="label">
+              {#if signingUp}
+                <span>Sign up with Email</span>
+              {:else}
+                <span>Sign in</span>
+              {/if}
+            </span>
+          </PrimaryButton>
           <div class="secondary">
             {#if !signingUp}
               <button type="button" on:click={resetPassword}>
