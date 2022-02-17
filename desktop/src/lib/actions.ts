@@ -9,7 +9,7 @@ export const serverSites = {
     let successful = false
     try {
       const res = await axios.post(
-        `${serverConfig.url}/api/${site.id}`,
+        `${serverConfig.url}/api/${site.id}.json`,
         {
           action: 'SAVE_SITE',
           payload: {
