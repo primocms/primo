@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {get, writable} from 'svelte/store'
 import { browser } from '$app/env'
-import config from '../stores/config'
+import config from './config'
 
 const store = writable(null);
 
@@ -11,7 +11,7 @@ if (browser) {
 
 export const connected = writable(false)
 
-async function getSitesFromServer() {
+export async function getSitesFromServer() {
   const {serverConfig} = get(config)
   try {
     const res = await axios.get(`${serverConfig.url}/api/sites.json`, {

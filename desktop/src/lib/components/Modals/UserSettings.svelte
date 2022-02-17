@@ -4,6 +4,7 @@
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import TextField from '$lib/ui/TextField.svelte'
   import config from '../../../stores/config'
+  import {getSitesFromServer} from '../../../stores/serverSites'
   import Hosting from '../Hosting.svelte'
 
   export let tab = 0
@@ -59,6 +60,7 @@
         ...c,
         serverConfig,
       }))
+      getSitesFromServer()
       connectedToServer = true
       serverErrorMessage = ''
     } else {

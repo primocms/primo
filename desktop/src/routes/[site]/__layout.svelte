@@ -14,7 +14,7 @@
   } from '@primo-app/primo'
   import { find } from 'lodash-es'
   import sites from '../../stores/sites'
-  import cloudSites from '../../stores/cloudSites'
+  import serverSites from '../../stores/serverSites'
   import activeSite from '../../stores/activeSite'
   import Build from '../../extensions/Build.svelte'
   import { page } from '$app/stores'
@@ -53,8 +53,8 @@
         }
       })
       stores.saved.set(true)
-    } else if (find($cloudSites, ['id', siteID])) {
-      const success = await actions.cloudSites.save(updatedSite)
+    } else if (find($serverSites, ['id', siteID])) {
+      const success = await actions.serverSites.save(updatedSite)
       stores.saved.set(success)
       if (!get(stores.saved)) {
         window.alert('Could not save site. See console for details.')
@@ -72,7 +72,7 @@
   $: siteID = $page.params.site
   $: data = $activeSite || Site({ id: 'test', name: 'Test' })
   $: mounted &&
-    setActiveSite(siteID, $cloudSites ? [...$sites, ...$cloudSites] : $sites)
+    setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
   async function setActiveSite(siteID, sites) {
     // necessary for rollup to load (?)
     setTimeout(() => {

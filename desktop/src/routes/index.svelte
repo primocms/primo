@@ -4,7 +4,7 @@
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
   import sites from '../stores/sites'
-  import cloudSites, { connected } from '../stores/cloudSites'
+  import serverSites, { connected } from '../stores/serverSites'
   import config from '../stores/config'
 
   let loading
@@ -182,7 +182,7 @@
         </li>
       </ul>
     </div>
-    {#if $cloudSites}
+    {#if $serverSites}
       <hr />
       <div class="sites-container">
         <header>
@@ -192,7 +192,7 @@
           >
         </header>
         <ul class="sites" xyz="fade stagger stagger-1">
-          {#each $cloudSites as site, i (site.id)}
+          {#each $serverSites as site, i (site.id)}
             <li class="xyz-in">
               <a href={site.id} class="site-link">
                 <SiteThumbnail site={site.data} />

@@ -3,7 +3,7 @@ import axios from 'axios'
 import config from '../stores/config'
 import * as stores from '../stores'
 
-export const cloudSites = {
+export const serverSites = {
   save: async (site) => {
     const { serverConfig } = get(config)
     let successful = false

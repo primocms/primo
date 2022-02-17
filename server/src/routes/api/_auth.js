@@ -22,14 +22,13 @@ export async function authorizeRequest(event, callback) {
   
   const token = authorization.replace('Basic ', '')
   const storedToken = await getServerToken()
-
   if (token === storedToken) return {
     headers: {
 			'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
       'Access-Control-Allow-Headers': 'Authorization'
     },
-    ...callback()
+    ...(await callback())
   }
   else return {
     body: null
