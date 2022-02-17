@@ -8,7 +8,7 @@ export async function get(event) {
   }))
 }
 
-export async function options(event) {
+export async function options() {
   return {
     headers: {
 			'Access-Control-Allow-Origin': '*',
