@@ -15,3 +15,4 @@ Primo's an all-in-one application - combining a development environment with an 
 
 It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (thanks to the on-page editing and build-in components). To get started, download the desktop application from [primo.af](https://primo.af).
 
+To build from the browser, invite collaborators, and upload images, try [Primo Server](https://github.com/primo-af/primo/tree/master/server).
