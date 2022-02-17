@@ -1,6 +1,13 @@
 # Primo
 
-The all-in-one static site builder
+Primo is an all-in-one static site builder, combining a:
+* Content Mangement System
+* Development Environment
+* Static Site Generator
+* Component Library
+
+
+into a single application, making it dead simple to develop, manage, and publish high-performing websites. 
 
 ## Why Primo
 Traditional site-builders like Wix and Squarespace make content management easier, but at the expense of the customization, functionality, and site performance offered by modern frameworks. Modern frontend frameworks give developers superpowers, but at the expense of increased setup time and poor content management. Primo combines the quick setup and easy content management of a site builder with the performance and freedom of a framework, making it possible for developers of any level and background to publish fast-loading, mobile-optimized, custom websites. 
