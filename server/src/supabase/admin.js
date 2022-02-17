@@ -42,7 +42,7 @@ export async function saveSite(updatedSite) {
   const homepage = _find(updatedSite.pages, ['id', 'index'])
   // const preview = await buildStaticPage({ page: homepage, site: updatedSite })
   // console.log(2)
-  const [ res1, res2 ] = await Promise.all([
+  const [ res1 ] = await Promise.all([
     updateSiteData({
       id: updatedSite.id,
       data: updatedSite
@@ -52,7 +52,6 @@ export async function saveSite(updatedSite) {
     //   preview
     // })
   ])
-  console.log(3)
   // return res1.error || res2.error ? false : true
   return res1.error ? false : true
 

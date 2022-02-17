@@ -12,10 +12,7 @@ export const serverSites = {
         `${serverConfig.url}/api/${site.id}.json`,
         {
           action: 'SAVE_SITE',
-          payload: {
-            site,
-            token: serverConfig.token,
-          }
+          payload: site
         },
         {
           headers: {
@@ -23,7 +20,7 @@ export const serverSites = {
           },
         }
       )
-      if (res.data === 'ok') {
+      if (res.data) {
         successful = true
       }
     } catch (e) {
