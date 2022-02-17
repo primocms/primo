@@ -1,56 +1,17 @@
-# Primo Server
+# Primo
 
-![screenshot](./screenshot.png)
+The all-in-one static site builder
 
-This project lets you run Primo on your own server so you have full control over your own data and can edit your sites from any device, as well as invite others to collaborate. 
-
-If you're just building websites for yourself, you may prefer just using Primo Desktop. But this project allows you to run Primo in the cloud so that you can access and edit your sites from any device and collaborate with other developers/content editors (not at the same time), as well as edit them from Primo Desktop. 
-
-### Features
-* Multiple users
-* Image uploads
-* Use from anywhere
-
-## Project Status
-
-Primo Server is in Alpha. Features may break from version to version, but _probably_ not enough to delete all your data or anything drastic. 
-
-Until we ge to Beta, we can't recommend using primo in production (but it's good enough for personal projects).
+## Why Primo
+Traditional site-builders like Wix and Squarespace make content management easier, but at the expense of the customization, functionality, and site performance offered by modern frameworks. Modern frontend frameworks give developers superpowers, but at the expense of increased setup time and poor content management. Primo combines the quick setup and easy content management of a site builder with the performance and freedom of a framework, making it possible for developers of any level and background to publish fast-loading, mobile-optimized, custom websites. 
 
 ## How it works
-This repo deploys primo to [Vercel](https://vercel.com) and uses [Supabase](https://supabase.co) for authentication, database (PostgreSQL), and storage. 
 
-## Setup 
-Primo can be run on the free tier of both services (Vercel & Supabase), but you'll need to sign in with Github. 
+Primo's an all-in-one application - combining a development environment with an internationalized content management system with a component library with a static site generator that publishes directly to your favorite web host*. Primo pages are built one section at a time, and sections can contain either WISIWYG content (like a doc), or a component. Primo gives you a set of components to use out of the box; you can use them as-is or edit their code directly from Primo's component IDE. Although Primo components appear on the surface to be written with basic HTML, CSS, and JavaScript, they're actually written in [Svelte](https://svelte.dev): a compiled language which builds on the fundamental web languages while enabling templating, style encapsulation, and reactivity, among other things. Component fields can be added from the component editor and integrated with Svelte's templating tags (e.g. if you add a field and give it an ID or `heading`, you can make it an editable field in the CMS by adding it to your component's code like so - `<h1>{heading}</h1>`.) Long-form content suited for blogs and recipe introductions can be written directly on the page with the Content section. To publish the site, a web host can be connected using an API token, and after a click Primo creates and uploads the site bundle to the host. Each page of the site is made of static HTML and CSS, and any necessary JS gets downloaded as a module and hydrates its respective component. 
 
-Before deploying your Primo Server, you'll need to sign up for [Supabase](https://supabase.co) and create a new project. 
+* assuming your favorite web host is Vercel or Netlify. Otherwise, you can download the site bundle to host it elsewhere. 
 
-### 1. Deploy Backend (Supabase)
-1. Create a [Supabase](https://supabase.co) account or sign in with Github
-1. Create a new project
-1. When it's ready, select 'SQL' from the sidebar navigation
-1. Click **+ New query** 
-1. Paste in the contents of [`./primo_schema.sql`](https://raw.githubusercontent.com/primo-af/primo-server/master/primo_schema.sql) and click 'RUN'
-1. Disable Email confirmations (Authentication > Settings > Email Auth)
+## How to get started
 
+It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (thanks to the on-page editing and build-in components). To get started, download the desktop application from [primo.af](https://primo.af).
 
-### 2. Deploy Frontend (Vercel)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fprimo-af%2Fprimo%2Ftree%2Fdebugging%2Fserver&env=VITE_SUPABASE_URL,VITE_SUPABASE_PUBLIC_KEY,VITE_SUPABASE_ADMIN_KEY&envDescription=Supabase%20is%20an%20open-source%20Backend%20as%20a%20Service%20which%20Primo%20Server%20uses%20for%20Authentication%2C%20Database%2C%20and%20Storage.%20&demo-title=Primo%20Server&demo-description=Primo%20is%20a%20simpler%2C%20all-in-one%20way%20to%20build%20and%20manage%20websites.&demo-url=https%3A%2F%2Fprimo.af&demo-image=https%3A%2F%2Fres.cloudinary.com%2Fprimoaf%2Fimage%2Fupload%2Fv1635078478%2FScreen-Shot-2021-10-24-at-2.24.17-PM_1_eagd0z.webp)
-
-1. Click this nice button and follow the prompts. 
-1. Under 'Configure Project', enter your Supabase project **URL**, **Public Key (anon public)**, and **Admin Key (service_role secret)** (which you can find in the Supabase project dashboard > Settings > API https://app.supabase.io/project/---yourprojectid---/settings/api)
-1. Click 'Deploy'
-1. Sign up with an email address and password (this will be the admin account). For now, the server has a single email/password account which can send invitation URLs to collaborators. 
-
-### Updating
-
-At the moment, the only way to update your server instance to a newer version of primo is to re-deploy it. It takes a few steps, but doesn't require migrating your database or anything dangerous like that. 
-
-1. Delete the existing repository and Vercel project (the data will be unaffected since it's in Supabase)
-1. Click 'Deploy' and follow the instillation steps, using your existing Supabase project's details
-
-## Contributing
-Feel free to look for open issues in this repo and the [primo repo](https://github.com/primo-af/primo). If you find a bug or find yourself needing something from primo that it can't do, please open an issue to start discussion. 
-
-If you have any ideas or time to contribute, feel free to open an issue or come talk to us in the [primo Discord](https://discord.gg/vzSFTS9). 
