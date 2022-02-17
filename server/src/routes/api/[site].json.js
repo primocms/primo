@@ -19,7 +19,7 @@ export async function post(event) {
 
     if (action === 'SET_ACTIVE_EDITOR') {
       const res = await Promise.all([
-        supabaseAdmin.from('sites').update({ active_editor: 'an invited user' }).eq('id', payload.siteID),
+        supabaseAdmin.from('sites').update({ active_editor: payload.userID }).eq('id', payload.siteID),
         supabaseAdmin.rpc('remove_active_editor', { site: payload.siteID })
       ])
       return {

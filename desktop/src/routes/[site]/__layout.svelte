@@ -71,8 +71,10 @@
 
   $: siteID = $page.params.site
   $: data = $activeSite || Site({ id: 'test', name: 'Test' })
-  $: mounted &&
-    setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
+  $: mounted && setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
+  $: if ($serverSites && find($serverSites, ['id', $activeSite.id])) {
+    actions.setActiveEditor($activeSite.id)
+  } 
   async function setActiveSite(siteID, sites) {
     // necessary for rollup to load (?)
     setTimeout(() => {

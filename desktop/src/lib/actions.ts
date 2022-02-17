@@ -30,6 +30,32 @@ export const serverSites = {
   },
 }
 
+let siteBeingEdited = null
+export async function setActiveEditor(siteID) {
+  if (siteBeingEdited === siteID) return
+  siteBeingEdited = siteID
+  const { serverConfig } = get(config)
+  const res = await axios.post(
+    `${serverConfig.url}/api/${siteID}.json`,
+    {
+      action: 'SET_ACTIVE_EDITOR',
+      payload: {
+        siteID,
+        userID: 'a Primo Desktop user'
+      }
+    },
+    {
+      headers: {
+        Authorization: `Basic ${serverConfig.token}`,
+      },
+    }
+  )
+  if (siteBeingEdited === siteID) {
+    siteBeingEdited = null
+    setActiveEditor(siteID)
+  }
+}
+
 export async function addDeploymentToSite({
   siteID,
   deployment,

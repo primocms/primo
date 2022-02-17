@@ -130,7 +130,7 @@ export async function setActiveEditor({ siteID, lock = true, password = null }) 
     if (siteBeingEdited === siteID) return
     siteBeingEdited = siteID
     if (password) {
-      await axios.post(`/api/${siteID}.json?password=${password}`, { action: 'SET_ACTIVE_EDITOR', payload: { siteID } })
+      await axios.post(`/api/${siteID}.json?password=${password}`, { action: 'SET_ACTIVE_EDITOR', payload: { siteID, userID: 'an invited user' } })
     } else {
       await Promise.all([
         supabaseDB.sites.update(siteID, {
