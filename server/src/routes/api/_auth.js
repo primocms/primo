@@ -3,6 +3,13 @@ import {getServerToken, validateSitePassword, validateInvitationKey} from '../..
 export async function authorizeRequest(event, callback) {
   const key = event.url?.searchParams.get('key')
   const password = event.url?.searchParams.get('password')
+  
+  return {
+    headers: {
+			"Access-Control-Allow-Origin": "*",
+		},
+    body: 'success'
+  }
 
   if (key) {
     const valid = await validateInvitationKey(key)
