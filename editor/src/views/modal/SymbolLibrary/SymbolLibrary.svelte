@@ -138,7 +138,6 @@
     let { data: symbols } = await axios.get(
       'https://api.primo.af/public-library.json'
     );
-    symbols = convertSymbols(symbols)
     $publicSymbols = symbols || [];
   });
 
