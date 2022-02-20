@@ -17,7 +17,7 @@
   import { addDeploymentToSite } from '$lib/actions'
 
   const siteID = $page.params.site
-  const activeDeployment = find($sites, ['id', siteID]).activeDeployment
+  const activeDeployment = find($sites, ['id', siteID])?.activeDeployment
 
   let loading = false
 
