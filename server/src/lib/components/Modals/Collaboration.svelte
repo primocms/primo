@@ -34,10 +34,7 @@
   }
 
   async function savePass(password) {
-    await sites.update({
-      id: site.id,
-      props: { password }
-    })
+    sites.update(site.id, { password })
   }
 </script>
 
