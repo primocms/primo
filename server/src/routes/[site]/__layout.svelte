@@ -32,6 +32,7 @@
             title: 'Build to Github',
             icon: 'fab fa-github',
           },
+          hideLocaleSelector: true
         },
       },
     ])
