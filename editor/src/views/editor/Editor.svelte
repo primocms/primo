@@ -47,7 +47,9 @@
       {
         title: 'Content',
         label: 'Content',
-        onclick: () => modal.show('FIELDS'),
+        onclick: () => modal.show('FIELDS', {}, {
+          showSwitch: true
+        }),
       },
     ] : [],
   ];
