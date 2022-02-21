@@ -1,4 +1,3 @@
-import * as idb from 'idb-keyval';
 import {clone as _cloneDeep} from 'lodash-es'
 import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
@@ -16,17 +15,6 @@ const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   const finalRequest = buildFinalRequest(data)
-
-  let cacheKey
-  if (!buildStatic) {
-    cacheKey = JSON.stringify({
-      code, 
-      data: Object.keys(data),
-      format
-    })
-    const cached = await idb.get(cacheKey) 
-    if (cached) return cached
-  }
 
   let res
   try {
@@ -69,10 +57,6 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
       js: res.dom
     }
   } 
-
-  if (!buildStatic) {
-    idb.set(cacheKey, final)
-  }
 
   return final
 
