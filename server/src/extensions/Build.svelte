@@ -1,5 +1,4 @@
 <script>
-  import axios from 'axios'
   import { flattenDeep, uniqBy } from 'lodash-es'
   import JSZip from 'jszip'
   import fileSaver from 'file-saver'
@@ -9,6 +8,7 @@
   import { site, modal } from '@primo-app/primo'
   import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
   import hosts from '../stores/hosts'
+  import {sites} from '../actions'
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
   // import { addDeploymentToSite } from '$lib/actions'
@@ -41,7 +41,6 @@
   async function publishToHosts() {
     loading = true
 
-    // const name = window.location.pathname.split('/')[2]
     const files = (await buildSiteBundle($site, siteID)).map((file) => {
       return {
         file: file.path,
@@ -50,82 +49,18 @@
     })
     const uniqueFiles = uniqBy(files, 'file') // modules are duplicated
 
-    await Promise.allSettled(
-      $hosts.map(async ({ token, name, siteDeploymentID }) => {
-        if (name === 'vercel') {
-          const { data } = await axios
-            .post(
-              'https://api.vercel.com/v12/now/deployments',
-              {
-                name: siteID,
-                files: uniqueFiles,
-                projectSettings: {
-                  framework: null,
-                },
-                target: 'production',
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            )
-            .catch((e) => ({ data: null }))
+    sites.save($site)
+    const res = await sites.publish({
+      siteID,
+      host: $hosts[0],
+      files: uniqueFiles
+    })
 
-          deployment = {
-            id: data.id,
-            url: `https://${data.alias[0]}`,
-            created: data.createdAt,
-          }
-        } else if (name === 'netlify') {
-          // if deploymentID does not exists, create new site
-
-          let data
-
-          if (!siteDeploymentID) {
-            const zipFile = await createSiteZip()
-            const res = await axios
-              .post('https://api.netlify.com/api/v1/sites', zipFile, {
-                headers: {
-                  'Content-Type': 'application/zip',
-                  Authorization: `Bearer ${token}`,
-                },
-              })
-              .catch((e) => ({ data: null }))
-
-            data = res.data
-          } else {
-            const zipFile = await createSiteZip()
-            const res = await axios
-              .put(
-                `https://api.netlify.com/api/v1/sites/${siteDeploymentID}`,
-                zipFile,
-                {
-                  headers: {
-                    'Content-Type': 'application/zip',
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              )
-              .catch((e) => ({ data: null }))
-
-            data = res.data
-          }
-
-          // check for null data before continuing if null then handle this error else continue
-          if (!data) {
-            console.log({ data })
-            throw new Error('Error creating site')
-          } else {
-            deployment = {
-              id: data.deploy_id,
-              url: `https://${data.subdomain}.netlify.app`,
-              created: Date.now(),
-            }
-          }
-        }
-      })
-    )
+    if (!res) {
+      alert('There was an error publishing your site')
+    } else {
+      deployment = res
+    }
 
     loading = false
 
@@ -133,51 +68,13 @@
   }
 
   async function buildSiteBundle(site, siteName) {
-    const primoPage = `
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-
-          <body class="primo-page">   
-            <iframe allow="clipboard-read; clipboard-write self ${window.location.origin}" border="0" src="${window.location.origin}/${siteName}" style="height:100vh;width:100vw;position:absolute;top:0;left:0;border:0;"></iframe>
-          </body>
-        </html>
-      `
-
+    
     const pages = await Promise.all([
       ...site.pages.map((page) => buildPageTree({ page, site })),
-      {
-        path: `primo.json`,
-        content: JSON.stringify(site),
-      },
       // ...Object.entries(site.content).map((item) => ({
       //   path: `${item[0]}.json`,
       //   content: JSON.stringify(item[1]),
       // })),
-      {
-        path: `primo.json`,
-        content: JSON.stringify(site),
-      },
-      {
-        path: `edit/index.html`,
-        content: primoPage,
-      },
-      // [
-      //   {
-      //     path: `primo/index.html`,
-      //     content: primoPage,
-      //   },
-      //   // {
-      //   //   path: 'robots.txt',
-      //   //   content: `
-      //   //   # Example 3: Block all but AdsBot crawlers
-      //   //   User-agent: *
-      //   //   Disallow: /`
-      //   // },
-      // ],
     ])
 
     return buildSiteTree(pages, site)
@@ -211,18 +108,10 @@
 
       return [
         ...flattenDeep(pages),
-        // {
-        //   path: `styles.css`,
-        //   content: styles
-        // },
-        // {
-        //   path: `primo.json`,
-        //   content: json,
-        // },
-        // {
-        //   path: 'README.md',
-        //   content: `# Built with [primo](https://primo.af)`,
-        // },
+        {
+          path: `primo.json`,
+          content: json,
+        }
       ]
     }
   }

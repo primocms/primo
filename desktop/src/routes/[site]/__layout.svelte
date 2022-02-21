@@ -8,8 +8,6 @@
   import Primo, {
     modal as primoModal,
     Site,
-    fieldTypes,
-    modal,
     stores,
   } from '@primo-app/primo'
   import { find } from 'lodash-es'

@@ -76,7 +76,7 @@
 
   async function saveData(updatedSite) {
     saving = true
-    const success = await actions.sites.save(updatedSite, $sitePassword)
+    const success = await actions.sites.save(updatedSite)
     stores.saved.set(success)
     saving = false
   }

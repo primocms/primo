@@ -6,6 +6,7 @@
   import * as actions from '../../actions'
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
+  import {sitePassword} from '../../stores/misc'
 
   export let buttons = []
 
@@ -145,12 +146,14 @@
         {@html _find(availableHosts, ['id', host.name])['svg']}
       </div>
       <div class="host-user">
-        <button
-          on:click={() => {
-            actions.hosts.delete(host.name)
-          }}>Remove</button
-        >
-        <span class="sr-only">Go to host</span>
+        {#if !$sitePassword}
+          <!-- Hide option to remove for password users -->
+          <button
+            on:click={() => {
+              actions.hosts.delete(host.name)
+            }}>Remove</button
+          >
+        {/if}
       </div>
     </div>
   {/each}

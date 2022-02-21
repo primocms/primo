@@ -7,6 +7,7 @@ import {sites as dbSites} from './supabase/db'
 import * as supabaseStorage from './supabase/storage'
 import * as stores from './stores'
 import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+import {sitePassword} from './stores/misc'
 
 export const sites = {
   get: async (siteID, password) => {
@@ -58,15 +59,15 @@ export const sites = {
   update: async ({ id, props }) => {
     await supabaseDB.sites.update(id, props)
   },
-  save: async (updatedSite, password) => {
+  save: async (updatedSite) => {
     stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
-
+    const password = get(sitePassword)
     if (password) {
-      const {data:success} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, {
+      const {data} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, {
         action: 'SAVE_SITE',
         payload: updatedSite
       })
-      return success
+      return data
     } else {
       const homepage = find(updatedSite.pages, ['id', 'index'])
       const preview = await buildStaticPage({ page: homepage, site: updatedSite })
@@ -89,7 +90,7 @@ export const sites = {
       supabaseDB.sites.delete(id),
       supabaseStorage.deleteSiteData(id)
     ])
-  },
+  }, 
   validatePassword: async (siteID, password) => {
     try {
       const {data:json} = await axios.get(`/api/${siteID}.json?password=${password}`)
@@ -99,12 +100,30 @@ export const sites = {
       return false
     }
     // return !!data.id
+  },
+  publish: async ({ siteID, host, files }) => {
+    // console.log(supabase.auth.session())
+    const session = supabase.auth.session()
+
+    const {data} = await axios.post(`/api/${siteID}.json?password=${get(sitePassword)}`, {
+      action: 'PUBLISH',
+      payload: {
+        siteID,
+        host: host.name,
+        files
+      }
+    }, {
+      headers: {
+        authorization: `Bearer ${session?.access_token}`
+      }
+    })
+    return data?.deployment
   }
 }
 
 export const hosts = {
   initialize: async () => {
-    const hosts = await supabaseDB.hosts.get()
+    const {data:hosts} = await axios.get('/api/hosts.json')
     if (hosts) {
       stores.hosts.set(hosts)
     }
