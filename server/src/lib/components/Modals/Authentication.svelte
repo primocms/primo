@@ -89,7 +89,7 @@
     console.log({res})
     if (!res) {
       largeMessage = 'Could not sign up. Ask the server Admin to send you a new invitation link.'
-    } else if (res.success && !res.supabase.error && res.supabase.session) {
+    } else if (res.success && !res.supabase && !res.supabase.error && res.supabase.session) {
       window.history.pushState('',document.title,window.location.origin); // remove query params from url
       signIn()
     } else if (res.supabase.error) {
