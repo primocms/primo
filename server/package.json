@@ -23,7 +23,7 @@
   "dependencies": {
     "@primo-app/primo": "^1.4.18",
     "@supabase/supabase-js": "^1.22.6",
-    "@sveltejs/kit": "^1.0.0-next.272",
+    "@sveltejs/kit": "^1.0.0-next.281",
     "axios": "^0.26.0",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.1.0",
