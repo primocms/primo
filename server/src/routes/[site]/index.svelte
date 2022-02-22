@@ -5,7 +5,7 @@
 	export async function load({ params }) {
 		return {
 			redirect: `/${params.site}/index`, // load [site]/[...page].svelte
-      status: 301
+      status: 302
 		};
 	}
 </script>
