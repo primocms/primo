@@ -1,8 +1,3 @@
-<script>
-  const date = new Date()
-  const month = date.toLocaleString('default', { month: 'long' })
-</script>
-
 <footer class="container">
   <span class="disclaimer" />
   <div class="footer-links">

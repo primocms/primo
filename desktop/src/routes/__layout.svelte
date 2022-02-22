@@ -41,8 +41,11 @@
 <div id="primo-desktop-toolbar" />
 <slot />
 <div id="app-version">
-  <span>desktop v{desktop.version}</span>
-  <span>primo v{primo.version}</span>
+  <span>Primo Desktop v{desktop.version}</span>
+  <span>Editor v{primo.version}</span>
+  <button id="primo-update-button" on:click={() => {
+    window.primo.checkForUpdate()
+  }}>Check for Update</button>
 </div>
 
 <style global lang="postcss">
@@ -77,6 +80,15 @@
     position: fixed;
     bottom: 0.5rem;
     left: 0.5rem;
+  }
+
+  #app-version button {
+    color: var(--color-gray-4);
+    font-size: 0.75rem;
+    font-family: 'Satoshi', sans-serif;
+    background: transparent;
+    border: 0;
+    text-decoration: underline;
   }
 
   #app-version span:first-child {
