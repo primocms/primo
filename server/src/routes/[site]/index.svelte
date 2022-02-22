@@ -3,7 +3,11 @@
   // a few seconds after mounting, causing an issue where newly-created pages would reload the site (and lose progress) if clicked immediately after creation
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ params }) {
-		return {
+		// workaround: siteID/index loads index.svelte in production
+		// this is to prevent redirect loop
+		return params.page ? {
+      status: 200
+		} : {
 			redirect: `/${params.site}/index`, // load [site]/[...page].svelte
       status: 302
 		};
