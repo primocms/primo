@@ -131,7 +131,7 @@ export const symbols = {
 }
 
 export const pages = {
-  add: (newPage:Page, path:string): void => {
+  add: (newPage:Page, path:Array<string>): void => {
     saved.set(false)
     const currentPages:Array<Page> = get(stores.pages)
     let updatedPages:Array<Page> = cloneDeep(currentPages)
@@ -153,7 +153,7 @@ export const pages = {
     stores.content.set(updatedContent)
     stores.pages.set(updatedPages)
   },
-  delete: (pageId:string, path:string): void => {
+  delete: (pageId:string, path:Array<string>): void => {
     saved.set(false)
     const currentPages:Array<Page> = get(stores.pages)
     let newPages:Array<Page> = cloneDeep(currentPages)
