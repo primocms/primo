@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^1.0.0-next.20",
-    "@sveltejs/adapter-vercel": "next",
+    "@sveltejs/adapter-auto": "next",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.37",
     "autoprefixer": "^10.3.6",
     "postcss-nested": "^5.0.6",
@@ -21,9 +21,9 @@
   },
   "type": "module",
   "dependencies": {
-    "@primo-app/primo": "^1.4.18",
+    "@primo-app/primo": "^1.4.19",
     "@supabase/supabase-js": "^1.22.6",
-    "@sveltejs/kit": "^1.0.0-next.281",
+    "@sveltejs/kit": "=1.0.0-next.278",
     "axios": "^0.26.0",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.1.0",
