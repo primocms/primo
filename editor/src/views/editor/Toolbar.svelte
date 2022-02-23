@@ -142,7 +142,7 @@ class:mounted>
     right: 0;
     top: -10rem;
     z-index: 99999999;
-    padding-top: 40px;
+    padding-top: 30px;
     transition: 0.2s top;
     transition-delay: 0.5s;
     will-change: top;
