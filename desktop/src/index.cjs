@@ -1,4 +1,73 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, dialog, ipcMain } = require('electron')
+const { autoUpdater } = require("electron-updater")
+
+
+// Electron Update
+
+const isDev = require('electron-is-dev');
+const checkInternetConnected = require('check-internet-connected');
+
+autoUpdater.autoDownload = false
+
+autoUpdater.on('error', (error) => {
+  dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString())
+})
+
+autoUpdater.on('update-available', () => {
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update available',
+    message: 'A new version of Primo is available for download. Download and restart?',
+    buttons: ['Okay', 'Later']
+  }).then(({response}) => {
+    if (response === 0) {
+      autoUpdater.downloadUpdate()
+      dialog.showMessageBox({
+        title: 'Downloading',
+        message: `The update is downloading in the background. When it's ready, you'll be prompted to restart.`
+      })
+    }
+  })
+})
+
+autoUpdater.on('update-not-available', () => {
+  dialog.showMessageBox({
+    title: 'No Updates Available',
+    message: 'You have the latest version of Primo'
+  })
+})
+
+autoUpdater.on('update-downloaded', (downloaded) => {
+  console.log({downloaded})
+  dialog.showMessageBox({
+    title: 'New Version Downloaded',
+    message: 'The latest version has been downloaded. Primo will restart to apply the update.'
+  }).then(() => {
+    setImmediate(() => autoUpdater.quitAndInstall())
+  })
+})
+
+// export this to MenuItem click callback
+function checkForUpdates () {
+  if (isDev) return
+  checkInternetConnected({ domain: 'primo.af' })
+  .then(() => {
+    autoUpdater.checkForUpdates()    
+  }).catch((err) => {
+    console.error("No connection", err);
+    dialog.showMessageBox({
+      title: 'No Connection',
+      message: `It looks like you're not connected to the internet. You'll need that to download new versions.`
+    })
+  });
+}
+
+ipcMain.on('check-for-update', async (event) => {
+  checkForUpdates()
+  event.returnValue = null
+})
+
+const { BrowserWindow, shell } = require('electron');
 const path = require('path');
 const serve = require('electron-serve');
 
@@ -81,7 +150,7 @@ app.on("web-contents-created", (...[/* event */, webContents]) => {
   webContents.on("context-menu", (event, click) => {
     event.preventDefault();
     win.webContents.inspectElement(click.x, click.y)
-  }, false);
+  });
 });
 
 app.on('activate', () => {

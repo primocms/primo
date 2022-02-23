@@ -49,5 +49,9 @@ contextBridge.exposeInMainWorld('primo', {
   processCSS: async (raw) => {
     const res = await ipcRenderer.invoke('process-css', raw)
     return res
-  }
+  },
+  checkForUpdate: () => {
+    ipcRenderer.sendSync('check-for-update')
+  },
 })
+
