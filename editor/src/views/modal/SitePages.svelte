@@ -1,4 +1,6 @@
 <script lang="ts">
+  import {createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
@@ -25,7 +27,8 @@
     const newPage = shouldDuplicatePage
       ? duplicatePage(name, url)
       : Page(url, name)
-    actions.add(newPage, currentPath);
+    await actions.add(newPage, currentPath);
+    dispatch('save')
     creatingPage = false;
     pageName = '';
     pageURL = '';

@@ -111,7 +111,7 @@
 {/if}
 
 <Modal visible={!!activeModal}>
-  <svelte:component this={activeModal} {...$modal.componentProps} />
+  <svelte:component this={activeModal} {...$modal.componentProps} on:save={saveSite} />
 </Modal>
 
 <svelte:head>
