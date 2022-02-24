@@ -185,7 +185,7 @@
     .page-body {
       border-top: 1px solid var(--color-gray-9);
       height: 0;
-      padding-top: calc(100% - 37px);
+      padding-top: calc(75% - 37px);
       /* include header in square */
       position: relative;
 
