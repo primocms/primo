@@ -15,27 +15,26 @@
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
+    fieldTypes.register([
+      {
+        id: 'image',
+        label: 'Image',
+        component: ImageField,
+      },
+      ...PrimoFieldTypes,
+    ])
+    dropdown.set([
+      {
+        label: 'Back to Dashboard',
+        icon: 'fas fa-arrow-left',
+        href: '/',
+      },
+      {
+        component: SiteButtons,
+      },
+    ])
   }
 
-  fieldTypes.register([
-    {
-      id: 'image',
-      label: 'Image',
-      component: ImageField,
-    },
-    ...PrimoFieldTypes,
-  ])
-
-  dropdown.set([
-    {
-      label: 'Back to Dashboard',
-      icon: 'fas fa-arrow-left',
-      href: '/',
-    },
-    {
-      component: SiteButtons,
-    },
-  ])
 </script>
 
 <div id="primo-desktop-toolbar" />
