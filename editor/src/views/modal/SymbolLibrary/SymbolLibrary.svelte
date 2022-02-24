@@ -104,8 +104,9 @@
     try {
       const json = LZ.decompressFromBase64(compressedSymbols);
       const parsedSymbols = JSON.parse(json);
-      if (Array.isArray(parsedSymbols)) {
-        return parsedSymbols;
+      const convertedSymbols = convertSymbols(parsedSymbols)
+      if (Array.isArray(convertedSymbols)) {
+        return convertedSymbols;
       } else {
         throw Error;
       }
