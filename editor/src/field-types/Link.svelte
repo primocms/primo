@@ -1,7 +1,6 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-
-  import { find } from 'lodash-es';
+  import {createEventDispatcher} from 'svelte'
+  const dispatch = createEventDispatcher()
   import SplitButton from '../ui/inputs/SplitButton.svelte';
   import TextInput from '../components/inputs/TextInput.svelte';
   import { pages } from '../stores/data/draft';
@@ -38,7 +37,7 @@
   let selected = urlMatchesPage(field.value.url);
 
   function urlMatchesPage(url) {
-    if (url.startsWith('/')) {
+    if (url && url.startsWith('/')) {
       return 'Page';
     } else {
       return 'URL';
@@ -69,12 +68,22 @@
     <div class="url-select">
       <SplitButton bind:selected buttons={[{ id: 'Page' }, { id: 'URL' }]} />
       {#if selected === 'Page'}
-        <select bind:value={field.value.url}>
+        <select bind:value={field.value.url} on:change={() => dispatch('input')}>
           {#each $pages as page}
             <option value={getPageUrl(page, $locale)}>
               {page.name}
               <pre>({getPageUrl(page, $locale)})</pre>
             </option>
+            {#if page.pages.length > 0}
+              <optgroup label={page.name}>
+                {#each page.pages as childpage}
+                  <option value={getPageUrl(childpage, $locale)}>
+                    {childpage.name}
+                    <pre>({getPageUrl(childpage, $locale)})</pre>
+                  </option>
+                {/each}
+              </optgroup>
+            {/if}
           {/each}
         </select>
       {:else}
