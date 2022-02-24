@@ -97,6 +97,10 @@
     font-weight: 600;
     border: 0;
   }
+  textarea {
+    color: var(--primo-color-black);
+    padding: 0.5rem;
+  }
   .field-button {
     width: 100%;
     background: var(--color-gray-8);
