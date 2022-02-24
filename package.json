@@ -14,8 +14,10 @@
   "devDependencies": {
     "concurrently": "^7.0.0",
     "cypress": "^9.2.0",
+    "eslint": "^8.9.0",
     "i": "^0.3.7",
     "npm": "^8.3.0",
+    "prettier": "^2.5.1",
     "vitest": "0.0.139"
   },
   "dependencies": {}
