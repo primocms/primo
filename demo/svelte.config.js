@@ -10,8 +10,6 @@ const config = {
 		if (!IGNORED_WARNINGS.includes(warning.message)) handler(warning);
 	},
 	kit: {
-		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte',
 		adapter: vercel(),
 		vite: {
 			server: {

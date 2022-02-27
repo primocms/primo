@@ -10,14 +10,14 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-vercel": "next",
-    "@sveltejs/kit": "next",
+    "@sveltejs/kit": "^1.0.0-next.287",
     "autoprefixer": "^10.4.0",
     "postcss-load-config": "^3.1.0",
     "postcss-nested": "^5.0.6",
     "postcss-preset-env": "^6.7.0",
     "prettier": "^2.4.1",
     "prettier-plugin-svelte": "^2.4.0",
-    "svelte": "^3.42.6",
+    "svelte": "^3.46.4",
     "svelte-preprocess": "^4.9.8",
     "tailwindcss": "^2.2.19",
     "typescript": "^4.5.4"
