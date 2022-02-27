@@ -3,37 +3,48 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
 	// import ImageField from '../extensions/FieldTypes/ImageField.svelte'
-	import Primo, { modal as primoModal, fieldTypes, PrimoFieldTypes } from '@primo-app/primo';
+	import Primo, {
+		modal as primoModal,
+		fieldTypes,
+		PrimoFieldTypes,
+		registerProcessors
+	} from '@primo-app/primo';
 	import { saved } from '@primo-app/primo/src/stores/app/misc';
 	import Build from './_Build.svelte';
 	import * as primo from '@primo-app/primo/package.json';
 
-	fieldTypes.register([
-		// {
-		// 	id: 'image',
-		// 	label: 'Image',
-		// 	component: ImageField
-		// },
-		...PrimoFieldTypes
-	]);
+	if (browser) {
+		fieldTypes.register([
+			// {
+			// 	id: 'image',
+			// 	label: 'Image',
+			// 	component: ImageField
+			// },
+			...PrimoFieldTypes
+		]);
 
-	primoModal.register([
-		{
-			id: 'BUILD',
-			component: Build,
-			componentProps: {
-				siteName: 'Website' // TODO - change
-			},
-			options: {
-				route: 'build',
-				width: 'md',
-				header: {
-					title: 'Build to Github',
-					icon: 'fab fa-github'
+		primoModal.register([
+			{
+				id: 'BUILD',
+				component: Build,
+				componentProps: {
+					siteName: 'Website' // TODO - change
+				},
+				options: {
+					route: 'build',
+					width: 'md',
+					header: {
+						title: 'Build to Github',
+						icon: 'fab fa-github'
+					}
 				}
 			}
-		}
-	]);
+		]);
+
+		import('../compiler/processors').then(({ html, css }) => {
+			registerProcessors({ html, css });
+		});
+	}
 
 	let data;
 	$: if (browser) {

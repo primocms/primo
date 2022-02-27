@@ -1,4 +1,4 @@
-import * as idb from 'idb-keyval';
+// import * as idb from 'idb-keyval';
 import _ from 'lodash-es'
 import PromiseWorker from 'promise-worker';
 import svelteWorker from './workers/worker?worker'
@@ -73,7 +73,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
-  await idb.set(JSON.stringify(finalRequest), final)
+  // await idb.set(JSON.stringify(finalRequest), final)
   return final
 
   function buildFinalRequest(finalData) {
