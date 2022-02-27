@@ -3,6 +3,7 @@
 </script>
 
 <script>
+  import { browser } from '$app/env'
   import { onMount } from 'svelte'
   import { get } from 'svelte/store'
   import Primo, {
@@ -18,24 +19,26 @@
   import { page } from '$app/stores'
   import * as actions from '$lib/actions'
 
-  primoModal.register([
-    {
-      id: 'BUILD',
-      component: Build,
-      componentProps: {
-        siteName: 'Website', // TODO - change
-      },
-      options: {
-        route: 'build',
-        width: 'small',
-        header: {
-          title: 'Build to Github',
-          icon: 'fab fa-github',
+  if (browser) {
+    primoModal.register([
+      {
+        id: 'BUILD',
+        component: Build,
+        componentProps: {
+          siteName: 'Website', // TODO - change
         },
-        hideLocaleSelector: true
+        options: {
+          route: 'build',
+          width: 'small',
+          header: {
+            title: 'Build to Github',
+            icon: 'fab fa-github',
+          },
+          hideLocaleSelector: true
+        },
       },
-    },
-  ])
+    ])
+  }
 
   let role = 'developer'
 
@@ -84,9 +87,11 @@
   }
 </script>
 
-<Primo
-  {data}
-  {role}
-  {saving}
-  on:save={async ({ detail: data }) => saveData(data)}
-/>
+{#if browser}
+  <Primo
+    {data}
+    {role}
+    {saving}
+    on:save={async ({ detail: data }) => saveData(data)}
+  />
+{/if}
