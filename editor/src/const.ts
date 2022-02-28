@@ -21,6 +21,7 @@ export const defaultStyles = {
   h1 { 
     font-size: 1.875rem;
     font-weight: 500;
+    line-height: 1.2;
   }
 
   h2 {
@@ -361,10 +362,6 @@ html {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--padding);
-
-  & > * {
-    max-width: 700px;
-  }
 
   img {
     width: 100%;
