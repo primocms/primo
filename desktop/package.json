@@ -40,7 +40,6 @@
     "directories": {
       "buildResources": "assets"
     },
-    "compression": "store",
     "asar": true,
     "files": [
       "package.json",
