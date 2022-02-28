@@ -246,10 +246,13 @@ export function getComponentData({
 }): object {
   const symbol = component.type === 'symbol' ? component : _find(site.symbols, ['id', component.symbolID])
   const componentData = _chain(symbol.fields)
-    .map(field => ({
-      key: field.key,
-      value: site.content[loc][page.id]?.[component.id]?.[field.key] || (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
-    }))
+    .map(field => {
+      const content = site.content[loc][page.id]?.[component.id]?.[field.key]
+      return {
+        key: field.key,
+        value: content !== undefined ? content : (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
+      }
+    })
     .keyBy('key')
     .mapValues('value')
     .value();
