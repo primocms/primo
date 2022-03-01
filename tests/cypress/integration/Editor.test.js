@@ -12,7 +12,7 @@ describe("Interact with components in Primo Library and Site Library", () => {
         cy.get('span').contains('Add Component').click()
         cy.get ("button").contains("Primo Library").click();
         cy.get ("div#component-zjuqm").click();
-        cy.get ("div.buttons").get(".close").click();
+        cy.get ("div.buttons").get(`[aria-label="Close modal"]`).click();
     });
     
     it("Check if the added componet exist", () => {
@@ -32,7 +32,7 @@ describe("Interact with components in Primo Library and Site Library", () => {
 
     it('Edt page content', () => {
         cy.get('div.block-buttons-container').invoke('addClass', 'visible');
-        cy.get('div.ProseMirror').children('p').clear().type('Hello CMS. This is a test.');
+        cy.get('div.ProseMirror').children('p').type('Hello CMS. This is a test.')
     });
     
     it('move block up/down', () => {

@@ -12,7 +12,7 @@ describe('Component IDE & CMS', () => {
         cy.get('span').contains('Add Component').click()
         cy.get ("button").contains("Primo Library").click();
         cy.get ("div#component-zjuqm").click();
-        cy.get ("div.buttons").get(".close").click();
+        cy.get ("div.buttons").get(`[aria-label="Close modal"]`).click();
     });
     
     it("Check if the added componet exist", () => {
@@ -27,16 +27,18 @@ describe('Component IDE & CMS', () => {
         cy.get('div.block-buttons-container').invoke('addClass', 'visible');
         cy.get('span').contains('Edit Code').click();
         cy.get('.codemirror-container:nth(1)').click()
-        // TODO: chsnge the line 152 which is color to yellowgreen
+        // TODO: change the line 152 which is color to yellowgreen
         
     });
 
     it('Modify component fields IDE', () => {
         cy.get('button#tab-fields').click();
-        cy.get('#field-0 .input:nth(0)').clear().type('Header');
-        cy.get('span').contains('Draft').click();
+        cy.get('#field-0 .input:nth(0)').clear()
+        cy.get('#field-0 .input:nth(0)').type('Header');
+        cy.wait(10000);
+        cy.get('button').contains('Draft').click();
     });
-
+    
     it('switch to IDE', () => {
         cy.get('#ide').click();
     })
@@ -46,8 +48,8 @@ describe('Component IDE & CMS', () => {
         cy.get('button.button-span').children('span').contains('Edit Content').click();
         cy.wait(5000);
         cy.get('input.input[type="text"]:nth(0)').clear().type('Frequently tested');
-        cy.wait(1000);
-        cy.get('span').contains('Draft').click();
+        cy.wait(10000);
+        cy.get('button').contains('Draft').click();
     });
 });
 

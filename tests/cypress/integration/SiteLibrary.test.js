@@ -13,7 +13,7 @@ describe('Interact with components in Primo Library and Site Library', () => {
         cy.get('span.label').contains('Components').click();
         cy.get ("button").contains("Primo Library").click();
         cy.get ("div#component-zjuqm").click();
-        cy.get ("div.buttons").get(".close").click();
+        cy.get ("div.buttons").get(`[aria-label="Close modal"]`).click();
     });
 
     it("Check if the added componet exist", () => {
@@ -33,7 +33,8 @@ describe('Interact with components in Primo Library and Site Library', () => {
         cy.get('.cm-activeLine:nth(1)').type('p{color: red}', { parseSpecialCharSequences: false })
         cy.get('.s-26kNgjjIDjKx:nth(3)').click()
         // TODO: Add JS to the component
-        cy.get('span').contains('Draft').click();
+        cy.wait(15000);
+        cy.get('button').contains('Draft').click();
     });
 
     //  it('Add fields', () => {
