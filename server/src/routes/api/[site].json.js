@@ -6,7 +6,7 @@ export async function get(event) {
   return await authorizeRequest(event, async () => {
     const {data,error} = await supabaseAdmin.storage
       .from('sites')
-      .download(`${event.params.site}/site.json`)
+      .download(`${event.params.site}/site.json?${Date.now()}`)
     const json = JSON.stringify(await data.text())
     return {
       body: json
