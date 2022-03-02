@@ -1,11 +1,13 @@
 <script context="module">
   import { writable } from 'svelte/store';
-  const publicSymbols = writable([]);
+  const primoSymbols = writable([])
+  const communitySymbols = writable([])
 </script>
 
 <script>
   import { onMount } from 'svelte';
   import {some as _some} from 'lodash-es';
+  import { saveAs } from 'file-saver'
   import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import Container from './SymbolContainer.svelte';
@@ -54,7 +56,7 @@
     }
   }
 
-  async function addSymbol() {
+  async function createSymbol() {
     const symbol = Symbol();
     editSymbol(symbol);
   }
@@ -64,33 +66,25 @@
     actions.delete(symbol);
   }
 
-  let LZ;
-  async function copySymbol(symbol) {
-    if (!navigator.clipboard) {
-      alert(
-        'Unable to copy Symbol because your browser does not support copying'
-      );
-      return;
-    }
-
-    const currentlyCopied = await navigator.clipboard.readText();
-    const copiedSymbols = parseCopiedSymbols(currentlyCopied);
-    const symbolsToCopy = [...copiedSymbols, symbol];
-    const jsonSymbols = JSON.stringify(symbolsToCopy);
-    const compressedSymbols = LZ.compressToBase64(jsonSymbols);
-    await navigator.clipboard.writeText(compressedSymbols);
+  async function downloadSymbol(symbol) {
+    delete symbol.type
+    const json = JSON.stringify(symbol);
+    var blob = new Blob([json], {type: "application/json"});
+    saveAs(blob, `${symbol.name || symbol.id}.json`)
   }
 
-  async function pasteSymbol() {
-    const compressedSymbols = await navigator.clipboard.readText();
-    const symbols = parseCopiedSymbols(compressedSymbols);
-    symbols.forEach((symbol) => {
+  async function addSymbol({target}) {
+    var reader = new window.FileReader()
+    reader.onload = async function ({ target }) {
+      if (typeof target.result !== 'string') return
+      const uploaded = JSON.parse(target.result)
       placeSymbol({
-        ...symbol,
+        ...uploaded,
         id: createUniqueID(),
+        type: 'symbol'
       });
-    });
-    await navigator.clipboard.writeText(``);
+    }
+    reader.readAsText(target.files[0])
   }
 
   function copySymbolToSite(symbol) {
@@ -100,19 +94,19 @@
     });
   }
 
-  function parseCopiedSymbols(compressedSymbols) {
-    try {
-      const json = LZ.decompressFromBase64(compressedSymbols);
-      const parsedSymbols = JSON.parse(json);
-      const convertedSymbols = convertSymbols(parsedSymbols)
-      if (Array.isArray(convertedSymbols)) {
-        return convertedSymbols;
-      } else {
-        throw Error;
-      }
-    } catch (e) {
-      return [];
+  let symbolSubmission
+  let contributor = ''
+  let submitted = false
+  async function submitSymbol() {
+    const payload = {
+      contributor,
+      component: symbolSubmission
     }
+    axios.post('https://api.primo.af/community-library.json', payload).then(res => {
+      if (res.data?.ok) {
+        submitted = true
+      }
+    })
   }
 
   function createInstance(symbol) {
@@ -124,36 +118,40 @@
     };
   }
 
-  onMount(async () => {
-    if (!LZ) {
-      LZ = (await import('lz-string')).default;
-    }
-  });
-
   let [minColWidth, maxColWidth, gap] = [350, 800, 30];
   let width, height;
 
   let showingPublicLibrary = false;
 
   onMount(async () => {
-    let { data: symbols } = await axios.get(
-      'https://api.primo.af/public-library.json'
-    );
-    $publicSymbols = symbols || [];
+    if ($primoSymbols.length === 0) {
+      const { data: symbols } = await axios.get(
+        'https://api.primo.af/public-library.json'
+      );
+      $primoSymbols = symbols || [];
+    }
+    if ($communitySymbols.length === 0) {
+      const { data: symbols } = await axios.get(
+        'https://api.primo.af/community-library.json'
+      );
+      $communitySymbols = symbols || [];
+    }
   });
 
+  let selectedTab = 'site'
 </script>
 
 <ModalHeader />
 <main>
   <header class="tabs">
-    <button id ="site-library" on:click={() => showingPublicLibrary = false} class:active={!showingPublicLibrary}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
-    <button on:click={() => showingPublicLibrary = true} class:active={showingPublicLibrary}>Primo Library</button>
+    <button on:click={() => selectedTab = 'site'} class:active={selectedTab === 'site'}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
+    <button on:click={() => selectedTab = 'primo'} class:active={selectedTab === 'primo'}>Primo Library</button>
+    <button on:click={() => selectedTab = 'community'} class:active={selectedTab === 'community'}>Community Library</button>
   </header>
-  {#if !showingPublicLibrary}
+  {#if selectedTab === 'site'}
     <div class="xyz-in library-buttons">
       {#if $userRole === 'developer'}
-        <button on:click={addSymbol} style="border-right:1px solid var(--color-gray-9)" id="create-symbol">
+        <button on:click={createSymbol} style="border-right:1px solid var(--color-gray-9)" id="create-symbol">
           <svg
             fill="currentColor"
             viewBox="0 0 20 20"
@@ -164,16 +162,13 @@
           <span>Create</span>
         </button>
       {/if}
-      <button on:click={pasteSymbol} id="paste-symbol">
-        <svg
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"><path
-            d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-          <path
-            d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
-        <span>Paste</span>
-      </button>
+      <label class="button">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.7207 8.65351L7.76758 4.5957C7.89609 4.46719 8.10391 4.46719 8.23242 4.5957L12.2793 8.65351C12.4078 8.78203 12.4078 8.98984 12.2793 9.11836L11.7434 9.6543C11.6121 9.78555 11.4016 9.78281 11.2758 9.64883L8.71094 6.99375V13.7969C8.71094 13.9773 8.56328 14.125 8.38281 14.125H7.61719C7.43672 14.125 7.28906 13.9773 7.28906 13.7969V6.99375L4.72695 9.64883C4.59844 9.78008 4.38789 9.78281 4.25937 9.6543L3.72344 9.11836C3.59219 8.98984 3.59219 8.78203 3.7207 8.65351V8.65351ZM3.07812 3.29687H12.9219C13.1023 3.29687 13.25 3.14922 13.25 2.96875V2.20312C13.25 2.02266 13.1023 1.875 12.9219 1.875H3.07812C2.89766 1.875 2.75 2.02266 2.75 2.20312V2.96875C2.75 3.14922 2.89766 3.29687 3.07812 3.29687Z" fill="#E2E4E9"/>
+        </svg>                              
+        <span>Add</span>
+        <input on:change={addSymbol} type="file" accept=".json">
+      </label>
     </div>
     {#if $symbols.length === 0}
       <div id="empty-state">
@@ -182,10 +177,42 @@
         </span>
       </div>
     {/if}
+  {:else if selectedTab === 'community'}
+    <div class="contribution-form library-buttons xyz-in">
+      {#if !submitted}
+        <span>Contribute a Component to the Community Library</span>
+        <div>
+          <div>
+            <span>Component</span>
+            <select bind:value={symbolSubmission}>
+              {#each $symbols.filter(s => s.name) as symbol}
+                <option value={symbol}>{symbol.name}</option>
+              {/each}
+            </select>
+          </div>
+          <label>
+            <span>Personal Website (optional)</span>
+            <input bind:value={contributor} type="text">
+          </label>
+          <button on:click={submitSymbol}>
+            <span>Submit</span>
+          </button>
+        </div>
+        <!-- <footer>
+          Please only submit code which you wrote yourself
+        </footer> -->
+      {:else}
+        <span>Thanks! Your contribution will be considered and posted publicly if accepted. Feel free to submit more.</span>
+      {/if}
+    </div>
   {/if}
+
   <Masonry
-    style="overflow:scroll"
-    items={showingPublicLibrary ? $publicSymbols : $symbols}
+    items={({
+      'site': $symbols,
+      'primo': $primoSymbols,
+      'community': $communitySymbols
+    }[selectedTab])}
     {minColWidth}
     {maxColWidth}
     {gap}
@@ -195,10 +222,10 @@
     bind:width
     bind:height>
     <Container
-      titleEditable={!showingPublicLibrary}
+      titleEditable={selectedTab === 'site'}
       symbol={item}
-      on:copy={() => copySymbol(item)}
-      action={showingPublicLibrary ? {
+      on:copy={() => downloadSymbol(item)}
+      action={selectedTab !== 'site' ? {
         onclick: () => copySymbolToSite(item), 
         title: 'Duplicate', 
         icon: 'fas fa-plus', 
@@ -218,7 +245,7 @@
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
               </svg>`
       } : null)}
-      buttons={!showingPublicLibrary ? [
+      buttons={selectedTab === 'site' ? [
         { 
           onclick: () => {
             const confirm = window.confirm('This will delete ALL instances of this component across your site. Continue?');
@@ -231,12 +258,11 @@
         }, 
         { 
           id: 'copy', 
-          onclick: () => copySymbol(item), 
+          onclick: () => downloadSymbol(item), 
           title: 'Copy Component', 
-          svg: `<svg viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7.14286 10.2857V11.1786C7.14286 11.4744 6.90301 11.7143 6.60714 11.7143H0.535714C0.239844 11.7143 0 11.4744 0 11.1786V2.96428C0 2.66841 0.239844 2.42856 0.535714 2.42856H2.14286V9.03571C2.14286 9.72497 2.70359 10.2857 3.39286 10.2857H7.14286ZM7.14286 2.60713V0.285706H3.39286C3.09699 0.285706 2.85714 0.525549 2.85714 0.82142V9.03571C2.85714 9.33158 3.09699 9.57142 3.39286 9.57142H9.46429C9.76016 9.57142 10 9.33158 10 9.03571V3.14285H7.67857C7.38393 3.14285 7.14286 2.90178 7.14286 2.60713ZM9.8431 1.91452L8.37118 0.442603C8.27072 0.342144 8.13446 0.285706 7.99239 0.285706L7.85714 0.285706V2.42856H10V2.29332C10 2.15124 9.94356 2.01499 9.8431 1.91452Z" fill="white"/>
-                </svg>
-                ` 
+          svg: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.2793 7.34649L8.23242 11.4043C8.10391 11.5328 7.89609 11.5328 7.76758 11.4043L3.7207 7.34648C3.59219 7.21797 3.59219 7.01016 3.7207 6.88164L4.25664 6.3457C4.38789 6.21445 4.59844 6.21719 4.72422 6.35117L7.28906 9.00625L7.28906 2.20313C7.28906 2.02266 7.43672 1.875 7.61719 1.875L8.38281 1.875C8.56328 1.875 8.71094 2.02266 8.71094 2.20313L8.71094 9.00625L11.273 6.35117C11.4016 6.21992 11.6121 6.21719 11.7406 6.3457L12.2766 6.88164C12.4078 7.01016 12.4078 7.21797 12.2793 7.34649V7.34649ZM12.9219 12.7031L3.07813 12.7031C2.89766 12.7031 2.75 12.8508 2.75 13.0312L2.75 13.7969C2.75 13.9773 2.89766 14.125 3.07812 14.125L12.9219 14.125C13.1023 14.125 13.25 13.9773 13.25 13.7969L13.25 13.0313C13.25 12.8508 13.1023 12.7031 12.9219 12.7031Z" fill="#E2E4E9"/>
+                </svg>` 
         }, 
         { 
           id: 'edit', 
@@ -248,7 +274,7 @@
       ] : []} />
 
   </Masonry>
-  {#if showingPublicLibrary && $publicSymbols.length === 0}
+  {#if showingPublicLibrary && $primoSymbols.length === 0}
     <div class="spinner-container">
       <Spinner />
     </div>
@@ -316,7 +342,7 @@
     gap: 0.5rem;
     padding-bottom: 1rem;
 
-    button {
+    button, label.button {
       background: var(--primo-color-codeblack);
       transition: var(--transition-colors);
       display: flex;
@@ -343,6 +369,10 @@
         height: 1rem;
         margin-right: 5px;
       }
+
+      input[type="file"] {
+        display: none;
+      }
     }
 
     &:only-child {
@@ -360,6 +390,49 @@
         width: 1.5rem;
         height: 1.5rem;
       }
+    }
+  }
+
+  .contribution-form {
+    color: var(--color-gray-1);
+    background: var(--color-gray-9);
+    justify-self: flex-start;
+    border-radius: var(--primo-border-radius);
+    padding: 2rem;
+    font-size: 0.875rem;
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    label span {
+      margin-right: 0.5rem;
+    }
+
+    input {
+      padding: 0.5rem;
+      background: var(--color-gray-8);
+      border-radius: var(--primo-border-radius);
+
+      &:focus {
+        outline: 0;
+      }
+    }
+
+    /* footer {
+      color: var(--color-gray-4);
+      font-size: 0.75rem;
+    } */
+
+    select {
+      background: transparent;
+      border: 1px solid var(--color-gray-1);
+      border-radius: var(--primo-border-radius);
+      padding: 0 0.5rem;
     }
   }
 

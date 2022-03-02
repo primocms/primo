@@ -53,12 +53,12 @@
     "autosize": "^5.0.1",
     "axios": "^0.24.0",
     "browser-image-compression": "^1.0.16",
+    "file-saver": "^2.0.5",
     "idb-keyval": "^6.0.2",
     "js-base64": "^3.6.0",
     "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "lorem-ipsum": "^2.0.4",
-    "lz-string": "^1.4.4",
     "mini-svg-data-uri": "^1.4.3",
     "mousetrap": "^1.6.5",
     "nanoid": "^3.1.23",
@@ -75,7 +75,8 @@
     "prosemirror-schema-list": "^1.1.6",
     "prosemirror-view": "^1.23.5",
     "showdown": "^1.9.1",
-    "svelte": "^3.46.1"
+    "svelte": "^3.46.1",
+    "svelte-json-tree": "^0.1.0"
   },
   "resolutions": {
     "prosemirror-model": "1.15.0"
