@@ -41,7 +41,6 @@
   let duplicatingSite = false
   let duplicateFileIsValid = true
   function readJsonFile({ target }) {
-    console.log('reading')
     var reader = new window.FileReader()
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return

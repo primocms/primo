@@ -17,7 +17,7 @@
     processCSS,
     wrapInStyleTags,
   } from '../../../utils';
-  import { locale } from '../../../stores/app/misc';
+  import { locale, activeComponentData } from '../../../stores/app/misc';
 
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
@@ -52,6 +52,7 @@
     ...getSymbolPlaceholders(fields),
     ...(localContent[$locale])
   }
+  $: $activeComponentData = data
 
   function getSymbolPlaceholders(fields) {
     return _chain(fields).keyBy('key').mapValues(f => getPlaceholderValue(f)).value()
@@ -185,7 +186,6 @@
 
   let componentApp; // holds compiled component
   let compilationError; // holds compilation error
-
 
 
   // ensure placeholder values always conform to form
@@ -423,7 +423,7 @@
   <HSplitPane
     leftPaneSize={editorWidth}
     rightPaneSize={previewWidth}
-    styleLeft="overflow: { $showingIDE ? 'hidden' : 'scroll' }"
+    hideLeftOverflow={$showingIDE && activeTab === tabs[0]}
     on:resize={({ detail }) => {
       const { left, right } = detail;
       localStorage.setItem('editorWidth', left);
@@ -438,7 +438,8 @@
             bind:html={rawHTML}
             bind:css={rawCSS}
             bind:js={rawJS}
-            on:save={saveComponent} />
+            on:save={saveComponent} 
+          />
         {:else if activeTab === tabs[1]}
           <div class="fields">
             {#each fields as field, i}
@@ -495,7 +496,8 @@
         {loading}
         {componentApp}
         {data}
-        error={compilationError} />
+        error={compilationError} 
+      />
     </div>
   </HSplitPane>
 </main>

@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
-  import {locale} from '../../stores/app/misc'
+  import {locale, consoleLogs} from '../../stores/app/misc'
+  import JSONTree from 'svelte-json-tree';
 
   export let view = 'small';
   export let loading = false;
@@ -101,6 +102,20 @@
       {@html error}
     </pre>
   {/if}
+
+  {#if $consoleLogs.length > 0}
+    <div class="logs" transition:slide>
+      {#each $consoleLogs as log}
+        <div class="log">
+          {#if typeof log === 'object'}
+            <JSONTree value={log} />
+          {:else}
+            <pre>{@html log}</pre> 
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
   <div
     class="preview-container"
     class:loading
@@ -144,6 +159,26 @@
       color: var(--primo-color-white);
       background: var(--primo-color-primored);
       padding: 5px;
+    }
+
+    .logs {
+      --json-tree-font-family: 'Fira Code', serif, monospace;
+      --json-tree-label-color: #569cd6;
+
+      display: grid;
+      gap: 0.5rem;
+      background: var(--color-gray-9);
+      border: 2px solid var(--color-gray-8);
+      padding: 0.75rem 1rem;
+
+      pre {
+        display: block;
+      }
+
+      .log:not(:only-child):not(:last-child) {
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(250, 250, 250, 0.2);
+      }
     }
   }
   iframe {

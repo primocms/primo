@@ -11,7 +11,7 @@
   export let html = '';
   export let css = '';
   export let js = '';
-
+  
   let activeTab = 0;
   const activeTabs = {
     html: true,

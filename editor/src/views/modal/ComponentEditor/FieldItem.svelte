@@ -69,7 +69,6 @@
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
     bind:field={subfield} 
-    {i} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete
