@@ -22,7 +22,7 @@
   {#each field.fields as subfield}
     <div class="group-item">
       <svelte:component
-        this={_find($fieldTypes, ['id', subfield.type]).component}
+        this={_find($fieldTypes, ['id', subfield.type])?.component}
         field={subfield}
         on:input={onInput} />
     </div>
