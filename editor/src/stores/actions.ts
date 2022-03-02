@@ -1,4 +1,4 @@
-import { find, last, cloneDeep, some, chain, unset } from 'lodash-es'
+import { find, last, cloneDeep, some, chain, unset, omit } from 'lodash-es'
 import { get } from 'svelte/store'
 import { getSymbol } from './helpers'
 import { id as activePageID, sections } from './app/activePage'
@@ -163,6 +163,13 @@ export const pages = {
     } else {
       newPages = newPages.filter(page => page.id !== pageId)
     }
+
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+      locale,
+      content: omit(pages, [pageId])
+    }))).keyBy('locale').mapValues('content').value()
+
+    stores.content.set(updatedContent)
     stores.pages.set(newPages)
   },
   update: async (pageId:string, fn = (p) => {}) => {
