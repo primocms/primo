@@ -64,13 +64,15 @@
     }));
   }
 
-  $: fieldValues = Array.isArray(field.value)
-    ? field.value.map((value) => [
-        ...field.fields.map((subfield) => ({
-          ...subfield,
-          value: value[subfield.key]
-        })),
-      ])
+  let fieldValues = Array.isArray(field.value)
+    ? field.value.map((value) => {
+      const item = field.fields.map((subfield) => ({
+        ...subfield,
+        value: value[subfield.key]
+      }))
+      item._key = createUniqueID()
+      return item
+    })
     : [];
 
   function onInput() {
@@ -88,7 +90,7 @@
 <Card id="repeater-{field.key}">
   <header>{field.label}</header>
   <div class="fields">
-    {#each fieldValues as fieldValue, i}
+    {#each fieldValues as fieldValue, i (fieldValue._key)}
       <div
         class="repeater-item"
         id="repeater-{field.key}-{i}">
