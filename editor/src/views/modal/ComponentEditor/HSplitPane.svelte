@@ -158,7 +158,7 @@
   export let rightPaneSize = $$slots.center ? '33%' : '66%';
   export let minRightPaneSize = '1.5rem';
 
-  export let styleLeft = ''
+  export let hideLeftOverflow = false
 
   $: leftPaneSize && resetSize();
   $: rightPaneSize && resetSize();
@@ -178,7 +178,7 @@
   --min-right-panel-size: {minRightPaneSize};
   ">
   {#if $$slots.center}
-    <div bind:this={left} style={styleLeft} class="left" class:transitioning>
+    <div bind:this={left} class:overflow-hidden={hideLeftOverflow} class="left" class:transitioning>
       <slot name="left">
         <div style="background-color: red;">Left Contents goes here...</div>
       </slot>
@@ -208,7 +208,7 @@
       </slot>
     </div>
   {:else}
-    <div bind:this={left} class="left" style={styleLeft} class:transitioning>
+    <div bind:this={left} class="left" class:overflow-hidden={hideLeftOverflow} class:transitioning>
       <slot name="left">
         <div style="background-color: red;">Left Contents goes here...</div>
       </slot>
@@ -265,7 +265,6 @@
     min-width: var(--min-left-panel-size);
     height: 100%;
     overflow: scroll; /* Necessary to scroll content in CMS fields */
-    overflow: hidden; /* Necessary to prevent code view from scrolling 'Code' out of view */
   }
   div.center {
     width: var(--center-panel-size);
@@ -279,6 +278,9 @@
   }
   .transitioning {
     transition: width 0.1s;
+  }
+  .overflow-hidden {
+    overflow: hidden;
   }
 
 </style>
