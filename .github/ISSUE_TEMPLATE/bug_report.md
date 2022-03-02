@@ -17,7 +17,7 @@ Describe what you think should've happened
 Describe what actually happened
 
 ## Workaround:
-Can the user still use Expensify without this being fixed? Have you informed them of the workaround?
+Have you found a way around this in the meantime?
 
 ## Platform:
 <!---
