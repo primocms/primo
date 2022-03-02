@@ -15,7 +15,7 @@
   <label for={field.key}>
     <span class="switch-label" for={field.key}>{field.label}</span>
     <div class="switch-container">
-      <input type="checkbox" id={field.key} on:input={toggleSwitch} checked />
+      <input type="checkbox" id={field.key} on:input={toggleSwitch} checked={field.value} />
       <span />
     </div>
   </label>
