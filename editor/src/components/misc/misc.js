@@ -12,9 +12,19 @@ export const iframePreview = (locale = 'en') => `
             // TODO: re-render component when passing only a subset of existing props (i.e. when a prop has been deleted)
             c.$set(props);
           } else if (source) {
-            const blob = new Blob([source], { type: 'text/javascript' });
+            const withLogs = \`
+              const log = console.log.bind(console)
+              function postMessage(arg) {
+                try {
+                  window.postMessage({ event: 'logs', payload: arg })
+                } catch(e) {console.warn(e)}
+              }
+              console.log = (...args) => {
+                postMessage(...args)
+                log(...args)
+              };\` + source;
+            const blob = new Blob([withLogs], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
-  
             import(url).then(({ default: App }) => {
               if (c) c.$destroy();
               try {

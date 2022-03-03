@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
-  import {locale, consoleLogs} from '../../stores/app/misc'
+  import {locale } from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree';
 
   export let view = 'small';
@@ -12,12 +12,16 @@
   export let error = null;
   export let data = {}
 
+  let consoleLog
+
   let iframe;
   let previewLoaded = false;
   $: if (iframe) {
-    iframe.contentWindow.addEventListener('message', ({ data }) => {
+    iframe.contentWindow.addEventListener('message', ({data}) => {
       if (data === 'done') {
         previewLoaded = true;
+      } else if (data.event === 'logs') {
+        consoleLog = data.payload
       }
     });
   }
@@ -71,6 +75,9 @@
   function setIframeApp({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
       iframe.contentWindow.postMessage({ componentApp, componentData });
+      if (componentApp && !componentApp.includes('console.log')) {
+        consoleLog = null
+      }
     }
   }
 
@@ -103,17 +110,15 @@
     </pre>
   {/if}
 
-  {#if $consoleLogs.length > 0}
+  {#if consoleLog}
     <div class="logs" transition:slide>
-      {#each $consoleLogs as log}
-        <div class="log">
-          {#if typeof log === 'object'}
-            <JSONTree value={log} />
-          {:else}
-            <pre>{@html log}</pre> 
-          {/if}
-        </div>
-      {/each}
+      <div class="log">
+        {#if typeof consoleLog === 'object'}
+          <JSONTree value={consoleLog} />
+        {:else}
+          <pre>{@html consoleLog}</pre> 
+        {/if}
+      </div>
     </div>
   {/if}
   <div
