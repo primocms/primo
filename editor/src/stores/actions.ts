@@ -254,7 +254,7 @@ export async function saveFields(newPageFields, newSiteFields, newContent) {
 export async function addLocale(key) {
   content.update(s => ({
     ...s,
-    [key]: s.en
+    [key]: s['en']
   }))
 }
 

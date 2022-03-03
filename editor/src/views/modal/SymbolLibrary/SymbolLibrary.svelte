@@ -5,7 +5,7 @@
 </script>
 
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   import {some as _some} from 'lodash-es';
   import { saveAs } from 'file-saver'
   import axios from 'axios';
@@ -13,7 +13,6 @@
   import Container from './SymbolContainer.svelte';
   import { Symbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
-  import {convertSymbols} from '../../../utils'
   import { userRole } from '../../../stores/app';
   import modal from '../../../stores/app/modal';
   import { symbols } from '../../../stores/data/draft';
@@ -23,6 +22,7 @@
     deleteInstances,
   } from '../../../stores/actions';
   import ModalHeader from '../../modal/ModalHeader.svelte'
+  const track = getContext('track')
 
   export let onselect = null
 
@@ -59,6 +59,7 @@
   async function createSymbol() {
     const symbol = Symbol();
     editSymbol(symbol);
+    track('CREATE_COMPONENT')
   }
 
   async function deleteSymbol(symbol) {
@@ -92,6 +93,8 @@
       ...symbol,
       id: createUniqueID(),
     });
+    if (selectedTab === 'primo') track('ADD_PRIMO_COMPONENT', { id: symbol.id })
+    else if (selectedTab === 'community') track('ADD_COMMUNITY_COMPONENT', { id: symbol.id })
   }
 
   let symbolSubmission

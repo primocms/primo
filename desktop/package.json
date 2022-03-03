@@ -82,6 +82,7 @@
     "jszip": "^3.7.1",
     "lodash-es": "^4.17.21",
     "mini-svg-data-uri": "^1.4.3",
+    "node-machine-id": "^1.1.12",
     "postcss": "^8.4.5",
     "postcss-nested": "^5.0.6",
     "prettier": "^2.4.1",

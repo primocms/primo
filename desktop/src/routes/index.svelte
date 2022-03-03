@@ -6,6 +6,8 @@
   import sites from '../stores/sites'
   import serverSites, { connected } from '../stores/serverSites'
   import config from '../stores/config'
+  import {track} from '$lib/actions'
+  import { goto } from '$app/navigation';
 
   let loading
   function createSite() {
@@ -23,13 +25,10 @@
               activeDeployment: null,
             },
           ]
-          window.location.href = site.id // goto is breaking
+          track('CREATE_SITE')
+          // window.location.href = site.id // goto is breaking
+          goto(site.id)
           hide()
-          // setTimeout(() => {
-          //   // wait for file to be written
-          //   window.location.href = site.id // goto is breaking
-          //   hide()
-          // }, 500)
         },
       },
     })
@@ -93,6 +92,7 @@
                 {:else}
                   <a
                     href={site.valid ? site.id : '/'}
+                    on:click={() => track('OPEN_SITE')}
                     on:mouseenter={() => (hoveredItem = i)}
                     on:mouseleave={() => (hoveredItem = null)}
                   >

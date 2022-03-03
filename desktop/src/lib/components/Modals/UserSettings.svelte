@@ -70,21 +70,22 @@
     loading = false
   }
   connectToServer()
+
 </script>
 
 <main>
   <Tabs {tabs} bind:activeTab />
   <div class="content-container">
     {#if activeTab.label === 'Hosting'}
-      <h1 class="primo-heading-lg">
-        Hosting <span
+      <h1 class="primo-heading-lg heading">
+        Hosting <span class="supporting-text"
           >Connect to an available webhost to publish your sites to the internet</span
         >
       </h1>
       <Hosting />
     {:else if activeTab.label === 'Server'}
-      <h1 class="primo-heading-lg">
-        Primo Server <span
+      <h1 class="primo-heading-lg heading">
+        Primo Server <span class="supporting-text"
           >Connect to a primo server to manage your sites from your desktop</span
         >
       </h1>
@@ -109,31 +110,66 @@
         {/if}
       </form>
     {:else if activeTab.label === 'Advanced'}
-      <h1 class="primo-heading-lg">
-        Advanced <span>Set the directory you'll be saving your sites to.</span>
-      </h1>
-      <div>
-        <h2>Local Save Directory</h2>
+      <h1 class="primo-heading-lg heading">Advanced</h1>
+      <div class="container">
+        <h2 class="heading">
+          Local Save Directory
+          <span class="supporting-text">Set the directory you'll be saving your sites to.</span>
+        </h2>
         <span>{$config.saveDir}</span>
         <PrimaryButton on:click={selectDirectory}
           >Select directory</PrimaryButton
         >
+      </div>
+      <hr>
+      <div class="container">
+        <h2 class="heading">
+          Telemetry
+          <span class="supporting-text">We collect anonymous usage data to make Primo better. <a href="https://primo.af/privacy">Learn More</a></span>
+        </h2>
+        <label>
+          <span>Enable Telemetry</span>
+          <input type="checkbox" checked={$config.telemetryEnabled} on:change={() => {
+            config.update(c => ({
+              ...c,
+              telemetryEnabled: !$config.telemetryEnabled
+            }))
+          }}>
+        </label>
       </div>
     {/if}
   </div>
 </main>
 
 <style lang="postcss">
-  h1 {
+  .heading {
     display: flex;
     flex-direction: column;
     line-height: 1.4;
     margin-bottom: 1rem;
+  }
+  span.supporting-text {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--color-gray-4);
 
-    span {
-      font-weight: 500;
-      font-size: 0.75rem;
-      color: var(--color-gray-4);
+    a {
+      text-decoration: underline;
+    }
+  }
+  hr {
+    border-color: var(--color-gray-8);
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .container {
+    padding: 1rem 0;
+
+    &:last-child {
+      padding-bottom: 0;
     }
   }
   main {

@@ -9,6 +9,8 @@ const store = writable({
     url: '',
     token: ''
   },
+  telemetryEnabled: false,
+  machineID: null
 })
 
 if (browser) {
@@ -17,10 +19,13 @@ if (browser) {
     saveDir: window.primo.config.getSavedDirectory(),
     hosts: window.primo.config.getHosts(),
     serverConfig: window.primo.config.getServerConfig(),
+    telemetryEnabled: window.primo.config.getTelemetry(),
+    machineID: window.primo.config.getMachineID(),
   })
   store.subscribe((c) => {
     config.setHosts(c.hosts)
     config.setServerConfig(c.serverConfig)
+    config.setTelemetry(c.telemetryEnabled)
   })
 }
 

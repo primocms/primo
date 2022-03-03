@@ -75,7 +75,7 @@
     "prosemirror-schema-list": "^1.1.6",
     "prosemirror-view": "^1.23.5",
     "showdown": "^1.9.1",
-    "svelte": "^3.46.1",
+    "svelte": "^3.46.4",
     "svelte-json-tree": "^0.1.0"
   },
   "resolutions": {

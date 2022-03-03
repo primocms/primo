@@ -7,13 +7,12 @@
   import { Site } from '@primo-app/primo/src/const'
   import {validateSiteStructure} from '@primo-app/primo/src/utils'
 
-  export let onSuccess = (newSite) => {}
+  export let onSuccess = () => {}
   let loading
   let siteName = ``
   let siteID = ``
   let siteIDFocused = false
   let message = ''
-  // $: siteURL = siteID
   $: canCreateSite = siteName && siteID
 
   let siteData

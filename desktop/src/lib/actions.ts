@@ -109,3 +109,26 @@ export const hosts = {
     stores.hosts.update((hosts) => hosts.filter((p) => p.name !== name))
   },
 }
+
+const EVENTS = [
+  'CREATE_SITE',
+  'OPEN_SITE',
+  'ADD_PRIMO_COMPONENT',
+  'ADD_COMMUNITY_COMPONENT',
+  'CREATE_COMPONENT',
+  'ADD_TO_PAGE',
+  'CREATE_PAGE',
+  'ADD_LOCALITY',
+  'PUBLISH_SITE',
+  'DOWNLOAD_SITE',
+  'UPDATE_APP'
+]
+const machineID = get(config).machineID
+export async function track(event, args = null) {
+  if (!EVENTS.includes(event)) console.warn('Event does not exist', event)
+  if (get(config).telemetryEnabled) {
+    await axios.post('https://api.primo.af/telemetry.json', {event, machine_id: machineID, args})
+  } else {
+    console.log('Telemetry disabled', event)
+  }
+}
