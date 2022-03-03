@@ -175,7 +175,7 @@ let serverConfig = store.get('config.serverConfig') || {
   token: ''
 }
 let telemetryEnabled = store.get('config.telemetryEnabled') || true
-let machineID = require('node-machine-id').machineIdSync()
+let machineID = require('node-machine-id').machineIdSync(true)
 
 ipcMain.on('get-machine-id', async (event) => {
   event.returnValue = machineID
