@@ -7,12 +7,11 @@
     "preview": "svelte-kit preview"
   },
   "devDependencies": {
+    "@sveltejs/adapter-auto": "=1.0.0-next.23",
     "@sveltejs/adapter-static": "^1.0.0-next.20",
-    "@sveltejs/adapter-auto": "next",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.37",
     "autoprefixer": "^10.3.6",
     "postcss-nested": "^5.0.6",
-    "postcss-preset-env": "^6.7.0",
     "stream": "0.0.2",
     "svelte": "^3.44.0",
     "svelte-preprocess": "^4.9.5",
