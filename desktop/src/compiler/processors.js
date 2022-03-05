@@ -9,6 +9,8 @@ import * as idb from 'idb-keyval'
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 
+const componentsMap = new Map();
+
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   const finalRequest = buildFinalRequest(data)
@@ -20,8 +22,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
       data: Object.keys(data),
       format
     })
-    const cached = await idb.get(cacheKey) 
-    if (cached) return cached
+    if (componentsMap.has(cacheKey)) return componentsMap.get(cacheKey)
   }
 
   let res
@@ -67,14 +68,12 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   } 
 
   if (!buildStatic) {
-    idb.set(cacheKey, final)
+    componentsMap.set(cacheKey, final)
   }
 
   return final
 
   function buildFinalRequest(finalData) {
-
-    // export const primo = ${JSON.stringify(finalData)}
 
     const dataAsVariables = `\
     ${Object.entries(finalData)
@@ -108,18 +107,20 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   }
 }
 
-
+const cssMap = new Map()
 export async function css(raw) {
   if (!raw) {
     return ''
   }
-  // const cached = await idb.get(raw)
-  // if (cached) {
-  //   return cached
-  // }
+
+  if (cssMap.has(raw)) return {
+    css: cssMap.get(raw),
+    error: null
+  }
 
   const { css, error } = await window.primo.processCSS(raw)
   
-  // await idb.set(raw, css || error)
+  if (css) cssMap.set(raw, css)
+  
   return { css, error }
 }
