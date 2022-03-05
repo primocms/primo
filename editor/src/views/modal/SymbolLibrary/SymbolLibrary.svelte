@@ -7,7 +7,7 @@
 <script>
   import { onMount, getContext } from 'svelte';
   import {some as _some} from 'lodash-es';
-  import { saveAs } from 'file-saver'
+  import fileSaver from 'file-saver'
   import axios from 'axios';
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
   import Container from './SymbolContainer.svelte';
@@ -71,7 +71,7 @@
     delete symbol.type
     const json = JSON.stringify(symbol);
     var blob = new Blob([json], {type: "application/json"});
-    saveAs(blob, `${symbol.name || symbol.id}.json`)
+    fileSaver.saveAs(blob, `${symbol.name || symbol.id}.json`)
   }
 
   async function addSymbol({target}) {
