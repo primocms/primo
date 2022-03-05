@@ -2,12 +2,12 @@
   import { userRole } from '../../stores/app';
 </script>
 
-<p class="empty-description">
+<p class="description">
   <slot />
 </p>
 
 <style lang="postcss">
-  .empty-description {
+  .description {
     color: var(--color-gray-4);
     font-size: var(--font-size-2);
     text-align: center;
