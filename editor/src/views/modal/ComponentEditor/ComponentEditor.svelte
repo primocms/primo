@@ -4,7 +4,7 @@
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
-  import { Tabs, Card } from '../../../components/misc';
+  import { Tabs, Card, NoFieldMessage } from '../../../components/misc';
   import FullCodeEditor from './FullCodeEditor.svelte';
   import { CodePreview } from '../../../components/misc';
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
@@ -482,10 +482,7 @@
               </div>
             {/if}
           {:else}
-            <p class="empty-description">
-              You'll need to create and integrate a field before you can edit
-              this component's content from here
-            </p>
+            <NoFieldMessage />
           {/each}
         </div>
       {/if}
@@ -514,18 +511,6 @@
 
     --PrimaryButton-bg: var(--color-gray-8);
     --PrimaryButton-bg-hover: var(--color-gray-9);
-
-    .empty-description {
-      color: var(--color-gray-4);
-      font-size: var(--font-size-2);
-      text-align: center;
-      height: 100%;
-      display: flex;
-      align-items: flex-start;
-      padding: 6rem;
-      justify-content: center;
-      margin-top: 12px;
-    }
   }
 
   .field-item {

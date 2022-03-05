@@ -1,8 +1,7 @@
 <script>
   import { find, cloneDeep, isEqual, chain as _chain } from 'lodash-es';
   import { EditField } from '../../components/inputs';
-  import { Tabs } from '../../components/misc';
-  import { Card } from '../../components/misc';
+  import { Tabs, Card, NoFieldMessage } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
   import {getEmptyValue} from '../../utils'
 
@@ -500,15 +499,7 @@
         </div>
       {/if}
     {:else}
-      <p class="empty-description">
-        {#if $userRole === 'developer'}
-          You'll need to create and integrate a field before you can edit
-          content from here
-        {:else}
-          The site developer will need to create and integrate a field before
-          you can edit content from here
-        {/if}
-      </p>
+      <NoFieldMessage />
     {/each}
   {:else}
     {#each localSiteFields as field}
@@ -522,15 +513,7 @@
         </div>
       {/if}
     {:else}
-      <p class="empty-description">
-        {#if $userRole === 'developer'}
-          You'll need to create and integrate a field before you can edit
-          content from here
-        {:else}
-          The site developer will need to create and integrate a field before
-          you can edit content from here
-        {/if}
-      </p>
+      <NoFieldMessage />
     {/each}
   {/if}
 </main>
@@ -543,18 +526,6 @@
     color: var(--color-gray-2);
     background: var(--primo-color-black);
     overflow: scroll;
-
-    .empty-description {
-      color: var(--color-gray-4);
-      font-size: var(--font-size-2);
-      text-align: center;
-      height: 100%;
-      display: flex;
-      align-items: flex-start;
-      padding: 6rem;
-      justify-content: center;
-      margin-top: 12px;
-    }
 
     select {
       background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
