@@ -22,7 +22,7 @@
 
   async function createSiteZip() {
     const zip = new JSZip()
-    const files = await buildSiteBundle($site, siteID)
+    const files = await buildSiteBundle($site)
     files.forEach((file) => {
       zip.file(file.path, file.content)
     })
@@ -41,7 +41,7 @@
   async function publishToHosts() {
     loading = true
 
-    const files = (await buildSiteBundle($site, siteID)).map((file) => {
+    const files = (await buildSiteBundle($site)).map((file) => {
       return {
         file: file.path,
         data: file.content,
@@ -67,7 +67,7 @@
     pages = []
   }
 
-  async function buildSiteBundle(site, siteName) {
+  async function buildSiteBundle(site) {
     
     const pages = await Promise.all([
       ...site.pages.map((page) => buildPageTree({ page, site })),
@@ -94,7 +94,7 @@
           content: formattedHTML,
         },
         ...modules.map((module) => ({
-          path: `_modules/${module.id}.js`,
+          path: `_modules/${module.symbol}.js`,
           content: module.content,
         })),
         ...(page.pages
@@ -108,9 +108,17 @@
 
       return [
         ...flattenDeep(pages),
+        ...Object.entries(site.content).map(([locale, content]) => ({
+          path: `${locale}.json`,
+          content: JSON.stringify(content)
+        })),
         {
           path: `primo.json`,
           content: json,
+        },
+        {
+          path: 'robots.txt',
+          content: `User-agent: *`
         }
       ]
     }

@@ -194,7 +194,6 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
               ...data['${page.id}'],
               ...data['${page.id}']['${block.id}']
             };
-            console.log({content})
             new App({
               target: document.querySelector('#${block.id}'),
               hydrate: true,
