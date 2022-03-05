@@ -1,7 +1,7 @@
 <script>
   import { find, cloneDeep, isEqual, chain as _chain } from 'lodash-es';
   import { EditField } from '../../components/inputs';
-  import { Tabs, Card, NoFieldMessage } from '../../components/misc';
+  import { Tabs, Card, NoFieldsMessage } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
   import {getEmptyValue} from '../../utils'
 
@@ -499,7 +499,7 @@
         </div>
       {/if}
     {:else}
-      <NoFieldMessage />
+      <NoFieldsMessage />
     {/each}
   {:else}
     {#each localSiteFields as field}
@@ -513,7 +513,7 @@
         </div>
       {/if}
     {:else}
-      <NoFieldMessage />
+      <NoFieldsMessage />
     {/each}
   {/if}
 </main>

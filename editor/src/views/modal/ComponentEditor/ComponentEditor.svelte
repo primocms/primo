@@ -4,7 +4,7 @@
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
   import { PrimaryButton } from '../../../components/buttons';
-  import { Tabs, Card, NoFieldMessage } from '../../../components/misc';
+  import { Tabs, Card, NoFieldsMessage } from '../../../components/misc';
   import FullCodeEditor from './FullCodeEditor.svelte';
   import { CodePreview } from '../../../components/misc';
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
@@ -482,7 +482,7 @@
               </div>
             {/if}
           {:else}
-            <NoFieldMessage />
+            <NoFieldsMessage />
           {/each}
         </div>
       {/if}
