@@ -1,7 +1,3 @@
-<script>
-  import { userRole } from '../../stores/app';
-</script>
-
 <p class="description">
   <slot />
 </p>
