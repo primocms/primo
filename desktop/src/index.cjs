@@ -184,6 +184,7 @@ ipcMain.on('get-telemetry', async (event) => {
   event.returnValue = telemetryEnabled
 })
 ipcMain.on('set-telemetry', async (event, arg) => {
+  telemetryEnabled = arg
   store.set('config.telemetryEnabled', arg)
   event.returnValue = true
 })

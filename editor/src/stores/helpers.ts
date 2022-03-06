@@ -99,11 +99,6 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
       if (section.type === 'component') {
 
         const symbol = _find(site.symbols, ['id', section.symbolID])
-        const componentHasContent = site.content[locale][page.id]?.[section.id]
-
-        if (!componentHasContent) {
-          console.log('COMPONENT DOES NOT HAVE CONTENT', section)
-        }
 
         // if (!componentHasContent) return null // component has been placed but not filled out with content
         const data = getComponentData({
