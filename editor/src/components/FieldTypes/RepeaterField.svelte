@@ -65,14 +65,10 @@
   }
 
   let fieldValues = Array.isArray(field.value)
-    ? field.value.map((value) => {
-      const item = field.fields.map((subfield) => ({
+    ? field.value.map((value) => field.fields.map((subfield) => ({
         ...subfield,
         value: value[subfield.key]
-      }))
-      item._key = createUniqueID()
-      return item
-    })
+      })))
     : [];
 
   function onInput() {
@@ -84,6 +80,11 @@
     );
     dispatch('input');
   }
+
+  $: fieldValues = fieldValues.map(f => {
+    f._key = createUniqueID()
+    return f
+  })
 
 </script>
 
