@@ -264,7 +264,7 @@
     width: var(--left-panel-size);
     min-width: var(--min-left-panel-size);
     height: 100%;
-    overflow: scroll; /* Necessary to scroll content in CMS fields */
+    overflow-y: scroll; /* Necessary to scroll content in CMS fields */
   }
   div.center {
     width: var(--center-panel-size);
@@ -280,7 +280,7 @@
     transition: width 0.1s;
   }
   .overflow-hidden {
-    overflow: hidden;
+    overflow: hidden !important;
   }
 
 </style>

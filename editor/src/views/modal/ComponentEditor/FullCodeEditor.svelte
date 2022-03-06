@@ -119,7 +119,12 @@
     {/if}
   </div>
 {:else}
-  <HSplitPane {leftPaneSize} {centerPaneSize} {rightPaneSize} bind:resetSize>
+  <HSplitPane 
+    hideLeftOverflow={true}
+    {leftPaneSize} 
+    {centerPaneSize} 
+    {rightPaneSize} 
+    bind:resetSize>
     <div slot="left" class="tabs">
       <button
         class:tab-hidden={leftPaneSize === '0'}
