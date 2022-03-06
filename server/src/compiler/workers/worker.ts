@@ -174,25 +174,10 @@ registerPromiseWorker(async function ({code,site,locale,hydrated,buildStatic = t
                         if (importee.startsWith("."))
                             return new URL(importee, importer).href;
                         
-                        // bare named module imports (importing an npm package)
-                        if (importer.startsWith('https://cdn.skypack.dev/')) {
-                            return `https://cdn.skypack.dev${importee}`
-                        }
-    
-                        // get the package.json and load it into memory
-                        // const pkg_url = `${CDN_URL}/${importee}/package.json`;
-                        // const pkg = JSON.parse(await fetch_package(pkg_url));
-    
-                        // // get an entry point from the pkg.json - first try svelte, then modules, then main
-                        // if (pkg.svelte || pkg.module || pkg.main) {
-                        //     // use the aobove url minus `/package.json` to resolve the URL
-                        //     const url = pkg_url.replace(/\/package\.json$/, "");
-                        //     return new URL(pkg.svelte || pkg.module || pkg.main, `${url}/`)
-                        //         .href;
-                        // }
-    
-                        // we probably missed stuff, pass it along as is
-                        return importee;
+                        if (importee.startsWith('http')) {
+                            return importee
+                        } else return `https://cdn.skypack.dev/${importee}`; // bare named module imports (importing an npm package)
+
                     },
                     async load(id: string) {
                         // local repl components are stored in memory
