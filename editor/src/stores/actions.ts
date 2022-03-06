@@ -119,7 +119,10 @@ export const symbols = {
   update: (toUpdate:Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
-      return symbols.map(s => s.id === toUpdate.id ? toUpdate : s)
+      return symbols.map(s => s.id === toUpdate.id ? ({
+        ...s,
+        ...toUpdate
+      }) : s)
     })
   },
   delete: (toDelete:Symbol): void => {
