@@ -181,7 +181,6 @@ ipcMain.on('get-machine-id', async (event) => {
   event.returnValue = machineID
 })
 ipcMain.on('get-telemetry', async (event) => {
-  console.log({telemetryEnabled})
   event.returnValue = telemetryEnabled
 })
 ipcMain.on('set-telemetry', async (event, arg) => {
