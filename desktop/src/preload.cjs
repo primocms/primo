@@ -31,6 +31,16 @@ contextBridge.exposeInMainWorld('primo', {
     getServerConfig: () => {
       const url = ipcRenderer.sendSync('get-server-config')
       return url
+    },
+    getMachineID: () => {
+      return ipcRenderer.sendSync('get-machine-id')
+    },
+    getTelemetry: () => {
+      return ipcRenderer.sendSync('get-telemetry')
+    },
+    setTelemetry: (enabled) => {
+      ipcRenderer.sendSync('set-telemetry', enabled)
+      return true
     }
   },
   data: {

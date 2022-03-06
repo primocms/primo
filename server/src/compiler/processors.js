@@ -12,9 +12,21 @@ const cssPromiseWorker = new PromiseWorker(PostCSSWorker);
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
 
+const componentsMap = new Map();
+
 export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   const finalRequest = buildFinalRequest(data)
+
+  let cacheKey
+  if (!buildStatic) {
+    cacheKey = JSON.stringify({
+      code, 
+      data: Object.keys(data),
+      format
+    })
+    if (componentsMap.has(cacheKey)) return componentsMap.get(cacheKey)
+  }
 
   let res
   try {
@@ -58,6 +70,10 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
   } 
 
+  if (!buildStatic) {
+    componentsMap.set(cacheKey, final)
+  }
+
   return final
 
   function buildFinalRequest(finalData) {
@@ -97,8 +113,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 }
 
 
-
-
+const cssMap = new Map()
 export async function css(raw) {
   const processed = await cssPromiseWorker.postMessage({
     css: raw
@@ -108,6 +123,8 @@ export async function css(raw) {
       error: processed.message
     }
   }
+  if (cssMap.has(raw)) return ({ css: cssMap.get(raw) })
+  cssMap.set(raw, processed)
   return {
     css: processed
   }

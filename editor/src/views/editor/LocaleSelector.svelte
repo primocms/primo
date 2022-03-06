@@ -1,4 +1,5 @@
 <script>
+  import {getContext} from 'svelte'
   import {fly} from 'svelte/transition'
   import {find as _find} from 'lodash-es'
   import { locale } from '../../stores/app/misc';
@@ -27,6 +28,8 @@
     addingLanguage = false
     searchText = ''
   }
+
+  const track = getContext('track')
 
 </script>
 
@@ -66,19 +69,13 @@
         <div class="locale-list">
           {#each filteredAvailableLocales as loc}
             <button on:click={() => {
+              track('ADD_LOCALITY')
               addLocale(loc.key)
               addingLanguage = false
             }} class="option" class:active={loc.key === $locale}>{loc.name} ({loc.key})</button>
           {/each}
         </div>
       </div>
-
-        <!-- <AutoComplete autofocus selectedItem={$locale} items={availableLocales} labelFieldName="name" onChange={({key}) => {
-          if (key) {
-            addLocale(key)
-            addingLanguage = false
-          }
-        }}/> -->
       {/if} 
     </div>
   {/if}

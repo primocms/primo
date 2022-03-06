@@ -5,7 +5,6 @@
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
-  import {consoleLogs,activeComponentData} from '../../stores/app/misc'
   const slowDebounce = createDebouncer(500);
 
   import { EditorView, keymap } from '@codemirror/view';
@@ -108,33 +107,6 @@
     ],
   });
 
-  $: getConsoleLogs(value, $activeComponentData)
-  function getConsoleLogs(code, data) {
-    if (mode !== 'javascript') return
-    let logs = []
-    try {
-      const fieldKeys = Object.keys(data)
-      const fieldValues = Object.values(data)
-      logs = new Function(fieldKeys, `
-        let consoleLogs = [];
-        const log = console.log.bind(console)
-        console.log = (...args) => {
-          consoleLogs = [ ...consoleLogs, ...args ]
-          log(...args)
-        }
-        ${code}
-        return consoleLogs
-      `)(...fieldValues)
-    } catch(e) {
-      logs = [
-        e.toString()
-      ]
-      console.warn(e)
-    }
-
-    $consoleLogs = logs
-  }
-
   let prettier;
   let html;
   let css;
@@ -173,10 +145,6 @@
       parent: editorNode,
     });
   });
-
-  onDestroy(() => {
-    $consoleLogs = []
-  })
 
   let editorNode;
 

@@ -174,6 +174,20 @@ let serverConfig = store.get('config.serverConfig') || {
   url: '',
   token: ''
 }
+let telemetryEnabled = store.get('config.telemetryEnabled') || true
+let machineID = require('node-machine-id').machineIdSync(true)
+
+ipcMain.on('get-machine-id', async (event) => {
+  event.returnValue = machineID
+})
+ipcMain.on('get-telemetry', async (event) => {
+  console.log({telemetryEnabled})
+  event.returnValue = telemetryEnabled
+})
+ipcMain.on('set-telemetry', async (event, arg) => {
+  store.set('config.telemetryEnabled', arg)
+  event.returnValue = true
+})
 
 // create sites directory if non-existant
 fs.ensureDirSync(savePath)

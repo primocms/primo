@@ -1,4 +1,3 @@
-import PromiseWorker from 'promise-worker';
 import {find as _find} from 'lodash-es'
 import {rollup} from "../lib/rollup-browser";
 import registerPromiseWorker from 'promise-worker/register'

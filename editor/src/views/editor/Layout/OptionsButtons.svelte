@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import modal from '../../../stores/app/modal'
   import {showingIDE, userRole} from '../../../stores/app/misc'
 
@@ -17,12 +17,16 @@
     element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
   }
 
+  const track = getContext('track')
 </script>
 
 <div class="buttons-container primo-reset" bind:this={element}>
   <div class="buttons" class:deletable>
     <button
-      on:click={() => dispatch('convert', 'content')}
+      on:click={() => {
+        track('ADD_TO_PAGE', { section: 'CONTENT' })
+        dispatch('convert', 'content')
+      }}
       on:click={() => dispatch('delete')}>
       <i class="fas fa-edit" />
       <span>Add Content</span>
@@ -34,6 +38,7 @@
             onselect: (component) => {
               modal.hide()
               dispatch('select', component)
+              track('ADD_TO_PAGE', { section: 'COMPONENT' })
             }
           }, {
             hideLocaleSelector: true

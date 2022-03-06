@@ -17,7 +17,7 @@
     processCSS,
     wrapInStyleTags,
   } from '../../../utils';
-  import { locale, activeComponentData } from '../../../stores/app/misc';
+  import { locale } from '../../../stores/app/misc';
 
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
@@ -52,7 +52,6 @@
     ...getSymbolPlaceholders(fields),
     ...(localContent[$locale])
   }
-  $: $activeComponentData = data
 
   function getSymbolPlaceholders(fields) {
     return _chain(fields).keyBy('key').mapValues(f => getPlaceholderValue(f)).value()

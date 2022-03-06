@@ -102,10 +102,10 @@ export const sites = {
     // return !!data.id
   },
   publish: async ({ siteID, host, files }) => {
-    // console.log(supabase.auth.session())
     const session = supabase.auth.session()
+    const password = get(sitePassword)
 
-    const {data} = await axios.post(`/api/${siteID}.json?password=${get(sitePassword)}`, {
+    const {data} = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
       action: 'PUBLISH',
       payload: {
         siteID,

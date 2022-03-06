@@ -15,6 +15,3 @@ export const loadingSite = writable(true)
 export const onMobile = writable(false)
 
 export const locale = writable('en')
-
-export const consoleLogs = writable([])
-export const activeComponentData = writable({})

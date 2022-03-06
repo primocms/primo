@@ -1,4 +1,5 @@
 <script>
+  import {setContext} from 'svelte'
   import '$lib/assets/reset.css'
   import { browser } from '$app/env'
   import { goto } from '$app/navigation'
@@ -23,6 +24,7 @@
         component: SiteButtons,
       },
     ])
+    setContext('track', () => {})
   }
 
   watchForAutoLogin(async (event, session) => {

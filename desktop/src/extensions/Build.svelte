@@ -2,6 +2,7 @@
   import axios from 'axios'
   import { flattenDeep, uniqBy, find } from 'lodash-es'
   import JSZip from 'jszip'
+  import {getContext} from 'svelte'
   import { saveAs } from 'file-saver'
   import beautify from 'js-beautify'
   import { format } from 'timeago.js'
@@ -15,6 +16,7 @@
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
   import { addDeploymentToSite } from '$lib/actions'
+  const track = getContext('track')
 
   const siteID = $page.params.site
   const activeDeployment = find($sites, ['id', siteID])?.activeDeployment
@@ -34,6 +36,7 @@
     loading = true
     const toDownload = await createSiteZip()
     saveAs(toDownload, `${siteID}.zip`)
+    track('DOWNLOAD_SITE')
     modal.hide()
   }
 
@@ -146,6 +149,7 @@
       })
     )
 
+    track('PUBLISH_SITE')
     loading = false
 
     pages = []
@@ -257,7 +261,7 @@
   let pages = []
 </script>
 
-<ModalHeader icon="fas fa-globe" title="Publish" variants="mb-4" />
+<ModalHeader icon="fas fa-globe" title="Publish" />
 
 <main class="primo-reset">
   <div class="publish">

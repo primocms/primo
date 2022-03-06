@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {createEventDispatcher} from 'svelte'
+  import {createEventDispatcher,getContext} from 'svelte'
   const dispatch = createEventDispatcher()
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
@@ -9,6 +9,7 @@
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
   import { createUniqueID } from '../../utilities';
+  const track = getContext('track')
 
   import { Page } from '../../const';
   import type { Page as PageType } from '../../const'
@@ -33,6 +34,7 @@
     pageName = '';
     pageURL = '';
     shouldDuplicatePage = true;
+    track('CREATE_PAGE')
   }
 
   async function deletePage(pageId) {
