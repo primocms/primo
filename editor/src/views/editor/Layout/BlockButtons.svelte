@@ -8,20 +8,20 @@
   import { fade } from 'svelte/transition';
   import { sections } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
+  import { modKeyDown } from '../../../stores/app/misc';
 
-  let modKeydown = false;
   onMount(() => {
     Mousetrap.bind(
       'mod',
       () => {
-        modKeydown = true;
+        $modKeyDown = true;
       },
       'keydown'
     );
     Mousetrap.bind(
       'mod',
       () => {
-        modKeydown = false;
+        $modKeyDown = false;
       },
       'keyup'
     );
@@ -60,7 +60,7 @@
     <div class="component-button">
       {#if editable}
         <button on:click={() => dispatch('edit')} class="button-span">
-          {#if modKeydown}
+          {#if $modKeyDown}
             <span>&#8984; E</span>
           {:else}
             {#if $showingIDE}

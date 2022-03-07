@@ -1,16 +1,24 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
+  import * as Mousetrap from 'mousetrap';
 
   import HSplitPane from './HSplitPane.svelte';
   import { CodeMirror } from '../../../components';
-  import { onMobile } from '../../../stores/app/misc';
+  import { onMobile, modKeyDown } from '../../../stores/app/misc';
+  import {browser} from '$app/env'
 
   export let variants = '';
 
   export let html = '';
   export let css = '';
   export let js = '';
+
+  if (browser) {
+    Mousetrap.bind(['mod+1'], () => toggleTab(0))
+    Mousetrap.bind(['mod+2'], () => toggleTab(1))
+    Mousetrap.bind(['mod+3'], () => toggleTab(2))
+  }
   
   let activeTab = 0;
   const activeTabs = {
@@ -82,13 +90,19 @@
     <div class="tabs">
       <ul xyz="fade stagger delay-2">
         <li class="xyz-in" class:is-active={activeTab === 0}>
-          <button on:click={() => (activeTab = 0)}> <span>HTML</span> </button>
+          <button on:click={() => (activeTab = 0)}> 
+            <span>HTML</span>
+          </button>
         </li>
         <li class="xyz-in" class:is-active={activeTab === 1}>
-          <button on:click={() => (activeTab = 1)}> <span>CSS</span> </button>
+          <button on:click={() => (activeTab = 1)}>
+            <span>CSS</span>
+          </button>
         </li>
         <li class="xyz-in" class:is-active={activeTab === 2}>
-          <button on:click={() => (activeTab = 2)}> <span>JS</span> </button>
+          <button on:click={() => (activeTab = 2)}>
+            <span>JS</span>
+          </button>
         </li>
       </ul>
     </div>
@@ -97,12 +111,12 @@
         mode="html"
         bind:value={html}
         bind:selection={selections['html']}
-        on:tab-switch={({ detail }) => (activeTab = detail)}
+        on:tab-switch={() => toggleTab(0)}
         on:change={() => dispatch('htmlChange')}
         on:save={() => dispatch('save')} />
     {:else if activeTab === 1}
       <CodeMirror
-        on:tab-switch={({ detail }) => (activeTab = detail)}
+        on:tab-switch={() => toggleTab(1)}
         bind:selection={selections['css']}
         bind:value={css}
         mode="css"
@@ -110,11 +124,11 @@
         on:save={() => dispatch('save')} />
     {:else}
       <CodeMirror
-        on:tab-switch={({ detail }) => (activeTab = detail)}
+        on:tab-switch={() => toggleTab(2)}
         bind:selection={selections['js']}
         bind:value={js}
         mode="javascript"
-        on:change={({ detail }) => dispatch('jsChange')}
+        on:change={() => dispatch('jsChange')}
         on:save={() => dispatch('save')} />
     {/if}
   </div>
@@ -129,7 +143,11 @@
       <button
         class:tab-hidden={leftPaneSize === '0'}
         on:click={() => toggleTab(0)}>
-        <span>HTML</span>
+        {#if $modKeyDown}
+          <span>&#8984; 1</span>
+        {:else}
+          <span>HTML</span>
+        {/if}
       </button>
       <CodeMirror
         mode="html"
@@ -143,7 +161,11 @@
       <button
         class:tab-hidden={centerPaneSize === '0'}
         on:click={() => toggleTab(1)}>
-        <span>CSS</span>
+        {#if $modKeyDown}
+          <span>&#8984; 2</span>
+        {:else}
+          <span>CSS</span>
+        {/if}
       </button>
       <CodeMirror
         on:tab-switch={({ detail }) => toggleTab(detail)}
@@ -157,7 +179,11 @@
       <button
         class:tab-hidden={rightPaneSize === '0'}
         on:click={() => toggleTab(2)}>
-        <span>JS</span>
+        {#if $modKeyDown}
+          <span>&#8984; 3</span>
+        {:else}
+          <span>JS</span>
+        {/if}
       </button>
       <CodeMirror
         on:tab-switch={({ detail }) => toggleTab(detail)}
