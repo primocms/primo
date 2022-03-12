@@ -264,7 +264,8 @@ export function convertFields(fields = [], fn:Function = () => {}): Array<Field>
       key: field.key,
       label: field.label,
       type: field.type,
-      fields: convertFields(field.fields)
+      fields: convertFields(field.fields),
+      options: {}
     }
   })
 }

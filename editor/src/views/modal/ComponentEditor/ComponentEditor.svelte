@@ -395,7 +395,8 @@
         key: field.key,
         label: field.label,
         type: field.type,
-        fields: field.fields
+        fields: field.fields,
+        options: field.options || {}
       }))
     })
 

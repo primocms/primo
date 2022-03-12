@@ -6,6 +6,8 @@
   import fieldTypes from '../../../stores/app/fieldTypes';
   import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
   import GroupField from '../../../components/FieldTypes/GroupField.svelte';
+  import CustomField from '../CustomFieldDevType.svelte'
+  import SelectField from '../../../components/FieldTypes/SelectField.svelte'
 
   export let field
   export let isFirst
@@ -78,6 +80,9 @@
     level={level+1}
   />
 {/each}
+{#if field.type === 'select'}
+  <SelectField {field} {level} />
+{/if}
 {#if field.type === 'repeater' || field.type === 'group'}
   <button
     style="margin-left: {1.5 + level}rem"
@@ -102,7 +107,7 @@
   }
   .field-button {
     width: 100%;
-    background: var(--color-gray-8);
+    background: var(--color-gray-7);
     color: var(--color-gray-3);
     padding: 8px 0;
     border-bottom-right-radius: var(--border-radius);
@@ -121,6 +126,7 @@
     border-radius: 2px;
     margin-left: 1.5rem;
     margin-top: 8px;
+    margin-bottom: 8px;
     font-size: var(--font-size-2);
     background: var(--primo-color-codeblack);
     color: var(--color-gray-2);
@@ -135,7 +141,7 @@
   }
 
   input {
-    background: var(--color-gray-7);
+    background: var(--color-gray-8);
     color: var(--color-gray-2);
     padding: 4px;
     border-radius: 2px;

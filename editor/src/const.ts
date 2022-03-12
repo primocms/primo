@@ -161,7 +161,8 @@ export type Field = {
   key: string,
   label: string,
   type: string,
-  fields: any[]
+  fields: any[],
+  options: object
 }
 
 export const Field = (f = {}): Field => ({
@@ -170,6 +171,7 @@ export const Field = (f = {}): Field => ({
   label: '',
   type: 'text',
   fields: [],
+  options: {},
   ...f
 })
 

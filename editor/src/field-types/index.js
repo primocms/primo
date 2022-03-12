@@ -4,6 +4,7 @@ import Switch from './Switch.svelte'
 import URL from './URL.svelte'
 import Link from './Link.svelte'
 import Information from './Information.svelte'
+import Select from './Select.svelte'
 
 export default [
   {
@@ -30,6 +31,11 @@ export default [
     id: 'link',
     label: 'Link',
     component: Link
+  },
+  {
+    id: 'select',
+    label: 'Select',
+    component: Select
   },
   {
     id: 'info',
