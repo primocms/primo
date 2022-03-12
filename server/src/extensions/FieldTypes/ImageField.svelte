@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import { uploadSiteImage } from '../../supabase/storage'
+  import imageCompression from 'browser-image-compression'
+  import {sites} from '../../actions'
   const dispatch = createEventDispatcher()
   import Spinner from '$lib/ui/Spinner.svelte'
   import { page } from '$app/stores'
@@ -35,14 +36,19 @@
     loading = true
     const { files } = target
     if (files.length > 0) {
-      const file = files[0]
+      const image = files[0]
 
-      let size = new Blob([file]).size
-
-      const url = await uploadSiteImage({
-        id: siteID,
-        file,
+      const compressed = await imageCompression(image, {
+        maxSizeMB: 0.5,
       })
+      let size = new Blob([compressed]).size
+
+      let dataUri = await convertBlobToBase64(compressed)
+      const base64 = dataUri.replace(/data:.+?,/, "");
+      const url = await sites.uploadImage({ siteID, image: {
+        name: image.name,
+        base64
+      } })
 
       imagePreview = url
 
@@ -54,6 +60,14 @@
       loading = false
       dispatch('input')
     }
+  }
+
+  async function convertBlobToBase64(blob) {
+    return new Promise((resolve, _) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.readAsDataURL(blob)
+    })
   }
 
   let imagePreview = field.value.url || ''

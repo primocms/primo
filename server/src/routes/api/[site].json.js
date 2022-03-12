@@ -1,6 +1,7 @@
 import supabaseAdmin, {saveSite} from '../../supabase/admin'
 import { authorizeRequest } from './_auth'
 import {publishSite} from './_utils'
+import {decode} from 'base64-arraybuffer'
 
 export async function get(event) {
   return await authorizeRequest(event, async () => {
@@ -16,6 +17,7 @@ export async function get(event) {
 
 export async function post(event) {
   return await authorizeRequest(event, async () => {
+
     const {action, payload} = await event.request.json()
 
     if (action === 'SET_ACTIVE_EDITOR') {
@@ -31,7 +33,24 @@ export async function post(event) {
       return {
         body: 'true'
       }
-    } else if (action === 'SAVE_SITE') {
+    } else if (action === 'UPLOAD_IMAGE') {
+      const { siteID, image } = payload
+      await supabaseAdmin
+        .storage
+        .from('sites')
+        .upload(`${siteID}/assets/${image.name}`, decode(image.base64), {
+          contentType: 'image/png'
+        })
+  
+      const { publicURL } = await supabaseAdmin
+        .storage
+        .from('sites')
+        .getPublicUrl(`${siteID}/assets/${image.name}`)
+
+      return {
+        body: publicURL
+      }
+    }  else if (action === 'SAVE_SITE') {
       const res = await saveSite(payload)
       return {
         body:  res ? 'true' : 'false'

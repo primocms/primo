@@ -118,6 +118,25 @@ export const sites = {
       }
     })
     return data?.deployment
+  },
+  uploadImage: async ({ siteID, image }) => {
+    console.log({siteID, image})
+    const session = supabase.auth.session()
+    const password = get(sitePassword)
+    
+    const {data:url} = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
+      action: 'UPLOAD_IMAGE',
+      payload: {
+        siteID,
+        image
+      }
+    }, {
+      headers: {
+        authorization: `Bearer ${session?.access_token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return url
   }
 }
 
