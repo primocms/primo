@@ -1,4 +1,5 @@
 <script>
+	import { setContext } from 'svelte';
 	import '../reset.css';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
@@ -44,6 +45,7 @@
 		import('../compiler/processors').then(({ html, css }) => {
 			registerProcessors({ html, css });
 		});
+		setContext('track', () => {});
 	}
 
 	let data;
