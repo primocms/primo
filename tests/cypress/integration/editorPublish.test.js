@@ -7,7 +7,7 @@ describe('Publish from Editor', () => {
     it('Add component', () => {
         cy.get('span').contains('Add Component').click()
         cy.get ("button").contains("Primo Library").click();
-        cy.get ("div#component-xpflp").click();
+        cy.get ("div#component-zjuqm").click();
         cy.get ("div.buttons").get(`[aria-label="Close modal"]`).click();
     });
     

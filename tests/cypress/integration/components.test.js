@@ -6,8 +6,8 @@ describe('Component Library', () => {
     it('Adds a new Site Library component from the Primo Library', () => {
         cy.get('.primo-section .buttons button:last-child').click();
         cy.get("button").contains("Primo Library").click();
-        cy.get("#component-xpflp button").click({ force: true }); // component loading hides button
-        cy.get('button#site-library').click()
+        cy.get("#component-zjuqm button").click({ force: true }); // component loading hides button
+        cy.get('header button').contains('Site Library').click()
         cy.get(".component-wrapper")
     });
 
