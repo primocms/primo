@@ -129,14 +129,14 @@
 
   $: $locale, setupFields()
   function setupFields() {
-    localPageFields = getFieldValues(localPageFields)
-    localSiteFields = getFieldValues(localSiteFields)
+    localPageFields = getFieldValues(localPageFields, 'page')
+    localSiteFields = getFieldValues(localSiteFields, 'site')
   }
 
-  function getFieldValues(fields) {
+  function getFieldValues(fields, context) {
     return fields.map(field => ({
       ...field,
-      value: (localContent[$locale][field.key] || getEmptyValue(field))
+      value: (context === 'site' ? localContent[$locale][field.key] : localContent[$locale][$pageID][field.key]) || getEmptyValue(field)
     }))
   }
 
@@ -381,7 +381,7 @@
         </Card>
       {/each}
     {:else}
-      {#each localSiteFields as field (field.id)}
+      {#each localSiteFields as field, i (field.id)}
         <Card>
           <EditField
             minimal={field.type === 'info'}
