@@ -111,7 +111,7 @@ export function getPlaceholderValue(field:Field) {
   }
 
   function getRepeaterValue(subfields) {
-    return Array.from(Array(3)).map(_ => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
+    return Array.from(Array(2)).map(_ => _chain(subfields).map(s => ({ ...s, value: getPlaceholderValue(s) })).keyBy('key').mapValues('value').value())
   }
 
   function getGroupValue(field) {

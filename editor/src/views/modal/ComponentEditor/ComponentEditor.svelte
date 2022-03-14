@@ -43,9 +43,20 @@
     },
   };
 
+  let placeholders = new Map()
+  function getCachedPlaceholder(field) {
+    if (placeholders.has(field.id)) {
+      return placeholders.get(field.id)
+    } else {
+      const val = getPlaceholderValue(field)
+      placeholders.set(field.id, val)
+      return val
+    }
+  }
+
   let localComponent:SymbolType = cloneDeep(component) // local copy of component to modify & save 
   let localContent = component.type === 'symbol' ? {} : getComponentContent($content) // local copy of component content to modify & save
-  
+
   // component data w/ page/site data included (for compilation)
   $: data = {
     ...getPageData({ loc: $locale }),
@@ -54,7 +65,7 @@
   }
 
   function getSymbolPlaceholders(fields) {
-    return _chain(fields).keyBy('key').mapValues(f => f.default || getPlaceholderValue(f)).value()
+    return _chain(fields).keyBy('key').mapValues(f => f.default || getCachedPlaceholder(f)).value()
   }
 
   // parse component-specific content out of site content tree (keeping separate locales)
@@ -62,7 +73,7 @@
     return _chain(Object.entries(siteContent)) 
       .map(([locale]) => ({
         locale,
-        content: $content[locale][$pageID][localComponent.id] || {}
+        content: $content[locale][$pageID][localComponent.id] || getSymbolPlaceholders(localComponent.fields)
       }))
       .keyBy('locale')
       .mapValues('content')
@@ -78,7 +89,7 @@
   function getFieldValues(fields:Array<FieldType>, loc:string): Array<any> {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? getPlaceholderValue(field) : (localContent[loc]?.[field.key] || getEmptyValue(field))
+      value: component.type === 'symbol' ? getCachedPlaceholder(field) : (localContent[loc]?.[field.key] || getCachedPlaceholder(field))
     }))
   }
 
@@ -101,7 +112,7 @@
 
   function syncFieldKeys(fields) {
     removeNonexistantKeys() // delete keys from content that do not appear in fields
-    addMissingKeys() // add keys that do
+    addMissingKeys() // add keys that do appear in fields
 
     function addMissingKeys() {
       let updatedContent = cloneDeep(localContent)
@@ -192,7 +203,7 @@
   $: fields = fields.map(field => {
     if (component.type === 'symbol' && field.type === 'link' && !field.value?.url) return {
       ...field,
-      value: getPlaceholderValue(field) 
+      value: getCachedPlaceholder(field) 
     }
     else return field 
   })

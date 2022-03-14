@@ -47,6 +47,7 @@
     font-weight: 500;
 
     span {
+      font-size: var(--font-size-2);
       margin-bottom: 0.5rem;
     }
 

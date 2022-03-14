@@ -104,7 +104,7 @@
     flex-direction: column;
 
     span {
-      font-size: var(--font-size-1);
+      font-size: var(--font-size-2);
       font-weight: 600;
     }
 

@@ -4,6 +4,7 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
+  import { getPlaceholderValue } from '../../utils';
   import { createUniqueID } from '../../utilities';
   import { Card } from '../misc';
   import fieldTypes from '../../stores/app/fieldTypes';
@@ -60,7 +61,7 @@
     return field.fields.map((subfield) => ({
       ...subfield,
       id: createUniqueID(),
-      value: subfield.default || '',
+      value: getPlaceholderValue(subfield),
     }));
   }
 
