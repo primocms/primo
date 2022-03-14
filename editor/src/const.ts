@@ -162,7 +162,8 @@ export type Field = {
   label: string,
   type: string,
   fields: any[],
-  options: object
+  options: object,
+  default: any
 }
 
 export const Field = (f = {}): Field => ({
@@ -172,6 +173,7 @@ export const Field = (f = {}): Field => ({
   type: 'text',
   fields: [],
   options: {},
+  default: '',
   ...f
 })
 

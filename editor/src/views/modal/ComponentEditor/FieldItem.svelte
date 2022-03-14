@@ -40,6 +40,7 @@
   {isFirst}
   {isLast}
   minimal={field.type === 'info'}
+  showDefaultValue={['content', 'number', 'url', 'select', 'text'].includes(field.type)}
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
@@ -67,6 +68,15 @@
     field.key = validateFieldKey(field.key)
   }}
   slot="key" />
+  <input
+  class="input key-input"
+  type="text"
+  placeholder="Lorem ipsum"
+  bind:value={field.default}
+  on:input={() => {
+    dispatch('input')
+  }}
+  slot="default-value" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
@@ -147,6 +157,10 @@
     border-radius: 2px;
     border: 0;
     padding: 0.5rem;
+
+    &::placeholder {
+      color: var(--color-gray-7);
+    }
   }
   input:focus {
     outline: 0;

@@ -89,6 +89,7 @@ export function hydrateFieldsWithPlaceholders(fields) {
 }
 
 export function getPlaceholderValue(field:Field) {
+  if (field.default) return field.default
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
   else if (field.type === 'group') return getGroupValue(field)
   else if (field.type === 'image') return {
@@ -126,6 +127,7 @@ export function hydrateFieldsWithEmptyValues(fields:Array<Field>) {
 }
 
 export function getEmptyValue(field:Field) {
+  if (field.default) return field.default
   if (field.type === 'repeater') return []
   else if (field.type === 'group') return getGroupValue(field)
   else if (field.type === 'image') return {
@@ -158,7 +160,7 @@ export function validateSiteStructure(site): Site {
   let validated
   try {
     if (defined_structure(site, ['html'])) validated = convertSite(site) 
-    else if (defined_structure(site, ['content'])) validated = site
+    else if (defined_structure(site, ['content'])) validated = updateSite(site)
     else validated = null
   } catch(e) {
     console.warn('Site is invalid')
@@ -166,6 +168,17 @@ export function validateSiteStructure(site): Site {
   }
 
   return validated
+
+  function updateSite(site) {
+    return {
+      ...site,
+      fields: convertFields(site.fields),
+      symbols: site.symbols.map(symbol => ({
+        ...symbol,
+        fields: convertFields(symbol.fields)
+      }))
+    }
+  }
 
   function convertSite(site) {
 
@@ -265,7 +278,8 @@ export function convertFields(fields = [], fn:Function = () => {}): Array<Field>
       label: field.label,
       type: field.type,
       fields: convertFields(field.fields),
-      options: {}
+      options: field.options || {},
+      default: field.default || ''
     }
   })
 }

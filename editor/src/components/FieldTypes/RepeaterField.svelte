@@ -60,7 +60,7 @@
     return field.fields.map((subfield) => ({
       ...subfield,
       id: createUniqueID(),
-      value: '',
+      value: subfield.default || '',
     }));
   }
 

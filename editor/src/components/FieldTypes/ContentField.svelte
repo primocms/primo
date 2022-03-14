@@ -11,13 +11,17 @@
   export let title = null;
   export let variants = '';
 
+  function selectAll({target}) {
+    if (field.default === field.value) target.select()
+  }
+
 </script>
 
 
 {#if value}
   <label class={variants}>
     <span>{field.label}</span>
-    <input class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
+    <input on:focus={selectAll} class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
       onChange()
       dispatch('input', detail)
     }} />
@@ -30,6 +34,7 @@
     {title}
     {disabled}
     type="text"
+    on:focus={selectAll}
     bind:value={field.value}
     on:input />
   </label>

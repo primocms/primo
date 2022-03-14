@@ -54,7 +54,7 @@
   }
 
   function getSymbolPlaceholders(fields) {
-    return _chain(fields).keyBy('key').mapValues(f => getPlaceholderValue(f)).value()
+    return _chain(fields).keyBy('key').mapValues(f => f.default || getPlaceholderValue(f)).value()
   }
 
   // parse component-specific content out of site content tree (keeping separate locales)
@@ -390,14 +390,10 @@
     const ExtractedComponent = (component) => ({
       ...component,
       content: localContent,
-      fields: fields.map(field => ({
-        id: field.id,
-        key: field.key,
-        label: field.label,
-        type: field.type,
-        fields: field.fields,
-        options: field.options || {}
-      }))
+      fields: fields.map(field => {
+        delete field.value
+        return field
+      })
     })
 
     if (!disableSave) {

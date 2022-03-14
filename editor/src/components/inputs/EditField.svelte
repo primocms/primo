@@ -8,6 +8,7 @@
   export let isFirst = false;
   export let isLast = false;
   export let minimal = false;
+  export let showDefaultValue = true
 
   const dispatch = createEventDispatcher();
 
@@ -21,6 +22,7 @@
   style="margin-left: {level}rem"
   class="field-container"
   in:fade={{ duration: 100 }}
+  class:three-columns={showDefaultValue}
   class:child
   class:minimal>
   <div class="type">
@@ -41,6 +43,14 @@
         <slot name="key" />
       </label>
     </div>
+    {#if showDefaultValue}
+    <div class="field">
+      <label>
+        <span>Default Value</span>
+        <slot name="default-value" />
+      </label>
+    </div>
+    {/if}
   {/if}
   <div class="option-buttons">
     <button disabled={isFirst} title="Move up" on:click={() => moveItem('up')}>
@@ -64,6 +74,10 @@
     grid-template-columns: auto 1fr 1fr auto;
     padding: 0.5rem;
     gap: 1rem;
+
+    &.three-columns {
+      grid-template-columns: auto 1fr 1fr 1fr auto;
+    }
 
     &.child {
       margin-left: 1rem;

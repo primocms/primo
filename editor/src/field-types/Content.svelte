@@ -23,12 +23,17 @@
     autosize(element);
   }
 
+  function selectAll({target}) {
+    if (field.default === field.value) target.select()
+  }
+
 </script>
 
 <label for={field.id}>
   <span>{field.label}</span>
   <textarea
     id={field.id}
+    on:focus={selectAll}
     bind:this={element}
     bind:value={markdown}
     on:input={parseContent} />
