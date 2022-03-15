@@ -1,6 +1,6 @@
 {
   "name": "primo-server",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "scripts": {
     "dev": "svelte-kit dev",
     "build": "svelte-kit build",
