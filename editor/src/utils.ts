@@ -95,7 +95,7 @@ export function getPlaceholderValue(field:Field) {
   else if (field.type === 'image') return {
     url: 'https://picsum.photos/600/400?blur=10',
     src: 'https://picsum.photos/600/400?blur=10',
-    alt: 'Placeholder image',
+    alt: '',
     size: null
   }
   else if (field.type === 'text') return _capitalize(lorem.generateWords(3))
