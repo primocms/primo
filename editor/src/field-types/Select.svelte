@@ -45,6 +45,10 @@
         background: transparent;
         border-radius: var(--primo-border-radius);
         padding: 0.25rem 0.5rem;
+
+        &:focus {
+          outline: 1px solid var(--primo-color-primored);
+        }
       }
     }
   }

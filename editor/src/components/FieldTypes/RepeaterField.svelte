@@ -1,5 +1,5 @@
 <script>
-  import { find as _find } from 'lodash-es'
+  import { find as _find, chain as _chain, cloneDeep as _cloneDeep } from 'lodash-es'
   import pluralize from '../../libraries/pluralize';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
@@ -28,26 +28,26 @@
   ];
 
   function addRepeaterItem() {
-    fieldValues = [...fieldValues, createSubfield()];
+    repeaterFieldValues = [...repeaterFieldValues, createSubfield()];
     onInput();
   }
 
   function removeRepeaterItem(itemIndex) {
-    fieldValues = fieldValues.filter((_, i) => i !== itemIndex);
+    repeaterFieldValues = repeaterFieldValues.filter((_, i) => i !== itemIndex);
     onInput();
   }
 
   function moveRepeaterItem(indexOfItem, direction) {
-    const item = fieldValues[indexOfItem];
-    const withoutItem = fieldValues.filter((_, i) => i !== indexOfItem);
+    const item = repeaterFieldValues[indexOfItem];
+    const withoutItem = repeaterFieldValues.filter((_, i) => i !== indexOfItem);
     if (direction === 'up') {
-      fieldValues = [
+      repeaterFieldValues = [
         ...withoutItem.slice(0, indexOfItem - 1),
         item,
         ...withoutItem.slice(indexOfItem - 1),
       ];
     } else if (direction === 'down') {
-      fieldValues = [
+      repeaterFieldValues = [
         ...withoutItem.slice(0, indexOfItem + 1),
         item,
         ...withoutItem.slice(indexOfItem + 1),
@@ -65,24 +65,24 @@
     }));
   }
 
-  let fieldValues = Array.isArray(field.value)
+  let repeaterFieldValues = Array.isArray(field.value)
     ? field.value.map((value) => field.fields.map((subfield) => ({
         ...subfield,
+        fields: _cloneDeep(subfield.fields.map(sub => ({
+          ...sub,
+          value: value[subfield.key]?.[sub.key]
+        }))),
         value: value[subfield.key]
       })))
     : [];
 
   function onInput() {
-    field.value = fieldValues.map((fieldValue) =>
-      fieldValue.reduce(
-        (obj, item) => Object.assign(obj, { [item.key]: item.value }),
-        {}
-      )
-    );
+    field.value = repeaterFieldValues.map((items, i) => {
+      const foo = _chain(items).keyBy("key").mapValues('value');
     dispatch('input');
   }
 
-  $: fieldValues = fieldValues.map(f => {
+  $: repeaterFieldValues = repeaterFieldValues.map(f => {
     f._key = createUniqueID()
     return f
   })
@@ -92,7 +92,7 @@
 <Card id="repeater-{field.key}">
   <header>{field.label}</header>
   <div class="fields">
-    {#each fieldValues as fieldValue, i (fieldValue._key)}
+    {#each repeaterFieldValues as fieldValue, i (fieldValue._key)}
       <div
         class="repeater-item"
         id="repeater-{field.key}-{i}">
@@ -104,7 +104,7 @@
               <i class="fas fa-arrow-up" />
             </button>
           {/if}
-          {#if i !== fieldValues.length - 1}
+          {#if i !== repeaterFieldValues.length - 1}
             <button
               title="Move {field.label} down"
               on:click={() => moveRepeaterItem(i, 'down')}>
@@ -117,7 +117,7 @@
             <i class="fas fa-trash" />
           </button>
         </div>
-        {#each fieldValue as subfield}
+        {#each fieldValue as subfield (fieldValue._key + subfield.key)}
           <div
             class="repeater-item-field"
             id="repeater-{field.key}-{i}-{subfield.key}">
@@ -150,7 +150,7 @@
 
   .fields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* grid-template-columns: 1fr 1fr; */
     gap: 1rem;
     grid-row-gap: 2rem;
   }
