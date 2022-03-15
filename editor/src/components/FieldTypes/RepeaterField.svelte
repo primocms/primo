@@ -77,8 +77,7 @@
     : [];
 
   function onInput() {
-    field.value = repeaterFieldValues.map((items, i) => {
-      const foo = _chain(items).keyBy("key").mapValues('value');
+    field.value = repeaterFieldValues.map((items, i) => _chain(items).keyBy("key").mapValues('value').value());
     dispatch('input');
   }
 
