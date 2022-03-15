@@ -30,6 +30,10 @@
       console.error('Direction must be up or down');
     }
   }
+
+  function removeOption(itemIndex) {
+    field.options.options = field.options.options.filter((_, i) => i !== itemIndex);
+  }
 </script>
 
 <div class="main" style="margin-left: {1.5 + level}rem">
