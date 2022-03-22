@@ -157,10 +157,9 @@
     border-radius: 2px;
     border: 0;
     padding: 0.5rem;
-
-    &::placeholder {
-      color: var(--color-gray-7);
-    }
+  }
+  input::placeholder {
+    color: var(--color-gray-7);
   }
   input:focus {
     outline: 0;
