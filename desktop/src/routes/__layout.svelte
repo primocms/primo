@@ -98,9 +98,32 @@
   }
 
   .primo-reset {
-  @tailwind base;
-  font-family: 'Satoshi', sans-serif !important;
-  direction: ltr;
+    @tailwind base;
+    font-family: 'Satoshi', sans-serif !important;
+    direction: ltr;
+
+    .primo-modal {
+    color: var(--color-gray-1);
+    background: var(--color-gray-9);
+    padding: 2rem;
+    border-radius: var(--primo-border-radius);
+    margin: 0 auto;
+    width: 100vw;
+  }
+
+  .primo-heading-xl {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+  }
+
+  .primo-heading-lg {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    line-height: 1.5rem;
+    font-weight: 700;
+  }
 }
 
 body {
@@ -177,29 +200,6 @@ width: 100%;
 &:placeholder {
   color: var(--color-gray-5);
 } */
-}
-
-.primo-modal {
-color: var(--color-gray-1);
-background: var(--color-gray-9);
-padding: 2rem;
-border-radius: var(--primo-border-radius);
-margin: 0 auto;
-width: 100vw;
-}
-
-.primo-heading-xl {
-margin-bottom: 0.5rem;
-font-size: 1.25rem;
-line-height: 1.75rem;
-font-weight: 700;
-}
-
-.primo-heading-lg {
-margin-bottom: 0.25rem;
-font-size: 1.1rem;
-line-height: 1.5rem;
-font-weight: 700;
 }
 
 .sr-only {

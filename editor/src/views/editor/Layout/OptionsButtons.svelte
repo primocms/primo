@@ -70,7 +70,7 @@
     border-bottom: 1px solid var(--primo-color-codeblack);
 
     .buttons {
-      padding: 0.5rem var(--padding, 1rem);
+      padding: 0.5rem 1rem;
       margin: 0 auto;
       display: flex;
       flex: 1;

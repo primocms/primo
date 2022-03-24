@@ -126,7 +126,7 @@ class:mounted>
       display: flex;
       align-items: center;
       height: 100%;
-      padding: 0.5rem var(--padding, 1rem);
+      padding: 0.5rem 1rem;
       
       span {
         margin-left: 0.25rem;
@@ -253,7 +253,7 @@ class:mounted>
   .menu-container {
     display: flex;
     margin: 0 auto;
-    padding: 0.5rem var(--padding, 1rem);
+    padding: 0.5rem 1rem;
 
     .toolbar-link {
       margin: 0 0.5rem;

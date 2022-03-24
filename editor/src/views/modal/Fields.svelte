@@ -255,6 +255,7 @@
       {#each localPageFields as field, i (field.id)}
         <Card>
           <EditField
+            showDefaultValue={false}
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
             on:move={({ detail: direction }) => {
@@ -290,6 +291,7 @@
             {#if field.fields}
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
+                  showDefaultValue={false}
                   fieldTypes={fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
@@ -324,6 +326,7 @@
             {#if field.fields}
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
+                  showDefaultValue={false}
                   fieldTypes={fieldTypes}
                   child={true}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
@@ -362,6 +365,7 @@
       {#each localSiteFields as field, i (field.id)}
         <Card>
           <EditField
+            showDefaultValue={false}
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
             on:move={({ detail: direction }) => {
@@ -396,6 +400,7 @@
             {#if field.fields}
               {#each field.fields as subfield}
                 <EditField
+                  showDefaultValue={false}
                   child={true}
                   fieldTypes={fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
@@ -430,6 +435,7 @@
             {#if field.fields}
               {#each field.fields as subfield}
                 <EditField
+                  showDefaultValue={false}
                   fieldTypes={fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
