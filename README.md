@@ -1,5 +1,8 @@
 # Primo
 
+<img width="1440" alt="image" src="https://user-images.githubusercontent.com/39444813/159909586-8ea31e64-cbd0-4421-8e19-9d2868d71427.png">
+
+
 Primo is an all-in-one static site builder, combining a:
 * Content Mangement System
 * Development Environment
