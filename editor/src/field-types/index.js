@@ -5,8 +5,26 @@ import URL from './URL.svelte'
 import Link from './Link.svelte'
 import Information from './Information.svelte'
 import Select from './Select.svelte'
+import RepeaterField from './RepeaterField.svelte'
+import GroupField from './GroupField.svelte'
+import ContentField from './ContentField.svelte'
 
 export default [
+  {
+    id: 'repeater',
+    label: 'Repeater',
+    component: RepeaterField
+  },
+  {
+    id: 'group',
+    label: 'Group',
+    component: GroupField
+  },
+  {
+    id: 'text',
+    label: 'Text',
+    component: ContentField
+  },
   {
     id: 'content',
     label: 'Markdown',

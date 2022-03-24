@@ -1,31 +1,15 @@
 <script>
   import { find as _find, chain as _chain, cloneDeep as _cloneDeep } from 'lodash-es'
-  import pluralize from '../../libraries/pluralize';
+  import pluralize from '../libraries/pluralize';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
-  import { getPlaceholderValue } from '../../utils';
-  import { createUniqueID } from '../../utilities';
-  import { Card } from '../misc';
-  import fieldTypes from '../../stores/app/fieldTypes';
-  // import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
-  import GroupField from './GroupField.svelte';
+  import { getPlaceholderValue } from '../utils';
+  import { createUniqueID } from '../utilities';
+  import { Card } from '../components/misc';
+  import fieldTypes from './index.js';
 
   export let field;
-
-  const allFieldTypes = [
-    // {
-    //   id: 'repeater',
-    //   label: 'Repeater',
-    //   component: RepeaterField,
-    // },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField,
-    },
-    ...$fieldTypes,
-  ];
 
   function addRepeaterItem() {
     repeaterFieldValues = [...repeaterFieldValues, createSubfield()];
@@ -86,6 +70,11 @@
     return f
   })
 
+  function getFieldComponent(subfield) {
+    const field = _find(fieldTypes, ['id', subfield.type])
+    return field ? field.component : null
+  }
+
 </script>
 
 <Card id="repeater-{field.key}">
@@ -124,7 +113,7 @@
               <svelte:self field={subfield} on:input={onInput} />
             {:else}
               <svelte:component
-                this={_find(allFieldTypes, ['id', subfield.type]).component}
+                this={getFieldComponent(subfield)}
                 field={subfield}
                 on:input={onInput} />
             {/if}

@@ -1,7 +1,7 @@
 <script>
   import { find as _find, chain as _chain } from 'lodash-es'
-  import fieldTypes from '../../stores/app/fieldTypes';
-  import { Card } from '../misc';
+  import fieldTypes from './index'
+  import { Card } from '../components/misc';
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -16,13 +16,18 @@
     dispatch('input');
   }
 
+  function getFieldComponent(subfield) {
+    const field = _find(fieldTypes, ['id', subfield.type])
+    return field ? field.component : null
+  }
+  
 </script>
 
 <Card title={field.label}>
   {#each field.fields as subfield}
     <div class="group-item">
       <svelte:component
-        this={_find($fieldTypes, ['id', subfield.type])?.component}
+        this={getFieldComponent(subfield)}
         field={subfield}
         on:input={onInput} />
     </div>

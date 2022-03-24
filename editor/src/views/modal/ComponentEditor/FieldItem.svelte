@@ -3,30 +3,13 @@
   const dispatch = createEventDispatcher()
 
   import { EditField } from '../../../components/inputs';
-  import fieldTypes from '../../../stores/app/fieldTypes';
-  import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
-  import GroupField from '../../../components/FieldTypes/GroupField.svelte';
-  import CustomField from '../CustomFieldDevType.svelte'
-  import SelectField from '../../../components/FieldTypes/SelectField.svelte'
+  import fieldTypes from '../../../field-types';
+  import SelectField from '../../../field-types/SelectField.svelte';
 
   export let field
   export let isFirst
   export let isLast
   export let level = 0
-
-  const allFieldTypes = [
-    {
-      id: 'repeater',
-      label: 'Repeater',
-      component: RepeaterField,
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField,
-    },
-    ...$fieldTypes,
-  ];
 
   function validateFieldKey(key) {
     // replace dash and space with underscore
@@ -47,7 +30,7 @@
     on:change={() => dispatch('input')}
     bind:value={field.type}
     slot="type">
-    {#each allFieldTypes as field}
+    {#each fieldTypes as field}
       <option value={field.id}>{field.label}</option>
     {/each}
   </select>

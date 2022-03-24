@@ -7,8 +7,6 @@
   import { Tabs, Card } from '../../../components/misc';
   import FullCodeEditor from './FullCodeEditor.svelte';
   import { CodePreview } from '../../../components/misc';
-  import RepeaterField from '../../../components/FieldTypes/RepeaterField.svelte';
-  import GroupField from '../../../components/FieldTypes/GroupField.svelte';
   import {Field} from '../../../const'
   import FieldItem from './FieldItem.svelte'
 
@@ -25,7 +23,7 @@
     code as pageCode
   } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
-  import fieldTypes from '../../../stores/app/fieldTypes';
+  import fieldTypes from '../../../field-types'
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
   import { getPageData } from '../../../stores/helpers';
@@ -162,20 +160,6 @@
       localComponent.code[property] = value
     }
   }
-
-  const allFieldTypes = [
-    {
-      id: 'repeater',
-      label: 'Repeater',
-      component: RepeaterField,
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField,
-    },
-    ...$fieldTypes,
-  ];
 
   let loading = false;
 
@@ -377,7 +361,7 @@
   let activeTab = tabs[0];
 
   function getFieldComponent(field) {
-    const fieldType = find(allFieldTypes, ['id', field.type]);
+    const fieldType = find(fieldTypes, ['id', field.type]);
     if (fieldType && fieldType.component) {
       return fieldType.component;
     } else {

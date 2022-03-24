@@ -5,17 +5,15 @@
   import { Card } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
   import {getEmptyValue} from '../../utils'
+  import fieldTypes from '../../field-types'
 
   import ModalHeader from './ModalHeader.svelte';
-  import fieldTypes from '../../stores/app/fieldTypes';
   import { showingIDE, userRole } from '../../stores/app';
   import { locale } from '../../stores/app/misc';
   import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
   import { id as pageID, fields as pageFields } from '../../stores/app/activePage';
   import { fields as siteFields, content } from '../../stores/data/draft';
-  import RepeaterField from '../../components/FieldTypes/RepeaterField.svelte';
-  import GroupField from '../../components/FieldTypes/GroupField.svelte';
 
   let localContent = cloneDeep($content)
 
@@ -41,26 +39,6 @@
       }
     })
   }
-
-  const allFieldTypes = [
-    // {
-    //   id: 'custom',
-    //   label: 'Custom',
-    //   component: CustomFieldType,
-    //   devComponent: CustomFieldDevType,
-    // },
-    {
-      id: 'repeater',
-      label: 'Repeater',
-      component: RepeaterField,
-    },
-    {
-      id: 'group',
-      label: 'Group',
-      component: GroupField,
-    },
-    ...$fieldTypes,
-  ];
 
   const Field = () => ({
     id: createUniqueID(),
@@ -174,7 +152,7 @@
   $: showingPage = activeTab === tabs[0];
 
   function getComponent(field) {
-    const fieldType = find(allFieldTypes, ['id', field.type]);
+    const fieldType = find(fieldTypes, ['id', field.type]);
     if (fieldType) {
       return fieldType.component;
     } else {
@@ -186,7 +164,7 @@
   }
 
   function getDevComponent(field) {
-    const fieldType = find(allFieldTypes, ['id', field.type]);
+    const fieldType = find(fieldTypes, ['id', field.type]);
     if (fieldType) {
       return fieldType.devComponent;
     } else {
@@ -285,7 +263,7 @@
             }}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
-              {#each allFieldTypes as field}
+              {#each fieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
@@ -312,12 +290,12 @@
             {#if field.fields}
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
-                  fieldTypes={$fieldTypes}
+                  fieldTypes={fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
+                    {#each fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -346,13 +324,13 @@
             {#if field.fields}
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
-                  fieldTypes={$fieldTypes}
+                  fieldTypes={fieldTypes}
                   child={true}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
+                    {#each fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -392,7 +370,7 @@
             }}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
-              {#each allFieldTypes as field}
+              {#each fieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
@@ -419,11 +397,11 @@
               {#each field.fields as subfield}
                 <EditField
                   child={true}
-                  fieldTypes={$fieldTypes}
+                  fieldTypes={fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
+                    {#each fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -452,12 +430,12 @@
             {#if field.fields}
               {#each field.fields as subfield}
                 <EditField
-                  fieldTypes={$fieldTypes}
+                  fieldTypes={fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
+                    {#each fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>

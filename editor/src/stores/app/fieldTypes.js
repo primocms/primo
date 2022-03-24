@@ -1,5 +1,5 @@
 import {writable} from 'svelte/store'
-import TextField from '../../components/FieldTypes/ContentField.svelte'
+import TextField from '../../field-types/ContentField.svelte'
 
 const fieldTypes = writable([
   {
