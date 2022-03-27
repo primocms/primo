@@ -6,10 +6,9 @@
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { makeValidUrl } from '$lib/utils'
-  import { Site } from '@primo-app/primo/src/const'
   import {validateSiteStructure} from '@primo-app/primo/src/utils'
 
-  export let onSuccess = () => {}
+  export let onSuccess = (data) => {}
   let loading
   let siteName = ``
   let siteID = ``
@@ -55,7 +54,11 @@
 
   let selectedTheme = null
   function selectTheme(theme) {
-    siteData = theme.data
+    siteData = {
+      ...theme.data,
+      name: siteName,
+      id: siteID
+    }
     selectedTheme = theme.name
   }
 </script>
