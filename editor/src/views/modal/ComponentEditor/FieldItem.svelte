@@ -30,7 +30,7 @@
     on:change={() => dispatch('input')}
     bind:value={field.type}
     slot="type">
-    {#each fieldTypes as field}
+    {#each $fieldTypes as field}
       <option value={field.id}>{field.label}</option>
     {/each}
   </select>

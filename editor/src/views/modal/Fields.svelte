@@ -151,7 +151,7 @@
   $: showingPage = activeTab === tabs[0];
 
   function getComponent(field) {
-    const fieldType = find(fieldTypes, ['id', field.type]);
+    const fieldType = find($fieldTypes, ['id', field.type]);
     if (fieldType) {
       return fieldType.component;
     } else {
@@ -163,7 +163,7 @@
   }
 
   function getDevComponent(field) {
-    const fieldType = find(fieldTypes, ['id', field.type]);
+    const fieldType = find($fieldTypes, ['id', field.type]);
     if (fieldType) {
       return fieldType.devComponent;
     } else {
@@ -263,7 +263,7 @@
             }}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
-              {#each fieldTypes as field}
+              {#each $fieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
@@ -291,12 +291,12 @@
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
                   showDefaultValue={false}
-                  fieldTypes={fieldTypes}
+                  fieldTypes={$fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each fieldTypes as field}
+                    {#each $fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -326,13 +326,13 @@
               {#each field.fields as subfield, childIndex (subfield.id)}
                 <EditField
                   showDefaultValue={false}
-                  fieldTypes={fieldTypes}
+                  fieldTypes={$fieldTypes}
                   child={true}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each fieldTypes as field}
+                    {#each $fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -370,7 +370,7 @@
             on:move={({ detail: direction }) => moveField({ i, direction })}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
-              {#each fieldTypes as field}
+              {#each $fieldTypes as field}
                 <option value={field.id}>{field.label}</option>
               {/each}
             </select>
@@ -398,11 +398,11 @@
                 <EditField
                   showDefaultValue={false}
                   child={true}
-                  fieldTypes={fieldTypes}
+                  fieldTypes={$fieldTypes}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each fieldTypes as field}
+                    {#each $fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>
@@ -432,12 +432,12 @@
               {#each field.fields as subfield}
                 <EditField
                   showDefaultValue={false}
-                  fieldTypes={fieldTypes}
+                  fieldTypes={$fieldTypes}
                   on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
                   on:delete={() => deleteSubfield(field.id, subfield.id)}
                   {disabled}>
                   <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each fieldTypes as field}
+                    {#each $fieldTypes as field}
                       <option value={field.id}>{field.label}</option>
                     {/each}
                   </select>

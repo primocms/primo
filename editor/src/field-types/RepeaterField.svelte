@@ -7,7 +7,7 @@
   import { getPlaceholderValue } from '../utils';
   import { createUniqueID } from '../utilities';
   import { Card } from '../components/misc';
-  import fieldTypes from './index.js';
+  import {fieldTypes} from '../stores/app'
 
   export let field;
 
@@ -71,7 +71,7 @@
   })
 
   function getFieldComponent(subfield) {
-    const field = _find(fieldTypes, ['id', subfield.type])
+    const field = _find($fieldTypes, ['id', subfield.type])
     return field ? field.component : null
   }
 

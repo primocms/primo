@@ -1,7 +1,7 @@
 <script>
   import { find as _find, chain as _chain } from 'lodash-es'
-  import fieldTypes from './index'
   import { Card } from '../components/misc';
+  import {fieldTypes} from '../stores/app'
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -17,7 +17,7 @@
   }
 
   function getFieldComponent(subfield) {
-    const field = _find(fieldTypes, ['id', subfield.type])
+    const field = _find($fieldTypes, ['id', subfield.type])
     return field ? field.component : null
   }
   

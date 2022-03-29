@@ -22,8 +22,7 @@
     id as pageID,
     code as pageCode
   } from '../../../stores/app/activePage';
-  import { showingIDE } from '../../../stores/app';
-  import fieldTypes from '../../../field-types'
+  import { showingIDE, fieldTypes } from '../../../stores/app';
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
   import { getPageData } from '../../../stores/helpers';
@@ -361,7 +360,7 @@
   let activeTab = tabs[0];
 
   function getFieldComponent(field) {
-    const fieldType = find(fieldTypes, ['id', field.type]);
+    const fieldType = find($fieldTypes, ['id', field.type]);
     if (fieldType && fieldType.component) {
       return fieldType.component;
     } else {
