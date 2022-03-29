@@ -5,10 +5,9 @@
   import { Card } from '../../components/misc';
   import { createUniqueID } from '../../utilities';
   import {getEmptyValue} from '../../utils'
-  import fieldTypes from '../../field-types'
 
   import ModalHeader from './ModalHeader.svelte';
-  import { showingIDE, userRole } from '../../stores/app';
+  import { showingIDE, userRole, fieldTypes } from '../../stores/app';
   import { locale } from '../../stores/app/misc';
   import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
@@ -362,16 +361,13 @@
         </Card>
       {/each}
     {:else}
-      {#each localSiteFields as field, i (field.id)}
+      {#each localSiteFields as field, i (`${field.id}-${$locale}`)}
         <Card>
           <EditField
             showDefaultValue={false}
             minimal={field.type === 'info'}
             on:delete={() => deleteField(field.id)}
-            on:move={({ detail: direction }) => {
-              console.log(direction);
-              moveField({ i, direction });
-            }}
+            on:move={({ detail: direction }) => moveField({ i, direction })}
             {disabled}>
             <select bind:value={field.type} slot="type" {disabled}>
               {#each fieldTypes as field}

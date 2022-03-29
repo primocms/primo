@@ -3,7 +3,7 @@
   const dispatch = createEventDispatcher()
 
   import { EditField } from '../../../components/inputs';
-  import fieldTypes from '../../../field-types';
+  import fieldTypes from '../../../stores/app/fieldTypes'
   import SelectField from '../../../field-types/SelectField.svelte';
 
   export let field

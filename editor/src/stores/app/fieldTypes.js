@@ -1,13 +1,7 @@
 import {writable} from 'svelte/store'
-import TextField from '../../field-types/ContentField.svelte'
+import buildInFieldTypes from '../../field-types'
 
-const fieldTypes = writable([
-  {
-    id: 'text',
-    label: 'Text',
-    component: TextField
-  }
-])
+const fieldTypes = writable(buildInFieldTypes)
 
 export default {
   register: (userTypes) => {
