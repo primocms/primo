@@ -108,16 +108,16 @@
   });
 
   let prettier;
-  let html;
   let css;
   let babel;
+  let svelte;
   if (browser) fetchPrettier();
 
   async function fetchPrettier() {
     prettier = await import('prettier');
-    html = (await import('prettier/esm/parser-html')).default;
     css = (await import('prettier/esm/parser-postcss')).default;
     babel = (await import('prettier/esm/parser-babel')).default;
+    svelte = (await import('prettier-plugin-svelte'));
   }
 
   async function formatCode(code, { mode, position }) {
@@ -125,13 +125,15 @@
     try {
       if (mode === 'javascript') {
         mode = 'babel';
+      } else if (mode === 'html') {
+        mode = 'svelte'
       }
 
       formatted = prettier.formatWithCursor(code, {
         parser: mode,
         bracketSameLine: true,
         cursorOffset: position,
-        plugins: [html, css, babel],
+        plugins: [svelte, css, babel],
       });
     } catch (e) {
       console.warn(e);
