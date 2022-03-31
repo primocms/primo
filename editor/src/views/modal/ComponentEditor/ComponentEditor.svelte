@@ -453,7 +453,7 @@
       {:else}
         <div>
           {#each fields as field (`${field.id}-${$locale}`)} 
-            {#if field.key && getFieldComponent(field)}
+            {#if (field.key || field.type === 'info') && getFieldComponent(field)}
               <div
                 class="field-item"
                 class:repeater={field.key === 'repeater'}
