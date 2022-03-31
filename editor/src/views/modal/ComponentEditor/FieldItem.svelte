@@ -34,7 +34,7 @@
       <option value={field.id}>{field.label}</option>
     {/each}
   </select>
-  <textarea slot="main" class="info" bind:value={field.value} />
+  <textarea slot="main" class="info" bind:value={field.options.info} />
   <input
     class="input label-input"
     type="text"

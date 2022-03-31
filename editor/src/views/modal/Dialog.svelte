@@ -1,20 +1,21 @@
 <script>
+  import modal from '../../stores/app/modal'
   import Image from './Dialogs/Image.svelte'
   import Feedback from './Dialogs/Feedback.svelte'
   export let component
   export let componentProps = {}
   export let options = {
-    disableClose: true
+    disableClose: false
   }
   export let onSubmit 
 
   let value = ''
 </script>
 
-<main>
+<main class="primo-reset">
   {#if !options.disableClose}
     <header>
-      <button>
+      <button on:click={() => modal.hide()}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M1 13L13 1M13 13L1 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
@@ -54,11 +55,6 @@
     padding: 1rem;
     display: flex;
     justify-content: flex-end;
-  }
-
-  div {
-    padding: 2rem;
-    padding-top: 0;
   }
 
   form {
