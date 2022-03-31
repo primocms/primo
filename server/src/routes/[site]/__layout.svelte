@@ -41,8 +41,7 @@
         id: 'image',
         label: 'Image',
         component: ImageField,
-      },
-      ...PrimoFieldTypes,
+      }
     ])
   }
 
