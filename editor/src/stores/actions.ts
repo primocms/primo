@@ -177,19 +177,25 @@ export const pages = {
   },
   update: async (pageId:string, fn = (p) => {}) => {
     saved.set(false)
-    const newPages = await Promise.all(
-      get(stores.pages).map(async page => {
-        if (page.id === pageId) {
-          const newPage = await fn(page)
-          return newPage
-        } else if (some(page.pages, ['id', pageId])) {
-          return {
-            ...page,
-            pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
-          }
-        } else return page
-      })
-    )
+    const newPages = get(stores.pages).map(page => {
+      if (page.id === pageId) {
+        return fn(page)
+      } else if (some(page.pages, ['id', pageId])) {
+        return {
+          ...page,
+          pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
+        }
+      } else return page
+    })
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+      locale,
+      content: {
+        ...omit(pages, [pageId]),
+        [(fn({}))['id']]: pages[pageId]
+      }
+    }))).keyBy('locale').mapValues('content').value()
+
+    stores.content.set(updatedContent)
     stores.pages.set(newPages)
   }
 }
