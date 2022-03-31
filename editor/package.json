@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.4.33",
+  "version": "1.4.34",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "dist/index.js",
   "svelte": "src/index.js",
@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/lodash": "^4.14.168",
     "jest": "^26.0.1",
-    "prettier-plugin-svelte": "^1.4.2",
     "tslib": "^2.0.0",
     "typescript": "^4.2.3"
   },
@@ -66,6 +65,7 @@
     "platform": "^1.3.6",
     "pluralize": "^8.0.0",
     "prettier": "^2.4.1",
+    "prettier-plugin-svelte": "^2.6.0",
     "promise-worker": "^2.0.1",
     "prosemirror-commands": "^1.1.12",
     "prosemirror-history": "^1.2.0",
