@@ -6,8 +6,7 @@
   import {
     dropdown,
     registerProcessors,
-    fieldTypes,
-    PrimoFieldTypes,
+    fieldTypes
   } from '@primo-app/primo'
   import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
@@ -22,8 +21,7 @@
         id: 'image',
         label: 'Image',
         component: ImageField,
-      },
-      ...PrimoFieldTypes,
+      }
     ])
     dropdown.set([
       {
