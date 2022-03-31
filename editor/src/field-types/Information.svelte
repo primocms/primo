@@ -1,15 +1,14 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
   import showdown from 'showdown';
-
-  const dispatch = createEventDispatcher();
   const converter = new showdown.Converter();
 
   export let field = {
-    value: '',
+    options: {
+      info: ''
+    },
   };
 
-  const html = converter.makeHtml(field.value);
+  const html = converter.makeHtml(field.options.info);
 
 </script>
 
