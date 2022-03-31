@@ -187,11 +187,24 @@ export const pages = {
         }
       } else return page
     })
+    stores.pages.set(newPages)
+  },
+  edit: async (pageId: string, updatedPage: { id: string, name: string }) => {
+    const newPages = get(stores.pages).map(page => {
+      if (page.id === pageId) {
+        return { ...page, ...updatedPage }
+      } else if (some(page.pages, ['id', pageId])) {
+        return {
+          ...page,
+          pages: page.pages.map(page => page.id === pageId ? ({ ...page, ...updatedPage }) : page)
+        }
+      } else return page
+    })
     const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
       locale,
       content: {
         ...omit(pages, [pageId]),
-        [(fn({}))['id']]: pages[pageId]
+        [updatedPage.id]: pages[pageId]
       }
     }))).keyBy('locale').mapValues('content').value()
 

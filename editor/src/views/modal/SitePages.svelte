@@ -75,11 +75,8 @@
       .toLowerCase();
   }
 
-  function editPage(pageId, args) {
-    actions.update(pageId, (page) => ({
-      ...page,
-      ...args,
-    }));
+  function editPage(pageId, args: { name: string, id: string }) {
+    actions.edit(pageId, args)
   }
 
   function listPages(pageId) {
