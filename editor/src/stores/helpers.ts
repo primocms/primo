@@ -16,47 +16,7 @@ export function resetActivePage() {
 }
 
 export function getAllFields(componentFields:any[] = [], exclude = () => true) {
-  const allFields: any[] = unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
-  const includeActiveLinks: any[] = allFields.map(hydrateField)
-  return includeActiveLinks
-
-  function hydrateField(field) {
-    if (field.type === 'link') {
-      return setLinkActive(field)
-    } else if (field.type === 'repeater') {
-      return {
-        ...field,
-        // value: field.value.map(item => {
-        //   // TODO
-        //   // loop through keys, 
-        //   // check for url & active properties
-        //   // const active = getActiveLink(item.link)
-        //   return {
-        //     ...item
-        //   }
-        // })
-      } 
-    } else if (field.type === 'group') {
-      return field // TODO
-    } else return field
-  }
-
-  function setLinkActive(field) {
-    const active = getActiveLink(field)
-    return {
-      ...field,
-      value: {
-        ...field.value,
-        active
-      }
-    }
-  }
-
-  function getActiveLink({ value }) {
-    // const [currentPage] = get(router).path.split('/').slice(-1) ##
-    const currentPage = '' 
-    return currentPage === value.url
-  }
+  return unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
 }
 
 export function getSymbol(symbolID): SymbolType {
