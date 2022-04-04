@@ -4,7 +4,7 @@
 
   export let field;
 
-  if (!field.options) {
+  if (!field?.options?.options) {
     field.options = {
       options: []
     }
