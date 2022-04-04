@@ -164,12 +164,11 @@
     {#each $sections as block, i (block.id)}
       {#if block.symbolID}
         <Block
-          on:mount={() => componentsMounted++}
           block={hydrateInstance(block, $symbols)}
           {i}
         />
       {:else}
-        <Block on:save {block} {i} on:mount={() => componentsMounted++} />
+        <Block on:save {block} {i} />
       {/if}
     {/each}
   {/if}
