@@ -217,7 +217,6 @@ ipcMain.on('load-data', (event, directory) => {
 })
 
 ipcMain.on('set-preview', (event, site) => {
-  console.log('SETTING')
   fs.writeFileSync(`${savePath}/${site.id}.html`, site.preview)
   event.returnValue = true
 })
