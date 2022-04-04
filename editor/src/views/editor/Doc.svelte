@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { find } from 'lodash-es';
+  import { find, isEqual } from 'lodash-es';
   import Block from './Layout/Block.svelte';
   import Spinner from '../../ui/misc/Spinner.svelte';
   import {
@@ -102,11 +102,16 @@
 
   let htmlHead = '';
   let htmlBelow = '';
+  let cached = { pageCode: null, siteCode: null }
   $: setPageHTML({
     pageCode: $pageCode,
     siteCode: $siteCode
   });
   async function setPageHTML({ pageCode, siteCode }) {
+    if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
+    cached.pageCode = pageCode
+    cached.siteCode = siteCode
+    pageMounted = false
     const css = await processCSS(siteCode.css + pageCode.css);
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
@@ -132,27 +137,11 @@
     ]);
     htmlHead = !head.error ? head.html : '';
     htmlBelow = !below.error ? below.html : '';
+    pageMounted = true
   }
 
   // Fade in page when all components mounted
   let pageMounted = false;
-  let componentsMounted = 0;
-  $: nComponents = $sections.filter(
-    (block) => block.type === 'component'
-  ).length;
-
-  $: if (element && componentsMounted >= nComponents) {
-    pageMounted = true;
-  } else if (componentsMounted < nComponents) {
-    pageMounted = false;
-  }
-
-  // reset pageMounted on page change
-  $: if ($navigating && ($navigating.from.path !== $navigating.to.path)) {
-    pageMounted = false;
-    componentsMounted = 0;
-  }
-
   $: pageIsEmpty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
 </script>
 
@@ -168,6 +157,7 @@
 <div
   bind:this={element}
   class="primo-page being-edited"
+  class:fadein={pageMounted}
   lang={$locale}
 >
   {#if pageExists}
@@ -208,9 +198,13 @@
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   .primo-page {
+    transition: 0.1s opacity;
+    opacity: 0;
     border-top: 0;
-    transition: border-top 0.2s; /* match transition time in Toolbar.svelte */
-    transition-delay: 1s;
+  }
+
+  .fadein {
+    opacity: 1;
   }
 
   .empty-state {
