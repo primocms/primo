@@ -13,16 +13,13 @@ export const iframePreview = (locale = 'en') => `
             c.$set(props);
           } else if (source) {
             const withLogs = \`
-              const log = console.log.bind(console)
+              const primoLog = console ? console.log.bind(console) : null;
               function postMessage(arg) {
                 try {
                   window.postMessage({ event: 'logs', payload: arg })
                 } catch(e) {console.warn(e)}
               }
-              console.log = (...args) => {
-                postMessage(...args)
-                log(...args)
-              };\` + source;
+              if (primoLog) console.log = (...args) => { postMessage(...args); primoLog(...args); };\` + source;
             const blob = new Blob([withLogs], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
