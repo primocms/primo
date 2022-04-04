@@ -5,6 +5,7 @@
   import { TextInput } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
   import Preview from '../../../components/misc/Preview.svelte';
+  import compilations from './compilations'
 
   import modal from '../../../stores/app/modal';
   import { buildStaticPage } from '../../../stores/helpers';
@@ -19,7 +20,12 @@
   let preview = '';
   $: if (page) buildPreview();
   async function buildPreview() {
-    preview = await buildStaticPage({ page, site: $site });
+    if (compilations.has(page)) {
+      preview = compilations.get(page);
+    } else {
+      preview = await buildStaticPage({ page, site: $site });
+      compilations.set(page, preview);
+    }
   }
 
   // Svelte bug: it takes a second to handle links properly (i.e. reloads page when clicked shortly after mounting)
