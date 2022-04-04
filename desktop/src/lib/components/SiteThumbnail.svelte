@@ -1,8 +1,11 @@
 <script>
+  import {createEventDispatcher} from 'svelte'
   import { browser } from '$app/env'
   import { find } from 'lodash-es'
   import Spinner from '$lib/ui/Spinner.svelte'
   import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+
+  const dispatch = createEventDispatcher()
 
   export let site = null
   export let preview = null
@@ -30,6 +33,8 @@
       separateModules: false
     })
 
+    dispatch('setPreview', generatedPreview)
+
     if (!generatedPreview) {
       valid = false
     } else {
@@ -43,7 +48,7 @@
     processorLoaded = true
   }, 500)
 
-  $: !preview && browser && processorLoaded && getPreview(site)
+  $: browser && processorLoaded && getPreview(site)
 </script>
 
 <svelte:window on:resize={resizePreview} />
@@ -55,14 +60,14 @@
         <Spinner />
       </div>
     {/if}
-    {#if preview || generatedPreview}
+    {#if generatedPreview || preview}
       <iframe
         tabindex="-1"
         bind:this={iframe}
         style="transform: scale({scale})"
         class:fadein={iframeLoaded}
         title="page preview"
-        srcdoc={preview || generatedPreview}
+        srcdoc={generatedPreview || preview}
         on:load={() => {
           resizePreview()
           iframeLoaded = true

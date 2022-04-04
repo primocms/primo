@@ -6,7 +6,7 @@
   import sites from '../stores/sites'
   import serverSites, { connected } from '../stores/serverSites'
   import config from '../stores/config'
-  import {track} from '$lib/actions'
+  import {track, setSitePreview} from '$lib/actions'
   import { goto } from '$app/navigation';
 
   let loading
@@ -61,7 +61,7 @@
     <SignInNav />
     <div class="sites-container">
       <ul class="sites" xyz="fade stagger stagger-1">
-        {#each $sites as site, i (site.id)}
+        {#each $sites as { data:site, preview }, i (site.id)}
           <li
             class="xyz-in"
             class:active={hoveredItem === i}
@@ -73,7 +73,7 @@
               on:mouseenter={() => (hoveredItem = i)}
               on:mouseleave={() => (hoveredItem = null)}
             >
-              <SiteThumbnail bind:valid={site.valid} site={site.data} />
+              <SiteThumbnail bind:valid={site.valid} on:setPreview={({detail:preview}) => setSitePreview(site.id, preview)} {site} {preview} />
             </a>
             <div class="site-info">
               <div class="site-name">

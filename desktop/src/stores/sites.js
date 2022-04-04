@@ -12,17 +12,18 @@ async function initializSiteData() {
   const siteFiles = data.load()
   const sitesDB = await get('sites')
 
-  const rebuiltSites = siteFiles.map((siteFile) => {
+  const rebuiltSites = siteFiles.map(({data, preview}) => {
     const savedSite = _find(
       sitesDB,
-      (savedSite) => savedSite.id === siteFile.id
+      (savedSite) => savedSite.id === data.id
     )
     return {
-      id: siteFile.id,
-      name: siteFile.name,
+      id: data.id,
+      name: data.name,
       deployments: savedSite ? savedSite.deployments : [],
       activeDeployment: savedSite ? savedSite.activeDeployment : null,
-      data: siteFile,
+      data,
+      preview
     }
   })
 

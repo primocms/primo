@@ -44,6 +44,9 @@ contextBridge.exposeInMainWorld('primo', {
     }
   },
   data: {
+    setPreview: (site) => {
+      ipcRenderer.sendSync('set-preview', site)
+    },
     deleteSite: (siteID) => {
       ipcRenderer.sendSync('delete-site', siteID)
     },

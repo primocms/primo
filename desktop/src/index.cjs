@@ -196,11 +196,30 @@ fs.ensureDirSync(savePath)
 ipcMain.on('load-data', (event, directory) => {
   const files = fs.readdirSync(savePath)
   const sites = []
-  files.forEach(file => {
+  files.filter(file => {
+    const type = file.slice(file.indexOf('.')+1)
+    return type === 'json'
+  }).forEach(file => {
+    const name = file.slice(0, file.indexOf('.'))
     const data = fs.readJsonSync(`${directory}/${file}`, { throws: false })
-    if (data) sites.push(data)
+
+    let preview = null
+    if (fs.existsSync(`${directory}/${name}.html`)) {
+      preview = fs.readFileSync(`${directory}/${name}.html`, 'utf8')
+    }
+
+    if (data) sites.push({
+      preview,
+      data
+    })
   })
   event.returnValue = sites
+})
+
+ipcMain.on('set-preview', (event, site) => {
+  console.log('SETTING')
+  fs.writeFileSync(`${savePath}/${site.id}.html`, site.preview)
+  event.returnValue = true
 })
 
 ipcMain.on('save-data', (event, sites) => {

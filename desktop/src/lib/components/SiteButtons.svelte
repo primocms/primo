@@ -28,7 +28,7 @@
     <li class="site-item xyz-in">
       <a on:click={warn} href="/{site.id}">
         <div class="thumbnail">
-          <SiteThumbnail site={site.data} />
+          <SiteThumbnail site={site.data} preview={site.preview} />
         </div>
         <div class="card-footer">
           <div class="site-title">
