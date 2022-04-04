@@ -39,12 +39,13 @@
         id: 'pages',
         title: 'Pages',
         label: 'Pages',
-        icon: 'pages',
+        icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
     ],
     hasFields ? [
       {
+        icon: 'bxs:edit',
         title: 'Content',
         label: 'Content',
         onclick: () => modal.show('FIELDS', {}, {
@@ -60,7 +61,7 @@
         id: 'toolbar--pages',
         label: 'Pages',
         title: 'Pages',
-        icon: 'pages',
+        icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
     ],
@@ -69,7 +70,7 @@
         id: 'toolbar--components',
         title: 'Component Library',
         label: 'Components',
-        icon: 'clone',
+        icon: 'fa6-solid:clone',
         onclick: () => modal.show('SYMBOL_LIBRARY'),
       },
     ],
@@ -78,18 +79,21 @@
         id: 'toolbar--html',
         title: 'HTML',
         label: 'HTML',
+        icon: 'icomoon-free:html-five2',
         onclick: () => modal.show('WRAPPER'),
       },
       {
         id: 'toolbar--css',
         title: 'CSS',
         label: 'CSS',
+        icon: 'ci:css3',
         onclick: () => modal.show('STYLES'),
       },
       {
         id: 'toolbar--fields',
         title: 'Fields',
         label: 'Fields',
+        icon: 'bxs:edit',
         onclick: () => modal.show('FIELDS', {}, {
           showSwitch: true
         }),

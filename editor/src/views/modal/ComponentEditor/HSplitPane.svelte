@@ -151,13 +151,16 @@
   });
 
   let left, center, right;
-  export let leftPaneSize = $$slots.center ? '33%' : '66%';
+
+  export let hideRightPanel = false;
+
+  export let leftPaneSize = ($$slots.center ? '33%' : '66%')
   export let minLeftPaneSize = '1.5rem';
   export let centerPaneSize = '33%';
   export let minCenterPaneSize = '1.5rem';
-  export let rightPaneSize = $$slots.center ? '33%' : '66%';
+  export let rightPaneSize = ($$slots.center ? '33%' : '66%')
   export let minRightPaneSize = '1.5rem';
-
+  
   export let hideLeftOverflow = false
 
   $: leftPaneSize && resetSize();
@@ -196,34 +199,38 @@
         </div>
       </slot>
     </div>
-    <div
+      {#if !hideRightPanel}
+      <div
       bind:this={rightSeparator}
       class="separator"
       class:dragging
       on:mousedown={onMouseDownRight}
       on:touchstart={onMouseDownRight} />
-    <div bind:this={right} class="right" class:transitioning>
-      <slot name="right">
-        <div style="background-color: yellow;">Right Contents goes here...</div>
-      </slot>
-    </div>
+        <div bind:this={right} class="right" class:transitioning>
+          <slot name="right">
+            <div style="background-color: yellow;">Right Contents goes here...</div>
+          </slot>
+        </div>
+      {/if}
   {:else}
     <div bind:this={left} class="left" class:overflow-hidden={hideLeftOverflow} class:transitioning>
       <slot name="left">
         <div style="background-color: red;">Left Contents goes here...</div>
       </slot>
     </div>
-    <div
-      bind:this={leftSeparator}
-      class="separator"
-      class:dragging
-      on:mousedown={onMouseDownLeft}
-      on:touchstart={onMouseDownLeft} />
-    <div bind:this={right} class="right" class:transitioning>
-      <slot name="right">
-        <div style="background-color: yellow;">Right Contents goes here...</div>
-      </slot>
-    </div>
+      {#if !hideRightPanel}
+        <div
+        bind:this={leftSeparator}
+        class="separator"
+        class:dragging
+        on:mousedown={onMouseDownLeft}
+        on:touchstart={onMouseDownLeft} />
+        <div bind:this={right} class="right" class:transitioning>
+          <slot name="right">
+            <div style="background-color: yellow;">Right Contents goes here...</div>
+          </slot>
+        </div>
+      {/if}
   {/if}
 </div>
 

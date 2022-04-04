@@ -51,7 +51,7 @@
 <style lang="postcss">
   #primo-button {
     margin-right: 0.5rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem;
     border-radius: var(--primo-border-radius);
     display: block;
     height: 100%;

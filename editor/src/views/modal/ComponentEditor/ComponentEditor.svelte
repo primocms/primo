@@ -15,7 +15,7 @@
     processCSS,
     wrapInStyleTags,
   } from '../../../utils';
-  import { locale } from '../../../stores/app/misc';
+  import { locale, onMobile } from '../../../stores/app/misc';
 
   import { content, code as siteCode } from '../../../stores/data/draft';
   import {
@@ -411,8 +411,9 @@
 
 <main>
   <HSplitPane
-    leftPaneSize={editorWidth}
-    rightPaneSize={previewWidth}
+    leftPaneSize={$onMobile ? '100%' : editorWidth}
+    rightPaneSize={$onMobile ? '0' : previewWidth}
+    hideRightPanel={$onMobile}
     hideLeftOverflow={$showingIDE && activeTab === tabs[0]}
     on:resize={({ detail }) => {
       const { left, right } = detail;
