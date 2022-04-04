@@ -50,6 +50,7 @@
 
 <style lang="postcss">
   #primo-button {
+    aspect-ratio: 1;
     margin-right: 0.5rem;
     padding: 0.5rem;
     border-radius: var(--primo-border-radius);
