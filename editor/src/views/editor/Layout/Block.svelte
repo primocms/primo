@@ -223,6 +223,7 @@
   <div bind:this={container} class="block-buttons-container" class:visible={(hovering || $onMobile) && block.type !== 'options'}>
     <BlockButtons
       {i}
+      hasContentFields={block.fields.length > 0}
       editable={block.type === 'component'}
       bind:node={buttons}
       on:delete={() => {

@@ -40,6 +40,7 @@
   export let optionsAbove;
   export let optionsBelow;
   export let node = null;
+  export let hasContentFields
 
   export let editable;
 
@@ -58,7 +59,7 @@
   bind:this={node}>
   <div class="top">
     <div class="component-button">
-      {#if editable}
+      {#if editable && (hasContentFields || $showingIDE)}
         <button on:click={() => dispatch('edit')} class="button-span">
           {#if $modKeyDown}
             <span>&#8984; E</span>
