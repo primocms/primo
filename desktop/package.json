@@ -62,7 +62,7 @@
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
   },
   "dependencies": {
-    "@primo-app/primo": "^1.4.36",
+    "@primo-app/primo": "^1.4.39",
     "autoprefixer": "^10.4.0",
     "axios": "^0.21.4",
     "browser-image-compression": "^1.0.16",
@@ -86,6 +86,7 @@
     "postcss": "^8.4.5",
     "postcss-nested": "^5.0.6",
     "prettier": "^2.4.1",
+    "prettier-plugin-svelte": "^2.6.0",
     "promise-worker": "^2.0.1",
     "timeago.js": "^4.0.2"
   },
@@ -113,7 +114,6 @@
     "electron-packager": "^15.4.0",
     "postcss-load-config": "^3.1.1",
     "postcss-preset-env": "^7.1.0",
-    "prettier-plugin-svelte": "^2.2.0",
     "svelte": "^3.44.0",
     "svelte-check": "^2.0.0",
     "svelte-preprocess": "^4.10.2",

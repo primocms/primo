@@ -20,7 +20,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@primo-app/primo": "^1.4.36",
+    "@primo-app/primo": "^1.4.39",
     "@supabase/supabase-js": "^1.22.6",
     "@sveltejs/kit": "=1.0.0-next.278",
     "axios": "^0.26.0",
