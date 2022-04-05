@@ -1,4 +1,5 @@
 import {writable} from 'svelte/store'
+import {browser} from '$lib/env'
 
 export const modKeyDown = writable(false)
 
@@ -14,6 +15,6 @@ export const showKeyHint = writable(false)
 
 export const loadingSite = writable(true)
 
-export const onMobile = writable(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator?.userAgent))
+export const onMobile = browser? writable(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) : writable(false)
 
 export const locale = writable('en')
