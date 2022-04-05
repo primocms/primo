@@ -1,4 +1,5 @@
 <script>
+  import {_ as C} from 'svelte-i18n';
   import { cloneDeep, isEqual } from 'lodash-es';
   import { Tabs } from '../../components/misc';
   import { CodeMirror } from '../../components';
@@ -19,12 +20,12 @@
   const tabs = [
     {
       id: 'page',
-      label: 'Page',
+      label: $C('Page'),
       icon: 'square',
     },
     {
       id: 'site',
-      label: 'Site',
+      label: $C('Site'),
       icon: 'th',
     },
   ];

@@ -162,31 +162,31 @@
               fill-rule="evenodd"
               d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
               clip-rule="evenodd" /></svg>
-          <span>Create</span>
+          <span>{$C('Create')}</span>
         </button>
       {/if}
       <label class="button">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3.7207 8.65351L7.76758 4.5957C7.89609 4.46719 8.10391 4.46719 8.23242 4.5957L12.2793 8.65351C12.4078 8.78203 12.4078 8.98984 12.2793 9.11836L11.7434 9.6543C11.6121 9.78555 11.4016 9.78281 11.2758 9.64883L8.71094 6.99375V13.7969C8.71094 13.9773 8.56328 14.125 8.38281 14.125H7.61719C7.43672 14.125 7.28906 13.9773 7.28906 13.7969V6.99375L4.72695 9.64883C4.59844 9.78008 4.38789 9.78281 4.25937 9.6543L3.72344 9.11836C3.59219 8.98984 3.59219 8.78203 3.7207 8.65351V8.65351ZM3.07812 3.29687H12.9219C13.1023 3.29687 13.25 3.14922 13.25 2.96875V2.20312C13.25 2.02266 13.1023 1.875 12.9219 1.875H3.07812C2.89766 1.875 2.75 2.02266 2.75 2.20312V2.96875C2.75 3.14922 2.89766 3.29687 3.07812 3.29687Z" fill="#E2E4E9"/>
         </svg>                              
-        <span>Add</span>
+        <span>{$C('Add')}</span>
         <input on:change={uploadSymbol} type="file" accept=".json">
       </label>
     </div>
     {#if $symbols.length === 0}
       <div id="empty-state">
         <span>
-          You don't have any Components in your Site Library. <br>You can develop Components from scratch, paste them in from another site, or add some from the Primo Library.
+          {@html $C('no-components')}
         </span>
       </div>
     {/if}
   {:else if selectedTab === 'community'}
     <div class="contribution-form library-buttons xyz-in">
       {#if !submitted}
-        <span>Contribute a Component to the Community Library</span>
+        <span>{@html $C('contribute-to-community-library')}</span>
         <div>
           <div>
-            <span>Component</span>
+            <span>{$C('Component')}</span>
             <select bind:value={symbolSubmission}>
               {#each $symbols.filter(s => s.name) as symbol}
                 <option value={symbol}>{symbol.name}</option>
@@ -194,11 +194,11 @@
             </select>
           </div>
           <label>
-            <span>Personal Website (optional)</span>
+            <span>{$C('Personal Website (optional)')}</span>
             <input bind:value={contributor} type="text">
           </label>
           <button on:click={submitSymbol}>
-            <span>Submit</span>
+            <span>{$C('Submit')}</span>
           </button>
         </div>
         <!-- <footer>

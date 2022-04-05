@@ -1,4 +1,5 @@
 <script>
+  import { _ as C } from 'svelte-i18n'
   import * as Mousetrap from 'mousetrap';
   import { createEventDispatcher, onMount } from 'svelte';
   import { browser } from '$app/env';
@@ -37,8 +38,8 @@
     [
       {
         id: 'pages',
-        title: 'Pages',
-        label: 'Pages',
+        title: $C('Pages'),
+        label: $C('Pages'),
         icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
@@ -46,8 +47,8 @@
     hasFields ? [
       {
         icon: 'bxs:edit',
-        title: 'Content',
-        label: 'Content',
+        title: $C('Content'),
+        label: $C('Content'),
         onclick: () => modal.show('FIELDS', {}, {
           showSwitch: true
         }),
@@ -59,8 +60,8 @@
     [
       {
         id: 'toolbar--pages',
-        label: 'Pages',
-        title: 'Pages',
+        label: $C('Pages'),
+        title: $C('Pages'),
         icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
       },
@@ -68,8 +69,8 @@
     [
       {
         id: 'toolbar--components',
-        title: 'Component Library',
-        label: 'Components',
+        title: $C('Components'),
+        label: $C('Components'),
         icon: 'fa6-solid:clone',
         onclick: () => modal.show('SYMBOL_LIBRARY'),
       },
@@ -91,8 +92,8 @@
       },
       {
         id: 'toolbar--fields',
-        title: 'Fields',
-        label: 'Fields',
+        title: $C('Fields'),
+        label: $C('Fields'),
         icon: 'bxs:edit',
         onclick: () => modal.show('FIELDS', {}, {
           showSwitch: true

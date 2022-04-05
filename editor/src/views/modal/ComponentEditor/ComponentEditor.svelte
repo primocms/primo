@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {_ as C} from 'svelte-i18n'
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get, differenceWith as _differenceWith} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
@@ -347,12 +348,12 @@
   const tabs = [
     {
       id: 'code',
-      label: 'Code',
+      label: $C('Code'),
       icon: 'code',
     },
     {
       id: 'fields',
-      label: 'Fields',
+      label: $C('Fields'),
       icon: 'database',
     },
   ];

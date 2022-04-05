@@ -28,6 +28,15 @@
 
   import type { Site as SiteType, Page as PageType } from './const'
 
+  import { init, addMessages, getLocaleFromNavigator } from 'svelte-i18n';
+
+  import('../en.json').then(m => addMessages('en', m.default));
+
+  init({
+    fallbackLocale: 'en',
+    initialLocale: getLocaleFromNavigator(),
+  });
+
   export let data:SiteType = Site();
   export let role:'developer'|'content' = 'developer';
   export let saving:boolean = false;

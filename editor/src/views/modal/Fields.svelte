@@ -1,5 +1,6 @@
 <script>
   import { find, cloneDeep, isEqual, chain as _chain } from 'lodash-es';
+  import { _ as C } from 'svelte-i18n';
   import { EditField } from '../../components/inputs';
   import { Tabs } from '../../components/misc';
   import { Card } from '../../components/misc';
@@ -138,11 +139,11 @@
 
   const tabs = [
     {
-      label: 'Page',
+      label: $C('Page'),
       icon: 'square',
     },
     {
-      label: 'Site',
+      label: $C('Site'),
       icon: 'th',
     },
   ];
@@ -464,13 +465,13 @@
             <button
               class="field-button subfield-button"
               on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
+              {disabled}><i class="fas fa-plus" />{$C('Add a Subfield')}</button>
           {/if}
         </Card>
       {/each}
     {/if}
     <button class="field-button" on:click={addField} {disabled}><i
-        class="fas fa-plus" />Add a Field</button>
+        class="fas fa-plus" />{$C('Add a Field')}</button>
   {:else if showingPage}
     {#each localPageFields as field}
       {#if getComponent(field)}
