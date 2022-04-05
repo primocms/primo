@@ -25,6 +25,7 @@
     value: localContent[$locale][field.key]
   }));
 
+  $: showPageFields = localPageFields.length > 0;
 
   $: syncLocales($content)
   function syncLocales(content) {
@@ -145,9 +146,9 @@
       icon: 'th',
     },
   ];
-  let activeTab = tabs[0];
+  let activeTab = showPageFields ? tabs[0] : tabs[1];
 
-  let showingPage = true;
+  let showingPage = showPageFields;
   $: showingPage = activeTab === tabs[0];
 
   function getComponent(field) {
@@ -248,7 +249,9 @@
   }} />
 
 <main>
-  <Tabs {tabs} bind:activeTab />
+  {#if showPageFields || $showingIDE}
+    <Tabs {tabs} bind:activeTab />
+  {/if}
   {#if $showingIDE}
     {#if showingPage}
       {#each localPageFields as field, i (field.id)}
