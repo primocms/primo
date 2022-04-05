@@ -50,7 +50,7 @@
     ]
   },
   "scripts": {
-    "dist": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --publish always",
     "electron": "electron .",
     "start": "concurrently \"npm:dev\" \"electron .\"",
     "dev": "svelte-kit dev -p 3333",
