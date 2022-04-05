@@ -36,6 +36,7 @@
     "@codemirror/theme-one-dark": "^0.19.1",
     "@codemirror/view": "^0.19.19",
     "@fontsource/fira-code": "^4.5.1",
+    "@iconify/svelte": "^2.2.1",
     "@tiptap/core": "^2.0.0-beta.160",
     "@tiptap/extension-blockquote": "^2.0.0-beta.26",
     "@tiptap/extension-bubble-menu": "^2.0.0-beta.54",
