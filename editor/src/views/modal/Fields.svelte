@@ -149,8 +149,8 @@
   ];
   let activeTab = showPageFields ? tabs[0] : tabs[1];
 
-  let showingPage = showPageFields;
-  $: showingPage = activeTab === tabs[0];
+  let showingPage = true;
+  $: showingPage = showPageFields && (activeTab === tabs[0]);
 
   function getComponent(field) {
     const fieldType = find($fieldTypes, ['id', field.type]);
