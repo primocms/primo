@@ -5,6 +5,7 @@
 </script>
 
 <script>
+  import { _ as C } from 'svelte-i18n';
   import { onMount, getContext } from 'svelte';
   import {some as _some} from 'lodash-es';
   import fileSaver from 'file-saver'
