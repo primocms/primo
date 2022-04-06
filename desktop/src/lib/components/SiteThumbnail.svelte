@@ -26,6 +26,7 @@
   }
 
   async function getPreview(site) {
+    if (!site) return
     const homepage = find(site.pages, ['id', 'index'])
     generatedPreview = await buildStaticPage({
       page: homepage,
