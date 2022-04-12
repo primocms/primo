@@ -42,7 +42,8 @@
   let loading = false
   async function connectToServer() {
     loading = true
-    const endpoint = `${serverConfig.url}/api.json`
+    const url = serverConfig.url.replace(/\/$/, "") // remove trailing slash if present
+    const endpoint = `${url}/api.json`
     let data
     try {
       const res = await axios.get(endpoint, {
@@ -64,8 +65,17 @@
       connectedToServer = true
       serverErrorMessage = ''
     } else {
+      config.update((c) => ({
+        ...c,
+        serverConfig: {
+          url: '',
+          token: ''
+        },
+      }))
       connectedToServer = false
-      serverErrorMessage = `Could not connect to ${serverConfig.url}. Ensure the address and token are correct & try again.`
+      if (serverConfig.url) {
+        serverErrorMessage = `Could not connect to ${serverConfig.url}. Ensure the address and token are correct & try again.`
+      }
     }
     loading = false
   }
@@ -86,7 +96,7 @@
     {:else if activeTab.label === 'Server'}
       <h1 class="primo-heading-lg heading">
         Primo Server <span class="supporting-text"
-          >Connect to a primo server to manage your sites from your desktop</span
+          >Connect to a primo server to manage your server sites from your desktop</span
         >
       </h1>
       <form on:submit|preventDefault={connectToServer}>
@@ -124,11 +134,11 @@
       <hr>
       <div class="container">
         <h2 class="heading">
-          Telemetry
-          <span class="supporting-text">We collect anonymous usage data to make Primo better. <a href="https://primo.af/privacy" target="blank">Learn More</a></span>
+          Usage Data
+          <span class="supporting-text">We collect anonymous usage data to make Primo better. <a href="https://primo.af/privacy-policy" target="blank">Learn More</a></span>
         </h2>
         <label>
-          <span>Enable Telemetry</span>
+          <span>Enable Anonymous Usage Data Collection</span>
           <input type="checkbox" checked={$config.telemetryEnabled} on:change={() => {
             config.update(c => ({
               ...c,
