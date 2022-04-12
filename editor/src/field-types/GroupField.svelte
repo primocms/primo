@@ -7,8 +7,13 @@
 
   export let field;
 
+  let subfieldsWithValues = field.fields.map(subfield => ({
+    ...subfield,
+    value: field.value[subfield.key]
+  }))
+  
   function setFieldValue() {
-    field.value = _chain(field.fields).keyBy('key').mapValues('value').value()
+    field.value = _chain(subfieldsWithValues).keyBy('key').mapValues('value').value()
   }
 
   function onInput() {
@@ -24,7 +29,7 @@
 </script>
 
 <Card title={field.label}>
-  {#each field.fields as subfield}
+  {#each subfieldsWithValues as subfield}
     <div class="group-item">
       <svelte:component
         this={getFieldComponent(subfield)}
