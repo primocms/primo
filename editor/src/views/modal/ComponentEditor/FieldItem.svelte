@@ -1,4 +1,5 @@
 <script>
+  import {cloneDeep} from 'lodash-es'
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -16,6 +17,13 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
+  console.log(field)
+  $: console.log(field)
+
+  function dispatchUpdate() {
+    dispatch('input', cloneDeep(field))
+  }
+
 </script>
 
 <EditField
@@ -27,7 +35,7 @@
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
-    on:change={() => dispatch('input')}
+    on:change={dispatchUpdate}
     bind:value={field.type}
     slot="type">
     {#each $fieldTypes as field}
@@ -47,7 +55,7 @@
   placeholder="heading"
   bind:value={field.key}
   on:input={() => {
-    dispatch('input')
+    dispatchUpdate()
     field.key = validateFieldKey(field.key)
   }}
   slot="key" />
@@ -56,13 +64,11 @@
   type="text"
   placeholder="Lorem ipsum"
   bind:value={field.default}
-  on:input={() => {
-    dispatch('input')
-  }}
+  on:input
   slot="default-value" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
-  <svelte:self 
+  <!-- <svelte:self 
     bind:field={subfield} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
@@ -71,7 +77,7 @@
     on:createsubfield
     on:input
     level={level+1}
-  />
+  /> -->
 {/each}
 {#if field.type === 'select'}
   <SelectField {field} {level} />

@@ -4,12 +4,10 @@
   import HSplitPane from './HSplitPane.svelte';
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
-  import { PrimaryButton } from '../../../components/buttons';
   import { Tabs, Card } from '../../../components/misc';
   import FullCodeEditor from './FullCodeEditor.svelte';
   import { CodePreview } from '../../../components/misc';
-  import {Field} from '../../../const'
-  import FieldItem from './FieldItem.svelte'
+  import GenericFields from '../../../components/GenericFields.svelte'
 
   import {
     processCode,
@@ -23,7 +21,7 @@
     id as pageID,
     code as pageCode
   } from '../../../stores/app/activePage';
-  import { showingIDE, fieldTypes } from '../../../stores/app';
+  import { showingIDE } from '../../../stores/app';
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
   import { getPageData } from '../../../stores/helpers';
@@ -63,6 +61,7 @@
   }
 
   function getSymbolPlaceholders(fields) {
+    console.log(cloneDeep(fields))
     return _chain(fields).keyBy('key').mapValues(f => f.default || getCachedPlaceholder(f)).value()
   }
 
@@ -241,110 +240,6 @@
     }
   }
 
-  // Functionality for handling fields
-
-  function addNewField(fieldProps = {}) {
-    saveLocalValue('fields', [
-      ...fields,
-      Field(fieldProps)
-    ]);
-  }
-
-  function createSubfield({detail:field}) {
-    const idPath = getFieldPath(fields, field.id)
-    let updatedFields = cloneDeep(fields)
-    handleSubfieldCreation(fields)
-
-    function handleSubfieldCreation(fieldsToModify) {
-      if (find(fieldsToModify, ['id', field.id])) { // field is at this level
-        const newField = cloneDeep(field)
-        newField.fields = [
-          ...newField.fields,
-          Field()
-        ]
-        _set(updatedFields, idPath, newField)
-      } else { // field is lower
-        fieldsToModify.forEach(field => handleSubfieldCreation(field.fields));
-      }
-    }
-
-    saveLocalValue('fields', updatedFields);
-  }
-
-  function deleteField({detail:field}) {
-    const idPath = getFieldPath(fields, field.id)
-    let updatedFields = cloneDeep(fields)
-
-    let parentField = _get(updatedFields, idPath.slice(0, -2))
-    if (parentField) {
-      handleDeleteSubfield(fields)
-    } else {
-      saveLocalValue('fields', fields.filter((f) => f.id !== field.id));
-    }
-
-    function handleDeleteSubfield(fieldsToModify) {
-      if (find(fieldsToModify, ['id', parentField.id])) {
-        const newField = cloneDeep(parentField)
-        newField.fields = newField.fields.filter((f) => f.id != field.id)
-        _set(updatedFields, idPath.slice(0, -2), newField)
-      }
-      else {
-        fieldsToModify.forEach(field => handleDeleteSubfield(field.fields));
-      }
-      saveLocalValue('fields', updatedFields);
-    }
-  }
-
-  function moveField({detail}) {
-    const { field, direction } = detail
-    const idPath = getFieldPath(fields, field.id)
-
-    let updatedFields = cloneDeep(fields)
-
-    handleFieldMove(fields)
-
-    function handleFieldMove(fieldsToModify) {
-      const indexToMove = fieldsToModify.findIndex(f => f.id === field.id)
-      if (indexToMove > -1) { // field is at this level
-        const withoutItem = fieldsToModify.filter((_, i) => i !== indexToMove);
-        const newFields = {
-            up: [
-              ...withoutItem.slice(0, indexToMove - 1),
-              field,
-              ...withoutItem.slice(indexToMove - 1),
-            ],
-            down: [
-              ...withoutItem.slice(0, indexToMove + 1),
-              field,
-              ...withoutItem.slice(indexToMove + 1),
-            ],
-          }[direction]
-        if (idPath.length === 1) { // field is at root level
-          updatedFields = newFields
-        } else {
-          const path = idPath.slice(0, -1) // modify 'fields' containing field being moved
-          _set(updatedFields, path, newFields)
-        }
-      } else { // field is lower
-        fieldsToModify.forEach(field => handleFieldMove(field.fields));
-      }
-    }
-
-    saveLocalValue('fields', updatedFields)
-  }
-
-  function getFieldPath(fields, id) {
-    for (const [i, field] of fields.entries()) {
-      const result = getFieldPath(field.fields, id)
-      if (result) {
-        result.unshift(i, 'fields');
-        return result
-      } else if (field.id === id) {
-        return [i]
-      } 
-    }
-  }
-
   const tabs = [
     {
       id: 'code',
@@ -359,15 +254,6 @@
   ];
 
   let activeTab = tabs[0];
-
-  function getFieldComponent(field) {
-    const fieldType = find($fieldTypes, ['id', field.type]);
-    if (fieldType && fieldType.component) {
-      return fieldType.component;
-    } else {
-      return null;
-    }
-  }
 
   let editorWidth = localStorage.getItem('editorWidth') || '66%';
   let previewWidth = localStorage.getItem('previewWidth') || '33%';
@@ -396,6 +282,8 @@
       header.button.onclick(component);
     }
   }
+
+  $: console.log(cloneDeep(fields))
 
 </script>
 
@@ -433,53 +321,13 @@
             on:save={saveComponent} 
           />
         {:else if activeTab === tabs[1]}
-          <div class="fields">
-            {#each fields as field, i}
-              <Card id="field-{i}">
-                <FieldItem 
-                  bind:field
-                  isFirst={i === 0}
-                  isLast={i === fields.length - 1}
-                  on:delete={deleteField}
-                  on:move={moveField}
-                  on:createsubfield={createSubfield}
-                  on:input={refreshPreview}
-                />
-              </Card>
-            {/each}
-            <PrimaryButton icon="fas fa-plus" on:click={addNewField}>
-              Create a Field
-            </PrimaryButton>
-          </div>
+          <GenericFields bind:fields on:input={refreshPreview} />
         {/if}
       {:else}
-        <div>
-          {#each fields as field (`${field.id}-${$locale}`)} 
-            {#if (field.key || field.type === 'info') && getFieldComponent(field)}
-              <div
-                class="field-item"
-                class:repeater={field.key === 'repeater'}
-                id="field-{field.key}">
-                <svelte:component
-                  on:input={() => {
-                    fields = fields.filter(Boolean) // to trigger setting `data`
-                    saveLocalContent()
-                  }}
-                  this={getFieldComponent(field)}
-                  {field} />
-              </div>
-            {:else if getFieldComponent(field)}
-              <div class="invalid-field">
-                <span>This field needs a key in order to be valid</span>
-              </div>
-            {/if}
-          {:else}
-            <p class="empty-description">
-              You'll need to create and integrate a field before you can edit
-              this component's content from here
-            </p>
-          {/each}
-        </div>
+        <GenericFields bind:fields on:input={() => {
+          fields = fields.filter(Boolean) // to trigger setting `data`
+          saveLocalContent()
+        }} />
       {/if}
     </div>
     <div slot="right">

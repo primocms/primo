@@ -150,16 +150,9 @@ class:mounted>
     position: fixed;
     left: 0;
     right: 0;
-    top: -10rem;
+    top: 0;
     z-index: 99999999;
     padding-top: 30px;
-    transition: 0.2s top;
-    transition-delay: 0.5s;
-    will-change: top;
-
-    &.mounted {
-      top: 0;
-    }
   }
 
   .left {

@@ -14,8 +14,6 @@
   import { code as pageCode } from '../../stores/app/activePage';
   import {
     site,
-    pages as pagesStore,
-    // css as siteCSS,
     code as siteCode
   } from '../../stores/data/draft';
   import { buildStaticPage } from '../../stores/helpers';
