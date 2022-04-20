@@ -211,6 +211,8 @@
     background: var(--color-gray-8);
   }
   .image-preview {
+    border: 1px dashed #3E4041;
+    border-radius: 4px;
     aspect-ratio: 1 / 1;
     /* width: 100%; */
     height: 100%;
