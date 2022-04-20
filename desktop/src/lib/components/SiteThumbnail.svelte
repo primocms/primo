@@ -37,9 +37,9 @@
       })
 
       if (updatedPreview !== preview) {
-        generatedPreview = preview
-        dispatch('setPreview', generatedPreview)
-        if (!generatedPreview) {
+        generatedPreview = updatedPreview
+        dispatch('setPreview', updatedPreview)
+        if (!updatedPreview) {
           valid = false
         } else {
           valid = true
