@@ -217,7 +217,9 @@ ipcMain.on('load-data', (event, directory) => {
 })
 
 ipcMain.on('set-preview', (event, site) => {
-  fs.writeFileSync(`${savePath}/${site.id}.html`, site.preview)
+  if (site.preview) {
+    fs.writeFileSync(`${savePath}/${site.id}.html`, site.preview)
+  }
   event.returnValue = true
 })
 

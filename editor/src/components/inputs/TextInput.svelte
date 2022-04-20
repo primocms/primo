@@ -40,12 +40,12 @@
     margin-bottom: var(--TextInput-mb, 0);
     margin-right: var(--TextInput-mr, 0);
     margin-left: var(--TextInput-ml, 0);
+    width: 100%;
 
     span.label {
       font-size: var(--TextInput-label-font-size, 1rem);
       margin-bottom: 0.25rem;
       color: var(--color-gray-2);
-      font-weight: 600;
     }
 
     .input-container {
@@ -61,17 +61,21 @@
       input {
         display: block;
         width: 100%;
-        background: var(--color-gray-8);
+        background: var(--input-background, #58595B);
+        border: var(--input-border);
         color: var(--color-gray-1);
         outline-color: var(--primo-color-primored);
         font-weight: 500;
-        border-radius: 0.125rem;
+        border-radius: var(--input-border-radius);
         padding: 0.5rem 0.75rem;
         flex: 1;
-        border: 0;
 
         &:focus {
           outline: 0;
+        }
+
+        &::placeholder {
+          color: var(--color-gray-7);
         }
       }
     }

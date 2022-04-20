@@ -1,4 +1,6 @@
 <script>
+  import {cloneDeep} from 'lodash-es'
+  import Icon from '@iconify/svelte';
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -16,6 +18,10 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
+  function dispatchUpdate() {
+    dispatch('input', cloneDeep(field))
+  }
+
 </script>
 
 <EditField
@@ -27,8 +33,14 @@
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
-    on:change={() => dispatch('input')}
-    bind:value={field.type}
+    on:change={({target}) => {
+      field = {
+        ...field,
+        type: target.value,
+      }
+      dispatchUpdate()
+    }}
+    value={field.type}
     slot="type">
     {#each $fieldTypes as field}
       <option value={field.id}>{field.label}</option>
@@ -47,7 +59,7 @@
   placeholder="heading"
   bind:value={field.key}
   on:input={() => {
-    dispatch('input')
+    dispatchUpdate()
     field.key = validateFieldKey(field.key)
   }}
   slot="key" />
@@ -56,20 +68,25 @@
   type="text"
   placeholder="Lorem ipsum"
   bind:value={field.default}
-  on:input={() => {
-    dispatch('input')
-  }}
+  on:input
   slot="default-value" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
-    bind:field={subfield} 
+    field={subfield} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete
     on:move
     on:createsubfield
-    on:input
+    on:input={({detail:updatedSubfield}) => {
+      console.log({updatedSubfield})
+      field = {
+        ...field,
+        fields: field.fields.map(subfield => subfield.id === updatedSubfield.id ? updatedSubfield : subfield)
+      }
+      dispatchUpdate()
+    }}
     level={level+1}
   />
 {/each}
@@ -80,19 +97,22 @@
   <button
     style="margin-left: {1.5 + level}rem"
     class="field-button subfield-button"
-    on:click={() => dispatch('createsubfield', field)}><i class="fas fa-plus" />Create Subfield</button>
+    on:click={() => dispatch('createsubfield', field)}>
+    <Icon icon="akar-icons:plus" />
+    <span>Create Subfield</span>
+  </button>
 {/if}
 
 <style lang="postcss">
   select {
     width: 100%;
-    padding: 8px;
     border-right: 4px solid transparent;
     background: var(--color-gray-9);
     color: var(--color-gray-2);
     font-size: var(--font-size-2);
     font-weight: 600;
     border: 0;
+    padding: 0.5rem !important;
   }
   textarea {
     color: var(--primo-color-black);
@@ -100,19 +120,26 @@
   }
   .field-button {
     width: 100%;
-    background: var(--color-gray-7);
-    color: var(--color-gray-3);
+    background: var(--button-background);
+    color: var(--button-color);
     padding: 8px 0;
     border-bottom-right-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     transition: var(--transition-colors);
 
+    display: flex;
+    justify-content: center;
+
     i {
       margin-right: 0.5rem;
     }
+
+    span {
+      margin-left: 0.25rem;
+    }
   }
   .field-button:hover {
-    background: var(--color-gray-9);
+    background: var(--button-hover-background);
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
@@ -131,6 +158,10 @@
   }
   .field-button.subfield-button:focus {
     background: var(--color-gray-8);
+  }
+
+  .input {
+    padding: 0.5rem;
   }
 
   input {

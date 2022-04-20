@@ -36,8 +36,8 @@
       gap: 0.75rem;
 
       span {
-        font-weight: 700;
-        font-size: var(--font-size-2);
+        font-weight: var(--label-font-weight, 700);
+        font-size: var(--label-font-size, 10rem);
       }
 
       select {

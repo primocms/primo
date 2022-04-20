@@ -1,19 +1,21 @@
 <script>
-  import { find, cloneDeep, isEqual, chain as _chain } from 'lodash-es';
+  import { cloneDeep, isEqual, chain as _chain, debounce } from 'lodash-es';
   import { _ as C } from 'svelte-i18n';
-  import { EditField } from '../../components/inputs';
   import { Tabs } from '../../components/misc';
-  import { Card } from '../../components/misc';
-  import { createUniqueID } from '../../utilities';
-  import {getEmptyValue} from '../../utils'
+  import Preview from '../../components/misc/Preview.svelte';
+  import {getEmptyValue, processCode} from '../../utils'
+  import HSplitPane from './ComponentEditor/HSplitPane.svelte';
 
   import ModalHeader from './ModalHeader.svelte';
-  import { showingIDE, userRole, fieldTypes } from '../../stores/app';
-  import { locale } from '../../stores/app/misc';
+  import { showingIDE } from '../../stores/app';
+  import { locale, onMobile } from '../../stores/app/misc';
   import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
-  import { id as pageID, fields as pageFields } from '../../stores/app/activePage';
-  import { fields as siteFields, content } from '../../stores/data/draft';
+  import activePage, { id as pageID, fields as pageFields, code as pageCode } from '../../stores/app/activePage';
+  import site, { fields as siteFields, content } from '../../stores/data/draft';
+  import { buildStaticPage } from '../../stores/helpers';
+
+  import GenericFields from '../../components/GenericFields.svelte';
 
   let localContent = cloneDeep($content)
 
@@ -39,71 +41,6 @@
         }
       }
     })
-  }
-
-  const Field = () => ({
-    id: createUniqueID(),
-    key: '',
-    label: '',
-    value: '',
-    type: 'text',
-    fields: [],
-  });
-
-  function addField() {
-    if (showingPage) {
-      localPageFields = [...localPageFields, Field()];
-    } else {
-      localSiteFields = [...localSiteFields, Field()];
-    }
-  }
-
-  function addSubField(id) {
-    if (showingPage) {
-      localPageFields = localPageFields.map((field) => ({
-        ...field,
-        fields: field.id === id ? [...field.fields, Field()] : field.fields,
-      }));
-    } else {
-      localSiteFields = localSiteFields.map((field) => ({
-        ...field,
-        fields: field.id === id ? [...field.fields, Field()] : field.fields,
-      }));
-    }
-  }
-
-  function deleteSubfield(fieldId, subfieldId) {
-    if (showingPage) {
-      localPageFields = localPageFields.map((field) =>
-        field.id !== fieldId
-          ? field
-          : {
-              ...field,
-              fields: field.fields.filter(
-                (subfield) => subfield.id !== subfieldId
-              ),
-            }
-      );
-    } else {
-      localSiteFields = localSiteFields.map((field) =>
-        field.id !== fieldId
-          ? field
-          : {
-              ...field,
-              fields: field.fields.filter(
-                (subfield) => subfield.id !== subfieldId
-              ),
-            }
-      );
-    }
-  }
-
-  function deleteField(id) {
-    if (showingPage) {
-      localPageFields = localPageFields.filter((field) => field.id !== id);
-    } else {
-      localSiteFields = localSiteFields.filter((field) => field.id !== id);
-    }
   }
 
   $: $locale, setupFields()
@@ -132,10 +69,8 @@
         }
       }
     }
-    console.log(localContent)
+    updatePagePreview()
   }
-
-  let disabled = false;
 
   const tabs = [
     {
@@ -151,90 +86,27 @@
 
   let showingPage = true;
   $: showingPage = (showPageFields || $showingIDE) && (activeTab === tabs[0]);
-
-  function getComponent(field) {
-    const fieldType = find($fieldTypes, ['id', field.type]);
-    if (fieldType) {
-      return fieldType.component;
-    } else {
-      console.warn(
-        `Field type '${field.type}' no longer exists, removing '${field.label}' field`
-      );
-      return null;
-    }
-  }
-
-  function getDevComponent(field) {
-    const fieldType = find($fieldTypes, ['id', field.type]);
-    if (fieldType) {
-      return fieldType.devComponent;
-    } else {
-      console.warn(
-        `Field type '${field.type}' no longer exists, removing '${field.label}' field`
-      );
-      return null;
-    }
-  }
-
-  function validateFieldKey(key) {
-    // replace dash and space with underscore
-    return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
-  }
-
-  function moveField({ i: parentIndex, direction, childIndex = null }) {
-    const activeFields = showingPage ? localPageFields : localSiteFields;
-    const parentField = activeFields[parentIndex];
-    let updatedFields = activeFields;
-
-    if (direction !== 'up' && direction !== 'down') {
-      console.error('Direction must be up or down');
-      return;
-    }
-
-    if (childIndex === null) {
-      const withoutItem = activeFields.filter((_, i) => i !== parentIndex);
-      updatedFields = {
-        up: [
-          ...withoutItem.slice(0, parentIndex - 1),
-          parentField,
-          ...withoutItem.slice(parentIndex - 1),
-        ],
-        down: [
-          ...withoutItem.slice(0, parentIndex + 1),
-          parentField,
-          ...withoutItem.slice(parentIndex + 1),
-        ],
-      }[direction];
-    } else {
-      const childField = parentField.fields[childIndex];
-      const withoutItem = parentField.fields.filter((_, i) => i !== childIndex);
-      updatedFields[parentIndex].fields = {
-        up: [
-          ...withoutItem.slice(0, childIndex - 1),
-          childField,
-          ...withoutItem.slice(childIndex - 1),
-        ],
-        down: [
-          ...withoutItem.slice(0, childIndex + 1),
-          childField,
-          ...withoutItem.slice(childIndex + 1),
-        ],
-      }[direction];
-    }
-
-    if (showingPage) {
-      localPageFields = updatedFields;
-    } else {
-      localSiteFields = updatedFields;
-    }
-  }
   
   function applyFields() {
     saveFields(localPageFields, localSiteFields, localContent)
     modal.hide();
   }
 
-  let onChange = () => {};
+  let preview = localStorage.getItem('preview') || ''
+  $: localStorage.setItem('preview', preview)
+  updatePagePreview()
+  async function updatePagePreview() {
+    preview = await buildStaticPage({
+      page: $activePage,
+      site: {
+        ...$site,
+        content: localContent
+      },
+    });
+  }
+
+  let editorWidth = localStorage.getItem('editorWidth') || '66%';
+  let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
 </script>
 
@@ -250,382 +122,78 @@
   }} />
 
 <main>
-  {#if showPageFields || $showingIDE}
-    <Tabs {tabs} bind:activeTab />
-  {/if}
-  {#if $showingIDE}
-    {#if showingPage}
-      {#each localPageFields as field, i (field.id)}
-        <Card>
-          <EditField
-            showDefaultValue={false}
-            minimal={field.type === 'info'}
-            on:delete={() => deleteField(field.id)}
-            on:move={({ detail: direction }) => {
-              console.log(direction);
-              moveField({ i, direction });
-            }}
-            {disabled}>
-            <select bind:value={field.type} slot="type" {disabled}>
-              {#each $fieldTypes as field}
-                <option value={field.id}>{field.label}</option>
-              {/each}
-            </select>
-            <textarea slot="main" class="info" bind:value={field.value} />
-            <input
-              class="input label-input"
-              type="text"
-              placeholder="Heading"
-              bind:value={field.label}
-              slot="label"
-              {disabled} />
-            <input
-              class="input key-input"
-              type="text"
-              placeholder="main_heading"
-              bind:value={field.key}
-              on:input={() => (field.key = validateFieldKey(field.key))}
-              slot="key"
-              {disabled} />
-          </EditField>
-          <!-- <svelte:component this={field.devComponent} /> -->
-          <svelte:component this={getDevComponent(field)} {field} />
-          {#if field.type === 'group'}
-            {#if field.fields}
-              {#each field.fields as subfield, childIndex (subfield.id)}
-                <EditField
-                  showDefaultValue={false}
-                  fieldTypes={$fieldTypes}
-                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                  on:delete={() => deleteSubfield(field.id, subfield.id)}
-                  {disabled}>
-                  <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
-                      <option value={field.id}>{field.label}</option>
-                    {/each}
-                  </select>
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="Heading"
-                    bind:value={subfield.label}
-                    slot="label"
-                    {disabled} />
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="main_heading"
-                    bind:value={subfield.key}
-                    slot="key"
-                    {disabled} />
-                </EditField>
-              {/each}
-            {/if}
-            <button
-              class="field-button subfield-button"
-              on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
-          {:else if field.type === 'repeater'}
-            {#if field.fields}
-              {#each field.fields as subfield, childIndex (subfield.id)}
-                <EditField
-                  showDefaultValue={false}
-                  fieldTypes={$fieldTypes}
-                  child={true}
-                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                  on:delete={() => deleteSubfield(field.id, subfield.id)}
-                  {disabled}>
-                  <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
-                      <option value={field.id}>{field.label}</option>
-                    {/each}
-                  </select>
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="Heading"
-                    bind:value={subfield.label}
-                    slot="label"
-                    {disabled} />
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="main_heading"
-                    bind:value={subfield.key}
-                    slot="key"
-                    {disabled} />
-                </EditField>
-              {/each}
-            {/if}
-            <button
-              class="field-button subfield-button"
-              on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
-          {/if}
-        </Card>
-      {/each}
-    {:else}
-      {#each localSiteFields as field, i (`${field.id}-${$locale}`)}
-        <Card>
-          <EditField
-            showDefaultValue={false}
-            minimal={field.type === 'info'}
-            on:delete={() => deleteField(field.id)}
-            on:move={({ detail: direction }) => moveField({ i, direction })}
-            {disabled}>
-            <select bind:value={field.type} slot="type" {disabled}>
-              {#each $fieldTypes as field}
-                <option value={field.id}>{field.label}</option>
-              {/each}
-            </select>
-            <textarea slot="main" class="info" bind:value={field.value} />
-            <input
-              class="input label-input"
-              type="text"
-              placeholder="Heading"
-              bind:value={field.label}
-              slot="label"
-              {disabled} />
-            <input
-              class="input key-input"
-              type="text"
-              placeholder="main_heading"
-              bind:value={field.key}
-              on:input={() => (field.key = validateFieldKey(field.key))}
-              slot="key"
-              {disabled} />
-          </EditField>
-          <svelte:component this={getDevComponent(field)} {field} />
-          {#if field.type === 'group'}
-            {#if field.fields}
-              {#each field.fields as subfield}
-                <EditField
-                  showDefaultValue={false}
-                  child={true}
-                  fieldTypes={$fieldTypes}
-                  on:delete={() => deleteSubfield(field.id, subfield.id)}
-                  {disabled}>
-                  <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
-                      <option value={field.id}>{field.label}</option>
-                    {/each}
-                  </select>
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="Heading"
-                    bind:value={subfield.label}
-                    slot="label"
-                    {disabled} />
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="main_heading"
-                    bind:value={subfield.key}
-                    slot="key"
-                    {disabled} />
-                </EditField>
-              {/each}
-            {/if}
-            <button
-              class="field-button subfield-button"
-              on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />Add a Subfield</button>
-          {:else if field.type === 'repeater'}
-            {#if field.fields}
-              {#each field.fields as subfield}
-                <EditField
-                  showDefaultValue={false}
-                  fieldTypes={$fieldTypes}
-                  on:move={({ detail: direction }) => moveField( { i, direction, childIndex } )}
-                  on:delete={() => deleteSubfield(field.id, subfield.id)}
-                  {disabled}>
-                  <select bind:value={subfield.type} slot="type" {disabled}>
-                    {#each $fieldTypes as field}
-                      <option value={field.id}>{field.label}</option>
-                    {/each}
-                  </select>
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="Heading"
-                    bind:value={subfield.label}
-                    slot="label"
-                    {disabled} />
-                  <input
-                    class="input"
-                    type="text"
-                    placeholder="main_heading"
-                    bind:value={subfield.key}
-                    slot="key"
-                    {disabled} />
-                </EditField>
-              {/each}
-            {/if}
-            <button
-              class="field-button subfield-button"
-              on:click={() => addSubField(field.id)}
-              {disabled}><i class="fas fa-plus" />{$C('Add a Subfield')}</button>
-          {/if}
-        </Card>
-      {/each}
-    {/if}
-    <button class="field-button" on:click={addField} {disabled}><i
-        class="fas fa-plus" />{$C('Add a Field')}</button>
-  {:else if showingPage}
-    {#each localPageFields as field}
-      {#if getComponent(field)}
-        <div class="field-item" id="field-{field.key}">
-          <svelte:component
-            this={getComponent(field)}
-            {field}
-            fields={localPageFields.filter((f) => f.id !== field.id)}
-            on:input={saveLocalContent} />
-        </div>
-      {/if}
-    {:else}
-      <p class="empty-description">
-        {#if $userRole === 'developer'}
-          You'll need to create and integrate a field before you can edit
-          content from here
-        {:else}
-          The site developer will need to create and integrate a field before
-          you can edit content from here
+  <HSplitPane
+  leftPaneSize={$onMobile ? '100%' : editorWidth}
+  rightPaneSize={$onMobile ? '0' : previewWidth}
+  hideRightPanel={$onMobile}
+  on:resize={({ detail }) => {
+    const { left, right } = detail;
+    localStorage.setItem('editorWidth', left);
+    localStorage.setItem('previewWidth', right);
+  }}>
+    <div slot="left">
+      <div class="editor-container">
+        {#if showPageFields || $showingIDE}
+          <Tabs {tabs} bind:activeTab />
         {/if}
-      </p>
-    {/each}
-  {:else}
-    {#each localSiteFields as field}
-      {#if getComponent(field)}
-        <div class="field-item" id="field-{field.key}">
-          <svelte:component
-            this={getComponent(field)}
-            {field}
-            fields={localSiteFields.filter((f) => f.id !== field.id)}
-            on:input={saveLocalContent} />
-        </div>
-      {/if}
-    {:else}
-      <p class="empty-description">
-        {#if $userRole === 'developer'}
-          You'll need to create and integrate a field before you can edit
-          content from here
+        {#if showingPage}
+          <GenericFields bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
         {:else}
-          The site developer will need to create and integrate a field before
-          you can edit content from here
+          <GenericFields bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
         {/if}
-      </p>
-    {/each}
-  {/if}
+      </div>
+    </div>
+    <div slot="right" class="preview">
+      <div class="preview-container">
+        <Preview {preview} ratio={1} />
+      </div>
+    </div>
+  </HSplitPane>
 </main>
 
 <style lang="postcss">
+  * {
+    --Preview-iframe-width: 100%;
+  }
   main {
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem;
-    color: var(--color-gray-2);
+    padding: 0 0.5rem;
     background: var(--primo-color-black);
-    overflow: scroll;
+    height: 100%;
+    display: flex;
 
-    .empty-description {
-      color: var(--color-gray-4);
-      font-size: var(--font-size-2);
-      text-align: center;
-      height: 100%;
-      display: flex;
-      align-items: flex-start;
-      padding: 6rem;
-      justify-content: center;
-      margin-top: 12px;
-    }
+    .editor-container {
+        display: flex;
+        flex-direction: column;
+      }
 
-    select {
-      background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-      background-position: 100%;
-      background-repeat: no-repeat;
-      appearance: none;
+      .preview-container {
+        height: auto;
+        max-height: calc(100vh - 7rem);
+        overflow: scroll;
+
+        @media (max-width: 600px) {
+          height: 24rem;
+        }
+      }
+  }
+
+  .preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--primo-color-white);
+      display: block;
       width: 100%;
-      padding: 8px;
-      border-right: 4px solid transparent;
-      background: var(--color-gray-9);
-      color: var(--color-gray-2);
-      font-size: var(--font-size-2);
-      font-weight: 600;
-      border: 0;
-    }
-  }
-  textarea.info {
-    width: 100%;
-    background: transparent;
-    height: 7rem;
-    padding: 1rem;
-  }
-  .field-item {
-    padding: 1rem;
-    box-shadow: var(--box-shadow);
-    margin-bottom: 0.5rem;
-    background: var(--color-gray-9);
-  }
-  .input {
-    padding: 0.25rem 0.5rem;
-  }
-  input,
-  select {
-    outline: 0;
-    border: 0;
-  }
-  .field-button {
-    width: 100%;
-    background: var(--color-gray-8);
-    color: var(--color-gray-3);
-    padding: 0.5rem 0;
-    border-radius: var(--primo-border-radius);
-    transition: var(--transition-colors);
+      overflow: hidden;
+      transition: var(--transition-colors);
+      min-height: 10rem;
 
-    i {
-      margin-right: 0.5rem;
+      .preview-container {
+        all: unset;
+        height: 100%;
+        z-index: -1; /* needed for link */
+      }
     }
-  }
-  .field-button:hover {
-    background: var(--color-gray-9);
-  }
-  .field-button[disabled] {
-    background: var(--color-gray-5);
-    cursor: not-allowed;
-  }
-  .field-button.subfield-button {
-    width: calc(100% - 1rem);
-    border-radius: 2px;
-    font-size: var(--font-size-2);
-    padding: 4px 0;
-    margin: 8px 0;
-    margin-left: 1.5rem;
-    color: var(--color-gray-2);
-    transition: var(--transition-colors);
-    display: block;
-  }
-  input {
-    background: var(--color-gray-7);
-    color: var(--color-gray-2);
-    border-radius: 2px;
-  }
-  input:focus {
-    outline: 0;
-  }
-  select {
-    padding: 0.5rem;
-    border-right: 4px solid transparent;
-    background: var(--color-gray-9);
-    color: var(--color-gray-2);
-    font-size: var(--font-size-2);
-    font-weight: 600;
-  }
-
-  button {
-    i {
-      margin-right: 0.5rem;
-    }
-  }
 
 </style>

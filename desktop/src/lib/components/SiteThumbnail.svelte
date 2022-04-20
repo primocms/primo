@@ -28,19 +28,24 @@
   async function getPreview(site) {
     if (!site) return
     const homepage = find(site.pages, ['id', 'index'])
-    generatedPreview = await buildStaticPage({
-      page: homepage,
-      site,
-      separateModules: false
+
+    window.requestIdleCallback(async () => {
+      const updatedPreview = await buildStaticPage({
+        page: homepage,
+        site,
+        separateModules: false
+      })
+
+      if (updatedPreview !== preview) {
+        generatedPreview = updatedPreview
+        dispatch('setPreview', updatedPreview)
+        if (!updatedPreview) {
+          valid = false
+        } else {
+          valid = true
+        }
+      }
     })
-
-    dispatch('setPreview', generatedPreview)
-
-    if (!generatedPreview) {
-      valid = false
-    } else {
-      valid = true
-    }
   }
 
   // wait for processor to load before building preview

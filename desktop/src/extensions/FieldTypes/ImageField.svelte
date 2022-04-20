@@ -1,8 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
+  import Icon from '@iconify/svelte';
   import imageCompression from 'browser-image-compression'
   import svgToMiniDataURI from 'mini-svg-data-uri'
+  import TextInput from '@primo-app/primo/src/components/inputs/TextInput.svelte';
 
   const defaultValue = {
     alt: '',
@@ -94,7 +96,7 @@
   $: if (imagePreview.startsWith('primo:')) hydratePreview()
 </script>
 
-<div>
+<div class="image-field">
   <span class="field-label">{field.label}</span>
   <div class="image-info">
     {#if loading}
@@ -155,44 +157,45 @@
       </div>
     {/if}
     <div class="inputs">
-      <label class="image-input">
-        <span>URL</span>
-        <input
-          on:input={(e) => {
-            const { value } = e.target
-            imagePreview = value
-            setValue({
-              url: value,
-              size: null,
-            })
-            dispatch('input')
-          }}
-          value={field.value.url}
-          type="url"
-        />
-      </label>
-      <label class="image-input">
-        <span>Description</span>
-        <input type="text" bind:value={field.value.alt} />
-      </label>
+      <TextInput bind:value={field.value.alt} label="Description" />
+      <TextInput value={field.value.url} label="URL" on:input={(e) => {
+        const { value } = e.target
+        imagePreview = value
+        setValue({
+          url: value,
+          size: null,
+        })
+        dispatch('input')
+      }} />
     </div>
   </div>
 </div>
 <slot />
 
 <style lang="postcss">
+  * {
+    --TextInput-label-font-size: 0.75rem;
+  }
+  .image-field {
+    display: grid;
+    gap: 1rem;
+  }
   .field-label {
     font-size: var(--font-size-1);
     font-weight: 600;
     display: inline-block;
-    padding-bottom: 0.25rem;
+
+    font-size: 0.875rem;
+    font-weight: 400;
+
+    font-size: var(--label-font-size, 10rem);
   }
   .image-info {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 9rem 4fr;
     overflow: hidden;
-    border: 1px solid var(--primo-color-primored);
-    padding: 0.5rem;
+    /* border: 1px solid var(--primo-color-primored); */
+    /* padding: 0.5rem; */
 
     .spinner-container {
       background: var(--primo-color-primored);
@@ -208,10 +211,14 @@
     background: var(--color-gray-8);
   }
   .image-preview {
-    width: 100%;
-    padding-top: 50%;
+    border: 1px dashed #3E4041;
+    border-radius: 4px;
+    aspect-ratio: 1 / 1;
+    /* width: 100%; */
+    height: 100%;
+    /* padding-top: 50%; */
     position: relative;
-    margin-bottom: 0.25rem;
+    /* margin-bottom: 0.25rem; */
 
     .image-upload {
       flex: 1 1 0%;
@@ -277,9 +284,10 @@
   }
 
   .inputs {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    gap: 1rem;
     width: 100%;
+    padding: 0 1.3125rem;
 
     .image-input {
       display: flex;
@@ -294,11 +302,12 @@
       }
 
       input {
+        background: var(--input-background);
+        border: var(--input-border, 0);
         font-size: inherit;
         flex: 1;
         padding: 0 0.25rem;
         outline: 0;
-        border: 0;
       }
     }
   }

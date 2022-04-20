@@ -150,9 +150,11 @@
   let toolbar;
   let page;
   $: if (toolbar && page) {
-    page.style.borderTop = `${
-      toolbar.clientHeight + 2
-    }px solid var(--primo-color-black)`;
+    setTimeout(() => {
+      page.style.borderTop = `${
+        toolbar.clientHeight
+      }px solid var(--primo-color-black)`;
+    }, 0)
   }
 </script>
 

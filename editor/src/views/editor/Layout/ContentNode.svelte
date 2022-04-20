@@ -196,7 +196,7 @@
   .menu {
     font-size: var(--font-size-1);
     display: flex;
-    border-radius: 0.125rem;
+    border-radius: var(--input-border-radius);
     margin-left: 0.5rem;
     transition: opacity 0.1s;
     z-index: 99999 !important;

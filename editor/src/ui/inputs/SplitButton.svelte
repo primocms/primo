@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import Icon from '@iconify/svelte';
   import { findIndex } from 'lodash-es';
   export let buttons = [{ id: 'PLACEHOLDER' }];
   export let selected;
@@ -18,7 +18,12 @@
       on:click={() => {
         active = i;
         selected = button.id;
-      }}>{button.label || button.id}</button>
+      }}>
+        {#if button.icon}
+          <Icon icon={button.icon} width="14px" />
+        {/if} 
+        <span>{button.label || button.id}</span>
+      </button>
   {/each}
 </div>
 
@@ -27,20 +32,33 @@
     display: flex;
     flex-wrap: wrap;
     margin-top: 0.25rem;
-    border-radius: 0.125rem;
+    border-radius: var(--input-border-radius);
     margin-bottom: var(--SplitButton-mb, 0);
 
+    background: var(--input-background, #58595B);
+    padding: 0.25rem;
+    border-radius: 2rem;
+
     button {
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      
       flex: 1;
       background: var(--color-gray-7);
-      color: var(--color-gray-1);
-      padding: 0.5rem;
+      color: #8A8C8E;
+      padding: 0.5rem 2rem;
       font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+
+      background: transparent;
 
       &:focus,
       &.active {
-        text-decoration: underline var(--primo-color-primored);
-        box-shadow: var(--ring);
+        color: white;
+        background: #3E4041;
         z-index: 1;
       }
     }

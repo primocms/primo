@@ -28,7 +28,7 @@
 <style>
   .main {
     position: relative;
-    padding-top: 0.5rem;
+    padding-top: 1rem;
   }
   svg {
     position: absolute;

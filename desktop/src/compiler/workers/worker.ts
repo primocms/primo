@@ -7,9 +7,16 @@ import {locales} from '@primo-app/primo/src/const'
 // Based on https://github.com/pngwn/REPLicant
 
 const CDN_URL = "https://cdn.jsdelivr.net/npm";
+const cached_modules = new Map();
 
 async function fetch_package(url) {
-    return (await fetch(url)).text();
+    if (cached_modules.has(url)) {
+        return cached_modules.get(url)
+    } else {
+        const res = (await fetch(url)).text();
+        cached_modules.set(url, res);
+        return res
+    }
 }
 
 registerPromiseWorker(async function ({code,site,locale,hydrated,buildStatic = true, format = 'esm'}) {

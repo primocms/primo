@@ -99,6 +99,7 @@
     @tailwind base;
     font-family: 'Satoshi', sans-serif !important;
     direction: ltr;
+    user-select: none;
 
     .primo-modal {
     color: var(--color-gray-1);

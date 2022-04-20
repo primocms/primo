@@ -14,9 +14,10 @@
   let siteID = ``
   let siteIDFocused = false
   let message = ''
-  $: canCreateSite = siteName && siteID
 
   let siteData
+
+  $: canCreateSite = siteName && siteID && siteData
 
   async function createNewSite() {
     loading = true
