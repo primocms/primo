@@ -354,25 +354,6 @@
 
     --PrimaryButton-bg: var(--color-gray-8);
     --PrimaryButton-bg-hover: var(--color-gray-9);
-
-    .empty-description {
-      color: var(--color-gray-4);
-      font-size: var(--font-size-2);
-      text-align: center;
-      height: 100%;
-      display: flex;
-      align-items: flex-start;
-      padding: 6rem;
-      justify-content: center;
-      margin-top: 12px;
-    }
-  }
-
-  .field-item {
-    padding: 1rem;
-    box-shadow: var(--box-shadow);
-    margin-bottom: 0.5rem;
-    background: var(--color-gray-9);
   }
 
   [slot="right"] {

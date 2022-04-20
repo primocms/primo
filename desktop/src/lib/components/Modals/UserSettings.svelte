@@ -135,7 +135,7 @@
       <div class="container">
         <h2 class="heading">
           Usage Data
-          <span class="supporting-text">We collect anonymous usage data to make Primo better. <a href="https://primo.af/privacy-policy" target="blank">Learn More</a></span>
+          <span class="supporting-text">We collect anonymous usage data (<strong>not site data</strong>) to make Primo better. <a href="https://primo.af/privacy-policy" target="blank">Learn More</a></span>
         </h2>
         <label>
           <span>Enable Anonymous Usage Data Collection</span>

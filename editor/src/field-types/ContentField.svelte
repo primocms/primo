@@ -44,22 +44,24 @@
   label {
     display: flex;
     flex-direction: column;
-    font-size: var(--font-size-4);
-    font-weight: 500;
 
     span {
-      margin-bottom: 0.5rem;
-      font-size: var(--font-size-2);
+      margin-bottom: 1rem;
+      font-size: var(--label-font-size, 1rem);
+      font-weight: var(--label-font-weight, 700);
     }
 
     input {
-      background: var(--color-gray-8);
-      padding: 0.5rem;
-      border: 0;
+      background: var(--input-background, #2A2B2D);
+      border: var(--input-border, 1px solid #3E4041);
+      border-radius: 4px;
+      transition: 0.1s border;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
 
       &:focus {
         outline: 0;
-        box-shadow: var(--ring);
+        border-color: #646668;
       }
     }
   }

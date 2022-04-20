@@ -47,18 +47,22 @@
     font-weight: 500;
 
     span {
-      font-size: var(--font-size-2);
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: var(--label-font-size);
+      font-weight: var(--label-font-weight);
     }
 
     textarea {
+      background: var(--input-background, #2A2B2D);
+      border: var(--input-border, 1px solid #3E4041);
+      border-radius: 4px;
+      font-size: 0.875rem;
       outline: 0 !important;
-      background: var(--color-gray-8);
-      padding: 0.5rem;
-      border: 0;
+      transition: 0.1s border;
+      padding: 0.75rem 1rem;
 
       &:focus {
-        box-shadow: var(--ring);
+        border-color: #646668;
       }
     }
   }

@@ -152,7 +152,7 @@
   $: if (toolbar && page) {
     setTimeout(() => {
       page.style.borderTop = `${
-        toolbar.clientHeight + 2
+        toolbar.clientHeight
       }px solid var(--primo-color-black)`;
     }, 0)
   }

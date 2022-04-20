@@ -65,7 +65,7 @@
         color: var(--color-gray-1);
         outline-color: var(--primo-color-primored);
         font-weight: 500;
-        border-radius: 0.125rem;
+        border-radius: var(--input-border-radius);
         padding: 0.5rem 0.75rem;
         flex: 1;
         border: 0;
