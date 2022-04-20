@@ -155,6 +155,17 @@
     --font-size-3: 1.125rem;
     --font-size-4: 1.25rem;
 
+    --input-background: #2A2B2D;
+    --input-border: 1px solid #222;
+    --input-border-radius: 4px;
+
+    --label-font-size: 1rem;
+    --label-font-weight: 700;
+    
+
+    --title-font-size: 0.875rem;
+    --title-font-weight: 700;
+
     box-shadow: 0 0 #0000 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1),
       0 10px 10px -5px rgba(0, 0, 0, 0.04);

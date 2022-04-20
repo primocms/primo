@@ -1,5 +1,6 @@
 <script>
   import {cloneDeep} from 'lodash-es'
+  import Icon from '@iconify/svelte';
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -17,9 +18,6 @@
     return key.replace(/-/g, '_').replace(/ /g, '_').toLowerCase();
   }
 
-  console.log(field)
-  $: console.log(field)
-
   function dispatchUpdate() {
     dispatch('input', cloneDeep(field))
   }
@@ -35,8 +33,14 @@
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
-    on:change={dispatchUpdate}
-    bind:value={field.type}
+    on:change={({target}) => {
+      field = {
+        ...field,
+        type: target.value,
+      }
+      dispatchUpdate()
+    }}
+    value={field.type}
     slot="type">
     {#each $fieldTypes as field}
       <option value={field.id}>{field.label}</option>
@@ -68,16 +72,23 @@
   slot="default-value" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
-  <!-- <svelte:self 
-    bind:field={subfield} 
+  <svelte:self 
+    field={subfield} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete
     on:move
     on:createsubfield
-    on:input
+    on:input={({detail:updatedSubfield}) => {
+      console.log({updatedSubfield})
+      field = {
+        ...field,
+        fields: field.fields.map(subfield => subfield.id === updatedSubfield.id ? updatedSubfield : subfield)
+      }
+      dispatchUpdate()
+    }}
     level={level+1}
-  /> -->
+  />
 {/each}
 {#if field.type === 'select'}
   <SelectField {field} {level} />
@@ -86,19 +97,22 @@
   <button
     style="margin-left: {1.5 + level}rem"
     class="field-button subfield-button"
-    on:click={() => dispatch('createsubfield', field)}><i class="fas fa-plus" />Create Subfield</button>
+    on:click={() => dispatch('createsubfield', field)}>
+    <Icon icon="akar-icons:plus" />
+    <span>Create Subfield</span>
+  </button>
 {/if}
 
 <style lang="postcss">
   select {
     width: 100%;
-    padding: 8px;
     border-right: 4px solid transparent;
     background: var(--color-gray-9);
     color: var(--color-gray-2);
     font-size: var(--font-size-2);
     font-weight: 600;
     border: 0;
+    padding: 0.5rem !important;
   }
   textarea {
     color: var(--primo-color-black);
@@ -113,8 +127,15 @@
     border-bottom-left-radius: var(--border-radius);
     transition: var(--transition-colors);
 
+    display: flex;
+    justify-content: center;
+
     i {
       margin-right: 0.5rem;
+    }
+
+    span {
+      margin-left: 0.25rem;
     }
   }
   .field-button:hover {
@@ -137,6 +158,10 @@
   }
   .field-button.subfield-button:focus {
     background: var(--color-gray-8);
+  }
+
+  .input {
+    padding: 0.5rem;
   }
 
   input {

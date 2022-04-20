@@ -1,6 +1,6 @@
 <script>
   import {createEventDispatcher} from 'svelte'
-  import { find, cloneDeep, isEqual, chain as _chain, set as _set } from 'lodash-es';
+  import { find, cloneDeep, isEqual, chain as _chain, set as _set, get as _get } from 'lodash-es';
   import { _ as C } from 'svelte-i18n';
   import { Card } from './misc';
 
@@ -12,15 +12,11 @@
 
   const dispatch = createEventDispatcher()
 
-  $: console.log(cloneDeep(fields))
-
   function addField() {
-    console.log('addField')
     fields = [...fields, Field()];
   }
 
   function createSubfield({detail:field}) {
-    console.log('createSubfield')
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
     handleSubfieldCreation(fields)
@@ -41,7 +37,6 @@
   }
 
   function deleteField({detail:field}) {
-    console.log('deleteField')
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
 
@@ -80,8 +75,6 @@
   }
 
   function moveField({detail}) {
-    console.log('moveField')
-
     const { field, direction } = detail
     const idPath = getFieldPath(fields, field.id)
 
@@ -130,33 +123,31 @@
     }
   }
 
-  $: console.log(cloneDeep(fields))
-
 </script>
 
 <main>
   {#if $showingIDE}
     {#each fields as field, i (field.id)}
-      <Card>
-        <FieldItem
-          {field}
-          isFirst={i === 0}
-          isLast={i === fields.length - 1}
-          on:delete={deleteField}
-          on:move={moveField}
-          on:createsubfield={createSubfield}
-          on:input={({detail}) => {
-            console.log(detail)
-            field = detail
-            dispatch('input')
-          }}
-        />
-      </Card>
+      <FieldItem
+        {field}
+        isFirst={i === 0}
+        isLast={i === fields.length - 1}
+        on:delete={deleteField}
+        on:move={moveField}
+        on:createsubfield={createSubfield}
+        on:input={({detail}) => {
+          field = detail
+          dispatch('input')
+        }}
+      />
     {/each}
     <button class="field-button" on:click={addField} {disabled}><i class="fas fa-plus" />{$C('Add a Field')}</button>
   {:else}
     {#each fields as field}
-      {#if (field.key || field.type === 'info') && getComponent(field)}
+      {@const isValid = (field.key || field.type === 'info') && getComponent(field)}
+      {@const hasChildFields = field.fields.length > 0}
+      {#if isValid}
+      <Card title={hasChildFields ? field.label : null}>
         <div class="field-item" id="field-{field.key}" class:repeater={field.key === 'repeater'}>
           <svelte:component
             this={getComponent(field)}
@@ -164,6 +155,7 @@
             fields={fields.filter((f) => f.id !== field.id)}
             on:input />
         </div>
+      </Card>
       {/if}
     {:else}
       <p class="empty-description">
@@ -181,12 +173,13 @@
 
 <style lang="postcss">
   main {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    gap: 1rem;
     padding: 0.5rem;
     color: var(--color-gray-2);
     background: var(--primo-color-black);
     overflow: scroll;
+    min-width: 23rem;
 
     .empty-description {
       color: var(--color-gray-4);
@@ -222,10 +215,10 @@
     padding: 1rem;
   }
   .field-item {
-    padding: 1rem;
-    box-shadow: var(--box-shadow);
+    /* padding: 1.5rem; */
+    /* box-shadow: var(--box-shadow); */
     margin-bottom: 0.5rem;
-    background: var(--color-gray-9);
+    /* background: var(--color-gray-9); */
   }
   .input {
     padding: 0.25rem 0.5rem;

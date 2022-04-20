@@ -1,16 +1,17 @@
 <script>
-  import { cloneDeep, isEqual, chain as _chain } from 'lodash-es';
+  import { cloneDeep, isEqual, chain as _chain, debounce } from 'lodash-es';
   import { _ as C } from 'svelte-i18n';
   import { Tabs } from '../../components/misc';
   import Preview from '../../components/misc/Preview.svelte';
-  import {getEmptyValue} from '../../utils'
+  import {getEmptyValue, processCode} from '../../utils'
+  import HSplitPane from './ComponentEditor/HSplitPane.svelte';
 
   import ModalHeader from './ModalHeader.svelte';
   import { showingIDE } from '../../stores/app';
-  import { locale } from '../../stores/app/misc';
+  import { locale, onMobile } from '../../stores/app/misc';
   import { saveFields } from '../../stores/actions';
   import modal from '../../stores/app/modal';
-  import activePage, { id as pageID, fields as pageFields } from '../../stores/app/activePage';
+  import activePage, { id as pageID, fields as pageFields, code as pageCode } from '../../stores/app/activePage';
   import site, { fields as siteFields, content } from '../../stores/data/draft';
   import { buildStaticPage } from '../../stores/helpers';
 
@@ -69,7 +70,6 @@
       }
     }
     updatePagePreview()
-    console.log(localContent)
   }
 
   const tabs = [
@@ -88,18 +88,16 @@
   $: showingPage = (showPageFields || $showingIDE) && (activeTab === tabs[0]);
   
   function applyFields() {
-    console.log({localContent, localSiteFields})
     saveFields(localPageFields, localSiteFields, localContent)
     modal.hide();
   }
 
-  let preview = ''
+  let preview = localStorage.getItem('preview') || ''
+  $: localStorage.setItem('preview', preview)
   updatePagePreview()
   async function updatePagePreview() {
     preview = await buildStaticPage({
-      page: {
-        ...$activePage,
-      },
+      page: $activePage,
       site: {
         ...$site,
         content: localContent
@@ -107,6 +105,8 @@
     });
   }
 
+  let editorWidth = localStorage.getItem('editorWidth') || '66%';
+  let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
 </script>
 
@@ -122,37 +122,46 @@
   }} />
 
 <main>
-  <div>
-    <div class="editor-container">
-      {#if showPageFields || $showingIDE}
-        <Tabs {tabs} bind:activeTab />
-      {/if}
-      {#if showingPage}
-        <GenericFields bind:fields={localPageFields} on:input={saveLocalContent}/>
-      {:else}
-        <GenericFields bind:fields={localSiteFields} on:input={saveLocalContent} />
-      {/if}
+  <HSplitPane
+  leftPaneSize={$onMobile ? '100%' : editorWidth}
+  rightPaneSize={$onMobile ? '0' : previewWidth}
+  hideRightPanel={$onMobile}
+  on:resize={({ detail }) => {
+    const { left, right } = detail;
+    localStorage.setItem('editorWidth', left);
+    localStorage.setItem('previewWidth', right);
+  }}>
+    <div slot="left">
+      <div class="editor-container">
+        {#if showPageFields || $showingIDE}
+          <Tabs {tabs} bind:activeTab />
+        {/if}
+        {#if showingPage}
+          <GenericFields bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
+        {:else}
+          <GenericFields bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
+        {/if}
+      </div>
     </div>
-    <div class="preview-container">
-      <Preview {preview} />
+    <div slot="right" class="preview">
+      <div class="preview-container">
+        <Preview {preview} ratio={1} />
+      </div>
     </div>
-  </div>
+  </HSplitPane>
 </main>
 
 <style lang="postcss">
+  * {
+    --Preview-iframe-width: 100%;
+  }
   main {
     padding: 0 0.5rem;
     background: var(--primo-color-black);
     height: 100%;
     display: flex;
-    flex-direction: column;
 
-    & > div {
-      display: grid;
-      grid-template-columns: 50% 50%;
-      flex: 1;
-
-      .editor-container {
+    .editor-container {
         display: flex;
         flex-direction: column;
       }
@@ -166,7 +175,25 @@
           height: 24rem;
         }
       }
-    }
   }
+
+  .preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--primo-color-white);
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      transition: var(--transition-colors);
+      min-height: 10rem;
+
+      .preview-container {
+        all: unset;
+        height: 100%;
+        z-index: -1; /* needed for link */
+      }
+    }
 
 </style>
