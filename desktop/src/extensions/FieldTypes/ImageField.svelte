@@ -311,46 +311,4 @@
       }
     }
   }
-
-  .field-button {
-    width: 100%;
-    background: var(--color-gray-8);
-    /* border: 1px solid var(--primo-color-primored); */
-    color: var(--color-gray-3);
-    padding: 0.5rem 0;
-    border-radius: 1px;
-    transition: background 0.1s, color 0.1s;
-
-    background: #58595B;
-    font-size: 0.875rem;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-weight: 700;
-    padding: 0.875rem;
-
-    display: flex;
-    justify-content: center;
-    cursor: pointer;
-
-    input {
-      display: none;
-    }
-
-    &:hover {
-      background: var(--primo-color-primored);
-    }
-
-    /* &[disabled] {
-      background: var(--color-gray-5);
-      cursor: not-allowed;
-    } */
-
-    span {
-      margin-left: 0.5rem;
-    }
-
-    i {
-      margin-right: 0.5rem;
-    }
-  }
 </style>

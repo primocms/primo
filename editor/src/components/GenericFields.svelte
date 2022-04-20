@@ -230,18 +230,21 @@
   }
   .field-button {
     width: 100%;
-    background: var(--color-gray-8);
-    color: var(--color-gray-3);
-    padding: 0.5rem 0;
     border-radius: var(--primo-border-radius);
     transition: var(--transition-colors);
+
+    color: var(--button-color);
+    background: var(--button-background);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0.75rem 0;
 
     i {
       margin-right: 0.5rem;
     }
   }
   .field-button:hover {
-    background: var(--color-gray-9);
+    background: var(--button-hover-background);
   }
   .field-button[disabled] {
     background: var(--color-gray-5);
@@ -256,7 +259,6 @@
     margin-left: 1.5rem;
     color: var(--color-gray-2);
     transition: var(--transition-colors);
-    display: block;
   }
   input {
     background: var(--color-gray-7);

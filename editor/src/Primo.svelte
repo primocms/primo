@@ -161,10 +161,13 @@
 
     --label-font-size: 1rem;
     --label-font-weight: 700;
-    
 
     --title-font-size: 0.875rem;
     --title-font-weight: 700;
+
+    --button-color: #FAFAFA;
+    --button-background: #37383A;
+    --button-hover-color: #7D8082;
 
     box-shadow: 0 0 #0000 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1),

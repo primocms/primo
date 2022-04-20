@@ -120,8 +120,8 @@
   }
   .field-button {
     width: 100%;
-    background: var(--color-gray-7);
-    color: var(--color-gray-3);
+    background: var(--button-background);
+    color: var(--button-color);
     padding: 8px 0;
     border-bottom-right-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
@@ -139,7 +139,7 @@
     }
   }
   .field-button:hover {
-    background: var(--color-gray-9);
+    background: var(--button-hover-background);
   }
   .field-button.subfield-button {
     width: calc(100% - 1rem);
