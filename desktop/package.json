@@ -102,7 +102,7 @@
     "@rollup/plugin-commonjs": "^11.0.0",
     "@rollup/plugin-node-resolve": "^7.0.0",
     "@sveltejs/adapter-static": "^1.0.0-next.24",
-    "@sveltejs/kit": "next",
+    "@sveltejs/kit": "1.0.0-next.291",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.11",
     "@tsconfig/svelte": "^2.0.1",
     "concurrently": "^6.4.0",
