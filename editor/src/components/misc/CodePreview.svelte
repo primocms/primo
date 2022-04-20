@@ -4,6 +4,7 @@
   import { iframePreview } from './misc';
   import {locale } from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree';
+  import Icon from '@iconify/svelte'
 
   export let view = 'small';
   export let loading = false;
@@ -98,6 +99,22 @@
   }
 
   let previewWidth;
+  // $: if (previewWidth < 300) previewWidth = 300
+
+
+  $: console.log({activeIcon, previewWidth})
+  $: activeIcon = getIcon(previewWidth)
+  function getIcon(width) {
+    if (width < 500) {
+      return "bi:phone"
+    } else if (width < 1200) {
+      return 'ant-design:tablet-outlined'
+    } else if (width < 1800) {
+      return "bi:laptop"
+    } else {
+      return 'akar-icons:desktop-device'
+    }
+  }
 
 </script>
 
@@ -137,12 +154,19 @@
   {#if !hideControls}
     <div class="footer-buttons">
       {#if view === 'small'}
-        <div class="preview-width">{previewWidth}</div>
+        <div class="preview-width">
+          <Icon icon={activeIcon} height="1rem" />
+          <span>{previewWidth}</span>
+        </div>
         <button class="switch-view" on:click={changeView}>
           <i class="fas fa-expand-arrows-alt" />
           <span>window view</span>
         </button>
       {:else if view === 'large'}
+        <div class="preview-width">
+          <Icon icon={getIcon(window.innerWidth)} height="1rem" />
+          <span>{window.innerWidth}</span>
+        </div>
         <button class="switch-view" on:click={changeView}>
           <i class="fas fa-compress-arrows-alt" />
           <span>contained view</span>
@@ -225,13 +249,17 @@
       display: flex;
       align-items: center;
       padding: 0 1rem;
+
+      span {
+        padding-left: 0.5rem;
+        font-size: 0.75rem;
+      }
     }
   }
 
   .footer-buttons button {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    min-width: 12rem;
     flex: 1;
     outline: 0;
     background: var(--color-gray-9);

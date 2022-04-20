@@ -4,6 +4,7 @@
 
   export let preview;
   export let preventClicks = false;
+  export let ratio = null
 
   let height;
 
@@ -25,7 +26,7 @@
   function resizePreview() {
     const { clientWidth: parentWidth } = container;
     const { clientWidth: childWidth } = iframe;
-    scaleRatio = parentWidth / childWidth;
+    scaleRatio = ratio || (parentWidth / childWidth);
     iframe.style.transform = `scale(${scaleRatio})`;
     iframe.style.height = 100 / scaleRatio + '%';
   }
@@ -69,7 +70,7 @@
         border: 0;
         transition: opacity 0.1s;
         height: 100%;
-        width: 100vw;
+        width: var(--Preview-iframe-width, 100vw);
         transform-origin: top left;
 
         &.disable {
