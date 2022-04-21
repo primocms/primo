@@ -156,6 +156,8 @@
             on:input />
         </div>
       </Card>
+      {:else}
+        <p class="empty-description">This field needs a field key in order to be valid</p>
       {/if}
     {:else}
       <p class="empty-description">
@@ -178,7 +180,6 @@
     padding: 0.5rem;
     color: var(--color-gray-2);
     background: var(--primo-color-black);
-    overflow: scroll;
     min-width: 23rem;
 
     .empty-description {
