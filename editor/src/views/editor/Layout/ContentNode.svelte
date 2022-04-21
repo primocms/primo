@@ -1,4 +1,5 @@
 <script>
+  import {isEqual} from 'lodash-es'
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   import CopyButton from './CopyButton.svelte';
@@ -28,9 +29,10 @@
   let editor;
 
   let content = $site.content[$locale]?.[$pageID]?.[block.id] || ''
+  let cachedContent
   $: updateNodeContent($locale, $pageID, block.id) 
   function updateNodeContent(locale, pageID, blockID) {
-    if (!editor) return
+    if (!editor || isEqual(content, cachedContent)) return
     const updatedContent = $site.content?.[locale]?.[pageID]?.[blockID] || ''
     editor.commands.setContent(updatedContent)
   }
