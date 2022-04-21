@@ -29,8 +29,12 @@
     overflow: hidden;
     transition: 0.1s box-shadow;
 
-    &.selected, &:hover {
+    &.selected {
       box-shadow: 0px 0px 0px 3px #F27473;
+    }
+
+    &:hover {
+      opacity: 0.75;
     }
   }
   .title {

@@ -21,6 +21,12 @@
 
   async function createNewSite() {
     loading = true
+    siteData = {
+      ...siteData,
+      name: siteName,
+      id: siteID
+    }
+    console.log({siteData})
     onSuccess(siteData)
   }
 
@@ -49,17 +55,12 @@
 
   let themes = [{},{},{}]
   axios.get('https://api.primo.af/themes.json').then(({data}) => {
-    console.log({data})
     themes = data
   })
 
   let selectedTheme = null
   function selectTheme(theme) {
-    siteData = {
-      ...theme.data,
-      name: siteName,
-      id: siteID
-    }
+    siteData = theme.data
     selectedTheme = theme.name
   }
 </script>
@@ -190,6 +191,7 @@
     gap: 1rem;
     margin-bottom: 2rem;
   }
+
   #upload-json {
     display: grid;
     place-content: center;
@@ -215,7 +217,7 @@
       }
 
     &:hover {
-      box-shadow: 0px 0px 0px 3px #F27473;
+      opacity: 0.75;
     }
   }
 
