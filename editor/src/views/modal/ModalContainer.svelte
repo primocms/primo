@@ -30,7 +30,7 @@
       class:hovered={!$modal.disabledBgClose}
       on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()} />
     <div class="modal-card">
-      <div class="modal-card-body" class:p-3={!$modal.noPadding}>
+      <div class="modal-card-body">
         <slot />
       </div>
       {#if $modal.footer}
@@ -77,9 +77,9 @@
     overflow: hidden;
     position: relative;
     border-radius: var(--primo-border-radius);
-    max-height: 100vh;
+    max-height: calc(100vh - 3rem);
     padding: 0 1rem; /* pushes content out of sight on windows if vertical */
-    height: 100%; /* make component editor full height when in cms) */
+    /* height: 100%;  make component editor full height when in cms) */
 
     &.fullscreen {
       height: 100%;
@@ -93,9 +93,10 @@
     flex-direction: column;
     border-radius: var(--primo-border-radius);
     justify-content: center;
-    height: calc(
+    height: 100%;
+    /* height: calc(
       100vh - 6rem
-    ); /* to allow children to scroll on overflow (i.e. not grow) */
+    );  to allow children to scroll on overflow (i.e. not grow) */
     /* overflow-y: scroll; */ /* causes Styles to scroll by an inch */
   }
 

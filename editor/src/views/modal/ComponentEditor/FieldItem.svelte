@@ -122,19 +122,21 @@
     width: 100%;
     background: var(--button-background);
     color: var(--button-color);
-    padding: 8px 0;
+    padding: 0.5rem 0;
     border-bottom-right-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
     transition: var(--transition-colors);
 
     display: flex;
     justify-content: center;
+    align-items: center;
 
     i {
       margin-right: 0.5rem;
     }
 
     span {
+      font-weight: 500;
       margin-left: 0.25rem;
     }
   }

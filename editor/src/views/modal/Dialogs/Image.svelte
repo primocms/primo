@@ -145,10 +145,7 @@
         </label>
       </div>
     {/if}
-    <form on:submit|preventDefault={() => {
-      console.log({value})
-      dispatch('submit', value)
-    }}>
+    <form on:submit|preventDefault={() => dispatch('submit', value)}>
       <div class="inputs">
         <label class="image-input">
           <span>URL</span>
