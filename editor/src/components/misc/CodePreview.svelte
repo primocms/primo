@@ -84,12 +84,12 @@
     }
   }
 
-  // $: iframe && highlightTag($highlightedElement)
-  // function highlightTag(tag) {
-  //   if (tag) {
-  //     iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
-  //   }
-  // }
+  $: iframe && highlightTag($highlightedElement)
+  function highlightTag(tag) {
+    if (tag) {
+      iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
+    }
+  }
 
   $: setIframeData(componentData);
   function setIframeData(componentData) {

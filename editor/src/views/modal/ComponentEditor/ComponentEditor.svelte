@@ -86,7 +86,7 @@
   function getFieldValues(fields:Array<FieldType>, loc:string): Array<any> {
     return fields.map(field => ({
       ...field,
-      value: component.type === 'symbol' ? getCachedPlaceholder(field) : (localContent[loc]?.[field.key] || getCachedPlaceholder(field))
+      value: component.type === 'symbol' ? getCachedPlaceholder(field) : (localContent[loc]?.[field.key] !== undefined ? localContent[loc]?.[field.key] : getCachedPlaceholder(field))
     }))
   }
 
@@ -192,6 +192,12 @@
   })
 
 
+
+  // hover preview node, highlight line in code editor
+
+  // hover tag in code editor, highlight preview node
+
+
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
     disableSave = true;
@@ -285,6 +291,14 @@
 
   $: console.log(cloneDeep(fields))
 
+  let highlightedTag
+  $: console.log(highlightedTag)
+
+
+  $: highlightTag(highlightedTag)
+  async function highlightTag(toHighlight) {
+
+  }
 </script>
 
 <ModalHeader
@@ -319,6 +333,7 @@
             bind:css={rawCSS}
             bind:js={rawJS}
             on:save={saveComponent} 
+            bind:highlightedTag
           />
         {:else if activeTab === tabs[1]}
           <GenericFields bind:fields on:input={refreshPreview} />
@@ -333,6 +348,7 @@
     <div slot="right">
       <CodePreview
         view="small"
+        bind:highlightedTag
         {loading}
         {componentApp}
         {data}

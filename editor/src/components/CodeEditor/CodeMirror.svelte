@@ -1,13 +1,14 @@
 <script lang="ts">
-  import {some} from 'lodash-es';
+  import {some, flattenDeep as _flattenDeep} from 'lodash-es';
   import {autocompletion} from '@codemirror/autocomplete'
   import '@fontsource/fira-code/index.css';
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
 
+  import {highlightedElement} from '../../stores/app/misc';
   import { EditorView, keymap, Decoration, WidgetType, ViewUpdate, ViewPlugin, DecorationSet } from '@codemirror/view';
   import { standardKeymap, indentWithTab } from '@codemirror/commands';
   import {RangeSetBuilder} from "@codemirror/rangeset"
@@ -15,23 +16,21 @@
   import { EditorState, Compartment, StateEffect, StateField, Facet, Extension } from '@codemirror/state';
   import MainTheme from './theme';
   import extensions, { getLanguage } from './extensions';
-  import { cloneDeep } from 'lodash-es';
 
+  const showStripes = ViewPlugin.fromClass(class {
+    decorations: DecorationSet
 
-const showStripes = ViewPlugin.fromClass(class {
-  decorations: DecorationSet
+    constructor(view: EditorView) {
+      this.decorations = stripeDeco(view)
+    }
 
-  constructor(view: EditorView) {
-    this.decorations = stripeDeco(view)
-  }
-
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged)
-      this.decorations = stripeDeco(update.view)
-  }
-}, {
-  decorations: v => v.decorations
-})
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged)
+        this.decorations = stripeDeco(update.view)
+    }
+  }, {
+    decorations: v => v.decorations
+  })
 
 
   const baseTheme = EditorView.baseTheme({
@@ -42,9 +41,7 @@ const showStripes = ViewPlugin.fromClass(class {
       color: 'rgb(212,212,212) !important'
     },
     ".cm-svelte-variable, .cm-svelte-variable *": {
-      color: 'rgb(156,218,252) !important',
-      // background: 'red !important',
-      // padding: '0 0.25rem'
+      color: 'rgb(156,218,252) !important'
     },
   })
 
@@ -82,8 +79,7 @@ function stripeDeco(view: EditorView) {
         if (stringWithBrackets) {
           const individualWords = stringWithBrackets.split(' ')
 
-          individualWords.forEach((word, wordIndex) => {
-
+          individualWords.forEach((word) => {
 
             let position = from + string.indexOf(word, 0)
 
@@ -139,7 +135,6 @@ function stripeDeco(view: EditorView) {
               })
             } else if (word.match(/([{}])/g)) {
               const variable = word.replace(/[{}]/g, "")
-
               if (keywords.includes(variable)) return
 
               const newPosition = from + string.indexOf(word)
@@ -317,6 +312,7 @@ function stripeDeco(view: EditorView) {
         bracketSameLine: true,
         cursorOffset: position,
         plugins: [svelte, css, babel],
+        // plugins: [svelte]
       });
     } catch (e) {
       console.warn(e);
@@ -324,11 +320,13 @@ function stripeDeco(view: EditorView) {
     return formatted;
   }
 
+  let editorMounted = false
   onMount(async () => {
     Editor = new EditorView({
       state,
       parent: editorNode,
     });
+    editorMounted = true
   });
 
   let editorNode;
@@ -338,6 +336,54 @@ function stripeDeco(view: EditorView) {
   }
 
   let element;
+
+  $: editorNode && highlightTags($highlightedElement)
+  function highlightTags(element) {
+    if (!element) return
+    const withoutBody = element.slice(7)
+    const selectors = withoutBody.split(' > ')
+    const found = editorNode.querySelectorAll('span.ͼu');
+    const tags = Array.from(found).map((node, index) => ({ index, node })).filter(({node}) => selectors.includes(node.innerText));
+    console.log({selectors, found, withoutBody, tags})
+    found.forEach(tag => {
+      tag.classList.remove('highlighted')
+    })
+    tags.forEach(({node}) => {
+      node.classList.add('highlighted')
+    })
+  }
+
+  function foo(node) {
+    console.log({node})
+
+    setTimeout(() => {
+      const child = node.querySelector('.cm-content')
+      const found = child.querySelector('span.ͼu') || {}
+      const {innerText} = found
+      console.log({child, found, innerText})
+    }, 2000)
+    // get node children
+
+    // select `.cm-line .cu`, on hover get content of cm-line
+
+    // look for content in preview
+  }
+
+  $: if (editorNode && editorMounted && mode === 'html') {
+    const children = Array.from(editorNode.querySelectorAll('.cm-line'))
+    children.forEach(node => {
+      node.addEventListener('mouseenter', () => {
+        const content = node.querySelector('.ͼu')
+        const text = content.textContent
+        const html = content.innerHTML
+        console.log({text, html})
+        dispatch('tag-select', html)
+      })
+    })
+    const asTags = children.map(n => n.innerHTML)
+    console.log({children, asTags})
+  }
+
 </script>
 
 <svelte:window
@@ -346,7 +392,7 @@ function stripeDeco(view: EditorView) {
   }}
 />
 
-<div bind:this={element} class="codemirror-container {mode}" {style}>
+<div use:foo bind:this={element} class="codemirror-container {mode}" {style}>
   <div in:fade={{ duration: 200 }} bind:this={editorNode} />
 </div>
 
@@ -362,5 +408,11 @@ function stripeDeco(view: EditorView) {
     overflow-x: scroll;
     font-family: 'Fira Code', monospace !important;
     height: calc(100vh - 9.5rem);
+  }
+
+  :global(.highlighted) {
+    background: var(--color-gray-6);
+    /* color: white; */
+    border-radius: 2px;
   }
 </style>
