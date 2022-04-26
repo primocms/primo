@@ -4,6 +4,7 @@
   import { stores } from '@primo-app/primo'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
+  import {setSitePreview} from '$lib/actions'
 
   const dispatch = createEventDispatcher()
 
@@ -28,7 +29,7 @@
     <li class="site-item xyz-in">
       <a on:click={warn} href="/{site.id}">
         <div class="thumbnail">
-          <SiteThumbnail site={site.data} preview={site.preview} />
+          <SiteThumbnail site={site.data} preview={site.preview}  on:setPreview={({detail:preview}) => setSitePreview(site.id, preview)} />
         </div>
         <div class="card-footer">
           <div class="site-title">
