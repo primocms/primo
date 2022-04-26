@@ -1,7 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
-  import Icon from '@iconify/svelte';
   import imageCompression from 'browser-image-compression'
   import svgToMiniDataURI from 'mini-svg-data-uri'
   import TextInput from '@primo-app/primo/src/components/inputs/TextInput.svelte';
@@ -158,8 +157,7 @@
     {/if}
     <div class="inputs">
       <TextInput bind:value={field.value.alt} label="Description" />
-      <TextInput value={field.value.url} label="URL" on:input={(e) => {
-        const { value } = e.target
+      <TextInput value={field.value.url} label="URL" on:input={({detail:value}) => {
         imagePreview = value
         setValue({
           url: value,
