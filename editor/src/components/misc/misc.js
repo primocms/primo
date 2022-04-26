@@ -20,7 +20,8 @@ export const iframePreview = (locale = 'en') => `
                 } catch(e) {console.warn(e)}
               }
               if (primoLog) console.log = (...args) => { postMessage(...args); primoLog(...args); };\` + source;
-            const blob = new Blob([withLogs], { type: 'text/javascript' });
+            // const blob = new Blob([withLogs], { type: 'text/javascript' });
+            const blob = new Blob([source], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
               if (c) c.$destroy();
