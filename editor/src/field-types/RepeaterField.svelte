@@ -5,7 +5,7 @@
   import {fade} from 'svelte/transition'
   import { createEventDispatcher, onDestroy } from 'svelte';
   import {slide} from 'svelte/transition'
-  import {get, set} from 'idb-keyval';
+  import * as idb from 'idb-keyval';
   const dispatch = createEventDispatcher();
 
   import { getPlaceholderValue } from '../utils';
@@ -45,6 +45,7 @@
     } else {
       console.error('Direction must be up or down');
     }
+    onInput();
   }
 
   function createSubfield() {
@@ -82,45 +83,43 @@
   }
 
   $: singularLabel = pluralize.singular(field.label)
-  function getTitle(field, i) {
-    const first = field.fields.find(field => ['text', 'link', 'number'].includes(field.type))
-    const key = first ? first.key : null
-    let value = field.value[i][key]
-    if (typeof(value) === 'object') {
-      value = value.label
-    }
-    return value || singularLabel
+  function getTitle(field, repeaterItem) {
+    const firstField = repeaterItem.find(subfield => ['text', 'link', 'number'].includes(subfield.type))
+    if (firstField) {
+      let {value} = repeaterItem[0]
+      if (firstField.type === 'link') {
+        value = value.label
+      }
+      return value 
+    } else return singularLabel
   }
 
   let visibleRepeaters = {}
-  get(field.id).then(res => {
+  idb.get(field.id).then(res => {
     if (res) {
       visibleRepeaters = res
     }
   })
 
   onDestroy(() => {
-    set(field.id, _cloneDeep(visibleRepeaters))
+    // save visible repeaters 
+    idb.set(field.id, _cloneDeep(visibleRepeaters))
   })
 </script>
 
 <div class="repeater-level-{level}">
   <div class="fields" transition={{ duration: 100 }}>
-    {#each repeaterFieldValues as fieldValue, i (fieldValue._key)}
+    {#each repeaterFieldValues as repeaterItem, i (repeaterItem._key)}
       {@const subfieldID = `${field.key}-${i}`}
       <div
         transition:fade={{ duration: 100 }}
         class="repeater-item"
         id="repeater-{field.key}-{i}">
         <div class="item-options">
-          <button class="title" on:click={() => {
-            visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID]
-          }}>
-          {#key subfieldID}
-            <span>{getTitle(field, i)}</span>  
-          {/key}
-          <Icon icon={visibleRepeaters[subfieldID] ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
-        </button>
+          <button class="title" on:click={() => visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID]}>
+            <span>{getTitle(field, repeaterItem)}</span>
+            <Icon icon={visibleRepeaters[subfieldID] ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
+          </button>
           <div class="buttons">
             {#if i !== 0}
               <button
@@ -145,7 +144,7 @@
         </div>
         {#if visibleRepeaters[subfieldID]}
           <div class="field-values" transition:slide={{ duration: 100 }}>
-            {#each fieldValue as subfield (fieldValue._key + subfield.key)}
+            {#each repeaterItem as subfield (repeaterItem._key + subfield.key)}
               <div
                 class="repeater-item-field"
                 id="repeater-{field.key}-{i}-{subfield.key}">
@@ -251,18 +250,15 @@
       font-size: var(--title-font-size);
       font-weight: var(--title-font-weight);
       border-bottom: 1px solid transparent;
-      /* position: absolute;
-      top: 0;
-      right: 0;
-      left: 0; */
       display: flex;
+      gap: 1rem;
       justify-content: space-between;
       align-items: center;
-      /* padding: 1.5rem; */
-      /* padding: 0.25rem 0.5rem; */
       color: var(--color-gray-2);
-      /* z-index: 10; */
-      /* border-bottom: 1px solid var(--color-gray-8); */
+
+      .buttons {
+        white-space: nowrap;
+      }
 
       &:not(:only-child) {
         border-bottom: var(--input-border);
@@ -274,6 +270,7 @@
         display: flex;
         gap: 1rem;
         align-items: center;
+        text-align: left;
       }
 
       .buttons button {
