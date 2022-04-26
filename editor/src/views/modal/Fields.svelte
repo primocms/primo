@@ -126,6 +126,7 @@
   leftPaneSize={$onMobile ? '100%' : editorWidth}
   rightPaneSize={$onMobile ? '0' : previewWidth}
   hideRightPanel={$onMobile}
+  hideLeftOverflow={true}
   on:resize={({ detail }) => {
     const { left, right } = detail;
     localStorage.setItem('editorWidth', left);
@@ -164,6 +165,8 @@
     .editor-container {
         display: flex;
         flex-direction: column;
+        max-height: calc(100vh - 100px); /* stopgap for scrolling issue */
+        overflow-y: scroll; 
       }
 
       .preview-container {
@@ -179,10 +182,8 @@
 
   .preview {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: var(--primo-color-white);
+      inset: 0;
+      /* background: var(--primo-color-white); */
       display: block;
       width: 100%;
       overflow: hidden;

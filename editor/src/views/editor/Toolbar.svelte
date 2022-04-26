@@ -28,7 +28,6 @@
   </div>
 </div>
 <nav
-role="navigation"
 aria-label="toolbar"
 id="primo-toolbar"
 class="primo-reset"

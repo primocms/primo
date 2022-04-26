@@ -195,7 +195,7 @@
             </select>
           </div>
           <label>
-            <span>{$C('Personal Website (optional)')}</span>
+            <!-- <span>{$C('Credit to (optional)')}</span> -->
             <input bind:value={contributor} type="text">
           </label>
           <button on:click={submitSymbol}>

@@ -141,6 +141,8 @@
       .editor-container {
         display: flex;
         flex-direction: column;
+        max-height: calc(100vh - 100px); /* stopgap for scrolling issue */
+        overflow-y: scroll; 
       }
 
       .preview-container {

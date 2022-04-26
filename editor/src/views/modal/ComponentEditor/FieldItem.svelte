@@ -95,9 +95,11 @@
 {/if}
 {#if field.type === 'repeater' || field.type === 'group'}
   <button
-    style="margin-left: {1.5 + level}rem"
-    class="field-button subfield-button"
-    on:click={() => dispatch('createsubfield', field)}>
+    class="field-button subfield-button level-{level}"
+    on:click={() => dispatch('createsubfield', field)}
+    style:transform="translateX({1.5+level}rem)"
+    style:width="calc(100% - {1.5+level}rem)"
+  >
     <Icon icon="akar-icons:plus" />
     <span>Create Subfield</span>
   </button>
@@ -144,9 +146,9 @@
     background: var(--button-hover-background);
   }
   .field-button.subfield-button {
-    width: calc(100% - 1rem);
+    /* width: calc(100% - 1rem); */
     border-radius: 2px;
-    margin-left: 1.5rem;
+    /* margin-left: 1.5rem; */
     margin-top: 8px;
     margin-bottom: 8px;
     font-size: var(--font-size-2);

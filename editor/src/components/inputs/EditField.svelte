@@ -104,7 +104,7 @@
     }
 
     .option-buttons {
-      padding: 0.25rem 0.5rem;
+      /* padding: 0.25rem 0.5rem; */
       color: var(--color-gray-3);
       background: var(--color-gray-900);
       z-index: 10;

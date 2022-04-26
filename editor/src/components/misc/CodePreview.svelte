@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
-  import {locale } from '../../stores/app/misc'
+  import {locale, highlightedElement } from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree';
   import Icon from '@iconify/svelte'
 
@@ -22,7 +22,9 @@
       if (data === 'done') {
         previewLoaded = true;
       } else if (data.event === 'logs') {
-        consoleLog = data.payload
+        // consoleLog = data.payload
+      } else if (data.event === 'path') {
+        $highlightedElement = data.payload
       }
     });
   }
@@ -82,6 +84,13 @@
     }
   }
 
+  // $: iframe && highlightTag($highlightedElement)
+  // function highlightTag(tag) {
+  //   if (tag) {
+  //     iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
+  //   }
+  // }
+
   $: setIframeData(componentData);
   function setIframeData(componentData) {
     if (iframeLoaded) {
@@ -102,7 +111,6 @@
   // $: if (previewWidth < 300) previewWidth = 300
 
 
-  $: console.log({activeIcon, previewWidth})
   $: activeIcon = getIcon(previewWidth)
   function getIcon(width) {
     if (width < 500) {

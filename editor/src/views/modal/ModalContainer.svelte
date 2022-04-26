@@ -77,6 +77,7 @@
     overflow: hidden;
     position: relative;
     border-radius: var(--primo-border-radius);
+    flex: 1;
     max-height: calc(100vh - 3rem);
     padding: 0 1rem; /* pushes content out of sight on windows if vertical */
     /* height: 100%;  make component editor full height when in cms) */
@@ -93,7 +94,7 @@
     flex-direction: column;
     border-radius: var(--primo-border-radius);
     justify-content: center;
-    height: 100%;
+    /* height: 100%; */
     /* height: calc(
       100vh - 6rem
     );  to allow children to scroll on overflow (i.e. not grow) */

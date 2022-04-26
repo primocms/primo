@@ -35,7 +35,7 @@
 
 </script>
 
-<div class="preview" style="height:{height}px">
+<div class="preview" style="height:{ratio === 1 ? '100%' : `${height}px`}">
   <div class="preview-container" bind:this={container}>
     <iframe
       class:disable={preventClicks}
@@ -51,7 +51,6 @@
 
 <style lang="postcss">
   .preview {
-    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
