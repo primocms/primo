@@ -82,7 +82,9 @@
           element: floatingMenu,
         }),
         KeyboardShortcuts,
-        Image,
+        Image.configure({
+          allowBase64: true
+        }),
       ],
       onTransaction() {
         // force re-render so `editor.isActive` works as expected
