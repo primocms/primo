@@ -1,4 +1,4 @@
-import axios from 'axios'
+import * as axios from '$lib/libraries/axios'
 import {get, writable} from 'svelte/store'
 import { browser } from '$app/env'
 import config from './config'

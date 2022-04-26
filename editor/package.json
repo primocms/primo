@@ -51,7 +51,7 @@
     "@tiptap/extension-ordered-list": "^2.0.0-beta.27",
     "@tiptap/starter-kit": "^2.0.0-beta.183",
     "autosize": "^5.0.1",
-    "axios": "^0.24.0",
+    "axios": "^0.27.1",
     "browser-image-compression": "^1.0.16",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.0.2",

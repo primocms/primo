@@ -1,5 +1,5 @@
 <script>
-  import axios from 'axios'
+  import * as axios from '$lib/libraries/axios'
   import { flattenDeep, uniqBy, find } from 'lodash-es'
   import JSZip from 'jszip'
   import {getContext} from 'svelte'

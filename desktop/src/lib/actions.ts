@@ -1,5 +1,5 @@
 import { get } from 'svelte/store'
-import axios from 'axios'
+import * as axios from '$lib/libraries/axios'
 import config from '../stores/config'
 import * as stores from '../stores'
 
