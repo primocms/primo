@@ -81,6 +81,7 @@
                   <form
                     on:submit|preventDefault={() => (siteBeingEdited = null)}
                   >
+                    <!-- svelte-ignore a11y-autofocus -->
                     <input
                       on:blur={() => (siteBeingEdited = null)}
                       class="reset-input"

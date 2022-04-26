@@ -133,10 +133,6 @@
     justify-content: center;
     align-items: center;
 
-    i {
-      margin-right: 0.5rem;
-    }
-
     span {
       font-weight: 500;
       margin-left: 0.25rem;

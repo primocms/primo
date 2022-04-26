@@ -24,7 +24,7 @@
       } else if (data.event === 'logs') {
         // consoleLog = data.payload
       } else if (data.event === 'path') {
-        $highlightedElement = data.payload
+        // $highlightedElement = data.payload
       }
     });
   }

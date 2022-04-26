@@ -109,15 +109,9 @@
 
   onDestroy(resetActivePage)
 
-  let ready = true
-  setTimeout(() => {
-    ready = true
-  }, 1000)
 </script>
 
-{#if ready}
-  <Editor on:save={saveSite} />
-{/if}
+<Editor on:save={saveSite} />
 
 <Modal visible={!!activeModal}>
   <svelte:component this={activeModal} {...$modal.componentProps} on:save={saveSite} />
