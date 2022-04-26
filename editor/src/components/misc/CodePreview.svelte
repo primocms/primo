@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { iframePreview } from './misc';
-  import {locale, highlightedElement } from '../../stores/app/misc'
+  import {locale} from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree';
   import Icon from '@iconify/svelte'
 
