@@ -1,5 +1,5 @@
 <script>
-  import * as axios from '$lib/libraries/axios'
+  import axios from '$lib/libraries/axios'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import ThemeThumbnail from '$lib/components/ThemeThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'

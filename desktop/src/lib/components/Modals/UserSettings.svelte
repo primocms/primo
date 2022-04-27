@@ -1,5 +1,5 @@
 <script>
-  import * as axios from '$lib/libraries/axios'
+  import axios from '$lib/libraries/axios'
   import Tabs from '$lib/ui/Tabs.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import TextField from '$lib/ui/TextField.svelte'
