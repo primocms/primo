@@ -94,7 +94,7 @@
     flex-direction: column;
     border-radius: var(--primo-border-radius);
     justify-content: center;
-    /* height: 100%; */
+    height: 100%;
     /* height: calc(
       100vh - 6rem
     );  to allow children to scroll on overflow (i.e. not grow) */

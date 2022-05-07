@@ -359,7 +359,7 @@ function stripeDeco(view: EditorView) {
 <style lang="postcss">
   .codemirror-container {
     width: 100%;
-    overflow-x: scroll;
+    overflow-y: scroll;
     font-family: 'Fira Code', monospace !important;
     height: calc(100vh - 9.5rem);
   }

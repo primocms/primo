@@ -181,6 +181,10 @@
     color: var(--color-gray-2);
     background: var(--primo-color-black);
     min-width: 23rem;
+    height: 100%;
+    overflow-y: scroll;
+    place-content: flex-start;
+    justify-content: stretch;
 
     .empty-description {
       color: var(--color-gray-4);
