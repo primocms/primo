@@ -1,7 +1,7 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
-  import SymbolContainer from '../../../modal/SymbolLibrary/SymbolContainer.svelte';
+  import SymbolContainer from '../../../modal/ComponentLibrary/SymbolContainer.svelte';
   import Masonry from './Masonry.svelte';
 
   import { symbols } from '../../../../stores/data/draft';

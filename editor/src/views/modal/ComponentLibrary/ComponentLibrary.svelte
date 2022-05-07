@@ -22,7 +22,7 @@
     symbols as actions,
     deleteInstances,
   } from '../../../stores/actions';
-  import ModalHeader from '../../modal/ModalHeader.svelte'
+  import ModalHeader from '../ModalHeader.svelte'
   const track = getContext('track')
 
   export let onselect = null

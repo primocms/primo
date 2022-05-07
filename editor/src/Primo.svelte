@@ -87,7 +87,7 @@
       ? {
           SITE_PAGES: modals.SitePages,
           COMPONENT_EDITOR: modals.ComponentEditor,
-          SYMBOL_LIBRARY: modals.SymbolLibrary,
+          SYMBOL_LIBRARY: modals.ComponentLibrary,
           FIELDS: modals.Fields,
           WRAPPER: modals.HTML,
           STYLES: modals.CSS,
