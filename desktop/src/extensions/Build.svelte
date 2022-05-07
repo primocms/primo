@@ -314,13 +314,13 @@
             </p>
             <PrimaryButton
               on:click={publishToHosts}
-              label="Save and Publish"
+              label="Publish"
               {loading}
             />
           {:else if $hosts.length > 0 && !deployment}
             <PrimaryButton
               on:click={publishToHosts}
-              label="Save and Publish"
+              label="Publish"
               {loading}
             />
           {:else if !deployment}
@@ -382,7 +382,7 @@
         }
 
         .deployment {
-          padding: 0.5rem 0;
+          padding: 1rem 0;
           display: flex;
           flex-direction: column;
 
