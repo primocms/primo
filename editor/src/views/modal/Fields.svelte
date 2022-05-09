@@ -58,7 +58,7 @@
 
   function saveLocalContent() {
     // TODO: use _set to mutate the object instead of reassigning it on every keypress
-    localContent = {
+    localContent = cloneDeep({
       ...localContent,
       [$locale]: {
         ...localContent[$locale],
@@ -68,7 +68,18 @@
           ..._chain(localPageFields).keyBy('key').mapValues('value').value()
         }
       }
-    }
+    })
+
+    // create keys within other locales if missing
+    const siteEnglishVariables = _chain(localSiteFields).keyBy('key').mapValues('value').value()
+    Object.entries(localContent).forEach(([loc, content]) => {
+      Object.keys(siteEnglishVariables).forEach((key) => {
+        if (content.key === undefined) {
+          localContent[loc][key] = siteEnglishVariables[key]
+        }
+      })
+    })
+
     updatePagePreview()
   }
 
@@ -166,7 +177,7 @@
         display: flex;
         flex-direction: column;
         max-height: calc(100vh - 100px); /* stopgap for scrolling issue */
-        overflow-y: scroll; 
+        /* overflow-y: scroll;  */
       }
 
       .preview-container {
