@@ -131,7 +131,7 @@ const machineID = get(config).machineID
 export async function track(event, args = null) {
   if (!EVENTS.includes(event)) console.warn('Event does not exist', event)
   if (get(config).telemetryEnabled) {
-    await axios.post('https://api.primo.af/telemetry.json', {event, machine_id: machineID, args})
+    // await axios.post('https://api.primo.af/telemetry.json', {event, machine_id: machineID, args})
   } else {
     console.log('Telemetry disabled', event)
   }

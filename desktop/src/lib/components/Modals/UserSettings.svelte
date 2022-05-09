@@ -131,7 +131,7 @@
           >Select directory</PrimaryButton
         >
       </div>
-      <hr>
+      <!-- <hr>
       <div class="container">
         <h2 class="heading">
           Usage Data
@@ -146,7 +146,7 @@
             }))
           }}>
         </label>
-      </div>
+      </div> -->
     {/if}
   </div>
 </main>
