@@ -198,4 +198,25 @@
       margin-top: 12px;
     }
   }
+  .field-button {
+    width: 100%;
+    background: var(--button-background);
+    color: var(--button-color);
+    padding: 0.5rem 0;
+    border-radius: 1px;
+    transition: background 0.1s, color 0.1s;
+
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-weight: 700;
+
+    &:hover {
+      background: var(--button-hover-color);
+    }
+
+    i {
+      margin-right: 0.5rem;
+    }
+  }
 </style>

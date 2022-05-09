@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { slide } from 'svelte/transition';
+  import { slide, fade } from 'svelte/transition';
   import { iframePreview } from './misc';
   import {locale} from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree';
@@ -33,7 +33,7 @@
   let iframeLoaded = false;
 
   function resizePreview() {
-    if (view) {
+    if (view && container && iframe) {
       const { clientWidth: parentWidth } = container;
       const { clientWidth: childWidth } = iframe;
       const scaleRatio = parentWidth / childWidth;
@@ -43,20 +43,20 @@
   }
 
   function changeView() {
-    iframe.classList.remove('fadein');
+    visible = false
+    // iframe.classList.remove('fadein');
     setTimeout(() => {
       if (view === 'small') {
         view = 'large';
         // clientWidth doesn't compute right without this
         setTimeout(resizePreview, 100);
       } else {
-        iframe.classList.remove('fadein');
         iframe.style.transform = 'scale(1)';
         iframe.style.height = '100%';
         view = 'small';
       }
       setTimeout(() => {
-        iframe.classList.add('fadein');
+        visible = true
       }, 100);
     }, 100);
   }
@@ -83,13 +83,6 @@
       }
     }
   }
-
-  // $: iframe && highlightTag($highlightedElement)
-  // function highlightTag(tag) {
-  //   if (tag) {
-  //     iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
-  //   }
-  // }
 
   $: setIframeData(componentData);
   function setIframeData(componentData) {
@@ -124,6 +117,8 @@
     }
   }
 
+  let visible = true
+
 </script>
 
 <div class="code-preview">
@@ -147,11 +142,13 @@
     </div>
   {/if}
   <div
+    in:fade
     class="preview-container"
     class:loading
     bind:this={container}
     bind:clientWidth={previewWidth}>
     <iframe
+      class:visible
       class:scaled={view === 'large'}
       on:load={setLoading}
       class:fadein={previewLoaded}
@@ -221,17 +218,20 @@
   iframe {
     width: 100%;
     border: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.4s;
     background: var(--primo-color-white);
     height: 100%;
     width: 100%;
-  }
-  .fadein {
     opacity: 1;
-  }
-  iframe.scaled {
-    width: 100vw;
-    transform-origin: top left;
+
+    &.visible {
+      opacity: 1;
+    }
+
+    &.scaled {
+      width: 100vw;
+      transform-origin: top left;
+    }
   }
   .preview-container {
     background: var(--primo-color-white);
