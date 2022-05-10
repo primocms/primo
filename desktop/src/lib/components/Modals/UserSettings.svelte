@@ -131,22 +131,6 @@
           >Select directory</PrimaryButton
         >
       </div>
-      <!-- <hr>
-      <div class="container">
-        <h2 class="heading">
-          Usage Data
-          <span class="supporting-text">We collect anonymous usage data (<strong>not site data</strong>) to make Primo better. <a href="https://primo.af/privacy-policy" target="blank">Learn More</a></span>
-        </h2>
-        <label>
-          <span>Enable Anonymous Usage Data Collection</span>
-          <input type="checkbox" checked={$config.telemetryEnabled} on:change={() => {
-            config.update(c => ({
-              ...c,
-              telemetryEnabled: !$config.telemetryEnabled
-            }))
-          }}>
-        </label>
-      </div> -->
     {/if}
   </div>
 </main>
@@ -162,18 +146,6 @@
     font-weight: 500;
     font-size: 0.75rem;
     color: var(--color-gray-4);
-
-    a {
-      text-decoration: underline;
-    }
-  }
-  hr {
-    border-color: var(--color-gray-8);
-  }
-  label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
   }
   .container {
     padding: 1rem 0;
