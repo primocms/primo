@@ -1,8 +1,5 @@
 const { app, dialog, ipcMain } = require('electron')
 const { autoUpdater } = require("electron-updater")
-const {compileSvelte} = require("./compile.cjs")
-
-console.log(compileSvelte)
 
 // Electron Update
 
@@ -183,10 +180,6 @@ ipcMain.on('get-machine-id', async (event) => {
   event.returnValue = machineID
 })
 ipcMain.on('get-telemetry', async (event) => {
-  const res = await compileSvelte({
-    code: `<h1>yes</h1>`
-  })
-  console.log(res)
   event.returnValue = telemetryEnabled
 })
 ipcMain.on('set-telemetry', async (event, arg) => {
@@ -295,4 +288,11 @@ ipcMain.handle('process-css', async (event, data) => {
     error: res.error
   }
   return processed
+})
+
+
+// Svelte
+const { compileSvelte } = require('./compile.cjs')
+ipcMain.handle('process-svelte', async (event, data) => {
+  return await compileSvelte(data)
 })
