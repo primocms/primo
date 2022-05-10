@@ -4,7 +4,6 @@ import svelteWorker from './workers/worker?worker'
 import {get} from 'svelte/store'
 import {site} from '@primo-app/primo/src/stores/data/draft'
 import {locale} from '@primo-app/primo/src/stores/app/misc'
-import * as idb from 'idb-keyval'
 
 const SvelteWorker = new svelteWorker()
 const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
@@ -16,18 +15,20 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   const finalRequest = buildFinalRequest(data)
 
   let cacheKey
-  if (!buildStatic) {
-    cacheKey = JSON.stringify({
-      code, 
-      data: Object.keys(data),
-      format
-    })
-    if (componentsMap.has(cacheKey)) return componentsMap.get(cacheKey)
-  }
+  // if (!buildStatic) {
+  //   cacheKey = JSON.stringify({
+  //     code, 
+  //     data: Object.keys(data),
+  //     format
+  //   })
+  //   if (componentsMap.has(cacheKey)) return componentsMap.get(cacheKey)
+  // }
 
   let res
   try {
-    res = await htmlPromiseWorker.postMessage(finalRequest)
+    // res = await htmlPromiseWorker.postMessage(finalRequest)
+    // res = await compileSvelte(finalRequest)
+    // console.log({res})
   } catch(e) {
     console.log('error', e)
     res = {

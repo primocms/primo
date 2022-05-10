@@ -12,14 +12,6 @@ export const iframePreview = (locale = 'en') => `
             // TODO: re-render component when passing only a subset of existing props (i.e. when a prop has been deleted)
             c.$set(props);
           } else if (source) {
-            const withLogs = \`
-              const primoLog = console ? console.log.bind(console) : null;
-              function postMessage(arg) {
-                try {
-                  window.postMessage({ event: 'logs', payload: arg })
-                } catch(e) {console.warn(e)}
-              }
-              if (primoLog) console.log = (...args) => { postMessage(...args); primoLog(...args); };\` + source;
             const blob = new Blob([source], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
@@ -42,8 +34,8 @@ export const iframePreview = (locale = 'en') => `
         function setListeners() {
           if (set) return
           document.body.querySelectorAll('*').forEach(el => {
-            console.log({el})
             el.addEventListener('mouseenter', () => {
+              console.log(el.__svelte_meta)
               const path = getDomPath(el)
               window.postMessage({ event: 'path', payload: path })
             })
