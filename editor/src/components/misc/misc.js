@@ -29,17 +29,21 @@ export const iframePreview = (locale = 'en') => `
           }
         }
 
-
         let set = false
+        const activeLoc = { line: 0, column: 0, char: 0 }
         function setListeners() {
           if (set) return
           document.body.querySelectorAll('*').forEach(el => {
             el.addEventListener('mouseenter', () => {
-              console.log(el.__svelte_meta)
-              const path = getDomPath(el)
-              window.postMessage({ event: 'path', payload: path })
+              const loc = el?.__svelte_meta?.loc
+              if (!loc || (activeLoc.char === loc.char && activeLoc.line === loc.line)) return
+              window.postMessage({ event: 'path', payload: loc })
+              activeLoc.char = loc.char
+              activeLoc.line = loc.line
+              activeLoc.column = loc.column
             })
           })
+          set = true
         }
 
         window.addEventListener('message', ({data}) => {

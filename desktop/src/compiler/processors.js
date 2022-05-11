@@ -10,18 +10,20 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   const finalRequest = buildFinalRequest(data)
 
   let cacheKey
-  // if (!buildStatic) {
-  //   cacheKey = JSON.stringify({
-  //     code, 
-  //     data: Object.keys(data),
-  //     format
-  //   })
-  //   if (componentsMap.has(cacheKey)) return componentsMap.get(cacheKey)
-  // }
+  if (!buildStatic) {
+    cacheKey = JSON.stringify({
+      code, 
+      data: Object.keys(data),
+      format
+    })
+    if (componentsMap.has(cacheKey)) {
+      const cached = componentsMap.get(cacheKey)
+      return cached
+    }
+  }
 
   let res
   try {
-    // res = await htmlPromiseWorker.postMessage(finalRequest)
     res = await window.primo.processSvelte(finalRequest)
   } catch(e) {
     console.log('error', e)

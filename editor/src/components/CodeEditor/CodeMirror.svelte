@@ -9,185 +9,13 @@
   const slowDebounce = createDebouncer(500);
 
   import {highlightedElement} from '../../stores/app/misc';
-  import { EditorView, keymap, Decoration, WidgetType, ViewUpdate, ViewPlugin, DecorationSet } from '@codemirror/view';
+  import { EditorView, keymap } from '@codemirror/view';
   import { standardKeymap, indentWithTab } from '@codemirror/commands';
-  import {RangeSetBuilder} from "@codemirror/rangeset"
-  import {syntaxTree} from "@codemirror/language"
-  import { EditorState, Compartment, StateEffect, StateField, Facet, Extension } from '@codemirror/state';
+  import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
   import extensions, { getLanguage } from './extensions';
-
-  const showStripes = ViewPlugin.fromClass(class {
-    decorations: DecorationSet
-
-    constructor(view: EditorView) {
-      this.decorations = stripeDeco(view)
-    }
-
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged)
-        this.decorations = stripeDeco(update.view)
-    }
-  }, {
-    decorations: v => v.decorations
-  })
-
-
-  const baseTheme = EditorView.baseTheme({
-    ".cm-svelte-keyword": {
-      color: 'rgb(197,134,192)'
-    },
-    ".cm-svelte-bracket, .cm-svelte-bracket *": {
-      color: 'rgb(212,212,212) !important'
-    },
-    ".cm-svelte-variable, .cm-svelte-variable *": {
-      color: 'rgb(156,218,252) !important'
-    },
-  })
-
-const stepSize = Facet.define<number, number>({
-  combine: values => values.length ? Math.min(...values) : 2
-})
-
-function zebraStripes(options: {step?: number} = {}): Extension {
-  return [
-    baseTheme,
-    options.step == null ? [] : stepSize.of(options.step),
-    showStripes
-  ]
-}
-
-const highlightEntities = {
-  bracket: Decoration.mark({class: "cm-svelte-bracket"}),
-  variable: Decoration.mark({class: "cm-svelte-variable"}),
-  keyword: Decoration.mark({class: "cm-svelte-keyword"}),
-}
-
-function stripeDeco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
-  const actions = []
-
-  syntaxTree(view.state).iterate({
-    from: view.visibleRanges['from'], 
-    to: view.visibleRanges['to'],
-    enter: (type, from, to) => {
-      // highlight attributes when svelte variable
-      if (type.name === 'Text' && mode === 'html') {
-        const string = view.state.doc.sliceString(from, to)
-
-        const [stringWithBrackets] = string.match(/({.*})/g) || [];
-        if (stringWithBrackets) {
-          const individualWords = stringWithBrackets.split(' ')
-
-          individualWords.forEach((word) => {
-
-            let position = from + string.indexOf(word, 0)
-
-            const specialCharacters = ['{', '}']
-
-            specialCharacters.forEach(highlightSpecialChar)
-
-            function highlightSpecialChar(character, i) {
-              const regex = new RegExp(character, 'g');
-              const characterPosition = [...word.matchAll(regex)] // word.indexOf(character)
-              if (characterPosition) {
-                characterPosition.forEach(({ index }) => {
-                  actions.push({
-                    start: position + index, 
-                    length: 1,
-                    mark: highlightEntities.bracket,
-                    string: character
-                  })
-                })
-              }
-            }
-
-            const keywords = ['#each', '/each', 'as', '@html', '/if', '#if', ':else']
-
-            keywords.forEach(highlightKeyword)
-
-            function highlightKeyword(keyword) {
-              const keywordPosition = word.indexOf(keyword)
-
-              if (keywordPosition === -1) return
-
-              actions.push({
-                start: position + keywordPosition, 
-                length: keyword.length, 
-                mark: highlightEntities.keyword,
-                string: keyword
-              })
-            }
-
-            const [enclosedVariable] = word.match(/({.*})/g) || []
-
-            if (enclosedVariable) {
-              const variable = enclosedVariable.replace(/[{}]/g, "")
-
-              if (keywords.includes(variable)) return
-
-              const newPosition = from + string.indexOf(variable)
-
-              actions.push({
-                start: newPosition, 
-                end: newPosition + variable.length, 
-                mark: highlightEntities.variable
-              })
-            } else if (word.match(/([{}])/g)) {
-              const variable = word.replace(/[{}]/g, "")
-              if (keywords.includes(variable)) return
-
-              const newPosition = from + string.indexOf(word)
-
-              actions.push({
-                start: newPosition, 
-                end: newPosition + variable.length, 
-                mark: highlightEntities.variable
-              })
-            } else {
-              const isKeyword = some(keywords, keyword => word.includes(keyword), false)
-              if (isKeyword) return
-              
-              const newPosition = from + string.indexOf(word)
-              actions.push({
-                start: newPosition, 
-                end: newPosition + word.length, 
-                mark: highlightEntities.variable
-              })
-            }
-          
-          })
-        }
-
-      } else if (type.name === 'UnquotedAttributeValue') {
-        const string = view.state.doc.sliceString(from, to)
-        actions.push({
-          start: from, 
-          end: from + 1, 
-          mark: highlightEntities.bracket
-        })
-        actions.push({
-          start: from + 1, 
-          end: from + string.length - 1, 
-          mark: highlightEntities.variable
-        })
-        actions.push({
-          start: from + string.length -1, 
-          end: from + string.length, 
-          mark: highlightEntities.bracket
-        })
-      }
-    }
-  })
-
-  const sorted = actions.sort((a, b) => a.start - b.start)
-
-  sorted.forEach(({start, end, length, mark}) => {
-    builder.add(start, length ? (start + length) : end, mark)
-  })
-  return builder.finish()
-}
-
+  import highlightActiveLine from './extensions/inspector'
+  import svelteSyntax from './extensions/svelte'
 
   const languageConf = new Compartment();
   const tabSize = new Compartment();
@@ -211,7 +39,7 @@ function stripeDeco(view: EditorView) {
     },
     doc: prefix + value,
     extensions: [
-      zebraStripes({step: 2}),
+      svelteSyntax(),
       autocompletion(),
       languageConf.of(language),
       keymap.of([
@@ -337,52 +165,7 @@ function stripeDeco(view: EditorView) {
 
   let element;
 
-  $: editorNode && highlightTags($highlightedElement)
-  function highlightTags(element) {
-    if (!element) return
-    const withoutBody = element.slice(7)
-    const selectors = withoutBody.split(' > ')
-    const found = editorNode.querySelectorAll('span.ͼu');
-    const tags = Array.from(found).map((node, index) => ({ index, node })).filter(({node}) => selectors.includes(node.innerText));
-    console.log({selectors, found, withoutBody, tags})
-    found.forEach(tag => {
-      tag.classList.remove('highlighted')
-    })
-    tags.forEach(({node}) => {
-      node.classList.add('highlighted')
-    })
-  }
-
-  function foo(node) {
-    console.log({node})
-
-    setTimeout(() => {
-      const child = node.querySelector('.cm-content')
-      const found = child.querySelector('span.ͼu') || {}
-      const {innerText} = found
-      console.log({child, found, innerText})
-    }, 2000)
-    // get node children
-
-    // select `.cm-line .cu`, on hover get content of cm-line
-
-    // look for content in preview
-  }
-
-  $: if (editorNode && editorMounted && mode === 'html') {
-    const children = Array.from(editorNode.querySelectorAll('.cm-line'))
-    children.forEach(node => {
-      node.addEventListener('mouseenter', () => {
-        const content = node.querySelector('.ͼu')
-        const text = content.textContent
-        const html = content.innerHTML
-        console.log({text, html})
-        dispatch('tag-select', html)
-      })
-    })
-    const asTags = children.map(n => n.innerHTML)
-    console.log({children, asTags})
-  }
+  $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
 
 </script>
 
@@ -392,7 +175,7 @@ function stripeDeco(view: EditorView) {
   }}
 />
 
-<div use:foo bind:this={element} class="codemirror-container {mode}" {style}>
+<div bind:this={element} class="codemirror-container {mode}" {style}>
   <div in:fade={{ duration: 200 }} bind:this={editorNode} />
 </div>
 

@@ -87,7 +87,7 @@
   $: iframe && highlightTag($highlightedElement)
   function highlightTag(tag) {
     if (tag) {
-      iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
+      // iframe.contentWindow.postMessage({ event: 'highlight', payload: tag });
     }
   }
 
