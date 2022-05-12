@@ -30,7 +30,7 @@ export const iframePreview = (locale = 'en') => `
         }
 
         let set = false
-        const activeLoc = { line: 0, column: 0, char: 0 }
+        const activeLoc = { line: null, column: null, char: null }
         function setListeners() {
           if (set) return
           document.body.querySelectorAll('*').forEach(el => {

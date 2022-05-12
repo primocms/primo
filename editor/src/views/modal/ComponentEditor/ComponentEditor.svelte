@@ -61,7 +61,6 @@
   }
 
   function getSymbolPlaceholders(fields) {
-    console.log(cloneDeep(fields))
     return _chain(fields).keyBy('key').mapValues(f => f.default || getCachedPlaceholder(f)).value()
   }
 
@@ -289,16 +288,6 @@
     }
   }
 
-  $: console.log(cloneDeep(fields))
-
-  let highlightedTag
-  $: console.log(highlightedTag)
-
-
-  $: highlightTag(highlightedTag)
-  async function highlightTag(toHighlight) {
-
-  }
 </script>
 
 <ModalHeader
@@ -333,7 +322,6 @@
             bind:css={rawCSS}
             bind:js={rawJS}
             on:save={saveComponent} 
-            bind:highlightedTag
           />
         {:else if activeTab === tabs[1]}
           <GenericFields bind:fields on:input={refreshPreview} />
@@ -348,7 +336,6 @@
     <div slot="right">
       <CodePreview
         view="small"
-        bind:highlightedTag
         {loading}
         {componentApp}
         {data}
