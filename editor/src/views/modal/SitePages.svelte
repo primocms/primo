@@ -161,8 +161,7 @@
       <li class="xyz-in">
         <PageItem
           {page}
-          parent={currentPath[0]}
-          disableAdd={breadcrumbs}
+          disableAdd={!!breadcrumbs}
           active={$id === page.id}
           on:edit={({ detail }) => editPage(page.id, detail)}
           on:add={() => addSubPage(page.id)}

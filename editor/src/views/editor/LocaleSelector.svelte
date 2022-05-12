@@ -125,7 +125,7 @@
 
     .locale-list {
       display: grid;
-      overflow: scroll;
+      overflow-y: scroll;
       max-height: 20rem;
 
       button.option {

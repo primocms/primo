@@ -1,5 +1,5 @@
 import ComponentEditor from './ComponentEditor/ComponentEditor.svelte'
-import SymbolLibrary from './SymbolLibrary/SymbolLibrary.svelte'
+import ComponentLibrary from './ComponentLibrary/ComponentLibrary.svelte'
 import SitePages from './SitePages.svelte'
 import Fields from './Fields.svelte'
 import HTML from './HTML.svelte'
@@ -8,7 +8,7 @@ import Dialog from './Dialog.svelte'
 
 export {
   ComponentEditor,
-  SymbolLibrary,
+  ComponentLibrary,
   SitePages,
   CSS,
   Fields,

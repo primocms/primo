@@ -172,32 +172,10 @@
 </div>
 
 <style lang="postcss">
-  header {
-    /* padding: 0.25rem 0; */
-    font-size: var(--label-font-size);
-    font-weight: var(--label-font-weight);
-
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .header-button {
-    width: 100%;
-
-    & + .fields {
-      padding-top: 1rem;
-    }
-  }
 
   .fields {
     display: grid;
-    /* grid-template-columns: 1fr 1fr; */
     gap: 3rem;
-
-    /* hr {
-      border-color: #222;
-      &:last-of-type { display: none }
-    } */
   }
 
   .repeater-level-0 {

@@ -363,8 +363,7 @@
     display: flex; /* to help w/ positioning child items in code view */
     background: var(--primo-color-black);
     color: var(--color-gray-2);
-    padding: 0.5rem;
-    padding-top: 0;
+    padding: 0 0.5rem;
     flex: 1;
     overflow: hidden;
 
@@ -374,6 +373,10 @@
 
   [slot="right"] {
     width: 100%;
+  }
+
+  [slot="left"] {
+    height: 100%;
   }
 
 </style>

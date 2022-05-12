@@ -270,8 +270,8 @@
   div.left {
     width: var(--left-panel-size);
     min-width: var(--min-left-panel-size);
-    height: 100%;
-    overflow-y: scroll; /* Necessary to scroll content in CMS fields */
+    /* height: 100%; */
+    /*  overflow-y: scroll; Necessary to scroll content in CMS fields */
   }
   div.center {
     width: var(--center-panel-size);

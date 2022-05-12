@@ -181,6 +181,10 @@
     color: var(--color-gray-2);
     background: var(--primo-color-black);
     min-width: 23rem;
+    height: 100%;
+    overflow-y: scroll;
+    place-content: flex-start;
+    justify-content: stretch;
 
     .empty-description {
       color: var(--color-gray-4);
@@ -193,95 +197,26 @@
       justify-content: center;
       margin-top: 12px;
     }
-
-    select {
-      background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-      background-position: 100%;
-      background-repeat: no-repeat;
-      appearance: none;
-      width: 100%;
-      padding: 8px;
-      border-right: 4px solid transparent;
-      background: var(--color-gray-9);
-      color: var(--color-gray-2);
-      font-size: var(--font-size-2);
-      font-weight: 600;
-      border: 0;
-    }
-  }
-  textarea.info {
-    width: 100%;
-    background: transparent;
-    height: 7rem;
-    padding: 1rem;
-  }
-  .field-item {
-    /* padding: 1.5rem; */
-    /* box-shadow: var(--box-shadow); */
-    margin-bottom: 0.5rem;
-    /* background: var(--color-gray-9); */
-  }
-  .input {
-    padding: 0.25rem 0.5rem;
-  }
-  input,
-  select {
-    outline: 0;
-    border: 0;
   }
   .field-button {
     width: 100%;
-    border-radius: var(--primo-border-radius);
-    transition: var(--transition-colors);
-
-    color: var(--button-color);
     background: var(--button-background);
+    color: var(--button-color);
+    padding: 0.5rem 0;
+    border-radius: 1px;
+    transition: background 0.1s, color 0.1s;
+
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    border-radius: 4px;
     font-weight: 700;
-    font-size: 14px;
-    padding: 0.75rem 0;
+
+    &:hover {
+      background: var(--button-hover-color);
+    }
 
     i {
       margin-right: 0.5rem;
     }
   }
-  .field-button:hover {
-    background: var(--button-hover-background);
-  }
-  .field-button[disabled] {
-    background: var(--color-gray-5);
-    cursor: not-allowed;
-  }
-  .field-button.subfield-button {
-    width: calc(100% - 1rem);
-    border-radius: 2px;
-    font-size: var(--font-size-2);
-    padding: 4px 0;
-    margin: 8px 0;
-    margin-left: 1.5rem;
-    color: var(--color-gray-2);
-    transition: var(--transition-colors);
-  }
-  input {
-    background: var(--color-gray-7);
-    color: var(--color-gray-2);
-    border-radius: 2px;
-  }
-  input:focus {
-    outline: 0;
-  }
-  select {
-    padding: 0.5rem;
-    border-right: 4px solid transparent;
-    background: var(--color-gray-9);
-    color: var(--color-gray-2);
-    font-size: var(--font-size-2);
-    font-weight: 600;
-  }
-
-  button {
-    i {
-      margin-right: 0.5rem;
-    }
-  }
-
 </style>

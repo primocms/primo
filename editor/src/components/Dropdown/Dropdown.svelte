@@ -49,17 +49,6 @@
     }
   }
 
-  .dropdown-item {
-    display: flex;
-    padding: 0.5rem;
-    align-items: center;
-
-    button.option {
-      padding: 0 !important;
-      padding-left: 0.5rem !important;
-    }
-  }
-
   button.label {
     font-weight: 700;
     display: flex;
@@ -108,24 +97,8 @@
           margin-left: 0.5rem;
         }
 
-        &:hover, &.active {
+        &:hover {
           background: var(--color-gray-7);
-        }
-      }
-    }
-
-    .search {
-      display: flex;
-      align-items: center;
-      background: var(--color-gray-8);
-      padding: 0.25rem 0.5rem;
-
-      input {
-        background: transparent;
-        margin-left: 0.5rem;
-
-        &:focus {
-          outline: 0;
         }
       }
     }

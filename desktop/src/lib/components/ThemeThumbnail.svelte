@@ -1,6 +1,7 @@
 <script>
   import {createEventDispatcher} from 'svelte'
   import SiteThumbnail from './SiteThumbnail.svelte'
+  import {setSitePreview} from '$lib/actions'
 
   const dispatch = createEventDispatcher()
 
@@ -16,7 +17,7 @@
   selected = !selected
   dispatch('click')
 }}>
-  <SiteThumbnail {site} {preview} />
+  <SiteThumbnail {site} {preview} on:setPreview={({detail:preview}) => setSitePreview(site.id, preview)}  />
   {#if title}
     <div class="title">{title}</div>
   {/if}
@@ -30,7 +31,7 @@
     transition: 0.1s box-shadow;
 
     &.selected {
-      box-shadow: 0px 0px 0px 3px #F27473;
+      box-shadow: 0px 0px 0px 2px var(--primo-color-primored);
     }
 
     &:hover {

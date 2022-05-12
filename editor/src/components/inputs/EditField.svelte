@@ -45,6 +45,7 @@
     </div>
     {#if showDefaultValue}
     <div class="field">
+      <!-- svelte-ignore a11y-label-has-associated-control -->
       <label>
         <span>Default Value</span>
         <slot name="default-value" />

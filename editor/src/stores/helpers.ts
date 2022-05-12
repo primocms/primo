@@ -28,30 +28,27 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   let [ head, below, ...blocks ] = await Promise.all([
     new Promise(async (resolve) => {
       const css:string = await processCSS(site.code.css + page.code.css)
-      // TODO: fix
-      const svelte:{ css:string, html:string, js:string } = await processCode({ 
-        code: {
-          html: `<svelte:head>
-          ${site.code.html?.head}
-          ${page.code.html?.head}
+      const data = getPageData({ page, site, loc: locale })
+      const code = {
+        html: `
+        <svelte:head>
+          ${site.code.html.head}
+          ${page.code.html.head}
           <style>${css}</style>
-          </svelte:head>
-          `, 
-          js: ''
-        },
-        data: getPageData({ page, site, loc: locale }),
-        format: 'esm'});
+          </svelte:head>`, 
+        js: ``
+      }
+      const svelte:{ css:string, html:string, js:string } = await processCode({ code, data });
       resolve(svelte)
     }),
     new Promise(async (resolve) => {
-      const svelte = await processCode({ 
-        code: {
-          html: site.code.html?.below + page.code.html?.below, 
-          css: '', 
-          js: ''
-        },
-        data: getPageData({ page, site, loc: locale })
-      });
+      const data = getPageData({ page, site, loc: locale })
+      const code = {
+        html: site.code.html.below + page.code.html.below, 
+        css: ``, 
+        js: ``
+      }
+      const svelte = await processCode({ code, data });
 
       resolve(svelte) 
     }),
@@ -225,16 +222,12 @@ export function getComponentData({
 export function getPageData({
   page = get(activePage),
   site = get(activeSite),
-  loc = get(locale),
-  fallback = 'placeholder'
+  loc = get(locale)
 }: {
   page?: PageType,
   site?: SiteType,
-  loc?: string,
-  fallback?: 'placeholder' | 'empty'
+  loc?: string
 }): object {
-
-  // TODO: hydrate page/site fields
 
   // remove pages from data object (not accessed from component)
   const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))

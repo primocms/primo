@@ -57,23 +57,26 @@
   class="input key-input"
   type="text"
   placeholder="heading"
-  bind:value={field.key}
-  on:input={() => {
+  value={field.key}
+  on:input={({target}) => {
+    field.key = validateFieldKey(target.value)
     dispatchUpdate()
-    field.key = validateFieldKey(field.key)
   }}
   slot="key" />
   <input
   class="input key-input"
   type="text"
   placeholder="Lorem ipsum"
-  bind:value={field.default}
-  on:input
+  value={field.default}
+  on:input={({target}) => {
+    field.default = target.value
+    dispatchUpdate()
+  }}
   slot="default-value" />
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
-    field={subfield} 
+    field={cloneDeep(subfield)} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
     on:delete
@@ -132,10 +135,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-
-    i {
-      margin-right: 0.5rem;
-    }
 
     span {
       font-weight: 500;

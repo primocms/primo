@@ -1,4 +1,4 @@
-import {ComponentEditor,SymbolLibrary,SitePages,CSS,Fields,HTML,Dialog} from '../../views/modal'
+import {ComponentEditor,ComponentLibrary,SitePages,CSS,Fields,HTML,Dialog} from '../../views/modal'
 
 export const modalTypes = {
   'COMPONENT_EDITOR' : {
@@ -9,7 +9,7 @@ export const modalTypes = {
     },
   },
   'SYMBOL_LIBRARY' : {
-    component: SymbolLibrary,
+    component: ComponentLibrary,
     header: {
       title: 'Component Library',
       icon: 'fas fa-clone'

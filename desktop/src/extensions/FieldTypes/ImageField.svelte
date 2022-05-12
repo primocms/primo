@@ -286,27 +286,5 @@
     gap: 1rem;
     width: 100%;
     padding: 0 1.3125rem;
-
-    .image-input {
-      display: flex;
-      align-items: center;
-      font-size: var(--font-size-1);
-      width: 100%;
-      margin-bottom: 0.25rem;
-
-      span {
-        font-weight: 600;
-        padding: 0 0.5rem;
-      }
-
-      input {
-        background: var(--input-background);
-        border: var(--input-border, 0);
-        font-size: inherit;
-        flex: 1;
-        padding: 0 0.25rem;
-        outline: 0;
-      }
-    }
   }
 </style>
