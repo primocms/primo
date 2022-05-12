@@ -63,6 +63,10 @@ contextBridge.exposeInMainWorld('primo', {
     const res = await ipcRenderer.invoke('process-css', raw)
     return res
   },
+  processSvelte: async (args) => {
+    const res = await ipcRenderer.invoke('process-svelte', args)
+    return res
+  },
   checkForUpdate: () => {
     ipcRenderer.sendSync('check-for-update')
   },

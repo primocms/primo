@@ -1,7 +1,6 @@
 const { app, dialog, ipcMain } = require('electron')
 const { autoUpdater } = require("electron-updater")
 
-
 // Electron Update
 
 const isDev = require('electron-is-dev');
@@ -289,4 +288,11 @@ ipcMain.handle('process-css', async (event, data) => {
     error: res.error
   }
   return processed
+})
+
+
+// Svelte
+const { compileSvelte } = require('./compile.cjs')
+ipcMain.handle('process-svelte', async (event, data) => {
+  return await compileSvelte(data)
 })

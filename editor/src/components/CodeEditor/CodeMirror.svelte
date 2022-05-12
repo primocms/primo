@@ -1,198 +1,21 @@
 <script lang="ts">
-  import {some} from 'lodash-es';
+  import {some, flattenDeep as _flattenDeep} from 'lodash-es';
   import {autocompletion} from '@codemirror/autocomplete'
   import '@fontsource/fira-code/index.css';
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
 
-  import { EditorView, keymap, Decoration, WidgetType, ViewUpdate, ViewPlugin, DecorationSet } from '@codemirror/view';
+  import {highlightedElement} from '../../stores/app/misc';
+  import { EditorView, keymap } from '@codemirror/view';
   import { standardKeymap, indentWithTab } from '@codemirror/commands';
-  import {RangeSetBuilder} from "@codemirror/rangeset"
-  import {syntaxTree} from "@codemirror/language"
-  import { EditorState, Compartment, StateEffect, StateField, Facet, Extension } from '@codemirror/state';
+  import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
   import extensions, { getLanguage } from './extensions';
-  import { cloneDeep } from 'lodash-es';
-
-
-const showStripes = ViewPlugin.fromClass(class {
-  decorations: DecorationSet
-
-  constructor(view: EditorView) {
-    this.decorations = stripeDeco(view)
-  }
-
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged)
-      this.decorations = stripeDeco(update.view)
-  }
-}, {
-  decorations: v => v.decorations
-})
-
-
-  const baseTheme = EditorView.baseTheme({
-    ".cm-svelte-keyword": {
-      color: 'rgb(197,134,192)'
-    },
-    ".cm-svelte-bracket, .cm-svelte-bracket *": {
-      color: 'rgb(212,212,212) !important'
-    },
-    ".cm-svelte-variable, .cm-svelte-variable *": {
-      color: 'rgb(156,218,252) !important',
-      // background: 'red !important',
-      // padding: '0 0.25rem'
-    },
-  })
-
-const stepSize = Facet.define<number, number>({
-  combine: values => values.length ? Math.min(...values) : 2
-})
-
-function zebraStripes(options: {step?: number} = {}): Extension {
-  return [
-    baseTheme,
-    options.step == null ? [] : stepSize.of(options.step),
-    showStripes
-  ]
-}
-
-const highlightEntities = {
-  bracket: Decoration.mark({class: "cm-svelte-bracket"}),
-  variable: Decoration.mark({class: "cm-svelte-variable"}),
-  keyword: Decoration.mark({class: "cm-svelte-keyword"}),
-}
-
-function stripeDeco(view: EditorView) {
-  let builder = new RangeSetBuilder<Decoration>()
-  const actions = []
-
-  syntaxTree(view.state).iterate({
-    from: view.visibleRanges['from'], 
-    to: view.visibleRanges['to'],
-    enter: (type, from, to) => {
-      // highlight attributes when svelte variable
-      if (type.name === 'Text' && mode === 'html') {
-        const string = view.state.doc.sliceString(from, to)
-
-        const [stringWithBrackets] = string.match(/({.*})/g) || [];
-        if (stringWithBrackets) {
-          const individualWords = stringWithBrackets.split(' ')
-
-          individualWords.forEach((word, wordIndex) => {
-
-
-            let position = from + string.indexOf(word, 0)
-
-            const specialCharacters = ['{', '}']
-
-            specialCharacters.forEach(highlightSpecialChar)
-
-            function highlightSpecialChar(character, i) {
-              const regex = new RegExp(character, 'g');
-              const characterPosition = [...word.matchAll(regex)] // word.indexOf(character)
-              if (characterPosition) {
-                characterPosition.forEach(({ index }) => {
-                  actions.push({
-                    start: position + index, 
-                    length: 1,
-                    mark: highlightEntities.bracket,
-                    string: character
-                  })
-                })
-              }
-            }
-
-            const keywords = ['#each', '/each', 'as', '@html', '/if', '#if', ':else']
-
-            keywords.forEach(highlightKeyword)
-
-            function highlightKeyword(keyword) {
-              const keywordPosition = word.indexOf(keyword)
-
-              if (keywordPosition === -1) return
-
-              actions.push({
-                start: position + keywordPosition, 
-                length: keyword.length, 
-                mark: highlightEntities.keyword,
-                string: keyword
-              })
-            }
-
-            const [enclosedVariable] = word.match(/({.*})/g) || []
-
-            if (enclosedVariable) {
-              const variable = enclosedVariable.replace(/[{}]/g, "")
-
-              if (keywords.includes(variable)) return
-
-              const newPosition = from + string.indexOf(variable)
-
-              actions.push({
-                start: newPosition, 
-                end: newPosition + variable.length, 
-                mark: highlightEntities.variable
-              })
-            } else if (word.match(/([{}])/g)) {
-              const variable = word.replace(/[{}]/g, "")
-
-              if (keywords.includes(variable)) return
-
-              const newPosition = from + string.indexOf(word)
-
-              actions.push({
-                start: newPosition, 
-                end: newPosition + variable.length, 
-                mark: highlightEntities.variable
-              })
-            } else {
-              const isKeyword = some(keywords, keyword => word.includes(keyword), false)
-              if (isKeyword) return
-              
-              const newPosition = from + string.indexOf(word)
-              actions.push({
-                start: newPosition, 
-                end: newPosition + word.length, 
-                mark: highlightEntities.variable
-              })
-            }
-          
-          })
-        }
-
-      } else if (type.name === 'UnquotedAttributeValue') {
-        const string = view.state.doc.sliceString(from, to)
-        actions.push({
-          start: from, 
-          end: from + 1, 
-          mark: highlightEntities.bracket
-        })
-        actions.push({
-          start: from + 1, 
-          end: from + string.length - 1, 
-          mark: highlightEntities.variable
-        })
-        actions.push({
-          start: from + string.length -1, 
-          end: from + string.length, 
-          mark: highlightEntities.bracket
-        })
-      }
-    }
-  })
-
-  const sorted = actions.sort((a, b) => a.start - b.start)
-
-  sorted.forEach(({start, end, length, mark}) => {
-    builder.add(start, length ? (start + length) : end, mark)
-  })
-  return builder.finish()
-}
-
+  import highlightActiveLine from './extensions/inspector'
+  import svelteSyntax from './extensions/svelte'
 
   const languageConf = new Compartment();
   const tabSize = new Compartment();
@@ -216,7 +39,7 @@ function stripeDeco(view: EditorView) {
     },
     doc: prefix + value,
     extensions: [
-      zebraStripes({step: 2}),
+      svelteSyntax(),
       autocompletion(),
       languageConf.of(language),
       keymap.of([
@@ -317,6 +140,7 @@ function stripeDeco(view: EditorView) {
         bracketSameLine: true,
         cursorOffset: position,
         plugins: [svelte, css, babel],
+        // plugins: [svelte]
       });
     } catch (e) {
       console.warn(e);
@@ -324,11 +148,13 @@ function stripeDeco(view: EditorView) {
     return formatted;
   }
 
+  let editorMounted = false
   onMount(async () => {
     Editor = new EditorView({
       state,
       parent: editorNode,
     });
+    editorMounted = true
   });
 
   let editorNode;
@@ -338,6 +164,9 @@ function stripeDeco(view: EditorView) {
   }
 
   let element;
+
+  $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
+
 </script>
 
 <svelte:window
@@ -362,5 +191,11 @@ function stripeDeco(view: EditorView) {
     overflow-y: scroll;
     font-family: 'Fira Code', monospace !important;
     height: calc(100vh - 9.5rem);
+  }
+
+  :global(.highlighted) {
+    background: var(--color-gray-6);
+    /* color: white; */
+    border-radius: 2px;
   }
 </style>
