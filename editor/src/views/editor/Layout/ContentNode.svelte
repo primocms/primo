@@ -187,15 +187,12 @@
 </div>
 
 <style>
-  .primo-content {
-    caret-color: rgb(248, 68, 73);
-  }
-
-  :global(.primo-content ::selection, ::-moz-selection) {
+  :global(.ProseMirror ::selection, ::-moz-selection) {
     background: rgb(248, 68, 73);
   }
 
-  :global(.primo-content .ProseMirror) {
+  :global(.ProseMirror) {
+    caret-color: rgb(248, 68, 73);
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;
