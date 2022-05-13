@@ -136,9 +136,13 @@
     })
   }
 
+  $: if (node) {
+    node.children[0].classList.add('primo-content')
+  }
+
 </script>
 
-<div bind:this={node} class="primo-content">
+<div bind:this={node}>
   <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
     {#if editor}
       <CopyButton
