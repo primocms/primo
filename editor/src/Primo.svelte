@@ -95,11 +95,13 @@
       : null;
   }
 
-  $: $loadingSite = checkFor404($pageId, $pages);
-  function checkFor404(id:string, pages:Array<PageType>) {
+  $: checkFor404($pageId, $draft);
+  function checkFor404(id:string, site:SiteType) {
     const [root, child] = id.split('/');
-    const exists:boolean = some(pages, ['id', root]) || some(pages, ['id', child]);
-    return !exists;
+    const exists:boolean = some(site.pages, ['id', root]) || some(site.pages, ['id', child]);
+    if (!exists && site.id !== 'default') {
+      $pageId = 'index';
+    }
   }
 
   onMount(() => {

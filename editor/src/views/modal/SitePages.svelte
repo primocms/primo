@@ -29,7 +29,6 @@
       ? duplicatePage(name, url)
       : Page(url, name)
     await actions.add(newPage, currentPath);
-    dispatch('save')
     creatingPage = false;
     pageName = '';
     pageURL = '';

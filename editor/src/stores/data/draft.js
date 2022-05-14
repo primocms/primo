@@ -2,7 +2,7 @@ import { get, writable, derived } from 'svelte/store';
 import { Page, Site } from '../../const'
 import {isEqual} from 'lodash-es'
 
-export const id = writable('')
+export const id = writable('default')
 export const name = writable('')
 export const pages = writable([ Page() ])
 export const fields = writable([])

@@ -42,6 +42,7 @@
         label: $C('Pages'),
         icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
+        showSwitch: false
       },
     ],
     hasFields ? [
@@ -64,6 +65,7 @@
         title: $C('Pages'),
         icon: 'fa-solid:th-large',
         onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
+        showSwitch: false
       },
     ],
     [

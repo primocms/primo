@@ -13,7 +13,7 @@ export const userRole = writable('developer')
 
 export const showKeyHint = writable(false)
 
-export const loadingSite = writable(true)
+export const loadingSite = writable(false)
 
 export const onMobile = browser ? writable(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) : writable(false)
 
