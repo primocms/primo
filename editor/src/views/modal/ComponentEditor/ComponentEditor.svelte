@@ -324,13 +324,13 @@
             on:save={saveComponent} 
           />
         {:else if activeTab === tabs[1]}
-          <GenericFields bind:fields on:input={refreshPreview} />
+          <GenericFields bind:fields on:input={refreshPreview} showCode={true} />
         {/if}
       {:else}
         <GenericFields bind:fields on:input={() => {
           fields = fields.filter(Boolean) // to trigger setting `data`
           saveLocalContent()
-        }} />
+        }} showCode={false} />
       {/if}
     </div>
     <div slot="right">

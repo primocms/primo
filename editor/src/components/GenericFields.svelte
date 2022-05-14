@@ -9,6 +9,7 @@
   import FieldItem from '../views/modal/ComponentEditor/FieldItem.svelte'
 
   export let fields
+  export let showCode = true
 
   const dispatch = createEventDispatcher()
 
@@ -126,7 +127,7 @@
 </script>
 
 <main>
-  {#if $showingIDE}
+  {#if showCode}
     {#each fields as field, i (field.id)}
       <FieldItem
         {field}

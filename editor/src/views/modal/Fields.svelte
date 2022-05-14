@@ -151,7 +151,7 @@
         {#if showingPage}
           <GenericFields bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
         {:else}
-          <GenericFields bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
+          <GenericFields showCode={false} bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
         {/if}
       </div>
     </div>
