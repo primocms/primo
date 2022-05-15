@@ -44,6 +44,7 @@
     "files": [
       "package.json",
       "index.cjs",
+      "src/compile.cjs",
       "src/index.cjs",
       "src/preload.cjs",
       "build/**/*"
