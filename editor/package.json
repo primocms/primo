@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@codemirror/closebrackets": "^0.19.0",
-    "@codemirror/commands": "^0.19.5",
+    "@codemirror/commands": "^0.20.0",
     "@codemirror/comment": "^0.19.0",
     "@codemirror/fold": "^0.19.1",
     "@codemirror/gutter": "^0.19.5",

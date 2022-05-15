@@ -7,6 +7,7 @@
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(500);
+  import { abbreviationTracker } from '../../libraries/emmet/plugin';
 
   import {highlightedElement} from '../../stores/app/misc';
   import { EditorView, keymap } from '@codemirror/view';
@@ -39,6 +40,7 @@
     },
     doc: prefix + value,
     extensions: [
+      abbreviationTracker(),
       svelteSyntax(),
       autocompletion(),
       languageConf.of(language),
@@ -197,5 +199,19 @@
     background: var(--color-gray-6);
     /* color: white; */
     border-radius: 2px;
+  }
+
+  /* Ensure emmet popup doesn't get cut off */
+  :global(.cm-scroller) {
+    overflow: visible !important;
+  }
+
+  :global(.emmet-preview) {
+    background: var(--color-gray-9) !important;
+    padding: 0.5rem !important;
+    margin-left: 0 !important;
+    margin-top: 1.5rem !important;
+    border-top-right-radius: 0 !important;
+    border-top-left-radius: 0 !important;
   }
 </style>

@@ -608,11 +608,6 @@
     "@emmetio/html-matcher" "^1.3.0"
     emmet "^2.1.1"
 
-"@emmetio/codemirror-plugin@^1.2.1":
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/@emmetio/codemirror-plugin/-/codemirror-plugin-1.2.4.tgz#f880a36098536f6555747eadece9b7cc2df597e3"
-  integrity sha512-wVw2gqI6X+uVWYVRtTVymzTgbo4hEZIcPCNj4xrXw4l/+L3Qa+tAC/yf+Xy9nenRPCqRq0RLqGiQL+Qf/wYE9Q==
-
 "@emmetio/css-abbreviation@^2.1.4":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@emmetio/css-abbreviation/-/css-abbreviation-2.1.4.tgz#90362e8a1122ce3b76f6c3157907d30182f53f54"
