@@ -88,6 +88,7 @@
     "postcss-nested": "^5.0.6",
     "prettier": "^2.4.1",
     "promise-worker": "^2.0.1",
+    "rollup": "^2.73.0",
     "timeago.js": "^4.0.2"
   },
   "devDependencies": {
