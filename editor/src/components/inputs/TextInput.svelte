@@ -74,7 +74,7 @@
           outline: 0;
         }
 
-        &::placeholder {
+        &:placeholder {
           color: var(--color-gray-7);
         }
       }
