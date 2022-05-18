@@ -103,7 +103,7 @@
         <CodeMirror
           bind:value={unsavedPageCSS}
           mode="css"
-          docs="https://adam-marsden.co.uk/css-cheat-sheet"
+          docs="https://docs.primo.af/development#css-1"
           debounce={true}
           on:change={updatePagePreview}
           on:save={saveStyles}
@@ -112,7 +112,7 @@
         <CodeMirror
           bind:value={unsavedSiteCSS}
           mode="css"
-          docs="https://adam-marsden.co.uk/css-cheat-sheet"
+          docs="https://docs.primo.af/development#css-1"
           debounce={true}
           on:change={updatePagePreview}
           on:save={saveStyles}

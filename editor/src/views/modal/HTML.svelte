@@ -72,6 +72,7 @@
         bind:value={localPageHTML.head}
         style="height:10rem"
         mode="html"
+        docs="https://docs.primo.af/development#html-1"
       />
 
       <span class="before-body">{'Before </body>'}</span>
@@ -79,6 +80,7 @@
         bind:value={localPageHTML.below}
         style="height:15rem"
         mode="html"
+        docs="https://docs.primo.af/development#beforeclosingbodytag"
       />
     {:else}
       <span class="head">{'<head>'}</span>
@@ -86,13 +88,14 @@
         bind:value={localSiteHTML.head}
         style="height:10rem"
         mode="html"
+        docs="https://docs.primo.af/development#html-1"
       />
-
       <span class="before-body">{'Before </body>'}</span>
       <CodeMirror
         bind:value={localSiteHTML.below}
         style="height:15rem"
         mode="html"
+        docs="https://docs.primo.af/development#beforeclosingbodytag"
       />
     {/if}
   </div>

@@ -29,7 +29,7 @@
   export let style = '';
   export let debounce = false;
   export let selection = 0;
-
+  export let docs = 'https://docs.primo.af/development'
 
   const language = getLanguage(mode);
 
@@ -179,20 +179,46 @@
 
 <div bind:this={element} class="codemirror-container {mode}" {style}>
   <div in:fade={{ duration: 200 }} bind:this={editorNode} />
+  <a class="docs" target="blank" href={docs}>
+    <span>Docs</span>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+      <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+    </svg>
+  </a>
 </div>
 
-<!-- {#if docs}
-  <a target="blank" href="{docs}" class="z-10 text-xs pointer-events-auto flex items-center absolute bottom-0 right-0 h-auto text-gray-100 py-1 px-3 m-1 bg-gray-900 hover:bg-primored transition-colors duration-200">
-    <i class="fas fa-external-link-alt mr-1"></i>
-    <span>Docs</span>
-  </a>
-{/if} -->
 <style lang="postcss">
   .codemirror-container {
     width: 100%;
     overflow-y: scroll;
     font-family: 'Fira Code', monospace !important;
     height: calc(100vh - 9.5rem);
+    position: relative;
+  }
+
+  .docs {
+    position: sticky;
+    bottom: 2rem;
+    left: 100%;
+    margin-right: 0.25rem;
+    background: var(--color-gray-9);
+    transition: 0.1s background;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    display: inline-flex;
+
+    span {
+      margin-right: 0.25rem;
+    }
+
+    svg {
+      width: 0.75rem;
+    }
+
+    &:hover {
+      background: var(--color-gray-8);
+    }
   }
 
   :global(.highlighted) {
@@ -203,7 +229,8 @@
 
   /* Ensure emmet popup doesn't get cut off */
   :global(.cm-scroller) {
-    overflow: visible !important;
+    /* overflow-y: visible !important;
+    overflow-x: auto !important; */
   }
 
   :global(.emmet-preview) {
