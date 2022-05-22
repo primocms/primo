@@ -1,19 +1,19 @@
 import axios from 'axios'
-import {find} from 'lodash-es'
-import {get} from 'svelte/store'
+import { find } from 'lodash-es'
+import { get } from 'svelte/store'
 import supabase from './supabase/core'
 import * as supabaseDB from './supabase/db'
-import {sites as dbSites} from './supabase/db'
+import { sites as dbSites } from './supabase/db'
 import * as supabaseStorage from './supabase/storage'
 import * as stores from './stores'
 import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
-import {sitePassword} from './stores/misc'
+import { sitePassword } from './stores/misc'
 
 export const sites = {
   get: async (siteID, password) => {
     if (password) {
-      const [ dbRes, apiRes ] = await Promise.all([
-        dbSites.get({id: siteID}), 
+      const [dbRes, apiRes] = await Promise.all([
+        dbSites.get({ id: siteID }),
         axios.get(`/api/${siteID}.json?password=${password}`)
       ])
       return {
@@ -22,10 +22,10 @@ export const sites = {
       }
     } else {
       // const res = await dbSites.get({id: siteID})
-      const [ dbRes, storageRes ] = await Promise.all([
-        dbSites.get({id: siteID}),
+      const [dbRes, storageRes] = await Promise.all([
+        dbSites.get({ id: siteID }),
         supabaseStorage.downloadSiteData(siteID)
-      ]) 
+      ])
 
       return {
         ...dbRes,
@@ -34,7 +34,7 @@ export const sites = {
     }
   },
   initialize: async () => {
-    const sites = await supabaseDB.sites.get({query: `id, name, password`})
+    const sites = await supabaseDB.sites.get({ query: `id, name, password` })
     if (sites) {
       stores.sites.set(sites)
     }
@@ -54,7 +54,7 @@ export const sites = {
         preview: ''
       })
     ])
-    stores.sites.update(sites => [ ...sites, newSite ])
+    stores.sites.update(sites => [...sites, newSite])
   },
   update: async ({ id, props }) => {
     await supabaseDB.sites.update(id, props)
@@ -63,7 +63,7 @@ export const sites = {
     stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
     const password = get(sitePassword)
     if (password) {
-      const {data} = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, {
+      const { data } = await axios.post(`/api/${updatedSite.id}.json?password=${password}`, {
         action: 'SAVE_SITE',
         payload: updatedSite
       })
@@ -71,7 +71,7 @@ export const sites = {
     } else {
       const homepage = find(updatedSite.pages, ['id', 'index'])
       const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-      const [ res1, res2 ] = await Promise.all([
+      const [res1, res2] = await Promise.all([
         supabaseStorage.updateSiteData({
           id: updatedSite.id,
           data: updatedSite
@@ -90,13 +90,13 @@ export const sites = {
       supabaseDB.sites.delete(id),
       supabaseStorage.deleteSiteData(id)
     ])
-  }, 
+  },
   validatePassword: async (siteID, password) => {
     try {
-      const {data:json} = await axios.get(`/api/${siteID}.json?password=${password}`)
+      const { data: json } = await axios.get(`/api/${siteID}.json?password=${password}`)
       const data = JSON.parse(json)
       return data ? true : false
-    } catch(e) {
+    } catch (e) {
       return false
     }
     // return !!data.id
@@ -105,11 +105,11 @@ export const sites = {
     const session = supabase.auth.session()
     const password = get(sitePassword)
 
-    const {data} = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
+    const { data } = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
       action: 'PUBLISH',
       payload: {
         siteID,
-        host: host.name,
+        host,
         files
       }
     }, {
@@ -120,11 +120,10 @@ export const sites = {
     return data?.deployment
   },
   uploadImage: async ({ siteID, image }) => {
-    console.log({siteID, image})
     const session = supabase.auth.session()
     const password = get(sitePassword)
-    
-    const {data:url} = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
+
+    const { data: url } = await axios.post(`/api/${siteID}.json?password=${password || ''}`, {
       action: 'UPLOAD_IMAGE',
       payload: {
         siteID,
@@ -142,13 +141,13 @@ export const sites = {
 
 export const hosts = {
   initialize: async () => {
-    const {data:hosts} = await axios.get('/api/hosts.json')
+    const { data: hosts } = await axios.get('/api/hosts.json')
     if (hosts) {
       stores.hosts.set(hosts)
     }
   },
   create: async (provider) => {
-    stores.hosts.update(hosts => [ ...hosts, provider ])
+    stores.hosts.update(hosts => [...hosts, provider])
     await supabaseDB.hosts.create(provider)
   },
   delete: async (name) => {
@@ -181,7 +180,7 @@ export async function setActiveEditor({ siteID, lock = true, password = null }) 
     }
     if (siteBeingEdited === siteID) {
       siteBeingEdited = null
-      setActiveEditor({ siteID, lock, password})
+      setActiveEditor({ siteID, lock, password })
     }
   } else {
     siteBeingEdited = null

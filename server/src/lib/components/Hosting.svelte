@@ -43,15 +43,10 @@
         data: null
       })
     if (data) {
-      hosts.update((h) => {
-        return [
-          ...h,
-          {
-            name: 'netlify',
-            token,
-            user: data,
-          },
-        ]
+      actions.hosts.create({
+        name: 'netlify',
+        token,
+        user: data,
       })
     } else {
       window.alert('Could not connect to host')

@@ -1,10 +1,21 @@
 import axios from 'axios'
 import JSZip from 'jszip'
+import {Blob} from 'node:buffer';
+globalThis.Blob = Blob;
+JSZip.support.blob = true;
+
+
+const blobToBinary = async (blob) => {
+  const buffer = await blob.arrayBuffer();
+  
+  const view = new Int8Array(buffer);
+  
+  return [...view].map((n) => n.toString(2)).join(' ');
+};
 
 // pass in site
 export async function publishSite({ siteID, host, files, activeDeployment }) {
   let deployment
-
   try {
     if (host.name === 'vercel') {
       const { data } = await axios
@@ -35,11 +46,11 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
       // if deploymentID does not exists, create new site
   
       let data
-  
       if (!activeDeployment) {
         const zipFile = await createSiteZip(files)
+        const content = await blobToBinary(zipFile)
         const res = await axios
-          .post('https://api.netlify.com/api/v1/sites', zipFile, {
+          .post('https://api.netlify.com/api/v1/sites', content, {
             headers: {
               'Content-Type': 'application/zip',
               Authorization: `Bearer ${host.token}`,
