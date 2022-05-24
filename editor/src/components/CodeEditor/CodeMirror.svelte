@@ -1,6 +1,5 @@
 <script lang="ts">
   import {some, flattenDeep as _flattenDeep} from 'lodash-es';
-  import {autocompletion} from '@codemirror/autocomplete'
   import '@fontsource/fira-code/index.css';
   import { onMount, createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
@@ -10,11 +9,12 @@
   import { abbreviationTracker } from '../../libraries/emmet/plugin';
 
   import {highlightedElement} from '../../stores/app/misc';
+  import {basicSetup} from "@codemirror/basic-setup"
   import { EditorView, keymap } from '@codemirror/view';
   import { standardKeymap, indentWithTab } from '@codemirror/commands';
   import { EditorState, Compartment } from '@codemirror/state';
   import MainTheme from './theme';
-  import extensions, { getLanguage } from './extensions';
+  import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
   import svelteSyntax from './extensions/svelte'
 
@@ -38,11 +38,10 @@
     selection: {
       anchor: selection,
     },
-    doc: prefix + value,
+    doc: value,
     extensions: [
       abbreviationTracker(),
-      svelteSyntax(),
-      autocompletion(),
+      // svelteSyntax(),
       languageConf.of(language),
       keymap.of([
         standardKeymap,
@@ -110,8 +109,7 @@
         selection = view.state.selection.main.from;
       }),
       MainTheme,
-      tabSize.of(EditorState.tabSize.of(2)),
-      ...extensions,
+      basicSetup,
     ],
   });
 
@@ -150,16 +148,13 @@
     return formatted;
   }
 
-  let editorMounted = false
-  onMount(async () => {
+  let editorNode;
+  $: if (editorNode) {
     Editor = new EditorView({
       state,
       parent: editorNode,
     });
-    editorMounted = true
-  });
-
-  let editorNode;
+  }
 
   function dispatchChanges(value) {
     dispatch('change', value);
