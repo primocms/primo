@@ -149,9 +149,9 @@
           <Tabs {tabs} bind:activeTab />
         {/if}
         {#if showingPage}
-          <GenericFields bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
+          <GenericFields showCode={$showingIDE} bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
         {:else}
-          <GenericFields showCode={false} bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
+          <GenericFields showCode={$showingIDE} bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />
         {/if}
       </div>
     </div>
