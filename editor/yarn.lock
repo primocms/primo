@@ -896,7 +896,7 @@
   dependencies:
     "@lezer/common" "^0.15.0"
 
-"@lezer/lr@^0.16.0":
+"@lezer/lr@^0.16.0", "@lezer/lr@^0.16.3":
   "integrity" "sha512-pau7um4eAw94BEuuShUIeQDTf3k4Wt6oIUOYxMmkZgDHdqtIcxWND4LRxi8nI9KuT4I1bXQv67BCapkxt7Ywqw=="
   "resolved" "https://registry.npmjs.org/@lezer/lr/-/lr-0.16.3.tgz"
   "version" "0.16.3"
