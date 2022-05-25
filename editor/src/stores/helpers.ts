@@ -1,10 +1,10 @@
-import {unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep} from 'lodash-es'
+import { unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { site as activeSite, symbols, fields as siteFields } from './data/draft'
 import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
-import {locale} from './app/misc'
-import { processCode, processCSS, getPlaceholderValue, getEmptyValue, LoremIpsum} from '../utils'
+import { locale } from './app/misc'
+import { processCode, processCSS, getPlaceholderValue, getEmptyValue, LoremIpsum } from '../utils'
 import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
 import { Page } from '../const'
 
@@ -15,7 +15,7 @@ export function resetActivePage() {
   pageCode.set(Page().code)
 }
 
-export function getAllFields(componentFields:any[] = [], exclude = () => true) {
+export function getAllFields(componentFields: any[] = [], exclude = () => true) {
   return unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
 }
 
@@ -23,11 +23,11 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page:PageType, site:SiteType, locale?:string, separateModules?:boolean }) {
+export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page: PageType, site: SiteType, locale?: string, separateModules?: boolean }) {
   if (!page.sections) return null // ensure data fits current structure
-  let [ head, below, ...blocks ] = await Promise.all([
+  let [head, below, ...blocks] = await Promise.all([
     new Promise(async (resolve) => {
-      const css:string = await processCSS(site.code.css + page.code.css)
+      const css: string = await processCSS(site.code.css + page.code.css)
       const data = getPageData({ page, site, loc: locale })
       const code = {
         html: `
@@ -35,22 +35,22 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           ${site.code.html.head}
           ${page.code.html.head}
           <style>${css}</style>
-          </svelte:head>`, 
+          </svelte:head>`,
         js: ``
       }
-      const svelte:{ css:string, html:string, js:string } = await processCode({ code, data });
+      const svelte: { css: string, html: string, js: string } = await processCode({ code, data });
       resolve(svelte)
     }),
     new Promise(async (resolve) => {
       const data = getPageData({ page, site, loc: locale })
       const code = {
-        html: site.code.html.below + page.code.html.below, 
-        css: ``, 
+        html: site.code.html.below + page.code.html.below,
+        css: ``,
         js: ``
       }
       const svelte = await processCode({ code, data });
 
-      resolve(svelte) 
+      resolve(svelte)
     }),
     ...page.sections.map(async section => {
       if (section.type === 'component') {
@@ -65,13 +65,13 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           loc: locale
         })
 
-        const { html, css, js }: { html:string, css:string, js:string } = symbol.code
+        const { html, css, js }: { html: string, css: string, js: string } = symbol.code
 
-        const svelte = await processCode({ 
+        const svelte = await processCode({
           code: {
-            html, 
-            css, 
-            js 
+            html,
+            css,
+            js
           },
           data,
           format: 'esm',
@@ -93,7 +93,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           type: 'content',
           id: section.id
         }
-      } 
+      }
     })
   ])
 
@@ -110,7 +110,15 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   const final = `
   <!DOCTYPE html>
   <html lang="${locale}">
-    <head>${head.html || ''}</head>
+    <head>
+      ${head.html || ''}
+      <script async>
+        let data = {}
+        fetch('/${locale}.json').then(res => res.json()).then(res => {
+          data = res
+        })
+      </script>
+    </head>
     <body class="primo-page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
@@ -119,7 +127,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   </html>
   `
 
-  function buildBlocks(blocks:any[]): string {
+  function buildBlocks(blocks: any[]): string {
     return blocks.map(block => {
       if (!block || block.type === 'options') return ''
       const { id, type, css } = block
@@ -135,25 +143,22 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     }).join('')
   }
 
-  function buildModules(blocks:any[]): string {
+  function buildModules(blocks: any[]): string {
     return blocks.filter(block => block.js).map(block => {
-      return separateModules ? 
-        `<script type="module" async>
+      return separateModules ?
+        `<script type="module">
           import App from '/_modules/${block.symbol}.js';
-          fetch('/${locale }.json').then(res => res.json()).then(data => {
-            const content = {
+          new App({
+            target: document.querySelector('#${block.id}'),
+            hydrate: true,
+            props: {
               ...data,
               ...data['${page.id}'],
               ...data['${page.id}']['${block.id}']
-            };
-            new App({
-              target: document.querySelector('#${block.id}'),
-              hydrate: true,
-              props: content
-            });
-          })
+            }
+          });
         </script>`
-      : `<script type="module" async>
+        : `<script type="module" async>
             const App = ${block.js};
             new App({
               target: document.querySelector('#${block.id}'),
@@ -168,7 +173,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     content: string
   }
 
-  const modules:Array<Module> = uniqBy(
+  const modules: Array<Module> = uniqBy(
     blocks.filter(block => block.js).map(block => ({
       symbol: block.symbol,
       content: block.js
@@ -209,8 +214,8 @@ export function getComponentData({
     .value();
 
   // remove pages from data object (not accessed from component)
-  const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
-  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   return {
     ...siteContent,
@@ -230,8 +235,8 @@ export function getPageData({
 }): object {
 
   // remove pages from data object (not accessed from component)
-  const pageIDs = _flattenDeep(site.pages.map(page => [ page.id, ...page.pages.map(p => p.id) ]))
-  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([ page, sections ]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   // TODO: remove sections from page content (only keep field keys)
 
