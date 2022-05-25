@@ -1,3 +1,10 @@
+<script context="module">
+  import {writable, get} from 'svelte/store'
+
+  const leftPaneSize = writable(get(onMobile) ? '100%' : '50%');
+  const rightPaneSize = writable('50%');
+</script>
+
 <script>
   import { cloneDeep, isEqual, chain as _chain, debounce } from 'lodash-es';
   import { _ as C } from 'svelte-i18n';
@@ -134,15 +141,10 @@
 
 <main>
   <HSplitPane
-  leftPaneSize={$onMobile ? '100%' : editorWidth}
-  rightPaneSize={$onMobile ? '0' : previewWidth}
+  bind:leftPaneSize={$leftPaneSize}
+  bind:rightPaneSize={$rightPaneSize}
   hideRightPanel={$onMobile}
-  hideLeftOverflow={true}
-  on:resize={({ detail }) => {
-    const { left, right } = detail;
-    localStorage.setItem('editorWidth', left);
-    localStorage.setItem('previewWidth', right);
-  }}>
+  hideLeftOverflow={true}>
     <div slot="left">
       <div class="editor-container">
         {#if showPageFields || $showingIDE}
