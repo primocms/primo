@@ -16,7 +16,6 @@
   import MainTheme from './theme';
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
-  import svelteSyntax from './extensions/svelte'
 
   const languageConf = new Compartment();
   const tabSize = new Compartment();
@@ -41,7 +40,6 @@
     doc: value,
     extensions: [
       abbreviationTracker(),
-      // svelteSyntax(),
       languageConf.of(language),
       keymap.of([
         standardKeymap,

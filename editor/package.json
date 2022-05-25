@@ -41,6 +41,7 @@
     "@fontsource/fira-code": "^4.5.1",
     "@iconify/svelte": "^2.2.1",
     "@lezer/highlight": "^0.16.0",
+    "@lezer/lr": "^0.16.3",
     "@tiptap/core": "^2.0.0-beta.174",
     "@tiptap/extension-blockquote": "^2.0.0-beta.26",
     "@tiptap/extension-bubble-menu": "^2.0.0-beta.55",
