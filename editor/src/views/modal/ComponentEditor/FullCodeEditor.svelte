@@ -1,6 +1,21 @@
+<script context="module">
+  import {writable} from 'svelte/store'
+
+  const leftPaneSize = writable('33%');
+  const centerPaneSize = writable('33%');
+  const rightPaneSize = writable('33%');
+
+  const activeTabs = writable({
+    html: true,
+    css: true,
+    js: true,
+  })
+</script>
+
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
+  import {cloneDeep} from 'lodash-es'
   import * as Mousetrap from 'mousetrap';
 
   import HSplitPane from './HSplitPane.svelte';
@@ -21,11 +36,6 @@
   }
   
   let activeTab = 0;
-  const activeTabs = {
-    html: true,
-    css: true,
-    js: true,
-  };
 
   let selections = {
     html: 0,
@@ -41,47 +51,21 @@
       1: 'css',
       2: 'js',
     }[tab];
-    activeTabs[tabName] = !activeTabs[tabName];
-
-    if (activeTabs.html && activeTabs.css && activeTabs.js) {
-      leftPaneSize = '33%';
-      centerPaneSize = '33%';
-      rightPaneSize = '33%';
-    } else if (!activeTabs.html && activeTabs.css && activeTabs.js) {
-      leftPaneSize = '0';
-      centerPaneSize = '66%';
-      rightPaneSize = '66%';
-    } else if (!activeTabs.html && activeTabs.css && !activeTabs.js) {
-      leftPaneSize = '0';
-      centerPaneSize = '100%';
-      rightPaneSize = '0';
-    } else if (!activeTabs.html && !activeTabs.css && activeTabs.js) {
-      leftPaneSize = '0';
-      centerPaneSize = '0';
-      rightPaneSize = '100%';
-    } else if (activeTabs.html && !activeTabs.css && !activeTabs.js) {
-      leftPaneSize = '100%';
-      centerPaneSize = '0';
-      rightPaneSize = '0';
-    } else if (activeTabs.html && activeTabs.css && !activeTabs.js) {
-      leftPaneSize = '50%';
-      centerPaneSize = '50%';
-      rightPaneSize = '0';
-    } else if (activeTabs.html && !activeTabs.css && activeTabs.js) {
-      leftPaneSize = '50%';
-      centerPaneSize = '0';
-      rightPaneSize = '50%';
+    $activeTabs = {
+      ...$activeTabs,
+      [tabName]: !$activeTabs[tabName],
     }
-    localStorage.setItem(`pane-html`, leftPaneSize);
-    localStorage.setItem(`pane-css`, centerPaneSize);
-    localStorage.setItem(`pane-js`, rightPaneSize);
+
+    const nActive = Object.values($activeTabs).filter(Boolean).length;
+    if (!nActive) return
+    const panelWidth = 100 / nActive;
+    $leftPaneSize = $activeTabs['html'] ? `${panelWidth}%` : '0';
+    $centerPaneSize = $activeTabs['css'] ? `${panelWidth}%` : '0';
+    $rightPaneSize = $activeTabs['js'] ? `${panelWidth}%` : '0';
 
     resetSize();
   }
 
-  let leftPaneSize = localStorage.getItem('pane-html') || '33%';
-  let centerPaneSize = localStorage.getItem('pane-css') || '33%';
-  let rightPaneSize = localStorage.getItem('pane-js') || '33%';
 
 </script>
 
@@ -138,13 +122,13 @@
 {:else}
   <HSplitPane 
     hideLeftOverflow={true}
-    {leftPaneSize} 
-    {centerPaneSize} 
-    {rightPaneSize} 
+    bind:leftPaneSize={$leftPaneSize} 
+    bind:centerPaneSize={$centerPaneSize} 
+    bind:rightPaneSize={$rightPaneSize} 
     bind:resetSize>
     <div slot="left" class="tabs">
       <button
-        class:tab-hidden={leftPaneSize === '0'}
+        class:tab-hidden={$leftPaneSize <= '0'}
         on:click={() => toggleTab(0)}>
         {#if $modKeyDown}
           <span>&#8984; 1</span>
@@ -163,7 +147,7 @@
     </div>
     <div slot="center" class="tabs">
       <button
-        class:tab-hidden={centerPaneSize === '0'}
+        class:tab-hidden={$centerPaneSize <= '0'}
         on:click={() => toggleTab(1)}>
         {#if $modKeyDown}
           <span>&#8984; 2</span>
@@ -182,7 +166,7 @@
     </div>
     <div slot="right" class="tabs">
       <button
-        class:tab-hidden={rightPaneSize === '0'}
+        class:tab-hidden={$rightPaneSize <= '0'}
         on:click={() => toggleTab(2)}>
         {#if $modKeyDown}
           <span>&#8984; 3</span>

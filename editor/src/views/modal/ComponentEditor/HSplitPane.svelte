@@ -5,9 +5,11 @@
   let leftSeparator, rightSeparator;
   let transitioning = false;
   let dragging = false;
+
+  let breakpointWidth = 0
+
   export let resetSize = () => {
     transitioning = true;
-    if (left) left.removeAttribute('style');
     if (center) center.removeAttribute('style');
     if (right) right.removeAttribute('style');
     if (leftSeparator) leftSeparator.removeAttribute('style');
@@ -44,12 +46,11 @@
 
   const onMouseMoveLeft = (e) => {
     // assumes no center column for now
-    const width =
-      (parseInt(right.style.width) / parseInt(left.style.width) / 2) * 100;
-    dispatch('resize', {
-      right: Math.round(width) + '%',
-      left: Math.round(100 - width) + '%',
-    });
+    const width = (parseInt(rightPaneSize) / parseInt(leftPaneSize) / 2) * 100;
+    // dispatch('resize', {
+    //   right: Math.round(width) + '%',
+    //   left: Math.round(100 - width) + '%',
+    // });
     // dispatch('mousedown', e)
     e.preventDefault();
     if (e.button !== 0) return;
@@ -58,21 +59,31 @@
       y: e.clientY - md.e.clientY,
     };
     // Prevent negative-sized elements
-    delta.x = Math.min(
-      Math.max(delta.x, -(md.firstWidth + md.centerWidth)),
-      md.secondWidth + md.centerWidth
-    );
+    // delta.x = Math.min(
+    //   Math.max(delta.x, -(md.firstWidth + md.centerWidth)),
+    //   md.secondWidth + md.centerWidth
+    // );
 
     if ($$slots.center) {
-      rightSeparator.style.left =
-        md.firstWidth + delta.x / 2 + (md.centerWidth - delta.x / 2) + 'px';
-      left.style.width = md.firstWidth + delta.x / 2 + 'px';
-      center.style.width = md.centerWidth + delta.x / 2 + 'px';
-      right.style.width = md.secondWidth - delta.x + 'px';
+      if (rightPaneSize === '0') {
+        const leftDelta = md.firstWidth + delta.x
+        leftPaneSize = leftDelta >= breakpointWidth ? leftDelta + 'px' : 0;
+
+        const centerDelta = md.centerWidth - delta.x
+        centerPaneSize = centerDelta >= breakpointWidth ? centerDelta + 'px' : 0;
+      } else {
+        const leftDelta = md.firstWidth + delta.x / 2
+        leftPaneSize = leftDelta >=0 ? leftDelta + 'px' : 0;
+
+        const centerDelta = md.centerWidth + delta.x / 2
+        centerPaneSize = centerDelta >= breakpointWidth ? centerDelta + 'px' : 0;
+
+        const rightDelta = md.secondWidth - delta.x
+        rightPaneSize = rightDelta >= breakpointWidth ? rightDelta + 'px' : 0;
+      }
     } else {
-      leftSeparator.style.left = md.firstWidth + delta.x;
-      left.style.width = md.firstWidth + delta.x + 'px';
-      right.style.width = md.secondWidth - delta.x + 'px';
+      leftPaneSize = md.firstWidth + delta.x + 'px'
+      rightPaneSize = md.secondWidth - delta.x + 'px';
     }
     updateCallback();
   };
@@ -112,15 +123,19 @@
     );
 
     if ($$slots.center) {
-      rightSeparator.style.left =
-        md.firstWidth + delta.x / 2 + (md.centerWidth - delta.x / 2) + 'px';
-      left.style.width = md.firstWidth + delta.x / 2 + 'px';
-      center.style.width = md.centerWidth + delta.x / 2 + 'px';
-      right.style.width = md.secondWidth - delta.x + 'px';
+      const leftDelta = md.firstWidth + delta.x / 2
+      console.log('leftPaneSize', leftPaneSize)
+      leftPaneSize = leftDelta >= breakpointWidth ? (leftDelta + 'px') : 0;
+
+      const centerDelta = md.centerWidth + delta.x / 2
+      centerPaneSize = centerDelta >= breakpointWidth ? (centerDelta + 'px') : 0;
+
+      const rightDelta = md.secondWidth - delta.x
+      rightPaneSize = rightDelta >= breakpointWidth ? (rightDelta + 'px') : 0;
     } else {
-      leftSeparator.style.left = md.firstWidth + delta.x;
-      left.style.width = md.firstWidth + delta.x + 'px';
-      right.style.width = md.secondWidth - delta.x + 'px';
+      console.log('leftPaneSize 2', leftPaneSize)
+      leftPaneSize = md.firstWidth + delta.x + 'px';
+      rightPaneSize = md.secondWidth - delta.x + 'px';
     }
 
     updateCallback();
@@ -163,9 +178,14 @@
   
   export let hideLeftOverflow = false
 
-  $: leftPaneSize && resetSize();
-  $: rightPaneSize && resetSize();
+  // $: leftPaneSize && resetSize();
+  // $: rightPaneSize && resetSize();
 
+  $: console.log({ 
+    leftPaneSize,
+    center,
+    rightPaneSize
+  })
 </script>
 
 <div
