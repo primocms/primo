@@ -2,6 +2,7 @@ import { EditorState, Text } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
 import { CompletionContext, CompletionResult } from "@codemirror/autocomplete"
 import { SyntaxNode } from "@lezer/common"
+import svelteAutocompletions from './autocompletions'
 
 type AttrSpec = { [attrName: string]: null | readonly string[] }
 type TagSpec = { [tagName: string]: { attrs?: AttrSpec, children?: readonly string[] } }
@@ -489,6 +490,13 @@ export function htmlCompletionSource(context: CompletionContext): CompletionResu
   } else if (context.explicit && (around.name == "Element" || around.name == "Text" || around.name == "Document")) {
     return completeStartTag(state, tree, pos)
   } else {
-    return null
+    const svelteKeyword = context.matchBefore(/\{/)
+    if (svelteKeyword) {
+      return {
+        from: svelteKeyword.from,
+        options: svelteAutocompletions
+      }
+    } else return null
+
   }
 }

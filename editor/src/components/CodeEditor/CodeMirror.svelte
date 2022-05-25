@@ -17,7 +17,6 @@
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
 
-  const languageConf = new Compartment();
   const tabSize = new Compartment();
 
   const dispatch = createEventDispatcher();
@@ -40,7 +39,7 @@
     doc: value,
     extensions: [
       abbreviationTracker(),
-      languageConf.of(language),
+      language,
       keymap.of([
         standardKeymap,
         indentWithTab,
@@ -161,7 +160,6 @@
   let element;
 
   $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
-
 </script>
 
 <svelte:window
@@ -186,15 +184,16 @@
     width: 100%;
     overflow-y: scroll;
     font-family: 'Fira Code', monospace !important;
-    height: calc(100vh - 9.5rem);
+    height: calc(100vh - 10.25rem);
     position: relative;
   }
 
   .docs {
     position: sticky;
-    bottom: 2rem;
+    bottom: 0.25rem;
     left: 100%;
     margin-right: 0.25rem;
+    color: var(--color-gray-2);
     background: var(--color-gray-9);
     transition: 0.1s background;
     padding: 0.25rem 0.5rem;
@@ -218,6 +217,41 @@
     background: var(--color-gray-6);
     /* color: white; */
     border-radius: 2px;
+  }
+
+  :global(.cm-tooltip-autocomplete) {
+    color: var(--color-gray-9) !important;
+    background: var(--color-gray-8);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  :global(.ͼo .cm-tooltip-autocomplete > ul > li) {
+    padding: 0.5rem !important;
+    font-size: 0.75rem;
+    color: var(--color-gray-1);
+    transition: 0.1s background;
+  }
+
+  :global(.ͼo .cm-tooltip-autocomplete > ul > li[aria-selected="true"], .ͼo .cm-tooltip-autocomplete > ul > li:hover) {
+    color: white;
+    background: var(--color-gray-7);
+    transition: 0.1s background, 0.1s color;
+  }
+
+  :global(.ͼo .cm-tooltip-autocomplete > ul > li .cm-completionLabel) {
+    padding: 3px 8px;
+    border-right: 1px solid var(--primo-color-primored);
+    color: white;
+    font-size: 0.75rem;
+    font-family: 'Fira Code';
+  }
+
+  :global(.ͼo .cm-tooltip-autocomplete > ul > li .cm-completionDetail) {
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    font-family: system-ui;
+    font-style: normal;
   }
 
   /* Ensure emmet popup doesn't get cut off */
