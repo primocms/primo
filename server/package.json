@@ -21,16 +21,18 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^1.22.6",
-    "@sveltejs/kit": "=1.0.0-next.278",
+    "@sveltejs/kit": "^1.0.0-next.326",
     "axios": "^0.26.0",
     "base64-arraybuffer": "^1.0.2",
     "browser-image-compression": "^1.0.17",
+    "crypto": "^1.0.1",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.1.0",
     "javascript-time-ago": "^2.3.8",
     "js-beautify": "^1.14.0",
     "jszip": "^3.7.1",
     "lodash-es": "^4.17.21",
-    "promise-worker": "^2.0.1"
+    "promise-worker": "^2.0.1",
+    "timeago.js": "^4.0.2"
   }
 }

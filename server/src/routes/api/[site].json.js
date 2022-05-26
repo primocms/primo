@@ -5,7 +5,7 @@ import {decode} from 'base64-arraybuffer'
 
 export async function get(event) {
   return await authorizeRequest(event, async () => {
-    const {data,error} = await supabaseAdmin.storage
+    const {data} = await supabaseAdmin.storage
       .from('sites')
       .download(`${event.params.site}/site.json?${Date.now()}`)
     const json = JSON.stringify(await data.text())
@@ -59,17 +59,17 @@ export async function post(event) {
       const { siteID, files, host } = payload
       // get active_deployment from db
       const {data} = await supabaseAdmin.from('hosts').select('*').eq('name', host.name)
+      const {data:siteData} = await supabaseAdmin.from('sites').select('*').eq('id', siteID)
+      const [{ active_deployment }] = siteData
       const deployment = await publishSite({
         siteID: siteID,
         host: data[0],
         files,
-        activeDeployment: null
+        activeDeployment: active_deployment
       })
       if (deployment) {
         const {data,error} = await supabaseAdmin.from('sites').update({ 
-          active_deployment: {
-            [host]: deployment
-          } 
+          active_deployment: deployment
         }).eq('id', siteID)
         if (error) console.error(error)
         return {

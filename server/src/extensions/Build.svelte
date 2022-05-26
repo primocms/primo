@@ -1,20 +1,18 @@
 <script>
-  import { flattenDeep, uniqBy } from 'lodash-es'
+  import { flattenDeep, uniqBy, find } from 'lodash-es'
   import JSZip from 'jszip'
   import fileSaver from 'file-saver'
   import beautify from 'js-beautify'
+  import { format } from 'timeago.js'
   import Hosting from '$lib/components/Hosting.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { site, modal } from '@primo-app/primo'
   import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
   import hosts from '../stores/hosts'
+  import allSites from '../stores/sites'
   import {sites} from '../actions'
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
-  // import { addDeploymentToSite } from '$lib/actions'
-
-  // TimeAgo.addDefaultLocale(en)
-  // const timeAgo = new TimeAgo('en-US')
 
   const siteID = $page.params.site
 
@@ -36,8 +34,9 @@
     modal.hide()
   }
 
-  let deployment
-  let activeDeployment
+  let lastDeployment = find($allSites, ['id', siteID])?.['active_deployment']
+  let newDeployment
+
   async function publishToHosts() {
     loading = true
 
@@ -48,19 +47,17 @@
       }
     })
     const uniqueFiles = uniqBy(files, 'file') // modules are duplicated
-
     sites.save($site)
-    const res = await sites.publish({
+    const activeHost = $hosts[0]
+    newDeployment = await sites.publish({
       siteID,
-      host: $hosts[0],
+      host: activeHost,
       files: uniqueFiles
     })
 
-    if (!res) {
+    if (!newDeployment) {
       alert('There was an error publishing your site')
-    } else {
-      deployment = res
-    }
+    } 
 
     loading = false
 
@@ -142,34 +139,32 @@
       />
     </div>
     <div>
-      {#if deployment}
-        <div class="boxes">
-          <div class="box">
-            <div class="deployment">
-              Published to
-              <a href={deployment.url} rel="external" target="blank"
-                >{deployment.url}</a
-              >
-            </div>
-          </div>
-        </div>
-      {/if}
-      <!-- show activeDeployment from addDeploymentToSite-->
       <header class="review">
         <div>
-          {#if activeDeployment && deployment}
+          {#if newDeployment}
             <div class="boxes">
               <div class="box">
-                <div class="deployment">
-                  Active Deployment
-                  <a href={activeDeployment.url} rel="external" target="blank"
-                    >{activeDeployment.url}</a
+                <div class="newDeployment">
+                  Published to
+                  <a href={newDeployment.url} rel="external" target="blank"
+                    >{newDeployment.url}</a
+                  >
+                </div>
+              </div>
+            </div>
+          {:else if lastDeployment}
+            <div class="boxes">
+              <div class="box">
+                <div class="newDeployment">
+                  Published {format(lastDeployment.created)} to
+                  <a href={lastDeployment.url} rel="external" target="blank"
+                    >{lastDeployment.url}</a
                   >
                 </div>
               </div>
             </div>
           {/if}
-          {#if pages.length > 0 && !deployment}
+          {#if pages.length > 0 && !newDeployment}
             <p class="title">Review and Publish</p>
             <p class="subtitle">
               Here are the changes that you're making to your site
@@ -179,14 +174,14 @@
               label="Save and Publish"
               {loading}
             />
-          {:else if $hosts.length > 0 && !deployment}
+          {:else if $hosts.length > 0 && !newDeployment}
             <p class="title">Publish Changes</p>
             <PrimaryButton
               on:click={publishToHosts}
               label="Save and Publish"
               {loading}
             />
-          {:else if !deployment}
+          {:else if !newDeployment}
             <p class="title">Download your website</p>
             <p class="subtitle">
               You can connect a web host to publish your website directly from
@@ -244,7 +239,7 @@
           border-bottom: 1px solid var(--color-gray-8);
         }
 
-        .deployment {
+        .newDeployment {
           padding: 0.5rem 0;
           display: flex;
           flex-direction: column;

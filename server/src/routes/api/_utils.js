@@ -1,17 +1,7 @@
 import axios from 'axios'
 import JSZip from 'jszip'
-import {Blob} from 'node:buffer';
-globalThis.Blob = Blob;
-JSZip.support.blob = true;
-
-
-const blobToBinary = async (blob) => {
-  const buffer = await blob.arrayBuffer();
-  
-  const view = new Int8Array(buffer);
-  
-  return [...view].map((n) => n.toString(2)).join(' ');
-};
+import {chain, find} from 'lodash-es'
+import crypto from 'crypto'
 
 // pass in site
 export async function publishSite({ siteID, host, files, activeDeployment }) {
@@ -43,55 +33,91 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
         created: data.createdAt,
       }
     } else if (host.name === 'netlify') {
-      // if deploymentID does not exists, create new site
-  
       let data
       if (!activeDeployment) {
-        const zipFile = await createSiteZip(files)
-        const content = await blobToBinary(zipFile)
-        const res = await axios
-          .post('https://api.netlify.com/api/v1/sites', content, {
-            headers: {
-              'Content-Type': 'application/zip',
-              Authorization: `Bearer ${host.token}`,
-            },
-          })
-          .catch((e) => ({ data: null }))
-  
-        data = res.data
-      } else {
-        const zipFile = await createSiteZip(files)
-        const res = await axios
-          .put(
-            `https://api.netlify.com/api/v1/sites/${activeDeployment}`,
-            zipFile,
-            {
-              headers: {
-                'Content-Type': 'application/zip',
-                Authorization: `Bearer ${host.token}`,
-              },
-            }
-          )
-          .catch((e) => ({ data: null }))
-  
-        data = res.data
-      }
-  
-      // check for null data before continuing if null then handle this error else continue
-      if (!data) {
-        throw new Error('Error creating site')
-      } else {
+        data = await uploadFiles({
+          endpoint: 'https://api.netlify.com/api/v1/sites',
+          files
+        })
         deployment = {
-          id: data.deploy_id,
-          url: `https://${data.subdomain}.netlify.app`,
+          id: data.site_id,
+          deploy_id: data.id,
+          url: data.ssl_url,
           created: Date.now(),
         }
+      } else {
+        data = await uploadFiles({
+          endpoint: `https://api.netlify.com/api/v1/sites/${activeDeployment.id}/deploys`,
+          files
+        })
+        deployment = {
+          id: data.site_id,
+          deploy_id: data.id,
+          url: data.ssl_url,
+          created: Date.now(),
+        }
+      }
+      if (!data) {
+        throw new Error('Error creating site')
       }
     }
   } catch(e) {
     console.error(e)
   }
   return deployment
+
+
+  async function uploadFiles({ endpoint, files }) {
+    const filesToUpload = chain(files.map(f => {
+      var shasum = crypto.createHash('sha1')
+      shasum.update(f.data)
+      return ({ 
+        hash: shasum.digest('hex'), 
+        file: `/${f.file}`
+      })
+    }))
+      .keyBy('file')
+      .mapValues('hash')
+      .value()
+
+    // upload hashes to netlify
+    const res = await axios
+      .post(
+        endpoint,
+        {
+          "files": filesToUpload
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${host.token}`,
+          },
+        }
+      )
+      .catch((e) => {
+        console.log(e.toString())
+        return ({ data: null })
+      })
+
+    // upload missing files
+    if (res.data) {
+      const {required, id} = res.data
+      await Promise.all(
+        required.map(async (hash) => {
+          const fileName = Object.keys(filesToUpload).find(key => filesToUpload[key] === hash)
+          const {data} = find(files, ['file', fileName.slice(1)])
+          await axios.put(`https://api.netlify.com/api/v1/deploys/${id}/files${fileName}`, 
+            data, 
+            {
+              headers: {
+                'Content-Type': 'application/octet-stream',
+                Authorization: `Bearer ${host.token}`
+              }
+          })
+        })
+      )
+      return res.data
+    }
+  }
 }
 
 async function createSiteZip(files) {

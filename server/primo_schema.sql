@@ -6,6 +6,8 @@ CREATE TABLE public.sites (
     name text,
     password text,
     active_editor text,
+    host text,
+    active_deployment text,
     created_at timestamp with time zone DEFAULT now()
 );
 

@@ -50,7 +50,9 @@ const DEFAULT_SITES_QUERY = `
   id,
   name,
   password,
-  active_editor
+  active_editor,
+  host,
+  active_deployment
 `
 
 export const sites = {

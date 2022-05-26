@@ -34,7 +34,7 @@ export const sites = {
     }
   },
   initialize: async () => {
-    const sites = await supabaseDB.sites.get({ query: `id, name, password` })
+    const sites = await supabaseDB.sites.get({ query: `id, name, password, active_deployment, host` })
     if (sites) {
       stores.sites.set(sites)
     }
