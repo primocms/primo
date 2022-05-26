@@ -219,6 +219,10 @@
     border-radius: 2px;
   }
 
+  :global(.ͼu) {
+    color: rgb(86, 156, 214);
+  }
+
   :global(.cm-tooltip-autocomplete) {
     color: var(--color-gray-9) !important;
     background: var(--color-gray-8);
