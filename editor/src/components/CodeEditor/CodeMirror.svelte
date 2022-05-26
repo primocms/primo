@@ -106,7 +106,7 @@
         selection = view.state.selection.main.from;
       }),
       MainTheme,
-      basicSetup,
+      basicSetup
     ],
   });
 
