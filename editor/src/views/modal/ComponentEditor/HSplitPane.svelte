@@ -124,7 +124,6 @@
 
     if ($$slots.center) {
       const leftDelta = md.firstWidth + delta.x / 2
-      console.log('leftPaneSize', leftPaneSize)
       leftPaneSize = leftDelta >= breakpointWidth ? (leftDelta + 'px') : 0;
 
       const centerDelta = md.centerWidth + delta.x / 2
@@ -133,7 +132,6 @@
       const rightDelta = md.secondWidth - delta.x
       rightPaneSize = rightDelta >= breakpointWidth ? (rightDelta + 'px') : 0;
     } else {
-      console.log('leftPaneSize 2', leftPaneSize)
       leftPaneSize = md.firstWidth + delta.x + 'px';
       rightPaneSize = md.secondWidth - delta.x + 'px';
     }
@@ -177,15 +175,6 @@
   export let minRightPaneSize = '1.5rem';
   
   export let hideLeftOverflow = false
-
-  // $: leftPaneSize && resetSize();
-  // $: rightPaneSize && resetSize();
-
-  $: console.log({ 
-    leftPaneSize,
-    center,
-    rightPaneSize
-  })
 </script>
 
 <div
