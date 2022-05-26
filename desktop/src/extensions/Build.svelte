@@ -19,7 +19,7 @@
   const track = getContext('track')
 
   const siteID = $page.params.site
-  const activeDeployment = find($sites, ['id', siteID])?.activeDeployment
+  const lastDeployment = find($sites, ['id', siteID])?.activeDeployment
 
   let loading = false
 
@@ -40,7 +40,7 @@
     modal.hide()
   }
 
-  let deployment
+  let newDeployment
   async function publishToHosts() {
     loading = true
 
@@ -75,26 +75,26 @@
             )
             .catch((e) => ({ data: null }))
 
-          deployment = {
+          newDeployment = {
             id: data?.id,
             url: `https://${data.alias[0]}`,
             created: data?.createdAt,
           }
-          addDeploymentToSite({
-            siteID,
-            deployment,
-            activeDeployment: {
-              ...deployment,
-              name,
-              siteID: data.id,
-            },
-          })
+          // addDeploymentToSite({
+          //   siteID,
+          //   newDeployment,
+          //   lastDeployment: {
+          //     ...newDeployment,
+          //     name,
+          //     siteID: data.id,
+          //   },
+          // })
         } else if (name === 'netlify') {
 
           let data
 
-          // if no deployment saved, create new site
-          if (!activeDeployment || activeDeployment.name !== 'netlify') {
+          // if no newDeployment saved, create new site
+          if (!lastDeployment || lastDeployment.name !== 'netlify') {
             const zipFile = await createSiteZip()
             const res = await axios
               .post('https://api.netlify.com/api/v1/sites', zipFile, {
@@ -110,7 +110,7 @@
             const zipFile = await createSiteZip()
             const res = await axios
               .put(
-                `https://api.netlify.com/api/v1/sites/${activeDeployment.siteID}`,
+                `https://api.netlify.com/api/v1/sites/${lastDeployment.siteID}`,
                 zipFile,
                 {
                   headers: {
@@ -127,23 +127,11 @@
           if (!data) {
             console.warn('Error creating site', { data })
           } else {
-            deployment = {
+            newDeployment = {
               id: data.deploy_id,
               url: data.url,
               created: Date.now(),
             }
-            addDeploymentToSite({
-              siteID,
-              deployment,
-              activeDeployment: {
-                ...deployment,
-                url: data.subdomain
-                  ? `https://${data.subdomain}.netlify.app`
-                  : deployment.url,
-                name,
-                siteID: data.id,
-              },
-            })
           }
         }
       })
@@ -276,42 +264,42 @@
       />
     </div>
     <div>
-      {#if deployment}
+      {#if newDeployment}
         <div class="boxes">
           <div class="box">
             {#each Object.keys($site.content) as locale}
-              <div class="deployment">
+              <div class="newDeployment">
                 {#if Object.keys($site.content).length > 1}
                   {(find(locales, ['key', locale])['name'])} site published to
                 {:else}
                   Site published to
                 {/if}
                 <a
-                  href="{activeDeployment ? activeDeployment.url : deployment.url}/{locale !== 'en' ? locale : ''}"
+                  href="{lastDeployment ? lastDeployment.url : newDeployment.url}/{locale !== 'en' ? locale : ''}"
                   rel="external"
                   target="blank"
-                  >{activeDeployment ? activeDeployment.url : deployment.url}/{locale !== 'en' ? locale : ''}</a
+                  >{lastDeployment ? lastDeployment.url : newDeployment.url}/{locale !== 'en' ? locale : ''}</a
                 >
               </div>
             {/each}
           </div>
         </div>
-      {:else if activeDeployment}
+      {:else if lastDeployment}
         <div class="boxes">
           <div class="box">
-            <div class="deployment">
+            <div class="newDeployment">
               Last published to
-              <a href={activeDeployment.url} rel="external" target="blank"
-                >{activeDeployment.url}</a
+              <a href={lastDeployment.url} rel="external" target="blank"
+                >{lastDeployment.url}</a
               >
-              <span>{format(activeDeployment.created)}</span>
+              <span>{format(lastDeployment.created)}</span>
             </div>
           </div>
         </div>
       {/if}
       <header class="review">
         <div>
-          {#if pages.length > 0 && !deployment}
+          {#if pages.length > 0 && !newDeployment}
             <p class="title">Review and Publish</p>
             <p class="subtitle">
               Here are the changes that you're making to your site
@@ -321,13 +309,13 @@
               label="Publish"
               {loading}
             />
-          {:else if $hosts.length > 0 && !deployment}
+          {:else if $hosts.length > 0 && !newDeployment}
             <PrimaryButton
               on:click={publishToHosts}
               label="Publish"
               {loading}
             />
-          {:else if !deployment}
+          {:else if !newDeployment}
             <p class="title">Download your website</p>
             <p class="subtitle">
               You can connect a web host to publish your website directly from
@@ -385,7 +373,7 @@
           border-bottom: 1px solid var(--color-gray-8);
         }
 
-        .deployment {
+        .newDeployment {
           padding: 1rem 0;
           display: flex;
           flex-direction: column;
