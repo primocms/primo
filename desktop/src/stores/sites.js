@@ -18,11 +18,12 @@ async function initializSiteData() {
       sitesDB,
       (savedSite) => savedSite.id === data.id
     )
+    console.log({data})
     return {
       id: data.id,
       name: data.name,
-      deployments: savedSite ? savedSite.deployments : [],
-      activeDeployment: savedSite ? savedSite.activeDeployment : null,
+      // deployments: savedSite ? savedSite.deployments : [],
+      activeDeployment: data.activeDeployment,
       data,
       preview
     }
@@ -31,8 +32,10 @@ async function initializSiteData() {
   store.set(rebuiltSites)
 
   store.subscribe((s) => {
+    console.log({s})
     const sitesData = s.map((site) => ({
       ...site.data,
+      activeDeployment: site.activeDeployment,
     }))
     data.save(sitesData)
 

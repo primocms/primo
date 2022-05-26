@@ -90,10 +90,10 @@
             },
           })
         } else if (name === 'netlify') {
-          // if deploymentID does not exists, create new site
 
           let data
 
+          // if no deployment saved, create new site
           if (!activeDeployment || activeDeployment.name !== 'netlify') {
             const zipFile = await createSiteZip()
             const res = await axios
@@ -281,7 +281,11 @@
           <div class="box">
             {#each Object.keys($site.content) as locale}
               <div class="deployment">
-                {(find(locales, ['key', locale])['name'])} site published to
+                {#if Object.keys($site.content).length > 1}
+                  {(find(locales, ['key', locale])['name'])} site published to
+                {:else}
+                  Site published to
+                {/if}
                 <a
                   href="{activeDeployment ? activeDeployment.url : deployment.url}/{locale !== 'en' ? locale : ''}"
                   rel="external"

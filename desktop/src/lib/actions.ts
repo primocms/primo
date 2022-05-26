@@ -69,10 +69,10 @@ export async function addDeploymentToSite({
     s.map((site) => {
       return site.id === siteID
         ? {
-            ...site,
-            deployments: [deployment, ...site.deployments],
-            activeDeployment,
-          }
+          ...site,
+          // deployments: [deployment, ...site.deployments],
+          activeDeployment,
+        }
         : site
     })
   )
