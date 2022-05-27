@@ -7,8 +7,7 @@
     "preview": "svelte-kit preview"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "=1.0.0-next.23",
-    "@sveltejs/adapter-static": "^1.0.0-next.20",
+    "@sveltejs/adapter-auto": "^1.0.0-next.48",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.37",
     "autoprefixer": "^10.3.6",
     "postcss-nested": "^5.0.6",
@@ -22,11 +21,10 @@
   "dependencies": {
     "@primo-app/primo": "^1.5.10",
     "@supabase/supabase-js": "^1.22.6",
-    "@sveltejs/kit": "^1.0.0-next.326",
+    "@sveltejs/kit": "^1.0.0-next.291",
     "axios": "^0.26.0",
     "base64-arraybuffer": "^1.0.2",
     "browser-image-compression": "^1.0.17",
-    "crypto": "^1.0.1",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.1.0",
     "javascript-time-ago": "^2.3.8",

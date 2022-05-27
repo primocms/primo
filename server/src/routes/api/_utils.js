@@ -1,7 +1,7 @@
 import axios from 'axios'
 import JSZip from 'jszip'
 import {chain, find} from 'lodash-es'
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 
 // pass in site
 export async function publishSite({ siteID, host, files, activeDeployment }) {
