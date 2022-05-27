@@ -41,7 +41,6 @@ export async function saveSite(updatedSite) {
   // TODO: make preview work from server (can't compile)
   const homepage = _find(updatedSite.pages, ['id', 'index'])
   // const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-  // console.log(2)
   const [ res1 ] = await Promise.all([
     updateSiteData({
       id: updatedSite.id,

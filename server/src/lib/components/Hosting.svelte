@@ -153,7 +153,7 @@
       <div class="user">
         {@html _find(availableHosts, ['id', host.name])['svg']}
       </div>
-      <div class="host-user">
+      <div class="remove-option">
         {#if !$sitePassword}
           <!-- Hide option to remove for password users -->
           <button
@@ -340,6 +340,12 @@
         padding-bottom: 1rem;
         border-bottom: 1px solid var(--primo-color-gray-9);
         margin-bottom: 1rem;
+      }
+
+      .remove-option button {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--color-gray-8);
+        border-radius: var(--primo-border-radius);
       }
     }
     /* .deployment {

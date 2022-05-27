@@ -49,18 +49,19 @@
     const uniqueFiles = uniqBy(files, 'file') // modules are duplicated
     sites.save($site)
     const activeHost = $hosts[0]
-    newDeployment = await sites.publish({
+    const {deployment, error} = await sites.publish({
       siteID,
       host: activeHost,
       files: uniqueFiles
     })
 
-    if (!newDeployment) {
-      alert('There was an error publishing your site')
-    } 
+    if (error) {
+      alert(error)
+    } else {
+      newDeployment = deployment
+    }
 
     loading = false
-
     pages = []
   }
 
@@ -122,6 +123,16 @@
   }
 
   let pages = []
+
+  function disconnectSite() {
+    lastDeployment = null
+    sites.update({
+      id: siteID,
+      props: {
+        active_deployment: null,
+      }
+    })
+  }
 </script>
 
 <ModalHeader icon="fas fa-globe" title="Publish" variants="mb-4" />
@@ -161,6 +172,7 @@
                     >{lastDeployment.url}</a
                   >
                 </div>
+                <button on:click={disconnectSite}>Disconnect</button>
               </div>
             </div>
           {/if}
@@ -233,11 +245,8 @@
         background: var(--color-gray-9);
         color: var(--color-gray-2);
         display: flex;
-        flex-direction: column;
-
-        &:not(:last-child) {
-          border-bottom: 1px solid var(--color-gray-8);
-        }
+        justify-content: space-between;
+        align-items: center;
 
         .newDeployment {
           padding: 0.5rem 0;
@@ -251,10 +260,12 @@
               color: var(--color-primored);
             }
           }
+        }
 
-          &:not(:last-child) {
-            border-bottom: 1px solid var(--color-gray-8);
-          }
+        button {
+          padding: 0.5rem 1rem;
+          border: 1px solid var(--color-gray-8);
+          border-radius: var(--primo-border-radius);
         }
       }
     }

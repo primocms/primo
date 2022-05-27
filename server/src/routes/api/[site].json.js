@@ -61,7 +61,7 @@ export async function post(event) {
       const {data} = await supabaseAdmin.from('hosts').select('*').eq('name', host.name)
       const {data:siteData} = await supabaseAdmin.from('sites').select('*').eq('id', siteID)
       const [{ active_deployment }] = siteData
-      const deployment = await publishSite({
+      const {deployment, error} = await publishSite({
         siteID: siteID,
         host: data[0],
         files,
@@ -74,13 +74,15 @@ export async function post(event) {
         if (error) console.error(error)
         return {
           body: {
-            deployment
+            deployment,
+            error: null
           }
         }
       } else {
         return {
           body: {
-            deployment: null
+            deployment: null,
+            error
           }
         }
       }

@@ -57,6 +57,13 @@ export const sites = {
     stores.sites.update(sites => [...sites, newSite])
   },
   update: async ({ id, props }) => {
+    stores.sites.update(
+      sites => sites.map(
+        s => s.id !== id
+          ? s
+          : ({ ...s, ...props })
+      )
+    )
     await supabaseDB.sites.update(id, props)
   },
   save: async (updatedSite) => {
@@ -117,7 +124,17 @@ export const sites = {
         authorization: `Bearer ${session?.access_token}`
       }
     })
-    return data?.deployment
+    if (data) {
+      stores.sites.update(
+        sites => sites.map(
+          s => s.id !== siteID
+            ? s
+            : ({ ...s, active_deployment: data.deployment })
+        )
+      )
+    }
+
+    return data
   },
   uploadImage: async ({ siteID, image }) => {
     const session = supabase.auth.session()

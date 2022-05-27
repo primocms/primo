@@ -6,6 +6,7 @@ import crypto from 'node:crypto'
 // pass in site
 export async function publishSite({ siteID, host, files, activeDeployment }) {
   let deployment
+  let error
   try {
     if (host.name === 'vercel') {
       const { data } = await axios
@@ -25,7 +26,6 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
             },
           }
         )
-        .catch((e) => ({ data: null }))
   
       deployment = {
         id: data.projectId,
@@ -33,41 +33,42 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
         created: data.createdAt,
       }
     } else if (host.name === 'netlify') {
-      let data
       if (!activeDeployment) {
-        data = await uploadFiles({
+        const {data} = await uploadFiles({
           endpoint: 'https://api.netlify.com/api/v1/sites',
           files
         })
-        deployment = {
-          id: data.site_id,
-          deploy_id: data.id,
-          url: data.ssl_url,
-          created: Date.now(),
-        }
+        if (data) {
+          deployment = {
+            id: data.id,
+            deploy_id: data.deploy_id,
+            url: `https://${data.subdomain}.netlify.com`,
+            created: Date.now(),
+          }
+        } 
       } else {
-        data = await uploadFiles({
+        const {data} = await uploadFiles({
           endpoint: `https://api.netlify.com/api/v1/sites/${activeDeployment.id}/deploys`,
           files
         })
-        deployment = {
-          id: data.site_id,
-          deploy_id: data.id,
-          url: data.ssl_url,
-          created: Date.now(),
+        if (data) {
+          deployment = {
+            id: data.site_id,
+            deploy_id: data.id,
+            url: data.ssl_url,
+            created: Date.now(),
+          }
         }
-      }
-      if (!data) {
-        throw new Error('Error creating site')
       }
     }
   } catch(e) {
-    console.error(e)
+    error = e.toString()
+    console.error(error)
   }
-  return deployment
-
+  return { deployment, error }
 
   async function uploadFiles({ endpoint, files }) {
+    let error = 'Could not upload files to Netlify'
     const filesToUpload = chain(files.map(f => {
       var shasum = crypto.createHash('sha1')
       shasum.update(f.data)
@@ -93,19 +94,15 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
           },
         }
       )
-      .catch((e) => {
-        console.log(e.toString())
-        return ({ data: null })
-      })
 
     // upload missing files
     if (res.data) {
-      const {required, id} = res.data
+      const {required, id, deploy_id} = res.data // deploy_id for new site, id for existing site (!?)
       await Promise.all(
         required.map(async (hash) => {
           const fileName = Object.keys(filesToUpload).find(key => filesToUpload[key] === hash)
           const {data} = find(files, ['file', fileName.slice(1)])
-          await axios.put(`https://api.netlify.com/api/v1/deploys/${id}/files${fileName}`, 
+          await axios.put(`https://api.netlify.com/api/v1/deploys/${deploy_id || id}/files${fileName}`, 
             data, 
             {
               headers: {
@@ -115,15 +112,7 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
           })
         })
       )
-      return res.data
-    }
+      return { data: res.data, error: null }
+    } else return { data: null, error }
   }
-}
-
-async function createSiteZip(files) {
-  const zip = new JSZip()
-  files.forEach((file) => {
-    zip.file(file.path, file.content)
-  })
-  return await zip.generateAsync({ type: 'blob' })
 }
