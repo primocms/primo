@@ -1,6 +1,6 @@
 import preprocess from 'svelte-preprocess';
 // import adapter from '@sveltejs/adapter-static';
-import vercel from '@sveltejs/adapter-vercel';
+import adapter from '@sveltejs/adapter-auto';
 
 const IGNORED_WARNINGS = [`'__SERVER_VERSION__' is not defined`];
 
@@ -13,7 +13,7 @@ const config = {
     postcss: true
   }),
 	kit: {
-		adapter: vercel(),
+		adapter: adapter(),
     // ssr: false,
     vite: {
       server: {

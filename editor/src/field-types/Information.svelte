@@ -1,5 +1,5 @@
 <script>
-  import showdown from 'showdown';
+  import showdown from '../libraries/showdown/showdown.min.js';
   const converter = new showdown.Converter();
 
   export let field = {

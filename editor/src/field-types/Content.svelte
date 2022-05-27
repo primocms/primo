@@ -3,8 +3,11 @@
   const dispatch = createEventDispatcher();
 
   import autosize from 'autosize';
-  import showdown from 'showdown';
+  // import showdown from 'showdown';
+  import showdown from '../libraries/showdown/showdown.min.js';
   const converter = new showdown.Converter();
+
+  console.log(showdown)
 
   export let field;
 
