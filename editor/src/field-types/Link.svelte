@@ -16,7 +16,7 @@
     value: link,
   };
 
-  if (!field.value) {
+  if (!field.value || !field.value.label) {
     field.value = link;
   }
 
