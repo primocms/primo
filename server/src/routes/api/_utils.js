@@ -1,5 +1,4 @@
 import axios from 'axios'
-import JSZip from 'jszip'
 import {chain, find} from 'lodash-es'
 import crypto from 'node:crypto'
 
@@ -60,6 +59,34 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
           }
         }
       }
+    } else if (host.name === 'github') {
+      // console.log({activeDeployment})
+      if (activeDeployment) {
+        const sha = await pushSite({
+          token: host.token,
+          repo: activeDeployment.id,
+          files,
+          activeSha: activeDeployment.deploy_id
+        })
+        deployment = {
+          ...activeDeployment,
+          deploy_id: sha,
+          created: Date.now(),
+        }
+      } else {
+        const { html_url, full_name } = await createRepo({ token: host.token, name: siteID })
+        const sha = await pushSite({
+          token: host.token,
+          repo: full_name,
+          files
+        })
+        deployment = {
+          id: full_name,
+          deploy_id: sha,
+          url: html_url,
+          created: Date.now(),
+        }
+      }
     }
   } catch(e) {
     error = e.toString()
@@ -115,4 +142,55 @@ export async function publishSite({ siteID, host, files, activeDeployment }) {
       return { data: res.data, error: null }
     } else return { data: null, error }
   }
+}
+
+
+async function pushSite({ token, repo, files, activeSha = null }) {
+  const headers = { 
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github.v3+json'
+  }
+  const tree = await createTree()
+  const commit = await createCommit(tree.sha)
+  const final = await pushCommit(commit.sha)
+  return final.object.sha
+
+  async function createTree() {
+    const bundle = files.map(file => ({
+      path: file.file,
+      content: file.data,
+      type: 'blob',
+      mode: '100644'
+    }))
+    const {data} = await axios.post(`https://api.github.com/repos/${repo}/git/trees`, {
+      tree: bundle
+    }, { headers })
+    return data
+  }
+
+  async function createCommit(tree) {
+    const {data} = await axios.post(`https://api.github.com/repos/${repo}/git/commits`, {
+      message: 'Update site',
+      tree,
+      ... activeSha ? { parents: [activeSha] } : {}
+    }, { headers })
+    return data
+  }
+
+  async function pushCommit(commitSha) {
+    const {data} = await axios.patch(`https://api.github.com/repos/${repo}/git/refs/heads/main`, {
+      sha: commitSha,
+      force: true
+    }, { headers })
+    return data
+  }
+}
+
+async function createRepo({ token, name }) {
+  const headers = { 'Authorization': `Bearer ${token}` }
+  const {data} = await axios.post(`https://api.github.com/user/repos`, {
+    name,
+    auto_init: true
+  }, { headers })
+  return data
 }

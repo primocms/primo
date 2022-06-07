@@ -122,8 +122,6 @@
     }
   }
 
-  let pages = []
-
   function disconnectSite() {
     lastDeployment = null
     sites.update({
@@ -176,21 +174,11 @@
               </div>
             </div>
           {/if}
-          {#if pages.length > 0 && !newDeployment}
-            <p class="title">Review and Publish</p>
-            <p class="subtitle">
-              Here are the changes that you're making to your site
-            </p>
-            <PrimaryButton
-              on:click={publishToHosts}
-              label="Save and Publish"
-              {loading}
-            />
-          {:else if $hosts.length > 0 && !newDeployment}
+          {#if $hosts.length > 0 && !newDeployment}
             <p class="title">Publish Changes</p>
             <PrimaryButton
               on:click={publishToHosts}
-              label="Save and Publish"
+              label="Publish"
               {loading}
             />
           {:else if !newDeployment}

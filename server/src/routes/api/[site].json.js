@@ -58,12 +58,14 @@ export async function post(event) {
     } else if (action === 'PUBLISH') {
       const { siteID, files, host } = payload
       // get active_deployment from db
-      const {data} = await supabaseAdmin.from('hosts').select('*').eq('name', host.name)
-      const {data:siteData} = await supabaseAdmin.from('sites').select('*').eq('id', siteID)
+      const [{data:hosts}, {data:siteData}] = await Promise.all([
+        supabaseAdmin.from('hosts').select('*').eq('name', host.name),
+        supabaseAdmin.from('sites').select('*').eq('id', siteID)
+      ])
       const [{ active_deployment }] = siteData
       const {deployment, error} = await publishSite({
         siteID: siteID,
-        host: data[0],
+        host: hosts[0],
         files,
         activeDeployment: active_deployment
       })
