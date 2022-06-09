@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Tell us about something brokien in primo
+about: Tell us about something broken in primo
 title: ''
 labels: ''
 assignees: ''
