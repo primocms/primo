@@ -1,28 +1,21 @@
-# Primo
+# primo
 
-<img width="1440" alt="image" src="https://user-images.githubusercontent.com/39444813/159909586-8ea31e64-cbd0-4421-8e19-9d2868d71427.png">
+primo is an *all-in-one* CMS. Compared to most CMSs that make it easier to manage content and host websites, primo makes it easier to manage content, edit code, curate components, and publish to a static host (Vercel, Netlify) or push to Github. 
 
+It does this by integrating tools to solve a lot of the concerns you would normally need to figure out yourself when building a website with a CMS, like custom development, pre-built components, a UI framework, git integration, publishing and setup to put it all together for each new site. 
 
-Primo is an all-in-one static site builder, combining a:
-* Content Mangement System
-* Development Environment
-* Static Site Generator
-* Component Library
+Having everything integrated out of the box means that new sites can be started without *any* setup, hundreds of sites can be managed on the same server (or Desktop app), final website code stays as lean as possible, all components can be seamlessly used across sites and adapt to the design of that site (using CSS variables), and a lot more. 
 
+Most of primo's functionality and productivity advantages are due to Svelte - compiler and UI language that extends HTML/CSS/JS's functionality to enable templating, style encapsulation, component-driven development, complex interactions and app-like functionality. primo pages are made of Svelte components and WYSIWYG content sections (written with [TipTap](https://tiptap.dev/)), and the Svelte compiler turns those pages into clean HTML, CSS, and vanilla JavaScript that loads fast for slow connections. 
 
-into a single application, making it dead simple to develop, manage, and publish high-performing websites. 
-
-## Why Primo
-Traditional site-builders like Wix and Squarespace make content management easier, but at the expense of the customization, functionality, and site performance expected by Developers. Modern frontend frameworks give developers superpowers, but at the expense of increased setup time and poor content management. Primo combines the quick setup and easy content management of a site builder with the performance and freedom of a framework, making it possible for developers of any level and background to publish fast-loading, mobile-optimized, customizable websites. 
-
-## How it works
-
-Primo's an all-in-one application - combining a development environment with an internationalized content management system with a component library with a static site generator that publishes directly to your favorite web host*. Primo pages are built one section at a time, and sections can contain either WISIWYG content written directly on the page or components. Primo gives you a set of components to use out of the box - you can use them as-is or edit their code directly from Primo. Although Primo components appear on the surface to be written with basic HTML, CSS, and JavaScript, they're actually written in [Svelte](https://svelte.dev): a compiled language which builds on the fundamental web languages while enabling templating, style encapsulation, and reactivity, among other things. Component fields can be added from the component editor and integrated with Svelte's templating tags (e.g. if you add a field and give it an ID of `heading`, you can make it an editable field in the CMS by adding it to your component's code like so - `<h1>{heading}</h1>`.) To publish the site, a web host can be connected using an API token, and after a click Primo creates and uploads the site bundle to your chosen host. Each page of the site is made of static HTML and CSS, and any necessary JS gets downloaded as a module after the page loads and hydrates its respective component. 
-
-*assuming your favorite web host is Vercel or Netlify. Otherwise, you can download the site bundle to host it elsewhere. 
+## Features
+- a powerful **code-editor** which you can use to modify any component in your site, applying the updates to all instances of that component across your site
+- a **component library** for managing the  components used on a site (including importing components from other primo sites or building new ones from scratch)
+- **components packs** and themes built with clean, editable code. 
+- **static site generation** which builds and uploads minimal HTML, CSS, and framework-less JavaScript files to your connected host. 
+- **static host and Github integration** which creates a new Vercel/Netlify sites and Github repos for new primo sites, and updates them when you publish updates to your site. 
 
 ## How to get started
+It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.af](https://primo.af).
 
-It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (thanks to the on-page editing and build-in components). To get started, download the desktop application from [primo.af](https://primo.af).
-
-To build from the browser, invite collaborators, and upload images, try [Primo Server](https://github.com/primo-af/primo/tree/master/server).
+To build from your browser, invite collaborators, and upload images, try [Primo Server](https://github.com/primo-af/primo/tree/master/server).
