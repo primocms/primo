@@ -3,31 +3,42 @@
   const dispatch = createEventDispatcher();
 
   import autosize from 'autosize';
-  // import showdown from 'showdown';
   import showdown from '../libraries/showdown/showdown.min.js';
   const converter = new showdown.Converter();
 
-  console.log(showdown)
-
   export let field;
 
-  function parseContent() {
-    const html = converter.makeHtml(markdown);
-    field.value = html;
-    dispatch('input');
+  // ensure options has correct shape
+  if (!field?.options?.markdown) {
+    field.options = {
+      markdown: converter.makeMarkdown(field.value) || ''
+    }
   }
 
-  let markdown =
-    typeof field.value === 'string' ? converter.makeMarkdown(field.value) : '';
+  // ensure value is a string
+  if (field.value !== 'string') {
+    field.value = ''
+  }
+
+  let value = field.options.markdown
+  $: parseContent(value)
 
   let element;
 
   $: if (element) {
+    // grow textarea to size of content
     autosize(element);
   }
 
+  // easily delete default content 
   function selectAll({target}) {
     if (field.default === field.value) target.select()
+  }
+
+  function parseContent(markdown) {
+    field.value = converter.makeHtml(markdown);
+    field.options.markdown = markdown
+    dispatch('input');
   }
 
 </script>
@@ -37,9 +48,8 @@
   <textarea
     id={field.id}
     on:focus={selectAll}
-    bind:this={element}
-    bind:value={markdown}
-    on:input={parseContent} />
+    bind:value
+    bind:this={element} />
 </label>
 
 <style lang="postcss">
