@@ -1,7 +1,11 @@
+<script context="module">
+  const scrollPositions = new Map()
+</script>
+
 <script lang="ts">
-  import {some, flattenDeep as _flattenDeep} from 'lodash-es';
+  import {flattenDeep as _flattenDeep} from 'lodash-es';
   import '@fontsource/fira-code/index.css';
-  import { onMount, createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
@@ -16,8 +20,6 @@
   import MainTheme from './theme';
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
-
-  const tabSize = new Compartment();
 
   const dispatch = createEventDispatcher();
 
@@ -81,11 +83,11 @@
               const { formatted, cursorOffset } = res;
               Editor.dispatch({
                 changes: [
-                  { from: 0, to: Editor.state.doc.length, insert: formatted },
+                  { from: 0, to: Editor.state.doc.length, insert: formatted }
                 ],
                 selection: {
                   anchor: cursorOffset,
-                },
+                }
               });
               dispatchChanges(formatted);
             });
@@ -158,6 +160,14 @@
   }
 
   let element;
+  $: if (element) {
+    if (scrollPositions.has(value)) {
+      element.scrollTo(0, scrollPositions.get(value))
+    }
+    element.addEventListener('scroll', () => {
+      scrollPositions.set(value, element.scrollTop)
+    })
+  }
 
   $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
 </script>
