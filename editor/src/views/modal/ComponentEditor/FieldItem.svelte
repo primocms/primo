@@ -83,11 +83,7 @@
     on:move
     on:createsubfield
     on:input={({detail:updatedSubfield}) => {
-      console.log({updatedSubfield})
-      field = {
-        ...field,
-        fields: field.fields.map(subfield => subfield.id === updatedSubfield.id ? updatedSubfield : subfield)
-      }
+      field.fields = field.fields.map(subfield => subfield.id === updatedSubfield.id ? updatedSubfield : subfield)
       dispatchUpdate()
     }}
     level={level+1}
