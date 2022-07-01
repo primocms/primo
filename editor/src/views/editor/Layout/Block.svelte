@@ -11,7 +11,7 @@
   import BlockButtons from './BlockButtons.svelte';
 
   import { focusedNode } from '../../../stores/app';
-  import { onMobile, saved } from '../../../stores/app/misc';
+  import { onMobile, saved, showingIDE } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
   import { id, sections } from '../../../stores/app/activePage';
   import { pages, updateContent, symbols } from '../../../stores/actions';
@@ -119,7 +119,7 @@
       component: block,
       header: {
         title: 'Edit Component',
-        icon: 'fas fa-code',
+        icon: $showingIDE ? 'fas fa-code' : 'fas fa-edit',
         button: {
           icon: 'fas fa-check',
           label: 'Draft',

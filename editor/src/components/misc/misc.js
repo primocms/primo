@@ -21,6 +21,7 @@ export const iframePreview = (locale = 'en') => `
                   target: document.body,
                   props
                 })
+                setTimeout(setListeners, 200)
               } catch(e) {
                 document.body.innerHTML = ''
                 console.error(e.toString())
@@ -29,27 +30,19 @@ export const iframePreview = (locale = 'en') => `
           }
         }
 
-        let set = false
-        const activeLoc = { line: null, column: null, char: null }
         function setListeners() {
-          if (set) return
           document.body.querySelectorAll('*').forEach(el => {
             el.addEventListener('mouseenter', () => {
               const loc = el?.__svelte_meta?.loc
-              if (!loc || (activeLoc.char === loc.char && activeLoc.line === loc.line)) return
               window.postMessage({ event: 'path', payload: loc })
-              activeLoc.char = loc.char
-              activeLoc.line = loc.line
-              activeLoc.column = loc.column
             })
           })
-          set = true
         }
 
         window.addEventListener('message', ({data}) => {
+          if (data.event === 'path') return
           if (data.componentApp || data.componentData) {
             update(data.componentApp, data.componentData)
-            setTimeout(setListeners, 200)
           }
         }, false)
 		  <\/script>

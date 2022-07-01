@@ -17,6 +17,7 @@
 
   let iframe;
   let previewLoaded = false;
+  let activeLoc = { line: null, column: null, char: null }
   $: if (iframe) {
     iframe.contentWindow.addEventListener('message', ({data}) => {
       if (data === 'done') {
@@ -24,7 +25,10 @@
       } else if (data.event === 'logs') {
         // consoleLog = data.payload
       } else if (data.event === 'path') {
-        $highlightedElement = data.payload
+        const loc = data.payload
+        if (activeLoc.char === loc.char && activeLoc.line === loc.line) return
+        $highlightedElement = loc
+        activeLoc = { ...loc }
       }
     });
   }
