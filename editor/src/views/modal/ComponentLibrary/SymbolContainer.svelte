@@ -355,10 +355,12 @@
           }
 
           &.highlight {
-            background: var(--primo-color-primored);
+            color: var(--primo-color-black);
+            background: var(--primo-color-primogreen);
           }
 
           &:hover {
+            color: var(--primo-color-white);
             background: transparent;
           }
 

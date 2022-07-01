@@ -188,7 +188,7 @@
 
       button {
         padding: 0.5rem 1rem;
-        background: var(--primo-color-primored);
+        background: var(--primo-color-primogreen);
         border-radius: 0.25rem;
         margin-left: 0.5rem;
 

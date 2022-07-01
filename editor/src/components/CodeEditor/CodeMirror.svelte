@@ -245,7 +245,7 @@
 
   :global(.ͼo .cm-tooltip-autocomplete > ul > li .cm-completionLabel) {
     padding: 3px 8px;
-    border-right: 1px solid var(--primo-color-primored);
+    border-right: 1px solid var(--primo-color-primogreen);
     color: white;
     font-size: 0.75rem;
     font-family: 'Fira Code';

@@ -1,12 +1,12 @@
 import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum";
-import type {Site, Page, Field} from './const'
+import type { Site, Page, Field } from './const'
 
-export async function processCode({ code, data = {}, buildStatic = true, format = 'esm', locale = 'en'}: { code:any, data:object, buildStatic?:boolean, format?:string, locale?:string}) {
-  const {css,error} = await processors.css(code.css || '')
+export async function processCode({ code, data = {}, buildStatic = true, format = 'esm', locale = 'en' }: { code: any, data: object, buildStatic?: boolean, format?: string, locale?: string }) {
+  const { css, error } = await processors.css(code.css || '')
   if (error) {
-    return {error}
+    return { error }
   }
   const res = await processors.html({
     code: {
@@ -18,12 +18,15 @@ export async function processCode({ code, data = {}, buildStatic = true, format 
 }
 
 export async function processCSS(raw: string): Promise<string> {
-  const {css,error} = await processors.css(raw)
-  if (error) {
-    console.log('CSS Error:', error)
+  const res = await processors.css(raw) || {}
+  if (!res) {
+    return ''
+  } else if (res.error) {
+    console.log('CSS Error:', res.error)
     return raw
+  } else if (res.css) {
+    return res.css
   }
-  return css
 }
 
 export function convertFieldsToData(fields: any[]): object {
@@ -52,12 +55,12 @@ export function createDebouncer(time) {
   }, time);
 }
 
-export function wrapInStyleTags(css: string, id:string = null): string {
+export function wrapInStyleTags(css: string, id: string = null): string {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
 }
 
 // make a url string valid
-export const makeValidUrl = (str:string = ''): string => {
+export const makeValidUrl = (str: string = ''): string => {
   if (str) {
     return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase()
   } else {
@@ -88,7 +91,7 @@ export function hydrateFieldsWithPlaceholders(fields) {
   }))
 }
 
-export function getPlaceholderValue(field:Field) {
+export function getPlaceholderValue(field: Field) {
   if (field.default) return field.default
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
   else if (field.type === 'group') return getGroupValue(field)
@@ -119,14 +122,14 @@ export function getPlaceholderValue(field:Field) {
   }
 }
 
-export function hydrateFieldsWithEmptyValues(fields:Array<Field>) {
+export function hydrateFieldsWithEmptyValues(fields: Array<Field>) {
   return fields.map(field => ({
     ...field,
     value: getPlaceholderValue(field)
   }))
 }
 
-export function getEmptyValue(field:Field) {
+export function getEmptyValue(field: Field) {
   if (field.default) return field.default
   if (field.type === 'repeater') return []
   else if (field.type === 'group') return getGroupValue(field)
@@ -159,10 +162,10 @@ export function validateSiteStructure(site): Site {
 
   let validated
   try {
-    if (defined_structure(site, ['html'])) validated = convertSite(site) 
+    if (defined_structure(site, ['html'])) validated = convertSite(site)
     else if (defined_structure(site, ['content'])) validated = updateSite(site)
     else validated = null
-  } catch(e) {
+  } catch (e) {
     console.warn('Site is invalid')
     validated = null
   }
@@ -183,7 +186,7 @@ export function validateSiteStructure(site): Site {
   function convertSite(site) {
 
     const siteContent = {}
-    const updated:Site = {
+    const updated: Site = {
       id: site.id,
       name: site.name,
       pages: convertPages(site.pages, (page) => {
@@ -200,12 +203,12 @@ export function validateSiteStructure(site): Site {
     }
     updated.content['en'] = siteContent
 
-    console.log({updated})
+    console.log({ updated })
 
     return updated
 
-    function convertPages(pages = [], fn = (_) => {}) {
-      return pages.map((page):Page => {
+    function convertPages(pages = [], fn = (_) => { }) {
+      return pages.map((page): Page => {
         const pageContent = {}
         const updatedPage = {
           id: page.id,
@@ -235,7 +238,7 @@ export function validateSiteStructure(site): Site {
           return {
             id: section.id,
             type: section.type,
-            ...(section.symbolID ? { symbolID : section.symbolID } : {})
+            ...(section.symbolID ? { symbolID: section.symbolID } : {})
           }
         })
       }
@@ -266,7 +269,7 @@ export function convertSymbols(symbols) {
   }))
 }
 
-export function convertFields(fields = [], fn:Function = () => {}): Array<Field> {
+export function convertFields(fields = [], fn: Function = () => { }): Array<Field> {
   return fields.map(field => {
     fn({
       id: field.key,
@@ -288,10 +291,10 @@ export function convertFields(fields = [], fn:Function = () => {}): Array<Field>
 // https://stackoverflow.com/questions/24924464/how-to-check-if-object-structure-exists
 function defined_structure(obj, attrs) {
   var tmp = obj;
-  for(let i=0; i<attrs.length; ++i) {
-      if(tmp[attrs[i]] == undefined)
-          return false;
-      tmp = tmp[attrs[i]];
+  for (let i = 0; i < attrs.length; ++i) {
+    if (tmp[attrs[i]] == undefined)
+      return false;
+    tmp = tmp[attrs[i]];
   }
   return true;
 }

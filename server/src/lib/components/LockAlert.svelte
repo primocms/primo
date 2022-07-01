@@ -40,11 +40,11 @@
     background: transparent;
 
     &.outlined {
-      border: 2px solid var(--primo-color-primored);
+      border: 2px solid var(--primo-color-primogreen);
     }
 
     &:hover {
-      background: var(--primo-color-primored);
+      background: var(--primo-color-primogreen);
     }
   }
 </style>

@@ -19,8 +19,8 @@
 
 <style>
   input {
-    outline-color: rgb(248, 68, 73);
-    background: white;
+    outline-color: var(--primo-color-primogreen);
+    background: var(--primo-color-black);
     padding: 0.5rem;
     border-bottom: 2px solid rgb(245, 245, 245);
   }

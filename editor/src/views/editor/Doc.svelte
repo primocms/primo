@@ -193,7 +193,7 @@
     justify-content: center;
     z-index: 5;
 
-    --Spinner-color: var(--primo-color-primored);
+    --Spinner-color: var(--primo-color-primogreen);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   .primo-page {

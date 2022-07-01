@@ -44,7 +44,7 @@
   <span>Primo Desktop v{desktop.version}</span>
   <span>Editor v{primo.version}</span>
   <button id="primo-update-button" on:click={() => {
-    window.primo.checkForUpdate()
+    window.primo?.checkForUpdate()
   }}>Check for Update</button>
 </div>
 
@@ -126,13 +126,13 @@
 }
 
 body {
-  --primo-color-primored: rgb(248, 68, 73);
-  --primo-color-primored-dark: rgb(186, 37, 42);
+  --primo-color-primogreen: #35D994;
+  --primo-color-primogreen-dark: #097548;
   --primo-color-white: white;
   --primo-color-codeblack: rgb(30, 30, 30);
   --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
-  --primo-color-black: rgb(17, 17, 17);
+  --primo-color-black: #121212;
   --primo-color-black-opaque: rgba(17, 17, 17, 0.9);
 
   --color-gray-1: rgb(245, 245, 245);
@@ -160,15 +160,15 @@ body {
   --padding-container: 15px;
   --max-width-container: 1900px;
 
-  --ring: 0px 0px 0px 2px var(--primo-color-primored);
+  --ring: 0px 0px 0px 2px var(--primo-color-primogreen);
 
   --primo-max-width-1: 30rem;
   --primo-max-width-2: 1200px;
   --primo-max-width-max: 1200px;
 
-  --primo-ring-primored: 0px 0px 0px 2px var(--primo-color-primored);
-  --primo-ring-primored-thin: 0px 0px 0px 1px var(--primo-color-primored);
-  --primo-ring-primored-thick: 0px 0px 0px 3px var(--primo-color-primored);
+  --primo-ring-primored: 0px 0px 0px 2px var(--primo-color-primogreen);
+  --primo-ring-primored-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
+  --primo-ring-primored-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
 
   --primo-border-radius: 5px;
 }

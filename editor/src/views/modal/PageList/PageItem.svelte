@@ -171,7 +171,7 @@
           transition: var(--transition-colors);
 
           &:hover {
-            color: var(--primo-color-primored);
+            color: var(--primo-color-primogreen);
           }
 
           &:focus {

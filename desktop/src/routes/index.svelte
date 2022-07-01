@@ -47,7 +47,7 @@
     const confirm = window.confirm('Are you sure you want to delete this site?')
     if (!confirm) return
     $sites = $sites.filter((site) => site.id !== siteID)
-    window.primo.data.deleteSite(siteID)
+    window.primo?.data.deleteSite(siteID)
   }
 
   let siteBeingEdited
@@ -368,7 +368,7 @@
                 display: flex;
 
                 &:hover {
-                  color: var(--primo-color-primored);
+                  color: var(--primo-color-primogreen);
                 }
 
                 svg {
@@ -389,7 +389,7 @@
                 padding: 0 0.5rem;
 
                 &:hover {
-                  color: var(--primo-color-primored);
+                  color: var(--primo-color-primogreen);
                 }
 
                 svg {
@@ -432,7 +432,7 @@
           font-weight: 600;
           color: var(--color-gray-2);
           border-radius: var(--primo-border-radius);
-          border: 2px solid var(--primo-color-primored);
+          border: 2px solid var(--primo-color-primogreen);
 
           svg {
             border-radius: 50%;
@@ -442,7 +442,7 @@
           }
 
           &:hover svg {
-            color: var(--primo-color-primored);
+            color: var(--primo-color-primogreen);
           }
         }
       }
@@ -461,14 +461,14 @@
       height: 1.25rem;
     }
     &:hover {
-      color: var(--primo-color-primored);
+      color: var(--primo-color-primogreen);
     }
   }
 
   button {
     transition: color 0.1s, background-color 0.1s;
     &:focus {
-      outline: 2px solid var(--primo-color-primored);
+      outline: 2px solid var(--primo-color-primogreen);
     }
   }
 

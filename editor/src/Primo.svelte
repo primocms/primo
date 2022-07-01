@@ -125,8 +125,8 @@
 
 <style>
   :global(:root) {
-    --primo-color-primored: rgb(248, 68, 73);
-    --primo-color-primored-dark: rgb(186, 37, 42);
+    --primo-color-primogreen: rgb(248, 68, 73);
+    --primo-color-primogreen-dark: rgb(186, 37, 42);
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
     --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -175,7 +175,7 @@
     --padding-container: 15px;
     --max-width-container: 1900px;
 
-    --ring: 0px 0px 0px 2px var(--primo-color-primored);
+    --ring: 0px 0px 0px 2px var(--primo-color-primogreen);
   }
 
 </style>

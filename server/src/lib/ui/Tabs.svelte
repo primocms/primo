@@ -86,7 +86,7 @@
           flex: 1;
           border-bottom: 2px solid transparent;
           &.is-active {
-            border-color: var(--primo-color-primored);
+            border-color: var(--primo-color-primogreen);
           }
 
           button {

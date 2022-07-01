@@ -54,7 +54,7 @@
   <span>{label}</span>
 </div>
 
-<style>
+<style lang="postcss">
   .copy-button {
     display: flex;
     align-items: center;
@@ -70,11 +70,11 @@
       box-shadow: var(--primo-ring-primored);
 
       &:hover {
-        background: var(--primo-color-primored);
+        background: var(--primo-color-primogreen);
       }
 
       &.selected {
-        outline-color: var(--primo-color-primored);
+        outline-color: var(--primo-color-primogreen);
         pointer-events: none;
         cursor: default;
         background: var(--primo-color-gray-7);

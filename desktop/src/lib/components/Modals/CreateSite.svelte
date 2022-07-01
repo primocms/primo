@@ -54,7 +54,7 @@
   }
 
   let themes = [{},{},{}]
-  axios.get('https://api.primo.af/themes.json').then(({data}) => {
+  axios.get('https://api.primo.so/themes.json').then(({data}) => {
     themes = data
   })
 

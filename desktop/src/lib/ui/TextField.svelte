@@ -84,7 +84,7 @@
 
       button {
         padding: 0.5rem 1rem;
-        background: var(--primo-color-primored);
+        background: var(--primo-color-primogreen);
 
         &:hover {
         }

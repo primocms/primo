@@ -178,7 +178,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--primo-color-primored);
+    border: 1px solid var(--primo-color-primogreen);
     padding: 0.5rem;
 
     .spinner-container {
@@ -223,7 +223,7 @@
         opacity: 0.95;
 
         svg {
-          color: var(--primo-color-primored);
+          color: var(--primo-color-primogreen);
         }
       }
 

@@ -66,7 +66,7 @@
     margin: var(--space-y, 0) var(--space-x, 0);
 
     &:hover {
-      background: var(--primo-color-primored);
+      background: var(--primo-color-primogreen);
     }
   }
 

@@ -42,7 +42,7 @@
         transition: transform 0.1s;
 
         input {
-          color: var(--primo-color-primored);
+          color: var(--primo-color-primogreen);
           background: var(--primo-color-white);
           outline: 0;
           position: absolute;

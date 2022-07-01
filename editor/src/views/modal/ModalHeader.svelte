@@ -113,11 +113,11 @@
         transition: var(--transition-colors);
 
         &:hover {
-          color: var(--primo-color-primored);
+          color: var(--primo-color-primogreen);
         }
 
         &:focus {
-          color: var(--primo-color-primored);
+          color: var(--primo-color-primogreen);
           outline: 0;
         }
 
@@ -194,26 +194,26 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgb(248, 68, 73);
+            background-color: var(--primo-color-primogreen);
             transition: 0.4s;
             display: flex;
             align-items: center;
 
             &.code i.fa-edit {
-              color: white;
+              color: var(--primo-color-black);
             }
 
             &.code i.fa-code {
-              color: rgb(248, 68, 73);
+              color: var(--primo-color-black);
             }
 
             i {
               position: absolute;
               z-index: 1;
-              color: white;
+              color: var(--primo-color-black);
 
               &.fa-edit {
-                color: rgb(248, 68, 73);
+                color: var(--primo-color-black);
               }
 
               &.fa-edit {
@@ -261,8 +261,8 @@
     transition: var(--transition-colors);
 
     &.primary {
-      background: var(--primo-color-primored);
-      color: var(--primo-color-white);
+      background: var(--primo-color-primogreen);
+      color: var(--primo-color-black);
       margin-left: 0.5rem;
 
       span {
@@ -275,19 +275,19 @@
       }
 
       &:hover {
-        background: var(--primo-color-primored-dark);
+        background: var(--primo-color-primogreen-dark);
       }
     }
 
     &.switch {
-      border: 2px solid var(--primo-color-primored);
-      color: var(--primo-color-primored);
-      outline-color: var(--primo-color-primored);
+      border: 2px solid var(--primo-color-primogreen);
+      color: var(--primo-color-primogreen);
+      outline-color: var(--primo-color-primogreen);
 
       &:hover {
-        background: var(--primo-color-primored-dark);
+        background: var(--primo-color-primogreen-dark);
         color: var(--primo-color-white);
-        border-color: var(--primo-color-primored-dark);
+        border-color: var(--primo-color-primogreen-dark);
       }
     }
   }

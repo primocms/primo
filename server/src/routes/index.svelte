@@ -274,7 +274,7 @@
                 place-items: center flex-start;
 
                 &:hover {
-                  color: var(--primo-color-primored);
+                  color: var(--primo-color-primogreen);
                 }
 
                 svg {
@@ -296,7 +296,7 @@
                 padding: 0 0.5rem;
 
                 &:hover {
-                  color: var(--primo-color-primored);
+                  color: var(--primo-color-primogreen);
                 }
 
                 svg {
@@ -339,7 +339,7 @@
           font-weight: 600;
           color: var(--color-gray-2);
           border-radius: var(--primo-border-radius);
-          border: 2px solid var(--primo-color-primored);
+          border: 2px solid var(--primo-color-primogreen);
 
           svg {
             border-radius: 50%;
@@ -349,7 +349,7 @@
           }
 
           &:hover svg {
-            color: var(--primo-color-primored);
+            color: var(--primo-color-primogreen);
           }
         }
       }
@@ -368,14 +368,14 @@
       height: 1.25rem;
     }
     &:hover {
-      color: var(--primo-color-primored);
+      color: var(--primo-color-primogreen);
     }
   }
 
   button {
     transition: color 0.1s, background-color 0.1s;
     &:focus {
-      outline: 2px solid var(--primo-color-primored);
+      outline: 2px solid var(--primo-color-primogreen);
     }
     &:disabled {
       opacity: 0.5;

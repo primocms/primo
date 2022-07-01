@@ -212,7 +212,7 @@
     background-color: var(--color-gray-9);
     color: var(--primo-color-white);
     border-bottom-width: 2px;
-    border-color: var(--primo-color-primored);
+    border-color: var(--primo-color-primogreen);
   }
   .floating-menu {
     transform: translateY(-0.5rem);

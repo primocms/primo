@@ -95,11 +95,11 @@ on:click={() => {
     opacity: 0;
   }
   .primo {
-    background: var(--primo-color-primored);
-    color: var(--color-gray-1);
+    background: var(--primo-color-primogreen);
+    color: var(--primo-color-black);
 
     &:hover {
-      background: var(--primo-color-primored-dark);
+      background: var(--primo-color-primogreen-dark);
     }
   }
 

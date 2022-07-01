@@ -106,7 +106,7 @@
       contributor,
       component: symbolSubmission
     }
-    axios.post('https://api.primo.af/community-library.json', payload).then(res => {
+    axios.post('https://api.primo.so/community-library.json', payload).then(res => {
       if (res.data?.ok) {
         submitted = true
       }
@@ -130,13 +130,13 @@
   onMount(async () => {
     if ($primoSymbols.length === 0) {
       const { data: symbols } = await axios.get(
-        'https://api.primo.af/public-library.json'
+        'https://api.primo.so/public-library.json'
       );
       $primoSymbols = symbols || [];
     }
     if ($communitySymbols.length === 0) {
       const { data: symbols } = await axios.get(
-        'https://api.primo.af/community-library.json'
+        'https://api.primo.so/community-library.json'
       );
       $communitySymbols = symbols || [];
     }
@@ -313,7 +313,7 @@
       }
 
       &.active {
-        border-color: var(--primo-color-primored);
+        border-color: var(--primo-color-primogreen);
       }
     }
   }

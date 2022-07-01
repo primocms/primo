@@ -31,7 +31,7 @@
     transition: 0.1s box-shadow;
 
     &.selected {
-      box-shadow: 0px 0px 0px 2px var(--primo-color-primored);
+      box-shadow: 0px 0px 0px 2px var(--primo-color-primogreen);
     }
 
     &:hover {

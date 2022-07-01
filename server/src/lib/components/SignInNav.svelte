@@ -47,7 +47,7 @@
       }
 
       &:hover {
-        border-color: var(--primo-color-primored);
+        border-color: var(--primo-color-primogreen);
       }
 
       &.with-icon {

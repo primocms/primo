@@ -44,7 +44,7 @@
 
   export let editable;
 
-  const iconStyles = `width:15px;position: relative;top: 1px;fill:#f7fafc;`;
+  const iconStyles = `width:15px;position: relative;top: 1px;fill:currentColor`;
 
   $: isFirst = i === 0;
   $: isLast = i === $sections.length - 1;
@@ -139,14 +139,14 @@
 
 <style lang="postcss">
   .block-buttons {
-    box-shadow: inset 0 0 0 calc(4px) rgb(248, 68, 73);
+    box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
     z-index: 999999;
     position: absolute;
     inset: 0px;
   }
 
   .is-content {
-    box-shadow: inset 0 0 0 calc(4px) rgba(248, 68, 73, 0.1);
+    box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
   }
   .component-button {
     display: flex;
@@ -154,7 +154,7 @@
   }
   
   .button-delete {
-    border-left: 1px solid var(--primo-color-primored-dark);
+    /* border-left: 1px solid var(--primo-color-primogreen-dark); */
     border-bottom-right-radius: 0.25rem;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -171,7 +171,7 @@
     justify-content: center;
     align-items: center;
     height: 2rem;
-    background-color: var(--primo-color-primored);
+    background-color: var(--color-gray-8);
     color: var(--primo-color-white);
     font-size: var(--font-size-2);
     font-weight: 500;
@@ -186,7 +186,8 @@
     }
 
     &:hover {
-      background-color: var(--primo-color-primored-dark);
+      background-color: var(--primo-color-primogreen);
+      color: var(--primo-color-black);
     }
 
     &.top-right:first-child {

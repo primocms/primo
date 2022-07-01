@@ -91,7 +91,7 @@ aria-label="Close modal"
     }
 
     &:hover {
-      color: var(--primo-color-primored);
+      color: var(--primo-color-primogreen);
     }
   }
 

@@ -192,11 +192,11 @@
     display: grid;
     grid-template-columns: 9rem 4fr;
     overflow: hidden;
-    /* border: 1px solid var(--primo-color-primored); */
+    /* border: 1px solid var(--primo-color-primogreen); */
     /* padding: 0.5rem; */
 
     .spinner-container {
-      background: var(--primo-color-primored);
+      background: var(--primo-color-primogreen);
       height: 100%;
       width: 100%;
       display: flex;
@@ -240,7 +240,7 @@
 
       &:hover {
         opacity: 0.95;
-        background: var(--primo-color-primored);
+        background: var(--primo-color-primogreen);
       }
 
       span {

@@ -62,7 +62,6 @@
     }
 
     loading = false
-    pages = []
   }
 
   async function buildSiteBundle(site) {

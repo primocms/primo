@@ -26,7 +26,7 @@
 <style lang="postcss">
   .primary-button {
     width: 100%;
-    background: var(--PrimaryButton-bg, var(--primo-color-primored));
+    background: var(--PrimaryButton-bg, var(--primo-color-primogreen));
     color: var(--PrimaryButton-color, var(--primo-color-white));
     padding: 0.5rem;
     margin-top: var(--PrimaryButton-mt, 0);
@@ -43,7 +43,7 @@
     &:hover {
       background: var(
         --PrimaryButton-bg-hover,
-        var(--primo-color-primored-dark)
+        var(--primo-color-primogreen-dark)
       );
       color: var(--PrimaryButton-color-hover, var(--primo-color-white));
     }

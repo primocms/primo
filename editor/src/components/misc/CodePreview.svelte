@@ -191,7 +191,7 @@
 
     .error-container {
       color: var(--primo-color-white);
-      background: var(--primo-color-primored);
+      background: var(--primo-color-primogreen);
       padding: 5px;
     }
 
@@ -243,7 +243,7 @@
     flex: 1;
   }
   .preview-container.loading {
-    border-color: var(--primo-color-primored);
+    border-color: var(--primo-color-primogreen);
   }
   .footer-buttons {
     display: flex;

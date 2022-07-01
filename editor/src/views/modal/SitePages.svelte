@@ -258,7 +258,7 @@
       li.create-page {
         button {
           padding: 3rem;
-          border: 2px solid var(--primo-color-primored);
+          border: 2px solid var(--primo-color-primogreen);
           border-radius: var(--primo-border-radius);
           background: var(--primo-color-black);
           color: var(--primo-color-white);
@@ -273,7 +273,7 @@
           &:hover {
             filter: brightness(1.1);
             svg {
-              color: var(--primo-color-primored);
+              color: var(--primo-color-primogreen);
             }
           }
           svg {
