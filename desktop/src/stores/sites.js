@@ -8,21 +8,16 @@ const store = writable([])
 if (browser) initializSiteData()
 
 async function initializSiteData() {
-  const { data } = window.primo // preload.cjs
+  const data = window.primo?.data // preload.cjs
+  if (!data) return
   const siteFiles = data.load()
   // const sitesDB = await get('sites')
   const sitesDB = []
 
   const rebuiltSites = siteFiles.map(({data, preview}) => {
-    const savedSite = _find(
-      sitesDB,
-      (savedSite) => savedSite.id === data.id
-    )
-    console.log({data})
     return {
       id: data.id,
       name: data.name,
-      // deployments: savedSite ? savedSite.deployments : [],
       activeDeployment: data.activeDeployment,
       data,
       preview

@@ -26,7 +26,7 @@
   let activeTab = tabs[tab]
 
   async function selectDirectory() {
-    const dir = await window.primo.config.selectDirectory()
+    const dir = await window.primo?.config.selectDirectory()
     if (dir) {
       $config = {
         ...$config,

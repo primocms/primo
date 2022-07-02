@@ -57,7 +57,7 @@ export async function setActiveEditor(siteID) {
 }
 
 export async function setSitePreview(id, preview) {
-  window.primo.data.setPreview({ id, preview })
+  window.primo?.data.setPreview({ id, preview })
 }
 
 export async function addDeploymentToSite({

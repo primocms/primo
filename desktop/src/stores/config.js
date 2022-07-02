@@ -14,19 +14,21 @@ const store = writable({
 })
 
 if (browser) {
-  const { config } = window.primo
-  store.set({
-    saveDir: window.primo.config.getSavedDirectory(),
-    hosts: window.primo.config.getHosts(),
-    serverConfig: window.primo.config.getServerConfig(),
-    telemetryEnabled: window.primo.config.getTelemetry(),
-    machineID: window.primo.config.getMachineID(),
-  })
-  store.subscribe((c) => {
-    config.setHosts(c.hosts)
-    config.setServerConfig(c.serverConfig)
-    config.setTelemetry(c.telemetryEnabled)
-  })
+  const config = window.primo?.config
+  if (config) {
+    store.set({
+      saveDir: config.getSavedDirectory(),
+      hosts: config.getHosts(),
+      serverConfig: config.getServerConfig(),
+      telemetryEnabled: config.getTelemetry(),
+      machineID: config.getMachineID(),
+    })
+    store.subscribe((c) => {
+      config.setHosts(c.hosts)
+      config.setServerConfig(c.serverConfig)
+      config.setTelemetry(c.telemetryEnabled)
+    })
+  }
 }
 
 export default store

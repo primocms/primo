@@ -24,7 +24,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   let res
   try {
-    res = await window.primo.processSvelte(finalRequest)
+    res = await window.primo?.processSvelte(finalRequest)
   } catch(e) {
     console.log('error', e)
     res = {
@@ -34,7 +34,12 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   let final 
 
-  if (res.error) {
+  if (!res) {
+    final = {
+      html: '<h1 style="text-align: center">could not render</h1>'
+    }
+    res = {}
+  } else if (res.error) {
     console.log(data, res.error)
     final = {
       error: escapeHtml(res.error)
@@ -115,6 +120,7 @@ export async function css(raw) {
     error: null
   }
 
+  if (!window.primo) return
   const { css, error } = await window.primo.processCSS(raw)
   
   if (css) cssMap.set(raw, css)
