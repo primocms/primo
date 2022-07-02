@@ -93,7 +93,7 @@
     {#if activeTab === 0}
       <CodeMirror
         mode="html"
-        docs="https://docs.primo.af/development#html"
+        docs="https://docs.primo.so/development#html"
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={() => toggleTab(0)}
@@ -105,7 +105,7 @@
         bind:selection={selections['css']}
         bind:value={css}
         mode="css"
-        docs="https://docs.primo.af/development#css"
+        docs="https://docs.primo.so/development#css"
         on:change={() => dispatch('cssChange')}
         on:save={() => dispatch('save')} />
     {:else}
@@ -113,7 +113,7 @@
         on:tab-switch={() => toggleTab(2)}
         bind:selection={selections['js']}
         bind:value={js}
-        docs="https://docs.primo.af/development#javascript"
+        docs="https://docs.primo.so/development#javascript"
         mode="javascript"
         on:change={() => dispatch('jsChange')}
         on:save={() => dispatch('save')} />
@@ -138,7 +138,7 @@
       </button>
       <CodeMirror
         mode="html"
-        docs="https://docs.primo.af/development#html"
+        docs="https://docs.primo.so/development#html"
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => toggleTab(detail)}
@@ -160,7 +160,7 @@
         bind:selection={selections['css']}
         bind:value={css}
         mode="css"
-        docs="https://docs.primo.af/development#css"
+        docs="https://docs.primo.so/development#css"
         on:change={() => dispatch('cssChange')}
         on:save />
     </div>
@@ -179,7 +179,7 @@
         bind:selection={selections['js']}
         bind:value={js}
         mode="javascript"
-        docs="https://docs.primo.af/development#javascript"
+        docs="https://docs.primo.so/development#javascript"
         on:change={() => dispatch('jsChange')}
         on:save />
     </div>

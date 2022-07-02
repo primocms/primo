@@ -103,7 +103,7 @@
         <CodeMirror
           bind:value={unsavedPageCSS}
           mode="css"
-          docs="https://docs.primo.af/development#css-1"
+          docs="https://docs.primo.so/development#css-1"
           debounce={true}
           on:change={updatePagePreview}
           on:save={saveStyles}
@@ -112,7 +112,7 @@
         <CodeMirror
           bind:value={unsavedSiteCSS}
           mode="css"
-          docs="https://docs.primo.af/development#css-1"
+          docs="https://docs.primo.so/development#css-1"
           debounce={true}
           on:change={updatePagePreview}
           on:save={saveStyles}
