@@ -27,7 +27,6 @@ import { htmlLanguage, html as html$1 } from "@codemirror/lang-html";
 import { cssLanguage, css as css$1 } from "@codemirror/lang-css";
 import { snippet } from "@codemirror/autocomplete";
 import { syntaxTree, language } from "@codemirror/language";
-// import { undo } from "@codemirror/commands";
 function isNumber$2(code2) {
   return code2 > 47 && code2 < 58;
 }

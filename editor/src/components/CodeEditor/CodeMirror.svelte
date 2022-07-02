@@ -13,10 +13,10 @@
   import { abbreviationTracker } from '../../libraries/emmet/plugin';
 
   import {highlightedElement} from '../../stores/app/misc';
-  import {basicSetup} from "@codemirror/basic-setup"
+  import {basicSetup} from "codemirror"
   import { EditorView, keymap } from '@codemirror/view';
-  import { standardKeymap, indentWithTab } from '@codemirror/commands';
-  import { EditorState, Compartment } from '@codemirror/state';
+  import { standardKeymap, indentWithTab} from '@codemirror/commands';
+  import { EditorState } from '@codemirror/state';
   import MainTheme from './theme';
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
@@ -29,7 +29,7 @@
   export let style = '';
   export let debounce = false;
   export let selection = 0;
-  export let docs = 'https://docs.primo.af/development'
+  export let docs = 'https://docs.primo.so/development'
 
   const language = getLanguage(mode);
 
@@ -83,7 +83,11 @@
               const { formatted, cursorOffset } = res;
               Editor.dispatch({
                 changes: [
-                  { from: 0, to: Editor.state.doc.length, insert: formatted }
+                  { 
+                    from: 0, 
+                    to: Editor.state.doc.length, 
+                    insert: formatted 
+                  }
                 ],
                 selection: {
                   anchor: cursorOffset,

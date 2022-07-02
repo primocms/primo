@@ -1,5 +1,5 @@
 import Number from './Number.svelte'
-import Content from './Content.svelte'
+import Markdown from './Markdown.svelte'
 import Switch from './Switch.svelte'
 import URL from './URL.svelte'
 import Link from './Link.svelte'
@@ -28,7 +28,7 @@ export default [
   {
     id: 'content',
     label: 'Markdown',
-    component: Content
+    component: Markdown
   },
   {
     id: 'number',
