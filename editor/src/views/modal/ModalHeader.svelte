@@ -261,8 +261,8 @@
     transition: var(--transition-colors);
 
     &.primary {
-      background: var(--primo-color-primogreen);
-      color: var(--primo-color-black);
+      border: 2px solid var(--primo-color-primogreen);
+      color: var(--primo-color-white);
       margin-left: 0.5rem;
 
       span {
@@ -275,7 +275,8 @@
       }
 
       &:hover {
-        background: var(--primo-color-primogreen-dark);
+        color: var(--primo-color-black);
+        background: var(--primo-color-primogreen);
       }
     }
 

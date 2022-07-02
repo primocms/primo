@@ -355,13 +355,13 @@
           }
 
           &.highlight {
-            color: var(--primo-color-black);
-            background: var(--primo-color-primogreen);
+            color: var(--primo-color-white);
+            border: 1px solid var(--primo-color-primogreen);
           }
 
           &:hover {
-            color: var(--primo-color-white);
-            background: transparent;
+            color: var(--primo-color-black);
+            background: var(--primo-color-primogreen);
           }
 
           span {
