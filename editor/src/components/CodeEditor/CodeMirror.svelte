@@ -126,7 +126,7 @@
     prettier = await import('prettier');
     css = (await import('prettier/esm/parser-postcss')).default;
     babel = (await import('prettier/esm/parser-babel')).default;
-    svelte = (await import('prettier-plugin-svelte'));
+    svelte = (await import('../../libraries/prettier/prettier-svelte')).default;
   }
 
   async function formatCode(code, { mode, position }) {
