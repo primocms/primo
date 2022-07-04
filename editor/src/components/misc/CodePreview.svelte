@@ -31,6 +31,9 @@
         activeLoc = { ...loc }
       }
     });
+    
+    // open clicked links in browser
+    iframe.contentWindow.document.querySelectorAll('a').forEach((link) => { link.target = '_blank' })
   }
 
   let container;
