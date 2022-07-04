@@ -2,18 +2,23 @@
   import { find as _find, chain as _chain, cloneDeep as _cloneDeep } from 'lodash-es'
   import pluralize from '../libraries/pluralize';
   import Icon from '@iconify/svelte'
-  import {fade} from 'svelte/transition'
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy, tick } from 'svelte';
   import {slide} from 'svelte/transition'
   import * as idb from 'idb-keyval';
   const dispatch = createEventDispatcher();
 
+  import { locale } from '../stores/app/misc'
   import { getPlaceholderValue } from '../utils';
   import { createUniqueID } from '../utilities';
   import {fieldTypes} from '../stores/app'
 
   export let field;
   export let level = 0
+
+  // ensure value is an array
+  if (!Array.isArray(field.value)) {
+    field.value = []
+  }
 
   function addRepeaterItem() {
     const subfield = createSubfield()
@@ -56,8 +61,15 @@
     }));
   }
 
-  let repeaterFieldValues = Array.isArray(field.value)
-    ? field.value.map((value) => field.fields.map((subfield) => ({
+  let repeaterFieldValues = []
+  getRepeaterFieldValues().then(val => repeaterFieldValues = val)
+
+  $: $locale, getRepeaterFieldValues().then(val => repeaterFieldValues = val)
+  $: setTemplateKeys(repeaterFieldValues) 
+
+  async function getRepeaterFieldValues() {
+    await tick() // need to wait for $locale to change parent content 
+    return field.value.map((value) => field.fields.map((subfield) => ({
         ...subfield,
         fields: _cloneDeep(subfield.fields.map(sub => ({
           ...sub,
@@ -65,17 +77,19 @@
         }))),
         value: value[subfield.key]
       })))
-    : [];
+  }
+  
+  function setTemplateKeys(val) {
+    repeaterFieldValues = val.map(f => {
+      f._key = f._key || createUniqueID()
+      return f
+    })
+  }
 
   function onInput() {
     field.value = repeaterFieldValues.map((items, i) => _chain(items).keyBy("key").mapValues('value').value());
     dispatch('input');
   }
-
-  $: repeaterFieldValues = repeaterFieldValues.map(f => {
-    f._key = f._key || createUniqueID()
-    return f
-  })
 
   function getFieldComponent(subfield) {
     const field = _find($fieldTypes, ['id', subfield.type])
@@ -112,7 +126,6 @@
     {#each repeaterFieldValues as repeaterItem, i (repeaterItem._key)}
       {@const subfieldID = `${field.key}-${i}`}
       <div
-        transition:fade={{ duration: 100 }}
         class="repeater-item"
         id="repeater-{field.key}-{i}">
         <div class="item-options">
@@ -143,7 +156,7 @@
           </div>
         </div>
         {#if visibleRepeaters[subfieldID]}
-          <div class="field-values" transition:slide={{ duration: 100 }}>
+          <div class="field-values">
             {#each repeaterItem as subfield (repeaterItem._key + subfield.key)}
               <div
                 class="repeater-item-field"

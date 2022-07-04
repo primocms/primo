@@ -4,7 +4,7 @@
   const dispatch = createEventDispatcher();
 
   export let field;
-  export let onChange
+  export let onChange = () => {}
   
   export let value = null;
   export let disabled = false;
