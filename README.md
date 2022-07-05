@@ -6,7 +6,7 @@ It does this by integrating tools to solve a lot of the concerns you would norma
 
 Having everything integrated out of the box means that new sites can be started without *any* setup, hundreds of sites can be managed on the same server (or Desktop app), final website code stays as lean as possible, all components can be seamlessly used across sites and adapt to the design of that site (using CSS variables), and a lot more. 
 
-Most of primo's functionality and productivity advantages are due to Svelte - compiler and UI language that extends HTML/CSS/JS's functionality to enable templating, style encapsulation, component-driven development, complex interactions and app-like functionality. primo pages are made of Svelte components and WYSIWYG content sections (written with [TipTap](https://tiptap.dev/)), and the Svelte compiler turns those pages into clean HTML, CSS, and vanilla JavaScript that loads fast for slow connections. 
+Most of primo's functionality and productivity advantages are due to Svelte - compiler and UI language that extends HTML/CSS/JS's functionality to enable templating, style encapsulation, component-driven development, complex interactions and app-like functionality. primo pages are made of Svelte components and WYSIWYG content sections (written with [TipTap](https://tiptap.dev/)), and the Svelte compiler turns those pages into clean HTML, CSS, and vanilla JavaScript that is fast-loading, secure by default, search engine optimized, and scalable. 
 
 ## Features
 - a powerful **code-editor** which you can use to modify any component in your site, applying the updates to all instances of that component across your site
@@ -16,6 +16,6 @@ Most of primo's functionality and productivity advantages are due to Svelte - co
 - **static host and Github integration** which creates a new Vercel/Netlify sites and Github repos for new primo sites, and updates them when you publish updates to your site. 
 
 ## How to get started
-It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.af](https://primo.af).
+It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.af](https://primo.so).
 
 To build from your browser, invite collaborators, and upload images, try [Primo Server](https://github.com/primo-af/primo/tree/master/server).
