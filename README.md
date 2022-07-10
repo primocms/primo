@@ -16,6 +16,6 @@ Most of primo's functionality and productivity advantages are due to Svelte - co
 - **static host and Github integration** which creates a new Vercel/Netlify sites and Github repos for new primo sites, and updates them when you publish updates to your site. 
 
 ## How to get started
-It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.af](https://primo.so).
+It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.so](https://primo.so).
 
 To build from your browser, invite collaborators, and upload images, try [Primo Server](https://github.com/primo-af/primo/tree/master/server).
