@@ -7,12 +7,30 @@ export const iframePreview = (locale = 'en') => `
       <script type="module">
         let c;
 
+        const channel = new BroadcastChannel('component_preview');
+        channel.onmessage = ({data}) => {
+          const { event, payload } = data
+          if (payload.componentApp || payload.componentData) {
+            update(payload.componentApp, payload.componentData)
+          }
+        }
+
         function update(source = null, props) {
           if (c && !source && props) {
             // TODO: re-render component when passing only a subset of existing props (i.e. when a prop has been deleted)
             c.$set(props);
           } else if (source) {
-            const blob = new Blob([source], { type: 'text/javascript' });
+            const withLogs = \`
+            const channel = new BroadcastChannel('component_preview');
+            const primoLog = console ? console.log.bind(console) : null;
+            function postMessage(logs) {
+              channel.postMessage({
+                event: 'SET_CONSOLE_LOGS',
+                payload: { logs }
+              });
+            }
+            if (primoLog) console.log = (...args) => { postMessage(...args); primoLog(...args); };\` + source;
+            const blob = new Blob([withLogs], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
               if (c) c.$destroy();
@@ -26,6 +44,12 @@ export const iframePreview = (locale = 'en') => `
                 document.body.innerHTML = ''
                 console.error(e.toString())
               }
+              channel.postMessage({
+                event: 'SET_HEIGHT',
+                payload: {
+                  height: window.document.body.scrollHeight
+                }
+              });
             })
           }
         }
@@ -33,18 +57,14 @@ export const iframePreview = (locale = 'en') => `
         function setListeners() {
           document.body.querySelectorAll('*').forEach(el => {
             el.addEventListener('mouseenter', () => {
-              const loc = el?.__svelte_meta?.loc
-              window.postMessage({ event: 'path', payload: loc })
+              const loc = el?.__svelte_meta?.loc // line of code
+              channel.postMessage({
+                event: 'SET_ELEMENT_PATH',
+                payload: { loc }
+              });
             })
           })
         }
-
-        window.addEventListener('message', ({data}) => {
-          if (data.event === 'path') return
-          if (data.componentApp || data.componentData) {
-            update(data.componentApp, data.componentData)
-          }
-        }, false)
 		  <\/script>
     </head>
     <body class="primo-page">
