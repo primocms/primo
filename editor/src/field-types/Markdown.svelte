@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
+  import {get} from 'lodash-es'
   import autosize from 'autosize';
   import showdown from '../libraries/showdown/showdown.min.js';
   const converter = new showdown.Converter();
@@ -9,9 +10,10 @@
   export let field;
 
   // ensure options has correct shape
-  if (!field?.options?.markdown) {
+  if (!get(field, 'options.markdown')) {
     field.options = {
-      markdown: converter.makeMarkdown(field.value) || ''
+      ...field.options,
+      markdown: converter.makeMarkdown(field.value || '') 
     }
   }
 
