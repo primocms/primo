@@ -174,7 +174,7 @@
   let rawJS = localComponent.code.js;
 
   // changing codes triggers compilation
-  $: compileComponentCode({
+  $: autoRefresh && compileComponentCode({
     html: rawHTML,
     css: rawCSS,
     js: rawJS
@@ -207,6 +207,7 @@
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
     disableSave = true;
+    loading = true
 
     // automatically create fields for keys without fields
     // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
@@ -223,7 +224,10 @@
     // })
 
     await compile();
-    disableSave = false;
+    disableSave = compilationError
+    await setTimeout(() => {
+      loading = false
+    }, 200)
 
     async function compile() {
       const parentCSS = await processCSS($siteCode.css + $pageCode.css)
@@ -295,6 +299,8 @@
     }
   }
 
+  let autoRefresh = true
+
 </script>
 
 <ModalHeader
@@ -324,6 +330,7 @@
             bind:css={rawCSS}
             bind:js={rawJS}
             on:save={saveComponent} 
+            on:refresh={refreshPreview}
           />
         {:else if activeTab === tabs[1]}
           <GenericFields bind:fields on:input={refreshPreview} showCode={true} />
@@ -342,6 +349,7 @@
         {componentApp}
         {data}
         error={compilationError} 
+        bind:autoRefresh
       />
     </div>
   </HSplitPane>

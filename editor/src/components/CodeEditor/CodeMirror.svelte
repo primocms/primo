@@ -9,7 +9,7 @@
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
-  const slowDebounce = createDebouncer(500);
+  const slowDebounce = createDebouncer(1000);
   import { abbreviationTracker } from '../../libraries/emmet/plugin';
 
   import {highlightedElement} from '../../stores/app/misc';
@@ -70,6 +70,13 @@
           key: 'mod-s',
           run: () => {
             dispatch('save');
+            return true;
+          },
+        },
+        {
+          key: 'mod-r',
+          run: () => {
+            dispatch('refresh');
             return true;
           },
         },
@@ -198,7 +205,9 @@
     width: 100%;
     overflow-y: scroll;
     font-family: 'Fira Code', monospace !important;
-    height: calc(100vh - 10.25rem);
+    /* height: calc(100vh - 10.25rem); */
+    /* height: 100%; */
+    height: calc(100% - 40px);
     position: relative;
   }
 

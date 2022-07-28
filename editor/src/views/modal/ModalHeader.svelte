@@ -294,8 +294,7 @@
   }
 
   button[disabled] {
-    opacity: 0.75;
-    cursor: not-allowed;
+    opacity: 0.25;
     transition: opacity 0.1s;
   }
   i.fa-spinner {

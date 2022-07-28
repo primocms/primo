@@ -15,7 +15,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
-  import {cloneDeep} from 'lodash-es'
   import * as Mousetrap from 'mousetrap';
 
   import HSplitPane from './HSplitPane.svelte';
@@ -98,7 +97,9 @@
         bind:selection={selections['html']}
         on:tab-switch={() => toggleTab(0)}
         on:change={() => dispatch('htmlChange')}
-        on:save={() => dispatch('save')} />
+        on:save
+        on:refresh
+      />
     {:else if activeTab === 1}
       <CodeMirror
         on:tab-switch={() => toggleTab(1)}
@@ -107,7 +108,9 @@
         mode="css"
         docs="https://docs.primo.so/development#css"
         on:change={() => dispatch('cssChange')}
-        on:save={() => dispatch('save')} />
+        on:save
+        on:refresh
+      />
     {:else}
       <CodeMirror
         on:tab-switch={() => toggleTab(2)}
@@ -116,7 +119,9 @@
         docs="https://docs.primo.so/development#javascript"
         mode="javascript"
         on:change={() => dispatch('jsChange')}
-        on:save={() => dispatch('save')} />
+        on:save
+        on:refresh
+      />
     {/if}
   </div>
 {:else}
@@ -143,7 +148,9 @@
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => toggleTab(detail)}
         on:change={() => dispatch('htmlChange')}
-        on:save />
+        on:save 
+        on:refresh
+      />
     </div>
     <div slot="center" class="tabs">
       <button
@@ -162,7 +169,9 @@
         mode="css"
         docs="https://docs.primo.so/development#css"
         on:change={() => dispatch('cssChange')}
-        on:save />
+        on:save 
+        on:refresh
+      />
     </div>
     <div slot="right" class="tabs">
       <button
@@ -181,7 +190,9 @@
         mode="javascript"
         docs="https://docs.primo.so/development#javascript"
         on:change={() => dispatch('jsChange')}
-        on:save />
+        on:save 
+        on:refresh
+      />
     </div>
   </HSplitPane>
 {/if}
