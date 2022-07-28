@@ -19,23 +19,6 @@
 
 </script>
 
-<button
-class="close"
-on:click={modal.hide}
-type="button"
-xyz="small"
-aria-label="Close modal"
->
-<svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
-  <path
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="2"
-    d="M6 18L18 6M6 6l12 12"
-  />
-</svg>
-</button>
-
 {#if !submitted}
   <main>
     <h1>Feedback</h1>

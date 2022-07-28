@@ -9,3 +9,4 @@ desktop/.svelte-kit
 desktop/dist
 
 server/.svelte-kit
+cli

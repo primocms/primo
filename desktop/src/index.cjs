@@ -49,7 +49,7 @@ autoUpdater.on('update-downloaded', (downloaded) => {
 // export this to MenuItem click callback
 function checkForUpdates () {
   if (isDev) return
-  checkInternetConnected({ domain: 'primo.af' })
+  checkInternetConnected({ domain: 'primo.so' })
   .then(() => {
     autoUpdater.checkForUpdates()    
   }).catch((err) => {
