@@ -275,9 +275,6 @@
 
   let activeTab = tabs[0];
 
-  let editorWidth = localStorage.getItem('editorWidth') || '66%';
-  let previewWidth = localStorage.getItem('previewWidth') || '33%';
-
   function refreshPreview() {
     compileComponentCode({
       html: rawHTML,

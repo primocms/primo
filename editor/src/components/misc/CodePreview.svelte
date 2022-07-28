@@ -26,7 +26,7 @@
       consoleLog = data.payload.logs
     } else if (event === 'SET_ELEMENT_PATH') {
       const {loc} = payload
-      if (activeLoc.char === loc.char && activeLoc.line === loc.line) return
+      if (!loc || (activeLoc.char === loc.char && activeLoc.line === loc.line)) return
       $highlightedElement = loc
       activeLoc = { ...loc }
     }
