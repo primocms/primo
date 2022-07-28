@@ -3,6 +3,9 @@
 
   const leftPaneSize = writable(get(onMobile) ? '100%' : '50%');
   const rightPaneSize = writable('50%');
+  const topPaneSize = writable(get(onMobile) ? '100%' : '50%');
+  const bottomPaneSize = writable('50%');
+  const orientation = writable('vertical')
 </script>
 
 <script lang="ts">
@@ -15,6 +18,7 @@
   import FullCodeEditor from './FullCodeEditor.svelte';
   import { CodePreview } from '../../../components/misc';
   import GenericFields from '../../../components/GenericFields.svelte'
+  import {autoRefresh} from '../../../components/misc/CodePreview.svelte'
 
   import {
     processCode,
@@ -174,7 +178,7 @@
   let rawJS = localComponent.code.js;
 
   // changing codes triggers compilation
-  $: autoRefresh && compileComponentCode({
+  $: $autoRefresh && compileComponentCode({
     html: rawHTML,
     css: rawCSS,
     js: rawJS
@@ -299,8 +303,6 @@
     }
   }
 
-  let autoRefresh = true
-
 </script>
 
 <ModalHeader
@@ -314,10 +316,13 @@
   button={{ ...header.button, onclick: saveComponent, disabled: disableSave }}>
 </ModalHeader>
 
-<main>
+<main class:showing-ide={$showingIDE} class:showing-cms={!$showingIDE}>
   <HSplitPane
+    orientation={$orientation}
     bind:leftPaneSize={$leftPaneSize}
     bind:rightPaneSize={$rightPaneSize}
+    bind:topPaneSize={$topPaneSize}
+    bind:bottomPaneSize={$bottomPaneSize}
     hideRightPanel={$onMobile}
     hideLeftOverflow={$showingIDE && activeTab === tabs[0]}>
     <div slot="left" lang={$locale}>
@@ -344,12 +349,12 @@
     </div>
     <div slot="right">
       <CodePreview
+        bind:orientation={$orientation}
         view="small"
         {loading}
         {componentApp}
         {data}
-        error={compilationError} 
-        bind:autoRefresh
+        error={compilationError}
       />
     </div>
   </HSplitPane>
@@ -372,8 +377,17 @@
     width: 100%;
   }
 
+  :global(.showing-cms [slot="left"]) {
+    height: 100% !important;
+  }
+
+  :global(.showing-cms .wrapper.vertical) {
+    height: 100% !important;
+  }
+
   [slot="left"] {
-    height: 100%;
+    height: calc(100% - 45px);
+
     display: flex;
     flex-direction: column;
   }

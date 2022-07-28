@@ -37,6 +37,8 @@
       firstWidth: left.offsetWidth,
       centerWidth: center ? center.offsetWidth : null,
       secondWidth: right.offsetWidth,
+      firstHeight: left.offsetHeight,
+      secondHeight: right.offsetHeight
     };
     window.addEventListener('mousemove', onMouseMoveLeft);
     window.addEventListener('mouseup', onMouseUp);
@@ -81,9 +83,51 @@
         const rightDelta = md.secondWidth - delta.x
         rightPaneSize = rightDelta >= breakpointWidth ? rightDelta + 'px' : 0;
       }
-    } else {
-      leftPaneSize = md.firstWidth + delta.x + 'px'
-      rightPaneSize = md.secondWidth - delta.x + 'px';
+    } else { // set shrink limit
+      const updatedSizes = {
+        top: md.firstHeight + delta.y,
+        bottom: md.secondHeight - delta.y,
+        left: md.firstWidth + delta.x,
+        right: md.secondWidth - delta.x
+      }
+
+      const minSizes = {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 36
+      }
+
+      // if the top is smaller than the min, subtract the extra from it and add to the bottom
+      if (orientation === 'vertical') {
+        if (minSizes.top > updatedSizes.top) {
+          const overflow = updatedSizes.top - minSizes.top + 3
+          updatedSizes.top = updatedSizes.top - overflow + 3
+          updatedSizes.bottom = updatedSizes.bottom + overflow
+        } else if (minSizes.bottom > updatedSizes.bottom) {
+          const overflow = updatedSizes.bottom - minSizes.bottom
+          updatedSizes.top = updatedSizes.top + overflow + 3
+          updatedSizes.bottom = updatedSizes.bottom - overflow + 3
+        } else {
+          updatedSizes.top = updatedSizes.top + 3
+          updatedSizes.bottom = updatedSizes.bottom + 3
+        }
+        bottomPaneSize = updatedSizes.bottom + 'px'
+        topPaneSize = updatedSizes.top + 'px'
+      } else if (orientation === 'horizontal') {
+        if (minSizes.left > updatedSizes.left) {
+          const overflow = updatedSizes.left - minSizes.left
+          updatedSizes.left = updatedSizes.left - overflow
+          updatedSizes.right = updatedSizes.right + overflow
+        } else if (minSizes.right > updatedSizes.right) {
+          const overflow = updatedSizes.right - minSizes.right
+          updatedSizes.left = updatedSizes.left + overflow
+          updatedSizes.right = updatedSizes.right - overflow
+        }
+        leftPaneSize = updatedSizes.left + 'px'
+        rightPaneSize = updatedSizes.right + 'px'
+      }
+
     }
     updateCallback();
   };
@@ -173,21 +217,29 @@
   export let minCenterPaneSize = '1.5rem';
   export let rightPaneSize = ($$slots.center ? '33%' : '66%')
   export let minRightPaneSize = '1.5rem';
+
+  export let topPaneSize = '50%'
+  export let bottomPaneSize = '50%'
+
+  export let orientation = 'horizontal'
   
   export let hideLeftOverflow = false
 </script>
 
 <div
-  class="wrapper"
+  class="wrapper {orientation}"
   style="
-  --left-panel-size: {leftPaneSize}; 
-  --min-left-panel-size: {minLeftPaneSize}; 
+  --left-pane-size: {leftPaneSize}; 
+  --min-left-pane-size: {minLeftPaneSize}; 
 
-  --center-panel-size: {centerPaneSize}; 
-  --min-center-panel-size: {minCenterPaneSize}; 
+  --center-pane-size: {centerPaneSize}; 
+  --min-center-pane-size: {minCenterPaneSize}; 
 
-  --right-panel-size: {rightPaneSize}; 
-  --min-right-panel-size: {minRightPaneSize};
+  --right-pane-size: {rightPaneSize}; 
+  --min-right-pane-size: {minRightPaneSize};
+
+  --top-pane-size: {topPaneSize};
+  --bottom-pane-size: {bottomPaneSize};
   ">
   {#if $$slots.center}
     <div bind:this={left} class:overflow-hidden={hideLeftOverflow} class="left" class:transitioning>
@@ -243,12 +295,31 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
+  .wrapper.vertical {
+    display: grid;
+    grid-template-rows: calc(var(--top-pane-size, 1fr) - 3px) 6px calc(var(--bottom-pane-size, 1fr) - 3px);
+    /* height: calc(100% - 45px); */
+
+    & > div.left, & > div.right {
+      width: 100%;
+    }
+
+    & > div.separator {
+      width: 100%;
+      height: 100%;
+      cursor: row-resize;
+    }
+  }
+
+  .wrapper.horizontal {
+    display: flex;
+    /* height: calc(100% - 40px); */
+  }
   div.wrapper {
     width: 100%;
+    height: 100%;
     /* height: 100%; */ /* causing overflow in ComponentEditor code view */
-    /* background-color: yellow; */
-    display: inline-flex;
   }
   div.separator {
     background: var(--color-gray-8);
@@ -256,7 +327,6 @@
     cursor: col-resize;
     height: auto;
     width: 4px;
-    margin: 0 4px;
     z-index: 1;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='30'><path d='M2 0 v30 M5 0 v30 M8 0 v30' fill='none' stroke='currentColor'/></svg>");
     background-size: 20px 30px;
@@ -277,19 +347,19 @@
     position: relative;
   }
   div.left {
-    width: var(--left-panel-size);
-    min-width: var(--min-left-panel-size);
+    width: var(--left-pane-size);
+    min-width: var(--min-left-pane-size);
     /* height: 100%; */
     /*  overflow-y: scroll; Necessary to scroll content in CMS fields */
   }
   div.center {
-    width: var(--center-panel-size);
-    min-width: var(--min-center-panel-size);
+    width: var(--center-pane-size);
+    min-width: var(--min-center-pane-size);
     height: 100%;
   }
   div.right {
-    width: var(--right-panel-size);
-    min-width: var(--min-right-panel-size);
+    width: var(--right-pane-size);
+    min-width: var(--min-right-pane-size);
     display: flex;
   }
   .transitioning {
