@@ -50,7 +50,7 @@
     })
   }
 
-  $: $locale, setupFields()
+  $: $locale, setupFields(), updatePagePreview()
   function setupFields() {
     localPageFields = getFieldValues(localPageFields, 'page')
     localSiteFields = getFieldValues(localSiteFields, 'site')
@@ -81,12 +81,12 @@
     const siteEnglishVariables = _chain(localSiteFields).keyBy('key').mapValues('value').value()
     Object.entries(localContent).forEach(([loc, content]) => {
       Object.keys(siteEnglishVariables).forEach((key) => {
-        if (content.key === undefined) {
+        if (content[key] === undefined) {
           localContent[loc][key] = siteEnglishVariables[key]
         }
       })
     })
-
+    
     updatePagePreview()
   }
 
@@ -122,9 +122,6 @@
       },
     });
   }
-
-  let editorWidth = localStorage.getItem('editorWidth') || '66%';
-  let previewWidth = localStorage.getItem('previewWidth') || '33%';
 
 </script>
 
