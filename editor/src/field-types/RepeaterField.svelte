@@ -97,7 +97,15 @@
   }
 
   $: singularLabel = pluralize.singular(field.label)
-  function getTitle(field, repeaterItem) {
+
+  function getImage(repeaterItem) {
+    const [firstField] = repeaterItem
+    if (firstField && firstField.type === 'image') {
+      return firstField.value.url 
+    } else return null
+  }
+
+  function getTitle(repeaterItem) {
     const firstField = repeaterItem.find(subfield => ['text', 'link', 'number'].includes(subfield.type))
     if (firstField) {
       let {value} = repeaterItem[0]
@@ -122,15 +130,21 @@
 </script>
 
 <div class="repeater-level-{level}">
-  <div class="fields" transition={{ duration: 100 }}>
+  <div class="fields">
     {#each repeaterFieldValues as repeaterItem, i (repeaterItem._key)}
       {@const subfieldID = `${field.key}-${i}`}
+      {@const itemImage = getImage(repeaterItem, field)}
+      {@const itemTitle = getTitle(repeaterItem, field)}
       <div
         class="repeater-item"
         id="repeater-{field.key}-{i}">
         <div class="item-options">
           <button class="title" on:click={() => visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID]}>
-            <span>{getTitle(field, repeaterItem)}</span>
+            {#if itemImage}
+              <img src={itemImage} />
+            {:else}
+              <span>{itemTitle}</span>
+            {/if}
             <Icon icon={visibleRepeaters[subfieldID] ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
           </button>
           <div class="buttons">
@@ -188,7 +202,7 @@
 
   .fields {
     display: grid;
-    gap: 3rem;
+    gap: 1.5rem;
   }
 
   .repeater-level-0 {
@@ -257,11 +271,16 @@
       }
 
       button.title {
-        padding: 1rem 0;
+        padding: 0.5rem 0;
         display: flex;
         gap: 1rem;
         align-items: center;
         text-align: left;
+        
+        img {
+          width: 3rem;
+          border-radius: 2px;
+        }
       }
 
       .buttons button {
