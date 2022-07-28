@@ -1,14 +1,13 @@
-import { find, last, cloneDeep, some, chain, unset, omit } from 'lodash-es'
+import { find, last, cloneDeep, some, chain, unset, omit, isEqual } from 'lodash-es'
 import { get } from 'svelte/store'
-import { getSymbol } from './helpers'
 import { id as activePageID, sections } from './app/activePage'
 import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
-import { content, code, fields, timeline, undone, site as unsavedSite } from './data/draft'
+import { content, code, fields, timeline, site as unsavedSite } from './data/draft'
 import type { Site, Symbol, Page } from '../const'
 import { validateSiteStructure } from '../utils'
 
-export async function hydrateSite(data:Site): Promise<void> {
+export async function hydrateSite(data: Site): Promise<void> {
   const site = validateSiteStructure(data)
   if (!site) return
   sections.set([])
@@ -20,9 +19,10 @@ export async function hydrateSite(data:Site): Promise<void> {
   fields.set(site.fields)
   stores.symbols.set(site.symbols)
   stores.content.set(site.content)
+  console.log('hydrated')
 }
 
-export async function updateActivePageHTML(html:string): Promise<void> {
+export async function updateActivePageHTML(html: string): Promise<void> {
   pages.update(get(activePageID), (page) => ({
     ...page,
     code: {
@@ -32,7 +32,7 @@ export async function updateActivePageHTML(html:string): Promise<void> {
   }));
 }
 
-export async function updateActivePageCSS(css:string): Promise<void> {
+export async function updateActivePageCSS(css: string): Promise<void> {
   pages.update(get(activePageID), (page) => ({
     ...page,
     code: {
@@ -43,14 +43,14 @@ export async function updateActivePageCSS(css:string): Promise<void> {
 }
 
 
-export async function updateSiteHTML(html:{ head:string, below:string }): Promise<void> {
+export async function updateSiteHTML(html: { head: string, below: string }): Promise<void> {
   code.update(c => ({
     ...c,
     html
   }))
 }
 
-export async function updateSiteCSS(css:string): Promise<void> {
+export async function updateSiteCSS(css: string): Promise<void> {
   code.update(c => ({
     ...c,
     css
@@ -59,7 +59,7 @@ export async function updateSiteCSS(css:string): Promise<void> {
 
 // when a Symbol is deleted from the Site Library, 
 // delete every instance of it on the site as well (and their content)
-export async function deleteInstances(symbol:Symbol): Promise<void> {
+export async function deleteInstances(symbol: Symbol): Promise<void> {
 
   // remove from page sections
   const sectionsToDeleteFromContent = []
@@ -67,7 +67,7 @@ export async function deleteInstances(symbol:Symbol): Promise<void> {
   function removeInstancesFromPage(page) {
     const updatedSections = page.sections.filter(section => {
       if (section.symbolID === symbol.id) {
-        const sectionPath = [ page.id, section.id ]
+        const sectionPath = [page.id, section.id]
         sectionsToDeleteFromContent.push(sectionPath)
       } else return true
     })
@@ -82,41 +82,30 @@ export async function deleteInstances(symbol:Symbol): Promise<void> {
   const updatedSiteContent = cloneDeep(get(stores.site).content)
   const locales = Object.keys(get(stores.site).content)
   locales.forEach(locale => {
-    sectionsToDeleteFromContent.forEach(path => unset(updatedSiteContent, [ locale, ...path ]))
+    sectionsToDeleteFromContent.forEach(path => unset(updatedSiteContent, [locale, ...path]))
   })
 
   stores.content.set(updatedSiteContent)
   stores.pages.set(updatedPages)
 }
 
+let foo = 0
 export function undoSiteChange(): void {
-  const state = get(timeline)
-
-  // Set timeline back
-  const timelineWithoutLastChange = state.slice(0, state.length - 1)
-  timeline.set(timelineWithoutLastChange)
-
-  // Save removed states
-  undone.update(u => ([...state.slice(state.length - 1), ...u]))
-
-  // Set Site
-  const siteWithoutLastChange = last(timelineWithoutLastChange)
-
-  hydrateSite(siteWithoutLastChange)
+  const undone = timeline.undo();
+  hydrateSite(undone)
 }
 
 export function redoSiteChange(): void {
-  const restoredState = [...get(timeline), ...get(undone)]
-  timeline.set(restoredState)
-  hydrateSite(restoredState[restoredState.length - 1])
+  const redone = timeline.redo()
+  hydrateSite(redone)
 }
 
 export const symbols = {
-  create: (symbol:Symbol): void => {
+  create: (symbol: Symbol): void => {
     saved.set(false)
     stores.symbols.update(s => [cloneDeep(symbol), ...s])
   },
-  update: (toUpdate:Symbol): void => {
+  update: (toUpdate: Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.map(s => s.id === toUpdate.id ? ({
@@ -125,7 +114,7 @@ export const symbols = {
       }) : s)
     })
   },
-  delete: (toDelete:Symbol): void => {
+  delete: (toDelete: Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
@@ -134,18 +123,18 @@ export const symbols = {
 }
 
 export const pages = {
-  add: (newPage:Page, path:Array<string>): void => {
+  add: (newPage: Page, path: Array<string>): void => {
     saved.set(false)
-    const currentPages:Array<Page> = get(stores.pages)
-    let updatedPages:Array<Page> = cloneDeep(currentPages)
+    const currentPages: Array<Page> = get(stores.pages)
+    let updatedPages: Array<Page> = cloneDeep(currentPages)
     if (path.length > 0) {
-      const rootPage:Page = find(updatedPages, ['id', path[0]])
+      const rootPage: Page = find(updatedPages, ['id', path[0]])
       rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
     } else {
       updatedPages = [...updatedPages, newPage]
     }
 
-    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => ({
       locale,
       content: {
         ...pages,
@@ -156,10 +145,10 @@ export const pages = {
     stores.content.set(updatedContent)
     stores.pages.set(updatedPages)
   },
-  delete: (pageId:string, path:Array<string>): void => {
+  delete: (pageId: string, path: Array<string>): void => {
     saved.set(false)
-    const currentPages:Array<Page> = get(stores.pages)
-    let newPages:Array<Page> = cloneDeep(currentPages)
+    const currentPages: Array<Page> = get(stores.pages)
+    let newPages: Array<Page> = cloneDeep(currentPages)
     if (path.length > 0) {
       const rootPage = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
@@ -167,7 +156,7 @@ export const pages = {
       newPages = newPages.filter(page => page.id !== pageId)
     }
 
-    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => ({
       locale,
       content: omit(pages, [pageId])
     }))).keyBy('locale').mapValues('content').value()
@@ -175,7 +164,7 @@ export const pages = {
     stores.content.set(updatedContent)
     stores.pages.set(newPages)
   },
-  update: async (pageId:string, fn = (p) => {}) => {
+  update: async (pageId: string, fn = (p) => { }) => {
     saved.set(false)
     const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) {
@@ -200,7 +189,7 @@ export const pages = {
         }
       } else return page
     })
-    const updatedContent = chain(Object.entries(get(stores.content)).map(([ locale, pages ]) => ({
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => ({
       locale,
       content: {
         ...omit(pages, [pageId]),
@@ -224,7 +213,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
     const updatedPage = currentContent[activeLocale][pageID]
     delete updatedPage[blockID]
     content.update(content => {
-      for (const [ locale, pages ] of Object.entries(content)) {
+      for (const [locale, pages] of Object.entries(content)) {
         content[locale] = {
           ...pages, // idk why TS is complaining about this
           [pageID]: updatedPage
@@ -248,7 +237,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
     }))
   } else {
     // create matching block in all locales
-    for(let locale of Object.keys(currentContent)) {
+    for (let locale of Object.keys(currentContent)) {
       content.update(c => ({
         ...c,
         [locale]: {

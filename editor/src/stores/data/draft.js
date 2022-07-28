@@ -1,6 +1,6 @@
 import { get, writable, derived } from 'svelte/store';
 import { Page, Site } from '../../const'
-import {isEqual} from 'lodash-es'
+import { createStack } from 'svelte-undo';
 
 export const id = writable('default')
 export const name = writable('')
@@ -42,22 +42,15 @@ export default derived(
   }
 })
 
-export const timeline = writable([ get(site) ])
-export const undone = writable([])
+export let timeline = createStack(get(site));
+export function resetTimeline(site) {
+  timeline = createStack(site)
+}
+
 
 site.subscribe(s => {
-  const items = get(timeline)
-  const latestUpdate = items[items.length-1]
-  if (!isEqual(s, latestUpdate)) {
-    timeline.update(t => ([ ...t, s ]))
-  } 
-})
-
-let length = 0
-
-timeline.subscribe(t => {
-  if (t.length > length) { // timeline has grown (new change, not undo)
-    undone.set([])
-  } 
-  length = t.length
+  const stack = get(timeline)
+  if (stack.last) {
+    timeline.push(s)
+  }
 })

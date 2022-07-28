@@ -11,7 +11,7 @@
   import Doc from './Doc.svelte';
 
   import { showingIDE } from '../../stores/app';
-  import { undone, fields as siteFields } from '../../stores/data/draft';
+  import { fields as siteFields, timeline } from '../../stores/data/draft';
   import { fields as pageFields, sections } from '../../stores/app/activePage';
   import { saving, saved, loadingSite } from '../../stores/app/misc';
   import modal from '../../stores/app/modal';
@@ -166,13 +166,15 @@
   buttons={$loadingSite ? [] : toolbarButtons}
   on:toggleView={() => showingIDE.set(!$showingIDE)}
 >
-  <ToolbarButton
-    id="undo"
-    title="Undo"
-    icon="undo"
-    on:click={undoSiteChange}
-  />
-  {#if $undone.length > 0}
+  {#if !$timeline.first}
+    <ToolbarButton
+      id="undo"
+      title="Undo"
+      icon="undo"
+      on:click={undoSiteChange}
+    />
+  {/if}
+  {#if !$timeline.last}
     <ToolbarButton
       id="redo"
       title="Redo"

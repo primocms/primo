@@ -21,7 +21,7 @@
   import { DEFAULTS, Site } from './const';
   import {resetActivePage} from './stores/helpers'
 
-  import { pages } from './stores/data/draft';
+  import { pages, resetTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite } from './stores/actions';
   import { page as pageStore } from '$app/stores';
@@ -52,6 +52,7 @@
   $: if (!isEqual(cachedData, data)) {
     cachedData = data;
     hydrateSite(data);
+    resetTimeline(data)
   }
 
   $: $pageId = getPageId($pageStore.params.page);
