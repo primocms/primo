@@ -9,6 +9,7 @@
   export let isLast = false;
   export let minimal = false;
   export let showDefaultValue = true
+  export let showVisibilityOptions = false
 
   const dispatch = createEventDispatcher();
 
@@ -22,12 +23,14 @@
   style="margin-left: {level}rem"
   class="field-container"
   in:fade={{ duration: 100 }}
-  class:three-columns={showDefaultValue}
+  class:has-default-value={showDefaultValue}
+  class:has-visibility-options={showVisibilityOptions}
   class:child
   class:minimal>
-  <div class="type">
+  <label class="type">
+    <span>Type</span>
     <slot name="type" />
-  </div>
+  </label>
   {#if minimal}
     <slot name="main" />
   {:else}
@@ -51,6 +54,12 @@
         <slot name="default-value" />
       </label>
     </div>
+    {/if}
+    {#if showVisibilityOptions}
+      <label class="hide">
+        <span>Visible</span>
+        <slot name="hide" />
+      </label>
     {/if}
   {/if}
   <div class="option-buttons">
@@ -76,8 +85,16 @@
     padding: 0.5rem;
     gap: 1rem;
 
-    &.three-columns {
+    &.has-default-value {
       grid-template-columns: auto 1fr 1fr 1fr auto;
+    }
+
+    &.has-visibility-options {
+      grid-template-columns: auto 1fr 1fr minmax(4rem, auto) auto;
+    }
+
+    &.has-default-value.has-visibility-options {
+      grid-template-columns: auto 1fr 1fr 1fr minmax(4rem, auto) auto;
     }
 
     &.child {
@@ -88,7 +105,6 @@
     .type {
       border-radius: 1px;
       display: flex;
-      align-items: center;
       min-width: 3rem;
     }
 

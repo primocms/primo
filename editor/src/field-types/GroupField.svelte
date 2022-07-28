@@ -19,6 +19,7 @@
   }
 
   function onInput() {
+    setSelectedOption()
     setFieldValue()
     dispatch('input');
   }
@@ -29,7 +30,12 @@
   }
 
   let hidden = false
-  
+
+  let selectedOption = null
+  $: subfieldsWithValues, setSelectedOption()
+  function setSelectedOption() {
+    selectedOption = subfieldsWithValues.filter(f => f.type === 'select')[0]?.value || null
+  }
 </script>
 
 <div class="group-field group-level-{level}">
@@ -42,13 +48,15 @@
   {#if !hidden}
     <div class="group-entries" transition:slide={{ duration: 100 }}>
       {#each subfieldsWithValues as subfield}
-        <div class="group-item">
-          <svelte:component
-            this={getFieldComponent(subfield)}
-            field={subfield}
-            level={level+1}
-            on:input={onInput} />
-        </div>
+        {#if subfield.options.hidden === "__show" || subfield.options.hidden === selectedOption || !subfield.options.hidden}
+          <div class="group-item">
+            <svelte:component
+              this={getFieldComponent(subfield)}
+              field={subfield}
+              level={level+1}
+              on:input={onInput} />
+          </div>
+        {/if}
       {/each}
     </div>
   {/if}

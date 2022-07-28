@@ -12,6 +12,7 @@
   export let isFirst
   export let isLast
   export let level = 0
+  export let options = []
 
   function validateFieldKey(key) {
     // replace dash and space with underscore
@@ -22,6 +23,12 @@
     dispatch('input', cloneDeep(field))
   }
 
+  $: visibilityOptions = field.fields.filter(f => f.type === 'select').map(f => ({
+    label: f.label,
+    key: f.key,
+    options: f.options.options || []
+  }))
+
 </script>
 
 <EditField
@@ -30,6 +37,7 @@
   {isLast}
   minimal={field.type === 'info'}
   showDefaultValue={['content', 'number', 'url', 'select', 'text'].includes(field.type)}
+  showVisibilityOptions={field.type !== 'select' && options.length > 0 ? options : false}
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}>
   <select
@@ -73,12 +81,35 @@
     dispatchUpdate()
   }}
   slot="default-value" />
+  <select
+    on:change={({target}) => {
+      field = {
+        ...field,
+        options: {
+          ...field.options,
+          hidden: target.value
+        }
+      }
+      dispatchUpdate()
+    }}
+    value={field.options.hidden || '__show'}
+    slot="hide">
+    <option value="__show">Always</option>
+    {#each options as item}
+      <optgroup label={item.label}>
+        {#each item.options as option}
+          <option value={option.value}>{option.label}</option>
+        {/each}
+      </optgroup>
+    {/each}
+  </select>
 </EditField>
 {#each field.fields as subfield, i (subfield.id)}
   <svelte:self 
     field={cloneDeep(subfield)} 
     isFirst={i === 0}
     isLast={i === field.fields.length - 1}
+    options={visibilityOptions}
     on:delete
     on:move
     on:createsubfield
@@ -90,7 +121,7 @@
   />
 {/each}
 {#if field.type === 'select'}
-  <SelectField {field} {level} />
+  <SelectField {field} {level} on:input={dispatchUpdate} />
 {/if}
 {#if field.type === 'repeater' || field.type === 'group'}
   <button

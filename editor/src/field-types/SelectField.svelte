@@ -56,8 +56,8 @@
         type="text"
         bind:value={option.value}
         on:input={() => {
-          dispatch('input')
           option.value = validateFieldKey(option.value)
+          dispatch('input')
         }} /> 
     </label>
     <div

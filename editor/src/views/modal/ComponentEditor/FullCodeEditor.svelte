@@ -230,6 +230,7 @@
   }
 
   .tabs button {
+    background: var(--color-gray-9);
     color: var(--primo-color-white);
     width: 100%;
     text-align: center;
