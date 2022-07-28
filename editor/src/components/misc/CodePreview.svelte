@@ -1,3 +1,8 @@
+<script context="module">
+  import {writable} from 'svelte/store'
+  export const autoRefresh = writable(true)
+</script>
+
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { slide, fade } from 'svelte/transition';
@@ -7,31 +12,31 @@
   import Icon from '@iconify/svelte'
 
   export let view = 'small';
+  export let orientation = 'horizontal'
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
   export let error = null;
   export let data = {}
 
+  const channel = new BroadcastChannel('component_preview');
+  channel.onmessage = ({data}) => {
+    const { event, payload } = data
+    if (event === 'SET_CONSOLE_LOGS') {
+      consoleLog = data.payload.logs
+    } else if (event === 'SET_ELEMENT_PATH') {
+      const {loc} = payload
+      if (activeLoc.char === loc.char && activeLoc.line === loc.line) return
+      $highlightedElement = loc
+      activeLoc = { ...loc }
+    }
+  }
+
   let consoleLog
 
   let iframe;
-  let previewLoaded = false;
   let activeLoc = { line: null, column: null, char: null }
-  $: if (iframe) {
-    iframe.contentWindow.addEventListener('message', ({data}) => {
-      if (data === 'done') {
-        previewLoaded = true;
-      } else if (data.event === 'logs') {
-        // consoleLog = data.payload
-      } else if (data.event === 'path') {
-        const loc = data.payload
-        if (activeLoc.char === loc.char && activeLoc.line === loc.line) return
-        $highlightedElement = loc
-        activeLoc = { ...loc }
-      }
-    });
-    
+  $: if (iframe) {    
     // open clicked links in browser
     iframe.contentWindow.document.querySelectorAll('a').forEach((link) => { link.target = '_blank' })
   }
@@ -84,17 +89,20 @@
   });
   function setIframeApp({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentApp, componentData });
-      if (componentApp && !componentApp.includes('console.log')) {
-        consoleLog = null
-      }
+      channel.postMessage({
+        event: 'SET_APP',
+        payload: { componentApp, componentData }
+      });
     }
   }
 
   $: setIframeData(componentData);
   function setIframeData(componentData) {
     if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentData });
+      channel.postMessage({
+        event: 'SET_APP_DATA',
+        payload: { componentData }
+      });
     }
   }
 
@@ -126,6 +134,14 @@
 
   let visible = true
 
+  function toggleOrientation() {
+    if (orientation === 'vertical') {
+      orientation = 'horizontal'
+    } else if (orientation === 'horizontal') {
+      orientation = 'vertical'
+    }
+  }
+
 </script>
 
 <div class="code-preview">
@@ -150,6 +166,7 @@
   {/if}
   <div
     in:fade
+    style=""
     class="preview-container"
     class:loading
     bind:this={container}
@@ -158,32 +175,30 @@
       class:visible
       class:scaled={view === 'large'}
       on:load={setLoading}
-      class:fadein={previewLoaded}
       title="Preview HTML"
       srcdoc={iframePreview($locale)}
       bind:this={iframe} />
   </div>
   {#if !hideControls}
     <div class="footer-buttons">
-      {#if view === 'small'}
-        <div class="preview-width">
-          <Icon icon={activeIcon} height="1rem" />
-          <span>{previewWidth}</span>
-        </div>
-        <button class="switch-view" on:click={changeView}>
-          <i class="fas fa-expand-arrows-alt" />
-          <span>window view</span>
-        </button>
-      {:else if view === 'large'}
-        <div class="preview-width">
-          <Icon icon={getIcon(window.innerWidth)} height="1rem" />
-          <span>{window.innerWidth}</span>
-        </div>
-        <button class="switch-view" on:click={changeView}>
-          <i class="fas fa-compress-arrows-alt" />
-          <span>contained view</span>
-        </button>
-      {/if}
+      <div class="preview-width">
+        <Icon icon={activeIcon} height="1rem" />
+        <span>{previewWidth}</span>
+      </div>
+      <button class="switch-view" on:click={changeView}>
+        <i class="fas { view === 'small' ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'}" />
+        <span>{ view === 'small' ? 'contained' : 'screen'} width</span>
+      </button>
+      <button on:click={toggleOrientation} class="preview-orientation">
+        {#if orientation === 'vertical'}
+          <Icon icon="charm:layout-rows" />
+        {:else if orientation === 'horizontal'}
+        <Icon icon="charm:layout-columns" />
+        {/if}
+      </button>
+      <button title="Toggle auto-refresh (refresh with Command R)" class="auto-refresh" class:toggled={$autoRefresh} on:click={() => $autoRefresh = !$autoRefresh}>
+        <Icon icon="bx:refresh" />
+      </button>
     </div>
   {/if}
 </div>
@@ -198,7 +213,7 @@
 
     .error-container {
       color: var(--primo-color-white);
-      background: var(--primo-color-primogreen);
+      background: red;
       padding: 5px;
     }
 
@@ -250,7 +265,7 @@
     flex: 1;
   }
   .preview-container.loading {
-    border-color: var(--primo-color-primogreen);
+    border-color: var(--color-gray-7);
   }
   .footer-buttons {
     display: flex;
@@ -270,12 +285,30 @@
         font-size: 0.75rem;
       }
     }
+
+    .switch-view {
+      flex: 1;
+    }
+
+    .preview-orientation {
+      font-size: 1.25rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .auto-refresh {
+      font-size: 1.5rem;
+      padding: 0.25rem 0.5rem;
+      opacity: 0.5;
+
+      &.toggled {
+        opacity: 1;
+      }
+    }
   }
 
   .footer-buttons button {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    flex: 1;
     outline: 0;
     background: var(--color-gray-9);
     border: 1px solid var(--color-gray-8);
