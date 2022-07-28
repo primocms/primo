@@ -213,6 +213,10 @@
     }
   }
 
+  .tabs {
+    height: 100%;
+  }
+
   .tabs ul {
     display: flex;
     justify-content: space-around;
@@ -239,10 +243,11 @@
       height: 100%;
       position: absolute;
       background: #111;
-      transition: background 0.1s 0.05s;
+      transition: background 0.1s, color 0.1s;
 
       &:hover {
-        background: rgb(248, 68, 73);
+        background: var(--primo-color-primogreen);
+        color: var(--primo-color-codeblack);
       }
 
       span {

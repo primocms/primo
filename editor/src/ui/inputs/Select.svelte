@@ -40,7 +40,7 @@
     }
 
     select {
-      outline-color: rgb(248, 68, 73);
+      outline-color: var(--primo-color-primogreen);
       background: var(--color-gray-9);
       padding: 0.5rem;
       border: 2px solid var(--color-gray-2);

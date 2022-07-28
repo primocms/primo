@@ -188,11 +188,11 @@
 
 <style>
   :global(.ProseMirror ::selection, ::-moz-selection) {
-    background: rgb(248, 68, 73);
+    background: var(--primo-color-primogreen);
   }
 
   :global(.ProseMirror) {
-    caret-color: rgb(248, 68, 73);
+    caret-color: var(--primo-color-primogreen);
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;

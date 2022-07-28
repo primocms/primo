@@ -204,7 +204,7 @@
             }
 
             &.code i.fa-code {
-              color: var(--primo-color-black);
+              color: white;
             }
 
             i {
@@ -213,12 +213,9 @@
               color: var(--primo-color-black);
 
               &.fa-edit {
-                color: var(--primo-color-black);
-              }
-
-              &.fa-edit {
                 left: 1px;
                 bottom: 1px;
+                color: white;
               }
 
               &.fa-code {
@@ -234,7 +231,7 @@
               width: 20px;
               left: 3px;
               z-index: 1;
-              background-color: white;
+              background-color: var(--primo-color-black);
               transition: background-color 0.4s, transform 0.1s;
               box-shadow: 0px 0px 3px 0px rgb(0 0 0 / 50%);
             }
