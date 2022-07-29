@@ -87,7 +87,7 @@ function tagNameAfter(input, offset) {
   }
   // Undefined to signal there's a <? or <!, null for just missing
   cachedInput = input; cachedPos = pos;
-  return cachedName = name ? name.toLowerCase() : next == question || next == bang ? undefined : null
+  return cachedName = name ? name : next == question || next == bang ? undefined : null
 }
 
 const lessThan = 60, greaterThan = 62, slash = 47, question = 63, bang = 33, dash = 45;
@@ -142,7 +142,9 @@ const tagStart = new ExternalTokenizer((input, stack) => {
     if (name == "script") return input.acceptToken(StartScriptTag)
     if (name == "style") return input.acceptToken(StartStyleTag)
     if (name == "textarea") return input.acceptToken(StartTextareaTag)
-    if (selfClosers.hasOwnProperty(name)) return input.acceptToken(StartSelfClosingTag)
+
+    const isUpperCase = name.charAt(0) === (name.charAt(0)).toUpperCase();
+    if (selfClosers.hasOwnProperty(name) || isUpperCase) return input.acceptToken(StartSelfClosingTag)
     if (parent && closeOnOpen[parent] && closeOnOpen[parent][name]) input.acceptToken(missingCloseTag, -1);
     else input.acceptToken(StartTag);
   }
