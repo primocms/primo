@@ -166,6 +166,14 @@ export const oneDarkHighlightStyle = HighlightStyle.define([
   },
 ])
 
+// workaround for introduced bug 
+// https://discuss.codemirror.net/t/highlighting-that-seems-ignored-in-cm6/4320/17
+const fn0 = oneDarkHighlightStyle.style;
+// noinspection JSConstantReassignment
+oneDarkHighlightStyle.style = tags => fn0(tags || [])
+
+export const ThemeHighlighting = syntaxHighlighting(oneDarkHighlightStyle)
+
 /// Extension to enable the One Dark theme (both the editor theme and
 /// the highlight style).
 const oneDark: Extension = [oneDarkTheme, syntaxHighlighting(oneDarkHighlightStyle)]

@@ -24,18 +24,14 @@
     const { event, payload } = data
     if (event === 'SET_CONSOLE_LOGS') {
       consoleLog = data.payload.logs
-    } else if (event === 'SET_ELEMENT_PATH') {
-      const {loc} = payload
-      if (!loc || (activeLoc.char === loc.char && activeLoc.line === loc.line)) return
-      $highlightedElement = loc
-      activeLoc = { ...loc }
+    } else if (event === 'SET_ELEMENT_PATH' && payload.loc) {
+      $highlightedElement = payload.loc
     }
   }
 
   let consoleLog
 
   let iframe;
-  let activeLoc = { line: null, column: null, char: null }
   $: if (iframe) {    
     // open clicked links in browser
     iframe.contentWindow.document.querySelectorAll('a').forEach((link) => { link.target = '_blank' })

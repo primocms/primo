@@ -17,7 +17,7 @@
   import { EditorView, keymap } from '@codemirror/view';
   import { standardKeymap, indentWithTab} from '@codemirror/commands';
   import { EditorState } from '@codemirror/state';
-  import MainTheme from './theme';
+  import {oneDarkTheme, ThemeHighlighting} from './theme';
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
 
@@ -42,6 +42,8 @@
     extensions: [
       abbreviationTracker(),
       language,
+      oneDarkTheme,
+      ThemeHighlighting,
       keymap.of([
         standardKeymap,
         indentWithTab,
@@ -118,7 +120,6 @@
         }
         selection = view.state.selection.main.from;
       }),
-      MainTheme,
       basicSetup
     ],
   });
