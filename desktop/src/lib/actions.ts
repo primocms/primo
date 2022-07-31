@@ -1,7 +1,9 @@
 import { get } from 'svelte/store'
+import { find as _find } from 'lodash-es'
 import axios from '$lib/libraries/axios'
 import config from '../stores/config'
 import * as stores from '../stores'
+import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
 
 export const serverSites = {
   save: async (site) => {
@@ -56,8 +58,25 @@ export async function setActiveEditor(siteID) {
   }
 }
 
-export async function setSitePreview(id, preview) {
-  window.primo?.data.setPreview({ id, preview })
+export async function storeSite(site) {
+  window.primo.data.save(site)
+}
+
+export async function setSitePreview(site) {
+  const homepage = _find(site.pages, ['id', 'index'])
+  const preview = await buildStaticPage({
+    page: homepage,
+    site,
+    separateModules: false
+  })
+  const siteID = site.id
+  stores.sites.update((s) =>
+    s.map((site) => site.id === siteID ? ({
+      ...site,
+      preview
+    }) : site)
+  )
+  window.primo?.data.setPreview({ id: site.id, preview })
 }
 
 export async function addDeploymentToSite({

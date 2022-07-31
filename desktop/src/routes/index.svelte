@@ -6,7 +6,6 @@
   import sites from '../stores/sites'
   import serverSites, { connected } from '../stores/serverSites'
   import config from '../stores/config'
-  import {track, setSitePreview} from '$lib/actions'
   import { goto } from '$app/navigation';
 
   let loading
@@ -25,7 +24,6 @@
               activeDeployment: null,
             },
           ]
-          track('CREATE_SITE')
           // window.location.href = site.id // goto is breaking
           goto(site.id)
           hide()
@@ -73,7 +71,7 @@
               on:mouseenter={() => (hoveredItem = i)}
               on:mouseleave={() => (hoveredItem = null)}
             >
-              <SiteThumbnail bind:valid={site.valid} on:setPreview={({detail:preview}) => setSitePreview(site.id, preview)} {site} {preview} />
+              <SiteThumbnail bind:valid={site.valid} {site} {preview} />
             </a>
             <div class="site-info">
               <div class="site-name">
@@ -93,7 +91,6 @@
                 {:else}
                   <a
                     href={site.valid ? site.id : '/'}
-                    on:click={() => track('OPEN_SITE')}
                     on:mouseenter={() => (hoveredItem = i)}
                     on:mouseleave={() => (hoveredItem = null)}
                   >

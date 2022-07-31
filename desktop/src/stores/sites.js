@@ -26,16 +26,7 @@ async function initializSiteData() {
 
   store.set(rebuiltSites)
 
-  store.subscribe((s) => {
-    console.log({s})
-    const sitesData = s.map((site) => ({
-      ...site.data,
-      activeDeployment: site.activeDeployment,
-    }))
-    data.save(sitesData)
 
-    // set('sites', s)
-  })
 }
 export default {
   update: store.update,

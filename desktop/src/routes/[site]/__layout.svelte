@@ -18,6 +18,7 @@
   import Build from '../../extensions/Build.svelte'
   import { page } from '$app/stores'
   import * as actions from '$lib/actions'
+  import {setSitePreview, storeSite} from '$lib/actions'
 
   if (browser) {
     primoModal.register([
@@ -44,6 +45,7 @@
 
   async function saveData(updatedSite) {
     saving = true
+    setSitePreview(updatedSite)
 
     if (find($sites, ['id', siteID])) {
       $sites = $sites.map((site) => {
@@ -53,6 +55,7 @@
           data: updatedSite,
         }
       })
+      storeSite(updatedSite)
       stores.saved.set(true)
     } else if (find($serverSites, ['id', siteID])) {
       const success = await actions.serverSites.save(updatedSite)

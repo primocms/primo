@@ -54,9 +54,9 @@ contextBridge.exposeInMainWorld('primo', {
       const data = ipcRenderer.sendSync('load-data', saveDirectory)
       return data || []
     },
-    save: (data) => {
-      const success = ipcRenderer.sendSync('save-data', data)
-      return success
+    save: async (data) => {
+      const res = await ipcRenderer.invoke('save-data', data)
+      return res
     }
   },
   processCSS: async (raw) => {
@@ -69,6 +69,10 @@ contextBridge.exposeInMainWorld('primo', {
   },
   checkForUpdate: () => {
     ipcRenderer.sendSync('check-for-update')
+  },
+  createPopup: async () => {
+    const res = ipcRenderer.sendSync('create-popup')
+    return res
   },
 })
 

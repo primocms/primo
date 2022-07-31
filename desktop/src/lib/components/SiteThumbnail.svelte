@@ -3,9 +3,6 @@
   import { browser } from '$app/env'
   import { find } from 'lodash-es'
   import Spinner from '$lib/ui/Spinner.svelte'
-  import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
-
-  const dispatch = createEventDispatcher()
 
   export let site = null
   export let preview = null
@@ -25,36 +22,6 @@
     scale = parentWidth / childWidth
   }
 
-  async function getPreview(site) {
-    if (!site) return
-    const homepage = find(site.pages, ['id', 'index'])
-
-    window.requestIdleCallback(async () => {
-      const updatedPreview = await buildStaticPage({
-        page: homepage,
-        site,
-        separateModules: false
-      })
-
-      if (updatedPreview !== preview) {
-        generatedPreview = updatedPreview
-        dispatch('setPreview', updatedPreview)
-        if (!updatedPreview) {
-          valid = false
-        } else {
-          valid = true
-        }
-      }
-    })
-  }
-
-  // wait for processor to load before building preview
-  let processorLoaded = false
-  setTimeout(() => {
-    processorLoaded = true
-  }, 500)
-
-  $: browser && processorLoaded && getPreview(site)
 </script>
 
 <svelte:window on:resize={resizePreview} />

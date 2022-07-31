@@ -80,6 +80,8 @@ require('electron-reload')(__dirname, {
 
 const serveURL = serve({ directory: "build" });
 
+const port = process.env.PORT || 3333
+
 let win
 const createWindow = () => {
   // Create the browser window.
@@ -94,7 +96,8 @@ const createWindow = () => {
       nodeIntegration: true,
       nativeWindowOpen: true
     },
-    show: false
+    show: false,
+    acceptFirstMouse: true
   });
 
   win.once('ready-to-show', () => {
@@ -102,8 +105,7 @@ const createWindow = () => {
   })
 
   // and load the index.html of the app.
-  const isDev = !app.isPackaged
-  const port = process.env.PORT || 3333
+
   if (isDev) {
     loadVitePage(port)
   } else serveURL(win);
@@ -125,6 +127,27 @@ const createWindow = () => {
     })
   }
 };
+
+const createPopup = () => {
+  const popup = new BrowserWindow({
+    minWidth: 200,
+    width: 500,
+    height: 900,
+    webPreferences: {
+      preload: `${__dirname}/preload.cjs`,
+      enableRemoteModule: true,
+      nodeIntegration: true,
+      nativeWindowOpen: true
+    },
+    darkTheme: true,
+    show: false,
+    // transparent: true
+  });
+  popup.loadURL(`http://localhost:${port}/preview`).catch((err) => {
+    console.log('Could not load preview', port)
+  })
+  popup.show()
+}
 
 app.whenReady().then(createWindow)
 
@@ -191,6 +214,12 @@ ipcMain.on('set-telemetry', async (event, arg) => {
 // create sites directory if non-existant
 fs.ensureDirSync(savePath)
 
+// Create popup 
+ipcMain.on('create-popup', (event) => {
+  createPopup()
+  event.returnValue = true
+})
+
 // Save/Load Data
 ipcMain.on('load-data', (event, directory) => {
   const files = fs.readdirSync(savePath)
@@ -222,11 +251,13 @@ ipcMain.on('set-preview', (event, site) => {
   event.returnValue = true
 })
 
-ipcMain.on('save-data', (event, sites) => {
-  sites.forEach(site => {
-    fs.writeJsonSync(`${savePath}/${site.id}.json`, site, { throws: false, spaces: '\t' })
+ipcMain.handle('save-data', async (event, site) => {
+  await new Promise((resolve) => {
+    fs.writeJSON(`${savePath}/${site.id}.json`, site, () => {
+      resolve()
+    })
   })
-  event.returnValue = true
+  return true
 })
 
 ipcMain.on('delete-site', (event, site) => {

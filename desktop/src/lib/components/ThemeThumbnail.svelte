@@ -1,7 +1,6 @@
 <script>
   import {createEventDispatcher} from 'svelte'
   import SiteThumbnail from './SiteThumbnail.svelte'
-  import {setSitePreview} from '$lib/actions'
 
   const dispatch = createEventDispatcher()
 
@@ -17,7 +16,7 @@
   selected = !selected
   dispatch('click')
 }}>
-  <SiteThumbnail {site} {preview} on:setPreview={({detail:preview}) => setSitePreview(site.id, preview)}  />
+  <SiteThumbnail {site} {preview} />
   {#if title}
     <div class="title">{title}</div>
   {/if}
