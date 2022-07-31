@@ -9,6 +9,7 @@
 </script>
 
 <script lang="ts">
+  import {onDestroy} from 'svelte'
   import {_ as C} from 'svelte-i18n'
   import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get, differenceWith as _differenceWith} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
@@ -213,20 +214,6 @@
     disableSave = true;
     loading = true
 
-    // automatically create fields for keys without fields
-    // TODO: prevent creating multiple fields for the same key (e.g. when typing {} first then {heading})
-    // account for keys passed down from page/site fields
-    // allow user to delete fields, even if the key is still used in the html (i.e. don't recreate them)
-
-    // const keys = html.match(/(?<=\{\s*).*?(?=\s*\})/gs) || []// extract keys 
-    // const notInFields = keys.map(s => s.replace(/\s/g, '')).filter(s => !find(fields, ['key', s]))
-    // notInFields.forEach(key => {
-    //   addNewField({ 
-    //     key,
-    //     label: capitalize(key)
-    //   })
-    // })
-
     await compile();
     disableSave = compilationError
     await setTimeout(() => {
@@ -275,15 +262,23 @@
 
   let activeTab = tabs[0];
 
-  function refreshPreview() {
-    compileComponentCode({
+  let previewUpToDate = false
+  $: rawHTML, rawCSS, rawJS, previewUpToDate = false // reset when code changes
+
+  async function refreshPreview() {
+    await compileComponentCode({
       html: rawHTML,
       css: rawCSS,
       js: rawJS
     })
+    previewUpToDate = true
   }
 
-  function saveComponent() {
+  async function saveComponent() {
+
+    if (!previewUpToDate) {
+      await refreshPreview()
+    }
 
     const ExtractedComponent = (component) => ({
       ...component,
@@ -338,7 +333,7 @@
           <GenericFields bind:fields on:input={refreshPreview} showCode={true} />
         {/if}
       {:else}
-        <GenericFields bind:fields on:input={() => {
+        <GenericFields bind:fields on:save={saveComponent} on:input={() => {
           fields = fields.filter(Boolean) // to trigger setting `data`
           saveLocalContent()
         }} showCode={false} />
