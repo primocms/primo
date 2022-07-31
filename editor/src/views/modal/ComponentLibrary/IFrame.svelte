@@ -1,7 +1,6 @@
 <script>
-  import {locale} from '../../../stores/app/misc'
   import Spinner from '../../../components/misc/Spinner.svelte';
-  import { iframePreview } from '../../../components/misc/misc';
+  import { componentPreview } from '../../../components/misc/misc';
 
   export let componentApp;
   export let componentData = {}
@@ -51,14 +50,16 @@
   </div>
 {/if}
 <div bind:this={container} class="iframe-container">
-  <iframe
-    class:fadein={finishedResizing}
-    style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
-    scrolling="no"
-    on:load={() => (iframeLoaded = true)}
-    title="Preview HTML"
-    srcdoc={iframePreview($locale)}
-    bind:this={iframe} />
+  {#if componentApp && componentData}
+    <iframe
+      class:fadein={finishedResizing}
+      style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
+      scrolling="no"
+      on:load={() => (iframeLoaded = true)}
+      title="Preview HTML"
+      srcdoc={componentPreview(componentApp, componentData)}
+      bind:this={iframe} />
+  {/if}
 </div>
 
 <style lang="postcss">

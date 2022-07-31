@@ -72,6 +72,23 @@ export const iframePreview = (locale = 'en') => `
   </html>
 `
 
+export const componentPreview = (js, data) => `
+<!DOCTYPE html>
+<html lang="en">
+  <head></head>
+  <body class="primo-page">
+    <main></main>
+    <script type="module" async>
+      ${js}
+      new Component({
+        target: document.querySelector('main'),
+        props: ${JSON.stringify(data)}
+      });
+    </script>
+  </body>
+</html>
+`
+
 export const pagePreview = `
   <!DOCTYPE html>
   <html>
