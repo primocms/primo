@@ -9,7 +9,7 @@
 
 </script>
 
-<div class="subfield" in:fade={{ duration: 100 }}>
+<div class="subfield">
   <div class="select">
     <slot name="type" />
   </div>

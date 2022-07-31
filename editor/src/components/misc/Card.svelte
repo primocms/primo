@@ -22,7 +22,7 @@
   })
 </script>
 
-<div class="card" {id} in:fade={{ duration: 100 }}>
+<div class="card" {id}>
   {#if title}
     <button class="header-button" on:click={() => {
       hidden = !hidden
@@ -38,7 +38,7 @@
     </button>
   {/if}
   {#if !hidden}
-    <div class="card-body" transition:slide={{ duration: 100 }}>
+    <div class="card-body">
       <slot name="body" />
       <slot />
     </div>

@@ -19,7 +19,7 @@
 
   import HSplitPane from './HSplitPane.svelte';
   import { CodeMirror } from '../../../components';
-  import { onMobile, modKeyDown } from '../../../stores/app/misc';
+  import { onMobile, showKeyHint } from '../../../stores/app/misc';
   import {browser} from '$app/env'
 
   export let variants = '';
@@ -135,7 +135,7 @@
       <button
         class:tab-hidden={$leftPaneSize <= '0'}
         on:click={() => toggleTab(0)}>
-        {#if $modKeyDown}
+        {#if $showKeyHint}
           <span>&#8984; 1</span>
         {:else}
           <span>HTML</span>
@@ -156,7 +156,7 @@
       <button
         class:tab-hidden={$centerPaneSize <= '0'}
         on:click={() => toggleTab(1)}>
-        {#if $modKeyDown}
+        {#if $showKeyHint}
           <span>&#8984; 2</span>
         {:else}
           <span>CSS</span>
@@ -177,7 +177,7 @@
       <button
         class:tab-hidden={$rightPaneSize <= '0'}
         on:click={() => toggleTab(2)}>
-        {#if $modKeyDown}
+        {#if $showKeyHint}
           <span>&#8984; 3</span>
         {:else}
           <span>JS</span>

@@ -1,8 +1,6 @@
 import {writable} from 'svelte/store'
 import {browser} from '$app/env'
 
-export const modKeyDown = writable(false)
-
 export const saving = writable(false)
 
 export const saved = writable(true)

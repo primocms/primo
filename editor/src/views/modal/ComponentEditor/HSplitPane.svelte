@@ -95,7 +95,7 @@
         top: 0,
         left: 0,
         right: 0,
-        bottom: 36
+        bottom: 37
       }
 
       // if the top is smaller than the min, subtract the extra from it and add to the bottom

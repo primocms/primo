@@ -5,18 +5,6 @@
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
   import {getComponentData} from '../../../stores/helpers'
-  import {hydrateFieldsWithPlaceholders} from '../../../utils'
-
-  const lorem = new LoremIpsum({
-    sentencesPerParagraph: {
-      max: 8,
-      min: 4
-    },
-    wordsPerSentence: {
-      max: 16,
-      min: 4
-    }
-  });
 
   import IFrame from './IFrame.svelte';
   import {

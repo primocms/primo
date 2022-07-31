@@ -4,7 +4,6 @@
 
 <script lang="ts">
   import {flattenDeep as _flattenDeep} from 'lodash-es';
-  import '@fontsource/fira-code/index.css';
   import { createEventDispatcher } from 'svelte';
   import { browser } from '$app/env';
   import { fade } from 'svelte/transition';

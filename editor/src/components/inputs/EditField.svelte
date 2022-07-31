@@ -22,7 +22,6 @@
 <div
   style="margin-left: {level}rem"
   class="field-container"
-  in:fade={{ duration: 100 }}
   class:has-default-value={showDefaultValue}
   class:has-visibility-options={showVisibilityOptions}
   class:child

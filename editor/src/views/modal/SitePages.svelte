@@ -9,7 +9,6 @@
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
   import { createUniqueID } from '../../utilities';
-  const track = getContext('track')
 
   import { Page } from '../../const';
   import type { Page as PageType } from '../../const'
@@ -33,7 +32,6 @@
     pageName = '';
     pageURL = '';
     shouldDuplicatePage = true;
-    track('CREATE_PAGE')
   }
 
   async function deletePage(pageId) {
