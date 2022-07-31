@@ -1,13 +1,16 @@
 <script>
   import { onMount, createEventDispatcher, getContext } from 'svelte';
+  import {fade, slide} from 'svelte/transition'
   import { _ as C } from 'svelte-i18n';
+  import Icon from '@iconify/svelte';
   import {find as _find, flattenDeep} from 'lodash-es'
   import ToolbarButton from './ToolbarButton.svelte';
   import Dropdown from '../../components/Dropdown/Dropdown.svelte'
   import LocaleSelector from './LocaleSelector.svelte'
   import { PrimoButton } from '../../components/buttons';
-  import { name } from '../../stores/data/draft';
+  import site, { name } from '../../stores/data/draft';
   import { showingIDE, userRole } from '../../stores/app';
+  import { showKeyHint } from '../../stores/app/misc';
   import { id as pageID } from '../../stores/app/activePage';
   import { onMobile } from '../../stores/app/misc';
   import modal from '../../stores/app/modal'
@@ -20,6 +23,20 @@
   onMount(() => {
     mounted = true;
   });
+
+
+  const channel = new BroadcastChannel('site_preview')
+  async function showPreview() {
+    window.primo.createPopup()
+    channel.onmessage = ({data}) => {
+      if (data === 'READY') {
+        channel.postMessage({
+          site: $site,
+          pageID: $pageID
+        })
+      }
+    }
+  }
 </script>
 
 <div id="primo-toolbar-overlay">
@@ -53,6 +70,9 @@ class:mounted>
           {/each}
         </div>
       {/each}
+      <button class="create-preview" on:click={showPreview} aria-label="Show page preview">
+        <Icon icon="bi:window" color="white" />
+      </button>
       <a href="https://docs.primo.so" class="toolbar-link text-link" target="blank">
         <span>{$C('Docs')}</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Pro 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) --><path fill="currentColor" d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM474.67,0H316a28,28,0,0,0-28,28V46.71A28,28,0,0,0,316.79,73.9L384,72,135.06,319.09l-.06.06a24,24,0,0,0,0,33.94l23.94,23.85.06.06a24,24,0,0,0,33.91-.09L440,128l-1.88,67.22V196a28,28,0,0,0,28,28H484a28,28,0,0,0,28-28V37.33h0A37.33,37.33,0,0,0,474.67,0Z"/></svg>
@@ -75,31 +95,38 @@ class:mounted>
             bind:checked={$showingIDE}
             on:click={() => dispatch('toggleView')} />
           <span class="slider" class:code={$showingIDE}>
+            {#if $showKeyHint}
+              <span
+              in:fade={{ duration: 50 }}
+              class="key-hint"
+              class:active={$showKeyHint}
+              aria-hidden>&#8984;D</span>
+            {:else}
             <svg
-              id="cms"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor">
-              <path
-                d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-              <path
-                fill-rule="evenodd"
-                d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                clip-rule="evenodd" />
-            </svg>
+            id="cms"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor">
+            <path
+              d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+            <path
+              fill-rule="evenodd"
+              d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+              clip-rule="evenodd" />
+          </svg>
             <svg
-              id="ide"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor">
-              <path
-                fill-rule="evenodd"
-                d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-                clip-rule="evenodd" />
-            </svg>
+            id="ide"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor">
+            <path
+              fill-rule="evenodd"
+              d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
+              clip-rule="evenodd" />
+          </svg>
+            {/if}
           </span>
-          <span class="sr-only">Switch to
-            {$showingIDE ? 'CMS' : 'IDE'}</span>
+          <span class="sr-only">Switch to {$showingIDE ? 'CMS' : 'IDE'}</span>
         </label>
         {#if !$onMobile}
           <div class="tooltip">
@@ -154,6 +181,12 @@ class:mounted>
     padding-top: 30px;
   }
 
+  button.create-preview {
+    padding: 0 0.5rem;
+    background: var(--primo-color-codeblack);
+    border-radius: var(--primo-border-radius);
+  }
+
   .left {
     width: 100%;
     display: flex;
@@ -171,6 +204,27 @@ class:mounted>
     align-items: center;
     margin-right: 0.5rem;
     padding-left: 0.5rem;
+  }
+
+  .key-hint {
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    inset: 0;
+    color: var(--primo-color-white);
+    z-index: 1;
+    opacity: 1;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: saturate(180%) blur(5px);
+    transform: scale(1.1);
   }
 
   .switch {

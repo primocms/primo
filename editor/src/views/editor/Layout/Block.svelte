@@ -14,7 +14,7 @@
   import { onMobile, saved, showingIDE } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
   import { id, sections } from '../../../stores/app/activePage';
-  import { pages, updateContent, symbols } from '../../../stores/actions';
+  import { pages, updateContent, symbols, updatePreview } from '../../../stores/actions';
 
   export let block
   export let i
@@ -44,6 +44,7 @@
       updateContent(block.id, null)
       updateBlock(null);
     }
+    updatePreview()
   }
 
   function updateBlock(newBlock) {
@@ -61,6 +62,7 @@
       ...page,
       sections: newSections,
     }));
+    updatePreview()
     $saved = false;
   }
 
@@ -135,6 +137,7 @@
               if (localeContent) updateContent(component.id, localeContent, localeID)
             })
             modal.hide();
+            updatePreview()
           },
         },
       },
@@ -208,6 +211,21 @@
       sticky = false;
     }
   }
+
+  function bindEdit() {
+    Mousetrap.bind(
+      'mod+e',
+      editComponent,
+      'keydown'
+    );
+  }
+
+  function unbindEdit() {
+    Mousetrap.unbind('mod+e')
+  }
+
+  $: if (hovering) bindEdit()
+      else unbindEdit()
   
 </script>
 
@@ -263,6 +281,7 @@
       on:debounce={() => ($saved = false)}
       on:change={({ detail: html }) => {
         updateContent(block.id, html)
+        updatePreview()
         dispatch('contentChanged');
       }}
       on:selectionChange={({ detail: selection }) => {

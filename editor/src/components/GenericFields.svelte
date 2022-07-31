@@ -1,10 +1,10 @@
 <script>
   import {createEventDispatcher} from 'svelte'
-  import { find, cloneDeep, isEqual, chain as _chain, set as _set, get as _get } from 'lodash-es';
+  import { find, cloneDeep, chain as _chain, set as _set, get as _get } from 'lodash-es';
   import { _ as C } from 'svelte-i18n';
   import { Card } from './misc';
 
-  import { showingIDE, userRole, fieldTypes } from '../stores/app';
+  import { userRole, fieldTypes } from '../stores/app';
   import {Field} from '../const'
   import FieldItem from '../views/modal/ComponentEditor/FieldItem.svelte'
 
@@ -154,6 +154,7 @@
             this={getComponent(field)}
             {field}
             fields={fields.filter((f) => f.id !== field.id)}
+            on:save
             on:input />
         </div>
       </Card>

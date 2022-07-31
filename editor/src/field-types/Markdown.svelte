@@ -43,6 +43,12 @@
     dispatch('input');
   }
 
+  function handleSave({ metaKey, key }) {
+    if (metaKey && key === 's') {
+      dispatch('save')
+    }
+  }
+
 </script>
 
 <label for={field.id}>
@@ -50,6 +56,7 @@
   <textarea
     id={field.id}
     on:focus={selectAll}
+    on:keydown={handleSave} 
     bind:value
     bind:this={element} />
 </label>

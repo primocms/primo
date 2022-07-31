@@ -1,6 +1,7 @@
 <script lang="ts">
   import { find, some, isEqual } from 'lodash-es';
   import * as Mousetrap from 'mousetrap';
+  import '@fontsource/fira-code/index.css';
 
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import Editor from './views/editor/Editor.svelte';
@@ -23,7 +24,7 @@
 
   import { pages, resetTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
-  import { hydrateSite } from './stores/actions';
+  import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
 
   import type { Site as SiteType, Page as PageType } from './const'
@@ -53,6 +54,7 @@
     cachedData = data;
     hydrateSite(data);
     resetTimeline(data)
+    updatePreview()
   }
 
   $: $pageId = getPageId($pageStore.params.page);
@@ -74,6 +76,7 @@
     } else {
       console.warn('Could not navigate to page', id);
     }
+    updatePreview()
 
     function setPageStore(page) {
       sections.set(page.sections);
@@ -106,11 +109,9 @@
   }
 
   onMount(() => {
-    Mousetrap.bind('command', () => ($showKeyHint = true), 'keydown');
-    Mousetrap.bind('command', () => ($showKeyHint = false), 'keyup');
+    Mousetrap.bind('mod', () => ($showKeyHint = true), 'keydown');
+    Mousetrap.bind('mod', () => ($showKeyHint = false), 'keyup');
   });
-
-  onDestroy(resetActivePage)
 
 </script>
 

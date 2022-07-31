@@ -30,6 +30,11 @@
       e.preventDefault();
       changeLocale()
     });
+
+    Mousetrap.bind(['mod+d'], (e) => {
+      e.preventDefault();
+      showingIDE.set(!$showingIDE)
+    });
   });
 
   $: hasFields = $siteFields ? [...$siteFields, ...$pageFields].length > 0 : false

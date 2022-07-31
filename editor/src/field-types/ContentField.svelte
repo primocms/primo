@@ -15,13 +15,19 @@
     if (field.default === field.value) target.select()
   }
 
+  function handleSave({ metaKey, key }) {
+    if (metaKey && key === 's') {
+      dispatch('save')
+    }
+  }
+
 </script>
 
 
 {#if value}
   <label class={variants}>
     <span>{field.label}</span>
-    <input on:focus={selectAll} class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
+    <input on:keydown={handleSave} on:focus={selectAll} class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
       onChange()
       dispatch('input', detail)
     }} />
@@ -34,6 +40,7 @@
     {title}
     {disabled}
     type="text"
+    on:keydown={handleSave}
     on:focus={selectAll}
     bind:value={field.value}
     on:input />

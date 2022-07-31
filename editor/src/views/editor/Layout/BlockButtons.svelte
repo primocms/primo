@@ -8,31 +8,7 @@
   import { fade } from 'svelte/transition';
   import { sections } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
-  import { modKeyDown } from '../../../stores/app/misc';
-
-  onMount(() => {
-    Mousetrap.bind(
-      'mod',
-      () => {
-        $modKeyDown = true;
-      },
-      'keydown'
-    );
-    Mousetrap.bind(
-      'mod',
-      () => {
-        $modKeyDown = false;
-      },
-      'keyup'
-    );
-    Mousetrap.bind(
-      'mod+e',
-      () => {
-        dispatch('edit');
-      },
-      'keydown'
-    );
-  })
+  import { showKeyHint } from '../../../stores/app/misc';
 
   const dispatch = createEventDispatcher();
 
@@ -61,7 +37,7 @@
     <div class="component-button">
       {#if editable && (hasContentFields || $showingIDE)}
         <button on:click={() => dispatch('edit')} class="button-span">
-          {#if $modKeyDown}
+          {#if $showKeyHint}
             <span>&#8984; E</span>
           {:else}
             {#if $showingIDE}

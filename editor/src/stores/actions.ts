@@ -19,7 +19,6 @@ export async function hydrateSite(data: Site): Promise<void> {
   fields.set(site.fields)
   stores.symbols.set(site.symbols)
   stores.content.set(site.content)
-  console.log('hydrated')
 }
 
 export async function updateActivePageHTML(html: string): Promise<void> {
@@ -275,5 +274,13 @@ export async function changeLocale() {
   locales.reduce((a, b, i) => {
     if (a === loc) locale.set(b) // switch to next locale
     else if (i === locales.length - 1) locale.set(locales[0]) // switch to first locale
+  })
+}
+
+export async function updatePreview() {
+  const channel = new BroadcastChannel('site_preview')
+  channel.postMessage({
+    site: get(unsavedSite),
+    pageID: get(activePageID)
   })
 }
