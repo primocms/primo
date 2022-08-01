@@ -107,6 +107,7 @@ const createWindow = () => {
   // and load the index.html of the app.
 
   if (isDev) {
+    win.webContents.openDevTools()
     loadVitePage(port)
   } else serveURL(win);
 
@@ -143,9 +144,18 @@ const createPopup = () => {
     show: false,
     // transparent: true
   });
-  popup.loadURL(`http://localhost:${port}/preview`).catch((err) => {
-    console.log('Could not load preview', port)
-  })
+
+  if (isDev) {
+    popup.webContents.openDevTools()
+    popup.loadURL(`http://localhost:${port}/preview`).catch((err) => {
+      console.log('Could not load preview', port)
+    })
+  } else {
+    popup.loadURL(`app://-/preview`).catch((err) => {
+      console.log('Could not load preview', port)
+    })
+  }
+
   popup.show()
 }
 

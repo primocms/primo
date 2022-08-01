@@ -1,6 +1,6 @@
 <script>
   import { browser } from '$app/env'
-  import {setContext} from 'svelte'
+  import {goto} from '$app/navigation'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import {
@@ -10,7 +10,6 @@
   } from '@primo-app/primo'
   import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
-  import {track} from '$lib/actions'
 
   if (browser) {
     import('../compiler/processors').then(({ html, css }) => {
@@ -33,7 +32,6 @@
         component: SiteButtons,
       },
     ])
-    setContext('track', track)
   }
 
 </script>

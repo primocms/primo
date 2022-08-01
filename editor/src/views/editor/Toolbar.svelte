@@ -24,10 +24,12 @@
     mounted = true;
   });
 
+  let channel
+  $: if (mounted) {
+    channel = new BroadcastChannel('site_preview')
+  }
 
-  const channel = new BroadcastChannel('site_preview')
   async function showPreview() {
-    window.primo.createPopup()
     channel.onmessage = ({data}) => {
       if (data === 'READY') {
         channel.postMessage({
@@ -36,7 +38,9 @@
         })
       }
     }
+    window.primo.createPopup()
   }
+
 </script>
 
 <div id="primo-toolbar-overlay">

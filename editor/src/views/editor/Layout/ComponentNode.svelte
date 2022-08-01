@@ -1,8 +1,8 @@
 <script>
   import _ from 'lodash-es';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import { processCode } from '../../../utils';
-  import { symbols, content } from '../../../stores/data/draft';
+  import { site as unsavedSite, content, symbols } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {getComponentData} from '../../../stores/helpers'
 
@@ -10,13 +10,16 @@
 
   export let block;
   export let node;
+  export let site = $unsavedSite;
 
-  $: symbol = _.find($symbols, ['id', block.symbolID])
+  const is_preview = getContext('is-preview')
+
+  $: symbol = _.find(is_preview ? site.symbols : $symbols, ['id', block.symbolID])
   $: $content, $locale, block, setComponentData()
 
   let componentData
   function setComponentData() {
-    componentData = getComponentData({ component: block, loc: $locale })
+    componentData = getComponentData({ component: block, loc: $locale, site: is_preview ? site : $unsavedSite })
   }
 
   let html = '';

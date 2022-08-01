@@ -277,10 +277,10 @@ export async function changeLocale() {
   })
 }
 
-export async function updatePreview() {
+export async function updatePreview(updatedSite = get(unsavedSite)) {
   const channel = new BroadcastChannel('site_preview')
   channel.postMessage({
-    site: get(unsavedSite),
+    site: updatedSite,
     pageID: get(activePageID)
   })
 }

@@ -7,6 +7,7 @@
   import ComponentNode from './ComponentNode.svelte';
 
   export let block
+  export let site
 
   let node
 
@@ -24,9 +25,9 @@
   id="{block.id}"
 >
   {#if block.type === 'component'}
-    <ComponentNode {block} {node} />
+    <ComponentNode {block} {node} {site} />
   {:else if block.type === 'content'}
-    <ContentNode {block} />
+    <ContentNode {block} {site} />
   {/if}
 </div>
 

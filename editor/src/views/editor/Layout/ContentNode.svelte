@@ -4,7 +4,7 @@
   const dispatch = createEventDispatcher();
   import CopyButton from './CopyButton.svelte';
 
-  import site from '../../../stores/data/draft'
+  import unsavedSite from '../../../stores/data/draft'
   import {id as pageID} from '../../../stores/app/activePage'
   import modal from '../../../stores/app/modal'
   import {locale} from '../../../stores/app/misc'
@@ -21,6 +21,7 @@
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
   export let block
+  export let site = $unsavedSite
   
   let node;
 
@@ -28,12 +29,12 @@
   let bubbleMenu;
   let editor;
 
-  let content = $site.content[$locale]?.[$pageID]?.[block.id] || ''
+  let content = site.content[$locale]?.[$pageID]?.[block.id] || ''
   let cachedContent
   $: updateNodeContent($locale, $pageID, block.id) 
   function updateNodeContent(locale, pageID, blockID) {
     if (!editor || isEqual(content, cachedContent)) return
-    const updatedContent = $site.content?.[locale]?.[pageID]?.[blockID] || ''
+    const updatedContent = site.content?.[locale]?.[pageID]?.[blockID] || ''
     editor.commands.setContent(updatedContent)
   }
 

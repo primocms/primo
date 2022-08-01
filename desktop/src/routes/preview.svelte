@@ -1,35 +1,48 @@
+<script context="module">
+  export const prerender = true;
+</script>
+
 <script>
-  import {find, cloneDeep} from 'lodash-es'
-  import {onMount} from 'svelte'
+  import {find, cloneDeep, flattenDeep, chain} from 'lodash-es'
+  import {onMount, setContext, tick} from 'svelte'
   import PureComponent from '@primo-app/primo/src/views/editor/Layout/PureComponent.svelte'
-  import { hydrateSite } from '@primo-app/primo/src/stores/actions';
-  import { processCSS, wrapInStyleTags, processCode } from '@primo-app/primo/src/utils';
+  import { wrapInStyleTags, processCode } from '@primo-app/primo/src/utils';
+  import {html} from '../compiler/processors'
 
   let channel
+
   onMount(() => {
     channel = new BroadcastChannel('site_preview')
     setupChannel()
   })
 
+  setContext('is-preview', true)
+
   function setupChannel() {
     channel.onmessage = (async ({data}) => {
-      site = cloneDeep(data.site)
-      page = find(site.pages, ['id', data.pageID])
-      hydrateSite(site)
-      const css = await processCSS(site.code.css + page.code.css);
-      const code = await processCode({
+      const { site:newSite, pageID:newPageID } = data
+      if (newSite.id === 'default') return
+      const newPage = find(newSite.pages, ['id', newPageID])
+      const {css} = await await window.primo.processCSS(newSite.code.css + newPage.code.css);
+      const pageIDs = flattenDeep(newSite.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+      const siteContent = chain(Object.entries(newSite.content['en']).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+      const code = await html({
         code: {
           html: `
             <svelte:head>
-              ${site.code.html.head}${page.code.html.head}
+              ${newSite.code.html.head}${newPage.code.html.head}
               ${wrapInStyleTags(css)}
             </svelte:head>`,
           css: '',
           js: '',
         },
-        data,
+        data: siteContent,
       })
       htmlHead = code.html
+      site = cloneDeep(newSite)
+      activePageID = newPageID
+      activePage = find(site.pages, ['id', activePageID])
+
       setTimeout(() => {
         ready = true
       }, 100)
@@ -47,8 +60,11 @@
     }
   }
 
-  let site
-  let page
+  let site 
+  let activePageID = 'index'
+
+  let activePage
+  // $: activePage = site ? find(site.pages, ['id', activePageID]) : null
 
   let ready
 
@@ -56,21 +72,21 @@
 </script>
 
 {@html htmlHead}
-<div
-  class:fadein={ready}
-  class="primo-page being-edited">
-  {#if page}
-    {#each page.sections as block, i (block.id)}
-      {#if block.symbolID}
-        <PureComponent
-          block={hydrateInstance(block, site.symbols)}
-        />
-      {:else if block.type === 'content'}
-        <PureComponent on:save {block} />
-      {/if}
-    {/each}
+{#key activePageID}
+  {#if activePage}
+    <div
+      class:fadein={ready}
+      class="primo-page being-edited">
+        {#each activePage.sections as section, i (section.id)}
+          {#if section.symbolID}
+            <PureComponent {site} block={hydrateInstance(section, site.symbols)} />
+          {:else if section.type === 'content'}
+            <PureComponent {site} block={section} />
+          {/if}
+        {/each}
+    </div>
   {/if}
-</div>
+{/key}
 
 <style>
   .primo-page {

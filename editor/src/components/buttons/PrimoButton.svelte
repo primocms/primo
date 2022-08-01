@@ -4,17 +4,14 @@
   import Spinner from '../../components/misc/Spinner.svelte';
   import PrimoLogo from '../svg/PrimoLogo.svelte';
   import DropdownButton from './DropdownButton.svelte';
-  import { saved } from '../../stores/app/misc';
+
 
   export let variants = '';
 
   let showingDropdown = false;
 
-  function warn(e) {
-    if (!$saved) {
-      e.preventDefault();
-      window.alert(`Save your changes before navigating away from your site`);
-    }
+  function handleToggle() {
+    showingDropdown = !showingDropdown
   }
 </script>
 
@@ -39,7 +36,7 @@
     {#each $dropdown as button}
       <li class="xyz-in">
         {#if button.component}
-          <svelte:component this={button.component} {...button.props} on:toggle={() => showingDropdown = !showingDropdown} />
+          <svelte:component this={button.component} {...button.props} on:toggle={handleToggle} />
         {:else}
           <DropdownButton {button} />
         {/if}

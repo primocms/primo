@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { find, some, isEqual } from 'lodash-es';
+  import { find, some, isEqual, cloneDeep } from 'lodash-es';
   import * as Mousetrap from 'mousetrap';
   import '@fontsource/fira-code/index.css';
 
@@ -20,7 +20,6 @@
     loadingSite,
   } from './stores/app/misc';
   import { DEFAULTS, Site } from './const';
-  import {resetActivePage} from './stores/helpers'
 
   import { pages, resetTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
@@ -51,10 +50,10 @@
   // refresh draft data when passing in updated data
   let cachedData:Site|undefined;
   $: if (!isEqual(cachedData, data)) {
-    cachedData = data;
-    hydrateSite(data);
+    cachedData = data
+    hydrateSite(data)
     resetTimeline(data)
-    updatePreview()
+    updatePreview(data)
   }
 
   $: $pageId = getPageId($pageStore.params.page);

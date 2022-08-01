@@ -3,6 +3,7 @@
 </script>
 
 <script>
+  import '@fontsource/fira-code/index.css';
   import { browser } from '$app/env'
   import { onMount } from 'svelte'
   import { get } from 'svelte/store'
