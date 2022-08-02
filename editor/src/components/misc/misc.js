@@ -72,22 +72,28 @@ export const iframePreview = (locale = 'en') => `
   </html>
 `
 
-export const componentPreview = (js, data) => `
-<!DOCTYPE html>
-<html lang="en">
-  <head></head>
-  <body class="primo-page">
-    <main></main>
-    <script type="module" async>
-      ${js}
-      new Component({
-        target: document.querySelector('main'),
-        props: ${JSON.stringify(data)}
-      });
-    </script>
-  </body>
-</html>
-`
+export const componentPreview = (js, data) => {
+
+  const blob = new Blob([js], { type: 'text/javascript' })
+  const url = URL.createObjectURL(blob)
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head></head>
+      <body class="primo-page">
+        <main></main>
+        <script type="module" async>
+          const { default:App } = await import('${url}')
+          new App({ 
+            target: document.querySelector('main'),
+            props: ${JSON.stringify(data)} 
+          })
+        </script>
+      </body>
+    </html>
+  `
+}
 
 export const pagePreview = `
   <!DOCTYPE html>

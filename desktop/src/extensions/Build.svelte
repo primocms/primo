@@ -2,7 +2,6 @@
   import axios from '$lib/libraries/axios'
   import { flattenDeep, uniqBy, find } from 'lodash-es'
   import JSZip from 'jszip'
-  import {getContext} from 'svelte'
   import { saveAs } from 'file-saver'
   import beautify from 'js-beautify'
   import { format } from 'timeago.js'

@@ -5,7 +5,7 @@
   const rightPaneSize = writable('50%');
   const topPaneSize = writable(get(onMobile) ? '100%' : '50%');
   const bottomPaneSize = writable('50%');
-  const orientation = writable('vertical')
+  const orientation = writable('horizontal')
 </script>
 
 <script lang="ts">

@@ -1,7 +1,7 @@
 <script>
   import axios from 'axios'
   import platform from 'platform'
-  import modal from '../../../stores/app/modal'
+  import {getContext} from 'svelte'
   import PrimaryButton from '../../../components/buttons/PrimaryButton.svelte'
   import * as primo from '../../../../package.json'
 
@@ -11,10 +11,12 @@
   let successful = false
 
   let version
-  try {
+  if (getContext('ENVIRONMENT') === 'DESKTOP') {
     version = `Desktop: ${__DESKTOP_VERSION__}`
-  } catch(e) {
+  } else if (getContext('ENVIRONMENT') === 'SERVER') {
     version = `Server: ${__SERVER_VERSION__}`
+  } else if (getContext('ENVIRONMENT') === 'TRY') {
+    version = `Try Primo: ${__TRY_VERSION__}`
   }
 
 </script>

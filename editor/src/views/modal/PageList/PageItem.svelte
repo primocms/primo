@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   const dispatch = createEventDispatcher();
   import { TextInput } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
@@ -11,6 +11,8 @@
   import { buildStaticPage } from '../../../stores/helpers';
   import { site } from '../../../stores/data/draft';
   import { page as pageStore } from '$app/stores';
+
+  const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'
 
   export let page;
   export let active = false;
@@ -39,14 +41,14 @@
   let id = page.id || '';
   $: disableSave = !name || !id;
 
-  const pageURL = `/${$pageStore.params.site}/${
-    page.id === 'index' ? '' : page.id || ''
-  }`;
+  const pageURL = isTryPrimo ? 
+    `/${page.id === 'index' ? '' : page.id || ''}` :  
+    `/${$pageStore.params.site}/${page.id === 'index' ? '' : page.id || ''}`;
 </script>
 
 <div class="page-item">
   <div class="page-info">
-    <a href={pageURL} on:click={openPage}>
+    <a href={pageURL} on:click|preventDefault={openPage}>
       <span class="title">{page.name}</span>
       <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
     </a>

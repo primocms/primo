@@ -3,8 +3,9 @@
   import pluralize from '../libraries/pluralize';
   import Icon from '@iconify/svelte'
   import { createEventDispatcher, onDestroy, tick } from 'svelte';
-  import {slide} from 'svelte/transition'
-  import * as idb from 'idb-keyval';
+
+  // idb crashes chrome (try primo, server)
+  // import * as idb from 'idb-keyval';
   const dispatch = createEventDispatcher();
 
   import { locale } from '../stores/app/misc'
@@ -117,15 +118,15 @@
   }
 
   let visibleRepeaters = {}
-  idb.get(field.id).then(res => {
-    if (res) {
-      visibleRepeaters = res
-    }
-  })
+  // idb.get(field.id).then(res => {
+  //   if (res) {
+  //     visibleRepeaters = res
+  //   }
+  // })
 
   onDestroy(() => {
     // save visible repeaters 
-    idb.set(field.id, _cloneDeep(visibleRepeaters))
+    // idb.set(field.id, _cloneDeep(visibleRepeaters))
   })
 </script>
 

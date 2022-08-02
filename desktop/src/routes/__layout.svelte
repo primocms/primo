@@ -1,6 +1,6 @@
 <script>
+  import {setContext} from 'svelte'
   import { browser } from '$app/env'
-  import {goto} from '$app/navigation'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import {
@@ -10,6 +10,8 @@
   } from '@primo-app/primo'
   import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
+
+  setContext('ENVIRONMENT', 'DESKTOP')
 
   if (browser) {
     import('../compiler/processors').then(({ html, css }) => {

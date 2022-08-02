@@ -12,7 +12,7 @@
   import Icon from '@iconify/svelte'
 
   export let view = 'small';
-  export let orientation = 'vertical'
+  export let orientation = 'horizontal'
   export let loading = false;
   export let hideControls = false;
   export let componentApp;
