@@ -1,14 +1,8 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
-  import { browser } from '$app/env'
-  import { find } from 'lodash-es'
   import Spinner from '$lib/ui/Spinner.svelte'
 
-  export let site = null
   export let preview = null
   export let valid = true
-
-  let generatedPreview
 
   let container
   let scale
@@ -33,14 +27,14 @@
         <Spinner />
       </div>
     {/if}
-    {#if generatedPreview || preview}
+    {#if preview}
       <iframe
         tabindex="-1"
         bind:this={iframe}
         style="transform: scale({scale})"
         class:fadein={iframeLoaded}
         title="page preview"
-        srcdoc={generatedPreview || preview}
+        srcdoc={preview}
         on:load={() => {
           resizePreview()
           iframeLoaded = true
