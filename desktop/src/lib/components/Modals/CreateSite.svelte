@@ -26,7 +26,6 @@
       name: siteName,
       id: siteID
     }
-    console.log({siteData})
     onSuccess(siteData)
   }
 

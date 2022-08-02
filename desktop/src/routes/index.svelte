@@ -7,6 +7,7 @@
   import serverSites, { connected } from '../stores/serverSites'
   import config from '../stores/config'
   import { goto } from '$app/navigation';
+  import {setSitePreview, storeSite} from '$lib/actions'
 
   let loading
   function createSite() {
@@ -24,7 +25,8 @@
               activeDeployment: null,
             },
           ]
-          // window.location.href = site.id // goto is breaking
+          setSitePreview(site)
+          storeSite(site)
           goto(site.id)
           hide()
         },
