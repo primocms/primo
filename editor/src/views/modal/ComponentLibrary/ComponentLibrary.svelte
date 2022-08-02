@@ -60,7 +60,6 @@
   async function createSymbol() {
     const symbol = Symbol();
     editSymbol(symbol);
-    track('CREATE_COMPONENT')
   }
 
   async function deleteSymbol(symbol) {
@@ -94,8 +93,6 @@
       ...symbol,
       id: createUniqueID(),
     });
-    if (selectedTab === 'primo') track('ADD_PRIMO_COMPONENT', { id: symbol.id })
-    else if (selectedTab === 'community') track('ADD_COMMUNITY_COMPONENT', { id: symbol.id })
   }
 
   let symbolSubmission

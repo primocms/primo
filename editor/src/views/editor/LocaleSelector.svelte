@@ -69,7 +69,6 @@
         <div class="locale-list">
           {#each filteredAvailableLocales as loc}
             <button on:click={() => {
-              track('ADD_LOCALITY')
               addLocale(loc.key)
               addingLanguage = false
             }} class="option" class:active={loc.key === $locale}>{loc.name} ({loc.key})</button>

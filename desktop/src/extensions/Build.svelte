@@ -15,8 +15,6 @@
   import sites from '../stores/sites'
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
-  import { addDeploymentToSite } from '$lib/actions'
-  const track = getContext('track')
 
   const siteID = $page.params.site
   const lastDeployment = find($sites, ['id', siteID])?.activeDeployment
@@ -36,7 +34,6 @@
     loading = true
     const toDownload = await createSiteZip()
     saveAs(toDownload, `${siteID}.zip`)
-    track('DOWNLOAD_SITE')
     modal.hide()
   }
 
@@ -136,8 +133,6 @@
         }
       })
     )
-
-    track('PUBLISH_SITE')
     loading = false
 
     pages = []

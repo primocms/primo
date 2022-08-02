@@ -24,7 +24,6 @@
   <div class="buttons" class:deletable>
     <button
       on:click={() => {
-        track('ADD_TO_PAGE', { section: 'CONTENT' })
         dispatch('convert', 'content')
       }}
       on:click={() => dispatch('delete')}>
@@ -38,7 +37,6 @@
             onselect: (component) => {
               modal.hide()
               dispatch('select', component)
-              track('ADD_TO_PAGE', { section: 'COMPONENT' })
             }
           }, {
             hideLocaleSelector: true
