@@ -1,4 +1,5 @@
 <script>
+  import {find as _find} from 'lodash-es'
   import axios from '$lib/libraries/axios'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import ThemeThumbnail from '$lib/components/ThemeThumbnail.svelte'
@@ -6,6 +7,7 @@
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { makeValidUrl } from '$lib/utils'
+  import {buildStaticPage} from '@primo-app/primo/src/stores/helpers'
   import {validateSiteStructure} from '@primo-app/primo/src/utils'
 
   export let onSuccess = (data) => {}
@@ -35,19 +37,26 @@
 
   let duplicatingSite = false
   let duplicateFileIsValid = true
+  let duplicationPreview
   function readJsonFile({ target }) {
     var reader = new window.FileReader()
+    duplicatingSite = true
+
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return
       const uploaded = JSON.parse(target.result)
       const converted = validateSiteStructure(uploaded)
+      if (converted) {
+        siteData = converted
+        duplicationPreview = await buildStaticPage({
+          site: converted,
+          page: _find(converted.pages, ['id', 'index'])
+        })
 
-      if (converted) siteData = converted
+      }
       else {
         duplicateFileIsValid = false
       }
-
-      duplicatingSite = true
     }
     reader.readAsText(target.files[0])
   }
@@ -84,7 +93,7 @@
       </div>
       {#if duplicatingSite}
         <div class="site-thumbnail">
-          <SiteThumbnail bind:valid={duplicateFileIsValid} site={siteData} />
+          <SiteThumbnail bind:valid={duplicateFileIsValid} preview={duplicationPreview} />
         </div>
         <div class="links">
           <button on:click={() => duplicatingSite = false}>back to themes</button>
