@@ -9,6 +9,7 @@
   export let button = null;
   export let warn = () => true;
   export let onclose = () => {};
+  export let showLocaleSelector = true
 
   function closeModal() {
     if (warn()) {
@@ -44,7 +45,7 @@
   </div>
   <div class="right-container">
     <slot />
-     {#if !$showingIDE && !$modal.hideLocaleSelector}
+     {#if !$showingIDE && !$modal.hideLocaleSelector && showLocaleSelector}
       <LocaleSelector align="left" />
     {/if}
     {#if $userRole === 'developer' && $modal.showSwitch}

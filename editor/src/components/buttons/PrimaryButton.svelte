@@ -27,7 +27,7 @@
   .primary-button {
     width: 100%;
     background: var(--PrimaryButton-bg, var(--primo-color-primogreen));
-    color: var(--PrimaryButton-color, var(--primo-color-white));
+    color: var(--PrimaryButton-color, var(--primo-color-black));
     padding: 0.5rem;
     margin-top: var(--PrimaryButton-mt, 0);
     margin-bottom: var(--PrimaryButton-mb, 0);
