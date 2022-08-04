@@ -315,9 +315,15 @@ ipcMain.on('get-server-config', async (event) => {
 const postcss = require('postcss')
 const nested = require('postcss-nested')
 const autoprefixer = require('autoprefixer')
+const postcssPresetEnv = require('postcss-preset-env')
 ipcMain.handle('process-css', async (event, data) => {
   const res = await postcss([
-    autoprefixer(),
+    postcssPresetEnv({
+      stage: 3,
+      features: {
+        'nesting-rules': false
+      }
+    }),
     nested()
   ]).process(data, { from: undefined }).catch(e => {
     return {
