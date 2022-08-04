@@ -1,13 +1,7 @@
-// import {find as _find} from 'lodash-es'
-// import {rollup} from "./lib/rollup-browser"
-// import * as svelte from 'svelte/compiler'
-// import {locales} from '@primo-app/primo/src/const'
-
 const {find:_find} = require('lodash')
 const {rollup} = require("rollup/dist/rollup.js")
 const svelte = require('svelte/compiler')
 const fetch = require('node-fetch')
-// const {locales} = require('@primo-app/primo/src/const/index.js')
 
 // Based on https://github.com/pngwn/REPLicant
 
