@@ -39,7 +39,6 @@
 
   async function publishToHosts() {
     loading = true
-
     const files = (await buildSiteBundle($site)).map((file) => {
       return {
         file: file.path,
@@ -65,7 +64,6 @@
   }
 
   async function buildSiteBundle(site) {
-    
     const pages = await Promise.all([
       ...site.pages.map((page) => buildPageTree({ page, site })),
       // ...Object.entries(site.content).map((item) => ({
@@ -73,7 +71,6 @@
       //   content: JSON.stringify(item[1]),
       // })),
     ])
-
     return buildSiteTree(pages, site)
 
     async function buildPageTree({ page, site }) {

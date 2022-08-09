@@ -1,6 +1,6 @@
 import { authorizeRequest } from './_auth'
 
-export async function get(event) {
+export async function GET(event) {
   return await authorizeRequest(event, () => ({
     body: {
       success: true

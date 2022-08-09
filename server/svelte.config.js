@@ -15,17 +15,6 @@ const config = {
 	kit: {
 		adapter: adapter(),
     // ssr: false,
-    vite: {
-      server: {
-        fs: {
-          // throws an error without this when importing Fira font
-          allow: ['..', 'node_modules/@fontsource/fira-code']
-        }
-      },
-      define: {
-        '__SERVER_VERSION__': JSON.stringify(process.env.npm_package_version),
-      }
-    }
 	}
 };
 

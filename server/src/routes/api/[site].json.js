@@ -3,7 +3,7 @@ import { authorizeRequest } from './_auth'
 import {publishSite} from './_utils'
 import {decode} from 'base64-arraybuffer'
 
-export async function get(event) {
+export async function GET(event) {
   return await authorizeRequest(event, async () => {
     const {data} = await supabaseAdmin.storage
       .from('sites')
@@ -15,7 +15,7 @@ export async function get(event) {
   })
 }
 
-export async function post(event) {
+export async function POST(event) {
   return await authorizeRequest(event, async () => {
 
     const {action, payload} = await event.request.json()

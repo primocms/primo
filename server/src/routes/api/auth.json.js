@@ -3,7 +3,7 @@ import {signUp} from '../../supabase/auth'
 import {users, config} from '../../supabase/db'
 import supabaseAdmin, {getNumberOfUsers} from '../../supabase/admin'
 
-export async function post(event) {
+export async function POST(event) {
   const payload = await event.request.json()
   const nUsers = await getNumberOfUsers()
   if (nUsers === 0) {
@@ -36,7 +36,7 @@ export async function post(event) {
   }
 }
 
-export async function get() {
+export async function GET() {
   const nUsers = await getNumberOfUsers()
   return {
     body: {
