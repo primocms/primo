@@ -126,8 +126,8 @@
 
 <style>
   :global(:root) {
-    --primo-color-primogreen: rgb(248, 68, 73);
-    --primo-color-primogreen-dark: rgb(186, 37, 42);
+    --primo-color-primogreen: #35D994;
+    --primo-color-primogreen-dark: #097548;
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
     --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);

@@ -41,11 +41,13 @@
     transition: color 0.1s, background-color 0.1s;
 
     &:hover {
-      background: var(
+
+      box-shadow: var(--primo-ring-primored-thick);
+      /* background: var(
         --PrimaryButton-bg-hover,
         var(--primo-color-primogreen-dark)
       );
-      color: var(--PrimaryButton-color-hover, var(--primo-color-white));
+      color: var(--PrimaryButton-color-hover, var(--primo-color-white)); */
     }
 
     &[disabled] {
