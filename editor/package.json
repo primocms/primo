@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.5.152",
+  "version": "1.5.153",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "dist/index.js",
   "svelte": "src/index.js",
@@ -52,6 +52,7 @@
     "autosize": "^5.0.1",
     "axios": "^0.27.1",
     "browser-image-compression": "^1.0.16",
+    "buffer": "^6.0.3",
     "codemirror": "^6.0.1",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.0.2",
