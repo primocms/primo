@@ -147,7 +147,7 @@
   <header class="tabs">
     <button on:click={() => selectedTab = 'site'} class:active={selectedTab === 'site'}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
     <button on:click={() => selectedTab = 'primo'} class:active={selectedTab === 'primo'}>Primo Library</button>
-    <button on:click={() => selectedTab = 'community'} class:active={selectedTab === 'community'}>Community Library</button>
+    <button on:click={() => selectedTab = 'community'} class:active={selectedTab === 'community'}>Kitchen Sink</button>
   </header>
   {#if selectedTab === 'site'}
     <div class="xyz-in library-buttons">
@@ -179,7 +179,7 @@
       </div>
     {/if}
   {:else if selectedTab === 'community'}
-    <div class="contribution-form library-buttons xyz-in">
+    <!-- <div class="contribution-form library-buttons xyz-in">
       {#if !submitted}
         <span>{@html $C('contribute-to-community-library')}</span>
         <div>
@@ -192,20 +192,16 @@
             </select>
           </div>
           <label>
-            <!-- <span>{$C('Credit to (optional)')}</span> -->
             <input bind:value={contributor} type="text">
           </label>
           <button on:click={submitSymbol}>
             <span>{$C('Submit')}</span>
           </button>
         </div>
-        <!-- <footer>
-          Please only submit code which you wrote yourself
-        </footer> -->
       {:else}
         <span>Thanks! Your contribution will be considered and posted publicly if accepted. Feel free to submit more.</span>
       {/if}
-    </div>
+    </div> -->
   {/if}
 
   <Masonry
