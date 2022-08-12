@@ -1,4 +1,5 @@
-# primo
+# Primo
+![screenshot](./screenshot.png)
 
 primo is an *all-in-one* CMS. Compared to most CMSs that make it easier to manage content and host websites, primo makes it easier to manage content, edit code, curate components, and publish to a static host (Vercel, Netlify) or push to Github. 
 
