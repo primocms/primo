@@ -275,27 +275,21 @@
     <ContentNode
       {block}
       on:save
-      on:focus={({ detail: selection }) => {
-        focusedNode.setSelection({ id: block.id, position: i, selection });
-      }}
+      on:focus={({ detail: selection }) => focusedNode.setSelection({ id: block.id, position: i, selection })}
       on:debounce={() => ($saved = false)}
       on:change={({ detail: html }) => {
         updateContent(block.id, html)
         updatePreview()
         dispatch('contentChanged');
       }}
-      on:selectionChange={({ detail: selection }) => {
-        focusedNode.setSelection({ id: block.id, position: i, selection });
-      }}
+      on:selectionChange={({ detail: selection }) => focusedNode.setSelection({ id: block.id, position: i, selection })}
       on:delete={deleteRow}
     />
   {:else if block.type === 'options'}
     <OptionsButtons
       deletable={$sections.length > 1}
       on:mount
-      on:select={({ detail: component }) => {
-        selectOption('component', component);
-      }}
+      on:select={({ detail: component }) => selectOption('component', component)}
       on:convert={({ detail: type }) => selectOption(type)}
       on:remove={deleteRow}
     />

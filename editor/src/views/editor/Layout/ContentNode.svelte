@@ -1,5 +1,5 @@
 <script>
-  import {isEqual} from 'lodash-es'
+  import {isEqual, cloneDeep} from 'lodash-es'
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   import CopyButton from './CopyButton.svelte';
@@ -21,7 +21,7 @@
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
   export let block
-  export let site = $unsavedSite
+  export let site
   
   let node;
 
@@ -29,12 +29,12 @@
   let bubbleMenu;
   let editor;
 
-  let content = site.content[$locale]?.[$pageID]?.[block.id] || ''
+  let content = (site || $unsavedSite).content[$locale]?.[$pageID]?.[block.id] || ''
   let cachedContent
   $: updateNodeContent($locale, $pageID, block.id) 
   function updateNodeContent(locale, pageID, blockID) {
     if (!editor || isEqual(content, cachedContent)) return
-    const updatedContent = site.content?.[locale]?.[pageID]?.[blockID] || ''
+    const updatedContent = (site || $unsavedSite).content?.[locale]?.[pageID]?.[blockID] || ''
     editor.commands.setContent(updatedContent)
   }
 
