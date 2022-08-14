@@ -7,6 +7,7 @@ import dropdown from './stores/app/dropdown'
 import activePage from './stores/app/activePage'
 import fieldTypes from './stores/app/fieldTypes'
 import modal from './stores/app/modal'
+import {buildStaticPage} from './stores/helpers'
 import {registerProcessors} from './component'
 import { DEFAULTS, Page, Site } from './const'
 import PrimoFieldTypes from './field-types'
@@ -35,6 +36,7 @@ export {
   PrimoFieldTypes,
   dropdown,
   stores,
-  registerProcessors
+  registerProcessors,
+  buildStaticPage
 }
 export default Primo

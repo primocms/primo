@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation'
   import { registerProcessors, dropdown } from '@primo-app/primo'
   import user from '../stores/user'
-  import { watchForAutoLogin, signOut } from '../supabase/auth'
+  import { watchForAutoLogin } from '../supabase/auth'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
   import * as actions from '../actions'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
