@@ -9,7 +9,7 @@ But putting the code and content together enables the even greater benefit of **
 
 ## Features
 - radically **simpler content editing** - focused fields for components content & on-page editing for editorial content
-- a powerful **component-editor** which you can use to modify any component in your site, applying the updates to all instances of that component across your site
+- a powerful **component-editor** which you can use to modify any component in your site, applying updates to all instances of that component across your site
 - a **component library** for managing the  components used on a site (including importing components from other primo sites or building new ones from scratch)
 - **components packs** and templates built with clean, editable code. 
 - **static site generation** which builds and uploads minimal HTML, CSS, and framework-less JavaScript files to your connected host. 
