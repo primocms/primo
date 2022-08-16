@@ -8,7 +8,7 @@ Instead of prioritizing one over the other, Primo treats code and content as two
 But putting the code and content together enables the even greater benefit of **component-driven development**. Instead of modifying your components from files, you edit them right from Primo's Component Editor, and when you save your changes they get applied to every instance of that component on your site. On top of that, Primo comes with a library of pre-built components written with simple, clean code that adapt to your site's design using CSS custom properties. When publish and update your site, Primo deploys its as a static site to a static host like Vercel or Netlify. 
 
 ## Features
-- radically simpler content editing - focused fields for components content & on-page editing for editorial content
+- radically **simpler content editing** - focused fields for components content & on-page editing for editorial content
 - a powerful **component-editor** which you can use to modify any component in your site, applying the updates to all instances of that component across your site
 - a **component library** for managing the  components used on a site (including importing components from other primo sites or building new ones from scratch)
 - **components packs** and templates built with clean, editable code. 
