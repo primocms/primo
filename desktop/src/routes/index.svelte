@@ -326,6 +326,7 @@
 
       ul.sites {
         display: grid;
+        place-content: flex-start;
         gap: 1rem;
 
         li {
