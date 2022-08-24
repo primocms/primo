@@ -140,16 +140,19 @@
   });
 
   let selectedTab = 'site'
+  let hideTabs = getContext('SIMPLE')
 </script>
 
 <ModalHeader />
 <main>
-  <header class="tabs">
-    <button on:click={() => selectedTab = 'site'} class:active={selectedTab === 'site'}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
-    <button on:click={() => selectedTab = 'primo'} class:active={selectedTab === 'primo'}>Primo Library</button>
-    <button on:click={() => selectedTab = 'community'} class:active={selectedTab === 'community'}>Kitchen Sink</button>
-  </header>
-  {#if selectedTab === 'site'}
+  {#if !hideTabs}
+    <header class="tabs">
+      <button on:click={() => selectedTab = 'site'} class:active={selectedTab === 'site'}>Site Library {$symbols.length > 1 ? `(${$symbols.length})` : ''}</button>
+      <button on:click={() => selectedTab = 'primo'} class:active={selectedTab === 'primo'}>Primo Library</button>
+      <button on:click={() => selectedTab = 'community'} class:active={selectedTab === 'community'}>Kitchen Sink</button>
+    </header>
+  {/if}
+  {#if selectedTab === 'site' && !hideTabs}
     <div class="xyz-in library-buttons">
       {#if $userRole === 'developer'}
         <button on:click={createSymbol} style="border-right:1px solid var(--color-gray-9)" id="create-symbol">
@@ -178,30 +181,6 @@
         </span>
       </div>
     {/if}
-  {:else if selectedTab === 'community'}
-    <!-- <div class="contribution-form library-buttons xyz-in">
-      {#if !submitted}
-        <span>{@html $C('contribute-to-community-library')}</span>
-        <div>
-          <div>
-            <span>{$C('Component')}</span>
-            <select bind:value={symbolSubmission}>
-              {#each $symbols.filter(s => s.name) as symbol}
-                <option value={symbol}>{symbol.name}</option>
-              {/each}
-            </select>
-          </div>
-          <label>
-            <input bind:value={contributor} type="text">
-          </label>
-          <button on:click={submitSymbol}>
-            <span>{$C('Submit')}</span>
-          </button>
-        </div>
-      {:else}
-        <span>Thanks! Your contribution will be considered and posted publicly if accepted. Feel free to submit more.</span>
-      {/if}
-    </div> -->
   {/if}
 
   <Masonry

@@ -43,11 +43,13 @@
 
 </script>
 
-<div id="primo-toolbar-overlay">
-  <div>
-    {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
+{#if !getContext('SIMPLE')}
+  <div id="primo-toolbar-overlay">
+    <div>
+      {$name} <span>/{$pageID === 'index' ? '' : $pageID}</span>
+    </div>
   </div>
-</div>
+{/if}
 <nav
 aria-label="toolbar"
 id="primo-toolbar"
@@ -152,7 +154,7 @@ class:mounted>
 
 <style lang="postcss">
   #primo-toolbar-overlay {
-    display: block !important;
+    display: block;
     height: 30px;
     -webkit-app-region: drag;
     background-color: var(--color-codeblack);

@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, getContext } from 'svelte';
   import { chain as _chain } from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
@@ -67,6 +67,8 @@
   let editingTitle = false
 
   let header
+  
+  const hide_options = getContext('SIMPLE')
 
 </script>
 
@@ -157,34 +159,36 @@
           </div>
         {/if}
       </div>
-      <div class="buttons">
-        {#each buttons as button}
-          <button
-            title={button.title}
-            class:selected={active}
-            class:highlight={button.highlight && !active}
-            on:mouseenter={() => {
-              hovering = true;
-            }}
-            on:mouseleave={() => {
-              hovering = false;
-            }}
-            on:click={() => {
-              active = true;
-              button.onclick();
-            }}>
-            {#if active && button.clicked}
-              <span>{button.clicked.label}</span>
-              {@html button.clicked.svg}
-            {:else}
-              {#if button.label}<span class="label">{button.label}</span>{/if}
-              {#if button.svg}
-                {@html button.svg}
-              {:else if button.icon}<i class={button.icon} />{/if}
-            {/if}
-          </button>
-        {/each}
-      </div>
+      {#if !hide_options}
+        <div class="buttons">
+          {#each buttons as button}
+            <button
+              title={button.title}
+              class:selected={active}
+              class:highlight={button.highlight && !active}
+              on:mouseenter={() => {
+                hovering = true;
+              }}
+              on:mouseleave={() => {
+                hovering = false;
+              }}
+              on:click={() => {
+                active = true;
+                button.onclick();
+              }}>
+              {#if active && button.clicked}
+                <span>{button.clicked.label}</span>
+                {@html button.clicked.svg}
+              {:else}
+                {#if button.label}<span class="label">{button.label}</span>{/if}
+                {#if button.svg}
+                  {@html button.svg}
+                {:else if button.icon}<i class={button.icon} />{/if}
+              {/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </header>
   </div>
 {/if}

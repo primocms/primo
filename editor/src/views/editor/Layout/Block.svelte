@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy, getContext } from 'svelte';
   import _ from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
@@ -154,14 +154,15 @@
   }
   let sticky = false;
   let toolbarHeight = 0;
+  let constrainButtons = getContext('SIMPLE')
 
   let container
   let toolbar
-  $: if (container && hovering) {
+  $: if (container && hovering && !constrainButtons) {
     toolbar = document.querySelector('#primo-toolbar');
     window.addEventListener('scroll', positionBlock);
     positionBlock();
-  } else if (!hovering) {
+  } else if (!hovering && !constrainButtons) {
     window.removeEventListener('scroll', positionBlock);
   }
 
