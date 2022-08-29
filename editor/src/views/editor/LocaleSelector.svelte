@@ -1,9 +1,10 @@
 <script>
   import {getContext} from 'svelte'
+  import Icon from '@iconify/svelte'
   import {fly} from 'svelte/transition'
   import {find as _find} from 'lodash-es'
   import { locale } from '../../stores/app/misc';
-  import {addLocale} from '../../stores/actions'
+  import {addLocale, removeLocale} from '../../stores/actions'
   import {locales as availableLocales} from '../../const'
   import { content } from '../../stores/data/draft';
 
@@ -29,8 +30,6 @@
     searchText = ''
   }
 
-  const track = getContext('track')
-
 </script>
 
 <div id="locale-selector" class:left={align === 'left'} in:fly={{duration: 200, x: 50, opacity: 0}}>
@@ -50,10 +49,17 @@
       {#if !addingLanguage}
         <div class="locale-list" aria-hidden="true">
           {#each locales as localeID}
-            <button on:click={() => {
-              showingSelector = false
-              $locale = localeID
-            }} class="option" class:active={localeID === $locale}>{LocaleName(localeID)} ({localeID})</button>
+            <div class="locale-item">
+              <button on:click={() => {
+                showingSelector = false
+                $locale = localeID
+              }} class="option" class:active={localeID === $locale}>{LocaleName(localeID)} ({localeID})</button>
+              {#if localeID !== 'en'}
+                <button class="remove" on:click={() => removeLocale(localeID)}>
+                  <Icon icon="bi:x" />
+                </button>
+              {/if}
+            </div>
           {/each}
           <button class="option" on:click={() => addingLanguage = true}>+ add new language</button>
         </div>
@@ -126,19 +132,31 @@
       display: grid;
       overflow-y: scroll;
       max-height: 20rem;
+      
+      .locale-item {
+        display: flex;
+      }
+      
+      button {
+        &:hover, &.active {
+          background: var(--color-gray-7);
+        }
+      }
 
       button.option {
+        flex: 1;
         text-align: left;
         font-weight: 500;
         white-space: nowrap;
         padding: 0.5rem 0.75rem;
         transition: 0.1s background;
-
-        &:hover, &.active {
-          background: var(--color-gray-7);
-        }
+      }
+      
+      button.remove {
+        padding: 0 0.5rem;
       }
     }
+  
 
     .search {
       display: flex;

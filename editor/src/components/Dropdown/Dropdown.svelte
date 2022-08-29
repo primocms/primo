@@ -12,9 +12,7 @@
 </script>
 
 <div id="locale-selector" class:left={align === 'left'} in:fly={{duration: 200, x: 50, opacity: 0}}>
-  <button class="label" class:active={showingSelector} id="jobLabel" on:click={() => {
-    showingSelector = !showingSelector
-  }}>
+  <button class="label" class:active={showingSelector} id="jobLabel" on:click={() => showingSelector = !showingSelector}>
     <Icon {icon} height="10" width="10" />   
     <span>Controls</span>   
     <svg id="chevron" width="12" height="15" viewBox="0 0 12 15" fill="none" xmlns="http://www.w3.org/2000/svg">

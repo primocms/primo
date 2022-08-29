@@ -268,6 +268,14 @@ export async function addLocale(key) {
   }))
 }
 
+export async function removeLocale(key) {
+  locale.set('en')
+  content.update(s => {
+    delete s[key]
+    return s
+  })
+}
+
 export async function changeLocale() {
   const locales = Object.keys(get(content))
   const loc = get(locale)
