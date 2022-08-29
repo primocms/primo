@@ -136,12 +136,12 @@ class:mounted>
           </svg>
             {/if}
           </span>
-          <span class="sr-only">Switch to {$showingIDE ? 'CMS' : 'IDE'}</span>
+          <span class="sr-only">Switch to {$showingIDE ? 'Content' : 'Code'}</span>
         </label>
         {#if !$onMobile}
           <div class="tooltip">
             Switch to
-            {$showingIDE ? 'CMS' : 'IDE'}
+            {$showingIDE ? 'Content' : 'Code'}
           </div>
         {/if}
       </div>

@@ -60,7 +60,7 @@
             <i class="fas fa-edit" />
           </span>
           <span class="sr-only">Switch to
-            {$showingIDE ? 'CMS' : 'IDE'}</span>
+            {$showingIDE ? 'Content' : 'Code'}</span>
         </label>
       </div>
     {/if}
