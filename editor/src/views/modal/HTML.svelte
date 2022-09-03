@@ -10,8 +10,7 @@
   import { saved } from '../../stores/app/misc';
   import { code as siteCode } from '../../stores/data/draft';
   import {
-    updateSiteHTML,
-    updateActivePageHTML,
+    updateHTML
   } from '../../stores/actions';
 
   let localPageHTML = cloneDeep($pageCode.html);
@@ -33,8 +32,10 @@
   let activeTab = tabs[0];
 
   async function saveFinalHTML() {
-    updateActivePageHTML(localPageHTML);
-    updateSiteHTML(localSiteHTML);
+    updateHTML({
+      page: localPageHTML,
+      site: localSiteHTML
+    })
     $saved = false;
   }
 </script>

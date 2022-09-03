@@ -14,7 +14,7 @@
   import { onMobile, saved, showingIDE } from '../../../stores/app/misc';
   import modal from '../../../stores/app/modal';
   import { id, sections } from '../../../stores/app/activePage';
-  import { pages, updateContent, symbols, updatePreview } from '../../../stores/actions';
+  import { pages, updateContent, symbols, updatePreview, deleteSection } from '../../../stores/actions';
 
   export let block
   export let i
@@ -35,15 +35,8 @@
     } else return false;
   }
 
-  function deleteRow() {
-    const onlyChild = $sections.length <= 1;
-    if (onlyChild) {
-      updateContent(block.id, null) // should be first
-      updateBlock(OptionsRow());
-    } else {
-      updateContent(block.id, null)
-      updateBlock(null);
-    }
+  function deleteBlock() {
+    deleteSection(block.id)
     updatePreview()
   }
 
@@ -246,7 +239,7 @@
       editable={block.type === 'component'}
       bind:node={buttons}
       on:delete={() => {
-        deleteRow();
+        deleteBlock();
         dispatch('contentChanged');
       }}
       on:edit={editComponent}
@@ -284,7 +277,7 @@
         dispatch('contentChanged');
       }}
       on:selectionChange={({ detail: selection }) => focusedNode.setSelection({ id: block.id, position: i, selection })}
-      on:delete={deleteRow}
+      on:delete={deleteBlock}
     />
   {:else if block.type === 'options'}
     <OptionsButtons
@@ -292,7 +285,7 @@
       on:mount
       on:select={({ detail: component }) => selectOption('component', component)}
       on:convert={({ detail: type }) => selectOption(type)}
-      on:remove={deleteRow}
+      on:remove={deleteBlock}
     />
   {/if}
 </div>

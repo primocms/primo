@@ -1,56 +1,32 @@
 import { get, writable, derived } from 'svelte/store';
-import { Page, Site } from '../../const'
-import { createStack } from 'svelte-undo';
+import { Page, Site } from '../../const';
+import { createStack } from '../../libraries/svelte-undo';
+import { cloneDeep } from 'lodash-es';
 
-export const id = writable('default')
-export const name = writable('')
-export const pages = writable([ Page() ])
-export const fields = writable([])
-export const symbols = writable([])
-
-// export const html = writable(Site().code.html)
-// export const css = writable(Site().code.css)
-export const code = writable(Site().code)
-export const content = writable(Site().content)
+export const id = writable('default');
+export const name = writable('');
+export const pages = writable([Page()]);
+export const fields = writable([]);
+export const symbols = writable([]);
+export const code = writable(Site().code);
+export const content = writable(Site().content);
 
 // conveniently get the entire site
-export const site = derived(
-  [ id, name, pages, code, fields, symbols, content ], 
-  ([ id, name, pages, code, fields, symbols, content]) => {
-  return {
-    id, 
-    name,
-    pages,
-    code,
-    fields, 
-    symbols,
-    content
-  }
-})
+export const site = derived([id, name, pages, code, fields, symbols, content], ([id, name, pages, code, fields, symbols, content]) => {
+	return {
+		id,
+		name,
+		pages,
+		code,
+		fields,
+		symbols,
+		content,
+	};
+});
 
-export default derived(
-  [ id, name, pages, code, fields, symbols, content ], 
-  ([ id, name, pages, code, fields, symbols, content]) => {
-  return {
-    id, 
-    name,
-    pages,
-    code,
-    fields, 
-    symbols,
-    content
-  }
-})
+export default site;
 
 export let timeline = createStack(get(site));
-export function resetTimeline(site) {
-  timeline = createStack(site)
+export function setTimeline(site) {
+	timeline.set(site);
 }
-
-
-site.subscribe(s => {
-  const stack = get(timeline)
-  if (stack.last) {
-    timeline.push(s)
-  }
-})

@@ -21,14 +21,23 @@ export async function hydrateSite(data: Site): Promise<void> {
   stores.content.set(site.content)
 }
 
-export async function updateActivePageHTML(html: string): Promise<void> {
-  pages.update(get(activePageID), (page) => ({
-    ...page,
+export async function updateHTML({ page, site }) {
+  // active page
+  pages.update(get(activePageID), (s) => ({
+    ...s,
     code: {
-      ...page.code,
-      html
+      ...s.code,
+      html: page
     }
   }));
+  
+  // site
+  code.update(c => ({
+    ...c,
+    html: site
+  }))
+
+  timeline.push(get(unsavedSite))
 }
 
 export async function updateActivePageCSS(css: string): Promise<void> {
@@ -39,14 +48,7 @@ export async function updateActivePageCSS(css: string): Promise<void> {
       css
     }
   }));
-}
-
-
-export async function updateSiteHTML(html: { head: string, below: string }): Promise<void> {
-  code.update(c => ({
-    ...c,
-    html
-  }))
+  timeline.push(get(unsavedSite))
 }
 
 export async function updateSiteCSS(css: string): Promise<void> {
@@ -54,6 +56,7 @@ export async function updateSiteCSS(css: string): Promise<void> {
     ...c,
     css
   }))
+  timeline.push(get(unsavedSite))
 }
 
 // when a Symbol is deleted from the Site Library, 
@@ -86,9 +89,10 @@ export async function deleteInstances(symbol: Symbol): Promise<void> {
 
   stores.content.set(updatedSiteContent)
   stores.pages.set(updatedPages)
+  timeline.push(get(unsavedSite))
 }
 
-let foo = 0
+
 export function undoSiteChange(): void {
   const undone = timeline.undo();
   hydrateSite(undone)
@@ -103,6 +107,7 @@ export const symbols = {
   create: (symbol: Symbol): void => {
     saved.set(false)
     stores.symbols.update(s => [cloneDeep(symbol), ...s])
+    timeline.push(get(unsavedSite))
   },
   update: (toUpdate: Symbol): void => {
     saved.set(false)
@@ -112,17 +117,19 @@ export const symbols = {
         ...toUpdate
       }) : s)
     })
+    timeline.push(get(unsavedSite))
   },
   delete: (toDelete: Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
     })
+    timeline.push(get(unsavedSite))
   }
 }
 
 export const pages = {
-  add: (newPage: Page, path: Array<string>): void => {
+  add: (newPage: Page, path: Array<string>, updateTimeline = true): void => {
     saved.set(false)
     const currentPages: Array<Page> = get(stores.pages)
     let updatedPages: Array<Page> = cloneDeep(currentPages)
@@ -143,8 +150,10 @@ export const pages = {
 
     stores.content.set(updatedContent)
     stores.pages.set(updatedPages)
+    
+    if (updateTimeline) timeline.push(get(unsavedSite))
   },
-  delete: (pageId: string, path: Array<string>): void => {
+  delete: (pageId: string, path: Array<string>, updateTimeline = true): void => {
     saved.set(false)
     const currentPages: Array<Page> = get(stores.pages)
     let newPages: Array<Page> = cloneDeep(currentPages)
@@ -162,8 +171,9 @@ export const pages = {
 
     stores.content.set(updatedContent)
     stores.pages.set(newPages)
+    if (updateTimeline) timeline.push(get(unsavedSite))
   },
-  update: async (pageId: string, fn = (p) => { }) => {
+  update: async (pageId: string, fn, updateTimeline = true) => {
     saved.set(false)
     const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) {
@@ -176,8 +186,9 @@ export const pages = {
       } else return page
     })
     stores.pages.set(newPages)
+    if (updateTimeline) timeline.push(get(unsavedSite))
   },
-  edit: async (pageId: string, updatedPage: { id: string, name: string }) => {
+  edit: async (pageId: string, updatedPage: { id: string, name: string }, updateTimeline = true) => {
     const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) {
         return { ...page, ...updatedPage }
@@ -198,7 +209,34 @@ export const pages = {
 
     stores.content.set(updatedContent)
     stores.pages.set(newPages)
+    if (updateTimeline) timeline.push(get(unsavedSite))
   }
+}
+
+export async function deleteSection(sectionID) {
+  
+  // delete section content from all locales
+  const updatedContent = cloneDeep(get(content))
+  const pageID = get(activePageID)
+  const updatedPage = cloneDeep(updatedContent[get(locale)][pageID])
+  delete updatedPage[sectionID]
+
+  for (const [locale, pages] of Object.entries(updatedContent)) {
+    updatedContent[locale] = {
+      ...pages, 
+      [pageID]: updatedPage
+    }
+  }
+  content.set(updatedContent)
+  
+  // delete section from page
+  const updatedSections = get(sections).filter(s => s.id !== sectionID)
+  pages.update(pageID, (page) => ({
+    ...page,
+    sections: updatedSections
+  }), false);
+  
+  timeline.push(get(unsavedSite))
 }
 
 export async function updateContent(blockID, updatedValue, activeLocale = get(locale)) {
@@ -207,21 +245,6 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
   const localeExists = !!currentContent[activeLocale]
   const pageExists = localeExists ? !!currentContent[activeLocale][pageID] : false
   const blockExists = pageExists ? !!currentContent[activeLocale][pageID][blockID] : false
-
-  if (!updatedValue) { // Delete block from all locales
-    const updatedPage = currentContent[activeLocale][pageID]
-    delete updatedPage[blockID]
-    content.update(content => {
-      for (const [locale, pages] of Object.entries(content)) {
-        content[locale] = {
-          ...pages, // idk why TS is complaining about this
-          [pageID]: updatedPage
-        }
-      }
-      return content
-    })
-    return
-  }
 
   if (blockExists) {
     content.update(content => ({
@@ -249,6 +272,8 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
       }))
     }
   }
+  
+  timeline.push(get(unsavedSite))
 }
 
 export async function saveFields(newPageFields, newSiteFields, newContent) {
@@ -258,22 +283,25 @@ export async function saveFields(newPageFields, newSiteFields, newContent) {
   }));
   fields.set(newSiteFields);
   content.set(newContent)
+  timeline.push(get(unsavedSite))
 }
-
 
 export async function addLocale(key) {
   content.update(s => ({
     ...s,
     [key]: s['en']
   }))
+  timeline.push(get(unsavedSite))
 }
 
 export async function removeLocale(key) {
   locale.set('en')
   content.update(s => {
-    delete s[key]
-    return s
+    const updatedContent = cloneDeep(s)
+    delete updatedContent[key]
+    return updatedContent
   })
+  timeline.push(get(unsavedSite))
 }
 
 export async function changeLocale() {

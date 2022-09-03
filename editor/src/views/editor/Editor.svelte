@@ -163,6 +163,7 @@
       }px solid var(--primo-color-black)`;
     }, 0)
   }
+  
 </script>
 
 <Toolbar

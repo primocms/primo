@@ -170,6 +170,8 @@
       {:else}
         <Block on:save {block} {i} />
       {/if}
+    {:else}
+        <Block block={{ type: 'options' }} />
     {/each}
   {/if}
 </div>
