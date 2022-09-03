@@ -181,7 +181,7 @@
         active={editor.isActive('italic')} />
       <CopyButton
         icon="highlighter"
-        on:click={editor.chain().focus().toggleHighlight({ color: '' }).run()}
+        on:click={editor.chain().focus().toggleHighlight().run()}
         active={editor.isActive('highlight')} />
     {/if}
   </div>
