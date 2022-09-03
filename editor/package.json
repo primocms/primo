@@ -2,7 +2,7 @@
   "name": "@primo-app/primo",
   "version": "1.6.0",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
-  "main": "dist/index.js",
+  "main": "src/index.js",
   "svelte": "src/index.js",
   "keywords": [
     "primo",
@@ -36,6 +36,7 @@
     "@lezer/highlight": "^1.0.0",
     "@lezer/html": "^1.0.1",
     "@lezer/lr": "^1.2.0",
+    "@popperjs/core": "^2.11.6",
     "@tiptap/core": "^2.0.0-beta.174",
     "@tiptap/extension-blockquote": "^2.0.0-beta.26",
     "@tiptap/extension-bubble-menu": "^2.0.0-beta.55",

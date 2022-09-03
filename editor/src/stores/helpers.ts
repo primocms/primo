@@ -1,7 +1,7 @@
 import { unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
-import { site as activeSite, symbols, fields as siteFields } from './data/draft'
+import { pages, site as activeSite, symbols, fields as siteFields } from './data/draft'
 import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
 import { locale } from './app/misc'
 import { processCode, processCSS, getPlaceholderValue, getEmptyValue, LoremIpsum } from '../utils'
@@ -13,6 +13,19 @@ export function resetActivePage() {
   sections.set([])
   pageFields.set([])
   pageCode.set(Page().code)
+}
+
+export function getSymbolUseInfo(symbolID) {
+  const info = { pages: [], frequency: 0 }
+  get(pages).forEach(page => {
+    page.sections.forEach(section => {
+      if (section.symbolID === symbolID) {
+        info.frequency++
+        if (!info.pages.includes(page.id)) info.pages.push(page.name)
+      }
+    })
+  })
+  return info
 }
 
 export function getAllFields(componentFields: any[] = [], exclude = () => true) {

@@ -1,10 +1,12 @@
 <script>
   import { createEventDispatcher, onMount, getContext } from 'svelte';
   import { chain as _chain } from 'lodash-es'
+  import Icon from '@iconify/svelte'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
   import { LoremIpsum } from "lorem-ipsum";
-  import {getComponentData} from '../../../stores/helpers'
+  import * as Popper from '@popperjs/core'
+  import {getComponentData, getSymbolUseInfo} from '../../../stores/helpers'
 
   import IFrame from './IFrame.svelte';
   import {
@@ -60,6 +62,15 @@
 
     error = res.error;
     componentApp = res.js;
+  }
+  
+  const info = getSymbolUseInfo(symbol.id)
+  let button_node
+  let tooltip_node
+  $: if (tooltip_node) {
+    Popper.createPopper(button_node, tooltip_node, {
+      placement: 'top',
+    });
   }
 
   let active;
@@ -150,6 +161,17 @@
               {/if}
             </label>
           </form>
+          <span bind:this={button_node} class="info" title="Used {info.frequency} times on site">
+            <Icon icon="akar-icons:info" width="1.25rem" height="100%" />
+          </span>
+          <div bind:this={tooltip_node} class="info-tooltip">
+            <div id="arrow" data-popper-arrow></div>
+            {#if info.frequency === 0}
+              <span>Unused</span>
+            {:else}
+              <span>Used on {info.pages.join(', ')} {info.frequency} {info.frequency === 1 ? 'time' : 'times'}</span>
+            {/if}
+          </div>
         {:else if name}
           <div class="action-name">
             <span>{name}</span>
@@ -310,6 +332,45 @@
         span {
           font-weight: 700;
           font-size: 0.75rem;
+        }
+      }
+      
+      .info {
+        padding: 0 1rem;
+        font-size: 3rem;
+        
+        &:hover + .info-tooltip {
+          opacity: 1;
+        }
+      }
+      
+      .info-tooltip {
+        font-weight: 500;
+        background: var(--color-gray-9);
+        padding: 0.25rem 0.5rem;
+        max-width: 250px;
+        opacity: 0;
+        transition: 0.1s opacity;
+        pointer-events: none;
+        translate: 0 -6px;
+        
+        [data-popper-arrow],
+        [data-popper-arrow]::before {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          background: inherit;
+        }
+        
+        [data-popper-arrow] {
+          visibility: hidden;
+          bottom: -4px;
+        }
+        
+        [data-popper-arrow]::before {
+          visibility: visible;
+          content: '';
+          transform: rotate(45deg);
         }
       }
 
