@@ -4,6 +4,7 @@ import axios from '$lib/libraries/axios'
 import config from '../stores/config'
 import * as stores from '../stores'
 import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+import {locale} from 'svelte-i18n'
 
 export const serverSites = {
   save: async (site) => {
@@ -56,6 +57,14 @@ export async function setActiveEditor(siteID) {
     siteBeingEdited = null
     setActiveEditor(siteID)
   }
+}
+
+export function setLanguage(language) {
+  config.update(c => ({
+    ...c,
+    language
+  }))
+  locale.set(language)
 }
 
 export async function storeSite(site) {

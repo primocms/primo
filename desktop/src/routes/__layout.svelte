@@ -1,6 +1,7 @@
 <script>
   import {setContext} from 'svelte'
   import { browser } from '$app/env'
+  import { init, addMessages } from 'svelte-i18n';
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import {
@@ -10,6 +11,15 @@
   } from '@primo-app/primo'
   import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
+  import config from '../stores/config'
+  
+  import('../../languages/en.json').then(m => addMessages('en', m.default));
+  import('../../languages/es.json').then(m => addMessages('es', m.default));
+  
+  init({
+    fallbackLocale: 'en',
+    initialLocale: $config.language,
+  });
 
   setContext('ENVIRONMENT', 'DESKTOP')
 

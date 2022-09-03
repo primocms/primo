@@ -1,29 +1,35 @@
 <script>
   import axios from '$lib/libraries/axios'
   import Tabs from '$lib/ui/Tabs.svelte'
+  import { _ as C } from 'svelte-i18n';
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import TextField from '$lib/ui/TextField.svelte'
   import config from '../../../stores/config'
   import {getSitesFromServer} from '../../../stores/serverSites'
   import Hosting from '../Hosting.svelte'
+  import {setLanguage} from '$lib/actions'
 
   export let tab = 0
 
-  let tabs = [
+  let tabs = []
+  $: tabs = [
     {
-      label: 'Hosting',
+      id: 'HOSTING',
+      label: $C('settings.hosting.heading'),
       icon: 'globe',
     },
     {
-      label: 'Server',
+      id: 'SERVER',
+      label: $C('settings.server.heading'),
       icon: 'server',
     },
     {
-      label: 'Advanced',
+      id: 'ADVANCED',
+      label: $C('settings.advanced.heading'),
       icon: 'cog',
     },
   ]
-  let activeTab = tabs[tab]
+  let activeTab = { id: 'HOSTING' }
 
   async function selectDirectory() {
     const dir = await window.primo?.config.selectDirectory()
@@ -86,17 +92,17 @@
 <main>
   <Tabs {tabs} bind:activeTab />
   <div class="content-container">
-    {#if activeTab.label === 'Hosting'}
+    {#if activeTab.id === 'HOSTING'}
       <h1 class="primo-heading-lg heading">
-        Hosting <span class="supporting-text"
-          >Connect to an available webhost to publish your sites to the internet</span
+        {$C('settings.hosting.heading')} <span class="supporting-text"
+          >{$C('settings.hosting.subheading')}</span
         >
       </h1>
       <Hosting />
-    {:else if activeTab.label === 'Server'}
+    {:else if activeTab.id === 'SERVER'}
       <h1 class="primo-heading-lg heading">
-        Primo Server <span class="supporting-text"
-          >Connect to a primo server to manage your server sites from your desktop</span
+        {$C('settings.server.heading')} <span class="supporting-text"
+          >{$C('settings.server.subheading')}</span
         >
       </h1>
       <form on:submit|preventDefault={connectToServer}>
@@ -114,22 +120,35 @@
         />
         <span>{serverErrorMessage}</span>
         {#if connectedToServer}
-          <span>Connected to {serverConfig.url}</span>
+          <span>{$C('settings.server.connected_to')} {serverConfig.url}</span>
         {:else}
-          <PrimaryButton {loading} type="submit">Connect to Server</PrimaryButton>
+          <PrimaryButton {loading} type="submit">{$C('settings.server.button')}</PrimaryButton>
         {/if}
       </form>
-    {:else if activeTab.label === 'Advanced'}
-      <h1 class="primo-heading-lg heading">Advanced</h1>
+    {:else if activeTab.id === 'ADVANCED'}
+      <h1 class="primo-heading-lg heading">{$C('settings.advanced.heading')}</h1>
       <div class="container">
         <h2 class="heading">
-          Local Save Directory
-          <span class="supporting-text">Set the directory you'll be saving your sites to.</span>
+          {$C('settings.advanced.save.heading')}
+          <span class="supporting-text">{$C('settings.advanced.save.subheading')}</span>
         </h2>
         <span>{$config.saveDir}</span>
         <PrimaryButton on:click={selectDirectory}
-          >Select directory</PrimaryButton
+          >{$C('settings.advanced.save.button')}</PrimaryButton
         >
+      </div>
+      <div class="container">
+        <h2 class="heading">
+          <span>{$C('settings.advanced.lang.heading')}</span>
+          <span class="supporting-text">{$C('settings.advanced.lang.subheading')}</span>
+        </h2>
+        <select value={$config.language} on:change={({target}) => {
+          const lang = target.value
+          setLanguage(lang)
+        }}>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
       </div>
     {/if}
   </div>
@@ -172,5 +191,15 @@
     }
 
     --space-y: 1rem;
+  }
+  select {
+    width: 100%;
+    background: var(--color-gray-9);
+    color: var(--color-gray-2);
+    font-size: var(--font-size-2);
+    font-weight: 600;
+    border: 1px solid var(--color-gray-8);
+    border-radius: var(--primo-border-radius);
+    padding: 0.5rem !important;
   }
 </style>

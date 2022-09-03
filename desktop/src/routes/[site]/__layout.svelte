@@ -20,6 +20,7 @@
   import { page } from '$app/stores'
   import * as actions from '$lib/actions'
   import {setSitePreview, storeSite} from '$lib/actions'
+  import config from '../../stores/config'
 
   if (browser) {
     primoModal.register([
@@ -96,6 +97,7 @@
     {data}
     {role}
     {saving}
+    language={$config.language}
     on:save={async ({ detail: data }) => saveData(data)}
   />
 {/if}

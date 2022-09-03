@@ -14,7 +14,7 @@
   <div class="tabs {variants}" in:fade={{ duration: 200 }}>
     <ul xyz="fade stagger">
       {#each tabs as tab}
-        <li class="xyz-in" class:is-active={activeTab === tab}>
+        <li class="xyz-in" class:is-active={activeTab.id === tab.id}>
           <button
             on:click={() => (activeTab = tab)}
             class:text-primored={tab.highlighted}
