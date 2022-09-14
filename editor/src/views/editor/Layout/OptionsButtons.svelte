@@ -25,8 +25,7 @@
     <button
       on:click={() => {
         dispatch('convert', 'content')
-      }}
-      on:click={() => dispatch('delete')}>
+      }}>
       <i class="fas fa-edit" />
       <span>Add Content</span>
     </button>

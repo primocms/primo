@@ -50,13 +50,14 @@
     },
   };
 
-  let placeholders = new Map()
+  const placeholders = new Map()
   function getCachedPlaceholder(field) {
-    if (placeholders.has(field.id)) {
-      return placeholders.get(field.id)
+    const key = JSON.stringify(field)
+    if (placeholders.has(key)) {
+      return placeholders.get(key)
     } else {
       const val = getPlaceholderValue(field)
-      placeholders.set(field.id, val)
+      placeholders.set(key, val)
       return val
     }
   }
@@ -125,7 +126,6 @@
       let updatedContent = cloneDeep(localContent)
       fields.forEach(field => {
         if (localContent[$locale][field.key] === undefined) {
-          console.log('DOES NOT EXIST, adding', field.key)
           Object.keys(localContent).forEach(loc => {
             updatedContent[loc][field.key] = getEmptyValue(field)
           })
@@ -139,7 +139,6 @@
       let updatedContent = cloneDeep(localContent)
       Object.keys(localContent[$locale]).forEach((key) => {
         if (!find(fields, ['key', key])) {
-          console.log('Value does not exist, deleting', key)
           Object.keys(localContent).forEach(loc => {
             delete updatedContent[loc][key]
           })

@@ -27,7 +27,7 @@
         <Spinner />
       </div>
     {/if}
-    {#if preview}
+    {#if preview !== null}
       <iframe
         tabindex="-1"
         bind:this={iframe}

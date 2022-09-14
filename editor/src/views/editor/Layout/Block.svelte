@@ -41,13 +41,17 @@
   }
 
   function updateBlock(newBlock) {
-    updateSections(
-      $sections
-        .map((exitingBlock) =>
-          exitingBlock.id === block.id ? newBlock : exitingBlock
-        )
-        .filter(Boolean)
-    );
+    if ($sections.length > 0) {
+      updateSections(
+        $sections
+          .map((exitingBlock) =>
+            exitingBlock.id === block.id ? newBlock : exitingBlock
+          )
+          .filter(Boolean)
+      );
+    } else {
+      updateSections([newBlock])
+    }
   }
 
   function updateSections(newSections) {
