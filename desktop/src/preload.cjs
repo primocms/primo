@@ -58,6 +58,9 @@ contextBridge.exposeInMainWorld('primo', {
 			const res = await ipcRenderer.invoke('save-data', data);
 			return res;
 		},
+		setDeployment: data => {
+			ipcRenderer.sendSync('set-deployment', data);
+		},
 	},
 	processCSS: async raw => {
 		const res = await ipcRenderer.invoke('process-css', raw);

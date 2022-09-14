@@ -2,7 +2,6 @@ const { app, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 
 // Electron Update
-
 const isDev = require('electron-is-dev');
 const checkInternetConnected = require('check-internet-connected');
 
@@ -233,54 +232,86 @@ ipcMain.on('create-popup', event => {
 });
 
 // Save/Load Data
+
+// Saving: Create directory named after site, contains data.json, config.json, and preview.html
+
+// Loading: Loop through directories
+
 ipcMain.on('load-data', (event, directory) => {
-	const files = fs.readdirSync(savePath);
-	const sites = [];
-	files
+	// convert any existing .json site files to directories
+	const all_files = fs.readdirSync(savePath);
+	const files = all_files
 		.filter(file => {
-			const type = file.slice(file.indexOf('.') + 1);
-			return type === 'json';
+			const extension = file.slice(file.indexOf('.') + 1); // get file extension
+			return extension === 'json';
 		})
 		.forEach(file => {
+			const file_directory = `${savePath}/${file}`;
+
 			const name = file.slice(0, file.indexOf('.'));
-			const data = fs.readJsonSync(`${directory}/${file}`, { throws: false });
+			const data = fs.readJsonSync(file_directory, { throws: false });
 
-			let preview = null;
-			if (fs.existsSync(`${directory}/${name}.html`)) {
-				preview = fs.readFileSync(`${directory}/${name}.html`, 'utf8');
+			const preview_exists = fs.existsSync(`${savePath}/${name}.html`);
+			const preview = preview_exists ? fs.readFileSync(`${savePath}/${name}.html`, 'utf8') : '';
+
+			if (data) {
+				// write to directory
+				const site_directory = `${savePath}/${name}`;
+				if (!fs.existsSync(site_directory)) {
+					fs.mkdir(site_directory);
+					fs.writeJSONSync(`${site_directory}/data.json`, data);
+					fs.writeJSONSync(`${site_directory}/config.json`, {});
+					fs.writeFileSync(`${site_directory}/preview.html`, preview);
+
+					fs.unlinkSync(`${site_directory}.json`);
+					if (preview_exists) fs.unlinkSync(`${site_directory}.html`);
+				}
 			}
-
-			if (data)
-				sites.push({
-					preview,
-					data,
-				});
 		});
+
+	// retrieve sites from directories
+	const updated_files = fs.readdirSync(savePath);
+	const directories = updated_files.filter(item => fs.lstatSync(`${directory}/${item}`).isDirectory());
+	const sites = directories.map(siteDirectory => ({
+		data: fs.readJsonSync(`${directory}/${siteDirectory}/data.json`, { throws: false }),
+		config: fs.readJsonSync(`${directory}/${siteDirectory}/config.json`, { throws: false }),
+		preview: fs.readFileSync(`${directory}/${siteDirectory}/preview.html`, 'utf8'),
+	}));
+
 	event.returnValue = sites;
 });
 
 ipcMain.on('set-preview', (event, site) => {
 	if (site.preview) {
-		fs.writeFileSync(`${savePath}/${site.id}.html`, site.preview);
+		fs.writeFileSync(`${savePath}/${site.id}/preview.html`, site.preview);
 	}
 	event.returnValue = true;
 });
 
-ipcMain.handle('save-data', async (event, site) => {
-	await new Promise(resolve => {
-		fs.writeJSON(`${savePath}/${site.id}.json`, site, () => {
-			resolve();
-		});
+ipcMain.on('set-deployment', (event, site) => {
+	const config = fs.readJsonSync(`${savePath}/${site.id}/config.json`, { throws: false });
+	fs.writeJSONSync(`${savePath}/${site.id}/config.json`, {
+		...config,
+		deployment: site.deployment,
 	});
+	event.returnValue = true;
+});
+
+// Save site
+ipcMain.handle('save-data', async (event, site) => {
+	const directory = `${savePath}/${site.id}`;
+	if (!fs.existsSync(directory)) fs.mkdir(directory);
+	fs.writeJSON(`${directory}/data.json`, site);
 	return true;
 });
 
+// Delete site
 ipcMain.on('delete-site', (event, site) => {
 	fs.unlinkSync(`${savePath}/${site}.json`);
 	event.returnValue = true;
 });
 
-// SAVE DIRECTORY
+// Set directory to save sites
 ipcMain.on('set-save-directory', async (event, arg) => {
 	const res = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] });
 	if (!res.canceled) {

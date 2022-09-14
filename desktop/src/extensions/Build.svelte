@@ -1,6 +1,6 @@
 <script>
   import axios from '$lib/libraries/axios'
-  import { flattenDeep, uniqBy, find } from 'lodash-es'
+  import { flattenDeep, uniqBy, find, isEqual as _isEqual, cloneDeep as _cloneDeep } from 'lodash-es'
   import JSZip from 'jszip'
   import { saveAs } from 'file-saver'
   import beautify from 'js-beautify'
@@ -13,16 +13,22 @@
   import hosts from '../stores/hosts'
   import sites from '../stores/sites'
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
+  import Preview from '@primo-app/primo/src/components/misc/Preview.svelte';
   import { page } from '$app/stores'
+  import {addDeploymentToSite} from '$lib/actions'
+  import {pushSite, createRepo} from './hosts/github'
+  import netlify from './hosts/netlify'
+  import vercel from './hosts/vercel'
 
   const siteID = $page.params.site
   const lastDeployment = find($sites, ['id', siteID])?.activeDeployment
 
   let loading = false
+  
+  const SHOW_CHANGED_PAGES = $hosts[0]['name'] === 'github'
 
   async function createSiteZip() {
     const zip = new JSZip()
-    const files = await buildSiteBundle($site, siteID)
     files.forEach((file) => {
       zip.file(file.path, file.content)
     })
@@ -35,142 +41,130 @@
     saveAs(toDownload, `${siteID}.zip`)
     modal.hide()
   }
-
-  let newDeployment
-  async function publishToHosts() {
-    loading = true
-
-    // const name = window.location.pathname.split('/')[2]
-    const files = (await buildSiteBundle($site, siteID)).map((file) => {
+  
+  // get updated pages
+  const previousSite = lastDeployment ? lastDeployment.site : null
+  let changed_pages = []
+  if (previousSite) {
+    const siteCodeMatches = _isEqual(previousSite.code, $site.code)
+    changed_pages = !siteCodeMatches 
+      ? $site.pages 
+      : Object.entries(previousSite.content['en']).map(([pageID, content]) => {
+        // if it's different from the new site, or doesn't exist in the new site, or only exists in the new site
+        const newPage = find($site.pages, ['id', pageID])
+        const previousPage = find(previousSite.pages, ['id', pageID])
+        
+        if (!newPage) return
+        
+        const previousContent = $site.content['en'][pageID]
+        const pageContentMatches = _isEqual(previousContent, content)
+        const pageCodeMatches = _isEqual(previousPage.code, newPage.code)
+        
+        if (!pageContentMatches || !pageCodeMatches) return find($site.pages, ['id', pageID])
+        
+      }).filter(Boolean)
+  }
+  
+  let files = []
+  buildSiteBundle($site, SHOW_CHANGED_PAGES ? changed_pages : []).then(res => {
+    files = uniqBy(res.map((file) => {
       return {
         file: file.path,
         data: file.content,
       }
-    })
-    const uniqueFiles = uniqBy(files, 'file') // modules are duplicated
+    }), 'file') // remove duplicated modules
+  })
 
-    await Promise.allSettled(
-      $hosts.map(async ({ token, name }) => {
-        if (name === 'vercel') {
-          const { data } = await axios
-            .post(
-              'https://api.vercel.com/v12/now/deployments',
-              {
-                name: siteID,
-                files: uniqueFiles,
-                projectSettings: {
-                  framework: null,
-                },
-                target: 'production',
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            )
-            .catch((e) => ({ data: null }))
-
+  let newDeployment
+  async function publishToHosts() {
+    loading = true
+    
+    const [activeHost] = $hosts
+    const { name, token } = activeHost
+    
+    try {
+      if (name === 'vercel') {
+        const data = await vercel.create_or_update_site({ name: siteID, files, token })
+        newDeployment = {
+          id: data.id,
+          url: `https://${data.alias[0]}`,
+          created: data.createdAt,
+          site: _cloneDeep($site)
+        }
+      } else if (name === 'netlify') {
+        const zip = await createSiteZip()
+        if (lastDeployment) { // Upload updated site
+          await netlify.updateSite({ id: lastDeployment.id, zip, token })
           newDeployment = {
-            id: data?.id,
-            url: `https://${data.alias[0]}`,
-            created: data?.createdAt,
+            ...lastDeployment,
+            created: Date.now(),
+            site: _cloneDeep($site)
           }
-          // addDeploymentToSite({
-          //   siteID,
-          //   newDeployment,
-          //   lastDeployment: {
-          //     ...newDeployment,
-          //     name,
-          //     siteID: data.id,
-          //   },
-          // })
-        } else if (name === 'netlify') {
-
-          let data
-
-          // if no newDeployment saved, create new site
-          if (!lastDeployment || lastDeployment.name !== 'netlify') {
-            const zipFile = await createSiteZip()
-            const res = await axios
-              .post('https://api.netlify.com/api/v1/sites', zipFile, {
-                headers: {
-                  'Content-Type': 'application/zip',
-                  Authorization: `Bearer ${token}`,
-                },
-              })
-              .catch((e) => ({ data: null }))
-
-            data = res.data
-          } else {
-            const zipFile = await createSiteZip()
-            const res = await axios
-              .put(
-                `https://api.netlify.com/api/v1/sites/${lastDeployment.siteID}`,
-                zipFile,
-                {
-                  headers: {
-                    'Content-Type': 'application/zip',
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              )
-              .catch((e) => ({ data: null }))
-            data = res.data
-          }
-
-          // check for null data before continuing if null then handle this error else continue
-          if (!data) {
-            console.warn('Error creating site', { data })
-          } else {
-            newDeployment = {
-              id: data.deploy_id,
-              url: data.url,
-              created: Date.now(),
-            }
+        } else { // Create new site
+          const {id, url} = await netlify.createSite({ zip, token })
+          newDeployment = {
+            id,
+            url,
+            created: Date.now(),
+            site: _cloneDeep($site)
           }
         }
-      })
-    )
+      
+      } else if (name === 'github') {    
+        if (lastDeployment) { // Push updates  
+          const sha = await pushSite({
+            token,
+            repo: lastDeployment.id,
+            files,
+            activeSha: lastDeployment.deploy_id
+          })
+          newDeployment = {
+            ...lastDeployment,
+            deploy_id: sha,
+            created: Date.now(),
+            site: _cloneDeep($site)
+          }
+        } else { // Create repo  
+          const { html_url, full_name } = await createRepo({ token, name: siteID })
+          const sha = await pushSite({
+            token,
+            repo: full_name,
+            files
+          })
+          newDeployment = {
+            id: full_name,
+            deploy_id: sha,
+            url: html_url,
+            created: Date.now(),
+            site: _cloneDeep($site)
+          }
+        }
+      }
+    } catch(e) {
+      console.error(e)
+      alert('Could not publish site, see console for details')
+    }
+    
+      // check for null data before continuing if null then handle this error else continue
+    if (!newDeployment) {
+      console.warn('Error creating site')
+    } else {
+      addDeploymentToSite({ siteID, deployment: newDeployment })
+    }
+    
     loading = false
-
-    pages = []
   }
 
-  async function buildSiteBundle(site, siteName) {
-    const primoPage = `
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-
-          <body class="primo-page">   
-            <iframe allow="clipboard-read; clipboard-write self https://its.primo.af" border="0" src="https://its.primo.af/${siteName}" style="height:100vh;width:100vw;position:absolute;top:0;left:0;border:0;"></iframe>
-          </body>
-        </html>
-      `
+  async function buildSiteBundle(site, pages_to_build = []) {
+      
+    const will_build = pages_to_build.length > 0 ? pages_to_build : site.pages
 
     const pages = await Promise.all([
-      ...site.pages.map((page) => buildPageTree({ page, site })),
+      ...will_build.map((page) => buildPageTree({ page, site })),
       {
         path: `primo.json`,
         content: JSON.stringify(site),
       },
-      // [
-      //   {
-      //     path: `edit/index.html`,
-      //     content: primoPage,
-      //   },
-      //   // {
-      //   //   path: 'robots.txt',
-      //   //   content: `
-      //   //   # Example 3: Block all but AdsBot crawlers
-      //   //   User-agent: *
-      //   //   Disallow: /`
-      //   // },
-      // ],
     ])
 
     return buildSiteTree(pages, site)
@@ -239,8 +233,6 @@
       ]
     }
   }
-
-  let pages = []
 </script>
 
 <ModalHeader icon="fas fa-globe" title="Publish" />
@@ -291,38 +283,68 @@
           </div>
         </div>
       {/if}
-      <header class="review">
-        <div>
-          {#if pages.length > 0 && !newDeployment}
-            <p class="title">Review and Publish</p>
-            <p class="subtitle">
-              Here are the changes that you're making to your site
-            </p>
-            <PrimaryButton
-              on:click={publishToHosts}
-              label="Publish"
-              {loading}
-            />
-          {:else if $hosts.length > 0 && !newDeployment}
-            <PrimaryButton
-              on:click={publishToHosts}
-              label="Publish"
-              {loading}
-            />
-          {:else if !newDeployment}
-            <p class="title">Download your website</p>
-            <p class="subtitle">
-              You can connect a web host to publish your website directly from
-              primo, or download it to publish it manually
-            </p>
-            <PrimaryButton
-              on:click={downloadSite}
-              label="Download your site"
-              {loading}
-            />
-          {/if}
-        </div>
-      </header>
+      {#if !newDeployment}
+        <header class="review">
+          <div>
+            {#if changed_pages.length > 0}
+              {#if SHOW_CHANGED_PAGES}
+                <p class="title">Review and Publish</p>
+                <p class="subtitle">These are the pages you've updated which will be uploaded</p>
+                <div class="changed-pages">
+                  {#each files.filter(f => f.file.slice(-4) === 'html') as file}
+                  <div class="page-item">
+                    <span>{file.file}</span>
+                    <div class="page-body">
+                        <div class="page-link">
+                          <Preview preview={file.data} preventClicks={true} />
+                        </div>
+                      </div>
+                  </div>
+                  {/each}
+                </div>
+              {/if}
+              <PrimaryButton
+                on:click={publishToHosts}
+                label="Publish Pages"
+                {loading}
+              />
+            {:else if $hosts.length > 0 && lastDeployment && SHOW_CHANGED_PAGES}
+              <p class="title">No updated pages</p>
+              <p class="subtitle">You haven't made any detectable changes to your site, but you can publish it again.</p>
+              <PrimaryButton
+                on:click={publishToHosts}
+                label="Publish Site"
+                {loading}
+              />
+            {:else if $hosts.length > 0 && lastDeployment}
+              <PrimaryButton
+                on:click={publishToHosts}
+                label="Publish Site"
+                {loading}
+              />
+            {:else if $hosts.length > 0}
+              <p class="title">Publish site</p>
+              <p class="subtitle">Your site will be uploaded as static HTML/CSS/JS files to your connected web host.</p>
+              <PrimaryButton
+                on:click={publishToHosts}
+                label="Publish Site"
+                {loading}
+              />
+            {:else}
+              <p class="title">Download your website</p>
+              <p class="subtitle">
+                You can connect a web host to publish your website directly from
+                primo, or download it to publish it manually
+              </p>
+              <PrimaryButton
+                on:click={downloadSite}
+                label="Download your site"
+                {loading}
+              />
+            {/if}
+          </div>
+        </header>
+      {/if}
     </div>
   </div>
 </main>
@@ -371,6 +393,8 @@
           padding: 1rem 0;
           display: flex;
           flex-direction: column;
+          
+          span {font-size: 0.875rem}
 
           a {
             text-decoration: underline;
@@ -387,6 +411,62 @@
       }
     }
   }
+  
+  header.review {
+    .changed-pages {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .page-item {
+      font-size: 0.75rem;
+      color: var(--color-gray-2);
+    }
+  }
+  
+    .page-body {
+      border-top: 1px solid var(--color-gray-9);
+      height: 0;
+      padding-top: calc(75% - 37px);
+      /* include header in square */
+      position: relative;
+      overflow: hidden;
+    
+      .page-link {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: var(--primo-color-white);
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        transition: var(--transition-colors);
+        min-height: 10rem;
+        
+        &.active {
+          cursor: default;
+          pointer-events: none;
+          opacity: 0.5;
+    
+          &:after {
+            opacity: 0.5;
+          }
+        }
+    
+        .page-container {
+          all: unset;
+          height: 100%;
+          z-index: -1; /* needed for link */
+        }
+      }
+      a.page-link {
+        &:hover {
+          opacity: 0.5;
+        }
+      }
+    }
 
   @media (max-width: 600px) {
     main {

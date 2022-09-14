@@ -88,54 +88,29 @@ export async function setSitePreview(site) {
   window.primo?.data.setPreview({ id: site.id, preview })
 }
 
-export async function addDeploymentToSite({
-  siteID,
-  deployment,
-  activeDeployment,
-}) {
+export async function addDeploymentToSite({ siteID, deployment }) {
   stores.sites.update((s) =>
     s.map((site) => {
       return site.id === siteID
         ? {
           ...site,
-          // deployments: [deployment, ...site.deployments],
-          activeDeployment,
+          activeDeployment: deployment,
         }
         : site
     })
   )
+  window.primo?.data.setDeployment({ id: siteID, deployment })
 }
 
 export const hosts = {
+  // todo: enable adding multiple hosts, connecting site to each
   connect: async ({ name, token }) => {
-    const endpoint = {
-      vercel: 'https://api.vercel.com/www/user',
-      netlify: 'https://api.netlify.com/api/v1/user',
-    }[name]
-
-    const { data } = await axios
-      .get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .catch((e) => {
-        data: null
-      })
-    if (data) {
-      stores.hosts.update((h) => {
-        return [
-          ...h,
-          {
-            name,
-            token,
-            // user: data.user,
-          },
-        ]
-      })
-    } else {
-      window.alert('Could not connect to host')
-    }
+    stores.hosts.update((h) => {
+      return [{
+          name,
+          token,
+        }]
+    })
   },
   delete: (name) => {
     stores.hosts.update((hosts) => hosts.filter((p) => p.name !== name))

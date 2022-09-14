@@ -1,35 +1,31 @@
-import { writable } from 'svelte/store'
-import { browser } from '$app/env'
-// import { get, set } from 'idb-keyval'
-import {find as _find} from 'lodash-es'
+import { writable } from 'svelte/store';
+import { browser } from '$app/env';
+import { find as _find } from 'lodash-es';
 
-const store = writable([])
+const store = writable([]);
 
-if (browser) initializSiteData()
+if (browser) initializSiteData();
 
 async function initializSiteData() {
-  const data = window.primo?.data // preload.cjs
-  if (!data) return
-  const siteFiles = data.load()
-  // const sitesDB = await get('sites')
-  const sitesDB = []
+	const data = window.primo?.data; // preload.cjs
+	if (!data) return;
+	const siteFiles = data.load();
+	const sitesDB = [];
 
-  const rebuiltSites = siteFiles.map(({data, preview}) => {
-    return {
-      id: data.id,
-      name: data.name,
-      activeDeployment: data.activeDeployment,
-      data,
-      preview
-    }
-  })
+	const rebuiltSites = siteFiles.map(({ data, preview, config }) => {
+		return {
+			id: data.id,
+			name: data.name,
+			activeDeployment: config.deployment,
+			data,
+			preview,
+		};
+	});
 
-  store.set(rebuiltSites)
-
-
+	store.set(rebuiltSites);
 }
 export default {
-  update: store.update,
-  set: store.set,
-  subscribe: store.subscribe,
-}
+	update: store.update,
+	set: store.set,
+	subscribe: store.subscribe,
+};
