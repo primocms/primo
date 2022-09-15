@@ -1,5 +1,4 @@
 <script>
-  import axios from '$lib/libraries/axios'
   import { flattenDeep, uniqBy, find, isEqual as _isEqual, cloneDeep as _cloneDeep } from 'lodash-es'
   import JSZip from 'jszip'
   import { saveAs } from 'file-saver'
@@ -25,7 +24,7 @@
 
   let loading = false
   
-  const SHOW_CHANGED_PAGES = $hosts[0]['name'] === 'github'
+  const SHOW_CHANGED_PAGES = $hosts[0]?.['name'] === 'github'
 
   async function createSiteZip() {
     const zip = new JSZip()

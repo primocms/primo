@@ -2,7 +2,7 @@
   import { _ as C } from 'svelte-i18n'
   import * as Mousetrap from 'mousetrap';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { browser } from '$app/env';
+  import { browser } from '$app/environment';
 
   const dispatch = createEventDispatcher();
 

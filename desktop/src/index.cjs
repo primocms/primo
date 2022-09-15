@@ -84,7 +84,7 @@ require('electron-reload')(__dirname, {
 
 const serveURL = serve({ directory: 'build' });
 
-const port = process.env.PORT || 3333;
+const port = process.env.PORT || 5173;
 
 let win;
 const createWindow = () => {

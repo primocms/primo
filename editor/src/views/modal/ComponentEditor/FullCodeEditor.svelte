@@ -20,7 +20,7 @@
   import HSplitPane from './HSplitPane.svelte';
   import { CodeMirror } from '../../../components';
   import { onMobile, showKeyHint } from '../../../stores/app/misc';
-  import {browser} from '$app/env'
+  import {browser} from '$app/environment'
 
   export let variants = '';
 

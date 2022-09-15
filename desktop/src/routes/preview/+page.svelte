@@ -7,13 +7,18 @@
   import {onMount, setContext, tick} from 'svelte'
   import PureComponent from '@primo-app/primo/src/views/editor/Layout/PureComponent.svelte'
   import { wrapInStyleTags, processCode } from '@primo-app/primo/src/utils';
-  import {html} from '../compiler/processors'
+  import {browser} from '$app/environment'
 
   let channel
+  let html
 
   onMount(() => {
     channel = new BroadcastChannel('site_preview')
-    setupChannel()
+
+    import('../../compiler/processors').then(module => {
+      html = module.html
+      setupChannel()
+    })
   })
 
   setContext('is-preview', true)

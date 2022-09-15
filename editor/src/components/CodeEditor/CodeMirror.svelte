@@ -5,7 +5,7 @@
 <script lang="ts">
   import {flattenDeep as _flattenDeep} from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
-  import { browser } from '$app/env';
+  import { browser } from '$app/environment';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(1000);

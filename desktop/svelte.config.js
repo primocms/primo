@@ -19,27 +19,7 @@ const config = {
 	kit: {
 		adapter: adapter({
       fallback: 'index.html'
-    }),
-    browser: {
-      router: true
-    },
-    vite: {
-      server: {
-        fs: {
-          // throws an error without this when importing Fira font
-          allow: ['..', 'node_modules/@fontsource/fira-code']
-        },
-        force: true,
-        open: false, // do not open the browser as we use electron
-        port: process.env.PORT || 3333,
-      },
-      build: {
-        sourcemap: true,
-      },
-      define: {
-          '__DESKTOP_VERSION__': JSON.stringify(process.env.npm_package_version),
-      }
-    }
+    })
 	}
 };
 

@@ -1,6 +1,6 @@
 import axios from '$lib/libraries/axios'
 import {get, writable} from 'svelte/store'
-import { browser } from '$app/env'
+import { browser } from '$app/environment'
 import config from './config'
 
 const store = writable(null);

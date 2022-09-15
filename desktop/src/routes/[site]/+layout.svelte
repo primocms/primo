@@ -1,11 +1,6 @@
-<script context="module">
-  export const ssr = false
-</script>
-
 <script>
   import '@fontsource/fira-code/index.css';
-  import { browser } from '$app/env'
-  import { onMount } from 'svelte'
+  import { browser } from '$app/environment'
   import { get } from 'svelte/store'
   import Primo, {
     modal as primoModal,
@@ -72,12 +67,9 @@
 
   let saving = false
 
-  let mounted = false
-  onMount(() => (mounted = true))
-
   $: siteID = $page.params.site
   $: data = $activeSite || Site({ id: 'test', name: 'Test' })
-  $: mounted && setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
+  $: browser && setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
   $: if ($serverSites && find($serverSites, ['id', $activeSite.id])) {
     actions.setActiveEditor($activeSite.id)
   } 
