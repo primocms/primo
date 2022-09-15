@@ -1,5 +1,5 @@
 {
-	"update": "Check for update",
+	"update": "Buscar actualizaciones",
 	"settings": {
 		"hosting": {
 			"heading": "Hosting",
@@ -40,7 +40,7 @@
 		"thumbnail": {
 			"rename": "Rename",
 			"delete": "Delete",
-			"confirm_delete": "Are you sure you want to delete this site? You can't get it back." 
+			"confirm_delete": "Are you sure you want to delete this site?" 
 		},
 		"create": {
 			"heading": "Create a site",
