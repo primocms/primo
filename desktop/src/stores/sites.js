@@ -10,7 +10,6 @@ async function initializSiteData() {
 	const data = window.primo?.data; // preload.cjs
 	if (!data) return;
 	const siteFiles = data.load();
-	const sitesDB = [];
 
 	const rebuiltSites = siteFiles.map(({ data, preview, config }) => {
 		return {

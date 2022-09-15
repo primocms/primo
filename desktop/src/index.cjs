@@ -240,7 +240,7 @@ ipcMain.on('create-popup', event => {
 ipcMain.on('load-data', (event, directory) => {
 	// convert any existing .json site files to directories
 	const all_files = fs.readdirSync(savePath);
-	const files = all_files
+	all_files
 		.filter(file => {
 			const extension = file.slice(file.indexOf('.') + 1); // get file extension
 			return extension === 'json';
@@ -302,6 +302,9 @@ ipcMain.handle('save-data', async (event, site) => {
 	const directory = `${savePath}/${site.id}`;
 	if (!fs.existsSync(directory)) fs.mkdir(directory);
 	fs.writeJSON(`${directory}/data.json`, site);
+
+	if (!fs.existsSync(`${directory}/config.json`)) fs.writeJSONSync(`${directory}/config.json`, {});
+
 	return true;
 });
 
