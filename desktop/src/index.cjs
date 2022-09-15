@@ -310,7 +310,12 @@ ipcMain.handle('save-data', async (event, site) => {
 
 // Delete site
 ipcMain.on('delete-site', (event, site) => {
-	fs.unlinkSync(`${savePath}/${site}.json`);
+	const file = fs.readFileSync(`${savePath}/${site}/data.json`, 'utf8') // grab site file
+
+	fs.rmSync(`${savePath}/${site}`, { recursive: true, force: true }); // delete directory
+
+	fs.writeFileSync(`${savePath}/_backups/${site}.json`, file); // back up to to _backups/sitename.json
+
 	event.returnValue = true;
 });
 
