@@ -1,7 +1,7 @@
 ![screenshot](./screenshot2.png)
 
 # Primo
-Primo is a component-based CMS that makes it easy to build visually-editable static sites. Its immense productivity advantage comes as a result of treating web pages as a collection of individual components (or sections) containing both content *and* code. And by embedding a development environment alongside the CMS, Primo enables site modifications to be made on the fly, and new components can be built, integrated, and used by content editors in a fraction of the time compared to other approaches. Primo also gives content editors an ideal page building/content management experience designed entirely around arranging sections on the page and updating component content or writing copy directly on the page. And when you publish and update your site, Primo deploys it as a static site to a static host like Vercel or Netlify. 
+Primo is a component-based CMS that makes it easy to build visually-editable static sites. Instead of developing your website by editing files, Primo lets you build web pages out of individual components (or sections) containing both code *and* content. By embedding a development environment alongside the CMS, Primo enables you to make site modifications on the fly and build/integrate components that can be used by content editors (who don't have access to the code) to arrange pages and sites section by section. Primo also gives content editors an ideal page building and content management experience that enables anyone to easily update component content, write copy directly on the page, and publish site changes. When you publish and update your site, Primo compiles and deploys it as a static site (with no JS by default) to Verce, Netlify, Github, etc. 
 
 ## Features
 - radically **simpler content editing** - focused fields for components, content & on-page editing for editorial content
@@ -18,3 +18,6 @@ Most of Primo's functionality and productivity advantages are due to Svelte - a 
 It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.so](https://primo.so).
 
 To build from your browser, invite collaborators, and upload images, check out [Primo Server](https://github.com/primodotso/primo-server).
+
+## Contributing
+Primo has intentionally been a solo project since 2019 without much room for contributions due to the volatility of the codebase. But as we move into Beta more opportunities will be created to contribute code changes, so if you're interested in helping out let us know in the [Discord](https://lu.ma/).
