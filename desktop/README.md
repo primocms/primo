@@ -28,3 +28,11 @@ This will make it so changes in either directory will be registered by vite.
 1. `npm run build`
 1. `npm run make` for Mac (binary at `out/primo-darwin-x64/primo.app`)
 1. `npm run make-windows` for Windows (binary at `primo-win32-x64/primo.exe`)
+
+## Contributing
+
+### Adding a language
+
+1. Create a language file in languages/ 
+1. Copy contents from en.json, overwrite
+1. Submit a PR with the change
