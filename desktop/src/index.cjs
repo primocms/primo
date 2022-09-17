@@ -243,7 +243,7 @@ ipcMain.on('load-data', (event, directory) => {
 	all_files
 		.filter(file => {
 			const extension = file.slice(file.indexOf('.') + 1); // get file extension
-			return extension === 'json';
+			return (extension === 'json')
 		})
 		.forEach(file => {
 			const file_directory = `${savePath}/${file}`;
@@ -271,7 +271,7 @@ ipcMain.on('load-data', (event, directory) => {
 
 	// retrieve sites from directories
 	const updated_files = fs.readdirSync(savePath);
-	const directories = updated_files.filter(item => fs.lstatSync(`${directory}/${item}`).isDirectory());
+	const directories = updated_files.filter(item => fs.lstatSync(`${directory}/${item}`).isDirectory() && item !== '_backups');
 	const sites = directories.map(siteDirectory => ({
 		data: fs.readJsonSync(`${directory}/${siteDirectory}/data.json`, { throws: false }),
 		config: fs.readJsonSync(`${directory}/${siteDirectory}/config.json`, { throws: false }),
@@ -303,6 +303,7 @@ ipcMain.handle('save-data', async (event, site) => {
 	if (!fs.existsSync(directory)) fs.mkdir(directory);
 	fs.writeJSON(`${directory}/data.json`, site);
 
+	if (!fs.existsSync(`${directory}/preview.html`)) fs.writeFileSync(`${directory}/preview.html`, '');
 	if (!fs.existsSync(`${directory}/config.json`)) fs.writeJSONSync(`${directory}/config.json`, {});
 
 	return true;
@@ -314,6 +315,7 @@ ipcMain.on('delete-site', (event, site) => {
 
 	fs.rmSync(`${savePath}/${site}`, { recursive: true, force: true }); // delete directory
 
+	if (!fs.existsSync(`${savePath}/_backups`)) fs.mkdir(`${savePath}/_backups`);
 	fs.writeFileSync(`${savePath}/_backups/${site}.json`, file); // back up to to _backups/sitename.json
 
 	event.returnValue = true;

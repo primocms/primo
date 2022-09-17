@@ -28,8 +28,8 @@
 
   async function createSiteZip() {
     const zip = new JSZip()
-    files.forEach((file) => {
-      zip.file(file.path, file.content)
+    files.forEach(({file, data}) => {
+      zip.file(file, data)
     })
     return await zip.generateAsync({ type: 'blob' })
   }

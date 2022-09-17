@@ -111,7 +111,7 @@
     if (firstField) {
       let {value} = repeaterItem[0]
       if (firstField.type === 'link') {
-        value = value.label
+        value = value?.label
       }
       return value 
     } else return singularLabel
