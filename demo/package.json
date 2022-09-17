@@ -17,7 +17,7 @@
     "postcss-preset-env": "^6.7.0",
     "prettier": "^2.4.1",
     "prettier-plugin-svelte": "^2.4.0",
-    "svelte": "^3.46.4",
+    "svelte": "^3.49.0",
     "svelte-preprocess": "^4.9.8",
     "tailwindcss": "^2.2.19",
     "typescript": "^4.5.4"
