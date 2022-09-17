@@ -289,9 +289,11 @@
       ul.sites {
         display: grid;
         place-content: flex-start;
+        place-items: flex-start normal;
         gap: 1rem;
 
         li {
+          height: 100%;
           background: var(--color-gray-9);
           border-radius: var(--primo-border-radius);
           overflow: hidden;

@@ -162,7 +162,7 @@
     }
 
     &:hover {
-      background-color: var(--primo-color-primogreen);
+      box-shadow: var(--primo-ring-primored);
       color: var(--primo-color-black);
     }
 

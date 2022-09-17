@@ -183,6 +183,23 @@ body {
   --primo-border-radius: 5px;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primo-color-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-gray-7);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primo-color-primogreen);
+}
+
 button,
 a {
   cursor: pointer;
