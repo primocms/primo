@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.6.1",
+  "version": "1.6.3",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "src/index.js",
   "svelte": "src/index.js",
@@ -85,5 +85,6 @@
     "prosemirror-model": "1.15.0"
   },
   "repository": "https://github.com/primo-af/primo.git",
-  "private": false
+  "private": false,
+  "type": "module"
 }
