@@ -20,4 +20,4 @@ It's incredibly easy to build a site with Primo. Technically, you don't even hav
 To build from your browser, invite collaborators, and upload images, check out [Primo Server](https://github.com/primodotso/primo-server).
 
 ## Contributing
-Primo has intentionally been a solo project since 2019 without much room for contributions due to the volatility of the codebase. But as we move into Beta more opportunities will be created to contribute code changes, so if you're interested in helping out let us know in the [Discord](https://lu.ma/).
+Primo has intentionally been a solo project since 2019 without much room for contributions due to the volatility of the codebase. But as we move into Beta more opportunities will be created to contribute code changes, so if you're interested in helping out let us know in the [Discord](https://discord.com/invite/UeNeTk6cF3).
