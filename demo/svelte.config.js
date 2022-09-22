@@ -10,21 +10,7 @@ const config = {
 		if (!IGNORED_WARNINGS.includes(warning.message)) handler(warning);
 	},
 	kit: {
-		adapter: vercel(),
-		vite: {
-			server: {
-				fs: {
-					// throws an error without this when importing Fira font
-					allow: ['..', 'node_modules/@fontsource/fira-code']
-				}
-			},
-			define: {
-				__DESKTOP_VERSION__: JSON.stringify(process.env.npm_package_version)
-			},
-			test: {
-				// ...
-			}
-		}
+		adapter: vercel()
 	},
 	preprocess: preprocess({
 		postcss: true

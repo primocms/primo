@@ -1,52 +1,38 @@
 <script>
-	import { setContext } from 'svelte';
-	import '../reset.css';
+	import '../../reset.css';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/env';
-	// import ImageField from '../extensions/FieldTypes/ImageField.svelte'
-	import Primo, {
-		modal as primoModal,
-		fieldTypes,
-		PrimoFieldTypes,
-		registerProcessors
-	} from '@primo-app/primo';
+	import { browser } from '$app/environment';
+	import Primo, { modal as primoModal, fieldTypes, PrimoFieldTypes } from '@primo-app/primo';
 	import { saved } from '@primo-app/primo/src/stores/app/misc';
-	import Build from './_Build.svelte';
+	import Build from '../_Build.svelte';
 	import * as primo from '@primo-app/primo/package.json';
 
-	if (browser) {
-		fieldTypes.register([
-			// {
-			// 	id: 'image',
-			// 	label: 'Image',
-			// 	component: ImageField
-			// },
-			...PrimoFieldTypes
-		]);
+	fieldTypes.register([
+		// {
+		// 	id: 'image',
+		// 	label: 'Image',
+		// 	component: ImageField
+		// },
+		...PrimoFieldTypes
+	]);
 
-		primoModal.register([
-			{
-				id: 'BUILD',
-				component: Build,
-				componentProps: {
-					siteName: 'Website' // TODO - change
-				},
-				options: {
-					route: 'build',
-					width: 'md',
-					header: {
-						title: 'Build to Github',
-						icon: 'fab fa-github'
-					}
+	primoModal.register([
+		{
+			id: 'BUILD',
+			component: Build,
+			componentProps: {
+				siteName: 'Website' // TODO - change
+			},
+			options: {
+				route: 'build',
+				width: 'md',
+				header: {
+					title: 'Build to Github',
+					icon: 'fab fa-github'
 				}
 			}
-		]);
-
-		import('../compiler/processors').then(({ html, css }) => {
-			registerProcessors({ html, css });
-		});
-		setContext('track', () => {});
-	}
+		}
+	]);
 
 	let data;
 	$: if (browser) {
@@ -66,8 +52,6 @@
 		localStorage.setItem('demo-site', JSON.stringify(updatedSite));
 		$saved = true;
 	}
-
-	$: console.log({ data });
 
 	let saving = false;
 </script>

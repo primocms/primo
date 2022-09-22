@@ -1,38 +1,52 @@
 <script>
-	import '../../reset.css';
+	import { setContext } from 'svelte';
+	import '../reset.css';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/env';
-	import Primo, { modal as primoModal, fieldTypes, PrimoFieldTypes } from '@primo-app/primo';
+	import { browser } from '$app/environment';
+	// import ImageField from '../extensions/FieldTypes/ImageField.svelte'
+	import Primo, {
+		modal as primoModal,
+		fieldTypes,
+		PrimoFieldTypes,
+		registerProcessors
+	} from '@primo-app/primo';
 	import { saved } from '@primo-app/primo/src/stores/app/misc';
-	import Build from '../_Build.svelte';
+	import Build from './_Build.svelte';
 	import * as primo from '@primo-app/primo/package.json';
 
-	fieldTypes.register([
-		// {
-		// 	id: 'image',
-		// 	label: 'Image',
-		// 	component: ImageField
-		// },
-		...PrimoFieldTypes
-	]);
+	if (browser) {
+		fieldTypes.register([
+			// {
+			// 	id: 'image',
+			// 	label: 'Image',
+			// 	component: ImageField
+			// },
+			...PrimoFieldTypes
+		]);
 
-	primoModal.register([
-		{
-			id: 'BUILD',
-			component: Build,
-			componentProps: {
-				siteName: 'Website' // TODO - change
-			},
-			options: {
-				route: 'build',
-				width: 'md',
-				header: {
-					title: 'Build to Github',
-					icon: 'fab fa-github'
+		primoModal.register([
+			{
+				id: 'BUILD',
+				component: Build,
+				componentProps: {
+					siteName: 'Website' // TODO - change
+				},
+				options: {
+					route: 'build',
+					width: 'md',
+					header: {
+						title: 'Build to Github',
+						icon: 'fab fa-github'
+					}
 				}
 			}
-		}
-	]);
+		]);
+
+		import('../compiler/processors').then(({ html, css }) => {
+			registerProcessors({ html, css });
+		});
+		setContext('track', () => {});
+	}
 
 	let data;
 	$: if (browser) {
@@ -53,6 +67,8 @@
 		$saved = true;
 	}
 
+	$: console.log({ data });
+
 	let saving = false;
 </script>
 
@@ -66,15 +82,13 @@
 
 <style global lang="postcss">
 	body {
-		margin: 0;
-
-		--primo-color-primogreen: rgb(248, 68, 73);
-		--primo-color-primogreen-dark: rgb(186, 37, 42);
+		--primo-color-primogreen: #35d994;
+		--primo-color-primogreen-dark: #097548;
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
-		--primo-color-black: rgb(17, 17, 17);
+		--primo-color-black: #121212;
 		--primo-color-black-opaque: rgba(17, 17, 17, 0.9);
 
 		--color-gray-1: rgb(245, 245, 245);
@@ -114,6 +128,7 @@
 
 		--primo-border-radius: 5px;
 	}
+
 	#app-version {
 		font-size: 0.75rem;
 		color: var(--color-gray-4);
