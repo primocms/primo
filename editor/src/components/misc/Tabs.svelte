@@ -4,7 +4,7 @@
   const dispatch = createEventDispatcher();
 
   export let tabs;
-  export let activeTab;
+  export let activeTab = 0;
   export let variants = '';
 
   $: dispatch('switch', activeTab);
@@ -14,10 +14,10 @@
 {#if tabs.length > 1}
   <div class="tabs {variants}" in:fade={{ duration: 200 }}>
     <ul xyz="fade stagger">
-      {#each tabs as tab}
-        <li class="xyz-in" class:is-active={activeTab === tab}>
+      {#each tabs as tab, i}
+        <li class="xyz-in" class:is-active={activeTab === i}>
           <button
-            on:click={() => (activeTab = tab)}
+            on:click={() => (activeTab = i)}
             id={tab.id ? `tab-${tab.id}` : null}>
             {#if tab.icon}<i class="fas fa-{tab.icon}" />{/if}
             {typeof tab === 'string' ? tab : tab.label}

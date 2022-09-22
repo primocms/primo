@@ -6,6 +6,7 @@
   const topPaneSize = writable(get(onMobile) ? '100%' : '50%');
   const bottomPaneSize = writable('50%');
   const orientation = writable('horizontal')
+  const activeTab = writable(0)
 </script>
 
 <script lang="ts">
@@ -258,8 +259,6 @@
     },
   ];
 
-  let activeTab = tabs[0];
-
   let previewUpToDate = false
   $: rawHTML, rawCSS, rawJS, previewUpToDate = false // reset when code changes
 
@@ -292,6 +291,7 @@
       header.button.onclick(component);
     }
   }
+  $: console.log($activeTab)
 
 </script>
 
@@ -314,11 +314,11 @@
     bind:topPaneSize={$topPaneSize}
     bind:bottomPaneSize={$bottomPaneSize}
     hideRightPanel={$onMobile}
-    hideLeftOverflow={$showingIDE && activeTab === tabs[0]}>
+    hideLeftOverflow={$showingIDE && $activeTab === 0}>
     <div slot="left" lang={$locale}>
       {#if $showingIDE}
-        <Tabs {tabs} bind:activeTab />
-        {#if activeTab === tabs[0]}
+        <Tabs {tabs} bind:activeTab={$activeTab} />
+        {#if $activeTab === 0}
           <FullCodeEditor
             variants="flex-1"
             bind:html={rawHTML}
@@ -327,7 +327,7 @@
             on:save={saveComponent} 
             on:refresh={refreshPreview}
           />
-        {:else if activeTab === tabs[1]}
+        {:else if $activeTab === 1}
           <GenericFields bind:fields on:input={refreshPreview} showCode={true} />
         {/if}
       {:else}

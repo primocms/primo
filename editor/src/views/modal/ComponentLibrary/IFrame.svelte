@@ -44,25 +44,32 @@
 
 <svelte:window on:resize={setScaleRatio} />
 
-{#if !iframeLoaded}
-  <div class="spinner-container">
-    <Spinner />
-  </div>
-{/if}
-<div bind:this={container} class="iframe-container">
-  {#if componentApp && componentData}
-    <iframe
-      class:fadein={finishedResizing}
-      style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
-      scrolling="no"
-      on:load={() => (iframeLoaded = true)}
-      title="Preview HTML"
-      srcdoc={componentPreview(componentApp, componentData)}
-      bind:this={iframe} />
+<div class="IFrame">
+  {#if !iframeLoaded}
+    <div class="spinner-container">
+      <Spinner />
+    </div>
   {/if}
+  <div bind:this={container} class="iframe-container">
+    {#if componentApp && componentData}
+      <iframe
+        class:fadein={finishedResizing}
+        style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
+        scrolling="no"
+        on:load={() => (iframeLoaded = true)}
+        title="Preview HTML"
+        srcdoc={componentPreview(componentApp, componentData)}
+        bind:this={iframe} />
+    {/if}
+  </div>
 </div>
 
 <style lang="postcss">
+  .IFrame {
+    position: relative;
+    height: 100%;
+  }
+  
   .spinner-container {
     background: var(--color-gray-9);
     width: 100%;

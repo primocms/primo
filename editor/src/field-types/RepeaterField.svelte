@@ -142,7 +142,7 @@
         <div class="item-options">
           <button class="title" on:click={() => visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID]}>
             {#if itemImage}
-              <img src={itemImage} />
+              <img src={itemImage} alt={itemTitle || `Preview for item ${i} in ${field.label}`} />
             {:else}
               <span>{itemTitle}</span>
             {/if}

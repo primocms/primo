@@ -65,20 +65,6 @@
 {/if}
 
 <style lang="postcss">
-  button.close {
-    color: var(--primo-color-white);
-    padding: 1rem 0.5rem;
-    align-self: flex-start;
-
-    svg {
-      height: 2rem;
-      width: 2rem;
-    }
-
-    &:hover {
-      color: var(--primo-color-primogreen);
-    }
-  }
 
   .hidden {
     display: none;

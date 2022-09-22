@@ -1,7 +1,7 @@
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, onMount } from 'svelte';
-  import SymbolContainer from '../../../modal/ComponentLibrary/SymbolContainer.svelte';
+  import ComponentContainer from '../../../modal/ComponentLibrary/ComponentContainer.svelte';
   import Masonry from './Masonry.svelte';
 
   import { symbols } from '../../../../stores/data/draft';
@@ -67,7 +67,7 @@
     bind:width
     bind:height
   >
-    <SymbolContainer
+    <ComponentContainer
       symbol={item}
       buttons={[
         {

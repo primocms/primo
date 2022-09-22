@@ -23,6 +23,7 @@
 <div class="buttons-container primo-reset" bind:this={element}>
   <div class="primo-buttons" class:deletable>
     <button
+      class="add-content"
       on:click={() => {
         dispatch('convert', 'content')
       }}>
@@ -30,6 +31,7 @@
       <span>Add Content</span>
     </button>
     <button
+      class="add-component"
       on:click={() => {
           $showingIDE = $userRole === 'developer' // so that 'Create Component' opens up IDE
           modal.show('SYMBOL_LIBRARY', {

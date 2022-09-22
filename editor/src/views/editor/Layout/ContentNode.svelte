@@ -113,9 +113,6 @@
     editor.chain().focus().run()
   });
 
-  onDestroy(() => {
-    editor.destroy();
-  });
 
   function setLink() {
     modal.show('DIALOG', {

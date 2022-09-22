@@ -1,3 +1,8 @@
+<script context="module">
+  import {writable} from 'svelte/store'
+  const activeTab = writable(0)
+</script>
+
 <script>
   import {_ as C} from 'svelte-i18n';
   import { cloneDeep, isEqual } from 'lodash-es';
@@ -16,6 +21,14 @@
   let localPageHTML = cloneDeep($pageCode.html);
   let localSiteHTML = cloneDeep($siteCode.html);
 
+  async function saveFinalHTML() {
+    updateHTML({
+      page: localPageHTML,
+      site: localSiteHTML
+    })
+    $saved = false;
+  }
+
   const tabs = [
     {
       id: 'page',
@@ -29,15 +42,6 @@
     },
   ];
 
-  let activeTab = tabs[0];
-
-  async function saveFinalHTML() {
-    updateHTML({
-      page: localPageHTML,
-      site: localSiteHTML
-    })
-    $saved = false;
-  }
 </script>
 
 <ModalHeader
@@ -65,39 +69,46 @@
 />
 
 <main>
-  <Tabs {tabs} bind:activeTab />
+  <Tabs {tabs} bind:activeTab={$activeTab} />
   <div class="editors">
-    {#if activeTab.id === 'page'}
-      <span class="head">{'<head>'}</span>
-      <CodeMirror
-        bind:value={localPageHTML.head}
-        style="height:10rem"
-        mode="html"
-        docs="https://docs.primo.so/development#html-1"
-      />
-
-      <span class="before-body">{'Before </body>'}</span>
-      <CodeMirror
-        bind:value={localPageHTML.below}
-        style="height:15rem"
-        mode="html"
-        docs="https://docs.primo.so/development#beforeclosingbodytag"
-      />
+    {#if $activeTab === 0}
+      <div class="editor-head">
+        <span class="head">{'<head>'}</span>
+        <CodeMirror
+          bind:value={localPageHTML.head}
+          style="height:10rem"
+          mode="html"
+          docs="https://docs.primo.so/development#html-1"
+        />
+      </div>
+      <div class="editor-body">
+        <span class="before-body">{'Before </body>'}</span>
+        <CodeMirror
+          bind:value={localPageHTML.below}
+          style="height:15rem"
+          mode="html"
+          docs="https://docs.primo.so/development#beforeclosingbodytag"
+        />
+      </div>
     {:else}
-      <span class="head">{'<head>'}</span>
-      <CodeMirror
-        bind:value={localSiteHTML.head}
-        style="height:10rem"
-        mode="html"
-        docs="https://docs.primo.so/development#html-1"
-      />
-      <span class="before-body">{'Before </body>'}</span>
-      <CodeMirror
-        bind:value={localSiteHTML.below}
-        style="height:15rem"
-        mode="html"
-        docs="https://docs.primo.so/development#beforeclosingbodytag"
-      />
+      <div class="editor-head">
+        <span class="head">{'<head>'}</span>
+        <CodeMirror
+          bind:value={localSiteHTML.head}
+          style="height:10rem"
+          mode="html"
+          docs="https://docs.primo.so/development#html-1"
+        />
+      </div>
+      <div class="editor-body">
+        <span class="before-body">{'Before </body>'}</span>
+        <CodeMirror
+          bind:value={localSiteHTML.below}
+          style="height:15rem"
+          mode="html"
+          docs="https://docs.primo.so/development#beforeclosingbodytag"
+        />
+      </div>
     {/if}
   </div>
 </main>

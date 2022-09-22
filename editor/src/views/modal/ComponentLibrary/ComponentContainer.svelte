@@ -119,23 +119,24 @@
     in:fade={{ duration: 100 }}
     class="component-wrapper"
     id="component-{symbol.id}"
-    style="height:{height + 32}px"
   >
     {#if action}
-      <button on:click={() => {
-        active = true
-        action.onclick()
-      }} class="primary-action" class:active style="height: calc(100% - {header ? header.clientHeight : 0}px">
-        <IFrame bind:height {componentApp} {componentData} />
-        <div class="overlay">
-          {#if !active}
-            <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z" fill="white"/>
-            </svg>
-          {/if}
-          <span>{active && action.clicked ? action.clicked.label : action.label}</span>
-        </div>
-      </button>
+      <div class="primary-action" class:active>
+        <button on:click={() => {
+          active = true
+          action.onclick()
+        }}>
+          <IFrame bind:height {componentApp} {componentData} />
+          <div class="overlay">
+            {#if !active}
+              <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z" fill="white"/>
+              </svg>
+            {/if}
+            <span>{active && action.clicked ? action.clicked.label : action.label}</span>
+          </div>
+        </button>
+      </div>
     {:else}
       <IFrame bind:height {componentApp} {componentData} />
     {/if}
@@ -175,9 +176,6 @@
         {:else if name}
           <div class="action-name">
             <span>{name}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-            </svg>
           </div>
         {/if}
       </div>
@@ -223,6 +221,11 @@
   }
 
   .primary-action {
+    position: relative;
+    button {
+      height: 100%;
+      width: 100%;
+    }
     .overlay {
       position: absolute;
       inset: 0;
@@ -242,15 +245,15 @@
     content-visibility: auto;
     color: var(--primo-color-white);
     border: 1px solid var(--color-gray-9);
-    max-height: 50vh;
-    min-height: 10rem;
+    display: grid;
+    grid-template-rows: 25vh auto;
 
     .overlay {
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: calc(100% - 32px);
+      height: 100%;
       background: var(--color-gray-8);
       z-index: 1;
       opacity: 0;
@@ -265,12 +268,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: var(--box-shadow);
       background: var(--color-gray-8);
-      position: absolute;
-      bottom: 0;
-      z-index: 2;
-      width: 100%;
       padding: 0.5rem;
 
       :global(svg) {
@@ -305,7 +303,6 @@
 
           label {
             font-size: 0.85rem;
-            width: 100%;
             height: 2rem;
             display: flex;
             align-items: center;

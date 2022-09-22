@@ -10,8 +10,9 @@
   import {some as _some} from 'lodash-es';
   import fileSaver from 'file-saver'
   import axios from 'axios';
+  import Icon from '@iconify/svelte'
   import Masonry from '../../editor/Layout/ComponentPicker/Masonry.svelte';
-  import Container from './SymbolContainer.svelte';
+  import Container from './ComponentContainer.svelte';
   import { Symbol } from '../../../const';
   import { createUniqueID } from '../../../utilities';
   import { userRole } from '../../../stores/app';
@@ -156,20 +157,12 @@
     <div class="xyz-in library-buttons">
       {#if $userRole === 'developer'}
         <button on:click={createSymbol} style="border-right:1px solid var(--color-gray-9)" id="create-symbol">
-          <svg
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            xmlns="http://www.w3.org/2000/svg"><path
-              fill-rule="evenodd"
-              d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"
-              clip-rule="evenodd" /></svg>
+          <Icon icon="fa6-solid:code" />
           <span>{$C('Create')}</span>
         </button>
       {/if}
       <label class="primo-button">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3.7207 8.65351L7.76758 4.5957C7.89609 4.46719 8.10391 4.46719 8.23242 4.5957L12.2793 8.65351C12.4078 8.78203 12.4078 8.98984 12.2793 9.11836L11.7434 9.6543C11.6121 9.78555 11.4016 9.78281 11.2758 9.64883L8.71094 6.99375V13.7969C8.71094 13.9773 8.56328 14.125 8.38281 14.125H7.61719C7.43672 14.125 7.28906 13.9773 7.28906 13.7969V6.99375L4.72695 9.64883C4.59844 9.78008 4.38789 9.78281 4.25937 9.6543L3.72344 9.11836C3.59219 8.98984 3.59219 8.78203 3.7207 8.65351V8.65351ZM3.07812 3.29687H12.9219C13.1023 3.29687 13.25 3.14922 13.25 2.96875V2.20312C13.25 2.02266 13.1023 1.875 12.9219 1.875H3.07812C2.89766 1.875 2.75 2.02266 2.75 2.20312V2.96875C2.75 3.14922 2.89766 3.29687 3.07812 3.29687Z" fill="#E2E4E9"/>
-        </svg>                              
+        <Icon icon="charm:upload" />                      
         <span>{$C('Add')}</span>
         <input on:change={uploadSymbol} type="file" accept=".json">
       </label>
@@ -324,6 +317,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      gap: 0.25rem;
       padding: 0.75rem 1.5rem;
       border-radius: 0.25rem;
       font-size: 0.75rem;
@@ -338,12 +332,6 @@
 
       &:first-child {
         border-right: 1px solid var(--color-gray-9);
-      }
-
-      svg {
-        width: 1rem;
-        height: 1rem;
-        margin-right: 5px;
       }
 
       input[type="file"] {
@@ -361,55 +349,6 @@
         font-size: var(--font-size-3);
         border: 0;
       }
-
-      svg {
-        width: 1.5rem;
-        height: 1.5rem;
-      }
     }
   }
-
-  .contribution-form {
-    color: var(--color-gray-1);
-    background: var(--color-gray-9);
-    justify-self: flex-start;
-    border-radius: var(--primo-border-radius);
-    padding: 2rem;
-    font-size: 0.875rem;
-    display: flex;
-    flex-direction: column;
-
-    & > div {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    label span {
-      margin-right: 0.5rem;
-    }
-
-    input {
-      padding: 0.5rem;
-      background: var(--color-gray-8);
-      border-radius: var(--primo-border-radius);
-
-      &:focus {
-        outline: 0;
-      }
-    }
-
-    /* footer {
-      color: var(--color-gray-4);
-      font-size: 0.75rem;
-    } */
-
-    select {
-      background: transparent;
-      border: 1px solid var(--color-gray-1);
-      border-radius: var(--primo-border-radius);
-      padding: 0 0.5rem;
-    }
-  }
-
 </style>

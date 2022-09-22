@@ -3,6 +3,7 @@
 
   const leftPaneSize = writable(get(onMobile) ? '100%' : '50%');
   const rightPaneSize = writable('50%');
+  const activeTab = writable(0)
 </script>
 
 <script>
@@ -100,10 +101,9 @@
       icon: 'th',
     },
   ];
-  let activeTab = showPageFields ? tabs[0] : tabs[1];
 
-  let showingPage = true;
-  $: showingPage = (showPageFields || $showingIDE) && (activeTab === tabs[0]);
+  // prevent showing page field tab in CMS if no page fields exist 
+  $: if (!showPageFields && $activeTab === 0 && !$showingIDE) $activeTab = 1
   
   function applyFields() {
     saveFields(localPageFields, localSiteFields, localContent)
@@ -145,9 +145,9 @@
     <div slot="left">
       <div class="editor-container">
         {#if showPageFields || $showingIDE}
-          <Tabs {tabs} bind:activeTab />
+          <Tabs {tabs} bind:activeTab={$activeTab} />
         {/if}
-        {#if showingPage}
+        {#if $activeTab === 0}
           <GenericFields showCode={$showingIDE} bind:fields={localPageFields} on:input={debounce(saveLocalContent, 200)}/>
         {:else}
           <GenericFields showCode={$showingIDE} bind:fields={localSiteFields} on:input={debounce(saveLocalContent, 200)} />

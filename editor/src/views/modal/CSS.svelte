@@ -1,3 +1,8 @@
+<script context="module">
+  import {writable} from 'svelte/store'
+  const activeTab = writable(0)
+</script>
+
 <script>
   import {_ as C} from 'svelte-i18n'
   import { isEqual, find } from 'lodash-es';
@@ -98,8 +103,8 @@
 <main>
   <div>
     <div class="editor-container">
-      <Tabs tabs={primaryTabs} bind:activeTab={primaryTab} />
-      {#if primaryTab.id === 'page'}
+      <Tabs tabs={primaryTabs} bind:activeTab={$activeTab} />
+      {#if $activeTab === 0}
         <CodeMirror
           bind:value={unsavedPageCSS}
           mode="css"
@@ -108,7 +113,7 @@
           on:change={updatePagePreview}
           on:save={saveStyles}
         />
-      {:else if primaryTab.id === 'site'}
+      {:else}
         <CodeMirror
           bind:value={unsavedSiteCSS}
           mode="css"
