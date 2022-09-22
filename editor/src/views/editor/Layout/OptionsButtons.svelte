@@ -21,7 +21,7 @@
 </script>
 
 <div class="buttons-container primo-reset" bind:this={element}>
-  <div class="buttons" class:deletable>
+  <div class="primo-buttons" class:deletable>
     <button
       on:click={() => {
         dispatch('convert', 'content')
@@ -66,7 +66,7 @@
     border-top: 1px solid var(--primo-color-codeblack);
     border-bottom: 1px solid var(--primo-color-codeblack);
 
-    .buttons {
+    .primo-buttons {
       padding: 0.5rem 1rem;
       margin: 0 auto;
       display: flex;

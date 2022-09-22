@@ -34,7 +34,7 @@
 </script>
 
 <main in:fade={{ duration: 100 }} bind:this={element} class="primo-reset">
-  <div class="buttons">
+  <div class="primo-buttons">
     <button
       class="close"
       on:click={() => dispatch('remove')}
@@ -51,7 +51,7 @@
         />
       </svg>
     </button>
-    <button class="button" on:click={() => dispatch('manage')}>
+    <button class="primo-button" on:click={() => dispatch('manage')}>
       <i class="fas fa-code" />
       <span>Manage Components</span>
     </button>
@@ -89,12 +89,12 @@
     max-height: 75vh;
     background-color: var(--primo-color-codeblack);
   }
-  .buttons {
+  .primo-buttons {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .button {
+  .primo-button {
     background: var(--color-gray-9);
     box-shadow: var(--primo-ring-primored);
     padding: 0.5rem 1rem;

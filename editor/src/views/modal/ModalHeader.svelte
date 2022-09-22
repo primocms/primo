@@ -66,7 +66,7 @@
     {/if}
     {#if button && button.onclick}
       <button
-        class="xyz-in button primary"
+        class="xyz-in primo-button primary"
         disabled={button.loading || button.disabled}
         on:click={button.onclick}>
         {#if button.icon}
@@ -76,7 +76,7 @@
       </button>
     {:else if button && button.href}
       <a
-        class="xyz-in button primary"
+        class="xyz-in primo-button primary"
         disabled={button.loading || button.disabled}
         href={button.href}
         target="blank">
@@ -253,13 +253,13 @@
     }
   }
 
-  .button {
+  .primo-button {
     display: flex;
     align-items: center;
     padding: 0.5rem 0.75rem;
     font-size: var(--font-size-2);
     border-radius: var(--primo-border-radius);
-    transition: var(--transition-colors);
+    transition: var(--transition-colors), 0.1s box-shadow;
 
     &.primary {
       border: 2px solid var(--primo-color-primogreen);
@@ -276,6 +276,10 @@
       }
 
       &:hover {
+        box-shadow: var(--primo-ring-primored);
+      }
+
+      &:active {
         color: var(--primo-color-black);
         background: var(--primo-color-primogreen);
       }

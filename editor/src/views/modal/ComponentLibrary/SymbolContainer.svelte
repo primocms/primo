@@ -182,7 +182,7 @@
         {/if}
       </div>
       {#if !hide_options}
-        <div class="buttons">
+        <div class="primo-buttons">
           {#each buttons as button}
             <button
               title={button.title}
@@ -374,7 +374,7 @@
         }
       }
 
-      .buttons {
+      .primo-buttons {
         display: flex;
         gap: 0.5rem;
 

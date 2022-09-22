@@ -53,7 +53,7 @@
       <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
     </a>
     {#if !displayOnly}
-      <div class="buttons">
+      <div class="primo-buttons">
         <button title="Edit" on:click={() => (editingPage = !editingPage)}>
           <i class="fas fa-edit" />
         </button>
@@ -162,7 +162,7 @@
         }
       }
 
-      .buttons {
+      .primo-buttons {
         display: flex;
         justify-content: flex-end;
         gap: 0.25rem;
