@@ -97,11 +97,6 @@ on:click={() => {
   .primo {
     color: var(--primo-color-white);
     border: 2px solid var(--primo-color-primogreen);
-
-    &:hover {
-      color: var(--primo-color-black);
-      background: var(--primo-color-primogreen);
-    }
   }
 
   .key-hint {
@@ -134,7 +129,7 @@ on:click={() => {
     color: var(--primo-color-white);
     font-weight: 700;
     padding: 0.5rem 1rem;
-    transition: var(--transition-colors);
+    transition: 0.1s box-shadow;
     outline: 0;
     position: relative;
     display: flex;
@@ -144,8 +139,13 @@ on:click={() => {
 
     &:hover,
     &:focus {
-      background: transparent;
+      box-shadow: var(--primo-ring-primored);
       z-index: 2;
+    }
+
+    &:active {
+      background: var(--primo-color-primogreen);
+      color: var(--color-gray-8);
     }
 
   }

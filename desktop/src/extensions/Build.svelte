@@ -3,6 +3,7 @@
   import JSZip from 'jszip'
   import { saveAs } from 'file-saver'
   import beautify from 'js-beautify'
+  import {_ as C} from 'svelte-i18n'
   import { format } from 'timeago.js'
   import Hosting from '$lib/components/Hosting.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
@@ -65,19 +66,22 @@
   }
   
   let files = []
-  buildSiteBundle($site, SHOW_CHANGED_PAGES ? changed_pages : []).then(res => {
-    files = uniqBy(res.map((file) => {
+  build_files()
+  async function build_files() {
+    const all_files = await buildSiteBundle($site, SHOW_CHANGED_PAGES ? changed_pages : [])
+
+    files = uniqBy(all_files.map((file) => {
       return {
         file: file.path,
         data: file.content,
       }
     }), 'file') // remove duplicated modules
-  })
+  }
 
   let newDeployment
   async function publishToHosts() {
     loading = true
-    
+    await build_files()
     const [activeHost] = $hosts
     const { name, token } = activeHost
     
@@ -234,7 +238,7 @@
   }
 </script>
 
-<ModalHeader icon="fas fa-globe" title="Publish" />
+<ModalHeader icon="fas fa-globe" title={$C('Publish')} />
 
 <main class="primo-reset">
   <div class="publish">
@@ -242,7 +246,7 @@
       <Hosting
         buttons={[
           {
-            label: 'Download Site',
+            label: $C('publish.download_heading'),
             onclick: downloadSite,
           },
         ]}
@@ -257,7 +261,7 @@
                 {#if Object.keys($site.content).length > 1}
                   {(find(locales, ['key', locale])['name'])} site published to
                 {:else}
-                  Site published to
+                  {$C('publish.published_to')}
                 {/if}
                 <a
                   href="{lastDeployment ? lastDeployment.url : newDeployment.url}/{locale !== 'en' ? locale : ''}"
@@ -273,7 +277,7 @@
         <div class="boxes">
           <div class="box">
             <div class="newDeployment">
-              Last published to
+              {$C('publish.last_published_to')}
               <a href={lastDeployment.url} rel="external" target="blank"
                 >{lastDeployment.url}</a
               >
@@ -312,29 +316,26 @@
               <p class="subtitle">You haven't made any detectable changes to your site, but you can publish it again.</p>
               <PrimaryButton
                 on:click={publishToHosts}
-                label="Publish Site"
+                label={$C('publish.publish_site')}
                 {loading}
               />
             {:else if $hosts.length > 0 && lastDeployment}
               <PrimaryButton
                 on:click={publishToHosts}
-                label="Publish Site"
+                label={$C('publish.publish_site')}
                 {loading}
               />
             {:else if $hosts.length > 0}
-              <p class="title">Publish site</p>
-              <p class="subtitle">Your site will be uploaded as static HTML/CSS/JS files to your connected web host.</p>
+              <p class="title">{$C('publish.publish_site')}</p>
+              <p class="subtitle">{$C('publish.description')}</p>
               <PrimaryButton
                 on:click={publishToHosts}
-                label="Publish Site"
+                label={$C('publish.publish_site')}
                 {loading}
               />
             {:else}
-              <p class="title">Download your website</p>
-              <p class="subtitle">
-                You can connect a web host to publish your website directly from
-                primo, or download it to publish it manually
-              </p>
+              <p class="title">{$C('publish.download_heading')}</p>
+              <p class="subtitle">{$C('publish.download_description')}</p>
               <PrimaryButton
                 on:click={downloadSite}
                 label="Download your site"

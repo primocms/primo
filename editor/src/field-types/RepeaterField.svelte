@@ -148,7 +148,7 @@
             {/if}
             <Icon icon={visibleRepeaters[subfieldID] ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
           </button>
-          <div class="buttons">
+          <div class="primo-buttons">
             {#if i !== 0}
               <button
                 title="Move {singularLabel} up"
@@ -262,7 +262,7 @@
       align-items: center;
       color: var(--color-gray-2);
 
-      .buttons {
+      .primo-buttons {
         white-space: nowrap;
       }
 
@@ -284,7 +284,7 @@
         }
       }
 
-      .buttons button {
+      .primo-buttons button {
 
         &:focus {
           /* outline: 0; */

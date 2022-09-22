@@ -200,7 +200,7 @@
   <ToolbarButton
     type="primo"
     title={pageEmpty ? 'Add a content block or component to your page to publish it' : 'Publish'}
-    label="Publish"
+    label={$C('Publish')}
     icon="globe"
     style="margin-left:0.25rem;"
     active={false}

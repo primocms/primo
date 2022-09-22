@@ -3,6 +3,7 @@
   "Content": "Content",
   "Components": "Components",
   "Fields": "Fields",
+  "Publish": "Publish",
   "Docs": "Docs",
   "Feedback": "Feedback",
   "Page Label": "Page URL",
@@ -13,7 +14,6 @@
   "Page": "Page",
   "Site": "Site",
   "Code": "Code",
-  "Personal Website (optional)": "Personal Website (optional)",
   "Submit": "Submit",
   "field-types": {
     "Repeater": "Repeater",
@@ -28,5 +28,15 @@
     "Info": "Info"
   },
   "no-components": "You don't have any Components in your Site Library. <br>You can develop Components from scratch, paste them in from another site, or add some from the Primo Library.",
-  "contribute-to-community-library": "Contribute a Component to the Community Library"
+  "contribute-to-community-library": "Contribute a Component to the Community Library",
+  "Edit Code": "Edit Code",
+  "Edit Content": "Edit Content",
+  "publish": {
+    "published_to": "Site published to",
+    "last_published_to": "Last published to",
+    "publish_site": "Publish site",
+    "description": "Your site will be uploaded as static HTML/CSS/JS files to your connected web host.",
+    "download_heading": "Download your site",
+    "download_description": "You can connect a web host to publish your website directly from primo, or download it to publish it manually"
+  }
 }

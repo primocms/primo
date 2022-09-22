@@ -61,7 +61,7 @@
         }} /> 
     </label>
     <div
-      class="buttons"
+      class="primo-buttons"
       id="repeater-{field.key}-{i}">
       <div class="item-options">
         {#if i !== 0}
@@ -164,7 +164,7 @@
   .field-button.subfield-button:focus {
     background: var(--color-gray-8);
   }
-  .buttons {
+  .primo-buttons {
     display: flex;
     align-items: center;
   }

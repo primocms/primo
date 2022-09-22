@@ -9,6 +9,7 @@
   import { sections } from '../../../stores/app/activePage';
   import { showingIDE } from '../../../stores/app';
   import { showKeyHint } from '../../../stores/app/misc';
+  import { _ as C } from 'svelte-i18n'
 
   const dispatch = createEventDispatcher();
 
@@ -42,10 +43,10 @@
           {:else}
             {#if $showingIDE}
               {@html code(iconStyles)}
-              <span>Edit Code</span>
+              <span>{$C('Edit Code')}</span>
             {:else}
               {@html edit(iconStyles)}
-              <span>Edit Content</span>
+              <span>{$C('Edit Content')}</span>
             {/if}
           {/if}
         </button>
@@ -78,7 +79,7 @@
               fill-rule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
               clip-rule="evenodd" /></svg>
-          <span>Add Section</span>
+          <span>{$C('Add Section')}</span>
         </button>
       {/if}
     </div>
@@ -107,7 +108,7 @@
             fill-rule="evenodd"
             d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
             clip-rule="evenodd" /></svg>
-            <span>Add Section</span>
+            <span>{$C('Add Section')}</span>
       </button>
     {/if}
   </div>
@@ -162,8 +163,13 @@
     }
 
     &:hover {
+      z-index: 1; /* show full shadow */
       box-shadow: var(--primo-ring-primored);
-      color: var(--primo-color-black);
+    }
+
+    &:active {
+      background: var(--primo-color-primogreen);
+      color: var(--color-gray-8);
     }
 
     &.top-right:first-child {

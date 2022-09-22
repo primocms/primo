@@ -15,7 +15,7 @@
   {title}
   {style}
   {id}
-  class="button is-light {variants}"
+  class="primo-button is-light {variants}"
   class:is-loading={loading}
   transition:fade
   on:click={() => dispatch('click')}>

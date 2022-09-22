@@ -70,7 +70,7 @@ class:mounted>
         <PrimoButton on:signOut />
       {/if}
       {#each buttons as group}
-        <div class="buttons">
+        <div class="primo-buttons">
           {#each group as button}
             <ToolbarButton {...button} />
           {/each}
@@ -202,7 +202,7 @@ class:mounted>
     display: flex;
     justify-content: flex-start;
   }
-  .left .buttons {
+  .left .primo-buttons {
     display: flex;
     flex-direction: row;
     margin-right: 0.5rem;

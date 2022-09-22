@@ -54,7 +54,7 @@
     display: block;
     height: 100%;
     background: var(--primo-color-codeblack);
-    transition: background 0.1s;
+    transition: background 0.1s, box-shadow 0.1s;
     width: 2.5rem;
     background-size: 2rem;
     background-repeat: no-repeat;
@@ -64,8 +64,15 @@
     justify-content: center;
     align-items: center;
 
-    &:hover,
+    &:hover {
+      box-shadow: var(--primo-ring-primored);
+    }
+
     &:focus {
+      box-shadow: var(--primo-ring-primored-thin);
+    }
+
+    &:active {
       background: var(--color-gray-8);
     }
 
