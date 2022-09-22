@@ -20,7 +20,12 @@ const config = {
 		adapter: adapter({
       fallback: 'index.html'
     })
-	}
+	},
+  vitePlugin: {
+		experimental: {
+			inspector: true,
+		}
+	},
 };
 
 export default config;

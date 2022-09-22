@@ -4,18 +4,27 @@ import axios from '$lib/libraries/axios'
 import config from '../stores/config'
 import * as stores from '../stores'
 import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
-import {locale} from 'svelte-i18n'
+import { locale, addMessages } from 'svelte-i18n'
 
 export const serverSites = {
   save: async (site) => {
     const { serverConfig } = get(config)
+
     let successful = false
     try {
+      // generate preview
+      const homepage = _find(site.pages, ['id', 'index'])
+      const preview = await buildStaticPage({
+        page: homepage,
+        site,
+        separateModules: false
+      })
+
       const res = await axios.post(
-        `${serverConfig.url}/api/${site.id}.json`,
+        `${serverConfig.url}/api/${site.id}`,
         {
           action: 'SAVE_SITE',
-          payload: site
+          payload: { site, preview }
         },
         {
           headers: {
@@ -31,6 +40,21 @@ export const serverSites = {
     }
     return successful
   },
+  publish: async (site) => {
+    const { serverConfig } = get(config)
+    const res = await axios.post(
+      `${serverConfig.url}/api/${site.id}`,
+      {
+        action: 'PUBLISH_SITE',
+        payload: site
+      },
+      {
+        headers: {
+          Authorization: `Basic ${serverConfig.token}`,
+        },
+      }
+    )
+  },
 }
 
 let siteBeingEdited = null
@@ -39,7 +63,7 @@ export async function setActiveEditor(siteID) {
   siteBeingEdited = siteID
   const { serverConfig } = get(config)
   const res = await axios.post(
-    `${serverConfig.url}/api/${siteID}.json`,
+    `${serverConfig.url}/api/${siteID}`,
     {
       action: 'SET_ACTIVE_EDITOR',
       payload: {
@@ -59,11 +83,13 @@ export async function setActiveEditor(siteID) {
   }
 }
 
-export function setLanguage(language) {
+export async function setLanguage(language) {
   config.update(c => ({
     ...c,
     language
   }))
+  const m = await import(`../languages/${language}.json`)
+  addMessages(language, m.default)
   locale.set(language)
 }
 
@@ -89,17 +115,22 @@ export async function setSitePreview(site) {
 }
 
 export async function addDeploymentToSite({ siteID, deployment }) {
-  stores.sites.update((s) =>
-    s.map((site) => {
-      return site.id === siteID
-        ? {
-          ...site,
-          activeDeployment: deployment,
-        }
-        : site
-    })
-  )
-  window.primo?.data.setDeployment({ id: siteID, deployment })
+  const [local_site] = (get(stores.sites)).filter(site => site.id === siteID)
+  if (local_site) {
+    stores.sites.update((s) =>
+      s.map((site) => {
+        return site.id === siteID
+          ? {
+            ...site,
+            activeDeployment: deployment,
+          }
+          : site
+      })
+    )
+    window.primo?.data.setDeployment({ id: siteID, deployment })
+  } else { // is server site
+
+  }
 }
 
 export const hosts = {
@@ -107,9 +138,9 @@ export const hosts = {
   connect: async ({ name, token }) => {
     stores.hosts.update((h) => {
       return [{
-          name,
-          token,
-        }]
+        name,
+        token,
+      }]
     })
   },
   delete: (name) => {

@@ -14,12 +14,15 @@ export const connected = writable(false)
 export async function getSitesFromServer() {
   const {serverConfig} = get(config)
   try {
-    const res = await axios.get(`${serverConfig.url}/api/sites.json`, {
+    if (!serverConfig.url) return
+    const {data:sites, error} = await axios.get(`${serverConfig.url}/api/sites`, {
       headers: {
         Authorization: `Basic ${serverConfig.token}`,
       },
+    }).catch(e => {
+      console.error(e.message)
+      return { data: null }
     })
-    const {sites} = res.data
     if (sites) {
       store.set(sites)
       connected.set(true)

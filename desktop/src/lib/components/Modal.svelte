@@ -37,10 +37,12 @@
   import { fade } from 'svelte/transition'
   import CreateSite from './Modals/CreateSite.svelte'
   import UserSettings from './Modals/UserSettings.svelte'
+  import ServerSetup from './Modals/ServerSetup.svelte'
 
   const modals = {
     SITE_CREATION: CreateSite,
     USER_SETTINGS: UserSettings,
+    SERVER_SETUP: ServerSetup
   }
 
   let activeModal = modals[$type.id]

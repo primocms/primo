@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { find, some, isEqual, cloneDeep } from 'lodash-es';
+  import { find, some, isEqual, cloneDeep, clone } from 'lodash-es';
   import * as Mousetrap from 'mousetrap';
   import '@fontsource/fira-code/index.css';
 
@@ -21,7 +21,7 @@
   } from './stores/app/misc';
   import { DEFAULTS, Site } from './const';
 
-  import { pages, setTimeline } from './stores/data/draft';
+  import site, { pages, setTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
@@ -29,22 +29,32 @@
   import type { Site as SiteType, Page as PageType } from './const'
 
   import { init, addMessages } from 'svelte-i18n';
-
-  import('../en.json').then(m => addMessages('en', m.default));
-  import('../es.json').then(m => addMessages('es', m.default));
+  
 
   export let data:SiteType = Site();
   export let role:'developer'|'content' = 'developer';
   export let saving:boolean = false;
-  export let language:string = 'EN'
+  export let language:string = 'en'
   
   $: $savingStore = saving;
   $: $userRole = role;
+
+  import('./languages/en.json').then(m => addMessages('en', m.default));
+  import(`./languages/${language}.json`).then(m => addMessages(language, m.default));
   
   init({
     fallbackLocale: 'en',
     initialLocale: language,
   });
+
+  hydrateSite(data)
+  setTimeline(data)
+  updatePreview(data)
+
+  $: {
+    console.log('running')
+    data = $draft
+  }
 
   function saveSite(): void {
     dispatch('save', $draft);
@@ -52,11 +62,13 @@
 
   // refresh draft data when passing in updated data
   let cachedData:Site|undefined;
-  $: if (!isEqual(cachedData, data)) {
-    cachedData = data
+  $: if (cachedData && cachedData.id !== data.id) {
+    cachedData = cloneDeep(data)
     hydrateSite(data)
     setTimeline(data)
     updatePreview(data)
+  } else if (!cachedData) {
+    cachedData = cloneDeep(data)
   }
 
   $: $pageId = getPageId($pageStore.params.page);

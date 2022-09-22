@@ -42,9 +42,9 @@
 
   async function saveData(updatedSite) {
     saving = true
-    setSitePreview(updatedSite)
 
     if (find($sites, ['id', siteID])) {
+      setSitePreview(updatedSite)
       $sites = $sites.map((site) => {
         if (site.id !== siteID) return site
         return {
@@ -67,10 +67,11 @@
 
   let saving = false
 
+  let data
+  $: $activeSite = data
   $: siteID = $page.params.site
-  $: data = $activeSite || Site({ id: 'test', name: 'Test' })
-  $: browser && setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
-  $: if ($serverSites && find($serverSites, ['id', $activeSite.id])) {
+  $: siteID, browser && setActiveSite(siteID, $serverSites ? [...$sites, ...$serverSites] : $sites)
+  $: if ($serverSites && $activeSite && find($serverSites, ['id', $activeSite.id])) {
     actions.setActiveEditor($activeSite.id)
   } 
   async function setActiveSite(siteID, sites) {
@@ -78,13 +79,13 @@
     setTimeout(() => {
       const site = find(sites, ['id', siteID])
       if (site) {
-        $activeSite = site.data || site
+        data = site.data || site
       }
     }, 500)
   }
 </script>
 
-{#if browser}
+{#if browser && data}
   <Primo
     {data}
     {role}

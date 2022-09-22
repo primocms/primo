@@ -1,7 +1,7 @@
 <script>
   import {setContext} from 'svelte'
   import { browser } from '$app/environment'
-  import { init, addMessages } from 'svelte-i18n';
+  import { _ as C, init, addMessages } from 'svelte-i18n';
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import {
@@ -13,8 +13,20 @@
   import * as desktop from '../../package.json'
   import config from '../stores/config'
   
-  import('../../languages/en.json').then(m => addMessages('en', m.default));
-  import('../../languages/es.json').then(m => addMessages('es', m.default));
+  import('../languages/en.json').then(m => addMessages('en', m.default));
+  import(`../languages/${$config.language}.json`).then(m => {
+    addMessages($config.language, m.default)
+    dropdown.set([
+      {
+        label: $C('back'),
+        icon: 'fas fa-arrow-left',
+        href: '/',
+      },
+      {
+        component: SiteButtons,
+      },
+    ])
+  });
   
   init({
     fallbackLocale: 'en',
@@ -33,16 +45,6 @@
         label: 'Image',
         component: ImageField,
       }
-    ])
-    dropdown.set([
-      {
-        label: 'Back to Dashboard',
-        icon: 'fas fa-arrow-left',
-        href: '/',
-      },
-      {
-        component: SiteButtons,
-      },
     ])
   }
 

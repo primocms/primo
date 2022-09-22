@@ -2,7 +2,6 @@
   import Spinner from '$lib/ui/Spinner.svelte'
 
   export let preview = null
-  export let valid = true
 
   let container
   let scale
@@ -22,7 +21,7 @@
 
 <div class="iframe-root">
   <div bind:this={container} class="iframe-container">
-    {#if !iframeLoaded && valid}
+    {#if !iframeLoaded}
       <div class="spinner">
         <Spinner />
       </div>
@@ -40,24 +39,6 @@
           iframeLoaded = true
         }}
       />
-    {:else if !valid}
-      <div class="invalid-state">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-        <span>Site file is invalid</span>
-      </div>
     {/if}
   </div>
 </div>
@@ -101,18 +82,5 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  .invalid-state {
-    height: 100%;
-    color: var(--primo-color-white);
-    display: grid;
-    place-content: center;
-    place-items: center;
-    gap: 0.25rem;
-
-    svg {
-      width: 2rem;
-      height: 2rem;
-    }
   }
 </style>

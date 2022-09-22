@@ -1,5 +1,9 @@
 <script context="module">
+  import {writable} from 'svelte/store'
   export const prerender = true;
+
+  // let activeTab = 0
+  export const activeTab = writable(0)
 </script>
 
 <script lang="ts">
@@ -11,7 +15,6 @@
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
   import sites from '../stores/sites'
   import serverSites, { connected } from '../stores/serverSites'
-  import config from '../stores/config'
   import { goto } from '$app/navigation';
   import {setSitePreview, storeSite} from '$lib/actions'
 
@@ -59,15 +62,33 @@
   let siteBeingEdited
 
   let hoveredItem = null
+
+  function add_server() {
+    show({
+      id: 'SERVER_SETUP',
+      props: {
+        onSuccess: hide
+      }
+    })
+  }
+
 </script>
 
 <Modal />
 <main class="primo-reset">
   <div class="container">
     <DashboardToolbar />
+    <div class="tabs">
+      <button class:active={$activeTab === 0} on:click={() => $activeTab = 0}>Local</button>
+      {#if $serverSites && $serverSites.length > 0}
+        <button class:active={$activeTab === 1} on:click={() => $activeTab = 1}>Server</button>
+      {:else}
+        <button on:click={add_server}>+ Add Server</button>
+      {/if}
+    </div>
     <div class="sites-container">
       <ul class="sites" xyz="fade stagger stagger-1">
-        {#each $sites as { data:site, preview }, i (site.id)}
+        {#each ($activeTab === 0 ? $sites : $serverSites) as { data:site, preview }, i (site.id)}
           <li
             class="xyz-in"
             class:active={hoveredItem === i}
@@ -75,11 +96,11 @@
           >
             <a
               class="site-link"
-              href={site.valid ? site.id : '/'}
+              href={site.id}
               on:mouseenter={() => (hoveredItem = i)}
               on:mouseleave={() => (hoveredItem = null)}
             >
-              <SiteThumbnail bind:valid={site.valid} {site} {preview} />
+              <SiteThumbnail {preview} />
             </a>
             <div class="site-info">
               <div class="site-name">
@@ -121,35 +142,35 @@
                 {/if}
               </div>
               <span class="site-url">{site.id}</span>
-              <div class="buttons">
-                <button
-                  class="delete-link"
-                  on:click={() => (siteBeingEdited = site.id)}
-                >
-                  <Icon icon="bxs:edit" width="1rem" height="1rem" />
-                  <span>{$C('dashboard.thumbnail.rename')}</span>
-                </button>
-                <button
-                  class="delete-link"
-                  on:click={() => deleteSiteItem(site.id)}
-                >
-                  <Icon icon="bxs:trash"  width="1rem" height="1rem" />
-                  <span>{$C('dashboard.thumbnail.delete')}</span>
-                </button>
-              </div>
+              {#if $activeTab === 0}
+                <div class="buttons">
+                  <button
+                    class="delete-link"
+                    on:click={() => (siteBeingEdited = site.id)}
+                  >
+                    <Icon icon="bxs:edit" width="1rem" height="1rem" />
+                    <span>{$C('dashboard.thumbnail.rename')}</span>
+                  </button>
+                  <button
+                    class="delete-link"
+                    on:click={() => deleteSiteItem(site.id)}
+                  >
+                    <Icon icon="bxs:trash"  width="1rem" height="1rem" />
+                    <span>{$C('dashboard.thumbnail.delete')}</span>
+                  </button>
+                </div>
+              {/if}
             </div>
           </li>
         {/each}
-        <li
-          class:inactive={hoveredItem !== true && hoveredItem !== null}
-          class:active={hoveredItem === true}
-          on:mouseenter={() => (hoveredItem = true)}
-          on:mouseleave={() => (hoveredItem = null)}
-        >
-          <button class="create-site" on:click={createSite}>
-            {#if loading}
-              <!-- <Spinner /> -->
-            {:else}
+        {#if $activeTab === 0}
+          <li
+            class:inactive={hoveredItem !== true && hoveredItem !== null}
+            class:active={hoveredItem === true}
+            on:mouseenter={() => (hoveredItem = true)}
+            on:mouseleave={() => (hoveredItem = null)}
+          >
+            <button class="create-site" on:click={createSite}>
               <svg
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -160,85 +181,12 @@
                   clip-rule="evenodd"
                 /></svg
               >
-            {/if}
-            {$C('dashboard.create.heading')}
-          </button>
-        </li>
+              {$C('dashboard.create.heading')}
+            </button>
+          </li>
+        {/if}
       </ul>
     </div>
-    {#if $serverSites}
-      <hr />
-      <div class="sites-container">
-        <header>
-          <h2>{$C('dashboard.server.heading')}</h2>
-          <a target="blank" rel="external" href={$config.serverConfig.url}
-            >{$config.serverConfig.url}</a
-          >
-        </header>
-        <ul class="sites" xyz="fade stagger stagger-1">
-          {#each $serverSites as site, i (site.id)}
-            <li class="xyz-in">
-              <a href={site.id} class="site-link">
-                <SiteThumbnail site={site.data} />
-              </a>
-              <div class="site-info">
-                <div class="site-name">
-                  {#if siteBeingEdited === site.id}
-                    <form
-                      on:submit|preventDefault={() => (siteBeingEdited = null)}
-                    >
-                      <input
-                        on:blur={() => (siteBeingEdited = null)}
-                        class="reset-input"
-                        type="text"
-                        bind:value={site.name}
-                      />
-                    </form>
-                  {:else}
-                    <a href={site.url}>{site.name}</a>
-                    <button on:click={() => (siteBeingEdited = site.id)}>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  {/if}
-                </div>
-                <span class="site-url">{site.id} </span>
-                <div class="buttons">
-                  <button
-                    class="delete-link"
-                    on:click={() => deleteSiteItem(site.id)}
-                  >
-                    <Icon icon="bxs:trash"  width="1rem" height="1rem" />
-                    <span>{$C('dashboard.thumbnail.delete')}</span>
-                  </button>
-                </div>
-              </div>
-            </li>
-          {:else}
-            <span class="info">{$C('dashboard.server.empty')}</span>
-          {/each}
-          {#if !$connected}
-            <li>
-              <button class="create-site" on:click={connectToServer}>
-                <span>{$C('dashboard.thumbnail.connect')}</span>
-              </button>
-            </li>
-          {/if}
-        </ul>
-      </div>
-    {/if}
     <SiteFooter />
   </div>
 </main>
@@ -258,6 +206,27 @@
       margin: 0 auto;
       padding: 2rem;
       min-height: 100vh;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 1.25rem;
+      border-bottom: 1px solid #252627;
+      margin-bottom: 1rem;
+
+      button {
+        font-weight: 700;
+        font-size: 1.125rem;
+        line-height: 1.5rem;
+        text-align: center;
+        color: #FAFAFA;
+        border-bottom: 3px solid transparent;
+        padding-bottom: 0.25rem;
+
+        &.active {
+          border-color: var(--primo-color-primogreen);
+        }
+      }
     }
 
     hr {
@@ -424,13 +393,6 @@
     }
     &:hover {
       color: var(--primo-color-primogreen);
-    }
-  }
-
-  button {
-    transition: color 0.1s, background-color 0.1s;
-    &:focus {
-      outline: 2px solid var(--primo-color-primogreen);
     }
   }
 
