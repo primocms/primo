@@ -129,7 +129,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
         let data = {}
         fetch('/${locale}.json').then(res => res.json()).then(res => {
           data = res
-        })
+        }).catch(() => {})
       </script>
     </head>
     <body class="primo-page">
