@@ -35,7 +35,6 @@
 
   $: pageExists = findPage(id, $pages);
   function findPage(id, pages) {
-    console.log({id})
     const [root] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     const childPage = rootPage ? find(rootPage?.pages, ['id', id]) : null;
@@ -144,7 +143,6 @@
 
   $: setPageContent(id, $pages);
   function setPageContent(id, pages) {
-    console.log({id, pages})
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {

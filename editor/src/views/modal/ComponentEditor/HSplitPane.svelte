@@ -10,7 +10,15 @@
 
   export let resetSize = () => {
     transitioning = true;
-    if (center) center.removeAttribute('style');
+    if (center) {
+      center.removeAttribute('style')
+      rightPaneSize = '33%'
+      leftPaneSize = '33%'
+      centerPaneSize = '33%'
+    } else {
+      rightPaneSize = '50%'
+      leftPaneSize = '50%'
+    }
     if (right) right.removeAttribute('style');
     if (leftSeparator) leftSeparator.removeAttribute('style');
     if (rightSeparator) rightSeparator.removeAttribute('style');
