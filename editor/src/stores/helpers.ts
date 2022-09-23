@@ -125,60 +125,53 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   <html lang="${locale}">
     <head>
       ${head.html || ''}
-      <script async>
-        let data = {}
-        fetch('/${locale}.json').then(res => res.json()).then(res => {
-          data = res
-        }).catch(() => {})
-      </script>
     </head>
     <body class="primo-page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
-      ${buildModules(blocks)}
     </body>
   </html>
   `
 
   function buildBlocks(blocks: any[]): string {
     return blocks.map(block => {
-      if (!block || block.type === 'options') return ''
-      const { id, type, css } = block
-      const html = block.html || site.content[locale]?.[page.id]?.[id] || ''
+      const { id, type, html, css, js } = block
+      const content = site.content[locale]?.[page.id]?.[id]
+      if (!block || !content || block.type === 'options') return '' // don't build out components that don't have content
       return `
-      ${css ? `<style>${css}</style>` : ``}
-      <div class="primo-section has-${type}" id="${id}">
-        <div class="primo-${type}">
-          ${html}
+        ${css ? `<style>${css}</style>` : ``}
+        <div class="primo-section has-${type}" id="${id}">
+          <div class="primo-${type}">
+            ${html || content} 
+          </div>
         </div>
-      </div>
+        ${js ? `<script type="module" async>${buildModule(block)}</script>` : ``}
     `
     }).join('')
   }
 
-  function buildModules(blocks: any[]): string {
-    return blocks.filter(block => block.js).map(block => {
-      return separateModules ?
-        `<script type="module">
-          import App from '/_modules/${block.symbol}.js';
-          new App({
-            target: document.querySelector('#${block.id}'),
-            hydrate: true,
-            props: {
-              ...data,
-              ...data['${page.id}'],
-              ...data['${page.id}']['${block.id}']
-            }
-          });
-        </script>`
-        : `<script type="module" async>
-            const App = ${block.js};
-            new App({
-              target: document.querySelector('#${block.id}'),
-              hydrate: true
-            });
-        </script>`
-    }).join('')
+  function buildModule(block): string {
+    return separateModules ? `\
+      const [ {default:App}, data ] = await Promise.all([
+        import('/_modules/${block.symbol}.js'),
+        fetch('/${locale}.json').then(res => res.json()).catch(() => {})
+      ])
+      new App({
+        target: document.querySelector('#${block.id}'),
+        hydrate: true,
+        props: {
+          ...data,
+          ...data['${page.id}'],
+          ...data['${page.id}']['${block.id}']
+        }
+      })`
+      :
+      `\
+    const App = ${block.js};
+    new App({
+      target: document.querySelector('#${block.id}'),
+      hydrate: true
+    }); `
   }
 
   type Module = {
