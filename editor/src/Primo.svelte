@@ -78,27 +78,6 @@
     return child ? `${root}/${child}` : root;
   }
 
-  $: setPageContent($pageId, $pages);
-  function setPageContent(id:string, pages:Array<PageType>): void {
-    const [root, child] = id.split('/');
-    const rootPage = find(pages, ['id', root]);
-    if (rootPage && !child) {
-      setPageStore(rootPage);
-    } else if (rootPage && child) {
-      const childPage = find(rootPage.pages, ['id', id]);
-      if (childPage) setPageStore(childPage)
-    } else {
-      console.warn('Could not navigate to page', id);
-    }
-    updatePreview()
-
-    function setPageStore(page) {
-      sections.set(page.sections);
-      fields.set(page.fields);
-      code.set(page.code);
-    }
-  }
-
   $: activeModal = getActiveModal($modal.type);
   function getActiveModal(modalType) {
     return modalType

@@ -152,22 +152,10 @@
       delete e['returnValue'];
     };
   }
-
-  // Add top margin to page since toolbar is fixed
-  let toolbar;
-  let page;
-  $: if (toolbar && page) {
-    setTimeout(() => {
-      page.style.borderTop = `${
-        toolbar.clientHeight
-      }px solid var(--primo-color-black)`;
-    }, 0)
-  }
   
 </script>
 
 <Toolbar
-  bind:element={toolbar}
   on:signOut
   buttons={$loadingSite ? [] : toolbarButtons}
   on:toggleView={() => showingIDE.set(!$showingIDE)}
@@ -209,4 +197,4 @@
   />
 </Toolbar>
 
-<Doc bind:element={page} on:save />
+<!-- <Doc bind:element={page} on:save /> -->

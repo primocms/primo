@@ -85,7 +85,7 @@
   }
 </script>
 
-{#if browser && data}
+{#if browser}
   <Primo
     {data}
     {role}
@@ -93,4 +93,5 @@
     language={$config.language}
     on:save={async ({ detail: data }) => saveData(data)}
   />
+  <slot></slot>
 {/if}

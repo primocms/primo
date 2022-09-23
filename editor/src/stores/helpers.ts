@@ -1,4 +1,4 @@
-import { unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep } from 'lodash-es'
+import { unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep, cloneDeep } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { pages, site as activeSite, symbols, fields as siteFields } from './data/draft'
