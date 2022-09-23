@@ -11,7 +11,7 @@
 
 <script lang="ts">
   import {_ as C} from 'svelte-i18n'
-  import { cloneDeep, find, isEqual, chain as _chain, set as _set, get as _get, differenceWith as _differenceWith} from 'lodash-es';
+  import { cloneDeep, find, isEqual, chain as _chain} from 'lodash-es';
   import HSplitPane from './HSplitPane.svelte';
   import { getPlaceholderValue, getEmptyValue } from '../../../utils';
   import ModalHeader from '../ModalHeader.svelte';
@@ -82,7 +82,7 @@
     return _chain(Object.entries(siteContent)) 
       .map(([locale]) => ({
         locale,
-        content: $content[locale][$pageID][localComponent.id] || getSymbolPlaceholders(localComponent.fields)
+        content: $content[locale][$pageID]?.[localComponent.id] || getSymbolPlaceholders(localComponent.fields)
       }))
       .keyBy('locale')
       .mapValues('content')
@@ -291,7 +291,6 @@
       header.button.onclick(component);
     }
   }
-  $: console.log($activeTab)
 
 </script>
 
