@@ -47,6 +47,7 @@
     } else {
       fields = fields.filter((f) => f.id !== field.id)
     }
+    dispatch('delete')
 
     function handleDeleteSubfield(fieldsToModify) {
       if (find(fieldsToModify, ['id', parentField.id])) {
@@ -148,27 +149,25 @@
       {@const isValid = (field.key || field.type === 'info') && getComponent(field)}
       {@const hasChildFields = field.fields.length > 0}
       {#if isValid}
-      <Card title={hasChildFields ? field.label : null}>
-        <div class="field-item" id="field-{field.key}" class:repeater={field.key === 'repeater'}>
-          <svelte:component
-            this={getComponent(field)}
-            {field}
-            fields={fields.filter((f) => f.id !== field.id)}
-            on:save
-            on:input />
-        </div>
-      </Card>
+        <Card title={hasChildFields ? field.label : null}>
+          <div class="field-item" id="field-{field.key}" class:repeater={field.key === 'repeater'}>
+            <svelte:component
+              this={getComponent(field)}
+              {field}
+              fields={fields.filter((f) => f.id !== field.id)}
+              on:save
+              on:input />
+          </div>
+        </Card>
       {:else}
-        <p class="empty-description">This field needs a field key in order to be valid</p>
+        <p class="empty-description">{$C('no_field_key')}</p>
       {/if}
     {:else}
       <p class="empty-description">
         {#if $userRole === 'developer'}
-          You'll need to create and integrate a field before you can edit
-          content from here
+          {$C('no_fields_dev')}
         {:else}
-          The site developer will need to create and integrate a field before
-          you can edit content from here
+          {$C('no_fields_content')}
         {/if}
       </p>
     {/each}

@@ -37,6 +37,7 @@
   import { Component } from '../../../const';
   import type { Component as ComponentType, Symbol as SymbolType, Field as FieldType } from '../../../const';
   import { getPageData } from '../../../stores/helpers';
+  import { tick } from 'svelte';
 
   export let component:ComponentType|SymbolType = Component();
   export let header = {
@@ -327,7 +328,11 @@
             on:refresh={refreshPreview}
           />
         {:else if $activeTab === 1}
-          <GenericFields bind:fields on:input={refreshPreview} showCode={true} />
+          <GenericFields bind:fields on:input={refreshPreview} on:delete={async () => {
+            await tick() // wait for fields to update
+            saveLocalContent()
+            refreshPreview()
+          }} showCode={true} />
         {/if}
       {:else}
         <GenericFields bind:fields on:save={saveComponent} on:input={() => {
