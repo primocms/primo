@@ -353,6 +353,7 @@
   .center,
   .right {
     position: relative;
+    transition: 0.1s width;
   }
   div.left {
     width: var(--left-pane-size);

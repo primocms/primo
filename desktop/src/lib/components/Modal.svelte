@@ -113,7 +113,7 @@
     margin: 0 auto;
     position: relative;
     border-radius: var(--primo-border-radius);
-    max-height: calc(100vh - 2rem);
+    max-height: 100vh;
   }
 
   .modal-card-body {

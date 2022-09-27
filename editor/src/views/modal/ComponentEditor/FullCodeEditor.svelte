@@ -42,8 +42,6 @@
     js: 0,
   };
 
-  let resetSize;
-
   function toggleTab(tab) {
     const tabName = {
       0: 'html',
@@ -61,8 +59,6 @@
     $leftPaneSize = $activeTabs['html'] ? `${panelWidth}%` : '0';
     $centerPaneSize = $activeTabs['css'] ? `${panelWidth}%` : '0';
     $rightPaneSize = $activeTabs['js'] ? `${panelWidth}%` : '0';
-
-    resetSize();
   }
 
 
@@ -129,8 +125,7 @@
     hideLeftOverflow={true}
     bind:leftPaneSize={$leftPaneSize} 
     bind:centerPaneSize={$centerPaneSize} 
-    bind:rightPaneSize={$rightPaneSize} 
-    bind:resetSize>
+    bind:rightPaneSize={$rightPaneSize}>
     <div slot="left" class="tabs">
       <button
         class:tab-hidden={$leftPaneSize <= '0'}

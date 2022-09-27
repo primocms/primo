@@ -5,32 +5,31 @@
   import config from '../../../stores/config'
   import {getSitesFromServer} from '../../../stores/serverSites'
 
-  export let onSuccess = (data) => {}
+  export let onSuccess = () => {}
 
   const serverConfig = $config.serverConfig
-  let connectedToServer = false
   let serverErrorMessage = ''
   let loading = false
 
   async function connect_to_server() {
     loading = true
-    const url = serverConfig.url.replace(/\/$/, "") // remove trailing slash if present
+    serverConfig.url = serverConfig.url.replace(/\/+$/, '') // remove trailing slash if present
     const endpoint = `${serverConfig.url}/api`
     const res = await axios.get(endpoint, {
       headers: {
         Authorization: `Basic ${serverConfig.token}`,
       },
     }).catch(e => e)
-    if (res.status === 200) {
+    if (res?.data?.body?.success) {
       config.update((c) => ({
         ...c,
         serverConfig,
       }))
       getSitesFromServer()
-      connectedToServer = true
       serverErrorMessage = ''
       onSuccess()
     } else {
+      serverErrorMessage = `Could not connect to ${serverConfig.url}, ensure the Address and Token are correct`
       config.update((c) => ({
         ...c,
         serverConfig: {
@@ -38,10 +37,6 @@
           token: ''
         },
       }))
-      connectedToServer = false
-      if (serverConfig.url) {
-        serverErrorMessage = `Could not connect to ${serverConfig.url}. Ensure the address and token are correct & try again.`
-      }
     }
     loading = false
   }
@@ -57,11 +52,11 @@
     <li>Copy the server token from the settings tab in the new server and paste it in the Address and API Token fields below.</li>
   </ol>
   <form on:submit|preventDefault={connect_to_server}>
-    <TextField
+    <!-- <TextField
       label="Server Label"
       placeholder="Client Work"
       bind:value={serverConfig.label}
-    />
+    /> -->
     <TextField
       label="Address"
       placeholder="https://myclientworkserver.com"

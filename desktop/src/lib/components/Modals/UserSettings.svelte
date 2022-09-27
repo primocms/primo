@@ -9,19 +9,12 @@
   import Hosting from '../Hosting.svelte'
   import {setLanguage} from '$lib/actions'
 
-  export let tab = 0
-
   let tabs = []
   $: tabs = [
     {
       id: 'HOSTING',
       label: $C('settings.hosting.heading'),
       icon: 'globe',
-    },
-    {
-      id: 'SERVER',
-      label: $C('settings.server.heading'),
-      icon: 'server',
     },
     {
       id: 'ADVANCED',
@@ -99,32 +92,6 @@
         >
       </h1>
       <Hosting />
-    {:else if activeTab.id === 'SERVER'}
-      <h1 class="primo-heading-lg heading">
-        {$C('settings.server.heading')} <span class="supporting-text"
-          >{$C('settings.server.subheading')}</span
-        >
-      </h1>
-      <form on:submit|preventDefault={connectToServer}>
-        <TextField
-          placeholder="https://myselfhostedprimoserver.com"
-          on:input={() => (connectedToServer = false)}
-          bind:value={serverConfig.url}
-          label="Address"
-        />
-        <TextField
-          placeholder="IU93HUKJNT062BDS998U2JKOI"
-          on:input={() => (connectedToServer = false)}
-          bind:value={serverConfig.token}
-          label="API Token"
-        />
-        <span>{serverErrorMessage}</span>
-        {#if connectedToServer}
-          <span>{$C('settings.server.connected_to')} {serverConfig.url}</span>
-        {:else}
-          <PrimaryButton {loading} type="submit">{$C('settings.server.button')}</PrimaryButton>
-        {/if}
-      </form>
     {:else if activeTab.id === 'ADVANCED'}
       <h1 class="primo-heading-lg heading">{$C('settings.advanced.heading')}</h1>
       <div class="container">
