@@ -27,9 +27,9 @@
 {#if value}
   <label class={variants}>
     <span>{field.label}</span>
-    <input on:keydown={handleSave} on:focus={selectAll} class="input" {title} {disabled} type="text" bind:value on:input={({detail}) => {
-      onChange()
-      dispatch('input', detail)
+    <input on:keydown={handleSave} on:focus={selectAll} class="input" {title} {disabled} type="text" bind:value on:input={() => {
+      onChange(field)
+      dispatch('input', field)
     }} />
   </label>
 {:else}
@@ -43,7 +43,7 @@
     on:keydown={handleSave}
     on:focus={selectAll}
     bind:value={field.value}
-    on:input />
+    on:input={() => dispatch('input', field)} />
   </label>
 {/if}
 

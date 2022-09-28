@@ -14,7 +14,8 @@
   const dispatch = createEventDispatcher()
 
   function addField() {
-    fields = [...fields, Field()];
+    fields = [...fields, Field()]
+    dispatch('input')
   }
 
   function createSubfield({detail:field}) {

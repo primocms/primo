@@ -89,7 +89,7 @@
 
   function onInput() {
     field.value = repeaterFieldValues.map((items, i) => _chain(items).keyBy("key").mapValues('value').value());
-    dispatch('input');
+    dispatch('input', field);
   }
 
   function getFieldComponent(subfield) {

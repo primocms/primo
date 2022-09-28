@@ -60,7 +60,7 @@
   <span>{field.label}</span>
   <div class="inputs">
     <TextInput
-      on:input
+      on:input={() => dispatch('input', field)}
       bind:value={field.value.label}
       id="page-label"
       label="Label"
@@ -88,7 +88,7 @@
         </select>
       {:else}
         <TextInput
-          on:input
+          on:input={() => dispatch('input', field)}
           bind:value={field.value.url}
           type="url"
           placeholder="https://somewhere.com" />
