@@ -205,6 +205,7 @@
       border-radius: var(--primo-border-radius);
       margin: 0 auto;
       padding: 2rem;
+      padding-bottom: 0.5rem;
       min-height: 100vh;
     }
 
