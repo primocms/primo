@@ -1,6 +1,6 @@
 <script>
   import { fade } from 'svelte/transition';
-  import { find, isEqual } from 'lodash-es';
+  import { find, isEqual, cloneDeep } from 'lodash-es';
   import Block from './Layout/Block.svelte';
   import Spinner from '../../ui/misc/Spinner.svelte';
   import {
@@ -101,14 +101,33 @@
   }
   $: pageMounted && disableLinks();
 
+
+  $: setPageContent(id, $pages);
+  function setPageContent(id, pages) {
+    const [root, child] = id.split('/');
+    const rootPage = find(pages, ['id', root]);
+    if (rootPage && !child) {
+      setPageStore(rootPage);
+    } else if (rootPage && child) {
+      const childPage = find(rootPage.pages, ['id', id]);
+      if (childPage) setPageStore(childPage)
+    } else {
+      console.warn('Could not navigate to page', id);
+    }
+    updatePreview()
+
+    function setPageStore(page) {
+      $sections = page.sections
+      $pageFields = page.fields
+      $pageCode = page.code
+    }
+  }
+
   let htmlHead = '';
   let htmlBelow = '';
   let cached = { pageCode: null, siteCode: null }
-  $: setPageHTML({
-    pageCode: $pageCode,
-    siteCode: $siteCode
-  });
-  async function setPageHTML({ pageCode, siteCode }) {
+  $: setPageHTML($pageCode, $siteCode);
+  async function setPageHTML(pageCode, siteCode) {
     if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
     cached.pageCode = pageCode
     cached.siteCode = siteCode
@@ -139,27 +158,6 @@
     htmlHead = !head.error ? head.html : '';
     htmlBelow = !below.error ? below.html : '';
     pageMounted = true
-  }
-
-  $: setPageContent(id, $pages);
-  function setPageContent(id, pages) {
-    const [root, child] = id.split('/');
-    const rootPage = find(pages, ['id', root]);
-    if (rootPage && !child) {
-      setPageStore(rootPage);
-    } else if (rootPage && child) {
-      const childPage = find(rootPage.pages, ['id', id]);
-      if (childPage) setPageStore(childPage)
-    } else {
-      console.warn('Could not navigate to page', id);
-    }
-    updatePreview()
-
-    function setPageStore(page) {
-      sections.set(page.sections);
-      pageFields.set(page.fields);
-      pageCode.set(page.code);
-    }
   }
 
   // Fade in page when all components mounted

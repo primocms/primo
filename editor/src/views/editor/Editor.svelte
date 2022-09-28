@@ -8,7 +8,6 @@
 
   import Toolbar from './Toolbar.svelte';
   import ToolbarButton from './ToolbarButton.svelte';
-  import Doc from './Doc.svelte';
 
   import { showingIDE } from '../../stores/app';
   import { fields as siteFields, timeline } from '../../stores/data/draft';
@@ -106,34 +105,7 @@
           showSwitch: true
         }),
       },
-    ],
-    // [
-    //   {
-    //     id: 'toolbar--preview',
-    //     title: 'Preview',
-    //     icon: 'window-restore',
-    //     onclick: async () => {
-    //       // window.open('http://localhost:3333', '_blank');
-    //       // var wnd = window.open('about:blank', '', '_blank');
-    //       // wnd.document.write(iframePreview);
-    //       const w = window.open(
-    //         'data:text/html;charset=utf-8,' + currentPagePreview,
-    //         '',
-    //         '_blank'
-    //       );
-    //       const preview = await buildStaticPage({
-    //         page: $currentPage,
-    //         site: $site,
-    //       });
-    //       console.log({ preview });
-    //       console.log({ w });
-    //       w.postMessage({ html: preview });
-    //       // setTimeout(() => {
-    //       //   w.postMessage({ html: preview });
-    //       // }, 0);
-    //     },
-    //   },
-    // ],
+    ]
   ];
 
   function savePage() {
