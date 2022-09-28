@@ -1,5 +1,5 @@
 <script>
-  import {cloneDeep} from 'lodash-es'
+  import {cloneDeep, chain as _chain, isEqual} from 'lodash-es'
   import Icon from '@iconify/svelte';
   import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
@@ -7,6 +7,7 @@
   import { EditField } from '../../../components/inputs';
   import fieldTypes from '../../../stores/app/fieldTypes'
   import SelectField from '../../../field-types/SelectField.svelte';
+  import {getPlaceholderValue, getEmptyValue} from '../../../utils'
 
   export let field
   export let isFirst
@@ -20,7 +21,44 @@
   }
 
   function dispatchUpdate() {
-    dispatch('input', cloneDeep(field))
+    // prevent fields from being saved with invalid values
+    const updated_field = cloneDeep(field)
+    const value_is_valid = validateFieldValue(updated_field)
+    if (!value_is_valid) {
+      updated_field.value = getPlaceholderValue(field)
+    }
+    dispatch('input', updated_field)
+  }
+
+  // Ensure fields have an initial value, in case the field is created & no value is set
+  function validateFieldValue(field) {
+    if (!('value' in field)) return false
+    else if (field.type === 'repeater') {
+      const desired_shape = getRepeaterShape(field.fields)
+      const current_shape = getRepeaterShape(field.fields)
+      console.log({desired_shape, current_shape})
+      return isEqual(desired_shape, current_shape)
+    }
+    else if (field.type === 'group') {
+      if (typeof field.value !== 'object') return false
+      const desired_shape = getGroupShape(field)
+      const current_shape = getGroupShape(field)
+      return isEqual(desired_shape, current_shape)
+    }
+    else if (field.type === 'image') return (typeof field.value === 'object' && 'url' in field.value && 'alt' in field.value)
+    else if (field.type === 'text') return (typeof field.value === 'string')
+    else if (field.type === 'content') return (typeof field.value === 'string')
+    else if (field.type === 'link') return  (typeof field.value === 'object' && 'url' in field.value && 'label' in field.value)
+    else if (field.type === 'url') return (typeof field.value === 'string')
+    else return true // future field types true until accounted for
+
+    function getRepeaterShape(subfields) {
+      return Array.from(Array(2)).map(_ => _chain(subfields).keyBy('key').mapValues((subfield) => typeof(subfield.value)).value())
+    }
+
+    function getGroupShape(field) {
+      return _chain(field.fields).keyBy('key').mapValues((field) => typeof(field.value)).value()
+    }
   }
 
   $: visibilityOptions = field.fields.filter(f => f.type === 'select').map(f => ({
@@ -54,7 +92,10 @@
       <option value={field.id}>{field.label}</option>
     {/each}
   </select>
-  <textarea slot="main" class="info" bind:value={field.options.info} />
+  <textarea slot="main" class="info" value={field.options.info} on:input={({target}) => {
+    field.options.info = target.value
+    dispatchUpdate()
+  }} />
   <input
     class="input label-input"
     type="text"
