@@ -1,6 +1,6 @@
 describe('Pages', () => {
     it('visit the page', () => {
-        cy.visit('http://localhost:3000/demo')
+        cy.visit('http://localhost:5174')
     })
 
     it('Create new top-level page by duplicating active page', () => {

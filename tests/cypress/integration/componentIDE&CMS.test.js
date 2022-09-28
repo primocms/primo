@@ -1,7 +1,7 @@
 describe('Component IDE & CMS', () => {
 
     it('visit the page', () => {
-        cy.visit('http://localhost:3000/demo')
+        cy.visit('http://localhost:5174')
     })
 
     it('switch to IDE', () => {

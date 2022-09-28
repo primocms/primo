@@ -1,7 +1,7 @@
 //cypress test
 describe('Component Library', () => {
     it('visit the page', () => {
-    cy.visit('http://localhost:3000/demo')
+    cy.visit('http://localhost:5174')
   })
     it('Adds a new Site Library component from the Primo Library', () => {
         cy.get('.primo-section .buttons button:last-child').click();
