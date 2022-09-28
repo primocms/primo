@@ -108,6 +108,17 @@ const createWindow = () => {
 		win.show();
 	});
 
+	win.webContents.on('will-prevent-unload', (event) => {
+			const options = {
+					type: 'question',
+					buttons: ['Cancel', 'Leave'],
+					message: 'Leave Site?',
+					detail: 'Changes that you made will not be saved.',
+			};
+			const response = dialog.showMessageBoxSync(null, options)
+			if (response === 1) event.preventDefault();
+	});
+
 	// and load the index.html of the app.
 
 	if (isDev) {
