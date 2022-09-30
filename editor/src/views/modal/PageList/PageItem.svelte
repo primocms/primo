@@ -2,6 +2,7 @@
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, getContext } from 'svelte';
   const dispatch = createEventDispatcher();
+  import {goto} from '$app/navigation'
   import { TextInput } from '../../../components/inputs';
   import { PrimaryButton } from '../../../components/buttons';
   import Preview from '../../../components/misc/Preview.svelte';
@@ -30,10 +31,10 @@
     }
   }
 
-  // Svelte bug: it takes a second to handle links properly (i.e. reloads page when clicked shortly after mounting)
-  // workaround: manage site from [...site].svelte instead of across index.svelte and [...site.svelte] 
-  function openPage(e) {
+  // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
+  function openPage(url) {
     modal.hide();
+    goto(url)
   }
 
   let editingPage = false;
@@ -48,7 +49,7 @@
 
 <div class="page-item">
   <div class="page-info">
-    <a href={pageURL} on:click|preventDefault={openPage}>
+    <a href={pageURL} on:click|preventDefault={() => openPage(pageURL)}>
       <span class="title">{page.name}</span>
       <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
     </a>
@@ -114,7 +115,7 @@
         </div>
       </div>
     {:else}
-      <a class="page-link" href={pageURL} on:click={openPage} class:active>
+      <a class="page-link" href={pageURL} on:click|preventDefault={() => openPage(pageURL)} class:active>
         <div class="page-container">
           <Preview {preview} preventClicks={true} />
         </div>
@@ -225,7 +226,7 @@
           z-index: -1; /* needed for link */
         }
       }
-      a.page-link {
+      .page-link {
         &:hover {
           opacity: 0.5;
         }
