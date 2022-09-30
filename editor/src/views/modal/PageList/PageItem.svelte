@@ -21,8 +21,8 @@
   export let displayOnly = false;
 
   let preview = '';
-  $: if (page) buildPreview();
-  async function buildPreview() {
+  $: if (page) build_preview();
+  async function build_preview() {
     if (compilations.has(page)) {
       preview = compilations.get(page);
     } else {
@@ -32,12 +32,12 @@
   }
 
   // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
-  function openPage(url) {
+  function open_page(url) {
     modal.hide();
     goto(url)
   }
 
-  let editingPage = false;
+  let editing_page = false;
   let name = page.name || '';
   let id = page.id || '';
   $: disableSave = !name || !id;
@@ -45,25 +45,33 @@
   const pageURL = isTryPrimo ? 
     `/${page.id === 'index' ? '' : page.id || ''}` :  
     `/${$pageStore.params.site}/${page.id === 'index' ? '' : page.id || ''}`;
+
+  // strip parent page from id
+  function get_simple_page_id(id) {
+    if (id === 'index') return id
+    const i = id.indexOf('/') + 1
+    return i ? id.slice(i, id.length) : id
+  }
+
 </script>
 
 <div class="page-item">
   <div class="page-info">
-    <a href={pageURL} on:click|preventDefault={() => openPage(pageURL)}>
+    <a href={pageURL} on:click|preventDefault={() => open_page(pageURL)}>
       <span class="title">{page.name}</span>
-      <span class="subtitle">{page.id === 'index' ? '' : page.id}</span>
+      <span class="subtitle">{get_simple_page_id(page.id)}</span>
     </a>
     {#if !displayOnly}
       <div class="primo-buttons">
-        <button title="Edit" on:click={() => (editingPage = !editingPage)}>
+        <button title="Edit" on:click={() => (editing_page = !editing_page)}>
           <i class="fas fa-edit" />
         </button>
         {#if page.pages && page.pages.length > 0 && !disableAdd}
-          <button title="Show sub-pages" on:click={() => dispatch('list')}>
+          <button title="Show child pages" on:click={() => dispatch('list')}>
             <i class="fas fa-th-large" />
           </button>
         {:else if page.id !== 'index' && !disableAdd}
-          <button title="Add sub-page" on:click={() => dispatch('add')}>
+          <button title="Add child page" on:click={() => dispatch('add')}>
             <i class="fas fa-plus" />
           </button>
         {/if}
@@ -79,11 +87,11 @@
       </div>
     {/if}
   </div>
-  <div class="page-body">
-    {#if editingPage}
+  <div class="page-body" class:editing={editing_page}>
+    {#if editing_page}
       <form
         on:submit|preventDefault={() => {
-          editingPage = false;
+          editing_page = false;
           dispatch('edit', { name, id });
         }}
         in:fade={{ duration: 100 }}
@@ -115,7 +123,7 @@
         </div>
       </div>
     {:else}
-      <a class="page-link" href={pageURL} on:click|preventDefault={() => openPage(pageURL)} class:active>
+      <a class="page-link" href={pageURL} on:click|preventDefault={() => open_page(pageURL)} class:active>
         <div class="page-container">
           <Preview {preview} preventClicks={true} />
         </div>
@@ -197,6 +205,10 @@
       padding-top: calc(75% - 37px);
       /* include header in square */
       position: relative;
+
+      &.editing {
+        overflow: scroll; /* prevent fields from being hidden */
+      }
 
       .page-link {
         position: absolute;

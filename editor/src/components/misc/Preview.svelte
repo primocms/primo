@@ -10,14 +10,14 @@
 
   let container;
   let iframe;
-  let iframeLoaded;
-  $: preview && iframeLoaded && setIframeContent({ preview });
+  $: preview && iframe && setIframeContent({ preview });
   function setIframeContent({ preview }) {
     iframe.contentWindow.postMessage({ preview });
 
     setTimeout(() => {
-      iframe.height = '';
-      height = iframe.contentWindow.document.body.scrollHeight * scaleRatio;
+      const scrollHeight = iframe.contentWindow?.document?.body?.scrollHeight // prevent weird error
+      if (!scrollHeight) return
+      height = iframe.contentWindow?.document?.body?.scrollHeight * scaleRatio;
       iframe.height = height;
     }, 100);
   }
@@ -42,8 +42,7 @@
       in:fade={{ duration: 100 }}
       title="Preview HTML"
       srcdoc={preview}
-      bind:this={iframe}
-      on:load={() => (iframeLoaded = true)} />
+      bind:this={iframe} />
   </div>
 </div>
 
