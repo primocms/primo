@@ -30,7 +30,7 @@ export async function updateHTML({ page, site }) {
       html: page
     }
   }));
-  
+
   // site
   code.update(c => ({
     ...c,
@@ -150,7 +150,7 @@ export const pages = {
 
     stores.content.set(updatedContent)
     stores.pages.set(updatedPages)
-    
+
     if (updateTimeline) timeline.push(get(unsavedSite))
   },
   delete: (pageId: string, path: Array<string>, updateTimeline = true): void => {
@@ -214,7 +214,7 @@ export const pages = {
 }
 
 export async function deleteSection(sectionID) {
-  
+
   // delete section content from all locales
   const updatedContent = cloneDeep(get(content))
   const pageID = get(activePageID)
@@ -223,19 +223,19 @@ export async function deleteSection(sectionID) {
 
   for (const [locale, pages] of Object.entries(updatedContent)) {
     updatedContent[locale] = {
-      ...pages, 
+      ...pages,
       [pageID]: updatedPage
     }
   }
   content.set(updatedContent)
-  
+
   // delete section from page
   const updatedSections = get(sections).filter(s => s.id !== sectionID)
   pages.update(pageID, (page) => ({
     ...page,
     sections: updatedSections
   }), false);
-  
+
   timeline.push(get(unsavedSite))
 }
 
@@ -272,7 +272,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
       }))
     }
   }
-  
+
   timeline.push(get(unsavedSite))
 }
 
@@ -314,6 +314,7 @@ export async function changeLocale() {
 }
 
 export async function updatePreview(updatedSite = get(unsavedSite)) {
+  if (!BroadcastChannel) return
   const channel = new BroadcastChannel('site_preview')
   channel.postMessage({
     site: updatedSite,

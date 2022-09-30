@@ -1,8 +1,10 @@
 <script>
   import { createEventDispatcher, onDestroy, getContext } from 'svelte';
+  import {browser} from '$app/environment'
   import _ from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
+  import * as Mousetrap from 'mousetrap';
 
   import { createUniqueID, move } from '../../../utilities';
   import OptionsButtons from './OptionsButtons.svelte';
@@ -155,11 +157,13 @@
 
   let container
   let toolbar
-  $: if (container && hovering && !constrainButtons) {
+
+  // position block buttons below toolbar
+  $: if (browser && container && hovering && !constrainButtons) {
     toolbar = document.querySelector('#primo-toolbar');
     window.addEventListener('scroll', positionBlock);
     positionBlock();
-  } else if (!hovering && !constrainButtons) {
+  } else if (browser && !hovering && !constrainButtons) {
     window.removeEventListener('scroll', positionBlock);
   }
 
@@ -222,8 +226,8 @@
     Mousetrap.unbind('mod+e')
   }
 
-  $: if (hovering) bindEdit()
-      else unbindEdit()
+  $: if (browser && hovering) bindEdit()
+      else if (browser) unbindEdit()
   
 </script>
 
@@ -232,7 +236,7 @@
   in:fade={{duration:100}}
   class:visible={mounted}
   class="primo-section has-{block.type} { block.type === 'component' ? `component-${block.symbolID}` : ``}"
-  id="{block.id}"
+  id={block.id}
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >
@@ -272,6 +276,7 @@
   {:else if block.type === 'content'}
     <ContentNode
       {block}
+      on:mount
       on:save
       on:focus={({ detail: selection }) => focusedNode.setSelection({ id: block.id, position: i, selection })}
       on:debounce={() => ($saved = false)}

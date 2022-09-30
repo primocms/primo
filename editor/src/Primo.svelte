@@ -49,10 +49,9 @@
 
   hydrateSite(data)
   setTimeline(data)
-  updatePreview(data)
-
+  onMount(() => updatePreview(data))
+  
   $: {
-    console.log('running')
     data = $draft
   }
 

@@ -444,16 +444,6 @@
         overflow: hidden;
         transition: var(--transition-colors);
         min-height: 10rem;
-        
-        &.active {
-          cursor: default;
-          pointer-events: none;
-          opacity: 0.5;
-    
-          &:after {
-            opacity: 0.5;
-          }
-        }
     
         .page-container {
           all: unset;

@@ -1,24 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import sites from '../../stores/sites'
-  import { stores } from '@primo-app/primo'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
 
   const dispatch = createEventDispatcher()
-
-  const { saved } = stores
-
-  function warn(e) {
-    if (!$saved) {
-      window.alert(
-        `Save your site before navigating away so you don't lose your changes`
-      )
-      e.preventDefault()
-    } else {
-      dispatch('toggle')
-    }
-  }
 
   $: featuredSites = $sites.slice(0, 5)
 </script>
@@ -26,7 +12,7 @@
 <ul class="primo-reset" xyz="fade stagger stagger-2">
   {#each featuredSites as site (site.id)}
     <li class="site-item xyz-in">
-      <a on:click={warn} href="/{site.id}">
+      <a on:click={() => dispatch('toggle')} href="/{site.id}">
         <div class="thumbnail">
           <SiteThumbnail site={site.data} preview={site.preview} />
         </div>

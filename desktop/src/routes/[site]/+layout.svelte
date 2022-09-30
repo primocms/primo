@@ -1,3 +1,7 @@
+<script context="module">
+  export const prerender = true;
+</script>
+
 <script>
   import '@fontsource/fira-code/index.css';
   import { browser } from '$app/environment'
@@ -85,13 +89,11 @@
   }
 </script>
 
-{#if browser}
-  <Primo
-    {data}
-    {role}
-    {saving}
-    language={$config.language}
-    on:save={async ({ detail: data }) => saveData(data)}
-  />
-  <slot></slot>
-{/if}
+<Primo
+  {data}
+  {role}
+  {saving}
+  language={$config.language}
+  on:save={async ({ detail: data }) => saveData(data)}
+/>
+<slot></slot>

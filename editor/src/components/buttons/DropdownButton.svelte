@@ -1,22 +1,13 @@
 <script>
-  import { saved } from '../../stores/app/misc';
-  import { goto } from '$app/navigation';
   export let button;
 
-  function warn(e) {
-    if (!$saved) {
-      e.preventDefault()
-      window.alert(
-        `Save your site before navigating away so you don't lose your changes`
-      );
-    } else {
-      if (button.onClick) button.onClick();
-    }
+  function click() {
+    if (button.onClick) button.onClick();
   }
 </script>
 
 {#if button.href}
-   <a href={button.href} on:click={warn}>
+   <a href={button.href} on:click={click}>
     <i class="{button.icon} mr-1" />
     <span>{button.label}</span>
   </a>
