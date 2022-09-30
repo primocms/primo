@@ -1,13 +1,12 @@
 {
   "name": "primo",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "main": "index.cjs",
   "description": "primo",
   "keywords": [],
   "author": "mateomorris",
   "license": "AGPL",
   "build": {
-    "afterSign": "notarize.cjs",
     "appId": "com.electron.primo",
     "productName": "Primo",
     "publish": "github",
@@ -59,7 +58,7 @@
     "start": "concurrently \"npm:dev\" \"electron .\"",
     "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite build && concurrently \"vite preview\" \"electron .\"",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. .",
@@ -67,7 +66,7 @@
   },
   "dependencies": {
     "@fontsource/fira-code": "^4.5.10",
-    "@primo-app/primo": "^1.6.1",
+    "@primo-app/primo": "^1.6.7",
     "autoprefixer": "^10.4.0",
     "browser-image-compression": "^1.0.16",
     "check-internet-connected": "^2.0.5",

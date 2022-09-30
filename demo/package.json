@@ -25,6 +25,7 @@
   "type": "module",
   "dependencies": {
     "@primo-app/primo": "^1.6.3",
+    "axios": "^0.27.2",
     "file-saver": "^2.0.5",
     "idb-keyval": "^6.0.3",
     "js-beautify": "^1.14.0",
