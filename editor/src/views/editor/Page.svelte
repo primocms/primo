@@ -52,21 +52,21 @@
   }
 
   // Disable the links on the page that don't navigate to a page within primo
-  async function disableLinks() {
+  async function disable_links() {
     if (!element) return;
     const { pathname, origin } = window.location;
     const [site] = pathname.split('/').slice(1);
     const homeUrl = `${origin}/${site}`;
     element.querySelectorAll('a').forEach((link) => {
 
-      // link is to primo.af
+      // link internally
       if (window.location.host === link.host) {
 
         // link navigates to site home
         if (link.pathname === '/') {
           link.onclick = (e) => {
             e.preventDefault();
-            // goto(homeUrl);
+            goto(homeUrl);
           };
           return;
         } 
@@ -99,11 +99,11 @@
       }
     });
   }
-  $: pageMounted && disableLinks();
+  $: page_mounted && disable_links();
 
 
-  $: setPageContent(id, $pages);
-  function setPageContent(id, pages) {
+  $: set_page_content(id, $pages);
+  function set_page_content(id, pages) {
     const [root, child] = id.split('/');
     const rootPage = find(pages, ['id', root]);
     if (rootPage && !child) {
@@ -114,7 +114,8 @@
     } else {
       console.warn('Could not navigate to page', id);
     }
-    updatePreview()
+    
+    if (page_mounted) updatePreview()
 
     function setPageStore(page) {
       $sections = page.sections
@@ -123,15 +124,15 @@
     }
   }
 
-  let htmlHead = '';
-  let htmlBelow = '';
+  let html_head = '';
+  let html_below = '';
   let cached = { pageCode: null, siteCode: null }
-  $: setPageHTML($pageCode, $siteCode);
-  async function setPageHTML(pageCode, siteCode) {
+  $: set_page_html($pageCode, $siteCode);
+  async function set_page_html(pageCode, siteCode) {
     if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
     cached.pageCode = pageCode
     cached.siteCode = siteCode
-    pageMounted = false
+    page_mounted = false
     const css = await processCSS(siteCode.css + pageCode.css);
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
@@ -155,21 +156,27 @@
         data,
       }),
     ]);
-    htmlHead = !head.error ? head.html : '';
-    htmlBelow = !below.error ? below.html : '';
-    pageMounted = true
+    html_head = !head.error ? head.html : '';
+    html_below = !below.error ? below.html : '';
   }
 
   // Fade in page when all components mounted
-  let pageMounted = false;
-  $: pageIsEmpty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
+  let page_mounted = false;
+  $: page_is_empty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
+
+
+  // detect when all sections are mounted
+  let sections_mounted = 0
+  $: if (sections_mounted === ($sections.length - 1)) {
+    page_mounted = true
+  }
 </script>
 
 <svelte:head>
-  {@html htmlHead || ''}
+  {@html html_head || ''}
 </svelte:head>
 
-{#if !pageMounted}
+{#if !page_mounted}
   <div class="spinner-container" out:fade={{ duration: 200 }}>
     <Spinner />
   </div>
@@ -177,27 +184,28 @@
 <div
   bind:this={element}
   class="primo-page being-edited"
-  class:fadein={pageMounted}
+  class:fadein={page_mounted}
   lang={$locale}
 >
   {#if pageExists}
     {#each $sections as block, i (block.id)}
       {#if block.symbolID}
         <Block
-          block={hydrateInstance(block, $symbols)}
           {i}
+          block={hydrateInstance(block, $symbols)}
+          on:mount={() => sections_mounted++}
         />
       {:else}
-        <Block on:save {block} {i} />
+        <Block on:save on:mount={() => sections_mounted++} {block} {i} />
       {/if}
     {:else}
         <Block block={{ type: 'options' }} />
     {/each}
   {/if}
 </div>
-{@html htmlBelow || ''}
+{@html html_below || ''}
 
-{#if pageIsEmpty}
+{#if page_is_empty}
 <div class="empty-state">
   if you're seeing this, <br>your website is empty
 </div>

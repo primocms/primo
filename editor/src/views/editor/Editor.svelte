@@ -2,7 +2,6 @@
   import { _ as C } from 'svelte-i18n'
   import * as Mousetrap from 'mousetrap';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { browser } from '$app/environment';
 
   const dispatch = createEventDispatcher();
 
@@ -20,16 +19,20 @@
 
   // setup key-bindings
   onMount(() => {
+
+    // Save page
     Mousetrap.bind(['mod+s'], (e) => {
       e.preventDefault();
       savePage();
     });
 
+    // Change locale
     Mousetrap.bind(['mod+l'], (e) => {
       e.preventDefault();
       changeLocale()
     });
 
+    // Toggle IDE
     Mousetrap.bind(['mod+d'], (e) => {
       e.preventDefault();
       showingIDE.set(!$showingIDE)
@@ -113,19 +116,14 @@
   }
 
   $: toolbarButtons = $showingIDE ? developerButtons : editorButtons;
-
-  // Show 'are you sure you want to leave prompt' when closing window; shows native prompt in Desktop
-  $: if (browser && !$saved && window.location.hostname !== 'localhost') {
-    window.onbeforeunload = function (e) {
-      e.returnValue = '';
-    };
-  } else if (browser) {
-    window.onbeforeunload = function (e) {
-      delete e['returnValue'];
-    };
-  }
   
 </script>
+
+<!-- Prevent leaving Primo without saving -->
+<svelte:window on:beforeunload={(e) => {
+  if ($saved) delete e['returnValue']
+  else e.returnValue = ''
+}} />
 
 <Toolbar
   on:signOut
@@ -168,5 +166,3 @@
     disabled={pageEmpty}
   />
 </Toolbar>
-
-<!-- <Doc bind:element={page} on:save /> -->
