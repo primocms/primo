@@ -19,8 +19,9 @@
     showKeyHint,
     loadingSite,
   } from './stores/app/misc';
-  import { DEFAULTS, Site } from './const';
+  import { Site } from './const';
 
+  import {options as options_store} from './stores/app/misc'
   import site, { pages, setTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
@@ -35,6 +36,9 @@
   export let role:'developer'|'content' = 'developer';
   export let saving:boolean = false;
   export let language:string = 'en'
+  export let options:object = {}
+
+  options_store.update(s => ({ ...s, ...options }))
   
   $: $savingStore = saving;
   $: $userRole = role;
@@ -118,8 +122,8 @@
 </svelte:head>
 
 <style>
-  :global(:root) {
-    --primo-color-primogreen: #35D994;
+  :global(#primo-page, #primo-toolbar) {
+    --primo-color-primogreen: var(--primo-color-brand, #35D994);
     --primo-color-primogreen-dark: #097548;
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
@@ -170,6 +174,9 @@
     --max-width-container: 1900px;
 
     --ring: 0px 0px 0px 2px var(--primo-color-primogreen);
+		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-primogreen);
+		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
+		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
   }
 
 </style>

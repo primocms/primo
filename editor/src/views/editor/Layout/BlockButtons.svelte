@@ -164,7 +164,7 @@
 
     &:hover {
       z-index: 1; /* show full shadow */
-      box-shadow: var(--primo-ring-primored);
+      box-shadow: var(--primo-ring-primogreen);
     }
 
     &:active {

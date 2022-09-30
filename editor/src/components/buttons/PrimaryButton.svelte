@@ -42,7 +42,7 @@
 
     &:hover {
 
-      box-shadow: var(--primo-ring-primored-thick);
+      box-shadow: var(--primo-ring-primogreen-thick);
       /* background: var(
         --PrimaryButton-bg-hover,
         var(--primo-color-primogreen-dark)

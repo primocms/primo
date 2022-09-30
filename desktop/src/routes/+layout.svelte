@@ -178,9 +178,9 @@ body {
   --primo-max-width-2: 1200px;
   --primo-max-width-max: 1200px;
 
-  --primo-ring-primored: 0px 0px 0px 2px var(--primo-color-primogreen);
-  --primo-ring-primored-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
-  --primo-ring-primored-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
+  --primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-primogreen);
+  --primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
+  --primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
 
   --primo-border-radius: 5px;
 }

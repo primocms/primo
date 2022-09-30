@@ -96,7 +96,7 @@
   }
   .primo-button {
     background: var(--color-gray-9);
-    box-shadow: var(--primo-ring-primored);
+    box-shadow: var(--primo-ring-primogreen);
     padding: 0.5rem 1rem;
     margin-bottom: 1rem;
     border-radius: var(--primo-border-radius);

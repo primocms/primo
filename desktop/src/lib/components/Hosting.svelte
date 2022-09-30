@@ -356,7 +356,7 @@
       }
 
       &:hover {
-        /* box-shadow: var(--primo-ring-primored); */
+        /* box-shadow: var(--primo-ring-primogreen); */
       }
       &:not(:last-child) {
         padding-bottom: 1rem;

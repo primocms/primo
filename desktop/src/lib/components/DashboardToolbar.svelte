@@ -60,7 +60,7 @@
     border-radius: var(--primo-border-radius);
 
     &:hover {
-      box-shadow: var(--primo-ring-primored);
+      box-shadow: var(--primo-ring-primogreen);
     }
   }
 </style>

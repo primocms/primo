@@ -49,14 +49,14 @@
     border-radius: 0.25rem;
     font-weight: 400;
     font-size: 14px;
-    box-shadow: var(--primo-ring-primored);
+    box-shadow: var(--primo-ring-primogreen);
     color: var(--primo-color-white);
     /* background: var(--primo-color-link); */
     transition: background 0.1s, color 0.1s;
     margin: var(--space-y, 0) var(--space-x, 0);
 
     &:hover {
-      box-shadow: var(--primo-ring-primored-thick);
+      box-shadow: var(--primo-ring-primogreen-thick);
     }
   }
 

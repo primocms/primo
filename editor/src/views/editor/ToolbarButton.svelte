@@ -139,7 +139,7 @@ on:click={() => {
 
     &:hover,
     &:focus {
-      box-shadow: var(--primo-ring-primored);
+      box-shadow: var(--primo-ring-primogreen);
       z-index: 2;
     }
 

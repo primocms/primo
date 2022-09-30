@@ -1,10 +1,9 @@
 <script>
   import dropdown from '../../stores/app/dropdown';
-  import { loadingSite } from '../../stores/app/misc';
+  import { loadingSite, options } from '../../stores/app/misc';
   import Spinner from '../../components/misc/Spinner.svelte';
   import PrimoLogo from '../svg/PrimoLogo.svelte';
   import DropdownButton from './DropdownButton.svelte';
-
 
   export let variants = '';
 
@@ -65,11 +64,11 @@
     align-items: center;
 
     &:hover {
-      box-shadow: var(--primo-ring-primored);
+      box-shadow: var(--primo-ring-primogreen);
     }
 
     &:focus {
-      box-shadow: var(--primo-ring-primored-thin);
+      box-shadow: var(--primo-ring-primogreen-thin);
     }
 
     &:active {

@@ -61,7 +61,7 @@
       transition: 0.1s box-shadow;
 
       &:hover {
-        box-shadow: var(--primo-ring-primored);
+        box-shadow: var(--primo-ring-primogreen);
       }
 
       a {
