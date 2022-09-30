@@ -22,7 +22,7 @@
   import { Site } from './const';
 
   import {options as options_store} from './stores/app/misc'
-  import site, { pages, setTimeline } from './stores/data/draft';
+  import { setTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
