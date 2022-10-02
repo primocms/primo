@@ -1,4 +1,4 @@
-const {find:_find} = require('lodash')
+const {find:_find} = require('lodash-es')
 const {rollup} = require("rollup/dist/rollup.js")
 const svelte = require('svelte/compiler')
 const fetch = require('node-fetch')
