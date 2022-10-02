@@ -7,7 +7,7 @@
 <script>
   import { _ as C } from 'svelte-i18n';
   import { onMount, getContext } from 'svelte';
-  import {some as _some} from 'lodash-es';
+  import {some as _some, cloneDeep as _cloneDeep} from 'lodash-es';
   import fileSaver from 'file-saver'
   import axios from 'axios';
   import Icon from '@iconify/svelte'
@@ -69,10 +69,11 @@
   }
 
   async function downloadSymbol(symbol) {
-    delete symbol.type
-    const json = JSON.stringify(symbol);
+    const copied_symbol = _cloneDeep(symbol)
+    delete copied_symbol.type
+    const json = JSON.stringify(copied_symbol);
     var blob = new Blob([json], {type: "application/json"});
-    fileSaver.saveAs(blob, `${symbol.name || symbol.id}.json`)
+    fileSaver.saveAs(blob, `${copied_symbol.name || copied_symbol.id}.json`)
   }
 
   async function uploadSymbol({target}) {
@@ -278,7 +279,7 @@
       }
 
       &.active {
-        border-color: var(--primo-color-primogreen);
+        border-color: var(--primo-color-brand);
       }
     }
   }

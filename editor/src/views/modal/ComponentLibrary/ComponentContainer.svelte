@@ -184,7 +184,6 @@
           {#each buttons as button}
             <button
               title={button.title}
-              class:selected={active}
               class:highlight={button.highlight && !active}
               on:mouseenter={() => {
                 hovering = true;
@@ -192,10 +191,7 @@
               on:mouseleave={() => {
                 hovering = false;
               }}
-              on:click={() => {
-                active = true;
-                button.onclick();
-              }}>
+              on:click={button.onclick}>
               {#if active && button.clicked}
                 <span>{button.clicked.label}</span>
                 {@html button.clicked.svg}
@@ -406,12 +402,12 @@
 
           &.highlight {
             color: var(--primo-color-white);
-            border: 1px solid var(--primo-color-primogreen);
+            border: 1px solid var(--primo-color-brand);
           }
 
           &:hover {
             color: var(--primo-color-black);
-            background: var(--primo-color-primogreen);
+            background: var(--primo-color-brand);
           }
 
           span {
