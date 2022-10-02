@@ -95,16 +95,15 @@
           site: _cloneDeep($site)
         }
       } else if (name === 'netlify') {
-        const zip = await createSiteZip()
         if (lastDeployment) { // Upload updated site
-          await netlify.updateSite({ id: lastDeployment.id, zip, token })
+          await netlify.updateSite({ id: lastDeployment.id, files, token })
           newDeployment = {
             ...lastDeployment,
             created: Date.now(),
             site: _cloneDeep($site)
           }
         } else { // Create new site
-          const {id, url} = await netlify.createSite({ zip, token })
+          const {id, url} = await netlify.createSite({ files, token })
           newDeployment = {
             id,
             url,
@@ -444,17 +443,6 @@
         overflow: hidden;
         transition: var(--transition-colors);
         min-height: 10rem;
-    
-        .page-container {
-          all: unset;
-          height: 100%;
-          z-index: -1; /* needed for link */
-        }
-      }
-      a.page-link {
-        &:hover {
-          opacity: 0.5;
-        }
       }
     }
 

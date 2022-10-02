@@ -124,7 +124,6 @@
 
 <style>
   :global(.primo-page, #primo-toolbar) {
-    --primo-color-brand: var(--primo-color-brand, #35D994);
     --primo-color-brand-dark: #097548;
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
@@ -175,9 +174,9 @@
     --max-width-container: 1900px;
 
     --ring: 0px 0px 0px 2px var(--primo-color-brand);
-		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand);
-		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand);
-		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand);
+		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand, #35D994);
+		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand, #35D994);
+		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand, #35D994);
   }
 
 </style>
