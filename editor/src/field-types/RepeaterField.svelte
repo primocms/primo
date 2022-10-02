@@ -290,14 +290,14 @@
           /* outline: 0; */
         }
         &:hover {
-          color: var(--primo-color-primogreen);
+          color: var(--primo-color-brand);
         }
         &:last-child {
           margin-left: 0.5rem;
           color: var(--color-gray-5);
 
           &:hover {
-            color: var(--primo-color-primogreen);
+            color: var(--primo-color-brand);
           }
         }
       }

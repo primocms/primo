@@ -26,7 +26,7 @@
 
 <style lang="postcss">
   button {
-    background: var(--primo-color-primogreen);
+    background: var(--primo-color-brand);
     color: var(--primo-color-black);
     padding: 0.5rem 1rem;
     border-radius: var(--primo-border-radius);
@@ -34,7 +34,7 @@
     transition: background 0.1s, color 0.1s;
 
     &:hover {
-      background: var(--primo-color-primogreen-dark);
+      background: var(--primo-color-brand-dark);
       color: var(--primo-color-white);
     }
 

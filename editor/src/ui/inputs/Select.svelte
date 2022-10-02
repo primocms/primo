@@ -40,7 +40,7 @@
     }
 
     select {
-      outline-color: var(--primo-color-primogreen);
+      outline-color: var(--primo-color-brand);
       background: var(--color-gray-9);
       padding: 0.5rem;
       border: 2px solid var(--color-gray-2);

@@ -138,8 +138,8 @@
 }
 
 body {
-  --primo-color-primogreen: #35D994;
-  --primo-color-primogreen-dark: #097548;
+  --primo-color-brand: #35D994;
+  --primo-color-brand-dark: #097548;
   --primo-color-white: white;
   --primo-color-codeblack: rgb(30, 30, 30);
   --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -172,15 +172,15 @@ body {
   --padding-container: 15px;
   --max-width-container: 1900px;
 
-  --ring: 0px 0px 0px 2px var(--primo-color-primogreen);
+  --ring: 0px 0px 0px 2px var(--primo-color-brand);
 
   --primo-max-width-1: 30rem;
   --primo-max-width-2: 1200px;
   --primo-max-width-max: 1200px;
 
-  --primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-primogreen);
-  --primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
-  --primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
+  --primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand);
+  --primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand);
+  --primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand);
 
   --primo-border-radius: 5px;
 }
@@ -199,7 +199,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primo-color-primogreen);
+    background: var(--primo-color-brand);
 }
 
 button,

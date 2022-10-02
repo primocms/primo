@@ -266,8 +266,8 @@ class:mounted>
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--primo-color-primogreen);
-    /* background: linear-gradient(to right, var(--primo-color-primogreen), var(--primo-color-primogreen-dark)); */
+    background-color: var(--primo-color-brand);
+    /* background: linear-gradient(to right, var(--primo-color-brand), var(--primo-color-brand-dark)); */
     transition: 0.4s;
     display: flex;
     align-items: center;
@@ -338,10 +338,10 @@ class:mounted>
       text-decoration: underline transparent;
       
       &:hover {
-        text-decoration-color: var(--primo-color-primogreen);
+        text-decoration-color: var(--primo-color-brand);
 
         svg {
-          color: var(--primo-color-primogreen);
+          color: var(--primo-color-brand);
         }
       }
 

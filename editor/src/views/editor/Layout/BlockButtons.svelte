@@ -131,7 +131,7 @@
   }
   
   .button-delete {
-    /* border-left: 1px solid var(--primo-color-primogreen-dark); */
+    /* border-left: 1px solid var(--primo-color-brand-dark); */
     border-bottom-right-radius: 0.25rem;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -168,7 +168,7 @@
     }
 
     &:active {
-      background: var(--primo-color-primogreen);
+      background: var(--primo-color-brand);
       color: var(--color-gray-8);
     }
 

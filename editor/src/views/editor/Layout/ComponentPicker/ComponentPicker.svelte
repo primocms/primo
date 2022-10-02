@@ -112,7 +112,7 @@
     }
 
     &:hover {
-      background: var(--primo-color-primogreen);
+      background: var(--primo-color-brand);
     }
   }
   button.close {
@@ -123,7 +123,7 @@
     color: white;
 
     &:hover {
-      color: var(--primo-color-primogreen);
+      color: var(--primo-color-brand);
     }
   }
 </style>

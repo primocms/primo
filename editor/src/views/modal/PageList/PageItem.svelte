@@ -182,7 +182,7 @@
           transition: var(--transition-colors);
 
           &:hover {
-            color: var(--primo-color-primogreen);
+            color: var(--primo-color-brand);
           }
 
           &:focus {

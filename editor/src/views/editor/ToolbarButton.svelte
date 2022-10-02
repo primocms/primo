@@ -96,7 +96,7 @@ on:click={() => {
   }
   .primo {
     color: var(--primo-color-white);
-    border: 2px solid var(--primo-color-primogreen);
+    border: 2px solid var(--primo-color-brand);
   }
 
   .key-hint {
@@ -144,7 +144,7 @@ on:click={() => {
     }
 
     &:active {
-      background: var(--primo-color-primogreen);
+      background: var(--primo-color-brand);
       color: var(--color-gray-8);
     }
 

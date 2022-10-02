@@ -188,11 +188,11 @@
 
 <style>
   :global(.ProseMirror ::selection, ::-moz-selection) {
-    background: var(--primo-color-primogreen);
+    background: var(--primo-color-brand);
   }
 
   :global(.ProseMirror) {
-    caret-color: var(--primo-color-primogreen);
+    caret-color: var(--primo-color-brand);
     white-space: pre-wrap;
     word-wrap: break-word;
     outline: 0;
@@ -212,7 +212,7 @@
     background-color: var(--color-gray-9);
     color: var(--primo-color-white);
     border-bottom-width: 2px;
-    border-color: var(--primo-color-primogreen);
+    border-color: var(--primo-color-brand);
   }
   .floating-menu {
     transform: translateY(-0.5rem);

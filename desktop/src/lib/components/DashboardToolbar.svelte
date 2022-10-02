@@ -40,7 +40,7 @@
       }
 
       &:hover {
-        border-color: var(--primo-color-primogreen);
+        border-color: var(--primo-color-brand);
       }
     }
 

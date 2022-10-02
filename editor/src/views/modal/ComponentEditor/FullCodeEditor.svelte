@@ -242,7 +242,7 @@
       transition: background 0.1s, color 0.1s;
 
       &:hover {
-        background: var(--primo-color-primogreen);
+        background: var(--primo-color-brand);
         color: var(--primo-color-codeblack);
       }
 

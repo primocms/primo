@@ -23,12 +23,12 @@
     }
 
     &:hover {
-      background: var(--primo-color-primogreen);
+      background: var(--primo-color-brand);
       color: var(--color-gray-1);
     }
 
     &.active {
-      background: var(--primo-color-primogreen);
+      background: var(--primo-color-brand);
       color: var(--primo-color-white);
     }
   }

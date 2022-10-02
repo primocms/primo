@@ -68,7 +68,7 @@
   }
 
   input {
-    outline-color: var(--primo-color-primogreen);
+    outline-color: var(--primo-color-brand);
     background-color: rgb(38, 38, 38);
     border-bottom: 2px solid rgb(23, 23, 23);
     padding: 0.25rem 0.5rem;
