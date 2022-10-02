@@ -56,9 +56,8 @@
 	let saving = false;
 </script>
 
-{#if browser}
-	<Primo {data} {role} {saving} on:save={async ({ detail: data }) => saveData(data)} />
-{/if}
+<Primo {data} {role} {saving} on:save={async ({ detail: data }) => saveData(data)} />
+<slot />
 <div id="app-version">
 	<span>primo demo v{__DESKTOP_VERSION__}</span>
 	<span>primo v{primo.version}</span>
@@ -68,8 +67,8 @@
 	body {
 		margin: 0;
 
-		--primo-color-primogreen: rgb(248, 68, 73);
-		--primo-color-primogreen-dark: rgb(186, 37, 42);
+		--primo-color-brand: rgb(248, 68, 73);
+		--primo-color-brand-dark: rgb(186, 37, 42);
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -102,15 +101,15 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--primo-color-primogreen);
+		--ring: 0px 0px 0px 2px var(--primo-color-brand);
 
 		--primo-max-width-1: 30rem;
 		--primo-max-width-2: 1200px;
 		--primo-max-width-max: 1200px;
 
-		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-primogreen);
-		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
-		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
+		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand);
+		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand);
+		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand);
 
 		--primo-border-radius: 5px;
 	}
