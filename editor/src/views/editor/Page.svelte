@@ -24,7 +24,6 @@
     wrapInStyleTags,
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
-  import { goto } from '$app/navigation';
 
   export let id = 'index'
   $: $pageID = id
@@ -48,57 +47,6 @@
       symbolID: block.symbolID
     }
   }
-
-  // Disable the links on the page that don't navigate to a page within primo
-  async function disable_links() {
-    if (!element) return;
-    const { pathname, origin } = window.location;
-    const [site] = pathname.split('/').slice(1);
-    const homeUrl = `${origin}/${site}`;
-    element.querySelectorAll('a').forEach((link) => {
-
-      // link internally
-      if (window.location.host === link.host) {
-
-        // link navigates to site home
-        if (link.pathname === '/') {
-          link.onclick = (e) => {
-            e.preventDefault();
-            goto(homeUrl);
-          };
-          return;
-        } 
-
-        link.onclick = e => {
-          e.preventDefault()
-        }
-
-        const [ linkPage ] = link.pathname.split('/').slice(1);
-
-        // Link goes to current site
-        const pageExists = !!find($pages, ['id', linkPage])
-
-        link.onclick = (e) => {
-          e.preventDefault();
-          if (pageExists) {
-            goto(`${homeUrl}/${linkPage}`);
-          } 
-        };
-
-      } else {
-        openLinkInNewWindow(link);
-      }
-
-      function openLinkInNewWindow(link) {
-        link.onclick = (e) => {
-          e.preventDefault();
-          window.open(link.href, '_blank');
-        };
-      }
-    });
-  }
-  $: page_mounted && disable_links();
-
 
   $: set_page_content(id, $pages);
   function set_page_content(id, pages) {

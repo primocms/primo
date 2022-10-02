@@ -2,7 +2,7 @@
   import _ from 'lodash-es';
   import { createEventDispatcher, getContext } from 'svelte';
   import { processCode } from '../../../utils';
-  import { site as unsavedSite, content, symbols } from '../../../stores/data/draft';
+  import { site as unsavedSite, content, symbols, pages } from '../../../stores/data/draft';
   import {locale} from '../../../stores/app/misc'
   import {getComponentData} from '../../../stores/helpers'
 
@@ -75,7 +75,51 @@
   // Fade in component on mount
   const observer = new MutationObserver(() => {
     dispatch('mount');
+    disable_links()
   });
+
+  // Disable & reroute internal links to prevent state loss
+  async function disable_links() {
+    const { pathname, origin } = window.location;
+    const [site] = pathname.split('/').slice(1);
+    const homeUrl = `${origin}/${site}`;
+    node.querySelectorAll('a').forEach((link) => {
+      link.onclick = e => {
+        e.preventDefault()
+      }
+
+      // link internally
+      if (window.location.host === link.host) {
+        // link navigates to site home
+        if (link.pathname === '/') {
+          link.addEventListener('click', () => {
+            goto(homeUrl);
+          })
+          return;
+        } 
+
+        const [ linkPage ] = link.pathname.split('/').slice(1);
+
+        // Link goes to current site
+        const pageExists = !!find($pages, ['id', linkPage])
+
+        link.onclick = (e) => {
+          if (pageExists) {
+            goto(`${homeUrl}/${linkPage}`);
+          } 
+        };
+
+      } else {
+        openLinkInNewWindow(link);
+      }
+
+      function openLinkInNewWindow(link) {
+        link.onclick = (e) => {
+          window.open(link.href, '_blank');
+        };
+      }
+    });
+  }
 
   $: if (node) {
     observer.observe(node, {
