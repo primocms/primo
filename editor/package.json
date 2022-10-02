@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.6.16",
+  "version": "1.6.18",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "src/index.js",
   "svelte": "src/index.js",
@@ -46,7 +46,7 @@
     "@tiptap/extension-highlight": "^2.0.0-beta.33",
     "@tiptap/extension-horizontal-rule": "^2.0.0-beta.31",
     "@tiptap/extension-image": "^2.0.0-beta.27",
-    "@tiptap/extension-link": "^2.0.0-beta.36",
+    "@tiptap/extension-link": "^2.0.0-beta.199",
     "@tiptap/extension-list-item": "^2.0.0-beta.20",
     "@tiptap/extension-ordered-list": "^2.0.0-beta.27",
     "@tiptap/starter-kit": "^2.0.0-beta.183",
