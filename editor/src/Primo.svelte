@@ -26,6 +26,7 @@
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
+  import en from './languages/en.json'
 
   import type { Site as SiteType, Page as PageType } from './const'
 
@@ -43,7 +44,7 @@
   $: $savingStore = saving;
   $: $userRole = role;
 
-  import('./languages/en.json').then(m => addMessages('en', m.default));
+  addMessages('en', en)
   import(`./languages/${language}.json`).then(m => addMessages(language, m.default));
   
   init({
@@ -122,9 +123,9 @@
 </svelte:head>
 
 <style>
-  :global(#primo-page, #primo-toolbar) {
-    --primo-color-primogreen: var(--primo-color-brand, #35D994);
-    --primo-color-primogreen-dark: #097548;
+  :global(.primo-page, #primo-toolbar) {
+    --primo-color-brand: var(--primo-color-brand, #35D994);
+    --primo-color-brand-dark: #097548;
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);
     --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -173,10 +174,10 @@
     --padding-container: 15px;
     --max-width-container: 1900px;
 
-    --ring: 0px 0px 0px 2px var(--primo-color-primogreen);
-		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-primogreen);
-		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-primogreen);
-		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-primogreen);
+    --ring: 0px 0px 0px 2px var(--primo-color-brand);
+		--primo-ring-primogreen: 0px 0px 0px 2px var(--primo-color-brand);
+		--primo-ring-primogreen-thin: 0px 0px 0px 1px var(--primo-color-brand);
+		--primo-ring-primogreen-thick: 0px 0px 0px 3px var(--primo-color-brand);
   }
 
 </style>

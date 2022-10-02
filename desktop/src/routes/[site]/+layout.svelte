@@ -82,9 +82,7 @@
     // necessary for rollup to load (?)
     setTimeout(() => {
       const site = find(sites, ['id', siteID])
-      if (site) {
-        data = site.data || site
-      }
+      if (site) data = site.data || site
     }, 500)
   }
 </script>
