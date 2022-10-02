@@ -15,7 +15,7 @@
     iframe.contentWindow.postMessage({ preview });
 
     setTimeout(() => {
-      const scrollHeight = iframe.contentWindow?.document?.body?.scrollHeight // prevent weird error
+      const scrollHeight = iframe?.contentWindow?.document?.body?.scrollHeight // prevent weird error
       if (!scrollHeight) return
       height = iframe.contentWindow?.document?.body?.scrollHeight * scaleRatio;
       iframe.height = height;

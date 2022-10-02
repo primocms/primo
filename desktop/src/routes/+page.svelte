@@ -106,7 +106,10 @@
               <div class="site-name">
                 {#if siteBeingEdited === site.id}
                   <form
-                    on:submit|preventDefault={() => (siteBeingEdited = null)}
+                    on:submit|preventDefault={() => {
+                      siteBeingEdited = null;
+                      storeSite(site)
+                    }}
                   >
                     <!-- svelte-ignore a11y-autofocus -->
                     <input
@@ -216,8 +219,7 @@
       margin-bottom: 1rem;
 
       button {
-        font-weight: 700;
-        font-size: 1.125rem;
+        font-weight: 500;
         line-height: 1.5rem;
         text-align: center;
         color: #FAFAFA;
@@ -225,14 +227,9 @@
         padding-bottom: 0.25rem;
 
         &.active {
-          border-color: var(--primo-color-primogreen);
+          border-color: var(--primo-color-brand);
         }
       }
-    }
-
-    hr {
-      margin: 2rem 0;
-      border-color: var(--color-gray-9);
     }
 
     .sites-container {
@@ -240,16 +237,7 @@
       display: grid;
       gap: 1rem;
 
-      span.info {
-        padding: 1rem;
-        color: white;
-        background: var(--color-gray-9);
-      }
-
       header {
-        h2 {
-          color: white;
-        }
         a {
           text-decoration: underline;
           color: var(--color-gray-4);
@@ -302,7 +290,7 @@
                 display: flex;
 
                 &:hover {
-                  color: var(--primo-color-primogreen);
+                  color: var(--primo-color-brand);
                 }
 
                 svg {
@@ -323,7 +311,7 @@
                 padding: 0 0.5rem;
 
                 &:hover {
-                  color: var(--primo-color-primogreen);
+                  color: var(--primo-color-brand);
                 }
 
                 svg {
@@ -366,7 +354,7 @@
           font-weight: 600;
           color: var(--color-gray-2);
           border-radius: var(--primo-border-radius);
-          border: 2px solid var(--primo-color-primogreen);
+          border: 2px solid var(--primo-color-brand);
 
           svg {
             border-radius: 50%;
@@ -376,7 +364,7 @@
           }
 
           &:hover svg {
-            color: var(--primo-color-primogreen);
+            color: var(--primo-color-brand);
           }
         }
       }
@@ -393,7 +381,7 @@
       padding-left: 0.25rem;
     }
     &:hover {
-      color: var(--primo-color-primogreen);
+      color: var(--primo-color-brand);
     }
   }
 
