@@ -1,5 +1,6 @@
 import { find, last, cloneDeep, some, chain, unset, omit, isEqual } from 'lodash-es'
 import { get } from 'svelte/store'
+import { browser } from '$app/environment'
 import { id as activePageID, sections } from './app/activePage'
 import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
@@ -314,7 +315,7 @@ export async function changeLocale() {
 }
 
 export async function updatePreview(updatedSite = get(unsavedSite)) {
-  if (!BroadcastChannel) return
+  if (!browser) return
   const channel = new BroadcastChannel('site_preview')
   channel.postMessage({
     site: updatedSite,
