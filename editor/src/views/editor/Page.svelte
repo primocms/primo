@@ -4,12 +4,10 @@
   import Block from './Layout/Block.svelte';
   import Spinner from '../../ui/misc/Spinner.svelte';
   import {
-    content,
     pages,
     symbols,
-    code as siteCode
-    // html as siteHTML,
-    // css as siteCSS,
+    code as siteCode,
+    id as siteID
   } from '../../stores/data/draft';
   import {locale} from '../../stores/app/misc'
   import {updatePreview} from '../../stores/actions'
@@ -132,7 +130,6 @@
     if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
     cached.pageCode = pageCode
     cached.siteCode = siteCode
-    page_mounted = false
     const css = await processCSS(siteCode.css + pageCode.css);
     const data = convertFieldsToData(getAllFields());
     const [head, below] = await Promise.all([
@@ -164,12 +161,12 @@
   let page_mounted = false;
   $: page_is_empty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
 
-
   // detect when all sections are mounted
   let sections_mounted = 0
-  $: if (sections_mounted === ($sections.length - 1)) {
+  $: if ($siteID !== 'default' && (sections_mounted === $sections.length)) {
     page_mounted = true
-  }
+  } 
+
 </script>
 
 <svelte:head>
@@ -206,9 +203,9 @@
 {@html html_below || ''}
 
 {#if page_is_empty}
-<div class="empty-state">
-  if you're seeing this, <br>your website is empty
-</div>
+  <div class="empty-state">
+    if you're seeing this, <br>your website is empty
+  </div>
 {/if}
 
 <style lang="postcss">
@@ -223,7 +220,7 @@
     justify-content: center;
     z-index: 5;
 
-    --Spinner-color: var(--primo-color-primogreen);
+    --Spinner-color: var(--primo-color-brand);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   .primo-page {
