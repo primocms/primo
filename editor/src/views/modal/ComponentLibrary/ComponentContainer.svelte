@@ -386,12 +386,6 @@
             height: 1rem;
           }
 
-          &.selected {
-            pointer-events: none;
-            opacity: 0.75;
-            outline: 0;
-          }
-
           .label {
             margin-right: 0.25rem;
           }

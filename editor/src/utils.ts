@@ -166,7 +166,7 @@ export function validateSiteStructure(site): Site {
     else if (defined_structure(site, ['content'])) validated = updateSite(site)
     else validated = null
   } catch (e) {
-    console.warn('Site is invalid')
+    console.warn('Site is invalid', site)
     validated = null
   }
 

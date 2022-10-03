@@ -1,6 +1,7 @@
 <script>
+  import {browser} from '$app/environment'
   import { onMount, createEventDispatcher, getContext } from 'svelte';
-  import {fade, slide} from 'svelte/transition'
+  import {fade} from 'svelte/transition'
   import { _ as C } from 'svelte-i18n';
   import Icon from '@iconify/svelte';
   import {find as _find, flattenDeep} from 'lodash-es'
@@ -25,7 +26,7 @@
   });
 
   let channel
-  $: if (mounted) {
+  $: if (browser) {
     channel = new BroadcastChannel('site_preview')
   }
 
