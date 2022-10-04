@@ -6731,4 +6731,3 @@ function getContent(state, range) {
   return destLines;
 }
 export { tracker as abbreviationTracker, balanceInward, balanceOutward, decrementNumber01, decrementNumber1, decrementNumber10, enterAbbreviationMode, evaluateMath, expandAbbreviation, goToNextEditPoint, goToPreviousEditPoint, goToTagPair, incrementNumber01, incrementNumber1, incrementNumber10, removeTag, selectNextItem, selectPreviousItem, splitJoinTag, toggleComment, wrapWithAbbreviation };
-//# sourceMappingURL=plugin.js.map
