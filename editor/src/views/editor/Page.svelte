@@ -183,7 +183,7 @@
     transition: 0.1s opacity;
     opacity: 0;
     border-top: 0;
-    margin-top: 86px;
+    margin-top: 85px;
   }
 
   .fadein {

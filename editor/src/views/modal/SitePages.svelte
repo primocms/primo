@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {createEventDispatcher,getContext} from 'svelte'
+  import {createEventDispatcher} from 'svelte'
   const dispatch = createEventDispatcher()
   import { cloneDeep, find } from 'lodash-es';
   import { fade } from 'svelte/transition';
@@ -32,6 +32,7 @@
     pageName = '';
     pageURL = '';
     shouldDuplicatePage = true;
+    listPages(rootPageId)
   }
 
   async function deletePage(pageId) {
@@ -76,53 +77,50 @@
     actions.edit(pageId, args)
   }
 
-  function listPages(pageId) {
-    const { pages } = find(listedPages, ['id', pageId]);
-    listedPages = pages;
-    currentPath = [...currentPath, pageId];
-  }
-
   function addSubPage(pageId) {
     listPages(pageId)
-    currentPath = [...currentPath, pageId];
+    currentPath = [pageId];
     creatingPage = true;
   }
 
   let currentPath = buildCurrentPath($page.params.page);
   $: rootPageId = currentPath[0];
-  $: childPageId = currentPath[1];
-  $: listedPages = getListedPages(childPageId, $pages);
-  $: breadcrumbs = getBreadCrumbs(childPageId, $pages);
 
-  function buildCurrentPath(pagePath = '') {
-    const [root, child] = pagePath.split('/');
-    if (!root || !child) {
-      // on index or top-level page
-      return [];
-    } else return [root, child];
+  let listedPages = $pages
+  listPages(currentPath[0])
+  
+  function listPages(pageId = null) {
+    if (!pageId) { // root page
+      listedPages = $pages
+      currentPath = []
+    } else {
+      listedPages = find($pages, ['id', pageId])['pages']
+      currentPath = [pageId];
+    }
   }
 
-  function getListedPages(childPageId, pages) {
-    if (childPageId) {
-      const rootPage = find(pages, ['id', rootPageId]);
-      return rootPage.pages || [];
-    } else return pages;
-  }
-
-  function getBreadCrumbs(childPageId, pages) {
-    if (childPageId) {
-      const rootPage = find(pages, ['id', rootPageId]);
+  $: breadcrumbs = getBreadCrumbs(rootPageId);
+  function getBreadCrumbs(rootPageId) {
+    if (rootPageId) {
+      const rootPage = find($pages, ['id', rootPageId]);
       return [
         {
           label: 'Site',
-          path: [],
+          id: null,
         },
         {
           label: rootPage.name,
-          path: currentPath,
+          path: rootPage.id,
         },
       ];
     } else return null;
+  }
+
+  function buildCurrentPath(pagePath = '') {
+    const [root, child] = pagePath.split('/');
+    if (!root || !child) { // on index or top-level page
+      return [];
+    } else return [root, child];
   }
 
   let pageName = '';
@@ -141,12 +139,12 @@
 <main>
   {#if breadcrumbs}
     <div in:fade class="breadcrumbs">
-      {#each breadcrumbs as { label, path }, i}
+      {#each breadcrumbs as { label, id }, i}
         <div class="breadcrumb">
           {#if i === breadcrumbs.length - 1}
             <span>{label}</span>
           {:else}
-            <button on:click={() => (currentPath = path)}>{label}</button>
+            <button on:click={() => listPages(id)}>{label}</button>
           {/if}
         </div>
       {/each}
