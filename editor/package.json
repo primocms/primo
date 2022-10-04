@@ -1,6 +1,6 @@
 {
   "name": "@primo-app/primo",
-  "version": "1.6.18",
+  "version": "1.6.26",
   "description": "primo is an all-in-one ide, cms, component library, and static site generator",
   "main": "src/index.js",
   "svelte": "src/index.js",

@@ -100,7 +100,7 @@ class:mounted>
     {/if}
     {#if $userRole === 'developer'}
       <div class="content" id="ide-toggle">
-        <label class="switch">
+        <label class="switch" aria-label="Switch to {$showingIDE ? 'Content' : 'Code'}">
           <input
             type="checkbox"
             bind:checked={$showingIDE}
@@ -137,7 +137,6 @@ class:mounted>
           </svg>
             {/if}
           </span>
-          <span class="sr-only">Switch to {$showingIDE ? 'Content' : 'Code'}</span>
         </label>
         {#if !$onMobile}
           <div class="tooltip">

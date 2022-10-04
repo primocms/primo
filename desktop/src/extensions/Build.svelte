@@ -21,7 +21,7 @@
   import vercel from './hosts/vercel'
 
   const siteID = $page.params.site
-  const lastDeployment = find($sites, ['id', siteID])?.activeDeployment
+  let lastDeployment = find($sites, ['id', siteID])?.activeDeployment
 
   let loading = false
   

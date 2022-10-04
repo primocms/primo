@@ -1,0 +1,1 @@
+declare module '@primo-app/primo'

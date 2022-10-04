@@ -11,13 +11,11 @@
 
   const dispatch = createEventDispatcher();
 
-  import { id as pageId, sections, fields, code } from './stores/app/activePage';
+  import { id as pageId} from './stores/app/activePage';
   import { userRole } from './stores/app';
   import {
-    saved,
     saving as savingStore,
-    showKeyHint,
-    loadingSite,
+    showKeyHint
   } from './stores/app/misc';
   import { Site } from './const';
 
@@ -27,6 +25,8 @@
   import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
   import en from './languages/en.json'
+  import es from './languages/es.json'
+
 
   import type { Site as SiteType, Page as PageType } from './const'
 
@@ -45,7 +45,7 @@
   $: $userRole = role;
 
   addMessages('en', en)
-  import(`./languages/${language}.json`).then(m => addMessages(language, m.default));
+  addMessages('es', es)
   
   init({
     fallbackLocale: 'en',

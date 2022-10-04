@@ -4,7 +4,6 @@
   import Icon from '@iconify/svelte'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
-  import { LoremIpsum } from "lorem-ipsum";
   import * as Popper from '@popperjs/core'
   import {getComponentData, getSymbolUseInfo} from '../../../stores/helpers'
 

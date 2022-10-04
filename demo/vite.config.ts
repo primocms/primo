@@ -3,6 +3,12 @@ import type { UserConfig } from 'vite';
 
 const config: UserConfig = {
 	plugins: [sveltekit()],
+	server: {
+		fs: {
+			// throws an error without this when importing Fira font
+			allow: ['..', 'node_modules/@fontsource/fira-code']
+		}
+	},
 	optimizeDeps: {
 		force: true
 	},

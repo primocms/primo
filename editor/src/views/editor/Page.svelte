@@ -24,6 +24,14 @@
     wrapInStyleTags,
   } from '../../utils';
   import { getAllFields } from '../../stores/helpers';
+  import en from '../../languages/en.json'
+  import { init, addMessages } from 'svelte-i18n';
+
+  addMessages('en', en)
+  init({
+    fallbackLocale: 'en',
+    initialLocale: 'en',
+  });
 
   export let id = 'index'
   $: $pageID = id
@@ -58,7 +66,7 @@
       const childPage = find(rootPage.pages, ['id', id]);
       if (childPage) setPageStore(childPage)
     } else {
-      console.warn('Could not navigate to page', id);
+      console.warn('Could not navigate to page', id, pages);
     }
     
     if (page_mounted) updatePreview()

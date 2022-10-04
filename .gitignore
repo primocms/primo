@@ -11,3 +11,6 @@ desktop/dist
 server/.svelte-kit
 cli
 scratchpad.md
+/test-results/
+/playwright-report/
+/playwright/.cache/
