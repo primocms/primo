@@ -1,20 +1,22 @@
-/// <reference types="vitest" />
-
+import adapter from '@sveltejs/adapter-auto';
 import preprocess from 'svelte-preprocess';
-import vercel from '@sveltejs/adapter-vercel';
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
+import nested from 'postcss-nested'
 
-const IGNORED_WARNINGS = [`'__DESKTOP_VERSION__' is not defined`];
-
+/** @type {import('@sveltejs/kit').Config} */
 const config = {
-	onwarn: (warning, handler) => {
-		if (!IGNORED_WARNINGS.includes(warning.message)) handler(warning);
-	},
-	kit: {
-		adapter: vercel()
-	},
+	// Consult https://github.com/sveltejs/svelte-preprocess
+	// for more information about preprocessors
 	preprocess: preprocess({
-		postcss: true
-	})
+		postcss: {
+			plugins: [tailwindcss(), autoprefixer(), nested()],
+		}
+	}),
+
+	kit: {
+		adapter: adapter()
+	}
 };
 
 export default config;
