@@ -37,6 +37,7 @@
 
   async function deletePage(pageId) {
     actions.delete(pageId, currentPath);
+    listPages(rootPageId)
   }
 
   function duplicatePage(name, url): PageType {
@@ -75,6 +76,7 @@
 
   function editPage(pageId, args: { name: string, id: string }) {
     actions.edit(pageId, args)
+    listPages(rootPageId)
   }
 
   function addSubPage(pageId) {
