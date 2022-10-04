@@ -37,7 +37,7 @@
 
       span {
         font-weight: var(--label-font-weight, 700);
-        font-size: var(--label-font-size, 10rem);
+        font-size: var(--label-font-size, 1rem);
       }
 
       select {

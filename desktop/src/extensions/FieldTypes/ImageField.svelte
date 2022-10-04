@@ -186,7 +186,7 @@
     font-size: 0.875rem;
     font-weight: 400;
 
-    font-size: var(--label-font-size, 10rem);
+    font-size: var(--label-font-size, 1rem);
   }
   .image-info {
     display: grid;
