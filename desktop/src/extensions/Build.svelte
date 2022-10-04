@@ -37,6 +37,10 @@
 
   async function downloadSite() {
     loading = true
+    if (files.length === 0) { // wait for files to build
+      setTimeout(downloadSite, 1000) 
+      return
+    }
     const toDownload = await createSiteZip()
     saveAs(toDownload, `${siteID}.zip`)
     modal.hide()
@@ -69,7 +73,6 @@
   build_files()
   async function build_files() {
     const all_files = await buildSiteBundle($site, SHOW_CHANGED_PAGES ? changed_pages : [])
-
     files = uniqBy(all_files.map((file) => {
       return {
         file: file.path,
