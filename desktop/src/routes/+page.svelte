@@ -122,7 +122,7 @@
                   </form>
                 {:else}
                   <a
-                    href={site.valid ? site.id : '/'}
+                    href={site.id}
                     on:mouseenter={() => (hoveredItem = i)}
                     on:mouseleave={() => (hoveredItem = null)}
                   >
