@@ -119,12 +119,6 @@
   
 </script>
 
-<!-- Prevent leaving Primo without saving -->
-<svelte:window on:beforeunload={(e) => {
-  if ($saved) delete e['returnValue']
-  else e.returnValue = ''
-}} />
-
 <Toolbar
   on:signOut
   buttons={$loadingSite ? [] : toolbarButtons}

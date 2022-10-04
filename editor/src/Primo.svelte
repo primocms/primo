@@ -19,11 +19,12 @@
   } from './stores/app/misc';
   import { Site } from './const';
 
-  import {options as options_store} from './stores/app/misc'
+  import {options as options_store, saved} from './stores/app/misc'
   import { setTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
   import { page as pageStore } from '$app/stores';
+  import {dev} from '$app/environment'
   import en from './languages/en.json'
   import es from './languages/es.json'
 
@@ -117,6 +118,12 @@
 <Modal visible={!!activeModal}>
   <svelte:component this={activeModal} {...$modal.componentProps} on:save={saveSite} />
 </Modal>
+
+<!-- Prevent leaving Primo without saving -->
+<svelte:window on:beforeunload={(e) => {
+  if ($saved || dev) delete e['returnValue']
+  else e.returnValue = ''
+}} />
 
 <svelte:head>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
