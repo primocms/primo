@@ -3,7 +3,7 @@
 </script>
 
 <script>
-  import {find, cloneDeep, flattenDeep, chain} from 'lodash-es'
+  import {find, cloneDeep, flattenDeep} from 'lodash-es'
   import {onMount, setContext, tick} from 'svelte'
   import PureComponent from '@primo-app/primo/src/views/editor/Layout/PureComponent.svelte'
   import { wrapInStyleTags, processCode } from '@primo-app/primo/src/utils';
@@ -27,10 +27,13 @@
     channel.onmessage = (async ({data}) => {
       const { site:newSite, pageID:newPageID } = data
       if (newSite.id === 'default') return
-      const newPage = find(newSite.pages, ['id', newPageID])
-      const {css} = await await window.primo.processCSS(newSite.code.css + newPage.code.css);
-      const pageIDs = flattenDeep(newSite.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-      const siteContent = chain(Object.entries(newSite.content['en']).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+      const newPage = find(newSite.pages, ['id', newPageID]) // get Page to show
+      const {css} = await await window.primo.processCSS(newSite.code.css + newPage.code.css); // process new Page's CSS
+
+      // Get site content
+      const pageIDs = flattenDeep(newSite.pages.map(page => [page.id, ...page.pages.map(p => p.id)])) // get all page IDs
+      const contentWithoutPages = Object.entries(newSite.content['en']).filter(([page]) => !pageIDs.includes(page)).map(([page, sections]) => ({ page, sections })) // Remove pages content from site content 
+      const siteContent = contentWithoutPages.reduce((a, v) => ({ ...a, [v.page]: v.sections}), {}) 
       const code = await html({
         code: {
           html: `
