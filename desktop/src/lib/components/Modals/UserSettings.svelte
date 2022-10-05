@@ -8,6 +8,8 @@
   import {getSitesFromServer} from '../../../stores/serverSites'
   import Hosting from '../Hosting.svelte'
   import {setLanguage} from '$lib/actions'
+  import ServerSetup from './ServerSetup.svelte'
+  import {hide} from '$lib/components/Modal.svelte'
 
   let tabs = []
   $: tabs = [
@@ -15,6 +17,11 @@
       id: 'HOSTING',
       label: $C('settings.hosting.heading'),
       icon: 'globe',
+    },
+    {
+      id: 'SERVER',
+      label: $C('settings.server.heading'),
+      icon: 'server',
     },
     {
       id: 'ADVANCED',
@@ -34,52 +41,6 @@
       window.location.reload()
     }
   }
-
-  const serverConfig = $config.serverConfig
-  let connectedToServer = false
-  let serverErrorMessage = ''
-  let loading = false
-  async function connectToServer() {
-    loading = true
-    const url = serverConfig.url.replace(/\/$/, "") // remove trailing slash if present
-    const endpoint = `${url}/api.json`
-    let data
-    try {
-      const res = await axios.get(endpoint, {
-        headers: {
-          Authorization: `Basic ${serverConfig.token}`,
-        },
-      })
-      data = res.data.success
-    } catch (e) {
-      console.error(e)
-      data = null
-    }
-    if (data) {
-      config.update((c) => ({
-        ...c,
-        serverConfig,
-      }))
-      getSitesFromServer()
-      connectedToServer = true
-      serverErrorMessage = ''
-    } else {
-      config.update((c) => ({
-        ...c,
-        serverConfig: {
-          url: '',
-          token: ''
-        },
-      }))
-      connectedToServer = false
-      if (serverConfig.url) {
-        serverErrorMessage = `Could not connect to ${serverConfig.url}. Ensure the address and token are correct & try again.`
-      }
-    }
-    loading = false
-  }
-  connectToServer()
-
 </script>
 
 <main>
@@ -92,6 +53,8 @@
         >
       </h1>
       <Hosting />
+    {:else if activeTab.id === 'SERVER'}
+      <ServerSetup inline={true} onSuccess={hide} />
     {:else if activeTab.id === 'ADVANCED'}
       <h1 class="primo-heading-lg heading">{$C('settings.advanced.heading')}</h1>
       <div class="container">
