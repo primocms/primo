@@ -191,22 +191,46 @@ export const pages = {
   },
   edit: async (pageId: string, updatedPage: { id: string, name: string }, updateTimeline = true) => {
     const newPages = get(stores.pages).map(page => {
-      if (page.id === pageId) {
-        return { ...page, ...updatedPage }
-      } else if (some(page.pages, ['id', pageId])) {
+      if (page.id === pageId) { // root page
         return {
           ...page,
-          pages: page.pages.map(page => page.id === pageId ? ({ ...page, ...updatedPage }) : page)
+          ...updatedPage,
+          pages: page.pages.map(subpage => ({ // update child page IDs
+            ...subpage,
+            id: subpage.id.replace(pageId, updatedPage.id)
+          }))
+        }
+      } else if (some(page.pages, ['id', pageId])) { // child page
+        return {
+          ...page,
+          pages: page.pages.map(subpage => subpage.id === pageId ? ({ ...subpage, ...updatedPage }) : subpage)
         }
       } else return page
     })
-    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => ({
-      locale,
-      content: {
-        ...omit(pages, [pageId]),
-        [updatedPage.id]: pages[pageId]
-      }
-    }))).keyBy('locale').mapValues('content').value()
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => {
+
+      // Replace root and child page IDs with new ID
+      const updatedLocaleContent = chain(Object.entries(pages).map(([key, val]) => {
+        console.log({ key, val })
+        if (key === pageId) {
+          return {
+            key: updatedPage.id,
+            val
+          }
+        }
+        else if (key.includes(`${pageId}/`)) {
+          return {
+            key: key.replace(`${pageId}/`, `${updatedPage.id}/`),
+            val
+          }
+        } else return { key, val }
+      })).keyBy('key').mapValues('val').value()
+      console.log({ updatedLocaleContent })
+      return ({
+        locale,
+        content: updatedLocaleContent
+      })
+    })).keyBy('locale').mapValues('content').value()
 
     stores.content.set(updatedContent)
     stores.pages.set(newPages)
