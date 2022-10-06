@@ -7,6 +7,7 @@
   "author": "mateomorris",
   "license": "AGPL",
   "build": {
+    "afterSign": "./notarize.cjs",
     "appId": "com.electron.primo",
     "productName": "Primo",
     "publish": "github",

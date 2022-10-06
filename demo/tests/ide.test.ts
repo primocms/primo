@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('Create component', async ({ page }) => {
-  await page.goto('http://localhost:4173/');
+  await page.goto('http://localhost:4173/blank');
 
   // Add Component to page
   await page.locator('button:has-text("Add Component")').click();
@@ -43,5 +43,5 @@ test('Create component', async ({ page }) => {
   await page.locator('.primary-action > button').click();
 
   // Expect Component on page
-  await page.locator('.primo-page h1:has-text("TEST TEXT")')
+  await page.locator('.page h1:has-text("TEST TEXT")')
 });

@@ -18,30 +18,70 @@ import { expect, test } from '@playwright/test';
 
 // Create page from scratch
 
-test('Create and navigate to new page', async ({ page }) => {
+test('Create and navigate to empty page', async ({ page }) => {
+  const theme = 'landing-page'
+  await page.goto(`http://localhost:4173/${theme}`);
 
-  // Go to http://localhost:4173/
-  await page.goto('http://localhost:4173/site');
+  // Slow down to prevent creating page before site has loaded 
+  await page.locator('.section.has-component')
 
-  // Click button:has-text("Add Content")
-  await page.locator('button:has-text("Add Content")').click();
-
-  // Click [aria-label="Pages"]
+  // Click 'Pages'
   await page.locator('[aria-label="Pages"]').click();
 
-  // Click button:has-text("Create Page")
+  // Click 'Create Page'
   await page.locator('button:has-text("Create Page")').click();
 
-  // Click [placeholder="About Us"]
+  // Give site name (url auto-fills)
   await page.locator('[placeholder="About Us"]').click();
+  await page.locator('[placeholder="About Us"]').fill('Second Page');
 
-  // Fill [placeholder="About Us"]
+  // Uncheck 'Duplicate'
+  await page.locator('text=Duplicate active page').click();
+
+  // Click Create
+  await page.locator('text=Create').click();
+
+  // Expect new page list item
+  await expect(page.locator('.page-items [data-page-i="1"] .title')).toHaveText('Second Page');
+
+  // Navigate to page
+  await page.locator('[data-page-i="1"] a.page-link').click();
+  await expect(page).toHaveURL(`http://localhost:4173/${theme}/second-page`);
+
+});
+
+test('Delete page', async ({ page }) => {
+  await page.goto(`http://localhost:4173/landing-page`);
+
+  // Click 'Pages'
+  await page.locator('[aria-label="Pages"]').click();
+
+  // Delete Page
+  await page.locator('.page-items [data-page-i="2"] button.delete').click();
+
+  // Close Modal
+  await page.locator('[aria-label="Close modal"]').click();
+});
+
+test('Create and navigate to duplicated page', async ({ page }) => {
+  const theme = 'landing-page'
+  // Go to Landing Page
+  await page.goto(`http://localhost:4173/${theme}`);
+
+  // Click 'Pages'
+  await page.locator('[aria-label="Pages"]').click();
+
+  // Click 'Create Page'
+  await page.locator('button:has-text("Create Page")').click();
+
+  // Add page name (url is automatic)
+  await page.locator('[placeholder="About Us"]').click();
   await page.locator('[placeholder="About Us"]').fill('Secondary Page');
 
-  // Create Page
+  // Click 'Create'
   await page.locator('text=Create').click();
 
   // Navigate to page
   await page.locator('a').nth(4).click();
-  await expect(page).toHaveURL('http://localhost:4173/site/secondary-page');
+  await expect(page).toHaveURL(`http://localhost:4173/${theme}/secondary-page`);
 });
