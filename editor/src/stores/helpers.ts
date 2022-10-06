@@ -129,6 +129,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     <body class="primo-page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
+      ${buildModules(blocks)}
     </body>
   </html>
   `
@@ -145,33 +146,39 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
             ${html || content} 
           </div>
         </div>
-        ${js ? `<script type="module" async>${buildModule(block)}</script>` : ``}
     `
     }).join('')
   }
 
-  function buildModule(block): string {
-    return separateModules ? `\
-      const [ {default:App}, data ] = await Promise.all([
-        import('/_modules/${block.symbol}.js'),
-        fetch('/${locale}.json').then(res => res.json()).catch(() => {})
-      ])
+  function buildModules(blocks: any[]): string {
+    return blocks.filter(block => block.js).map(block => {
+      const { js } = block
+      return `<script type="module" async>${buildModule(block)}</script>`
+    }).join('')
+
+    function buildModule(block): string {
+      return separateModules ? `\
+        const [ {default:App}, data ] = await Promise.all([
+          import('/_modules/${block.symbol}.js'),
+          fetch('/${locale}.json').then(res => res.json())
+        ]).catch(e => console.error(e))
+        new App({
+          target: document.querySelector('#${block.id}'),
+          hydrate: true,
+          props: {
+            ...data,
+            ...data['${page.id}'],
+            ...data['${page.id}']['${block.id}']
+          }
+        })`
+        :
+        `\
+      const App = ${block.js};
       new App({
         target: document.querySelector('#${block.id}'),
-        hydrate: true,
-        props: {
-          ...data,
-          ...data['${page.id}'],
-          ...data['${page.id}']['${block.id}']
-        }
-      })`
-      :
-      `\
-    const App = ${block.js};
-    new App({
-      target: document.querySelector('#${block.id}'),
-      hydrate: true
-    }); `
+        hydrate: true
+      }); `
+    }
   }
 
   type Module = {
