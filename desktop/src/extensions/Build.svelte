@@ -291,43 +291,7 @@
       {#if !newDeployment}
         <header class="review">
           <div>
-            {#if changed_pages.length > 0}
-              {#if SHOW_CHANGED_PAGES}
-                <p class="title">Review and Publish</p>
-                <p class="subtitle">These are the pages you've updated which will be uploaded</p>
-                <div class="changed-pages">
-                  {#each files.filter(f => f.file.slice(-4) === 'html') as file}
-                  <div class="page-item">
-                    <span>{file.file}</span>
-                    <div class="page-body">
-                        <div class="page-link">
-                          <Preview preview={file.data} preventClicks={true} />
-                        </div>
-                      </div>
-                  </div>
-                  {/each}
-                </div>
-              {/if}
-              <PrimaryButton
-                on:click={publishToHosts}
-                label="Publish Pages"
-                {loading}
-              />
-            {:else if $hosts.length > 0 && lastDeployment && SHOW_CHANGED_PAGES}
-              <p class="title">No updated pages</p>
-              <p class="subtitle">You haven't made any detectable changes to your site, but you can publish it again.</p>
-              <PrimaryButton
-                on:click={publishToHosts}
-                label={$C('publish.publish_site')}
-                {loading}
-              />
-            {:else if $hosts.length > 0 && lastDeployment}
-              <PrimaryButton
-                on:click={publishToHosts}
-                label={$C('publish.publish_site')}
-                {loading}
-              />
-            {:else if $hosts.length > 0}
+            {#if $hosts.length > 0}
               <p class="title">{$C('publish.publish_site')}</p>
               <p class="subtitle">{$C('publish.description')}</p>
               <PrimaryButton
