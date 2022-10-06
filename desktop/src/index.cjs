@@ -108,6 +108,12 @@ const createWindow = () => {
 		win.show();
 	});
 
+	// On right-click, open element in inspector
+	win.webContents.on('context-menu', (event, click) => {
+		event.preventDefault();
+		win.webContents.inspectElement(click.x, click.y);
+	});
+
 	win.webContents.on('will-prevent-unload', (event) => {
 			const options = {
 					type: 'question',
@@ -159,6 +165,11 @@ const createPopup = () => {
 		// transparent: true
 	});
 
+	popup.webContents.on('context-menu', (event, click) => {
+		event.preventDefault();
+		popup.webContents.inspectElement(click.x, click.y);
+	});
+
 	if (isDev) {
 		popup.webContents.openDevTools();
 		popup.loadURL(`http://localhost:${port}/preview`).catch(err => {
@@ -187,14 +198,6 @@ app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') {
 		app.quit();
 	}
-});
-
-// On right-click, open element in inspector
-app.on('web-contents-created', (...[, /* event */ webContents]) => {
-	webContents.on('context-menu', (event, click) => {
-		event.preventDefault();
-		win.webContents.inspectElement(click.x, click.y);
-	});
 });
 
 app.on('activate', () => {
