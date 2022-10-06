@@ -152,8 +152,8 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
 
   function buildModules(blocks: any[]): string {
     return blocks.filter(block => block.js).map(block => {
-      const { js } = block
-      return `<script type="module" async>${buildModule(block)}</script>`
+      // no async attribute, Firefox freezes up (w/o src)
+      return `<script type="module">${buildModule(block)}</script>`
     }).join('')
 
     function buildModule(block): string {
