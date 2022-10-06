@@ -130,7 +130,7 @@
 </svelte:head>
 
 <style>
-  :global(.primo-page, #primo-toolbar, #primo-modal) {
+  :global(.page, #primo-toolbar, #primo-modal) {
     --primo-color-brand-dark: #097548;
     --primo-color-white: white;
     --primo-color-codeblack: rgb(30, 30, 30);

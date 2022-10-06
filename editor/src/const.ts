@@ -10,7 +10,7 @@ function createUniqueID(length: number = 5): string {
 export const defaultStyles = {
   raw: `
   
-.primo-content {
+.content {
   margin: 0 auto;
   width: 100%;
   padding-right: 2rem;
@@ -68,11 +68,11 @@ export const defaultStyles = {
 }
 
 @media (min-width: 1024px) {
-  .primo-content h1 {
+  .content h1 {
     font-size: 3rem;
   }
 
-  .primo-content h2 {
+  .content h2 {
     font-size: 2.25rem;
   }
 }
@@ -80,7 +80,7 @@ export const defaultStyles = {
   final: `\
 /* Default content styles */
 
-.primo-content {
+.content {
   width: 100%;
   margin-right: auto;
   margin-left: auto;
@@ -88,54 +88,54 @@ export const defaultStyles = {
   padding-left: 2rem
 }
 
-.primo-content {
+.content {
   font-size: 1.125rem;
   --text-opacity: 1;
   color: #374151;
   color: rgba(55, 65, 81, var(--text-opacity));
 }
 
-.primo-content h1 {
+.content h1 {
     font-size: 1.875rem;
     font-weight: 500;
   }
 
-.primo-content h2 {
+.content h2 {
     font-size: 1.5rem;
     font-weight: 500;
   }
 
-.primo-content ol {
+.content ol {
     list-style-type: decimal;
   }
 
-.primo-content ul {
+.content ul {
     list-style-type: disc;
     list-style-position: inside;
   }
 
-.primo-content ul p {
+.content ul p {
       display: inline;
     }
 
-.primo-content ol {
+.content ol {
     list-style-type: decimal;
     list-style-position: inside;
   }
 
-.primo-content a {
+.content a {
     --text-opacity: 1;
     color: #1c64f2;
     color: rgba(28, 100, 242, var(--text-opacity));
     text-decoration: underline;
   }
 
-.primo-content blockquote {
+.content blockquote {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     padding: 1.5rem;
   }
 
-.primo-content mark {
+.content mark {
     --text-opacity: 1;
     color: #161e2e;
     color: rgba(22, 30, 46, var(--text-opacity));
@@ -145,11 +145,11 @@ export const defaultStyles = {
   }
 
 @media (min-width: 1024px) {
-  .primo-content h1 {
+  .content h1 {
     font-size: 3rem;
   }
 
-  .primo-content h2 {
+  .content h2 {
     font-size: 2.25rem;
   }
 }
@@ -339,7 +339,7 @@ html {
           var(--transition-time) box-shadow, var(--transtion-time) transform;
 }
 
-.primo-page {
+.page {
   font-family: system-ui, sans-serif;
   color: var(--color);
   line-height: 1.6; 
@@ -347,7 +347,7 @@ html {
   background: var(--background);
 }
 
-.primo-section .primo-content {
+.section .content {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: var(--padding);

@@ -235,7 +235,7 @@
   bind:this={node}
   in:fade={{duration:100}}
   class:visible={mounted}
-  class="primo-section has-{block.type} { block.type === 'component' ? `component-${block.symbolID}` : ``}"
+  class="section has-{block.type} { block.type === 'component' ? `component-${block.symbolID}` : ``}"
   id={block.id}
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
@@ -300,7 +300,7 @@
 </div>
 
 <style lang="postcss">
-  .primo-section {
+  .section {
     position: relative;
     min-height: 3rem;
   }

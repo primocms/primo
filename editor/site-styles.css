@@ -62,7 +62,7 @@
 
   @layer Foundation {
     /* Root Page */
-    .primo-page {
+    .page {
       font-family: var(--font-family);
       color: var(--color);
       line-height: var(--line-height);
@@ -70,7 +70,7 @@
     }
 
     /* Content Section */
-    .primo-section .primo-content {
+    .section .content {
       max-width: var(--max-width);
       margin: 0 auto;
       padding: var(--padding);
@@ -130,7 +130,7 @@
   }
 
   @layer Elements {
-    .primo-page {
+    .page {
       .section-container {
         max-width: var(--max-width, 1200px);
         margin: 0 auto;

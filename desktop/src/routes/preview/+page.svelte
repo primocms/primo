@@ -84,7 +84,7 @@
   {#if activePage}
     <div
       class:fadein={ready}
-      class="primo-page being-edited">
+      class="page being-edited">
         {#each activePage.sections as section, i (section.id)}
           {#if section.symbolID}
             <PureComponent {site} block={hydrateInstance(section, site.symbols)} />
@@ -97,7 +97,7 @@
 {/key}
 
 <style>
-  .primo-page {
+  .page {
     transition: 0.1s opacity;
     opacity: 0;
   }

@@ -126,7 +126,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     <head>
       ${head.html || ''}
     </head>
-    <body class="primo-page">
+    <body class="page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
       ${buildModules(blocks)}
@@ -141,7 +141,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
       if (!block || !content || block.type === 'options') return '' // don't build out components that don't have content
       return `
         ${css ? `<style>${css}</style>` : ``}
-        <div class="primo-section has-${type}" id="${id}">
+        <div class="section has-${type}" id="${id}">
           <div class="primo-${type}">
             ${html || content} 
           </div>

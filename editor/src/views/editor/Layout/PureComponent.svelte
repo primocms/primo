@@ -21,7 +21,7 @@
   bind:this={node}
   in:fade={{duration:100}}
   class:visible={mounted}
-  class="primo-section has-{block.type}"
+  class="section has-{block.type}"
   id="{block.id}"
 >
   {#if block.type === 'component'}
@@ -32,7 +32,7 @@
 </div>
 
 <style lang="postcss">
-  .primo-section {
+  .section {
     position: relative;
     min-height: 3rem;
   }
