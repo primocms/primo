@@ -42,9 +42,11 @@
   let id = page.id || '';
   $: disableSave = !name || !id;
 
+  const [ siteID ] = $pageStore.url.pathname.split('/').slice(1) // site param doesn't account for static SvelteKit routes (i.e. /blog)
+
   const pageURL = isTryPrimo ? 
     `/${page.id === 'index' ? '' : page.id || ''}` :  
-    `/${$pageStore.params.site}/${page.id === 'index' ? '' : page.id || ''}`;
+    `/${siteID}/${page.id === 'index' ? '' : page.id || ''}`;
 
   // strip parent page from id
   function get_simple_page_id(id) {
