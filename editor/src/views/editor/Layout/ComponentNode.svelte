@@ -1,5 +1,6 @@
 <script>
   import _ from 'lodash-es';
+  import {goto} from '$app/navigation'
   import { createEventDispatcher, getContext } from 'svelte';
   import { processCode } from '../../../utils';
   import { site as unsavedSite, content, symbols, pages } from '../../../stores/data/draft';
@@ -75,11 +76,11 @@
   // Fade in component on mount
   const observer = new MutationObserver(() => {
     dispatch('mount');
-    disable_links()
+    reroute_links()
   });
 
-  // Disable & reroute internal links to prevent state loss
-  async function disable_links() {
+  // Reroute links to correctly open externally and internally 
+  async function reroute_links() {
     const { pathname, origin } = window.location;
     const [site] = pathname.split('/').slice(1);
     const homeUrl = `${origin}/${site}`;
@@ -98,25 +99,25 @@
           return;
         } 
 
-        const [ linkPage ] = link.pathname.split('/').slice(1);
+        const [ linkedPageID ] = link.pathname.split('/').slice(1);
 
-        // Link goes to current site
-        const pageExists = !!find($pages, ['id', linkPage])
-
-        link.onclick = (e) => {
-          if (pageExists) {
-            goto(`${homeUrl}/${linkPage}`);
-          } 
-        };
-
+        // Link to page
+        const linkedPage = _.find($pages, ['id', linkedPageID])
+        if (linkedPage) {
+          link.addEventListener('click', () => {
+            goto(`${homeUrl}/${linkedPageID}`);
+          })
+        } else {
+          // TODO: Create page
+        }
       } else {
         openLinkInNewWindow(link);
       }
 
       function openLinkInNewWindow(link) {
-        link.onclick = (e) => {
+        link.addEventListener('click', () => {
           window.open(link.href, '_blank');
-        };
+        })
       }
     });
   }
