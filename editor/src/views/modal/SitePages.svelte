@@ -154,8 +154,8 @@
   {/if}
 
   <ul class="page-items" xyz="fade stagger stagger-1">
-    {#each listedPages as page (page.id)}
-      <li class="xyz-in">
+    {#each listedPages as page, i (page.id)}
+      <li class="xyz-in" data-page-i={i}>
         <PageItem
           {page}
           disableAdd={!!breadcrumbs}
