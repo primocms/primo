@@ -32,12 +32,10 @@
     pageName = '';
     pageURL = '';
     shouldDuplicatePage = true;
-    listPages(rootPageId)
   }
 
   async function deletePage(pageId) {
     actions.delete(pageId, currentPath);
-    listPages(rootPageId)
   }
 
   function duplicatePage(name, url): PageType {
@@ -76,7 +74,6 @@
 
   function editPage(pageId, args: { name: string, id: string }) {
     actions.edit(pageId, args)
-    listPages(rootPageId)
   }
 
   function addSubPage(pageId) {
@@ -89,7 +86,8 @@
   $: rootPageId = currentPath[0];
 
   let listedPages = $pages
-  listPages(currentPath[0])
+  listPages(currentPath[0]) // list initial pages
+  $: $pages, listPages(rootPageId) // update listed pages when making page store updates
   
   function listPages(pageId = null) {
     if (!pageId) { // root page
