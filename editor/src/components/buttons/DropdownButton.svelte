@@ -1,8 +1,8 @@
 <script>
   export let button;
 
-  function click() {
-    if (button.onClick) button.onClick();
+  function click(e) {
+    if (button.onClick) button.onClick(e);
   }
 </script>
 
