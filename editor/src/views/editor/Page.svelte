@@ -136,7 +136,8 @@
 {/if}
 <div
   bind:this={element}
-  class="page being-edited"
+  id="page"
+  class="being-edited"
   class:fadein={page_mounted}
   lang={$locale}
 >
@@ -179,7 +180,7 @@
     --Spinner-color: var(--primo-color-brand);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
-  .page {
+  #page {
     transition: 0.1s opacity;
     opacity: 0;
     border-top: 0;

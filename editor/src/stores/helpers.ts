@@ -126,7 +126,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     <head>
       ${head.html || ''}
     </head>
-    <body class="page">
+    <body id="page">
       ${buildBlocks(blocks)}
       ${below.html || ''}
       ${buildModules(blocks)}

@@ -84,6 +84,7 @@
   {#if activePage}
     <div
       class:fadein={ready}
+      id="page"
       class="page being-edited">
         {#each activePage.sections as section, i (section.id)}
           {#if section.symbolID}
@@ -97,7 +98,7 @@
 {/key}
 
 <style>
-  .page {
+  #page {
     transition: 0.1s opacity;
     opacity: 0;
   }
