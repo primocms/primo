@@ -16,8 +16,6 @@
   $: if (element) {
     element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
   }
-
-  const track = getContext('track')
 </script>
 
 <div class="buttons-container primo-reset" bind:this={element}>

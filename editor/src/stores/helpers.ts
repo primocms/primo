@@ -141,8 +141,8 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
       if (!block || !content || block.type === 'options') return '' // don't build out components that don't have content
       return `
         ${css ? `<style>${css}</style>` : ``}
-        <div class="section has-${type}${type === 'content' ? ' section-container' : ''}" id="${id}">
-          <div class="${type}">
+        <div class="section has-${type}" id="${id}">
+          <div class="${type}${type === 'content' ? ' section-container' : ''}">
             ${html || content} 
           </div>
         </div>
