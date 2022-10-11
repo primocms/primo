@@ -137,7 +137,6 @@
 <div
   bind:this={element}
   id="page"
-  class="being-edited"
   class:fadein={page_mounted}
   lang={$locale}
 >
@@ -187,7 +186,7 @@
     margin-top: 85px;
   }
 
-  .fadein {
+  #page.fadein {
     opacity: 1;
   }
 

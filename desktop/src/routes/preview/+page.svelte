@@ -84,8 +84,7 @@
   {#if activePage}
     <div
       class:fadein={ready}
-      id="page"
-      class="page being-edited">
+      id="page">
         {#each activePage.sections as section, i (section.id)}
           {#if section.symbolID}
             <PureComponent {site} block={hydrateInstance(section, site.symbols)} />
@@ -103,7 +102,7 @@
     opacity: 0;
   }
 
-  .fadein {
+  #page.fadein {
     opacity: 1;
   }
 </style>
