@@ -67,7 +67,7 @@ export const iframePreview = (locale = 'en') => `
         }
 		  <\/script>
     </head>
-    <body class="page">
+    <body id="page">
     </body>
   </html>
 `
@@ -81,7 +81,7 @@ export const componentPreview = (js, data) => {
     <!DOCTYPE html>
     <html lang="en">
       <head></head>
-      <body class="page">
+      <body id="page">
         <main></main>
         <script type="module" async>
           const { default:App } = await import('${url}')
@@ -121,7 +121,7 @@ export const pagePreview = `
         }, false)
 		  <\/script>
     </head>
-    <body class="page">
+    <body id="page">
     </body>
     <style>
         .page {
@@ -145,7 +145,7 @@ export const currentPagePreview = `
         }, false)
 		  <\/script>
     </head>
-    <body class="page">
+    <body id="page">
     </body>
     <style>
         .page {
