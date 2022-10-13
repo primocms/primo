@@ -99,7 +99,7 @@ class:mounted>
       <LocaleSelector />
     {/if}
     {#if $userRole === 'developer'}
-      <div class="content" id="ide-toggle">
+      <div id="ide-toggle">
         <label class="switch" aria-label="Switch to {$showingIDE ? 'Content' : 'Code'}">
           <input
             type="checkbox"
@@ -207,7 +207,7 @@ class:mounted>
     flex-direction: row;
     margin-right: 0.5rem;
   }
-  .content {
+  #ide-toggle {
     position: relative;
     display: flex;
     justify-content: center;
