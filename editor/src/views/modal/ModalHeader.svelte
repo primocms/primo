@@ -52,7 +52,7 @@
       <LocaleSelector align="left" />
     {/if}
     {#if $userRole === 'developer' && $modal.showSwitch}
-      <div class="content xyz-in">
+      <div class="switch-container xyz-in">
         <label class="switch">
           <input type="checkbox" bind:checked={$showingIDE} />
           <span class="slider round" class:code={$showingIDE}>
@@ -152,7 +152,7 @@
       display: flex;
       justify-content: flex-end;
 
-      .content {
+      .switch-container {
         position: relative;
         display: flex;
         justify-content: center;
