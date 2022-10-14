@@ -113,10 +113,10 @@ export const symbols = {
   update: (toUpdate: Symbol): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
-      return symbols.map(s => s.id === toUpdate.id ? ({
-        ...s,
+      return symbols.map(symbol => symbol.id === toUpdate.id ? ({
+        ...symbol,
         ...toUpdate
-      }) : s)
+      }) : symbol)
     })
     timeline.push(get(unsavedSite))
   },

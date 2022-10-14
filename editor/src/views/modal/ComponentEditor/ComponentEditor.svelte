@@ -97,10 +97,21 @@
 
   // hydrate fields with content (placeholder if passed component is a Symbol)
   function getFieldValues(fields:Array<FieldType>, loc:string): Array<any> {
-    return fields.map(field => ({
-      ...field,
-      value: component.type === 'symbol' ? getCachedPlaceholder(field) : (localContent[loc]?.[field.key] !== undefined ? localContent[loc]?.[field.key] : getCachedPlaceholder(field))
-    }))
+    return fields.map(field => {
+      if (component.type === 'symbol') {
+        return ({
+          ...field,
+          value: getCachedPlaceholder(field)
+        })
+      } else {
+        const field_value = localContent[loc]?.[field.key]
+        const value = (field_value !== undefined ? field_value : getCachedPlaceholder(field))
+        return ({
+          ...field,
+          value
+        })
+      }
+    })
   }
 
 

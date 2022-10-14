@@ -9,20 +9,12 @@
 
   export let field;
 
-  // ensure options has correct shape
-  if (!get(field, 'options.markdown')) {
-    field.options = {
-      ...field.options,
-      markdown: converter.makeMarkdown(field.value || '') 
-    }
-  }
-
   // ensure value is a string
-  if (field.value !== 'string') {
+  if (typeof(field.value) !== 'string') {
     field.value = ''
   }
 
-  let value = field.options.markdown
+  let value = field.value
   $: parseContent(value)
 
   let element;
@@ -39,7 +31,6 @@
 
   function parseContent(markdown) {
     field.value = converter.makeHtml(markdown);
-    field.options.markdown = markdown
     dispatch('input');
   }
 
@@ -57,7 +48,8 @@
     id={field.id}
     on:focus={selectAll}
     on:keydown={handleSave} 
-    bind:value
+    on:input={({target}) => parseContent(target.value)}
+    value={converter.makeMarkdown(value)}
     bind:this={element} />
 </label>
 
