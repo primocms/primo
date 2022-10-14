@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('Create component', async ({ page }) => {
+test('Create component with field', async ({ page }) => {
   await page.goto('http://localhost:4173/blank');
 
   // Add Component to page

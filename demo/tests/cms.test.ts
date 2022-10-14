@@ -108,3 +108,54 @@ test('Creates elements with UI', async ({ page }) => {
   await page.locator('.primary-button').click()
   await expect(page.locator('.content img')).toHaveAttribute('src', 'https://images.unsplash.com/photo-1664434341235-f77a94e1a26c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80');
 })
+
+
+test('Create and switch between languages', async ({ page }) => {
+  await page.goto('http://localhost:4173/landing-page');
+
+  // Wait for data to load
+  await page.locator('.section.has-component')
+
+  // Add Content section
+  page.locator('.section.has-component:first-of-type').hover()
+  await page.locator('.section.has-component:first-of-type button.bottom-right:has-text("Add Section")').click();
+  await page.locator('button:has-text("Add Content")').click();
+  const content_node = page.locator('.ProseMirror.content')
+  await content_node.type('Welcome')
+  await page.waitForTimeout(500) // wait for change to register
+  await expect(content_node).toHaveText('Welcome');
+
+  // Click Locale Selector
+  await page.locator('#primo-toolbar #locale-selector > button.label').click();
+
+  // Click 'Add new language'
+  await page.locator('text=+ add new language').click();
+
+  // Search for & select language
+  await page.locator('.search input[type="text"]').fill('spanish');
+  await page.locator('button.option:has-text("Spanish")').click();
+  await page.locator('button.option:has-text("Spanish")').click();
+
+  // Edit component content in new language
+  page.locator('#clmrm').hover()
+  await page.locator('#clmrm button:has-text("Edit Content")').click();
+  await page.locator('#field-heading input[type="text"]').click();
+  await page.locator('#field-heading input[type="text"]').fill('Bienvenidos a tu nuevo sitio');
+  await page.locator('button:has-text("Draft")').click();
+
+  // Edit content section in new language
+  content_node.fill('Bienvenidos')
+  await page.waitForTimeout(500) // wait for change to register
+
+  // Switch to English, expect English content
+  await page.locator('#primo-toolbar #locale-selector > button.label').click();
+  await page.locator('button.option:has-text("English")').click();
+  await expect(content_node).toHaveText('Welcome');
+  await expect(page.locator('#clmrm h1')).toHaveText('Welcome to your new site');
+
+  // Switch to Spanish, expect Spanish content
+  await page.locator('#primo-toolbar #locale-selector > button.label').click();
+  await page.locator('button.option:has-text("Spanish")').click();
+  await expect(content_node).toHaveText('Bienvenidos');
+  await expect(page.locator('#clmrm h1')).toHaveText('Bienvenidos a tu nuevo sitio');
+})

@@ -11,7 +11,7 @@
 
 </script>
 
-<div id="locale-selector" class:left={align === 'left'} in:fly={{duration: 200, x: 50, opacity: 0}}>
+<div id="dropdown" class:left={align === 'left'} in:fly={{duration: 200, x: 50, opacity: 0}}>
   <button class="label" class:active={showingSelector} id="jobLabel" on:click={() => showingSelector = !showingSelector}>
     <Icon {icon} height="10" width="10" />   
     <span>Controls</span>   
@@ -36,7 +36,7 @@
 </div>
 
 <style lang="postcss">
-  #locale-selector {
+  #dropdown {
     display: grid;
     color: var(--primo-color-white);
     position: relative;
