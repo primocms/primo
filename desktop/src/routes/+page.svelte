@@ -24,17 +24,7 @@
       id: 'SITE_CREATION',
       props: {
         onSuccess: (site) => {
-          $sites = [
-            ...$sites,
-            {
-              id: site.id,
-              name: site.name,
-              data: site,
-              deployments: [],
-              activeDeployment: null,
-            },
-          ]
-          setSitePreview(site)
+          await setSitePreview(site)
           storeSite(site)
           goto(site.id)
           hide()

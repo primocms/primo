@@ -12,9 +12,7 @@
     });
 
     const res = await fetch('https://api.primo.so/themes.json').then(res => res.json());
-    console.log({res})
     const theme = res[0]['data']
-		console.log(theme);
     data = theme
   })
 </script>
