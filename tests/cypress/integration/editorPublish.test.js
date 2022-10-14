@@ -32,7 +32,7 @@ describe('Publish from Editor', () => {
 
     it("Download site", () => {
         cy.get('span').contains('Publish').click()
-        cy.get('button[type="button"]').contains('Download your site').click()
+        cy.get('button[type="button"]').contains('Download site').click()
     });
 
     it("Save and publish", () => {

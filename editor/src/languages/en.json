@@ -41,7 +41,7 @@
     "last_published_to": "Last published to",
     "publish_site": "Publish site",
     "description": "Your site will be uploaded as static HTML/CSS/JS files to your connected web host.",
-    "download_heading": "Download your site",
+    "download_heading": "Download site",
     "download_description": "You can connect a web host to publish your website directly from primo, or download it to publish it manually"
   }
 }

@@ -304,7 +304,7 @@
               <p class="subtitle">{$C('publish.download_description')}</p>
               <PrimaryButton
                 on:click={downloadSite}
-                label="Download your site"
+                label="Download site"
                 {loading}
               />
             {/if}
