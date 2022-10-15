@@ -18,14 +18,20 @@
   import { goto } from '$app/navigation';
   import {setSitePreview, storeSite} from '$lib/actions'
 
-  let loading
   function createSite() {
     show({
       id: 'SITE_CREATION',
       props: {
-        onSuccess: (site) => {
-          await setSitePreview(site)
+        onSuccess: async (site) => {
+          sites.update(s => [...s, {
+            id: site.id,
+            name: site.name,
+            data: site,
+            deployments: [],
+            activeDeployment: null,
+          }])
           storeSite(site)
+          await setSitePreview(site)
           goto(site.id)
           hide()
         },
