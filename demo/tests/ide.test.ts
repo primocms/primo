@@ -45,3 +45,38 @@ test('Create component with field', async ({ page }) => {
   // Expect Component on page
   await page.locator('.page h1:has-text("TEST TEXT")')
 });
+
+
+test('Update site CSS', async ({ page }) => {
+  await page.goto('http://localhost:4173/landing-page');
+
+  // Slow down to prevent creating page before site has loaded 
+  await page.locator('#primo-toolbar-overlay div:has-text("Landing Page")')
+  await page.waitForTimeout(5000)
+
+  // Click #ide
+  await page.locator('#ide').click();
+
+  // Click [aria-label="CSS"]
+  await page.locator('[aria-label="CSS"]').click();
+
+  // Click button:has-text("Site")
+  await page.locator('button:has-text("Site")').click();
+
+  // Click text=--color-accent: rebeccapurple; >> span >> nth=2
+  await page.locator('text=--color-accent: rebeccapurple; >> span').nth(2).click();
+
+  await Promise.all('rebeccapurple'.split('').map(async () => {
+    await page.keyboard.press('Backspace')
+  }))
+
+  await page.keyboard.type('rgb(255, 0, 0)');
+
+  // Click button:has-text("Draft")
+  await page.locator('button:has-text("Draft")').click();
+
+  await page.waitForTimeout(1000)
+
+  await expect(await page.$eval('.section#clmrm .buttons .button:first-child', e => getComputedStyle(e).backgroundColor)).toBe('rgb(255, 0, 0)');
+
+})
