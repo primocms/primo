@@ -20,10 +20,9 @@
   import {
     processCode,
     processCSS,
-    convertFieldsToData,
     wrapInStyleTags,
   } from '../../utils';
-  import { getAllFields } from '../../stores/helpers';
+  import { getPageData } from '../../stores/helpers';
   import en from '../../languages/en.json'
   import { init, addMessages } from 'svelte-i18n';
 
@@ -87,7 +86,7 @@
     cached.pageCode = pageCode
     cached.siteCode = siteCode
     const css = await processCSS(siteCode.css + pageCode.css);
-    const data = convertFieldsToData(getAllFields());
+    const data = getPageData({});
     const [head, below] = await Promise.all([
       processCode({
         code: {

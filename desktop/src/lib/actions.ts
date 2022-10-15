@@ -94,13 +94,6 @@ export async function setLanguage(language) {
 }
 
 export async function storeSite(site) {
-  stores.sites.update(s => [...s, {
-    id: site.id,
-    name: site.name,
-    data: site,
-    deployments: [],
-    activeDeployment: null,
-  }])
   window.primo.data.save(site)
 }
 
