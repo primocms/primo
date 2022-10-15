@@ -7,7 +7,8 @@
     pages,
     symbols,
     code as siteCode,
-    id as siteID
+    id as siteID,
+    content
   } from '../../stores/data/draft';
   import {locale} from '../../stores/app/misc'
   import {updatePreview} from '../../stores/actions'
@@ -80,7 +81,7 @@
   let html_head = '';
   let html_below = '';
   let cached = { pageCode: null, siteCode: null }
-  $: set_page_html($pageCode, $siteCode);
+  $: $content, set_page_html($pageCode, $siteCode);
   async function set_page_html(pageCode, siteCode) {
     if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
     cached.pageCode = pageCode
