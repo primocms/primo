@@ -15,7 +15,7 @@ async function initializSiteData() {
 		return {
 			id: data.id,
 			name: data.name,
-			activeDeployment: config.deployment,
+			activeDeployment: config?.deployment || null,
 			data,
 			preview,
 		};
