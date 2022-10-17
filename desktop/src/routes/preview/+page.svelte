@@ -7,6 +7,7 @@
   import {onMount, setContext, tick} from 'svelte'
   import PureComponent from '@primo-app/primo/src/views/editor/Layout/PureComponent.svelte'
   import { wrapInStyleTags, processCode } from '@primo-app/primo/src/utils';
+  import {getPageData} from '@primo-app/primo/src/stores/helpers'
   import {browser} from '$app/environment'
 
   let channel
@@ -26,14 +27,10 @@
   function setupChannel() {
     channel.onmessage = (async ({data}) => {
       const { site:newSite, pageID:newPageID } = data
-      if (newSite.id === 'default') return
+      if (!newSite || newSite.id === 'default') return
       const newPage = find(newSite.pages, ['id', newPageID]) // get Page to show
       const {css} = await await window.primo.processCSS(newSite.code.css + newPage.code.css); // process new Page's CSS
-
-      // Get site content
-      const pageIDs = flattenDeep(newSite.pages.map(page => [page.id, ...page.pages.map(p => p.id)])) // get all page IDs
-      const contentWithoutPages = Object.entries(newSite.content['en']).filter(([page]) => !pageIDs.includes(page)).map(([page, sections]) => ({ page, sections })) // Remove pages content from site content 
-      const siteContent = contentWithoutPages.reduce((a, v) => ({ ...a, [v.page]: v.sections}), {}) 
+      const siteData = getPageData({ page: newPage, site: newSite })
       const code = await html({
         code: {
           html: `
@@ -44,7 +41,7 @@
           css: '',
           js: '',
         },
-        data: siteContent,
+        data: siteData,
       })
       htmlHead = code.html
       site = cloneDeep(newSite)
