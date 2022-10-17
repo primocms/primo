@@ -5,10 +5,12 @@ import { id as activePageID, sections } from './app/activePage'
 import { saved, locale } from './app/misc'
 import * as stores from './data/draft'
 import { content, code, fields, timeline, site as unsavedSite } from './data/draft'
-import type { Site, Symbol, Page } from '../const'
+import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '../const'
+import { Page } from '../const'
 import { validateSiteStructure } from '../utils'
+import { createUniqueID } from '../utilities';
 
-export async function hydrateSite(data: Site): Promise<void> {
+export async function hydrateSite(data: SiteType): Promise<void> {
   const site = validateSiteStructure(data)
   if (!site) return
   sections.set([])
@@ -62,7 +64,7 @@ export async function updateSiteCSS(css: string): Promise<void> {
 
 // when a Symbol is deleted from the Site Library, 
 // delete every instance of it on the site as well (and their content)
-export async function deleteInstances(symbol: Symbol): Promise<void> {
+export async function deleteInstances(symbol: SymbolType): Promise<void> {
 
   // remove from page sections
   const sectionsToDeleteFromContent = []
@@ -105,12 +107,12 @@ export function redoSiteChange(): void {
 }
 
 export const symbols = {
-  create: (symbol: Symbol): void => {
+  create: (symbol: SymbolType): void => {
     saved.set(false)
     stores.symbols.update(s => [cloneDeep(symbol), ...s])
     timeline.push(get(unsavedSite))
   },
-  update: (toUpdate: Symbol): void => {
+  update: (toUpdate: SymbolType): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.map(symbol => symbol.id === toUpdate.id ? ({
@@ -120,7 +122,7 @@ export const symbols = {
     })
     timeline.push(get(unsavedSite))
   },
-  delete: (toDelete: Symbol): void => {
+  delete: (toDelete: SymbolType): void => {
     saved.set(false)
     stores.symbols.update(symbols => {
       return symbols.filter(s => s.id !== toDelete.id)
@@ -130,12 +132,69 @@ export const symbols = {
 }
 
 export const pages = {
-  add: (newPage: Page, path: Array<string>, updateTimeline = true): void => {
+  duplicate: ({ page, path = [], details, updateTimeline = true }) => {
     saved.set(false)
-    const currentPages: Array<Page> = get(stores.pages)
-    let updatedPages: Array<Page> = cloneDeep(currentPages)
+    const currentPages = get(stores.pages)
+    let updatedPages = cloneDeep(currentPages)
+
+    const [newSections, IDs] = scrambleIds(page.sections)
+    const newPage = cloneDeep({
+      ...Page(),
+      ...page,
+      ...details,
+      sections: newSections
+    });
+
     if (path.length > 0) {
-      const rootPage: Page = find(updatedPages, ['id', path[0]])
+      const rootPage: PageType = find(updatedPages, ['id', path[0]])
+      rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
+    } else {
+      updatedPages = [...updatedPages, newPage]
+    }
+
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => {
+      const duplicatedSectionContent = chain(newPage.sections).keyBy('id').mapValues((section) => {
+        const { old } = find(IDs, i => i.new === section.id)
+        return pages[page.id][old] // set content from duplicated page
+      }).value()
+      const duplicatedPageContent = chain(newPage.fields).keyBy('key').mapValues(field => pages[page.id][field.key]).value()
+
+      return {
+        locale,
+        content: {
+          ...pages,
+          [newPage.id]: {
+            ...duplicatedSectionContent,
+            ...duplicatedPageContent
+          }
+        }
+      }
+    })).keyBy('locale').mapValues('content').value()
+
+    stores.content.set(updatedContent)
+    stores.pages.set(updatedPages)
+
+    if (updateTimeline) timeline.push(get(unsavedSite))
+
+    function scrambleIds(sections) {
+      let IDs = [];
+      const newSections = sections.map((section) => {
+        const newID = createUniqueID();
+        IDs.push({ old: section.id, new: newID });
+        return {
+          ...section,
+          id: newID,
+        };
+      });
+      return [newSections, IDs];
+    }
+  },
+  add: (newPage: PageType, path: Array<string>, updateTimeline = true): void => {
+    saved.set(false)
+    const currentPages: Array<PageType> = get(stores.pages)
+    let updatedPages: Array<PageType> = cloneDeep(currentPages)
+    if (path.length > 0) {
+      const rootPage: PageType = find(updatedPages, ['id', path[0]])
       rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
     } else {
       updatedPages = [...updatedPages, newPage]
@@ -145,7 +204,7 @@ export const pages = {
       locale,
       content: {
         ...pages,
-        [newPage.id]: chain(newPage.sections).keyBy('id').mapValues(() => ({})).value()
+        [newPage.id]: {}
       }
     }))).keyBy('locale').mapValues('content').value()
 
@@ -156,8 +215,8 @@ export const pages = {
   },
   delete: (pageId: string, path: Array<string>, updateTimeline = true): void => {
     saved.set(false)
-    const currentPages: Array<Page> = get(stores.pages)
-    let newPages: Array<Page> = cloneDeep(currentPages)
+    const currentPages: Array<PageType> = get(stores.pages)
+    let newPages: Array<PageType> = cloneDeep(currentPages)
     if (path.length > 0) {
       const rootPage = find(newPages, ['id', path[0]])
       rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)

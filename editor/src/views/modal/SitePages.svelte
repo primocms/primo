@@ -8,7 +8,6 @@
   import { PrimaryButton } from '../../components/buttons';
   import PageItem from './PageList/PageItem.svelte';
   import ModalHeader from './ModalHeader.svelte';
-  import { createUniqueID } from '../../utilities';
 
   import { Page } from '../../const';
   import type { Page as PageType } from '../../const'
@@ -24,10 +23,16 @@
     let name = pageName;
     let url = pageURL;
     url = currentPath[0] ? `${currentPath[0]}/${url}` : url; // prepend parent page to id (i.e. about/team)
-    const newPage = shouldDuplicatePage
-      ? duplicatePage(name, url)
-      : Page(url, name)
-    await actions.add(newPage, currentPath);
+    if (shouldDuplicatePage) {
+      await actions.duplicate({
+        page: $activePage,
+        path: currentPath,
+        details: { name, id: url }
+      })
+    } else {
+      await actions.add(Page(url, name), currentPath);
+    }
+    
     creatingPage = false;
     pageName = '';
     pageURL = '';
@@ -36,31 +41,6 @@
 
   async function deletePage(pageId) {
     actions.delete(pageId, currentPath);
-  }
-
-  function duplicatePage(name, url): PageType {
-    const newPage:PageType = cloneDeep({
-      ...Page(url, name),
-      ...$activePage
-    });
-    const [newSections] = scrambleIds(newPage.sections);
-    newPage.sections = newSections;
-    newPage.name = name;
-    newPage.id = url;
-    return newPage;
-
-    function scrambleIds(sections) {
-      let IDs = [];
-      const newSections = sections.map((section) => {
-        const newID = createUniqueID();
-        IDs.push([section.id, newID]);
-        return {
-          ...section,
-          id: newID,
-        };
-      });
-      return [newSections, IDs];
-    }
   }
 
   let creatingPage = false;
