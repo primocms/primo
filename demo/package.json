@@ -35,7 +35,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@primo-app/primo": "^1.6.46",
+		"@primo-app/primo": "^1.6.47",
 		"lodash-es": "^4.17.21",
 		"promise-worker": "^2.0.1"
 	}
