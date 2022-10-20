@@ -3,7 +3,7 @@
   "description": "primo",
   "repository": "https://github.com/primo-af/primo.git",
   "scripts": {
-    "install": "cd desktop && npm install",
+    "install": "cd editor && npm install && npm link && cd ../desktop && npm install && npm link @primo-app/primo",
     "dev": "npm run desktop",
     "desktop": "cd desktop && npm run start",
     "demo": "cd demo && npm run dev",
