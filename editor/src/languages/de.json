@@ -1,0 +1,48 @@
+{
+  "Pages": "Seiten",
+  "Content": "Content",
+  "Components": "Komponenten",
+  "Fields": "Felder",
+  "Publish": "Veröffentlichen",
+  "Docs": "Dokumentation",
+  "Feedback": "Feedback",
+  "Page Label": "Seiten URL",
+  "Create": "Erstellen",
+  "Add": "Hinzufügen",
+  "Add a Field": "Feld hinzufügen",
+  "Add a Subfield": "Unterfeld hinzufügen",
+  "Page": "Seite",
+  "Site": "Webseite",
+  "Site ID" : "Seiten ID",
+  "Code": "Quellcode",
+  "Submit": "Übermitteln",
+  "field-types": {
+    "Repeater": "Wiederholendes Element",
+    "Group": "Gruppe",
+    "Text": "Text",
+    "Markdown": "Markdown",
+    "Number": "Zahlenwert",
+    "Switch": "Schalter",
+    "URL": "URL",
+    "Link": "Link",
+    "Select": "Auswahlfeld",
+    "Info": "Info"
+  },
+  "component_editor": {
+    "no_field_key": "Um valide zu sein, benötigt dieses Feld einen Feldschlüssel",
+    "no_fields_dev": "Zuerst muss ein Feld erstellt und integriert werden um den Inhalt bearbeiten zu können",
+    "no_fields_content": "Die mit der Entwicklung beauftragte Person muss Felder erstellen und integrieren bevor diese bearbeitet werden können."
+  },
+  "no-components": "Es befindet sich keine Komponente in der Webseitenbibliothek. <br>Komponenten können komplett neu entwickelt, von anderen Seiten kopiert oder aus der Primobibliothek hinzugefügt werden.",
+  "contribute_to_community_library": "Komponente der Community Bibliothek hinzufügen",
+  "Edit Code": "Quellcode bearbeiten",
+  "Edit Content": "Inhalt bearbeiten",
+  "publish": {
+    "published_to": "Webseite veröffentlichen auf",
+    "last_published_to": "Als letztes veröffentlicht auf",
+    "publish_site": "Webseite veröffentlichen",
+    "description": " Die Webseite wird als statische HTML/CSS/JS Dateien bei dem ausgewählten Host hochgeladen.",
+    "download_heading": "Webseite herunterladen",
+    "download_description": "Sie können einen Host verbinden, um die Webseite direkt zu veröffentlichen, alternativ können Sie die Seite auch herunterladen, um sie manuell zu veröffentlichen."
+  }
+}
