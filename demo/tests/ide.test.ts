@@ -54,7 +54,7 @@ test('Update site CSS', async ({ page }) => {
   await page.locator('#primo-toolbar-overlay div:has-text("Landing Page")')
   await page.waitForTimeout(5000)
 
-  // Click #ide
+  // Switch to IDE
   await page.locator('#ide').click();
 
   // Click [aria-label="CSS"]
@@ -79,4 +79,33 @@ test('Update site CSS', async ({ page }) => {
 
   await expect(await page.$eval('.section#clmrm .buttons .button:first-child', e => getComputedStyle(e).backgroundColor)).toBe('rgb(255, 0, 0)');
 
+})
+
+test('Update site HTML', async ({ page }) => {
+
+  // Click #ide
+  // Go to http://localhost:4173/blank
+  await page.goto('http://localhost:4173/blank');
+
+  // Click #ide
+  await page.locator('#ide').click();
+
+  // Click [aria-label="HTML"]
+  await page.locator('[aria-label="HTML"]').click();
+
+  // Click button:has-text("Site")
+  await page.locator('button:has-text("Site")').click();
+
+  // Click text=/.*<meta charset="UTF-8"\>.*/
+  await page.locator('text=/.*<meta charset="UTF-8"\\>.*/').click();
+
+  await page.locator('text=/.*<meta charset="UTF-8"\\>.*/').type('<link id="test-head" />');
+
+  // Press ArrowRight
+  await page.locator('text=/.*<meta name="viewport" content="width=device-width, initial-scale=1\\.0"\\> <meta cha.*/').press('ArrowRight');
+
+  // Click button:has-text("Draft")
+  await page.locator('button:has-text("Draft")').click();
+
+  await page.locator('#test-head')
 })
