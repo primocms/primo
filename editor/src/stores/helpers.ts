@@ -136,9 +136,13 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
 
   function buildBlocks(blocks: any[]): string {
     return blocks.map(block => {
-      const { id, type, html, css, js } = block
+      const { id, type, html, css } = block
       const content = site.content[locale]?.[page.id]?.[id]
-      if (!block || !content || block.type === 'options') return '' // don't build out components that don't have content
+      const symbol = _find(site.symbols, ['id', block.symbol])
+
+      if (!block || block.type === 'options') return ''
+      if (!content && symbol.fields.length > 0) return '' // don't build out components that have fields but no content
+
       return `
         ${css ? `<style>${css}</style>` : ``}
         <div class="section has-${type}" id="${id}">
