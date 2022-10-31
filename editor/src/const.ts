@@ -339,7 +339,7 @@ html {
           var(--transition-time) box-shadow, var(--transtion-time) transform;
 }
 
-.page {
+#page {
   font-family: system-ui, sans-serif;
   color: var(--color);
   line-height: 1.6; 
