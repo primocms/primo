@@ -204,9 +204,8 @@
   .codemirror-container {
     width: 100%;
     overflow-y: scroll;
+    overscroll-behavior-x: contain; /* prevent from swiping back */
     font-family: 'Fira Code', monospace !important;
-    /* height: calc(100vh - 10.25rem); */
-    /* height: 100%; */
     height: calc(100% - 40px);
     position: relative;
   }
