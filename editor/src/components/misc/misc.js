@@ -29,7 +29,7 @@ export const iframePreview = (locale = 'en') => `
                 payload: { logs }
               });
             }
-            if (primoLog) console.log = (...args) => { postMessage(...args); primoLog(...args); };\` + source;
+            if (primoLog) console.log = (...args) => { try {postMessage(...args)}catch(e){postMessage('Could not print ' + typeof(args) + '. See in console.')}; primoLog(...args); };\` + source;
             const blob = new Blob([withLogs], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
