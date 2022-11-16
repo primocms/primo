@@ -1,3 +1,28 @@
+a.link {
+  text-decoration: underline var(--color-accent, rebeccapurple);
+  font-weight: 500;
+  border-bottom: 2px solid;
+  transition: var(--transition, 0.1s border);
+}
+
+a.link:hover {
+  text-decoration-color: transparent;
+}
+
 .heading {
-  font-size: 9rem;
+  font-size: 2.5rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.button {
+  color: var(--background, white);
+  background: var(--color-accent, rebeccapurple);
+  border-radius: 5px;
+  padding: 8px 20px;
+  transition: var(--transition, 0.1s box-shadow);
+}
+
+.button:hover {
+  box-shadow: 0 0 0 2px var(--color-accent, rebeccapurple);
 }
