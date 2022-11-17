@@ -13,7 +13,6 @@
   import hosts from '../stores/hosts'
   import sites from '../stores/sites'
   import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
-  import Preview from '@primo-app/primo/src/components/misc/Preview.svelte';
   import { page } from '$app/stores'
   import {addDeploymentToSite} from '$lib/actions'
   import {pushSite, createRepo} from './hosts/github'
@@ -192,7 +191,20 @@
         })
         const formattedHTML = await beautify.html(html)
 
-        const path = locale === 'en' ? (`${page.id === 'index' ? `index.html` : `${page.id}/index.html`}`) : (`${page.id === 'index' ? `${locale}/index.html` : `${locale}/${page.id}/index.html`}`)
+        let path 
+        if (page.id === 'index' || page.id === '404') {
+          if (locale === 'en') {
+            path = `${page.id}.html`
+          } else {
+            path = `${locale}/${page.id}.html`
+          }
+        } else {
+          if (locale === 'en') {
+            path = `${page.id}/index.html`
+          } else {
+            path = `${locale}/${page.id}/index.html`
+          }
+        }
 
         return await Promise.all([
           {
