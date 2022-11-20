@@ -1,16 +1,19 @@
+<script context="module">
+  const compilations = new Map()
+</script>
+
 <script>
   import { fade } from 'svelte/transition';
   import { createEventDispatcher, getContext } from 'svelte';
   const dispatch = createEventDispatcher();
   import {goto} from '$app/navigation'
-  import { TextInput } from '../../../components/inputs';
-  import { PrimaryButton } from '../../../components/buttons';
-  import Preview from '../../../components/misc/Preview.svelte';
-  import compilations from './compilations'
+  import { TextInput } from '../../../../components/inputs';
+  import { PrimaryButton } from '../../../../components/buttons';
+  import Preview from '../../../../components/misc/Preview.svelte';
 
-  import modal from '../../../stores/app/modal';
-  import { buildStaticPage } from '../../../stores/helpers';
-  import { site } from '../../../stores/data/draft';
+  import modal from '../../../../stores/app/modal';
+  import { buildStaticPage } from '../../../../stores/helpers';
+  import { site } from '../../../../stores/data/draft';
   import { page as pageStore } from '$app/stores';
 
   const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'

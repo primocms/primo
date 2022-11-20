@@ -1,4 +1,4 @@
-import { find, last, cloneDeep, some, chain, unset, omit, isEqual } from 'lodash-es'
+import { find, last, cloneDeep, some, chain, unset, omit, omitBy, isEqual } from 'lodash-es'
 import { get } from 'svelte/store'
 import { browser } from '$app/environment'
 import { id as activePageID, sections } from './app/activePage'
@@ -213,21 +213,35 @@ export const pages = {
 
     if (updateTimeline) timeline.push(get(unsavedSite))
   },
-  delete: (pageId: string, path: Array<string>, updateTimeline = true): void => {
+  delete: (pageId: string, updateTimeline = true): void => {
     saved.set(false)
     const currentPages: Array<PageType> = get(stores.pages)
     let newPages: Array<PageType> = cloneDeep(currentPages)
-    if (path.length > 0) {
-      const rootPage = find(newPages, ['id', path[0]])
+    const [root, child] = pageId.split('/')
+    if (child) {
+      const rootPage = find(newPages, ['id', root])
       rootPage.pages = rootPage.pages.filter(page => page.id !== pageId)
+      newPages = newPages.map(page => page.id === root ? rootPage : page)
     } else {
-      newPages = newPages.filter(page => page.id !== pageId)
+      newPages = newPages.filter(page => page.id !== root)
     }
-
-    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => ({
-      locale,
-      content: omit(pages, [pageId])
-    }))).keyBy('locale').mapValues('content').value()
+    const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => {
+      if (!child) { // deleting root page
+        return ({
+          locale,
+          content: omitBy(pages, (item, id) => { // delete all child pages content
+            if (id === root || id.startsWith(`${root}/`)) {
+              return true
+            }
+          })
+        })
+      } else { // deleting child page
+        return ({
+          locale,
+          content: omit(pages, [pageId])
+        })
+      }
+    })).keyBy('locale').mapValues('content').value()
 
     stores.content.set(updatedContent)
     stores.pages.set(newPages)
