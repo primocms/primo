@@ -4,7 +4,7 @@
 </script>
 
 <script>
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { slide, fade } from 'svelte/transition';
   import { iframePreview } from './misc';
   import {locale,highlightedElement} from '../../stores/app/misc'
@@ -43,42 +43,44 @@
   let container;
   let iframeLoaded = false;
 
-  function resizePreview() {
+  let scale
+  let height
+  async function resizePreview() {
     if (view && container && iframe) {
+      await tick()
       const { clientWidth: parentWidth } = container;
       const { clientWidth: childWidth } = iframe;
       const scaleRatio = parentWidth / childWidth;
-      iframe.style.transform = `scale(${scaleRatio})`;
-      iframe.style.height = 100 / scaleRatio + '%';
+      scale = `scale(${scaleRatio})`
+      height = 100 / scaleRatio + '%'
     }
   }
 
-  function changeView() {
-    visible = false
-    // iframe.classList.remove('fadein');
-    setTimeout(() => {
-      if (view === 'small') {
-        view = 'large';
-        // clientWidth doesn't compute right without this
-        setTimeout(resizePreview, 100);
-      } else {
-        iframe.style.transform = 'scale(1)';
-        iframe.style.height = '100%';
-        view = 'small';
-      }
-      setTimeout(() => {
-        visible = true
-      }, 100);
-    }, 100);
+  function cycle_preview() {
+    if (active_static_width === static_widths.phone) {
+      set_preview(static_widths.tablet)
+    } else if (active_static_width === static_widths.tablet) {
+      set_preview(static_widths.laptop)
+    } else if (active_static_width === static_widths.laptop) {
+      set_preview(static_widths.desktop)
+    } else {
+      set_preview(static_widths.phone)
+    } 
+    resizePreview()
   }
 
-  let interval;
-  onMount(() => {
-    interval = setInterval(resizePreview, 500);
-  });
-  onDestroy(() => {
-    clearInterval(interval);
-  });
+  function set_preview(size) {
+    active_static_width = size
+  }
+
+  async function changeView() {
+    if (view === 'small') {
+      view = 'large';
+      resizePreview()
+    } else {
+      view = 'small';
+    }
+  }
 
   $: componentData = data
 
@@ -105,7 +107,7 @@
     }
   }
 
-  function setLoading(e) {
+  function setLoading() {
     if (!iframeLoaded) {
       iframeLoaded = true;
       return;
@@ -115,23 +117,29 @@
   }
 
   let previewWidth;
-  // $: if (previewWidth < 300) previewWidth = 300
+  $: previewWidth, resizePreview()
 
+  const static_widths = {
+    phone: 300,
+    tablet: 600,
+    laptop: 1200,
+    desktop: 1600
+  }
+  let active_static_width = static_widths.laptop
 
-  $: activeIcon = getIcon(previewWidth)
+  $: active_dynamic_icon = getIcon(previewWidth)
+  $: active_static_icon = getIcon(active_static_width)
   function getIcon(width) {
-    if (width < 500) {
+    if (width < static_widths.tablet) {
       return "bi:phone"
-    } else if (width < 1200) {
+    } else if (width < static_widths.laptop) {
       return 'ant-design:tablet-outlined'
-    } else if (width < 1800) {
+    } else if (width < static_widths.desktop) {
       return "bi:laptop"
     } else {
       return 'akar-icons:desktop-device'
     }
   }
-
-  let visible = true
 
   function toggleOrientation() {
     if (orientation === 'vertical') {
@@ -165,14 +173,14 @@
   {/if}
   <div
     in:fade
-    style=""
     class="preview-container"
     class:loading
     bind:this={container}
     bind:clientWidth={previewWidth}>
     <iframe
-      class:visible
-      class:scaled={view === 'large'}
+      style:transform={view === 'large' ? scale : ''}
+      style:height={view === 'large' ? height : '100%'}
+      style:width={view === 'large' ? `${active_static_width}px` : '100%'}
       on:load={setLoading}
       title="Preview HTML"
       srcdoc={iframePreview($locale)}
@@ -181,12 +189,37 @@
   {#if !hideControls}
     <div class="footer-buttons">
       <div class="preview-width">
-        <Icon icon={activeIcon} height="1rem" />
-        <span>{previewWidth}</span>
+        {#if view === 'large'}
+          <button on:click={cycle_preview}>
+            <Icon icon={active_static_icon} height="1rem" />
+          </button>
+          <button>
+            <div class="static-width" contenteditable="true" on:keydown={(e) => {
+              if (e.code === 'Enter') {
+                e.preventDefault()
+                e.target.blur()
+              }
+            }} on:keyup={(e) => {
+              active_static_width = Number(e.target.textContent)
+              resizePreview()
+            }}>{active_static_width}</div>
+          </button>
+        {:else}
+          <span>
+            <Icon icon={active_dynamic_icon} height="1rem" />
+          </span>
+          <span>
+            {previewWidth}
+          </span>
+        {/if}
       </div>
       <button class="switch-view" on:click={changeView}>
         <i class="fas { view === 'small' ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'}" />
-        <span>{ view === 'small' ? 'contained' : 'screen'} width</span>
+        {#if view === 'large'}
+          <span>static width</span>
+        {:else}
+          <span>dynamic width</span>
+        {/if}
       </button>
       <button on:click={toggleOrientation} class="preview-orientation">
         {#if orientation === 'vertical'}
@@ -237,17 +270,13 @@
     }
   }
   iframe {
-    width: 100%;
     border: 0;
     transition: opacity 0.4s;
     background: var(--primo-color-white);
     height: 100%;
     width: 100%;
     opacity: 1;
-
-    &.visible {
-      opacity: 1;
-    }
+    transform-origin: top left;
 
     &.scaled {
       width: 100vw;
@@ -272,16 +301,29 @@
 
     .preview-width {
       background: var(--primo-color-black);
-      color: var(--primo-color-white);
       font-weight: 500;
       z-index: 10;
       display: flex;
       align-items: center;
-      padding: 0 1rem;
 
       span {
-        padding-left: 0.5rem;
+        padding: 0.5rem;
         font-size: 0.75rem;
+        border: 1px solid var(--color-gray-9);
+        background: var(--color-gray-9);
+
+        &:first-child {
+          padding-right: 0;
+        }
+
+        &:last-child {
+          padding-left: 0.25rem;
+        }
+      }
+
+      .static-width {
+        &:focus-visible { outline: none }
+        &::selection { background: var(--color-gray-7) } 
       }
     }
 
@@ -305,21 +347,21 @@
     }
   }
 
-  .footer-buttons button {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    outline: 0;
-    background: var(--color-gray-9);
-    border: 1px solid var(--color-gray-8);
-    color: var(--color-gray-2);
-    font-size: var(--font-size-1);
-    padding: 0.5rem 0;
-    display: block;
-    text-align: center;
-    transition: var(--transition-colors);
-  }
-  .footer-buttons button:hover {
-    background: var(--color-gray-8);
+  .footer-buttons {
+    button {
+      outline: 0;
+      background: var(--color-gray-9);
+      border: 1px solid var(--color-gray-8);
+      font-size: var(--font-size-1);
+      padding: 0.5rem;
+      display: block;
+      text-align: center;
+      transition: var(--transition-colors);
+
+      &:hover {
+        background: var(--color-gray-8);
+      }
+    }
   }
 
 </style>
