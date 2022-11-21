@@ -1,6 +1,6 @@
 import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
-import { LoremIpsum as lipsum } from "lorem-ipsum";
+import { LoremIpsum as lipsum } from "lorem-ipsum/src/index";
 import type { Site, Page, Field } from './const'
 
 export async function processCode({ code, data = {}, buildStatic = true, format = 'esm', locale = 'en' }: { code: any, data: object, buildStatic?: boolean, format?: string, locale?: string }) {
