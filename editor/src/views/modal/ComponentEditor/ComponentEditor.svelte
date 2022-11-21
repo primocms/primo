@@ -235,12 +235,13 @@
       const parentCSS = await processCSS($siteCode.css + $pageCode.css)
       const res = await processCode({
         code: {
-          html: `${html}
+          html: `
       <svelte:head>
-        ${$pageCode.html.head}
         ${$siteCode.html.head}
-        ${wrapInStyleTags(parentCSS)}
+        ${$pageCode.html.head}
+        ${wrapInStyleTags(parentCSS, 'parent-styles')}
       </svelte:head>
+      ${html}
       ${$pageCode.html.below}
       ${$siteCode.html.below}
       `,
@@ -391,7 +392,8 @@
   }
 
   [slot="left"] {
-    height: calc(100% - 45px);
+    /* height: calc(100% - 45px); */
+    height: 100%;
 
     display: flex;
     flex-direction: column;
