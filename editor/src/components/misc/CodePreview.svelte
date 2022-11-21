@@ -24,7 +24,9 @@
     channel = new BroadcastChannel('component_preview');
     channel.onmessage = ({data}) => {
       const { event, payload } = data
-      if (event === 'SET_CONSOLE_LOGS') {
+      if (event === 'BEGIN') {
+        consoleLog = null
+      } else if (event === 'SET_CONSOLE_LOGS') {
         consoleLog = data.payload.logs
       } else if (event === 'SET_ELEMENT_PATH' && payload.loc) {
         $highlightedElement = payload.loc

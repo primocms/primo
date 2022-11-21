@@ -21,15 +21,19 @@ export const iframePreview = (locale = 'en') => `
             c.$set(props);
           } else if (source) {
             const withLogs = \`
-            const channel = new BroadcastChannel('component_preview');
-            const primoLog = console ? console.log.bind(console) : null;
-            function postMessage(logs) {
-              channel.postMessage({
-                event: 'SET_CONSOLE_LOGS',
-                payload: { logs }
-              });
-            }
-            if (primoLog) console.log = (...args) => { try {postMessage(...args)}catch(e){postMessage('Could not print ' + typeof(args) + '. See in console.')}; primoLog(...args); };\` + source;
+              const channel = new BroadcastChannel('component_preview');
+              const primoLog = console ? console.log.bind(console) : null;
+              const primoError = console ? console.error.bind(console) : null;
+              function postMessage(logs) {
+                channel.postMessage({
+                  event: 'SET_CONSOLE_LOGS',
+                  payload: { logs }
+                });
+              }
+              channel.postMessage({ event: 'BEGIN' });
+              if (primoLog) console.log = (...args) => { try {postMessage(...args)}catch(e){postMessage('Could not print ' + typeof(args) + '. See in console.')}; primoLog(...args); };
+              if (primoLog) console.error = (...args) => { try {postMessage(...args)}catch(e){postMessage('Could not print ' + typeof(args) + '. See in console.')}; primoError(...args); };
+              \` + source;
             const blob = new Blob([withLogs], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             import(url).then(({ default: App }) => {
@@ -64,6 +68,9 @@ export const iframePreview = (locale = 'en') => `
               });
             })
           })
+          // Move site+page styles to top of html head to cascade correctly
+          const head = document.getElementsByTagName('head')[0]
+          head.prepend(document.getElementById('parent-styles'))
         }
 		  <\/script>
     </head>
