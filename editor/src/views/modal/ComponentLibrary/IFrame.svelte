@@ -21,6 +21,7 @@
         iframe.contentWindow.document.body.scrollHeight * scaleRatio;
       iframe.height = newHeight;
       height = newHeight;
+      container_height = iframe.contentWindow.document.body.scrollHeight
       finishedResizing = true;
     }
   }
@@ -39,6 +40,7 @@
   }
 
   let scaleRatio = 1;
+  let container_height
 
 </script>
 
@@ -50,7 +52,7 @@
       <Spinner />
     </div>
   {/if}
-  <div bind:this={container} class="iframe-container">
+  <div bind:this={container} class="iframe-container" style:height="{container_height*scaleRatio}px">
     {#if componentApp && componentData}
       <iframe
         class:fadein={finishedResizing}
@@ -67,7 +69,7 @@
 <style lang="postcss">
   .IFrame {
     position: relative;
-    height: 100%;
+    /* height: 100%; */
   }
   
   .spinner-container {
@@ -84,9 +86,9 @@
   }
   .iframe-container {
     background: var(--primo-color-white);
-    position: absolute;
+    /* position: absolute; */
     inset: 0;
-    height: 100%;
+    /* height: 100%; */
 
     iframe {
       opacity: 0;

@@ -217,7 +217,11 @@
 
   .primary-action {
     position: relative;
+    border: 1px solid var(--color-gray-8);
+    background: var(--color-gray-9);
+
     button {
+      min-height: 3rem;
       height: 100%;
       width: 100%;
     }
@@ -241,7 +245,6 @@
     color: var(--primo-color-white);
     border: 1px solid var(--color-gray-9);
     display: grid;
-    grid-template-rows: 25vh auto;
 
     .overlay {
       display: flex;
