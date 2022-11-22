@@ -2,22 +2,22 @@
   import { onDestroy } from 'svelte';
   import { fade, slide } from 'svelte/transition';
   import Icon from '@iconify/svelte'
-  // import {get, set} from 'idb-keyval'
+  import {get, set} from 'idb-keyval'
 
   export let id = null;
   export let title = null;
 
   let hidden = false
 
-  // $: if (title) get(title).then(res => {
-  //   if (res !== undefined) {
-  //     hidden = res
-  //   }
-  // })
+  $: if (title) get(title).then(res => {
+    if (res !== undefined) {
+      hidden = res
+    }
+  })
 
   onDestroy(() => {
     if (title) {
-      // set(title, hidden)
+      set(title, hidden)
     }
   })
 </script>
