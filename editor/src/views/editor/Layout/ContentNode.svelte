@@ -137,7 +137,7 @@
   $: if (node) {
     // classes added manually since they get overwritten by TipTap otherwise
     node.children[0].classList.add('content')
-    node.children[0].classList.add('section-container')
+    // node.children[0].classList.add('section-container')
   }
 
 </script>
