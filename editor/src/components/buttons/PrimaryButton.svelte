@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import Icon from '@iconify/svelte'
   const dispatch = createEventDispatcher();
 
   export let id = null;
@@ -17,9 +18,11 @@
   {disabled}
   on:click={(e) => dispatch('click', e)}
   {type}>
-  {#if icon}<i class={icon} />{/if}
+  {#if icon}
+    <Icon {icon} />
+  {/if}
   <slot>
-    {label}
+    <span>{label}</span>
   </slot>
 </button>
 
@@ -39,6 +42,13 @@
     border-bottom-right-radius: var(--PrimaryButton-round-br, 0.25rem);
     border-bottom-left-radius: var(--PrimaryButton-round-bl, 0.25rem);
     transition: color 0.1s, background-color 0.1s;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    font-weight: 500;
 
     &:hover {
 

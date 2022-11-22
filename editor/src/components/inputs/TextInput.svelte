@@ -43,7 +43,7 @@
     width: 100%;
 
     span.label {
-      font-size: var(--TextInput-label-font-size, 1rem);
+      font-size: var(--TextInput-label-font-size, 0.875rem);
       margin-bottom: 0.25rem;
       color: var(--color-gray-2);
     }

@@ -1,7 +1,6 @@
 import { get, writable, derived } from 'svelte/store';
 import { Page, Site } from '../../const';
 import { createStack } from '../../libraries/svelte-undo';
-import { cloneDeep } from 'lodash-es';
 
 export const id = writable('default');
 export const name = writable('');

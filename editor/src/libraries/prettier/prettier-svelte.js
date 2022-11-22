@@ -1,9 +1,9 @@
 import prettier from 'prettier'
 import * as svelteCompiler from 'svelte/compiler'
-import { Buffer } from 'buffer';
+// import Buffer from 'buffer';
 
 // @ts-ignore
-window.Buffer = Buffer;
+// window.Buffer = Buffer;
 
 // @see http://xahlee.info/js/html5_non-closing_tag.html
 const selfClosingTags = [

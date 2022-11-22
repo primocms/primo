@@ -3,7 +3,7 @@
   import * as Mousetrap from 'mousetrap';
   import '@fontsource/fira-code/index.css';
 
-  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import Editor from './views/editor/Editor.svelte';
   import Modal from './views/modal/ModalContainer.svelte';
   import modal from './stores/app/modal';
