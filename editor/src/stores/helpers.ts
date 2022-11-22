@@ -146,7 +146,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
       return `
         ${css ? `<style>${css}</style>` : ``}
         <div class="section has-${type}" id="${id}">
-          <div class="${type}${type === 'content' ? ' section-container' : ''}">
+          <div class="${type}">
             ${html || content} 
           </div>
         </div>
