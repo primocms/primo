@@ -9,7 +9,9 @@
   let activeTab = 0
 
   get(`${$siteID}--page-tab`).then(tab => {
-    activeTab = tab
+    if (tab) {
+      activeTab = tab
+    }
   })
   function set_tab(i) {
     activeTab = i
