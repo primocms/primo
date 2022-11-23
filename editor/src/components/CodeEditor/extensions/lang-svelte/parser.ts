@@ -34,6 +34,7 @@ const selfClosers = {
   embed: true, frame: true, hr: true, img: true, input: true,
   keygen: true, link: true, meta: true, param: true, source: true,
   track: true, wbr: true, menuitem: true,
+  textarea: true,
   // SVG
   rect: true,
   path: true,
