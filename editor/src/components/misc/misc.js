@@ -9,7 +9,7 @@ export const iframePreview = (locale = 'en') => `
 
         const channel = new BroadcastChannel('component_preview');
         channel.onmessage = ({data}) => {
-          const { event, payload } = data
+          const { event, payload = {} } = data
           if (payload.componentApp || payload.componentData) {
             update(payload.componentApp, payload.componentData)
           }
