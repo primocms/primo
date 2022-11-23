@@ -58,14 +58,15 @@ class="primo-reset"
 bind:this={element}
 class:mounted>
 <div class="menu-container">
-  {#if $onMobile}
+  <div class="mobile-header">
     <div class="mobile-dropdowns">
       {#if !getContext('hidePrimoButton')}
         <PrimoButton on:signOut />
       {/if}
       <Dropdown options={flattenDeep(buttons)}/>
     </div>
-  {:else} 
+  </div>
+  <div class="desktop-header">
     <div class="left">
       {#if !getContext('hidePrimoButton')}
         <PrimoButton on:signOut />
@@ -93,7 +94,7 @@ class:mounted>
         </button>
       {/if}
     </div>
-  {/if}
+  </div>
   <div class="primary-buttons">
     {#if !$showingIDE}
       <LocaleSelector />
@@ -138,12 +139,10 @@ class:mounted>
             {/if}
           </span>
         </label>
-        {#if !$onMobile}
-          <div class="tooltip">
-            Switch to
-            {$showingIDE ? 'Content' : 'Code'}
-          </div>
-        {/if}
+        <div class="tooltip">
+          Switch to
+          {$showingIDE ? 'Content' : 'Code'}
+        </div>
       </div>
     {/if}
     <slot />
@@ -153,6 +152,16 @@ class:mounted>
 
 
 <style lang="postcss">
+  .mobile-header {
+    @media (min-width: 900px) {
+      display: none;
+    }
+  }
+  .desktop-header, .tooltip {
+    @media (max-width: 900px) {
+      display: none;
+    }
+  }
   #primo-toolbar-overlay {
     display: block;
     height: 30px;
