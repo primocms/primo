@@ -5,7 +5,7 @@ const { autoUpdater } = require('electron-updater');
 const isDev = require('electron-is-dev');
 const checkInternetConnected = require('check-internet-connected');
 
-autoUpdater.autoDownload = true;
+autoUpdater.autoDownload = false;
 
 autoUpdater.on('error', error => {
 	dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
