@@ -156,7 +156,7 @@
       </div>
     {/if}
     <div class="inputs">
-      <TextInput bind:value={field.value.alt} label="Description" />
+      <TextInput bind:value={field.value.alt} label="Description" on:input/>
       <TextInput value={field.value.url} label="URL" on:input={({detail:value}) => {
         imagePreview = value
         setValue({
