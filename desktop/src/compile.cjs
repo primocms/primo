@@ -1,20 +1,45 @@
+const { app } = require('electron');
 const {rollup} = require("rollup/dist/rollup.js")
 const svelte = require('svelte/compiler')
 const fetch = require('node-fetch')
+const fs = require("fs-extra");
+
+const userData = app.getPath('userData')
+fs.ensureDirSync(`${userData}/fetched-modules`);
 
 // Based on https://github.com/pngwn/REPLicant
 
-const CDN_URL = "https://cdn.jsdelivr.net/npm";
 const cached_modules = new Map();
 
 async function fetch_package(url) {
-    if (cached_modules.has(url)) {
-        return cached_modules.get(url)
-    } else {
-        const res = (await fetch(url)).text();
-        cached_modules.set(url, res);
+    // Get local Svelte files
+    if (url.startsWith('https://localsveltefiles.com/')) { 
+        const buffer = await fs.readFile(__dirname + '/' + url.slice(29));
+        const fileContent = buffer.toString();
+        return fileContent
+    } 
+    
+    // Get cached library files (i.e. accessed from file system in current session)
+    const mod = cached_modules.get(url)
+    if (mod) return mod
+    
+    // Get library files from file system & set to cache
+    const libraryKey = url.replace('https://cdn.skypack.dev/', '').replace(/\//g, "_")
+    const libraryLocation = `${userData}/libraries/${libraryKey}`
+    const librarySaved = await fs.existsSync(libraryLocation)
+    if (librarySaved) { // exists, retrieve
+        const buffer = await fs.readFile(libraryLocation)
+        const fileContent = buffer.toString();
+        cached_modules.set(url, fileContent)
+        return fileContent
+    } else { // doesn't exist, fetch & store
+        const res = await (await fetch(url)).text();
+        cached_modules.set(url, res)
+        fs.writeFile(libraryLocation, res);
         return res
     }
+
+    // TODO: account for updated modules
 }
 
 exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildStatic = true, format = 'esm'}) {
@@ -29,41 +54,6 @@ exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildS
 
   function generate_lookup(code) {
       component_lookup.set(`./App.svelte`, code);
-      component_lookup.set(`./H.svelte`, `
-          <script>
-              import {onMount} from 'svelte'
-              let className = '';
-              export { className as class };
-
-              let heading;
-              let currentLevel = 1;
-              let headingLevel = 1
-              onMount(() => {
-                  document.body.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => {
-                      if (h.isSameNode(heading)) {
-                          headingLevel = currentLevel
-                      } else if (currentLevel < 6) {
-                          currentLevel = currentLevel + 1;
-                      } else {
-                          headingLevel = 6
-                      }
-                  })
-              })
-          </script>
-          {#if headingLevel === 1}
-              <h1 bind:this={heading} class={className}><slot>Empty H1</slot></h1>
-          {:else if headingLevel === 2}
-              <h2 bind:this={heading} class={className}><slot>Empty h2</slot></h2>
-          {:else if headingLevel === 3}
-              <h3 bind:this={heading} class={className}><slot>Empty h3</slot></h3>
-          {:else if headingLevel === 4}
-              <h4 bind:this={heading} class={className}><slot>Empty h4</slot></h4>
-          {:else if headingLevel === 5}
-              <h5 bind:this={heading} class={className}><slot>Empty h5</slot></h5>
-          {:else if headingLevel === 6}
-              <h6 bind:this={heading} class={className}><slot>Empty h6</slot></h6>
-          {/if}
-      `);
   }
 
   generate_lookup(code);
@@ -102,17 +92,18 @@ exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildS
                   async resolveId(importee, importer) {
   
                       // handle imports from 'svelte'
-  
                       // import x from 'svelte'
-                      if (importee === "svelte") return `${CDN_URL}/svelte/index.mjs`;
+                      // rollup needs a valid absolute url, so we're using this one
+                      // there's probably a righter way to do this 
+                      if (importee === "svelte") return `https://localsveltefiles.com/svelte/index.mjs`;
   
                       // import x from 'svelte/somewhere'
                       if (importee.startsWith("svelte/")) {
-                          return `${CDN_URL}/svelte/${importee.slice(7)}/index.mjs`;
+                        return `https://localsveltefiles.com/svelte/${importee.slice(7)}/index.mjs`;
                       }
   
                       // import x from './file.js' (via a 'svelte' or 'svelte/x' package)
-                      if (importer && importer.startsWith(`${CDN_URL}/svelte`)) {
+                      if (importer && importer.startsWith(`https://localsveltefiles.com/svelte`)) {
                           const resolved = new URL(importee, importer).href;
                           if (resolved.endsWith(".mjs")) return resolved;
                           return `${resolved}/index.mjs`;
