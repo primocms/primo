@@ -234,7 +234,7 @@
     async function compile() {
       const parentCSS = await processCSS($siteCode.css + $pageCode.css)
       const res = await processCode({
-        code: {
+        component: {
           html: `
       <svelte:head>
         ${$siteCode.html.head}
@@ -247,8 +247,8 @@
       `,
           css,
           js,
+          data,
         },
-        data,
         buildStatic: false,
       });
       compilationError = res.error;

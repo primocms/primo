@@ -5,15 +5,12 @@ import {locale} from '@primo-app/primo/src/stores/app/misc'
 
 const componentsMap = new Map();
 
-export async function html({ code, data, buildStatic = true, format = 'esm'}) {
-
-  const finalRequest = buildFinalRequest(data)
+export async function html({ component, buildStatic = true, format = 'esm'}) {
 
   let cacheKey
   if (!buildStatic) {
     cacheKey = JSON.stringify({
-      code, 
-      data: Object.keys(data),
+      component,
       format
     })
     if (componentsMap.has(cacheKey)) {
@@ -24,7 +21,15 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
 
   let res
   try {
-    res = await window.primo?.processSvelte(finalRequest)
+    const has_js = Array.isArray(component) ? component.some(s => s.js) : !!component.js
+    res = await window.primo?.processSvelte({
+      component,
+      hydrated: buildStatic && has_js,
+      buildStatic,
+      format,
+      site: get(site),
+      locale: get(locale)
+    })
   } catch(e) {
     console.log('error', e)
     res = {
@@ -40,7 +45,7 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
     }
     res = {}
   } else if (res.error) {
-    console.log(data, res.error)
+    console.error(res.error)
     final = {
       error: escapeHtml(res.error)
     }
@@ -53,16 +58,17 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
            .replace(/'/g, "&#039;");
     }
   } else if (buildStatic) {   
+    console.log({res})
     const blob = new Blob([res.ssr], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
     const {default:App} = await import(url/* @vite-ignore */)
-    const rendered = App.render(data)
+    const rendered = App.render(component.data)
     final = {
-      html: rendered.html || rendered.head,
+      head: rendered.head,
+      html: rendered.html,
       css: rendered.css.code,
       js: res.dom
     }
-    // console.log({final})
   } else {
     final = {
       js: res.dom
@@ -74,39 +80,6 @@ export async function html({ code, data, buildStatic = true, format = 'esm'}) {
   }
 
   return final
-
-  function buildFinalRequest(finalData) {
-
-    const dataAsVariables = `\
-    ${Object.entries(finalData)
-      .filter(field => field[0])
-      .map(field => `export let ${field[0]};`)
-      .join(` \n`)
-    }
-   `
-
-    const finalCode = `${code.html}
-      ${ code.css 
-        ? `<style>${code.css}</style>`
-        : ``
-      }
-      ${ code.js || (!code.js && !code.html.includes('<script>'))
-        ? `<script>${dataAsVariables}${code.js || ''}</script>`
-        : ``
-      }
-    `
-  
-    const hydrated = !!code.js && buildStatic
-  
-    return {
-      code: finalCode,
-      hydrated,
-      buildStatic,
-      format,
-      site: get(site),
-      locale: get(locale)
-    }
-  }
 }
 
 const cssMap = new Map()
@@ -122,7 +95,6 @@ export async function css(raw) {
 
   if (!window.primo) return
   const { css, error } = await window.primo.processCSS(raw)
-  
   if (css) cssMap.set(raw, css)
   
   return { css, error }
