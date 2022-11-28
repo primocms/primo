@@ -130,7 +130,7 @@
 
     .locale-list {
       display: grid;
-      overflow-y: scroll;
+      overflow-y: auto;
       max-height: 20rem;
       
       .locale-item {

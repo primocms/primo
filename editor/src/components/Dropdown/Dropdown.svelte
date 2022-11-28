@@ -79,7 +79,6 @@
 
     .locale-list {
       display: grid;
-      overflow: scroll;
       max-height: 20rem;
 
       button {
