@@ -14,8 +14,6 @@
   } from '../../../utils';
   import { code as siteCode } from '../../../stores/data/draft';
   import {
-    // html as pageHTML,
-    // css as pageCSS,
     code as pageCode
   } from '../../../stores/app/activePage';
 
@@ -44,18 +42,17 @@
     componentData = getComponentData({ component: symbol })
 
     const res = await processCode({
-      code: {
+      component: {
         ...symbol.code,
         html: `
-        <svelte:head>
-          ${$siteCode.html.head + $pageCode.html.head}
-          ${wrapInStyleTags($siteCode.css + $pageCode.css)}
-        </svelte:head>
-        ${symbol.code.html}
-        ${$siteCode.html.below + $pageCode.html.below}
-        `,
+          <svelte:head>
+            ${$siteCode.html.head + $pageCode.html.head}
+            ${wrapInStyleTags($siteCode.css + $pageCode.css)}
+          </svelte:head>
+          ${symbol.code.html}
+          ${$siteCode.html.below + $pageCode.html.below}`,
+        data: componentData,
       },
-      data: componentData,
       buildStatic: false,
     });
 

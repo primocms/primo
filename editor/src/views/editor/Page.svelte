@@ -90,26 +90,26 @@
     const data = getPageData({});
     const [head, below] = await Promise.all([
       processCode({
-        code: {
+        component: {
           html: `<svelte:head>
             ${siteCode.html.head}${pageCode.html.head}
             ${wrapInStyleTags(css)}
           </svelte:head>`,
           css: '',
           js: '',
+          data,
         },
-        data,
       }),
       processCode({
-        code: {
+        component: {
           html: siteCode.html.below + pageCode.html.below,
           css: '',
           js: '',
+          data,
         },
-        data,
       }),
     ]);
-    html_head = !head.error ? head.html : '';
+    html_head = !head.error ? head.head : '';
     html_below = !below.error ? below.html : '';
   }
 

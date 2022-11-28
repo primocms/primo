@@ -3,16 +3,23 @@ import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum/src/index";
 import type { Site, Page, Field } from './const'
 
-export async function processCode({ code, data = {}, buildStatic = true, format = 'esm', locale = 'en' }: { code: any, data: object, buildStatic?: boolean, format?: string, locale?: string }) {
-  const { css, error } = await processors.css(code.css || '')
-  if (error) {
-    return { error }
+export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en' }: { component: any, buildStatic?: boolean, format?: string, locale?: string }) {
+  let css = ''
+  if (component.css) {
+    const { css: res, error } = await processors.css(component.css || '')
+    if (error) {
+      console.log('ERROR', error)
+      return { error }
+    } else {
+      css = res
+    }
   }
+
   const res = await processors.html({
-    code: {
-      ...code,
-      css,
-    }, data, buildStatic, format, locale
+    component: {
+      ...component,
+      css
+    }, buildStatic, format, locale
   })
   return res
 }
@@ -202,8 +209,6 @@ export function validateSiteStructure(site): Site {
       }
     }
     updated.content['en'] = siteContent
-
-    console.log({ updated })
 
     return updated
 

@@ -175,7 +175,7 @@
 
     async function buildPageTree({ page, site }) {
 
-      const { modules } = await buildStaticPage({
+      const { js } = await buildStaticPage({
         page,
         site,
         separateModules: true
@@ -223,10 +223,10 @@
           path: `${locale}.json`,
           content: JSON.stringify(content)
         })),
-        ...modules.map((module) => ({
-          path: `_modules/${module.symbol}.js`,
-          content: module.content,
-        })),
+        {
+          path: `_module.js`,
+          content: js,
+        }
       ]
     }
 

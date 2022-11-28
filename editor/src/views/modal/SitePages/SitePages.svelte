@@ -23,10 +23,10 @@
 <ModalHeader icon="fas fa-th-large" title="Pages">
   <div class="buttons">
     <button on:click={() => set_tab(0)} class:active={activeTab === 0}>
-      <Icon icon="fa-solid:th-list" />
+      <Icon icon="fa-solid:th-large" />
     </button>
     <button on:click={() => set_tab(1)} class:active={activeTab === 1}>
-      <Icon icon="fa-solid:th-large" />
+      <Icon icon="fa-solid:th-list" />
     </button>
   </div>
 </ModalHeader>
@@ -34,9 +34,9 @@
 <main>
 
   {#if activeTab === 0}
-    <PageList />
-  {:else}
     <PageThumbnails />
+  {:else}
+    <PageList />
   {/if}
 </main>
 
