@@ -37,8 +37,10 @@
       css = rawCode.css;
       js = rawCode.js;
       const res = await processCode({
-        code: rawCode,
-        data: componentData,
+        component: {
+          ...rawCode,
+          data: componentData
+        },
         buildStatic: false,
       });
       if (res.error) {

@@ -42,7 +42,7 @@ async function fetch_package(url) {
     // TODO: account for updated modules
 }
 
-exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildStatic = true, format = 'esm'}) {
+exports.compileSvelte = async function compileSvelte({ component, hydrated=false, buildStatic = true, format = 'esm' }) {
 
   const final = {
       ssr: '',
@@ -52,11 +52,49 @@ exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildS
 
   const component_lookup = new Map();
 
-  function generate_lookup(code) {
-      component_lookup.set(`./App.svelte`, code);
+  const Component_Code = (component) => {
+    const dataAsVariables = `\
+        ${Object.entries(component.data)
+            .filter(field => field[0])
+            .map(field => `export let ${field[0]};`)
+            .join(`\n`)
+            }`
+    return `
+        <script>
+            ${dataAsVariables}
+            ${component.js}
+        </script>
+        <style>${component.css}</style>
+        ${component.html}`
   }
 
-  generate_lookup(code);
+  function generate_lookup(component) {
+
+    if (Array.isArray(component)) { // build page (sections as components)
+        component.forEach((section, i) => {
+            const code = Component_Code(section)
+            component_lookup.set(`./Component_${i}.svelte`, code);  
+        })
+        component_lookup.set(`./App.svelte`, `
+            <script>
+            ${component.map((_, i) => `import Component_${i} from './Component_${i}.svelte';`).join('')}
+            </script>
+            ${component.map((section, i) => {
+                const props = `\
+                    ${Object.entries(section.data)
+                    .filter(field => field[0])
+                    .map(field => `${field[0]}={${JSON.stringify(field[1])}}`)
+                    .join(` \n`)}`
+                return `<Component_${i} ${props} /> \n`
+            }).join('')}
+        `);  
+    } else { // build individual component
+        const code = Component_Code(component)
+        component_lookup.set(`./App.svelte`, code);
+    }
+  }
+
+  generate_lookup(component);
 
   if (buildStatic) {
       const bundle = await compile({
@@ -135,8 +173,6 @@ exports.compileSvelte = async function compileSvelte({code,hydrated=false,buildS
                       if (/.*\.svelte/.test(id)) {
                           try {
                               const res = svelte.compile(code, svelteOptions)
-                              // temporary workaround for handling when LocaleSelector.svelte breaks because of race condition
-                              // TODO: find cause & remove workaround
                               if(res.vars?.[0]?.['name'] === 'undefined') {
                                   console.warn('Used temporary workaround to hide component')
                                   const newRes = svelte.compile('<div></div>', svelteOptions)

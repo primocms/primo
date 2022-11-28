@@ -1,6 +1,7 @@
 import { unionBy, find as _find, uniqBy, chain as _chain, flattenDeep as _flattenDeep, cloneDeep } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
+import { processors } from '../component'
 import { pages, site as activeSite, symbols, fields as siteFields } from './data/draft'
 import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
 import { locale } from './app/misc'
@@ -37,169 +38,114 @@ export function getSymbol(symbolID): SymbolType {
 }
 
 export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page: PageType, site: SiteType, locale?: string, separateModules?: boolean }) {
-  if (!page.sections) return null // ensure data fits current structure
-  let [head, below, ...blocks] = await Promise.all([
-    new Promise(async (resolve) => {
+  const component = await Promise.all([
+    (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
       const data = getPageData({ page, site, loc: locale })
-      const code = {
+      return {
         html: `
-        <svelte:head>
-          ${site.code.html.head}
-          ${page.code.html.head}
-          <style>${css}</style>
+          <svelte:head>
+            ${site.code.html.head}
+            ${page.code.html.head}
+            <style>${css}</style>
           </svelte:head>`,
-        js: ``
-      }
-      const svelte: { css: string, html: string, js: string } = await processCode({ code, data });
-      resolve(svelte)
-    }),
-    new Promise(async (resolve) => {
-      const data = getPageData({ page, site, loc: locale })
-      const code = {
-        html: site.code.html.below + page.code.html.below,
         css: ``,
-        js: ``
+        js: ``,
+        data
       }
-      const svelte = await processCode({ code, data });
-
-      resolve(svelte)
-    }),
+    })(),
     ...page.sections.map(async section => {
       if (section.type === 'component') {
-
         const symbol = _find(site.symbols, ['id', section.symbolID])
-
-        // if (!componentHasContent) return null // component has been placed but not filled out with content
+        const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
         const data = getComponentData({
           component: section,
           page,
           site,
           loc: locale
         })
-
-        const { html, css, js }: { html: string, css: string, js: string } = symbol.code
-
-        const svelte = await processCode({
-          code: {
-            html,
-            css,
-            js
-          },
-          data,
-          format: 'esm',
-          locale
-        });
-
+        const { css, error } = await processors.css(postcss || '')
         return {
-          ...svelte,
-          type: 'component',
-          symbol: symbol.id,
-          id: section.id
+          html: `
+            <div class="section has-component" id="${section.id}">
+              <div class="component">
+                ${html} 
+              </div>
+            </div>`,
+          js,
+          css,
+          data
         }
-
       } else if (section.type === 'content') {
+        const html = site.content[locale][page.id][section.id]
+        const data = getPageData({ page, site, loc: locale })
         return {
-          html: site.content[locale]?.[page.id]?.[section.id] || LoremIpsum(2),
-          css: '',
+          html: `
+            <div class="section has-content" id="${section.id}">
+              <div class="content">
+                ${html} 
+              </div>
+            </div>`,
           js: '',
-          type: 'content',
-          id: section.id
+          css: '',
+          data
         }
       }
-    })
+    }),
+    (async () => {
+      const data = getPageData({ page, site, loc: locale })
+      return {
+        html: site.code.html.below + page.code.html.below,
+        css: ``,
+        js: ``,
+        data
+      }
+    })()
   ])
 
-  blocks = blocks.filter(Boolean) // remove empty blocks
+  const res = await processors.html({
+    component,
+    locale
+  })
 
-  // happens for empty blocks
-  if (!blocks[0]) {
-    return separateModules ? {
-      html: null,
-      modules: []
-    } : '<div></div>'
-  }
 
   const final = `
   <!DOCTYPE html>
   <html lang="${locale}">
     <head>
-      ${head.html || ''}
+      ${res.head}
+      <style>${res.css}</style>
     </head>
     <body id="page">
-      ${buildBlocks(blocks)}
-      ${below.html || ''}
-      ${buildModules(blocks)}
+      ${res.html}
+      <script type="module">${buildModule(res.js)}</script>
     </body>
   </html>
   `
 
-  function buildBlocks(blocks: any[]): string {
-    return blocks.map(block => {
-      const { id, type, html, css } = block
-      const content = site.content[locale]?.[page.id]?.[id]
-      const symbol = _find(site.symbols, ['id', block.symbol])
-
-      if (!block || block.type === 'options') return ''
-      if (!content && symbol.fields.length > 0) return '' // don't build out components that have fields but no content
-
-      return `
-        ${css ? `<style>${css}</style>` : ``}
-        <div class="section has-${type}" id="${id}">
-          <div class="${type}">
-            ${html || content} 
-          </div>
-        </div>
-    `
-    }).join('')
-  }
-
-  function buildModules(blocks: any[]): string {
-    return blocks.filter(block => block.js).map(block => {
-      // no async attribute, Firefox freezes up (w/o src)
-      return `<script type="module">${buildModule(block)}</script>`
-    }).join('')
-
-    function buildModule(block): string {
-      return separateModules ? `\
-        const [ {default:App}, data ] = await Promise.all([
-          import('/_modules/${block.symbol}.js'),
-          fetch('/${locale}.json').then(res => res.json())
-        ]).catch(e => console.error(e))
-        new App({
-          target: document.querySelector('#${block.id}'),
-          hydrate: true,
-          props: {
-            ...data,
-            ...data['${page.id}'],
-            ...data['${page.id}']['${block.id}']
-          }
-        })`
-        :
-        `\
-      const App = ${block.js};
+  // fetch module & content to hydrate component
+  function buildModule(js): string {
+    return separateModules ? `\
+      const [ {default:App}, data ] = await Promise.all([
+        import('/_module.js'),
+        fetch('/${locale}.json').then(res => res.json())
+      ]).catch(e => console.error(e))
       new App({
-        target: document.querySelector('#${block.id}'),
-        hydrate: true
-      }); `
-    }
+        target: document.querySelector('body'),
+        hydrate: true,
+      })`
+      :
+      `\
+    const App = ${js};
+    new App({
+      target: document.querySelector('body'),
+      hydrate: true
+    }); `
   }
-
-  type Module = {
-    symbol: string,
-    content: string
-  }
-
-  const modules: Array<Module> = uniqBy(
-    blocks.filter(block => block.js).map(block => ({
-      symbol: block.symbol,
-      content: block.js
-    })), 'symbol'
-  )
 
   return separateModules ? {
     html: final,
-    modules
+    js: res.js
   } : final
 }
 
