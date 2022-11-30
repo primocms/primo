@@ -166,9 +166,9 @@
     {:else}
       <p class="empty-description">
         {#if $userRole === 'developer'}
-          {$C('no_fields_dev')}
+          {$C('component_editor.no_fields_dev')}
         {:else}
-          {$C('no_fields_content')}
+          {$C('component_editor.no_fields_content')}
         {/if}
       </p>
     {/each}
