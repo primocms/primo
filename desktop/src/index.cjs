@@ -91,7 +91,7 @@ const createWindow = () => {
 	// Create the browser window.
 	win = new BrowserWindow({
 		titleBarStyle: isMac ? 'hidden' : 'default',
-		minWidth: 650,
+		minWidth: 300,
 		width: 1200,
 		height: 1200,
 		webPreferences: {
