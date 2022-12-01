@@ -1,7 +1,6 @@
-import { EditorState, Text } from "@codemirror/state"
+import type { Text, EditorState } from "@codemirror/state"
 import { syntaxTree } from "@codemirror/language"
-import { CompletionContext, CompletionResult } from "@codemirror/autocomplete"
-import { SyntaxNode } from "@lezer/common"
+import type { CompletionResult } from "@codemirror/autocomplete"
 import svelteAutocompletions from './autocompletions'
 
 type AttrSpec = { [attrName: string]: null | readonly string[] }
