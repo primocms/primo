@@ -2,7 +2,6 @@
   import axios from 'axios'
   import {getContext} from 'svelte'
   import PrimaryButton from '../../../components/buttons/PrimaryButton.svelte'
-  import * as primo from '../../../../package.json'
 
   let form
 
@@ -46,7 +45,7 @@
       </label>
       <div class="hidden">
         <input type="platform" class="primo-input" name="platform" value="{window.navigator}">
-        <input type="version" class="primo-input" name="version" value="{version}  Primo: {primo.version}">
+        <input type="version" class="primo-input" name="version" value="{version}  Primo: ___">
       </div>
       <PrimaryButton type="submit">Submit</PrimaryButton>
     </form>

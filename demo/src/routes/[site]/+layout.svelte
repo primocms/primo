@@ -1,7 +1,7 @@
 <script>
   import {onMount} from 'svelte'
   import Primo, {registerProcessors} from '@primo-app/primo'
-  import Page from '@primo-app/primo/src/views/editor/Page.svelte'
+  import Page from '@primo-app/primo/views/editor/Page.svelte'
   import { page } from '$app/stores'
 
   let data

@@ -1,5 +1,5 @@
 <script>
-  import Page from '@primo-app/primo/src/views/editor/Page.svelte'
+  import Page from '@primo-app/primo/views/editor/Page.svelte'
 </script>
 
 <Page id="index" />

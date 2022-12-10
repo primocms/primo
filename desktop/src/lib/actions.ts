@@ -3,7 +3,7 @@ import { find as _find } from 'lodash-es'
 import axios from '$lib/libraries/axios'
 import config from '../stores/config'
 import * as stores from '../stores'
-import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+import { buildStaticPage } from '@primo-app/primo/stores/helpers'
 import { locale, addMessages } from 'svelte-i18n'
 
 export const serverSites = {

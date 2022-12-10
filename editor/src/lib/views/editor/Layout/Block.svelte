@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher, onDestroy, getContext } from 'svelte';
-  import {browser} from '$app/environment'
   import _ from 'lodash-es'
   import { fade } from 'svelte/transition';
   const dispatch = createEventDispatcher();
@@ -159,11 +158,11 @@
   let toolbar
 
   // position block buttons below toolbar
-  $: if (browser && container && hovering && !constrainButtons) {
+  $: if (!import.meta.env.SSR && container && hovering && !constrainButtons) {
     toolbar = document.querySelector('#primo-toolbar');
     window.addEventListener('scroll', positionBlock);
     positionBlock();
-  } else if (browser && !hovering && !constrainButtons) {
+  } else if (!import.meta.env.SSR && !hovering && !constrainButtons) {
     window.removeEventListener('scroll', positionBlock);
   }
 
@@ -226,8 +225,8 @@
     Mousetrap.unbind('mod+e')
   }
 
-  $: if (browser && hovering) bindEdit()
-      else if (browser) unbindEdit()
+  $: if (!import.meta.env.SSR && hovering) bindEdit()
+      else if (!import.meta.env.SSR) unbindEdit()
   
 </script>
 

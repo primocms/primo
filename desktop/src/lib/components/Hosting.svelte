@@ -6,7 +6,7 @@
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import {find as _find} from 'lodash-es'
-  import { id as siteID } from '@primo-app/primo/src/stores/data/draft'
+  import { id as siteID } from '@primo-app/primo/stores/data/draft'
   import {addDeploymentToSite} from '$lib/actions'
 
   export let buttons = []

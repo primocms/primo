@@ -23,20 +23,17 @@
   import { setTimeline } from './stores/data/draft';
   import { site as draft } from './stores/data/draft';
   import { hydrateSite, updatePreview } from './stores/actions';
-  import { page as pageStore } from '$app/stores';
-  import {dev} from '$app/environment'
   import en from './languages/en.json'
   import es from './languages/es.json'
-
 
   import type { Site as SiteType, Page as PageType } from './const'
 
   import { init, addMessages } from 'svelte-i18n';
   
-
-  export let data:SiteType = Site();
-  export let role:'developer'|'content' = 'developer';
-  export let saving:boolean = false;
+  export let data:SiteType = Site()
+  export let page_id = 'index'
+  export let role:'developer'|'content' = 'developer'
+  export let saving:boolean = false
   export let language:string = 'en'
   export let options:object = {}
 
@@ -76,7 +73,7 @@
     cachedData = cloneDeep(data)
   }
 
-  $: $pageId = getPageId($pageStore.params.page);
+  $: $pageId = getPageId(page_id);
   function getPageId(pagePath:string = ''): string {
     if (pagePath === '') pagePath = 'index'
     const [root, child] = pagePath.split('/');
@@ -121,7 +118,7 @@
 
 <!-- Prevent leaving Primo without saving -->
 <svelte:window on:beforeunload={(e) => {
-  if ($saved || dev) delete e['returnValue']
+  if ($saved || import.meta.env.DEV) delete e['returnValue']
   else e.returnValue = ''
 }} />
 

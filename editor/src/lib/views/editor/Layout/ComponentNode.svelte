@@ -1,6 +1,5 @@
 <script>
   import _ from 'lodash-es';
-  import {goto} from '$app/navigation'
   import { createEventDispatcher, getContext } from 'svelte';
   import { processCode } from '../../../utils';
   import { site as unsavedSite, content, symbols, pages } from '../../../stores/data/draft';
@@ -95,9 +94,7 @@
       if (window.location.host === link.host) {
         // link navigates to site home
         if (link.pathname === '/') {
-          link.addEventListener('click', () => {
-            goto(homeUrl);
-          })
+          link.setAttribute("href", homeUrl);
           return;
         } 
 
@@ -106,9 +103,7 @@
         // Link to page
         const linkedPage = _.find($pages, ['id', linkedPageID])
         if (linkedPage) {
-          link.addEventListener('click', () => {
-            goto(`${homeUrl}/${linkedPageID}`);
-          })
+          link.setAttribute("href", `${homeUrl}/${linkedPageID}`);
         } else {
           // TODO: Create page
         }

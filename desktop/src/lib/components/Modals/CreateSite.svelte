@@ -8,8 +8,8 @@
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { makeValidUrl } from '$lib/utils'
-  import {buildStaticPage} from '@primo-app/primo/src/stores/helpers'
-  import {validateSiteStructure} from '@primo-app/primo/src/utils'
+  import {buildStaticPage} from '@primo-app/primo/stores/helpers'
+  import {validateSiteStructure} from '@primo-app/primo/utils'
 
   export let onSuccess = (data) => {}
   let loading

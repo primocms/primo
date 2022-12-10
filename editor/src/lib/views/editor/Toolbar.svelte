@@ -1,5 +1,4 @@
 <script>
-  import {browser} from '$app/environment'
   import { onMount, createEventDispatcher, getContext } from 'svelte';
   import {fade} from 'svelte/transition'
   import { _ as C } from 'svelte-i18n';
@@ -26,7 +25,7 @@
   });
 
   let channel
-  $: if (browser) {
+  $: if (!import.meta.env.SSR) {
     channel = new BroadcastChannel('site_preview')
   }
 

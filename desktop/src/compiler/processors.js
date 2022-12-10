@@ -1,7 +1,7 @@
 import _ from 'lodash-es'
 import {get} from 'svelte/store'
-import {site} from '@primo-app/primo/src/stores/data/draft'
-import {locale} from '@primo-app/primo/src/stores/app/misc'
+import {site} from '@primo-app/primo/stores/data/draft'
+import {locale} from '@primo-app/primo/stores/app/misc'
 
 const componentsMap = new Map();
 

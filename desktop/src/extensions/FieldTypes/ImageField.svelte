@@ -3,7 +3,7 @@
   const dispatch = createEventDispatcher()
   import imageCompression from 'browser-image-compression'
   import svgToMiniDataURI from 'mini-svg-data-uri'
-  import TextInput from '@primo-app/primo/src/components/inputs/TextInput.svelte';
+  import TextInput from '@primo-app/primo/components/inputs/TextInput.svelte';
 
   const defaultValue = {
     alt: '',
