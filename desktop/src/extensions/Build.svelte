@@ -8,11 +8,11 @@
   import Hosting from '$lib/components/Hosting.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { site, modal } from '@primo-app/primo'
-  import { locales } from '@primo-app/primo/src/const'
-  import { buildStaticPage } from '@primo-app/primo/src/stores/helpers'
+  import { locales } from '@primo-app/primo/const'
+  import { buildStaticPage } from '@primo-app/primo/stores/helpers'
   import hosts from '../stores/hosts'
   import sites from '../stores/sites'
-  import ModalHeader from '@primo-app/primo/src/views/modal/ModalHeader.svelte'
+  import ModalHeader from '@primo-app/primo/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
   import {addDeploymentToSite} from '$lib/actions'
   import {pushSite, createRepo} from './hosts/github'
@@ -174,79 +174,61 @@
     return buildSiteTree(pages, site)
 
     async function buildPageTree({ page, site }) {
-
-      const { js } = await buildStaticPage({
+      const { id } = page
+      const { html, js } = await buildStaticPage({
         page,
         site,
-        separateModules: true
+        separateModules: true,
       })
+      const formattedHTML = await beautify.html(html)
 
-      const pages = await Promise.all(Object.keys(site.content).map(async (locale) => {
+      let path
+      if (id === 'index' || id === '404') {
+        path = `${id}.html`
+      } else {
+        path = `${id}/index.html`
+      }
 
-        const { html } = await buildStaticPage({
-          page,
-          site,
-          separateModules: true,
-          locale
-        })
-        const formattedHTML = await beautify.html(html)
-
-        let path 
-        if (page.id === 'index' || page.id === '404') {
-          if (locale === 'en') {
-            path = `${page.id}.html`
-          } else {
-            path = `${locale}/${page.id}.html`
-          }
-        } else {
-          if (locale === 'en') {
-            path = `${page.id}/index.html`
-          } else {
-            path = `${locale}/${page.id}/index.html`
-          }
-        }
-
-        return await Promise.all([
-          {
-            path,
-            content: formattedHTML,
-          },
-          ...(page.pages
-            ? page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
-            : []),
-        ])
-      }))
-
-      return [
-        ...flattenDeep(pages),
-        ...Object.entries(site.content).map(([locale, content]) => ({
-          path: `${locale}.json`,
-          content: JSON.stringify(content)
-        })),
+      const page_tree = [
         {
-          path: `_module.js`,
-          content: js,
-        }
+          path,
+          content: formattedHTML,
+        },
       ]
+
+      if (js) {
+        page_tree.push({
+          path: `${id === 'index' ? '' : id}/_module.js`,
+          content: js,
+        })
+      }
+
+      if (page.pages) {
+        const child_pages = await Promise.all(
+          page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
+        )
+        page_tree.push(...child_pages)
+      }
+
+      return page_tree
     }
 
     async function buildSiteTree(pages, site) {
       const json = JSON.stringify(site)
-
       return [
         ...flattenDeep(pages),
-        // {
-        //   path: `styles.css`,
-        //   content: styles
-        // },
-        // {
-        //   path: `primo.json`,
-        //   content: json,
-        // },
-        // {
-        //   path: 'README.md',
-        //   content: `# Built with [primo](https://primo.af)`,
-        // },
+        ...Object.entries(site.content).map(([locale, content]) => ({
+          path: `${locale}.json`,
+          content: JSON.stringify(content),
+        })),
+        {
+          path: `primo.json`,
+          content: json,
+        },
+        {
+          path: 'robots.txt',
+          content: `User-agent: *`,
+        },
       ]
     }
   }
