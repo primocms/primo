@@ -20,15 +20,16 @@
   import HSplitPane from './HSplitPane.svelte';
   import { CodeMirror } from '../../../components';
   import { onMobile, showKeyHint } from '../../../stores/app/misc';
-  import {browser} from '$app/environment'
 
   export let variants = '';
+
+  export let data = {}
 
   export let html = '';
   export let css = '';
   export let js = '';
 
-  if (browser) {
+  if (!import.meta.env.SSR) {
     Mousetrap.bind(['mod+1'], () => toggleTab(0))
     Mousetrap.bind(['mod+2'], () => toggleTab(1))
     Mousetrap.bind(['mod+3'], () => toggleTab(2))
@@ -89,6 +90,7 @@
       <CodeMirror
         mode="html"
         docs="https://docs.primo.so/development#html"
+        {data}
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={() => toggleTab(0)}
@@ -139,6 +141,7 @@
       <CodeMirror
         mode="html"
         docs="https://docs.primo.so/development#html"
+        {data}
         bind:value={html}
         bind:selection={selections['html']}
         on:tab-switch={({ detail }) => toggleTab(detail)}

@@ -5,23 +5,24 @@
 <script lang="ts">
   import {flattenDeep as _flattenDeep} from 'lodash-es';
   import { createEventDispatcher } from 'svelte';
-  import { browser } from '$app/environment';
   import { fade } from 'svelte/transition';
   import { createDebouncer } from '../../utils';
   const slowDebounce = createDebouncer(1000);
   import { abbreviationTracker } from '../../libraries/emmet/plugin';
 
   import {highlightedElement} from '../../stores/app/misc';
+  import { code as site_code } from '../../stores/data/draft'
+  import { code as page_code } from '../../stores/app/activePage'
   import {basicSetup} from "codemirror"
   import { EditorView, keymap } from '@codemirror/view';
   import { standardKeymap, indentWithTab} from '@codemirror/commands';
-  import { EditorState } from '@codemirror/state';
+  import { EditorState, Compartment } from '@codemirror/state';
   import {oneDarkTheme, ThemeHighlighting} from './theme';
+  import { svelteCompletions, cssCompletions, extract_css_variables, updateCompletions } from './extensions/autocomplete'
   import { getLanguage } from './extensions';
   import highlightActiveLine from './extensions/inspector'
 
-  const dispatch = createEventDispatcher();
-
+  export let data = {}
   export let prefix = '';
   export let value = '';
   export let mode = 'html';
@@ -30,7 +31,12 @@
   export let selection = 0;
   export let docs = 'https://docs.primo.so/development'
 
+  const dispatch = createEventDispatcher();
+
   const language = getLanguage(mode);
+
+  const css_completions_compartment = new Compartment
+  let css_variables = extract_css_variables($site_code.css + $page_code.css + value)
 
   var Editor;
   const state = EditorState.create({
@@ -119,15 +125,25 @@
         }
         selection = view.state.selection.main.from;
       }),
-      basicSetup
+      basicSetup,
+      svelteCompletions(data),
+      ... mode === 'css' ? [css_completions_compartment.of(cssCompletions(css_variables))] : []
     ],
   });
+
+  // re-configure css-variables autocomplete when variables change
+  $: css_variables = extract_css_variables($site_code.css + $page_code.css + value)
+  $: (mode === 'css' && Editor) &&   Editor.dispatch({ 
+    effects: css_completions_compartment.reconfigure(cssCompletions(css_variables)) 
+  })
+  
+  $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
 
   let prettier;
   let css;
   let babel;
   let svelte;
-  if (browser) fetchPrettier();
+  if (!import.meta.env.SSR) fetchPrettier();
 
   async function fetchPrettier() {
     prettier = await import('prettier');
@@ -180,7 +196,6 @@
     })
   }
 
-  $: (mode === 'html' && Editor) && highlightActiveLine(Editor, $highlightedElement)
 </script>
 
 <svelte:window

@@ -70,12 +70,14 @@
   // component data w/ page/site data included (for compilation)
   $: data = {
     ...getPageData({ loc: $locale }),
-    ...getSymbolPlaceholders(fields),
+    ...getSymbolPlaceholders(fields), // empty?
     ...(localContent[$locale])
   }
 
   function getSymbolPlaceholders(fields) {
-    return _chain(fields).keyBy('key').mapValues(f => f.default || getCachedPlaceholder(f)).value()
+    return _chain(fields).keyBy('key').mapValues(f => {
+      return f.default || getCachedPlaceholder(f)
+    }).value()
   }
 
   // parse component-specific content out of site content tree (keeping separate locales)
@@ -215,10 +217,6 @@
 
 
 
-  // hover preview node, highlight line in code editor
-
-  // hover tag in code editor, highlight preview node
-
 
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
@@ -332,10 +330,10 @@
         <Tabs {tabs} bind:activeTab={$activeTab} />
         {#if $activeTab === 0}
           <FullCodeEditor
-            variants="flex-1"
             bind:html={rawHTML}
             bind:css={rawCSS}
             bind:js={rawJS}
+            {data}
             on:save={saveComponent} 
             on:refresh={refreshPreview}
           />

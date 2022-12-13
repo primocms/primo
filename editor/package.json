@@ -1,11 +1,12 @@
 {
 	"name": "@primo-app/primo",
-	"version": "1.6.56",
+	"version": "1.6.72",
 	"description": "primo is an all-in-one ide, cms, component library, and static site generator",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "svelte-kit sync && svelte-package",
 		"watch": "svelte-kit sync && svelte-package -w",
+		"publish": "npm run build && cd package && npm publish && cd ../",
 		"prepublishOnly": "echo 'Did you mean to publish `./package/`, instead of `./`?' && exit 1",
 		"test": "playwright test",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -31,7 +32,6 @@
 		"svelte-preprocess": "^4.10.7",
 		"tslib": "^2.4.1",
 		"typescript": "^4.9.3",
-		"vite": "^3.2.4",
 		"vitest": "^0.25.3"
 	},
 	"dependencies": {
@@ -52,6 +52,7 @@
 		"@lezer/html": "^1.0.1",
 		"@lezer/lr": "^1.2.0",
 		"@popperjs/core": "^2.11.6",
+		"@replit/codemirror-lang-svelte": "^6.0.0",
 		"@tiptap/core": "^2.0.0-beta.174",
 		"@tiptap/extension-blockquote": "^2.0.0-beta.26",
 		"@tiptap/extension-bubble-menu": "^2.0.0-beta.55",
@@ -93,7 +94,8 @@
 		"svelte": "^3.46.4",
 		"svelte-i18n": "^3.4.0",
 		"svelte-json-tree": "^0.1.0",
-		"svelte-undo": "^1.0.2"
+		"svelte-undo": "^1.0.2",
+		"vite": "^4.0.1"
 	},
 	"type": "module"
 }
