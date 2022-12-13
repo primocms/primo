@@ -3,7 +3,6 @@
     import Icon from '@iconify/svelte'
     import {find} from 'lodash-es'
     import PageItem from './Item.svelte'
-    import { page } from '$app/stores';
     import { TextInput } from '../../../../components/inputs';
     import { PrimaryButton } from '../../../../components/buttons';
     import { pages as actions } from '../../../../stores/actions';
@@ -57,7 +56,7 @@
       creatingPage = true;
     }
 
-    let currentPath = buildCurrentPath($page.params.page);
+    let currentPath = buildCurrentPath($id);
     $: rootPageId = currentPath[0];
 
     let listedPages = $sitePages

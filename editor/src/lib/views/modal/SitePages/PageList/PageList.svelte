@@ -1,6 +1,5 @@
 <script lang="ts">
   import {fade} from 'svelte/transition'
-  import { page } from '$app/stores';
   import Item from './Item.svelte'
   import { PrimaryButton } from '../../../../components/buttons';
   import { TextInput } from '../../../../components/inputs';
@@ -10,7 +9,7 @@
   import { makeValidUrl } from '../../../../utils';
   import { Page } from '../../../../const';
 
-  let currentPath = buildCurrentPath($page.params.page);
+  let currentPath = buildCurrentPath($activePageID);
 
   function edit_page(pageId, args: { name: string, id: string }) {
     actions.edit(pageId, args)

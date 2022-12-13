@@ -4,14 +4,13 @@
   import { fade, slide } from 'svelte/transition';
   import { createEventDispatcher, getContext } from 'svelte';
   const dispatch = createEventDispatcher();
-  import {goto} from '$app/navigation'
-  import { page as pageStore } from '$app/stores';
   import { TextInput } from '../../../../components/inputs';
   import { PrimaryButton } from '../../../../components/buttons';
   import modal from '../../../../stores/app/modal';
   import { id as activePageID } from '../../../../stores/app/activePage';
   const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'
-  const [ siteID ] = $pageStore.url.pathname.split('/').slice(1) // site param doesn't account for static SvelteKit routes (i.e. /blog)
+
+  const siteID = window.location.pathname.split('/')[1]
 
   export let page
   export let active
@@ -79,7 +78,7 @@
 {:else}
   <div class="page-item-container">
     <div class="left">
-      <a class="name" class:active href={pageURL} on:click|preventDefault={() => open_page(pageURL)}>
+      <a class="name" class:active href={pageURL} on:click={() => modal.hide()}>
         <span>{page.name}</span>
         <span>/{get_simple_page_id(page.id)}</span>
       </a>
