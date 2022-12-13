@@ -37,7 +37,11 @@ export const oneDarkTheme = EditorView.theme({
   },
 
   ".cm-cursor, .cm-dropCursor": { borderLeftColor: cursor },
-  "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": { backgroundColor: selection },
+  // ".cm-activeLine": { backgroundColor: highlightBackground },
+
+  "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {
+    backgroundColor: selection,
+  },
 
   ".cm-panels": { backgroundColor: darkBackground, color: ivory },
   ".cm-panels.cm-panels-top": { borderBottom: "2px solid black" },
@@ -51,7 +55,6 @@ export const oneDarkTheme = EditorView.theme({
     backgroundColor: "#6199ff2f"
   },
 
-  ".cm-activeLine": { backgroundColor: highlightBackground },
   ".cm-selectionMatch": { backgroundColor: "#aafe661a" },
 
   "&.cm-focused .cm-matchingBracket, &.cm-focused .cm-nonmatchingBracket": {
