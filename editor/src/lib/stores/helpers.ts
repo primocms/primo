@@ -108,11 +108,11 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
     locale
   })
 
-
   const final = `
   <!DOCTYPE html>
   <html lang="${locale}">
     <head>
+      <meta name="generator" content="Primo" />
       ${res.head}
       <style>${res.css}</style>
     </head>
@@ -126,8 +126,9 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
   // fetch module & content to hydrate component
   function buildModule(js): string {
     return separateModules ? `\
+      const path = window.location.pathname === '/' ? '' : window.location.pathname
       const [ {default:App}, data ] = await Promise.all([
-        import('/_module.js'),
+        import(path + '/_module.js'),
         fetch('/${locale}.json').then(res => res.json())
       ]).catch(e => console.error(e))
       new App({
@@ -197,14 +198,16 @@ export function getPageData({
   loc?: string
 }): object {
 
-  // remove pages from data object (not accessed from component)
+  // remove pages from site data object (not accessed from component)
   const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
   const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
-  // TODO: remove sections from page content (only keep field keys)
+  // remove sections from page data object
+  const sectionIDs = page.sections.map(section => section.id)
+  const pageContent = _chain(Object.entries(site.content[loc][page.id]).filter(([key]) => !sectionIDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
 
   return {
     ...siteContent,
-    ...site.content[loc][page.id], // Page content
+    ...pageContent,
   }
 }
