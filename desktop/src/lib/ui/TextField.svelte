@@ -83,11 +83,14 @@
       }
 
       button {
+        font-size: 0.875rem;
         padding: 0.5rem 1rem;
-        color: var(--color-gray-9);
-        background: var(--primo-color-brand);
+        background: var(--color-gray-7);
+        color: var(--color-gray-1);
+        border: 2px solid transparent;
 
         &:hover {
+          border-color: var(--primo-color-brand);
         }
       }
     }

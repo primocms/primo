@@ -4,10 +4,9 @@
   import hosts from '../../stores/hosts'
   import * as actions from '$lib/actions'
   import TextField from '$lib/ui/TextField.svelte'
-  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import {find as _find} from 'lodash-es'
   import { id as siteID } from '@primo-app/primo/stores/data/draft'
-  import {addDeploymentToSite} from '$lib/actions'
+  import {addDeploymentToSite, track} from '$lib/actions'
 
   export let buttons = []
   
@@ -18,51 +17,6 @@
   let enteredToken
 
   const getSVG = (name) => _find(availableHosts, ['id', name])?.svg || ''
-  
-  
-  async function connectVercel(token) {
-    showingHosts = false
-    const { data } = await axios
-      .get('https://api.vercel.com/www/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .catch((e) => {
-        data: null
-      })
-    if (data) {
-      await actions.hosts.connect({
-        name: 'vercel',
-        token: enteredToken,
-      })
-      addDeploymentToSite({ siteID, deployment: {} })
-    } else {
-      window.alert('Could not connect to host')
-    }
-  }
-  
-  async function connectNetlify(token) {
-    showingHosts = false
-    const { data } = await axios
-      .get('https://api.netlify.com/api/v1/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .catch((e) => {
-        data: null
-      })
-    if (data) {
-      await actions.hosts.connect({
-        name: 'netlify',
-        token: enteredToken
-      })
-      addDeploymentToSite({ siteID, deployment: {} })
-    } else {
-      window.alert('Could not connect to host')
-    }
-  }
   
   async function connectGithub(token) {
     const headers = { 'Authorization': `Bearer ${token}` }
@@ -135,6 +89,7 @@
       >
       <form
         on:submit|preventDefault={async () => {
+          track('CONNECT_HOST', { id: 'vercel' })
           await actions.hosts.connect({
             name: 'vercel',
             token: enteredToken,
@@ -175,6 +130,7 @@
       >
       <form
         on:submit|preventDefault={async () => {
+          track('CONNECT_HOST', { id: 'netlify' })
           await actions.hosts.connect({
             name: 'netlify',
             token: enteredToken,
@@ -215,6 +171,7 @@
       >
       <form
         on:submit|preventDefault={async () => {
+          track('CONNECT_HOST', { id: 'github' })
           await connectGithub(enteredToken)
           hostBeingConnected = null
           showingHosts = false

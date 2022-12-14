@@ -46,12 +46,13 @@
 			"heading": "Create a site",
 			"back": "Back to templates",
 			"duplicate": {
+				"heading": "Duplicate site",
 				"back": "Back to templates",
 				"upload": "upload new site file"
 			},
 			"name": "Site Name",
 			"id": "Site ID",
-			"pick": "Pick a starting point",
+			"pick": "Select a Theme",
 			"pick_info": "Upload a primo.json site file or start from a template",
 			"upload": "Upload site file",
 			"button": {

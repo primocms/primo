@@ -13,7 +13,7 @@
 
 
 <button class="theme-thumbnail" class:selected type="button" on:click={() => {
-  selected = !selected
+  selected = true
   dispatch('click')
 }}>
   <SiteThumbnail {site} {preview} />
@@ -40,7 +40,7 @@
   .title {
     font-size: 0.75rem;
     font-weight: 500;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     text-align: left;
     border-top: 1px solid var(--color-gray-9)
   }

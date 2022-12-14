@@ -1,15 +1,13 @@
 <script>
-  import axios from '$lib/libraries/axios'
   import Tabs from '$lib/ui/Tabs.svelte'
   import { _ as C } from 'svelte-i18n';
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import TextField from '$lib/ui/TextField.svelte'
   import config from '../../../stores/config'
-  import {getSitesFromServer} from '../../../stores/serverSites'
   import Hosting from '../Hosting.svelte'
   import {setLanguage} from '$lib/actions'
   import ServerSetup from './ServerSetup.svelte'
   import {hide} from '$lib/components/Modal.svelte'
+  import {track} from '$lib/actions'
 
   let tabs = []
   $: tabs = [
@@ -81,6 +79,16 @@
           <option value="de">Deutsch</option>
         </select>
       </div>
+      <div class="telemetry container">
+        <h2 class="heading">
+          <span>Telemetry</span>
+          <span class="supporting-text">Primo collects simple, anonymous usage data in order to improve the tool. <a href="https://primo.so/telemetry" target="blank">Learn more</a></span>
+        </h2>
+        <label>
+          <input type="checkbox" bind:checked={$config.telemetryAllowed} on:change={() => track('TELEMETRY_SET', { allowed: $config.telemetryAllowed })}>
+          <span>Allow telemetry</span>
+        </label>
+      </div>
     {/if}
   </div>
 </main>
@@ -102,6 +110,18 @@
 
     &:last-child {
       padding-bottom: 0;
+    }
+  }
+  .telemetry {
+    h2 a {
+      text-decoration: underline;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--color-gray-2);
     }
   }
   main {
