@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('primo', {
 		getMachineID: () => {
 			return ipcRenderer.sendSync('get-machine-id');
 		},
+		setTelemetryAllowed: (allow) => {
+			return ipcRenderer.sendSync('set-telemetry-allowed', allow);
+		},
+		getTelemetryAllowed: () => {
+			return ipcRenderer.sendSync('get-telemetry-allowed');
+		},
 		getLanguage: () => {
 			return ipcRenderer.sendSync('get-language');
 		},

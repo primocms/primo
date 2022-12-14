@@ -1,5 +1,5 @@
 <script>
-  import {setContext} from 'svelte'
+  import {setContext, onDestroy} from 'svelte'
   import { browser } from '$app/environment'
   import { _ as C, init, addMessages } from 'svelte-i18n';
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
@@ -12,6 +12,7 @@
   import * as primo from '@primo-app/primo/package.json'
   import * as desktop from '../../package.json'
   import config from '../stores/config'
+  import {track} from '$lib/actions'
   
   import('../languages/en.json').then(m => addMessages('en', m.default));
   import(`../languages/${$config.language}.json`).then(m => {
@@ -34,8 +35,10 @@
   });
 
   setContext('ENVIRONMENT', 'DESKTOP')
+  setContext('track', track)
 
   if (browser) {
+    track('START_SESSION')
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })

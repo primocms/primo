@@ -14,7 +14,7 @@
   import sites from '../stores/sites'
   import ModalHeader from '@primo-app/primo/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
-  import {addDeploymentToSite} from '$lib/actions'
+  import {addDeploymentToSite, track} from '$lib/actions'
   import {pushSite, createRepo} from './hosts/github'
   import netlify from './hosts/netlify'
   import vercel from './hosts/vercel'
@@ -144,6 +144,7 @@
           }
         }
       }
+      track('PUBLISH_SITE')
     } catch(e) {
       console.error(e)
       alert('Could not publish site, see console for details')

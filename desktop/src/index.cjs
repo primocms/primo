@@ -193,6 +193,14 @@ app.whenReady().then(createWindow);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
+	require('node-fetch')('https://api.primo.so/telemetry', {
+		method: 'POST',
+    mode: 'cors', 
+    body: JSON.stringify({
+			event: 'SESSION_ENDED',
+			distinct_id: machineID
+		})
+	})
 	// On OS X it is common for applications and their menu bar
 	// to stay active until the user quits explicitly with Cmd + Q
 	if (process.platform !== 'darwin') {
@@ -223,6 +231,16 @@ let serverConfig = store.get('config.serverConfig') || {
 };
 let language = store.get('config.language') || 'en';
 let machineID = require('node-machine-id').machineIdSync(true);
+let telemetryAllowed = store.get('config.telemetryAllowed') || true
+
+ipcMain.on('set-telemetry-allowed', async (event, arg) => {
+	telemetryAllowed = arg
+	store.set('config.telemetryAllowed', arg);
+	event.returnValue = true
+});
+ipcMain.on('get-telemetry-allowed', async event => {
+	event.returnValue = telemetryAllowed;
+});
 
 ipcMain.on('get-machine-id', async event => {
 	event.returnValue = machineID;

@@ -91,6 +91,7 @@ export async function setLanguage(language) {
   const m = await import(`../languages/${language}.json`)
   addMessages(language, m.default)
   locale.set(language)
+  track('SET_LANGUAGE', { language })
 }
 
 export async function storeSite(site) {
@@ -148,24 +149,28 @@ export const hosts = {
   },
 }
 
+
 const EVENTS = [
+  'SELECT_THEME',
   'CREATE_SITE',
-  'OPEN_SITE',
-  'ADD_PRIMO_COMPONENT',
-  'ADD_COMMUNITY_COMPONENT',
-  'CREATE_COMPONENT',
-  'ADD_TO_PAGE',
-  'CREATE_PAGE',
-  'ADD_LOCALITY',
+  'SET_LANGUAGE',
+  'CONNECT_HOST',
+  'TELEMETRY_SET',
   'PUBLISH_SITE',
-  'DOWNLOAD_SITE',
-  'UPDATE_APP'
+  'START_SESSION',
+  'END_SESSION'
 ]
-const machineID = get(config).machineID
-export async function track(event, args = null) {
+
+const machine_id = get(config).machineID
+export async function track(event, payload = null) {
+  const telemetryAllowed = get(config).telemetryAllowed
   if (!EVENTS.includes(event)) console.warn('Event does not exist', event)
-  if (get(config).telemetryEnabled) {
-    // await axios.post('https://api.primo.af/telemetry.json', {event, machine_id: machineID, args})
+  if (telemetryAllowed || event === 'TELEMETRY_SET') {
+    axios.post('http://api.primo.so/telemetry', {
+      event,
+      payload,
+      machine_id
+    })
   } else {
     console.log('Telemetry disabled', event)
   }

@@ -9,6 +9,7 @@ const store = writable({
 		token: '',
 	},
 	machineID: null,
+	telemetryAllowed: true,
 	language: 'en',
 });
 
@@ -21,11 +22,13 @@ if (browser) {
 			serverConfig: config.getServerConfig(),
 			machineID: config.getMachineID(),
 			language: config.getLanguage(),
+			telemetryAllowed: config.getTelemetryAllowed()
 		});
 		store.subscribe(c => {
 			config.setHosts(c.hosts);
 			config.setServerConfig(c.serverConfig);
 			config.setLanguage(c.language);
+			config.setTelemetryAllowed(c.telemetryAllowed);
 		});
 	}
 }
