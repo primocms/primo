@@ -10,7 +10,7 @@
   import { site, modal } from '@primo-app/primo'
   import { locales } from '@primo-app/primo/const'
   import { buildStaticPage } from '@primo-app/primo/stores/helpers'
-  import hosts from '../stores/hosts'
+  import config from '../stores/config'
   import sites from '../stores/sites'
   import ModalHeader from '@primo-app/primo/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
@@ -24,7 +24,7 @@
 
   let loading = false
   
-  const SHOW_CHANGED_PAGES = $hosts[0]?.['name'] === 'github'
+  const SHOW_CHANGED_PAGES = $config.hosts[0]?.['name'] === 'github'
 
   async function createSiteZip() {
     const zip = new JSZip()
@@ -84,7 +84,7 @@
   async function publishToHosts() {
     loading = true
     await build_files()
-    const [activeHost] = $hosts
+    const [activeHost] = $config.hosts
     const { name, token } = activeHost
     
     try {
@@ -286,7 +286,7 @@
       {#if !newDeployment}
         <header class="review">
           <div>
-            {#if $hosts.length > 0}
+            {#if $config.hosts.length > 0}
               <p class="title">{$C('publish.publish_site')}</p>
               <p class="subtitle">{$C('publish.description')}</p>
               <PrimaryButton

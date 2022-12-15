@@ -1,7 +1,7 @@
 <script>
   import axios from '$lib/libraries/axios'
   import { fade, slide } from 'svelte/transition'
-  import hosts from '../../stores/hosts'
+  import config from '../../stores/config'
   import * as actions from '$lib/actions'
   import TextField from '$lib/ui/TextField.svelte'
   import {find as _find} from 'lodash-es'
@@ -12,7 +12,6 @@
   
   let showingHosts = false
   let errorMessage = null
-  let loading = false
 
   let enteredToken
 
@@ -67,7 +66,7 @@
 </script>
 
 <div class="boxes">
-  {#each $hosts as host}
+  {#each $config.hosts as host}
     <div class="box host-account">
       <div class="logo">
         {@html getSVG(host.name)}
@@ -203,7 +202,7 @@
       </form>
     </div>
   {/if}
-  {#if !showingHosts && $hosts.length === 0}
+  {#if !showingHosts && $config.hosts.length === 0}
     <footer>
       {#each buttons as button}
         <button class="link" on:click={button.onclick}>{button.label}</button>

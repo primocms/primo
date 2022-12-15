@@ -197,7 +197,7 @@ app.on('window-all-closed', () => {
 		method: 'POST',
     mode: 'cors', 
     body: JSON.stringify({
-			event: 'SESSION_ENDED',
+			event: 'END_SESSION',
 			distinct_id: machineID
 		})
 	})

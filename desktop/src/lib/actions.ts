@@ -137,15 +137,19 @@ export async function addDeploymentToSite({ siteID, deployment }) {
 export const hosts = {
   // todo: enable adding multiple hosts, connecting site to each
   connect: async ({ name, token }) => {
-    stores.hosts.update((h) => {
-      return [{
+    config.update(c => ({
+      ...c,
+      hosts: [{
         name,
         token,
       }]
-    })
+    }))
   },
   delete: (name) => {
-    stores.hosts.update((hosts) => hosts.filter((p) => p.name !== name))
+    config.update(c => ({
+      ...c,
+      hosts: []
+    }))
   },
 }
 
@@ -157,8 +161,7 @@ const EVENTS = [
   'CONNECT_HOST',
   'TELEMETRY_SET',
   'PUBLISH_SITE',
-  'START_SESSION',
-  'END_SESSION'
+  'START_SESSION'
 ]
 
 const machine_id = get(config).machineID
@@ -166,10 +169,14 @@ export async function track(event, payload = null) {
   const telemetryAllowed = get(config).telemetryAllowed
   if (!EVENTS.includes(event)) console.warn('Event does not exist', event)
   if (telemetryAllowed || event === 'TELEMETRY_SET') {
-    axios.post('http://api.primo.so/telemetry', {
-      event,
-      payload,
-      machine_id
+    fetch('https://api.primo.so/telemetry', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({
+        event,
+        payload,
+        machine_id
+      })
     })
   } else {
     console.log('Telemetry disabled', event)
