@@ -40,12 +40,12 @@ export const iframePreview = (locale = 'en') => `
               if (c) c.$destroy();
               try {
                 c = new App({ 
-                  target: document.querySelector('#component'),
+                  target: document.querySelector('.section > .component'),
                   props
                 })
                 setTimeout(setListeners, 200)
               } catch(e) {
-                document.querySelector('#component').innerHTML = ''
+                document.querySelector('.section > .component').innerHTML = ''
                 console.error(e.toString())
               }
               channel.postMessage({
@@ -75,7 +75,9 @@ export const iframePreview = (locale = 'en') => `
 		  <\/script>
     </head>
     <body id="page">
-        <div class="section has-component" id="component">
+        <div class="section has-component">
+          <div class="component">
+          </div>
         </div>
     </body>
   </html>

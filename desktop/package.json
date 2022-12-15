@@ -47,6 +47,7 @@
     "files": [
       "package.json",
       "index.cjs",
+      "src/svelte/**/*",
       "src/compile.cjs",
       "src/index.cjs",
       "src/preload.cjs",

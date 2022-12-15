@@ -192,13 +192,13 @@ app.whenReady().then(createWindow);
 // app.on('ready', createWindow);
 
 // Quit when all windows are closed.
-app.on('window-all-closed', () => {
-	require('node-fetch')('https://api.primo.so/telemetry', {
+app.on('window-all-closed', async () => {
+	await require('node-fetch')('https://api.primo.so/telemetry', {
 		method: 'POST',
-    mode: 'cors', 
+    mode: 'no-cors', 
     body: JSON.stringify({
 			event: 'END_SESSION',
-			distinct_id: machineID
+			machine_id: machineID
 		})
 	})
 	// On OS X it is common for applications and their menu bar
