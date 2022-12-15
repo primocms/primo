@@ -1,6 +1,6 @@
 <script>
   import {isEqual, cloneDeep} from 'lodash-es'
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
   const dispatch = createEventDispatcher();
   import CopyButton from './CopyButton.svelte';
 
@@ -21,20 +21,18 @@
   import FloatingMenu from '@tiptap/extension-floating-menu';
 
   export let block
-  export let site
-  
-  let node;
+  export let node
 
   let floatingMenu;
   let bubbleMenu;
   let editor;
 
-  let content = (site || $unsavedSite).content[$locale]?.[$pageID]?.[block.id] || ''
+  let content = ($unsavedSite).content[$locale]?.[$pageID]?.[block.id] || ''
   let cachedContent
   $: updateNodeContent($locale, $pageID, block.id) 
   function updateNodeContent(locale, pageID, blockID) {
     if (!editor || isEqual(content, cachedContent)) return
-    const updatedContent = (site || $unsavedSite).content?.[locale]?.[pageID]?.[blockID] || ''
+    const updatedContent = ($unsavedSite).content?.[locale]?.[pageID]?.[blockID] || ''
     editor.commands.setContent(updatedContent)
   }
 
@@ -63,7 +61,8 @@
   });
 
   let focused = false;
-  onMount(() => {
+  onMount(async () => {
+    await tick() // wait for parent to do stuff (adds a container div otherwise)
     editor = new Editor({
       content,
       element: node,
@@ -135,55 +134,54 @@
   }
 
   $: if (node) {
-    // classes added manually since they get overwritten by TipTap otherwise
-    node.children[0].classList.add('content')
-    // node.children[0].classList.add('section-container')
+    tick().then(() => {
+      // classes added manually since they get overwritten by TipTap otherwise
+      editor.options.element.classList.add('content')
+    })
   }
 
 </script>
 
-<div bind:this={node}>
-  <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
-    {#if editor}
-      <CopyButton
-        icon="heading"
-        on:click={() => editor
-            .chain()
-            .focus()
-            .toggleHeading({ level: 1 })
-            .run()} />
-      <CopyButton
-        icon="code"
-        on:click={() => editor.chain().focus().toggleCodeBlock().run()} />
-      <CopyButton
-        icon="quote-left"
-        on:click={() => editor.chain().focus().toggleBlockquote().run()} />
-      <CopyButton
-        icon="list-ul"
-        on:click={() => editor.chain().focus().toggleBulletList().run()} />
-      <CopyButton
-        icon="list-ol"
-        on:click={() => editor.chain().focus().toggleOrderedList().run()} />
-      <CopyButton icon="image" on:click={addImage} />
-    {/if}
-  </div>
-  <div class="menu bubble-menu primo-reset" bind:this={bubbleMenu}>
-    {#if editor}
-      <CopyButton icon="link" on:click={setLink} />
-      <CopyButton
-        icon="bold"
-        on:click={() => editor.chain().focus().toggleBold().run()}
-        active={editor.isActive('bold')} />
-      <CopyButton
-        icon="italic"
-        on:click={() => editor.chain().focus().toggleItalic().run()}
-        active={editor.isActive('italic')} />
-      <CopyButton
-        icon="highlighter"
-        on:click={editor.chain().focus().toggleHighlight().run()}
-        active={editor.isActive('highlight')} />
-    {/if}
-  </div>
+<div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
+  {#if editor}
+    <CopyButton
+      icon="heading"
+      on:click={() => editor
+          .chain()
+          .focus()
+          .toggleHeading({ level: 1 })
+          .run()} />
+    <CopyButton
+      icon="code"
+      on:click={() => editor.chain().focus().toggleCodeBlock().run()} />
+    <CopyButton
+      icon="quote-left"
+      on:click={() => editor.chain().focus().toggleBlockquote().run()} />
+    <CopyButton
+      icon="list-ul"
+      on:click={() => editor.chain().focus().toggleBulletList().run()} />
+    <CopyButton
+      icon="list-ol"
+      on:click={() => editor.chain().focus().toggleOrderedList().run()} />
+    <CopyButton icon="image" on:click={addImage} />
+  {/if}
+</div>
+<div class="menu bubble-menu primo-reset" bind:this={bubbleMenu}>
+  {#if editor}
+    <CopyButton icon="link" on:click={setLink} />
+    <CopyButton
+      icon="bold"
+      on:click={() => editor.chain().focus().toggleBold().run()}
+      active={editor.isActive('bold')} />
+    <CopyButton
+      icon="italic"
+      on:click={() => editor.chain().focus().toggleItalic().run()}
+      active={editor.isActive('italic')} />
+    <CopyButton
+      icon="highlighter"
+      on:click={editor.chain().focus().toggleHighlight().run()}
+      active={editor.isActive('highlight')} />
+  {/if}
 </div>
 
 <style>

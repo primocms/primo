@@ -275,6 +275,7 @@
   {:else if block.type === 'content'}
     <ContentNode
       {block}
+      {node}
       on:mount
       on:save
       on:focus={({ detail: selection }) => focusedNode.setSelection({ id: block.id, position: i, selection })}
