@@ -67,7 +67,7 @@
   },
   "dependencies": {
     "@fontsource/fira-code": "^4.5.10",
-    "@primo-app/primo": "^1.7.0",
+    "@primo-app/primo": "^1.7.1",
     "autoprefixer": "^10.4.0",
     "browser-image-compression": "^1.0.16",
     "check-internet-connected": "^2.0.5",
