@@ -83,24 +83,15 @@ export const iframePreview = (locale = 'en') => `
   </html>
 `
 
-export const componentPreview = (js, data) => {
-
-  const blob = new Blob([js], { type: 'text/javascript' })
-  const url = URL.createObjectURL(blob)
+export const componentPreview = (code) => {
 
   return `
     <!DOCTYPE html>
     <html lang="en">
-      <head></head>
+      <head>${code.head}</head>
       <body id="page">
-        <main></main>
-        <script type="module" async>
-          const { default:App } = await import('${url}')
-          new App({ 
-            target: document.querySelector('main'),
-            props: ${JSON.stringify(data)} 
-          })
-        </script>
+        ${code.html}
+        <style>${code.css}</style>
       </body>
     </html>
   `

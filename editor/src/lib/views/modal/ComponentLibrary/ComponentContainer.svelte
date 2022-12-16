@@ -10,6 +10,7 @@
   import IFrame from './IFrame.svelte';
   import {
     processCode,
+    processCSS,
     wrapInStyleTags,
   } from '../../../utils';
   import { code as siteCode } from '../../../stores/data/draft';
@@ -34,30 +35,28 @@
     editingTitle = false
   }
 
-  let componentApp;
-  let componentData
-  let error;
+  let componentCode;
   compileComponentCode(symbol);
   async function compileComponentCode(symbol) {
-    componentData = getComponentData({ component: symbol })
-
+    const componentData = getComponentData({ component: symbol })
+    const parentCss = await processCSS($siteCode.css + $pageCode.css)
     const res = await processCode({
       component: {
         ...symbol.code,
         html: `
           <svelte:head>
             ${$siteCode.html.head + $pageCode.html.head}
-            ${wrapInStyleTags($siteCode.css + $pageCode.css)}
+            ${wrapInStyleTags(parentCss)}
           </svelte:head>
           ${symbol.code.html}
           ${$siteCode.html.below + $pageCode.html.below}`,
         data: componentData,
       },
-      buildStatic: false,
+      buildStatic: true,
+      hydrated: false,
+      ignoreCachedData: true
     });
-
-    error = res.error;
-    componentApp = res.js;
+    componentCode = res
   }
   
   const info = getSymbolUseInfo(symbol.id)
@@ -92,7 +91,7 @@
     }}
     class:active
     >
-    <IFrame bind:height {componentApp} {componentData} />
+    <IFrame bind:height {componentCode} />
     {#if name}
       <header>
         <div class="component-label">
@@ -122,7 +121,7 @@
           active = true
           action.onclick()
         }}>
-          <IFrame bind:height {componentApp} {componentData} />
+          <IFrame bind:height {componentCode} />
           <div class="overlay">
             {#if !active}
               <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -134,7 +133,7 @@
         </button>
       </div>
     {:else}
-      <IFrame bind:height {componentApp} {componentData} />
+      <IFrame bind:height {componentCode} />
     {/if}
     <header bind:this={header} class:has-action={action && buttons.length === 0}>
       <div class="component-label">

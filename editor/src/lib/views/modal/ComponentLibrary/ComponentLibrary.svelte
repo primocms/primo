@@ -24,7 +24,6 @@
     deleteInstances,
   } from '../../../stores/actions';
   import ModalHeader from '../ModalHeader.svelte'
-  const track = getContext('track')
 
   export let onselect = null
 
@@ -97,21 +96,6 @@
     });
   }
 
-  let symbolSubmission
-  let contributor = ''
-  let submitted = false
-  async function submitSymbol() {
-    const payload = {
-      contributor,
-      component: symbolSubmission
-    }
-    axios.post('https://api.primo.so/community-library.json', payload).then(res => {
-      if (res.data?.ok) {
-        submitted = true
-      }
-    })
-  }
-
   function createInstance(symbol) {
     const instanceID = createUniqueID();
     return {
@@ -129,13 +113,13 @@
   onMount(async () => {
     if ($primoSymbols.length === 0) {
       const { data: symbols } = await axios.get(
-        'https://api.primo.so/public-library.json'
+        'https://api.primo.so/public-library'
       );
       $primoSymbols = symbols || [];
     }
     if ($communitySymbols.length === 0) {
       const { data: symbols } = await axios.get(
-        'https://api.primo.so/community-library.json'
+        'https://api.primo.so/community-library'
       );
       $communitySymbols = symbols || [];
     }

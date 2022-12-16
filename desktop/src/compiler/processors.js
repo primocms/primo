@@ -1,34 +1,16 @@
 import _ from 'lodash-es'
-import {get} from 'svelte/store'
-import {site} from '@primo-app/primo/stores/data/draft'
-import {locale} from '@primo-app/primo/stores/app/misc'
 
-const componentsMap = new Map();
 
-export async function html({ component, buildStatic = true, format = 'esm'}) {
-
-  let cacheKey
-  if (!buildStatic) {
-    cacheKey = JSON.stringify({
-      component,
-      format
-    })
-    if (componentsMap.has(cacheKey)) {
-      const cached = componentsMap.get(cacheKey)
-      return cached
-    }
-  }
+export async function html({ component, buildStatic = true, format = 'esm', hydrated = true}) {
 
   let res
   try {
     const has_js = Array.isArray(component) ? component.some(s => s.js) : !!component.js
     res = await window.primo?.processSvelte({
       component,
-      hydrated: buildStatic && has_js,
+      hydrated: hydrated && buildStatic && has_js,
       buildStatic,
-      format,
-      site: get(site),
-      locale: get(locale)
+      format
     })
   } catch(e) {
     console.log('error', e)
@@ -58,7 +40,6 @@ export async function html({ component, buildStatic = true, format = 'esm'}) {
            .replace(/'/g, "&#039;");
     }
   } else if (buildStatic) {   
-    console.log({res})
     const blob = new Blob([res.ssr], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
     const {default:App} = await import(url/* @vite-ignore */)
@@ -74,10 +55,6 @@ export async function html({ component, buildStatic = true, format = 'esm'}) {
       js: res.dom
     }
   } 
-
-  if (!buildStatic) {
-    componentsMap.set(cacheKey, final)
-  }
 
   return final
 }

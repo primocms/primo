@@ -3,28 +3,48 @@ import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum/src/index";
 import type { Site, Page, Field } from './const'
 
-export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en' }: { component: any, buildStatic?: boolean, format?: string, locale?: string }) {
+const componentsCache = new Map();
+export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }: { component: any, buildStatic?: boolean, format?: string, locale?: string, hydrated?: boolean, ignoreCachedData?: boolean }) {
   let css = ''
   if (component.css) {
-    const { css: res, error } = await processors.css(component.css || '')
-    if (error) {
-      console.log('ERROR', error)
-      return { error }
-    } else {
-      css = res
-    }
+    css = await processCSS(component.css || '')
+  }
+
+  const cacheKey = ignoreCachedData ? JSON.stringify({
+    component: Array.isArray(component) ? component.map(c => ({ html: c.html, css: c.css, head: c.head })) : {
+      head: component.head,
+      html: component.html,
+      css: component.css
+    },
+  }) : JSON.stringify({
+    component,
+    format,
+    buildStatic,
+    hydrated
+  })
+
+  if (componentsCache.has(cacheKey)) {
+    return componentsCache.get(cacheKey)
   }
 
   const res = await processors.html({
     component: {
       ...component,
       css
-    }, buildStatic, format, locale
+    }, buildStatic, format, locale, hydrated
   })
+
+  componentsCache.set(cacheKey, res)
+
   return res
 }
 
+const cssCache = new Map();
 export async function processCSS(raw: string): Promise<string> {
+  if (cssCache.has(raw)) {
+    return cssCache.get(raw)
+  }
+
   const res = await processors.css(raw) || {}
   if (!res) {
     return ''
@@ -32,6 +52,7 @@ export async function processCSS(raw: string): Promise<string> {
     console.log('CSS Error:', res.error)
     return raw
   } else if (res.css) {
+    cssCache.set(raw, res.css)
     return res.css
   }
 }

@@ -1,36 +1,29 @@
 <script>
+  import {tick} from 'svelte'
   import Spinner from '../../../components/misc/Spinner.svelte';
   import { componentPreview } from '../../../components/misc/misc';
 
-  export let componentApp;
-  export let componentData = {}
+  export let componentCode
   export let height;
 
   let container;
   let iframe;
   let iframeLoaded;
   let finishedResizing = false;
-  $: componentApp && iframeLoaded && setIframeContent({ componentApp, componentData });
-  function setIframeContent({ componentApp, componentData }) {
-    iframe.contentWindow.postMessage({ componentApp, componentData });
+  $: iframeLoaded && setIframeContent();
+  async function setIframeContent() {
     setScaleRatio();
-    setTimeout(setHeight, 100);
-    function setHeight() {
-      iframe.height = '';
-      const newHeight =
-        iframe.contentWindow.document.body.scrollHeight * scaleRatio;
-      iframe.height = newHeight;
-      height = newHeight;
-      container_height = iframe.contentWindow.document.body.scrollHeight
-      finishedResizing = true;
-    }
+    await tick()
+    setHeight()
   }
 
-  $: setIframeData(componentData);
-  function setIframeData(componentData) {
-    if (iframeLoaded) {
-      iframe.contentWindow.postMessage({ componentData });
-    }
+  function setHeight() {
+    iframe.height = '';
+    const newHeight = iframe.contentWindow.document.body.scrollHeight * scaleRatio;
+    iframe.height = newHeight;
+    height = newHeight;
+    container_height = iframe.contentWindow.document.body.scrollHeight
+    finishedResizing = true;
   }
 
   function setScaleRatio() {
@@ -53,14 +46,14 @@
     </div>
   {/if}
   <div bind:this={container} class="iframe-container" style:height="{container_height*scaleRatio}px">
-    {#if componentApp && componentData}
+    {#if componentCode}
       <iframe
         class:fadein={finishedResizing}
         style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
         scrolling="no"
-        on:load={() => (iframeLoaded = true)}
         title="Preview HTML"
-        srcdoc={componentPreview(componentApp, componentData)}
+        on:load={() => (iframeLoaded = true)}
+        srcdoc={componentPreview(componentCode)}
         bind:this={iframe} />
     {/if}
   </div>
