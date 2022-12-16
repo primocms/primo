@@ -136,7 +136,8 @@
   $: if (node) {
     tick().then(() => {
       // classes added manually since they get overwritten by TipTap otherwise
-      editor.options.element.classList.add('content')
+      const el = editor.options.element.querySelector('.ProseMirror')
+      el.classList.add('content')
     })
   }
 
