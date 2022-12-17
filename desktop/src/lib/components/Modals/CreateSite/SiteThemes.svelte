@@ -48,10 +48,10 @@
       {/each}
     {/if}
   </div> 
-  <a href="https://primo.so/marketplace" class="primo--link" target="_blank">
+  <!-- <a href="https://primo.so/marketplace" class="primo--link" target="_blank">
     <span>More in the Marketplace</span>
     <Icon icon="charm:link-external" />
-  </a>
+  </a> -->
   <Button
     on:click={() => dispatch('create')}
     label={$C('dashboard.create.button.create')}
