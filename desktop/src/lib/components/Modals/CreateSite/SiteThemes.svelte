@@ -12,19 +12,34 @@
   const dispatch = createEventDispatcher()
   const track = getContext('track')
 
+  let theme_ids = []
   let themes = null
-  axios.get('https://api.primo.so/themes').then(({data}) => {
-    themes = data
-  })
+  fetch_themes()
+
+  async function fetch_themes(ids) {
+    const {data} = await axios.get('https://api.primo.so/themes')
+    theme_ids = data
+
+    themes = await Promise.all(
+      theme_ids.map(async id => {
+        const {data} = await axios.get(`https://api.primo.so/themes/${id}?preview`)
+        return {
+          id,
+          name: data.name, 
+          preview: data.preview
+        }
+      })
+    )
+  }
 
   let selectedTheme = null
-  function selectTheme(theme) {
+  async function selectTheme(theme) {
+    track('SELECT_THEME', { name: theme.name })
     selectedTheme = theme.name
-    track('SELECT_THEME', { id: theme.data.id })
-    const data = _.cloneDeep(theme.data)
-    delete data.name
-    delete data.id
-    dispatch('submit', data)
+    const {data:site} = await axios.get(`https://api.primo.so/themes/${theme.id}?data`)
+    delete site.name
+    delete site.id
+    dispatch('submit', site)
   }
 
 </script>
