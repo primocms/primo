@@ -69,13 +69,9 @@
     localContent = cloneDeep({
       ...localContent,
       [$locale]: {
-        ...localContent[$locale],
         ..._chain(localSiteFields).keyBy('key').mapValues('value').value(),
-        [$pageID]: {
-          ...localContent[$locale][$pageID],
-          ..._chain(localPageFields).keyBy('key').mapValues('value').value()
-        }
-      }
+        [$pageID]: _chain(localPageFields).keyBy('key').mapValues('value').value()
+      },
     })
 
     // create keys within other locales if missing
