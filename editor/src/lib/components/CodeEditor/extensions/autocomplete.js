@@ -4,11 +4,12 @@ import { snippetCompletion } from '@codemirror/autocomplete'
 import _ from 'lodash-es';
 
 const Completion_Label = (value) => {
-  const type_label = typeof(value)
-  if (type_label === 'object' && value !== null) {
+  if (Array.isArray(value)) {
+    return `[ ${typeof(value[0])} ]`
+  } else if (_.isObject(value)) {
     return '{ ' + Object.entries(value).map(([ key, value ]) => `${key}:${typeof(value)}`).join(', ') + ' }'
   } else {
-    return type_label
+    return typeof(value)
   }
 }
 
@@ -51,20 +52,23 @@ function svelteCompletions(data) {
   return svelteLanguage.data.of({
     autocomplete: (context) => {
       const word = context.matchBefore(/\S*/)
-    
+
       // Svelte blocks
-      if ((word.text.substring(0, 2) === '{#') || (word.text.substring(0, 2) === '{@')) {
+      if ((word.text.includes('{#') || word.text.includes('{@'))) {
+        const position = (word.text.indexOf('{#') !== - 1 ? word.text.indexOf('{#') : word.text.indexOf('{@')) 
         return {
-          from: word.from,
+          from: word.from + position,
           options: completions
         }
       }
     
       // Field values
-      if (word.text[0] === '{') {
+      if (word.text.includes('{')) {
         // matches child field values
+        const position = word.text.indexOf('{') 
+
         if (word.text.includes('.')) {
-          const options = Object.entries(data).filter(([_, value]) => typeof(value) === 'object').map(([key, value]) => {
+          const options = Object.entries(data).filter(([key, value]) => (_.isObject(value) && !Array.isArray(value))).map(([key, value]) => {
             const child_options = Object.entries(value).map(([child_key, child_value]) => ({
               label: `${key}.${child_key}`,
               type: 'variable',
@@ -73,14 +77,14 @@ function svelteCompletions(data) {
             return child_options
           })
           return {
-            from: word.from+1,
+            from: word.from + position + 1,
             options: _.flattenDeep(options)
           }
         }
-        
+
         // matches root-level fields
         return {
-          from: word.from+1,
+          from: word.from + position + 1, // offset for bracket
           options: [
             ...Object.entries(data).map(([key, value]) => ({ 
               label: key, 
