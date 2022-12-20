@@ -204,7 +204,6 @@
   let componentApp; // holds compiled component
   let compilationError; // holds compilation error
 
-
   // ensure placeholder values always conform to form
   // TODO: do for remaining fields
   $: fields = fields.map(field => {
@@ -214,9 +213,6 @@
     }
     else return field 
   })
-
-
-
 
   let disableSave = false;
   async function compileComponentCode({ html, css, js }) {
@@ -338,7 +334,10 @@
             on:refresh={refreshPreview}
           />
         {:else if $activeTab === 1}
-          <GenericFields bind:fields on:input={refreshPreview} on:delete={async () => {
+          <GenericFields bind:fields on:input={() => {
+            refreshPreview()
+            saveLocalContent()
+          }} on:delete={async () => {
             await tick() // wait for fields to update
             saveLocalContent()
             refreshPreview()

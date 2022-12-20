@@ -62,7 +62,7 @@ export async function html({ component, buildStatic = true, format = 'esm', hydr
 const cssMap = new Map()
 export async function css(raw) {
   if (!raw) {
-    return ''
+    return { css: '', error: null }
   }
 
   if (cssMap.has(raw)) return {

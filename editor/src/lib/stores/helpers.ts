@@ -83,7 +83,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           html: `
             <div class="section has-content" id="${section.id}">
               <div class="content">
-                ${html} 
+                ${html || ''} 
               </div>
             </div>`,
           js: '',
@@ -204,7 +204,7 @@ export function getPageData({
 
   // remove sections from page data object
   const sectionIDs = page.sections.map(section => section.id)
-  const pageContent = _chain(Object.entries(site.content[loc][page.id]).filter(([key]) => !sectionIDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
+  const pageContent = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !sectionIDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
 
   return {
     ...siteContent,
