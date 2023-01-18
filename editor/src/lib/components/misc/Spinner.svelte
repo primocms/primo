@@ -10,7 +10,7 @@
   />
 </svg>
 
-<style>
+<style lang="postcss">
   svg {
     width: var(--Spinner-size, 2rem);
     height: var(--Spinner-size, 2rem);

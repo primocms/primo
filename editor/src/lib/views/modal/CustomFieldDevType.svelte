@@ -52,7 +52,7 @@
 {/if}
 <div bind:this={element} />
 
-<style>
+<style lang="postcss">
   pre {
     margin: 0;
     padding: 1rem;

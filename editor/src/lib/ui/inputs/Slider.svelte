@@ -17,7 +17,7 @@
   {max}
   {step} />
 
-<style>
+<style lang="postcss">
   input {
     outline-color: var(--primo-color-brand);
     background: var(--primo-color-black);

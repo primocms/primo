@@ -185,7 +185,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   :global(.ProseMirror ::selection, ::-moz-selection) {
     background: var(--primo-color-brand);
   }

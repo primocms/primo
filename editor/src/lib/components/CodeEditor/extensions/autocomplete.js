@@ -138,7 +138,7 @@ export function updateCompletions(Editor, variables, compartment) {
 }
 
 export function extract_css_variables(css) {
-  return css.match(/--\S*:/gm)
+  return css.match(/--\S*:/gm) || []
 }
 
 export {

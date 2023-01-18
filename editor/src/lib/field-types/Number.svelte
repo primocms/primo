@@ -9,7 +9,7 @@
   <TextField {...field} on:input bind:value={field.value} type="number" />
 </div>
 
-<style>
+<style lang="postcss">
   div {
     width: 100%;
   }

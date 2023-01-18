@@ -113,7 +113,7 @@
   }}><i class="fas fa-plus" />Add Option</button>
 </div>
 
-<style>
+<style lang="postcss">
   .select-field {
     display: grid;
     grid-template-columns: 1fr 1fr auto;

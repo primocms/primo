@@ -25,7 +25,7 @@
   {@html html}
 </div>
 
-<style>
+<style lang="postcss">
   .main {
     position: relative;
     padding-top: 1rem;

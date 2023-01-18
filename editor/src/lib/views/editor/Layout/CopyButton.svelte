@@ -9,7 +9,7 @@
   <!-- <span class="opacity-0">></span> -->
 </button>
 
-<style>
+<style lang="postcss">
   button {
     display: flex;
     align-items: center;

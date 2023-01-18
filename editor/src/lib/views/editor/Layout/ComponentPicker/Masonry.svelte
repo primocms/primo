@@ -69,7 +69,7 @@
   {/each}
 </div>
 
-<style>
+<style lang="postcss">
   .masonry {
     display: flex;
     overflow-wrap: anywhere;

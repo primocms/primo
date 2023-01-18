@@ -34,7 +34,7 @@
   <slot />
 </label>
 
-<style>
+<style lang="postcss">
   label {
     display: flex;
     flex-direction: column;
