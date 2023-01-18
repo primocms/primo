@@ -91,7 +91,7 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
           data
         }
       }
-    }),
+    }).filter(Boolean), // remove options blocks
     (async () => {
       const data = getPageData({ page, site, loc: locale })
       return {
