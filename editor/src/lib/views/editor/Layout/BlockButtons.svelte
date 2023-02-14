@@ -1,7 +1,5 @@
 <!-- <svelte:options tag='block-buttons' /> -->
 <script>
-  import * as Mousetrap from 'mousetrap';
-
   import { code, trash, edit } from '../../../components/svg/small';
 
   import { onMount, createEventDispatcher } from 'svelte';

@@ -11,7 +11,6 @@
 
   export let field;
 
-
   // ensure value is correct shape
   if (typeof(field.value) === 'string') {
     field.value = {
@@ -61,7 +60,7 @@
     on:focus={selectAll}
     on:keydown={handleSave} 
     on:input={({target}) => parseContent(target.value)}
-    value={converter.makeMarkdown(value)}
+    {value}
     bind:this={element} />
 </label>
 
