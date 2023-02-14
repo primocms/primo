@@ -2,19 +2,30 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
-  import {get} from 'lodash-es'
   import autosize from 'autosize';
   import showdown from '../libraries/showdown/showdown.min.js';
-  const converter = new showdown.Converter();
+  import showdownHighlight from 'showdown-highlight'
+  const converter = new showdown.Converter({
+    extensions: [showdownHighlight()]
+  });
 
   export let field;
 
-  // ensure value is a string
-  if (typeof(field.value) !== 'string') {
-    field.value = ''
+
+  // ensure value is correct shape
+  if (typeof(field.value) === 'string') {
+    field.value = {
+      markdown: converter.makeMarkdown(field.value),
+      html: field.value
+    }
+  } else if (typeof(field.value) !== 'object' && !field.value.hasOwnProperty('markdown')) {
+    field.value = {
+      markdown: '',
+      html: ''
+    }
   }
 
-  let value = field.value
+  let value = field.value.markdown
   $: parseContent(value)
 
   let element;
@@ -26,11 +37,12 @@
 
   // easily delete default content 
   function selectAll({target}) {
-    if (field.default === field.value) target.select()
+    if (field.default === field.value.markdown) target.select()
   }
 
   function parseContent(markdown) {
-    field.value = converter.makeHtml(markdown);
+    field.value.html = converter.makeHtml(markdown);
+    field.value.markdown = markdown;
     dispatch('input');
   }
 
