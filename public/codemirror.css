@@ -1,0 +1,100 @@
+.cm-s-vscode-dark span.cm-meta {
+  color: #569cd6;
+}
+.cm-s-vscode-dark span.cm-number {
+  color: #b5cea8;
+}
+.cm-s-vscode-dark span.cm-keyword {
+  line-height: 1em;
+  font-weight: bold;
+  color: #569cd6;
+}
+.cm-s-vscode-dark span.cm-def {
+  color: #9cdcfe;
+}
+.cm-s-vscode-dark span.cm-variable {
+  color: #ddd6a3;
+}
+.cm-s-vscode-dark span.cm-variable-2 {
+  color: #9cdcfe;
+}
+.cm-s-vscode-dark span.cm-variable-3,
+.cm-s-vscode-dark span.cm-type {
+  color: #a9b7c6;
+}
+.cm-s-vscode-dark span.cm-property {
+  color: #9cdcfe;
+}
+.cm-s-vscode-dark span.cm-operator {
+  color: #d4d4d4;
+}
+.cm-s-vscode-dark span.cm-string {
+  color: #ce9178;
+}
+.cm-s-vscode-dark span.cm-string-2 {
+  color: #6a8759;
+}
+.cm-s-vscode-dark span.cm-comment {
+  color: #6a9955;
+}
+.cm-s-vscode-dark span.cm-link {
+  color: #287bde;
+}
+.cm-s-vscode-dark span.cm-atom {
+  color: #569cd6;
+}
+.cm-s-vscode-dark span.cm-error {
+  color: #bc3f3c;
+}
+.cm-s-vscode-dark span.cm-tag {
+  color: #569cd6;
+}
+.cm-s-vscode-dark span.cm-attribute {
+  color: #9cdcfe;
+}
+.cm-s-vscode-dark span.cm-qualifier {
+  color: #d7ba7d;
+}
+.cm-s-vscode-dark span.cm-bracket {
+  color: #808080;
+}
+
+.cm-s-vscode-dark.CodeMirror {
+  background: #1e1e1e;
+  color: #e9e9e9;
+}
+.cm-s-vscode-dark .CodeMirror-cursor {
+  border-left: 1px solid #bebebe;
+}
+.CodeMirror-activeline-background {
+  background: #3a3a3a;
+}
+.cm-s-vscode-dark div.CodeMirror-selected {
+  background: #1e496c;
+}
+.cm-s-vscode-dark .CodeMirror-gutters {
+  background: #252526;
+  border-right: 1px solid grey;
+  color: #606366;
+}
+.cm-s-vscode-dark span.cm-builtin {
+  color: #a9b7c6;
+}
+.cm-s-vscode-dark {
+  font-family: Consolas, 'Courier New', monospace, serif;
+}
+.cm-s-vscode-dark .CodeMirror-matchingbracket {
+  background-color: #3b514d;
+  color: yellow !important;
+}
+
+.CodeMirror-hints.vscode-dark {
+  font-family: Consolas, 'Courier New', monospace;
+  color: #9c9e9e;
+  background-color: #3b3e3f !important;
+}
+
+.CodeMirror-hints.vscode-dark .CodeMirror-hint-active {
+  background-color: #494d4e !important;
+  color: #9c9e9e !important;
+}

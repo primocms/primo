@@ -1,8 +1,5 @@
 {
-  "semi": "false",
-  "arrowParens": "always",
-  "singleQuote": true,
   "tabWidth": 2,
-  "trailingComma": "es5",
-  "svelteSortOrder": "options-scripts-markup-styles"
+  "singleQuote": true,
+  "semi": false
 }
