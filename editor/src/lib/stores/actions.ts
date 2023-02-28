@@ -370,6 +370,7 @@ export async function updateContent(blockID, updatedValue, activeLocale = get(lo
     }
   }
 
+  saved.set(false)
   timeline.push(get(unsavedSite))
 }
 
