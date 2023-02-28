@@ -15,6 +15,4 @@ Primo is a component-based CMS that makes it easy to build visually-editable sta
 Most of Primo's functionality and productivity advantages are due to Svelte - a compiler and UI language that extends HTML/CSS/JS's functionality to enable templating, style encapsulation, component-driven development, complex interactions and app-like functionality. primo pages are made of Svelte components and doc-like content sections (written with [TipTap](https://tiptap.dev/)), and the Svelte compiler turns those pages into clean HTML, CSS, and vanilla JavaScript that it uploads to a web host or Github repo. 
 
 ## How to get started
-It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, download the desktop application from [primo.so](https://primo.so).
-
-To build from your browser, invite collaborators, and upload images, check out [Primo Server](https://github.com/primodotso/primo-server).
+It's incredibly easy to build a site with Primo. Technically, you don't even have to write any code (though it's highly encouraged). To get started, you can host Primo for yourself using [Primo Server](https://github.com/primodotso/primo-server).
