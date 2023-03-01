@@ -1,24 +1,23 @@
 <script>
-  import { fade } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+  import { fade } from 'svelte/transition'
+  import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
 
-  export let tabs;
-  export let activeTab = 0;
-  export let variants = '';
+  export let tabs
+  export let activeTab = 0
 
-  $: dispatch('switch', activeTab);
-
+  $: dispatch('switch', activeTab)
 </script>
 
 {#if tabs.length > 1}
-  <div class="tabs {variants}" in:fade={{ duration: 200 }}>
+  <div class="tabs" in:fade={{ duration: 200 }}>
     <ul xyz="fade stagger">
       {#each tabs as tab, i}
         <li class="xyz-in" class:is-active={activeTab === i}>
           <button
             on:click={() => (activeTab = i)}
-            id={tab.id ? `tab-${tab.id}` : null}>
+            id={tab.id ? `tab-${tab.id}` : null}
+          >
             {#if tab.icon}<i class="fas fa-{tab.icon}" />{/if}
             {typeof tab === 'string' ? tab : tab.label}
           </button>
@@ -33,7 +32,8 @@
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
   integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
   crossorigin="anonymous"
-  referrerpolicy="no-referrer" />
+  referrerpolicy="no-referrer"
+/>
 
 <style lang="postcss">
   .tabs {
@@ -106,5 +106,4 @@
   button {
     transition: var(--transition-colors);
   }
-
 </style>

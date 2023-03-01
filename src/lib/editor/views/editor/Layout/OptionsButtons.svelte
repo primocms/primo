@@ -1,20 +1,20 @@
 <script>
-  import { onMount } from 'svelte';
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { onMount } from 'svelte'
+  import { createEventDispatcher, getContext } from 'svelte'
   import modal from '../../../stores/app/modal'
-  import {showingIDE, userRole} from '../../../stores/app/misc'
+  import { showingIDE, userRole } from '../../../stores/app/misc'
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
-  export let deletable = true;
+  export let deletable = true
 
   onMount(() => {
-    dispatch('mount');
-  });
+    dispatch('mount')
+  })
 
   let element
   $: if (element) {
-    element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
+    // element.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"})
   }
 </script>
 
@@ -24,24 +24,30 @@
       class="add-content"
       on:click={() => {
         dispatch('convert', 'content')
-      }}>
+      }}
+    >
       <i class="fas fa-edit" />
       <span>Add Content</span>
     </button>
     <button
       class="add-component"
       on:click={() => {
-          $showingIDE = $userRole === 'developer' // so that 'Create Component' opens up IDE
-          modal.show('SYMBOL_LIBRARY', {
+        $showingIDE = $userRole === 'developer' // so that 'Create Component' opens up IDE
+        modal.show(
+          'SYMBOL_LIBRARY',
+          {
             onselect: (component) => {
               modal.hide()
               dispatch('select', component)
-            }
-          }, {
-            hideLocaleSelector: true
-          })
+            },
+          },
+          {
+            hideLocaleSelector: true,
+          }
+        )
       }}
-      on:click={() => dispatch('delete')}>
+      on:click={() => dispatch('delete')}
+    >
       <i class="fas fa-clone" />
       <span>Add Component</span>
     </button>
@@ -49,7 +55,8 @@
       <button
         on:click={() => dispatch('remove')}
         class="delete"
-        on:click={() => dispatch('delete')}>
+        on:click={() => dispatch('delete')}
+      >
         <span>Cancel</span>
       </button>
     {/if}
@@ -109,5 +116,4 @@
       }
     }
   }
-
 </style>

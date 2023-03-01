@@ -21,3 +21,9 @@ export const onMobile = !import.meta.env.SSR ? writable(/Android|webOS|iPhone|iP
 export const locale = writable('en')
 
 export const highlightedElement = writable(null)
+
+export const hoveredBlock = writable({
+  i: 0,
+  id: null,
+  position: ''
+})

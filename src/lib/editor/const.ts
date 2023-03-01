@@ -316,7 +316,7 @@ export const Site = ({ id, name } = { id: 'default', name: 'Default' }): Site =>
       below: ''
     },
     css: `\
-@import url("https://unpkg.com/$lib/editor@1.3.64/reset.css");
+@import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
 
 html {
 

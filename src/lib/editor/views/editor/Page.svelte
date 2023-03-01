@@ -1,74 +1,70 @@
 <script>
-  import { fade } from 'svelte/transition';
-  import { find, isEqual, cloneDeep } from 'lodash-es';
-  import Block from './Layout/Block.svelte';
-  import Spinner from '../../ui/misc/Spinner.svelte';
+  import { fade } from 'svelte/transition'
+  import { find, isEqual, cloneDeep } from 'lodash-es'
+  import Block from './Layout/Block.svelte'
+  import Spinner from '../../ui/misc/Spinner.svelte'
   import {
     pages,
     symbols,
     code as siteCode,
     id as siteID,
-    content
-  } from '../../stores/data/draft';
-  import {locale} from '../../stores/app/misc'
-  import {updatePreview} from '../../stores/actions'
+    content,
+  } from '../../stores/data/draft'
+  import { locale } from '../../stores/app/misc'
+  import { updatePreview } from '../../stores/actions'
   import {
     id as pageID,
     sections,
     fields as pageFields,
-    code as pageCode
-  } from '../../stores/app/activePage';
-  import {
-    processCode,
-    processCSS,
-    wrapInStyleTags,
-  } from '../../utils';
-  import { getPageData } from '../../stores/helpers';
+    code as pageCode,
+  } from '../../stores/app/activePage'
+  import { processCode, processCSS, wrapInStyleTags } from '../../utils'
+  import { getPageData } from '../../stores/helpers'
   import en from '../../languages/en.json'
-  import { init, addMessages } from 'svelte-i18n';
+  import { init, addMessages } from 'svelte-i18n'
 
   addMessages('en', en)
   init({
     fallbackLocale: 'en',
     initialLocale: 'en',
-  });
+  })
 
   export let id = 'index'
   $: $pageID = id
 
   let element
 
-  $: pageExists = findPage(id, $pages);
+  $: pageExists = findPage(id, $pages)
   function findPage(id, pages) {
-    const [root] = id.split('/');
-    const rootPage = find(pages, ['id', root]);
-    const childPage = rootPage ? find(rootPage?.pages, ['id', id]) : null;
-    return childPage || rootPage;
+    const [root] = id.split('/')
+    const rootPage = find(pages, ['id', root])
+    const childPage = rootPage ? find(rootPage?.pages, ['id', id]) : null
+    return childPage || rootPage
   }
 
   function hydrateInstance(block, symbols) {
-    const symbol = find(symbols, ['id', block.symbolID]);
+    const symbol = find(symbols, ['id', block.symbolID])
     return {
       ...symbol,
       id: block.id,
       type: block.type,
-      symbolID: block.symbolID
+      symbolID: block.symbolID,
     }
   }
 
-  $: set_page_content(id, $pages);
+  $: set_page_content(id, $pages)
   function set_page_content(id, pages) {
-    const [root, child] = id.split('/');
-    const rootPage = find(pages, ['id', root]);
+    const [root, child] = id.split('/')
+    const rootPage = find(pages, ['id', root])
     if (rootPage && !child) {
-      setPageStore(rootPage);
+      setPageStore(rootPage)
     } else if (rootPage && child) {
-      const childPage = find(rootPage.pages, ['id', id]);
+      const childPage = find(rootPage.pages, ['id', id])
       if (childPage) setPageStore(childPage)
     } else {
-      console.warn('Could not navigate to page', id, pages);
+      console.warn('Could not navigate to page', id, pages)
     }
-    
+
     if (page_mounted) updatePreview()
 
     function setPageStore(page) {
@@ -78,16 +74,20 @@
     }
   }
 
-  let html_head = '';
-  let html_below = '';
+  let html_head = ''
+  let html_below = ''
   let cached = { pageCode: null, siteCode: null }
-  $: $content, set_page_html($pageCode, $siteCode);
+  $: $content, set_page_html($pageCode, $siteCode)
   async function set_page_html(pageCode, siteCode) {
-    if (isEqual(pageCode, cached.pageCode) && isEqual(siteCode, cached.siteCode)) return
+    if (
+      isEqual(pageCode, cached.pageCode) &&
+      isEqual(siteCode, cached.siteCode)
+    )
+      return
     cached.pageCode = pageCode
     cached.siteCode = siteCode
-    const css = await processCSS(siteCode.css + pageCode.css);
-    const data = getPageData({});
+    const css = await processCSS(siteCode.css + pageCode.css)
+    const data = getPageData({})
     const [head, below] = await Promise.all([
       processCode({
         component: {
@@ -108,21 +108,23 @@
           data,
         },
       }),
-    ]);
-    html_head = !head.error ? head.head : '';
-    html_below = !below.error ? below.html : '';
+    ])
+    html_head = !head.error ? head.head : ''
+    html_below = !below.error ? below.html : ''
   }
 
   // Fade in page when all components mounted
-  let page_mounted = false;
-  $: page_is_empty = $sections.length <= 1 && $sections.length !== 0 && $sections[0]['type'] === 'options'
+  let page_mounted = false
+  $: page_is_empty =
+    $sections.length <= 1 &&
+    $sections.length !== 0 &&
+    $sections[0]['type'] === 'options'
 
   // detect when all sections are mounted
   let sections_mounted = 0
-  $: if ($siteID !== 'default' && (sections_mounted === $sections.length)) {
+  $: if ($siteID !== 'default' && sections_mounted === $sections.length) {
     page_mounted = true
-  } 
-
+  }
 </script>
 
 <svelte:head>
@@ -134,12 +136,7 @@
     <Spinner />
   </div>
 {/if}
-<div
-  bind:this={element}
-  id="page"
-  class:fadein={page_mounted}
-  lang={$locale}
->
+<div bind:this={element} id="page" class:fadein={page_mounted} lang={$locale}>
   {#if pageExists}
     {#each $sections as block, i (block.id)}
       {#if block.symbolID}
@@ -152,7 +149,7 @@
         <Block on:save on:mount={() => sections_mounted++} {block} {i} />
       {/if}
     {:else}
-        <Block block={{ type: 'options' }} />
+      <Block block={{ type: 'options' }} />
     {/each}
   {/if}
 </div>
@@ -160,7 +157,7 @@
 
 {#if page_is_empty}
   <div class="empty-state">
-    if you're seeing this, <br>your website is empty
+    if you're seeing this, <br />your website is empty
   </div>
 {/if}
 
@@ -183,7 +180,8 @@
     transition: 0.1s opacity;
     opacity: 0;
     border-top: 0;
-    margin-top: 85px;
+    height: calc(100vh - 52px);
+    overflow: auto;
   }
 
   #page.fadein {

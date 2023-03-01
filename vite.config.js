@@ -1,8 +1,14 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import ClassMangler from './class-mangler';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	plugins: [sveltekit()],
+	plugins: [
+    sveltekit(),
+    ClassMangler({
+      dev: true
+    })
+  ],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	},

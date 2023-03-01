@@ -1,34 +1,38 @@
 <script>
-  import { onMount } from 'svelte';
-  import { fade } from 'svelte/transition';
-  import modal from '../../stores/app/modal';
-  import { showingIDE } from '../../stores/app';
-  import * as Mousetrap from 'mousetrap';
+  import { onMount } from 'svelte'
+  import { fade } from 'svelte/transition'
+  import modal from '../../stores/app/modal'
+  import { showingIDE } from '../../stores/app'
+  import * as Mousetrap from 'mousetrap'
 
-  export let visible;
+  export let visible
 
   onMount(() => {
     Mousetrap.bind(['esc'], () => {
       if (!$modal.disabledBgClose) {
-        modal.hide();
+        modal.hide()
       }
-    });
-  });
+    })
+  })
 
-  $: variants = $modal.variants || '';
+  $: variants = $modal.variants || ''
 
   function switchView() {
-    $showingIDE = !$showingIDE;
+    $showingIDE = !$showingIDE
   }
-
 </script>
 
 {#if visible}
-  <div id="primo-modal" class="modal mousetrap primo-reset {variants}" transition:fade={{ duration: 100 }}>
+  <div
+    id="primo-modal"
+    class="primo-modal modal mousetrap primo-reset"
+    transition:fade={{ duration: 100 }}
+  >
     <div
       class="modal-background"
       class:hovered={!$modal.disabledBgClose}
-      on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()} />
+      on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()}
+    />
     <div class="modal-card">
       <div class="modal-card-body">
         <slot />
@@ -100,5 +104,4 @@
     );  to allow children to scroll on overflow (i.e. not grow) */
     /* overflow-y: scroll; */ /* causes Styles to scroll by an inch */
   }
-
 </style>

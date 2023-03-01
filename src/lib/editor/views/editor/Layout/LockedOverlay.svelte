@@ -1,27 +1,13 @@
 <script>
-  import { code, trash, edit } from '../../../components/svg/small'
-
+  // import Letter from '$lib/components/Letter.svelte';
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { sections } from '../../../stores/app/activePage'
   import Icon from '@iconify/svelte'
 
   const dispatch = createEventDispatcher()
-
-  export let i
-  export let node = null
-
-  export let editable
-
-  $: isFirst = i === 0
-  $: isLast = i === $sections.length - 1
 </script>
 
-<div
-  in:fade={{ duration: 100 }}
-  class="block-buttons primo-reset"
-  bind:this={node}
->
+<div class="locked-overlay primo-reset" transition:fade={{ duration: 200 }}>
   <div class="top">
     <div class="component-button">
       <button on:click={() => dispatch('edit-content')}>
@@ -32,39 +18,40 @@
       </button>
     </div>
     <div class="top-right">
-      <button on:click={() => dispatch('delete')} class="button-delete">
-        <Icon icon="ion:trash" />
-      </button>
-      <button on:click={() => dispatch('duplicate')}>
-        <Icon icon="ion:duplicate" />
-      </button>
-      {#if !isFirst}
-        <button on:click={() => dispatch('moveUp')}>
-          <Icon icon="heroicons-outline:chevron-up" />
-        </button>
-      {/if}
+      <div class="lock">
+        <div>
+          <Icon icon="carbon:locked" />
+          <span>Locked</span>
+        </div>
+        <!-- <Letter letter="m" /> -->
+      </div>
     </div>
   </div>
   <div class="bottom">
-    {#if !isLast}
-      <button class="bottom-right" on:click={() => dispatch('moveDown')}>
-        <Icon icon="heroicons-outline:chevron-down" />
-      </button>
-    {/if}
+    <button class="bottom-right" on:click={() => dispatch('moveDown')}>
+      <svg
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+        ><path
+          fill-rule="evenodd"
+          d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+          clip-rule="evenodd"
+        /></svg
+      >
+    </button>
   </div>
 </div>
 
 <style lang="postcss">
-  .block-buttons {
+  .locked-overlay {
     box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
     z-index: 999999;
     position: absolute;
     inset: 0px;
+    background: rgba(0, 0, 0, 0.7);
   }
 
-  .is-content {
-    box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
-  }
   .component-button {
     display: flex;
     left: 0px;
@@ -76,17 +63,21 @@
 
   .top-right {
     display: flex;
-  }
+    flex-direction: column;
+    .lock {
+      color: white;
+      display: flex;
+      gap: 1rem;
+      padding: 0.5rem 1rem;
 
-  .button-delete {
-    /* border-left: 1px solid var(--primo-color-brand-dark); */
-    border-bottom-left-radius: 0.25rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+      div {
+        display: flex;
+        align-items: center;
+      }
+    }
   }
 
   button {
-    pointer-events: all;
     padding: 0 1rem;
     display: flex;
     justify-content: center;
@@ -108,19 +99,17 @@
 
     &:hover {
       z-index: 1; /* show full shadow */
-      /* box-shadow: var(--primo-ring-primogreen); */
+      box-shadow: var(--primo-ring-primogreen);
+    }
+
+    &:active {
       background: var(--primo-color-brand);
-      color: var(--colr-gray-9);
+      color: var(--color-gray-8);
     }
 
-    /* &:active {
-			background: var(--primo-color-brand);
-			color: var(--color-gray-8);
-		} */
-
-    &.top-right:first-child {
+    /* &.top-right:first-child {
       border-bottom-left-radius: 0.25rem;
-    }
+    } */
 
     &.bottom-right:first-child {
       border-top-left-radius: 0.25rem;
@@ -137,15 +126,10 @@
 
   .top {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     position: absolute;
     /* width: 100%; */
     inset: 0px;
-  }
-  .component-svg {
-    display: flex;
-    position: absolute;
-    right: 0px;
   }
   .bottom {
     display: flex;

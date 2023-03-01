@@ -3,6 +3,8 @@
   import '$lib/assets/reset.css'
   import { browser } from '$app/environment'
   import { goto } from '$app/navigation'
+  import { mouse_position } from '$lib/stores'
+  import { onMount } from 'svelte'
   import {
     modal as primoModal,
     fieldTypes,
@@ -12,18 +14,36 @@
   } from '$lib/editor'
   import user from '../stores/user'
   import { config } from '../stores'
-  import supabase from '../supabase/core'
+  import { supabase as supabaseClient } from '$lib/supabase'
   import { watchForAutoLogin } from '../supabase/auth'
   import { users } from '../supabase/db'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
   import Build from '../extensions/Build.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
-  import * as actions from '../actions'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
+  import { invalidate } from '$app/navigation'
+
+  export let data
 
   const { saved } = stores
 
+  onMount(() => {
+    const { data } = supabaseClient.auth.onAuthStateChange(() => {
+      invalidate('supabase:auth')
+    })
+
+    return () => {
+      if (data) data.subscription.unsubscribe()
+    }
+  })
+
   if (browser) {
+    user.update((u) => ({
+      ...u,
+      ...data.session.user,
+      signedIn: true,
+    }))
+
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
@@ -73,49 +93,55 @@
     setContext('track', () => {})
   }
 
-  watchForAutoLogin(async (event, session) => {
-    if (event === 'SIGNED_IN') {
-      const { id, email } = session.user
-      const [userData] = await users.get(null, 'role, sites', email)
-      if (!userData) return
-      user.update((u) => ({
-        ...u,
-        uid: id,
-        id,
-        email,
-        signedIn: true,
-        admin: userData.role === 'admin',
-        role: userData.role === 'admin' ? 'developer' : userData.role,
-        sites: userData.sites,
-      }))
-    } else if (event === 'SIGNED_OUT') {
-      user.reset()
-      goto('/')
-    } else if (event === 'PASSWORD_RECOVERY') {
-      // passwordResetToken = session.access_token;
-    } else {
-      console.warn('NEW AUTH EVENT', event)
-    }
-  })
+  // watchForAutoLogin(async (event, session) => {
+  //   if (event === 'SIGNED_IN') {
+  //     const { id, email } = session.user
+  //     const [userData] = await users.get(null, 'role, sites', email)
+  //     if (!userData) return
+  //     user.update((u) => ({
+  //       ...u,
+  //       uid: id,
+  //       id,
+  //       email,
+  //       signedIn: true,
+  //       admin: userData.role === 'admin',
+  //       role: userData.role === 'admin' ? 'developer' : userData.role,
+  //       sites: userData.sites,
+  //     }))
+  //   } else if (event === 'SIGNED_OUT') {
+  //     user.reset()
+  //     goto('/')
+  //   } else if (event === 'PASSWORD_RECOVERY') {
+  //     // passwordResetToken = session.access_token;
+  //   } else {
+  //     console.warn('NEW AUTH EVENT', event)
+  //   }
+  // })
 
   $: if (!$user.signedIn) {
-    show({
-      id: 'AUTH',
-      options: {
-        disableClose: true,
-      },
-      props: {
-        onSignIn: async () => {
-          await Promise.all([
-            actions.sites.initialize(),
-            actions.hosts.initialize(),
-          ])
-          hide()
-        },
-      },
-    })
+    // show({
+    //   id: 'AUTH',
+    //   options: {
+    //     disableClose: true,
+    //   },
+    //   props: {
+    //     onSignIn: async () => {
+    //       await Promise.all([
+    //         actions.sites.initialize(),
+    //         actions.hosts.initialize(),
+    //       ])
+    //       hide()
+    //     },
+    //   },
+    // })
   }
 </script>
+
+<svelte:window
+  on:mousemove={(event) => {
+    $mouse_position = { x: event.x, y: event.y }
+  }}
+/>
 
 <div style:--primo-color-brand={$config.customization.color}>
   <Modal />
@@ -124,6 +150,9 @@
 
 <style>
   div {
+    height: 100vh;
+    overflow: hidden;
+
     --primo-color-brand: #35d994;
     --primo-color-brand-dark: #097548;
     --primo-color-white: white;

@@ -167,11 +167,6 @@
         font-size: 0.75rem;
         text-decoration: underline;
       }
-
-      svg {
-        height: 0.75rem;
-        width: 0.75rem;
-      }
     }
   }
 

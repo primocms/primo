@@ -4,5 +4,8 @@
     "example/functions": true,
     "example/node_modules": true,
     "example/public": true
-  }
+  },
+  "i18n-ally.localesPaths": [
+    "src/lib/editor/languages"
+  ]
 }

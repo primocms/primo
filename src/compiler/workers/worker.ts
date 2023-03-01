@@ -185,6 +185,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                                     .filter(w => !w.message.startsWith(`Component has unused export`))
                                     .filter(w => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
                                     .filter(w => w.code !== `a11y-missing-content`)
+                                    .filter(w => !w.message.startsWith(`Unused CSS selector`)) // TODO: reinstate
                                 if (warnings[0]) {
                                     final.error = warnings[0].toString()
                                     return ''

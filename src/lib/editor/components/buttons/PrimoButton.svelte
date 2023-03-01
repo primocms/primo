@@ -1,13 +1,13 @@
 <script>
-  import dropdown from '../../stores/app/dropdown';
-  import { loadingSite, options } from '../../stores/app/misc';
-  import Spinner from '../../components/misc/Spinner.svelte';
-  import PrimoLogo from '../svg/PrimoLogo.svelte';
-  import DropdownButton from './DropdownButton.svelte';
+  import dropdown from '../../stores/app/dropdown'
+  import { loadingSite, options } from '../../stores/app/misc'
+  import Spinner from '../../components/misc/Spinner.svelte'
+  import PrimoLogo from '../svg/PrimoLogo.svelte'
+  import DropdownButton from './DropdownButton.svelte'
 
-  export let variants = '';
+  export let variants = ''
 
-  let showingDropdown = false;
+  let showingDropdown = false
 
   function handleToggle() {
     showingDropdown = !showingDropdown
@@ -15,13 +15,12 @@
 </script>
 
 <button
-  id="primo-button"
-  class={variants}
+  class="button"
   class:bg-primored={showingDropdown}
   class:chevron={showingDropdown}
   aria-label="See all sites"
   href="/"
-  on:click={() => showingDropdown = !showingDropdown}
+  on:click={() => (showingDropdown = !showingDropdown)}
 >
   {#if $loadingSite}
     <Spinner />
@@ -35,7 +34,11 @@
     {#each $dropdown as button}
       <li class="xyz-in">
         {#if button.component}
-          <svelte:component this={button.component} {...button.props} on:toggle={handleToggle} />
+          <svelte:component
+            this={button.component}
+            {...button.props}
+            on:toggle={handleToggle}
+          />
         {:else}
           <DropdownButton {button} />
         {/if}
@@ -45,7 +48,7 @@
 {/if}
 
 <style lang="postcss">
-  #primo-button {
+  .button {
     aspect-ratio: 1;
     margin-right: 0.5rem;
     padding: 0.5rem;

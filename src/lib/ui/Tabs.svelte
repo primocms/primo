@@ -5,13 +5,12 @@
 
   export let tabs
   export let activeTab
-  export let variants = ''
 
   $: dispatch('switch', activeTab)
 </script>
 
 {#if tabs.length > 1}
-  <div class="tabs {variants}" in:fade={{ duration: 200 }}>
+  <div class="tabs" in:fade={{ duration: 200 }}>
     <ul xyz="fade stagger">
       {#each tabs as tab}
         <li class="xyz-in" class:is-active={activeTab === tab}>

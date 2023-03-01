@@ -1,45 +1,40 @@
 <script>
-  import { createEventDispatcher, onMount, getContext } from 'svelte';
+  import { createEventDispatcher, onMount, getContext } from 'svelte'
   import { chain as _chain } from 'lodash-es'
   import Icon from '@iconify/svelte'
-  import { fade } from 'svelte/transition';
-  const dispatch = createEventDispatcher();
+  import { fade } from 'svelte/transition'
+  const dispatch = createEventDispatcher()
   import * as Popper from '@popperjs/core'
-  import {getComponentData, getSymbolUseInfo} from '../../../stores/helpers'
+  import { getComponentData, getSymbolUseInfo } from '../../../stores/helpers'
 
-  import IFrame from './IFrame.svelte';
-  import {
-    processCode,
-    processCSS,
-    wrapInStyleTags,
-  } from '../../../utils';
-  import { code as siteCode } from '../../../stores/data/draft';
-  import {
-    code as pageCode
-  } from '../../../stores/app/activePage';
+  import IFrame from './IFrame.svelte'
+  import { processCode, processCSS, wrapInStyleTags } from '../../../utils'
+  import { code as siteCode } from '../../../stores/data/draft'
+  import { code as pageCode } from '../../../stores/app/activePage'
 
   export let titleEditable = true
-  export let symbol;
-  export let name = symbol.name || '';
-  export let buttons = [];
-  export let hovering = false;
+  export let symbol
+  export let name = symbol.name || ''
+  export let buttons = []
+  export let hovering = false
   export let action = null
 
-  let height = localStorage.getItem(`symbol-height-${symbol.id}`) || 0;
-  $: localStorage.setItem(`symbol-height-${symbol.id}`, height + 32);
+  let height = localStorage.getItem(`symbol-height-${symbol.id}`) || 0
+  $: localStorage.setItem(`symbol-height-${symbol.id}`, height + 32)
 
   function changeName() {
-    document.activeElement.blur();
-    symbol.name = name;
-    dispatch('update', symbol);
+    document.activeElement.blur()
+    symbol.name = name
+    dispatch('update', symbol)
     editingTitle = false
   }
 
-  let componentCode;
-  compileComponentCode(symbol);
+  let componentCode
+  compileComponentCode(symbol)
   async function compileComponentCode(symbol) {
     const componentData = getComponentData({ component: symbol })
     const parentCss = await processCSS($siteCode.css + $pageCode.css)
+    console.log({ parentCss })
     const res = await processCode({
       component: {
         ...symbol.code,
@@ -54,43 +49,42 @@
       },
       buildStatic: true,
       hydrated: false,
-      ignoreCachedData: true
-    });
+      ignoreCachedData: true,
+    })
     componentCode = res
   }
-  
+
   const info = getSymbolUseInfo(symbol.id)
   let button_node
   let tooltip_node
   $: if (tooltip_node) {
     Popper.createPopper(button_node, tooltip_node, {
       placement: 'top',
-    });
+    })
   }
 
-  let active;
+  let active
 
   let editingTitle = false
 
   let header
-  
-  const hide_options = getContext('SIMPLE')
 
+  const hide_options = getContext('SIMPLE')
 </script>
 
-
-{#if buttons.length === 1 && action} <!-- make whole container a button -->
+{#if buttons.length === 1 && action}
+  <!-- make whole container a button -->
   <button
     in:fade={{ duration: 100 }}
     class="component-wrapper"
     id="component-{symbol.id}"
     style="height:{height + 32}px"
     on:click={() => {
-      active = true;
-      action.onclick();
+      active = true
+      action.onclick()
     }}
     class:active
-    >
+  >
     <IFrame bind:height {componentCode} />
     {#if name}
       <header>
@@ -102,11 +96,22 @@
     {/if}
     <div class="overlay">
       {#if !active}
-        <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z" fill="white"/>
+        <svg
+          width="13"
+          height="12"
+          viewBox="0 0 13 12"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z"
+            fill="white"
+          />
         </svg>
       {/if}
-      <span>{active && action.clicked ? action.clicked.label : action.label}</span>
+      <span
+        >{active && action.clicked ? action.clicked.label : action.label}</span
+      >
     </div>
   </button>
 {:else}
@@ -117,55 +122,85 @@
   >
     {#if action}
       <div class="primary-action" class:active>
-        <button on:click={() => {
-          active = true
-          action.onclick()
-        }}>
+        <button
+          on:click={() => {
+            active = true
+            action.onclick()
+          }}
+        >
           <IFrame bind:height {componentCode} />
           <div class="overlay">
             {#if !active}
-              <svg width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z" fill="white"/>
+              <svg
+                width="13"
+                height="12"
+                viewBox="0 0 13 12"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9.5 5.625V6.375C9.5 6.52969 9.37344 6.65625 9.21875 6.65625H7.15625V8.71875C7.15625 8.87344 7.02969 9 6.875 9H6.125C5.97031 9 5.84375 8.87344 5.84375 8.71875V6.65625H3.78125C3.62656 6.65625 3.5 6.52969 3.5 6.375V5.625C3.5 5.47031 3.62656 5.34375 3.78125 5.34375H5.84375V3.28125C5.84375 3.12656 5.97031 3 6.125 3H6.875C7.02969 3 7.15625 3.12656 7.15625 3.28125V5.34375H9.21875C9.37344 5.34375 9.5 5.47031 9.5 5.625ZM12.3125 6C12.3125 9.21094 9.71094 11.8125 6.5 11.8125C3.28906 11.8125 0.6875 9.21094 0.6875 6C0.6875 2.78906 3.28906 0.1875 6.5 0.1875C9.71094 0.1875 12.3125 2.78906 12.3125 6ZM11.1875 6C11.1875 3.41016 9.08984 1.3125 6.5 1.3125C3.91016 1.3125 1.8125 3.41016 1.8125 6C1.8125 8.58984 3.91016 10.6875 6.5 10.6875C9.08984 10.6875 11.1875 8.58984 11.1875 6Z"
+                  fill="white"
+                />
               </svg>
             {/if}
-            <span>{active && action.clicked ? action.clicked.label : action.label}</span>
+            <span
+              >{active && action.clicked
+                ? action.clicked.label
+                : action.label}</span
+            >
           </div>
         </button>
       </div>
     {:else}
       <IFrame bind:height {componentCode} />
     {/if}
-    <header bind:this={header} class:has-action={action && buttons.length === 0}>
+    <header
+      bind:this={header}
+      class:has-action={action && buttons.length === 0}
+    >
       <div class="component-label">
         {#if titleEditable}
           <form on:submit|preventDefault={changeName}>
             <!-- svelte-ignore a11y-label-has-associated-control -->
-            <label on:click={() => editingTitle = true}>
+            <label on:click={() => (editingTitle = true)}>
               {#if name || editingTitle}
-              <input type="text" bind:value={name} size={name.length} />
+                <input type="text" bind:value={name} size={name.length} />
               {/if}
               {#if !editingTitle}
                 <svg
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"><path
-                  d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                <path
-                  fill-rule="evenodd"
-                  d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                  clip-rule="evenodd" /></svg>
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                  ><path
+                    d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
+                  />
+                  <path
+                    fill-rule="evenodd"
+                    d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                    clip-rule="evenodd"
+                  /></svg
+                >
               {/if}
             </label>
           </form>
-          <span bind:this={button_node} class="info" title="Used {info.frequency} times on site">
+          <span
+            bind:this={button_node}
+            class="info"
+            title="Used {info.frequency} times on site"
+          >
             <Icon icon="akar-icons:info" width="1.25rem" height="100%" />
           </span>
           <div bind:this={tooltip_node} class="info-tooltip">
-            <div id="arrow" data-popper-arrow></div>
+            <div id="arrow" data-popper-arrow />
             {#if info.frequency === 0}
               <span>Unused</span>
             {:else}
-              <span>Used on {info.pages.join(', ')} {info.frequency} {info.frequency === 1 ? 'time' : 'times'}</span>
+              <span
+                >Used on {info.pages.join(', ')}
+                {info.frequency}
+                {info.frequency === 1 ? 'time' : 'times'}</span
+              >
             {/if}
           </div>
         {:else if name}
@@ -181,12 +216,13 @@
               title={button.title}
               class:highlight={button.highlight && !active}
               on:mouseenter={() => {
-                hovering = true;
+                hovering = true
               }}
               on:mouseleave={() => {
-                hovering = false;
+                hovering = false
               }}
-              on:click={button.onclick}>
+              on:click={button.onclick}
+            >
               {#if active && button.clicked}
                 <span>{button.clicked.label}</span>
                 {@html button.clicked.svg}
@@ -203,7 +239,6 @@
     </header>
   </div>
 {/if}
-
 
 <style lang="postcss">
   button.component-wrapper {
@@ -226,7 +261,8 @@
       inset: 0;
       height: 100%;
     }
-    &.active, &:hover {
+    &.active,
+    &:hover {
       .overlay {
         opacity: 0.95;
       }
@@ -325,16 +361,16 @@
           font-size: 0.75rem;
         }
       }
-      
+
       .info {
         padding: 0 1rem;
         font-size: 3rem;
-        
+
         &:hover + .info-tooltip {
           opacity: 1;
         }
       }
-      
+
       .info-tooltip {
         font-weight: 500;
         background: var(--color-gray-9);
@@ -344,7 +380,7 @@
         transition: 0.1s opacity;
         pointer-events: none;
         translate: 0 -6px;
-        
+
         [data-popper-arrow],
         [data-popper-arrow]::before {
           position: absolute;
@@ -352,12 +388,12 @@
           height: 8px;
           background: inherit;
         }
-        
+
         [data-popper-arrow] {
           visibility: hidden;
           bottom: -4px;
         }
-        
+
         [data-popper-arrow]::before {
           visibility: visible;
           content: '';
@@ -409,5 +445,4 @@
       }
     }
   }
-
 </style>

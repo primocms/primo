@@ -10,7 +10,7 @@
   import { setCustomization } from '../../../actions'
   import config from '../../../stores/config'
   import ImageField from '../../../extensions/FieldTypes/ImageField.svelte'
-  import RepeaterField from '$lib/editor/field-types/RepeaterField.svelte'
+  // import RepeaterField from '$lib/editor/field-types/RepeaterField.svelte'
   import Link from '$lib/editor/field-types/Link.svelte'
   import TextField from '$lib/editor/field-types/ContentField.svelte'
 
@@ -92,7 +92,7 @@
           }}
         />
         <br /><br />
-        <RepeaterField
+        <!-- <RepeaterField
           field={{
             key: 'footer-links',
             label: 'Footer Links',
@@ -115,7 +115,7 @@
               links: detail.value.map((subfield) => ({ ...subfield.link })),
             })
           }}
-        />
+        /> -->
         <br /><br />
         <Link
           field={{

@@ -63,7 +63,7 @@
     <div class="container">
       <DashboardToolbar />
       <div class="sites-container">
-        <ul class="sites" xyz="fade stagger stagger-1">
+        <ul class="sites">
           {#each $sites as site, i (site.id)}
             <li class="xyz-in">
               <a class="site-link" href={site.id}>

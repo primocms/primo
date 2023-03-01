@@ -4,7 +4,7 @@
   import { stores } from '$lib/editor'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
-  import { setActiveEditor } from '../../actions'
+  // import { setActiveEditor } from '../../actions'
   const dispatch = createEventDispatcher()
 
   const { saved } = stores
@@ -16,7 +16,7 @@
       )
       e.preventDefault()
     } else {
-      setActiveEditor({ siteID: site.id, lock: false })
+      // setActiveEditor({ siteID: site.id, lock: false })
       dispatch('toggle')
     }
   }

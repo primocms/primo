@@ -33,7 +33,7 @@
         },
       })
     } else if (res) {
-      actions.setActiveEditor({ siteID })
+      // actions.setActiveEditor({ siteID })
       $activeSite = res
     }
   }
@@ -54,15 +54,14 @@
   }
 
   onDestroy(() => {
-    if (browser && !siteLocked) actions.setActiveEditor({ siteID, lock: false })
-    else if (siteLocked) modal.hide()
+    // if (browser && !siteLocked) actions.setActiveEditor({ siteID, lock: false })
+    if (siteLocked) modal.hide()
   })
 </script>
 
 <Primo
   data={$activeSite}
   page_id={$page.params.page}
-  role={$user.role}
   options={{
     logo: $config.customization.logo.url,
   }}
