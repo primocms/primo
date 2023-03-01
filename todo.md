@@ -1,15 +1,32 @@
 # Primo Version 2.0.0--beta
 
-Next steps: 
+Features: 
+- ~~Block picker side panel~~
 - On-page editing (text, images, links)
-- Dev mode
+- ~~Dev mode~~
 - Primo Cloud landing page
 - Static block fields
-- primocms.org landing page
 - Save site data as db records & auto save
 - Design fields
 - Collaboration (lock block)
+
+Marketing: 
 - Primo Cloud service
+- primocms.org landing page
+
+Also: 
+- ~~Obfuscate app classes to prevent clashing with user classes~~
+- Refactor to use SvelteKit SSR features
+- Consolidate HTML, CSS, JS, and Fields for Page and Site
+
+## Need designs for
+- Side panel
+- On-page image & link editor UI
+- primocms.org
+- primocloud.io
+
+## Considerations
+- No dev mode, just dev role always shows dev options?
 
 APIs: 
 - Mailgun for emailing invitations & notifications

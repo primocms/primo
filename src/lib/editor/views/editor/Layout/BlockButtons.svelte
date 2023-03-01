@@ -1,17 +1,14 @@
 <script>
-  import { code, trash, edit } from '../../../components/svg/small'
-
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
   import { sections } from '../../../stores/app/activePage'
   import Icon from '@iconify/svelte'
+  import { showingIDE } from '../../../stores/app/misc'
 
   const dispatch = createEventDispatcher()
 
   export let i
   export let node = null
-
-  export let editable
 
   $: isFirst = i === 0
   $: isLast = i === $sections.length - 1
@@ -27,9 +24,11 @@
       <button on:click={() => dispatch('edit-content')}>
         <Icon icon="material-symbols:edit-square-outline-rounded" />
       </button>
-      <button on:click={() => dispatch('edit-code')}>
-        <Icon icon="ph:code-bold" />
-      </button>
+      {#if $showingIDE}
+        <button on:click={() => dispatch('edit-code')}>
+          <Icon icon="ph:code-bold" />
+        </button>
+      {/if}
     </div>
     <div class="top-right">
       <button on:click={() => dispatch('delete')} class="button-delete">
