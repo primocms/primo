@@ -5,8 +5,10 @@
 
 <script>
   import _ from 'lodash-es'
+  import { fade } from 'svelte/transition'
+  import Icon from '@iconify/svelte'
   import { Editor, Extension } from '@tiptap/core'
-  import activePage, { sections } from '../../../stores/app/activePage'
+  import { sections } from '../../../stores/app/activePage'
   import StarterKit from '@tiptap/starter-kit'
   import Highlight from '@tiptap/extension-highlight'
   import Link from '@tiptap/extension-link'
@@ -95,8 +97,6 @@
   function setComponentData() {
     componentData = getComponentData({
       component: block,
-      loc: $locale,
-      site: is_preview ? site : $unsavedSite,
     })
   }
 
@@ -113,6 +113,13 @@
   let editor
   let local_html, local_element, local_key
   let floatingMenu, bubbleMenu
+
+  let image_editor
+  let image_editor_is_visible = false
+
+  let link_editor
+  let link_editor_is_visible = false
+
   function create_editor() {
     editor = new Editor({
       content: local_html,
@@ -188,15 +195,37 @@
 
           const html = element?.innerHTML?.trim() || ''
 
-          if (html || child_node) {
+          if (
+            html ||
+            child_node ||
+            element.tagName === 'IMG' ||
+            element.tagName === 'A'
+          ) {
             return true
           }
         })
 
+        console.log({ componentData })
+        const component_data = getComponentData({
+          component: block,
+          include_parent_data: false,
+        })
+        console.log({ component_data })
+
         // loop over componentData and match to elements
         const tagged_elements = new Set() // elements that have been matched to a componentData key
-        for (const [key, val] of Object.entries(componentData)) {
-          if (typeof val === 'string') {
+        for (const [key, val] of Object.entries(component_data)) {
+          const is_link =
+            typeof val === 'object' &&
+            Object.hasOwn(val, 'url') &&
+            Object.hasOwn(val, 'label')
+
+          const is_image =
+            typeof val === 'object' &&
+            Object.hasOwn(val, 'url') &&
+            Object.hasOwn(val, 'alt')
+
+          if (typeof val === 'string' || is_link || is_image) {
             // value is text
             search_elements_for_value(key, val)
           } else if (Array.isArray(val)) {
@@ -207,6 +236,7 @@
               }
             }
           } else if (typeof val === 'object' && val !== null) {
+            // value is group
             Object.entries(val).forEach(([subkey, subvalue]) => {
               search_elements_for_value(`${key}.${subkey}`, subvalue)
             })
@@ -226,57 +256,156 @@
         }
 
         function match_value_to_element(key, value, element) {
-          const has_html = element.innerHTML.includes('<!-- HTML_TAG_START -->')
-          // const html = has_html
-          // 	? element.innerHTML
-          // 			.replace(new RegExp('<!-- HTML_TAG_START -->|<!-- HTML_TAG_END -->', 'g'), '')
-          // 			.replace(/\s/g, '')
-          // 	: '';
-          const html = element.innerHTML.trim()
+          if (value === '' || !value) return false
+
+          const html = element.innerHTML?.trim()
           const text = element.innerText?.trim()
 
           const html_matches = typeof value == 'string' && value.trim() === html
           const text_matches = typeof value == 'string' && value.trim() === text
+          const image_matches =
+            typeof value === 'object' &&
+            value.alt === element.alt &&
+            value.url === element.src
+          const link_matches =
+            typeof value === 'object' &&
+            value.url?.replace(/\/$/, '') ===
+              element.href?.replace(/\/$/, '') &&
+            value.label === element.innerText
+
+          console.log({ key, value, element, image_matches })
 
           // if (has_html && !html_matches) {
           // 	console.log('NO MATCH', key, { value, html });
           // }
 
-          if (text_matches) {
-            // Markdown Field
-            set_editable({ element, key })
+          if (link_matches) {
+            set_editable_link({ element, key })
             return true
           } else if (html_matches) {
-            // Text Field
-            set_editable({ element, key, should_create_editor: true })
+            // Markdown Field
+            set_editable_editor({ element, key })
             return true
-          } else return false
+          } else if (image_matches) {
+            set_editable_image({ element, key })
+            return true
+          } else if (text_matches) {
+            // Text & Number Field
+            set_editable({ element, key })
+            return true
+          } else {
+            console.log('no match', { element, key, value })
+            return false
+          }
         }
 
-        async function set_editable({
-          element,
-          key = '',
-          should_create_editor = false,
-        }) {
-          element.style.outline = '0'
+        async function set_editable_image({ element, key = '' }) {
+          let rect
+          element.setAttribute(`data-key`, key)
+          // console.log({ image_editor });
+          element.style.transition = 'box-shadow 0.1s'
+          element.onmouseover = async (e) => {
+            image_editor_is_visible = true
+            await tick()
+            element.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.5)'
+            rect = element.getBoundingClientRect()
+            image_editor.style.left = `${rect.left}px`
+            image_editor.style.top = `${rect.top}px`
+            // image_editor.style.width = `${rect.width}px`
+            // image_editor.style.height = `${rect.height}px`
 
-          if (should_create_editor) {
-            local_html = element.innerHTML.trim()
-            local_element = element
-            local_key = key
-            element.innerHTML = ''
-            create_editor()
-          } else {
-            element.setAttribute(`data-key`, key)
-            element.onblur = (e) => {
-              dispatch('unlock')
-              save_edited_value(key, e.target.innerText)
+            const button = image_editor.querySelector('button')
+            button.onclick = () => {
+              modal.show('DIALOG', {
+                component: 'IMAGE',
+                onSubmit: ({ url, alt }) => {
+                  // TODO: save alt text
+                  console.log({ key, url, alt })
+                  element.src = url
+                  save_edited_value(key, url)
+                  modal.hide()
+                },
+                props: {
+                  value: {
+                    url: element.src,
+                    alt: element.alt,
+                  },
+                },
+              })
             }
-            element.onfocus = () => {
-              dispatch('lock')
-            }
-            element.contentEditable = true
           }
+          element.onmouseleave = (e) => {
+            const is_outside =
+              e.x >= Math.floor(rect.right) ||
+              e.y >= Math.floor(rect.bottom) ||
+              e.x <= Math.floor(rect.left) ||
+              e.y <= Math.floor(rect.top)
+            if (is_outside) {
+              element.style.boxShadow = 'none'
+              image_editor_is_visible = false
+            }
+          }
+        }
+
+        async function set_editable_editor({ element, key = '' }) {
+          local_html = element.innerHTML.trim()
+          local_element = element
+          local_key = key
+          element.innerHTML = ''
+          create_editor()
+        }
+
+        async function set_editable_link({ element, key }) {
+          element.style.outline = '0'
+          element.setAttribute(`data-key`, key)
+          element.contentEditable = true
+
+          let rect
+          element.addEventListener('click', async () => {
+            rect = element.getBoundingClientRect()
+
+            link_editor_is_visible = true
+            await tick()
+            link_editor.style.left = `${rect.left}px`
+            link_editor.style.top = `${rect.top + rect.height}px`
+
+            // on_click_outside(link_editor, () => {
+            //   link_editor_is_visible = false
+            // })
+
+            const input = link_editor.querySelector('input')
+            input.value = element.href
+
+            const form = link_editor.querySelector('form')
+            form.onsubmit = (e) => {
+              e.preventDefault()
+              element.href = input.value
+              save_edited_value(key, {
+                url: input.value,
+                label: element.innerText,
+              })
+              link_editor_is_visible = false
+            }
+
+            const button = link_editor.querySelector('button[data-link]')
+            button.onclick = () => {
+              window.open(element.href, '_blank')
+            }
+          })
+        }
+
+        async function set_editable({ element, key = '' }) {
+          element.style.outline = '0'
+          element.setAttribute(`data-key`, key)
+          element.onblur = (e) => {
+            dispatch('unlock')
+            save_edited_value(key, e.target.innerText)
+          }
+          element.onfocus = () => {
+            dispatch('lock')
+          }
+          element.contentEditable = true
+          // await tick()
         }
       }
     }
@@ -334,6 +463,7 @@
       }
 
       function openLinkInNewWindow(link) {
+        if (link.dataset.key) return // is editable
         link.addEventListener('click', () => {
           window.open(link.href, '_blank')
         })
@@ -371,6 +501,40 @@
     })
   }
 </script>
+
+{#if image_editor_is_visible}
+  <div
+    in:fade={{ duration: 100 }}
+    class="primo-reset image-editor"
+    bind:this={image_editor}
+  >
+    <button class="icon">
+      <Icon icon="uil:image-upload" />
+    </button>
+  </div>
+{/if}
+
+{#if link_editor_is_visible}
+  <div
+    in:fade={{ duration: 100 }}
+    class="primo-reset link-editor"
+    bind:this={link_editor}
+  >
+    <button
+      on:click={() => {
+        link_editor_is_visible = false
+      }}
+    >
+      <Icon icon="ic:round-close" />
+    </button>
+    <button class="icon" data-link>
+      <Icon icon="heroicons-solid:external-link" />
+    </button>
+    <form>
+      <input type="text" />
+    </form>
+  </div>
+{/if}
 
 <div bind:this={node} />
 {#if error}
@@ -445,7 +609,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="postcss">
   :global(.ProseMirror) {
     outline: 0 !important;
   }
@@ -477,5 +641,48 @@
     transform: translateY(-0.5rem);
     color: var(--color-gray-8);
     background-color: var(--primo-color-white);
+  }
+  .image-editor {
+    position: fixed;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-bottom-right-radius: 4px;
+    z-index: 99;
+
+    button {
+      padding: 4px 8px;
+    }
+  }
+
+  .link-editor {
+    position: fixed;
+    font-size: 14px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    z-index: 99;
+    display: flex;
+
+    button {
+      background: var(--color-gray-7);
+      display: flex;
+      align-items: center;
+      padding: 0 5px;
+      border-right: 1px solid var(--color-gray-6);
+    }
+
+    a {
+      background: var(--color-gray-7);
+      display: flex;
+      align-items: center;
+      padding: 0 5px;
+    }
+
+    input {
+      padding: 2px 5px;
+      background: var(--color-gray-8);
+      color: var(--color-gray-1);
+      outline: 0;
+    }
   }
 </style>

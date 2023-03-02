@@ -156,13 +156,15 @@ export function getComponentData({
   page = get(activePage),
   site = get(activeSite),
   loc = get(locale),
-  fallback = 'placeholder'
+  fallback = 'placeholder',
+  include_parent_data = true
 }: {
   component: ComponentType | SymbolType,
   page?: PageType,
   site?: SiteType,
   loc?: string,
-  fallback?: 'placeholder' | 'empty'
+  fallback?: 'placeholder' | 'empty',
+  include_parent_data?: boolean
 }): object {
   const symbol = component.type === 'symbol' ? component : _find(site.symbols, ['id', component.symbolID])
   const componentData = _chain(symbol.fields)
@@ -181,11 +183,15 @@ export function getComponentData({
   const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
   const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
-  return {
+  // remove sections from page content
+  const sectionIDs = page.sections.map(section => section.id)
+  const pageContent = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !sectionIDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
+
+  return include_parent_data ? {
     ...siteContent,
-    ...site.content[loc][page.id], // Page content (TODO: strip out section IDs, only include page keys)
+    ...pageContent,
     ...componentData
-  }
+  } : componentData
 }
 
 export function getPageData({

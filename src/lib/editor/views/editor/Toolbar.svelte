@@ -376,6 +376,7 @@
     padding: 0 1rem;
     border-radius: 0.25rem;
     color: var(--color-gray-1);
+    border: 1px solid var(--color-gray-8);
 
     &.on {
       background: var(--color-gray-8);

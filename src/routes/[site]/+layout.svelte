@@ -24,7 +24,7 @@
       siteLocked = true
       modal.show('DIALOG', {
         component: LockAlert,
-        componentProps: {
+        props: {
           email: res.active_editor,
           canGoToDashboard: false,
         },

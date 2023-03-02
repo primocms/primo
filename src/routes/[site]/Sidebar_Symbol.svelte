@@ -1,14 +1,13 @@
 <script>
   import { onMount, createEventDispatcher, tick } from 'svelte'
   const dispatch = createEventDispatcher()
-  import { fade } from 'svelte/transition'
   import modal from '$lib/editor/stores/app/modal'
   import { hoveredBlock, showingIDE } from '$lib/editor/stores/app/misc'
   import { mouse_position } from '$lib/stores'
   import { draggable } from '@neodrag/svelte'
   import { positions } from '$lib/editor/views/editor/Layout/ComponentNode.svelte'
-  // import MenuPopup from '../workspace-[workspace]/MenuPopup.svelte'
-  // import IconButton from '$lib/components/IconButton.svelte'
+  import MenuPopup from '$lib/components/MenuPopup.svelte'
+  import IconButton from '$lib/components/IconButton.svelte'
   import Block from './BlockItem.svelte'
   import { sections } from '$lib/editor/stores/app/activePage'
 
@@ -55,7 +54,7 @@
       return within_left && above_bottom && below_top
     })
 
-    if (!matching_block) {
+    if (!matching_block && $positions.length > 0) {
       // hovering below last block
       if (mouse_y > $positions.at(0)['bottom']) {
         matching_block = $positions.at(0)
@@ -185,8 +184,11 @@
     {/if}
     {#if controls_enabled}
       <div class="symbol-options">
-        <!-- <IconButton icon="material-symbols:edit-note-sharp" on:click={() => edit_symbol(symbol)} /> -->
-        <!-- <IconButton
+        <IconButton
+          icon="material-symbols:edit-note-sharp"
+          on:click={() => edit_symbol(symbol)}
+        />
+        <IconButton
           icon="material-symbols:code"
           on:click={() => edit_symbol(symbol)}
         />
@@ -214,7 +216,7 @@
               on_click: () => dispatch('delete'),
             },
           ]}
-        /> -->
+        />
       </div>
     {/if}
   </header>

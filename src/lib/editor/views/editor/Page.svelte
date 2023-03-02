@@ -114,7 +114,7 @@
   }
 
   // Fade in page when all components mounted
-  let page_mounted = false
+  let page_mounted = true
   $: page_is_empty =
     $sections.length <= 1 &&
     $sections.length !== 0 &&

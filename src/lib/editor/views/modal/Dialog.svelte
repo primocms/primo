@@ -3,11 +3,11 @@
   import Image from './Dialogs/Image.svelte'
   import Feedback from './Dialogs/Feedback.svelte'
   export let component
-  export let componentProps = {}
+  export let props = {}
   export let options = {
-    disableClose: false
+    disableClose: false,
   }
-  export let onSubmit 
+  export let onSubmit
 
   let value = ''
 </script>
@@ -16,25 +16,37 @@
   {#if !options.disableClose}
     <header>
       <button on:click={() => modal.hide()}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 13L13 1M13 13L1 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M1 13L13 1M13 13L1 1"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </button>
     </header>
   {/if}
   <div>
     {#if component === 'IMAGE'}
-      <Image on:submit={({detail}) => onSubmit(detail)} />
+      <Image on:submit={({ detail }) => onSubmit(detail)} {...props} />
     {:else if component === 'LINK'}
       <div class="message">Enter URL</div>
       <form on:submit|preventDefault={() => onSubmit(value)}>
         <!-- svelte-ignore a11y-autofocus -->
-        <input type="url" bind:value autofocus>
+        <input type="url" bind:value autofocus />
       </form>
     {:else if component === 'FEEDBACK'}
       <Feedback />
-    {:else if typeof(component) !== 'string'}
-      <svelte:component this={component} {...componentProps} />
+    {:else if typeof component !== 'string'}
+      <svelte:component this={component} {...props} />
     {/if}
   </div>
 </main>
