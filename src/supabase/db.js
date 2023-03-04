@@ -1,6 +1,4 @@
-import {get} from 'svelte/store'
 import supabase from './core'
-import user from '../stores/user'
 
 const subscriptions = {}
 

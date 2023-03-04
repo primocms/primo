@@ -1,48 +1,54 @@
-<script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
-
-  import autosize from 'autosize';
-  import showdown from '../libraries/showdown/showdown.min.js';
+<script context="module">
+  import showdown from '../libraries/showdown/showdown.min.js'
   import showdownHighlight from 'showdown-highlight'
-  const converter = new showdown.Converter({
-    extensions: [showdownHighlight()]
-  });
+  export const converter = new showdown.Converter({
+    extensions: [showdownHighlight()],
+  })
+</script>
 
-  export let field;
+<script>
+  import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
+
+  import autosize from 'autosize'
+
+  export let field
 
   // ensure value is correct shape
-  if (typeof(field.value) === 'string') {
+  if (typeof field.value === 'string') {
     field.value = {
       markdown: converter.makeMarkdown(field.value),
-      html: field.value
+      html: field.value,
     }
-  } else if (typeof(field.value) !== 'object' && !field.value.hasOwnProperty('markdown')) {
+  } else if (
+    typeof field.value !== 'object' &&
+    !field.value.hasOwnProperty('markdown')
+  ) {
     field.value = {
       markdown: '',
-      html: ''
+      html: '',
     }
   }
 
   let value = field.value.markdown
   $: parseContent(value)
 
-  let element;
+  let element
 
   $: if (element) {
     // grow textarea to size of content
-    autosize(element);
+    autosize(element)
   }
 
-  // easily delete default content 
-  function selectAll({target}) {
+  // easily delete default content
+  function selectAll({ target }) {
     if (field.default === field.value.markdown) target.select()
   }
 
   function parseContent(markdown) {
-    field.value.html = converter.makeHtml(markdown);
-    field.value.markdown = markdown;
-    dispatch('input');
+    field.value.html = converter.makeHtml(markdown)
+    field.value.markdown = markdown
+    dispatch('input')
   }
 
   function handleSave({ metaKey, key }) {
@@ -50,7 +56,6 @@
       dispatch('save')
     }
   }
-
 </script>
 
 <label for={field.id}>
@@ -58,10 +63,11 @@
   <textarea
     id={field.id}
     on:focus={selectAll}
-    on:keydown={handleSave} 
-    on:input={({target}) => parseContent(target.value)}
+    on:keydown={handleSave}
+    on:input={({ target }) => parseContent(target.value)}
     {value}
-    bind:this={element} />
+    bind:this={element}
+  />
 </label>
 
 <style lang="postcss">
@@ -78,8 +84,8 @@
     }
 
     textarea {
-      background: var(--input-background, #2A2B2D);
-      border: var(--input-border, 1px solid #3E4041);
+      background: var(--input-background, #2a2b2d);
+      border: var(--input-border, 1px solid #3e4041);
       border-radius: 4px;
       font-size: 0.875rem;
       outline: 0 !important;
@@ -91,5 +97,4 @@
       }
     }
   }
-
 </style>

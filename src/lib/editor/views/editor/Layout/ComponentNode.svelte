@@ -31,6 +31,7 @@
   } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
   import modal from '../../../stores/app/modal'
+  import { converter } from '$lib/editor/field-types/Markdown.svelte'
 
   const dispatch = createEventDispatcher()
 
@@ -119,7 +120,6 @@
   function save_edited_value(key, value) {
     _.set(component_data, key, value)
     updateContent(block.id, component_data)
-    console.log({ block, component_data, key, value })
     update_symbol_with_static_values({
       ...block,
       content: {
@@ -136,12 +136,20 @@
   let image_editor
   let image_editor_is_visible = false
 
+  let actively_hovered_image
+  function set_hovered_image_position() {
+    if (actively_hovered_image) {
+      const rect = actively_hovered_image.getBoundingClientRect()
+      image_editor.style.top = `${rect.top}px`
+    }
+  }
+
   let link_editor
   let link_editor_is_visible = false
 
-  function create_editor() {
+  function create_editor(html = null) {
     editor = new Editor({
-      content: local_html,
+      content: html || local_html,
       element: local_element,
       extensions: [
         StarterKit,
@@ -165,7 +173,11 @@
           },
           onBlur() {
             dispatch('unlock')
-            save_edited_value(local_key, editor.getHTML())
+            const html = local_element.children[0].innerHTML // editor.getHTML() gets old value
+            save_edited_value(local_key, {
+              html,
+              markdown: converter.makeMarkdown(html),
+            })
           },
         }),
       ],
@@ -173,10 +185,15 @@
   }
 
   let error = ''
-  async function compileComponentCode(rawCode) {
+  async function compileComponentCode(rawCode, force_recompile = false) {
     // workaround for this function re-running anytime something changes on the page
     // (as opposed to when the code actually changes)
-    if (html !== rawCode.html || css !== rawCode.css || js !== rawCode.js) {
+    if (
+      force_recompile ||
+      html !== rawCode.html ||
+      css !== rawCode.css ||
+      js !== rawCode.js
+    ) {
       html = rawCode.html
       css = rawCode.css
       js = rawCode.js
@@ -201,233 +218,252 @@
           props: combined_data,
         })
 
-        const elements_with_text = Array.from(
-          node.querySelectorAll('*')
-        ).filter((element) => {
-          if (['STYLE', 'TITLE'].includes(element.tagName)) return false
-
-          const [child_node] = Array.from(element.childNodes).filter((node) => {
-            const has_text =
-              node?.nodeName === '#text' && node.nodeValue.trim().length > 0
-            return has_text
-          })
-
-          const html = element?.innerHTML?.trim() || ''
-
-          if (
-            html ||
-            child_node ||
-            element.tagName === 'IMG' ||
-            element.tagName === 'A'
-          ) {
-            return true
-          }
-        })
-
-        // loop over component_data and match to elements
-        const tagged_elements = new Set() // elements that have been matched to a component_data key
-        for (const [key, val] of Object.entries(component_data)) {
-          const is_link =
-            typeof val === 'object' &&
-            Object.hasOwn(val, 'url') &&
-            Object.hasOwn(val, 'label')
-
-          const is_image =
-            typeof val === 'object' &&
-            Object.hasOwn(val, 'url') &&
-            Object.hasOwn(val, 'alt')
-
-          if (typeof val === 'string' || is_link || is_image) {
-            // value is text
-            search_elements_for_value(key, val)
-          } else if (Array.isArray(val)) {
-            // value is repeater
-            for (const [index, item] of Object.entries(val)) {
-              for (const [subkey, val] of Object.entries(item)) {
-                search_elements_for_value(`${key}[${index}].${subkey}`, val)
-              }
-            }
-          } else if (typeof val === 'object' && val !== null) {
-            // value is group
-            Object.entries(val).forEach(([subkey, subvalue]) => {
-              search_elements_for_value(`${key}.${subkey}`, subvalue)
-            })
-          }
-        }
-
-        function search_elements_for_value(key, val) {
-          for (const element of elements_with_text) {
-            if (tagged_elements.has(element)) continue // element is already tagged, skip
-
-            const matched = match_value_to_element(key, val, element)
-            if (matched) {
-              tagged_elements.add(element)
-              break
-            }
-          }
-        }
-
-        function match_value_to_element(key, value, element) {
-          if (value === '' || !value) return false
-
-          const html = element.innerHTML?.trim()
-          const text = element.innerText?.trim()
-
-          const html_matches = typeof value == 'string' && value.trim() === html
-          const text_matches = typeof value == 'string' && value.trim() === text
-          const image_matches =
-            typeof value === 'object' &&
-            value.alt === element.alt &&
-            value.url === element.src
-          const link_matches =
-            typeof value === 'object' &&
-            value.url?.replace(/\/$/, '') ===
-              element.href?.replace(/\/$/, '') &&
-            value.label === element.innerText
-
-          // if (has_html && !html_matches) {
-          // 	console.log('NO MATCH', key, { value, html });
-          // }
-
-          if (link_matches) {
-            set_editable_link({ element, key })
-            return true
-          } else if (image_matches) {
-            set_editable_image({ element, key })
-            return true
-          } else if (text_matches) {
-            // Markdown Field
-            set_editable({ element, key })
-            return true
-          } else if (html_matches) {
-            // Text & Number Field
-            set_editable_editor({ element, key })
-            return true
-          } else {
-            // console.log('no match', { element, key, value })
-            return false
-          }
-        }
-
-        async function set_editable_image({ element, key = '' }) {
-          let rect
-          element.setAttribute(`data-key`, key)
-          // console.log({ image_editor });
-          element.style.transition = 'box-shadow 0.1s'
-          element.onmouseover = async (e) => {
-            image_editor_is_visible = true
-            await tick()
-            element.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.5)'
-            rect = element.getBoundingClientRect()
-            image_editor.style.left = `${rect.left}px`
-            image_editor.style.top = `${rect.top}px`
-            // image_editor.style.width = `${rect.width}px`
-            // image_editor.style.height = `${rect.height}px`
-
-            const button = image_editor.querySelector('button')
-            button.onclick = () => {
-              modal.show('DIALOG', {
-                component: 'IMAGE',
-                onSubmit: ({ url, alt }) => {
-                  element.src = url
-                  save_edited_value(key, { url, alt })
-                  modal.hide()
-                },
-                props: {
-                  value: {
-                    url: element.src,
-                    alt: element.alt,
-                  },
-                },
-              })
-            }
-          }
-          element.onmouseleave = (e) => {
-            const is_outside =
-              e.x >= Math.floor(rect.right) ||
-              e.y >= Math.floor(rect.bottom) ||
-              e.x <= Math.floor(rect.left) ||
-              e.y <= Math.floor(rect.top)
-            if (is_outside) {
-              element.style.boxShadow = 'none'
-              image_editor_is_visible = false
-            }
-          }
-        }
-
-        async function set_editable_editor({ element, key = '' }) {
-          local_html = element.innerHTML.trim()
-          local_element = element
-          local_key = key
-          element.innerHTML = ''
-          create_editor()
-        }
-
-        async function set_editable_link({ element, key }) {
-          element.style.outline = '0'
-          element.setAttribute(`data-key`, key)
-          element.contentEditable = true
-
-          let rect
-          element.addEventListener('click', async () => {
-            rect = element.getBoundingClientRect()
-
-            link_editor_is_visible = true
-            await tick()
-            link_editor.style.left = `${rect.left}px`
-            link_editor.style.top = `${rect.top + rect.height}px`
-
-            // on_click_outside(link_editor, () => {
-            //   link_editor_is_visible = false
-            // })
-
-            const input = link_editor.querySelector('input')
-            input.value = element.href
-
-            const form = link_editor.querySelector('form')
-            form.onsubmit = (e) => {
-              e.preventDefault()
-              element.href = input.value
-              save_edited_value(key, {
-                url: input.value,
-                label: element.innerText,
-              })
-              link_editor_is_visible = false
-            }
-
-            const button = link_editor.querySelector('button[data-link]')
-            button.onclick = () => {
-              window.open(element.href, '_blank')
-            }
-          })
-        }
-
-        async function set_editable({ element, key = '' }) {
-          element.style.outline = '0'
-          element.setAttribute(`data-key`, key)
-          element.onblur = (e) => {
-            dispatch('unlock')
-            save_edited_value(key, e.target.innerText)
-          }
-          element.onfocus = () => {
-            dispatch('lock')
-          }
-          element.contentEditable = true
-          // await tick()
-        }
+        make_content_editable()
       }
     }
   }
 
+  async function make_content_editable() {
+    const elements_with_text = Array.from(node.querySelectorAll('*')).filter(
+      (element) => {
+        if (['STYLE', 'TITLE'].includes(element.tagName)) return false
+
+        const [child_node] = Array.from(element.childNodes).filter((node) => {
+          const has_text =
+            node?.nodeName === '#text' && node.nodeValue.trim().length > 0
+          return has_text
+        })
+
+        const html = element?.innerHTML?.trim() || ''
+
+        if (
+          html ||
+          child_node ||
+          element.tagName === 'IMG' ||
+          element.tagName === 'A'
+        ) {
+          return true
+        }
+      }
+    )
+
+    // loop over component_data and match to elements
+    const tagged_elements = new Set() // elements that have been matched to a component_data key
+    for (const [key, val] of Object.entries(component_data)) {
+      const is_link =
+        typeof val === 'object' &&
+        Object.hasOwn(val, 'url') &&
+        Object.hasOwn(val, 'label')
+
+      const is_image =
+        typeof val === 'object' &&
+        Object.hasOwn(val, 'url') &&
+        Object.hasOwn(val, 'alt')
+
+      const is_markdown =
+        typeof val === 'object' &&
+        Object.hasOwn(val, 'html') &&
+        Object.hasOwn(val, 'markdown')
+
+      if (typeof val === 'string' || is_link || is_image || is_markdown) {
+        // value is text
+        search_elements_for_value(key, val)
+      } else if (Array.isArray(val)) {
+        // value is repeater
+        for (const [index, item] of Object.entries(val)) {
+          for (const [subkey, val] of Object.entries(item)) {
+            search_elements_for_value(`${key}[${index}].${subkey}`, val)
+          }
+        }
+      } else if (typeof val === 'object' && val !== null) {
+        // value is group
+        Object.entries(val).forEach(([subkey, subvalue]) => {
+          search_elements_for_value(`${key}.${subkey}`, subvalue)
+        })
+      }
+    }
+
+    function search_elements_for_value(key, val) {
+      for (const element of elements_with_text) {
+        if (tagged_elements.has(element)) continue // element is already tagged, skip
+
+        const matched = match_value_to_element(key, val, element)
+        if (matched) {
+          tagged_elements.add(element)
+          break
+        }
+      }
+    }
+
+    function match_value_to_element(key, value, element) {
+      if (value === '' || !value) return false
+
+      const html = element.innerHTML?.trim()
+      const text = element.innerText?.trim()
+
+      const text_matches = typeof value == 'string' && value.trim() === text
+
+      const html_matches =
+        typeof value === 'object' && value.html && value.html.trim() === html
+
+      const image_matches =
+        typeof value === 'object' &&
+        value.alt !== undefined &&
+        value.url &&
+        value.alt === element.alt &&
+        value.url === element.src
+      const link_matches =
+        typeof value === 'object' &&
+        value.url?.replace(/\/$/, '') === element.href?.replace(/\/$/, '') &&
+        value.label === element.innerText
+
+      // if (has_html && !html_matches) {
+      // 	console.log('NO MATCH', key, { value, html });
+      // }
+
+      if (link_matches) {
+        set_editable_link({ element, key })
+        return true
+      } else if (image_matches) {
+        set_editable_image({ element, key })
+        return true
+      } else if (text_matches) {
+        // Markdown Field
+        set_editable({ element, key })
+        return true
+      } else if (html_matches) {
+        // Text & Number Field
+        set_editable_editor({ element, key })
+        return true
+      } else {
+        // console.log('no match', { element, key, value })
+        return false
+      }
+    }
+
+    async function set_editable_image({ element, key = '' }) {
+      let rect
+      element.setAttribute(`data-key`, key)
+      // console.log({ image_editor });
+      element.style.transition = 'box-shadow 0.1s'
+      element.onmouseover = async (e) => {
+        image_editor_is_visible = true
+        await tick()
+        element.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.5)'
+        rect = element.getBoundingClientRect()
+        image_editor.style.left = `${rect.left}px`
+        image_editor.style.top = `${rect.top}px`
+
+        // image_editor.style.width = `${rect.width}px`
+        // image_editor.style.height = `${rect.height}px`
+        actively_hovered_image = element
+
+        const button = image_editor.querySelector('button')
+        button.onclick = () => {
+          modal.show('DIALOG', {
+            component: 'IMAGE',
+            onSubmit: ({ url, alt }) => {
+              element.src = url
+              save_edited_value(key, { url, alt })
+              modal.hide()
+            },
+            props: {
+              value: {
+                url: element.src,
+                alt: element.alt,
+              },
+            },
+          })
+        }
+      }
+      element.onmouseleave = (e) => {
+        const is_outside =
+          e.x >= Math.floor(rect.right) ||
+          e.y >= Math.floor(rect.bottom) ||
+          e.x <= Math.floor(rect.left) ||
+          e.y <= Math.floor(rect.top)
+        if (is_outside) {
+          element.style.boxShadow = 'none'
+          image_editor_is_visible = false
+          actively_hovered_image = null
+        }
+      }
+    }
+
+    async function set_editable_editor({ element, key = '' }) {
+      local_html = element.innerHTML.trim()
+      local_element = element
+      local_key = key
+      element.innerHTML = ''
+      create_editor(element.innerHTML.trim())
+    }
+
+    async function set_editable_link({ element, key }) {
+      element.style.outline = '0'
+      element.setAttribute(`data-key`, key)
+      element.contentEditable = true
+
+      let rect
+      element.addEventListener('click', async () => {
+        rect = element.getBoundingClientRect()
+
+        link_editor_is_visible = true
+        await tick()
+        link_editor.style.left = `${rect.left}px`
+        link_editor.style.top = `${rect.top + rect.height}px`
+
+        // on_click_outside(link_editor, () => {
+        //   link_editor_is_visible = false
+        // })
+
+        const input = link_editor.querySelector('input')
+        input.value = element.href
+
+        const form = link_editor.querySelector('form')
+        form.onsubmit = (e) => {
+          e.preventDefault()
+          element.href = input.value
+          save_edited_value(key, {
+            url: input.value,
+            label: element.innerText,
+          })
+          link_editor_is_visible = false
+        }
+
+        const button = link_editor.querySelector('button[data-link]')
+        button.onclick = () => {
+          window.open(element.href, '_blank')
+        }
+      })
+    }
+
+    async function set_editable({ element, key = '' }) {
+      element.style.outline = '0'
+      element.setAttribute(`data-key`, key)
+      element.onblur = (e) => {
+        dispatch('unlock')
+        save_edited_value(key, e.target.innerText)
+      }
+      element.onfocus = () => {
+        dispatch('lock')
+      }
+      element.contentEditable = true
+      // await tick()
+    }
+  }
+
+  let local_component_data
   $: hydrateComponent(component_data)
   async function hydrateComponent(data) {
     if (!component) return
     else if (error) {
       error = null
       compileComponentCode(symbol.code)
-    } else {
+    } else if (!_.isEqual(data, local_component_data)) {
       // TODO: re-render the component if `data` doesn't match its fields (e.g. when removing a component field to add to the page)
       component.$set(data)
+      setTimeout(make_content_editable, 200)
+      local_component_data = _.cloneDeep(data)
     }
   }
 
@@ -490,7 +526,12 @@
   }
 
   $: if (browser && node) {
-    node.closest('#page').addEventListener('scroll', set_position)
+    node.closest('#page').addEventListener('scroll', on_page_scroll)
+  }
+
+  function on_page_scroll() {
+    set_position()
+    set_hovered_image_position()
   }
 
   // Workaround for meny breaking when rearranging
@@ -657,9 +698,14 @@
     color: white;
     border-bottom-right-radius: 4px;
     z-index: 99;
+    transform-origin: top left;
 
     button {
       padding: 4px 8px;
+
+      &:hover {
+        background: var(--color-gray-8);
+      }
     }
   }
 

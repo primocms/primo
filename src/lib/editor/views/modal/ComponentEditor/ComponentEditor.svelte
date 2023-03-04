@@ -70,11 +70,10 @@
 
   let local_component: SymbolType = cloneDeep(component) // local copy of component to modify & save
   let local_content =
-    component.type === 'symbol'
+    component.type === 'symbol' && component.content
       ? component.content
       : getComponentContent($content) // local copy of component content to modify & save
 
-  console.log({ local_content, component })
   // component data w/ page/site data included (for compilation)
   $: data = {
     ...getPageData({ loc: $locale }),
@@ -120,7 +119,7 @@
   function getFieldValues(fields: Array<FieldType>, loc: string): Array<any> {
     return fields.map((field) => {
       if (component.type === 'symbol') {
-        const field_value = component.content[loc]?.[field.key]
+        const field_value = component.content?.[loc]?.[field.key]
         const value =
           field_value !== undefined ? field_value : getCachedPlaceholder(field)
         return {

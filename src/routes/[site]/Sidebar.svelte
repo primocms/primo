@@ -114,7 +114,9 @@
         ],
       }))
     }
-    updateContent(instance.id, symbol.content[$locale]?.['en'])
+    if (symbol.content?.[$locale]) {
+      updateContent(instance.id, symbol.content[$locale]['en'])
+    }
   }
 </script>
 
