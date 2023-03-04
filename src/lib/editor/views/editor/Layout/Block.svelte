@@ -18,6 +18,7 @@
   import {
     pages,
     updateContent,
+    update_symbol_with_static_values,
     symbols,
     updatePreview,
     deleteSection,
@@ -129,7 +130,6 @@
             label: 'Save',
             onclick: (component) => {
               dispatch('unlock')
-
               symbols.update({
                 type: 'symbol',
                 id: component.symbolID,
@@ -141,6 +141,7 @@
                 if (localeContent)
                   updateContent(component.id, localeContent, localeID)
               })
+              update_symbol_with_static_values(component)
               modal.hide()
               updatePreview()
             },
@@ -217,6 +218,7 @@
       const rect = node.getBoundingClientRect()
       node.style.position = 'fixed'
       node.style.left = `${rect.left}px`
+      // node.style.right = `${rect.left + rect.width}px`
       node.style.top = `${toolbarHeight}px` // toolbarHeight missing 8px for some reason
     }
 
@@ -224,6 +226,7 @@
       node.style.position = 'absolute'
       node.style.top = '0px'
       node.style.left = '0px'
+      node.style.right = `0px`
       sticky = false
     }
   }

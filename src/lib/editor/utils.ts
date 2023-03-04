@@ -308,7 +308,8 @@ export function convertFields(fields = [], fn: Function = () => { }): Array<Fiel
       type: field.type,
       fields: convertFields(field.fields),
       options: field.options || {},
-      default: field.default || ''
+      default: field.default || '',
+      is_static: field.is_static || false,
     }
   })
 }

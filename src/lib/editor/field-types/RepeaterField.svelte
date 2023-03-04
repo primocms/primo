@@ -1,19 +1,23 @@
 <script>
-  import { find as _find, chain as _chain, cloneDeep as _cloneDeep } from 'lodash-es'
-  import pluralize from '../libraries/pluralize';
+  import {
+    find as _find,
+    chain as _chain,
+    cloneDeep as _cloneDeep,
+  } from 'lodash-es'
+  import pluralize from '../libraries/pluralize'
   import Icon from '@iconify/svelte'
-  import { createEventDispatcher, onDestroy, tick } from 'svelte';
+  import { createEventDispatcher, onDestroy, tick } from 'svelte'
 
   // idb crashes chrome (try primo, server)
-  import * as idb from 'idb-keyval';
-  const dispatch = createEventDispatcher();
+  import * as idb from 'idb-keyval'
+  const dispatch = createEventDispatcher()
 
   import { locale } from '../stores/app/misc'
-  import { getPlaceholderValue } from '../utils';
-  import { createUniqueID } from '../utilities';
-  import {fieldTypes} from '../stores/app'
+  import { getPlaceholderValue } from '../utils'
+  import { createUniqueID } from '../utilities'
+  import { fieldTypes } from '../stores/app'
 
-  export let field;
+  export let field
   export let level = 0
 
   // ensure value is an array
@@ -21,37 +25,37 @@
     field.value = []
   }
 
-  function addRepeaterItem() {
+  function add_repeater_item() {
     const subfield = createSubfield()
     visibleRepeaters[`${field.key}-${repeaterFieldValues.length}`] = true
-    repeaterFieldValues = [...repeaterFieldValues, subfield];
-    onInput();
+    repeaterFieldValues = [...repeaterFieldValues, subfield]
+    onInput()
   }
 
   function removeRepeaterItem(itemIndex) {
-    repeaterFieldValues = repeaterFieldValues.filter((_, i) => i !== itemIndex);
-    onInput();
+    repeaterFieldValues = repeaterFieldValues.filter((_, i) => i !== itemIndex)
+    onInput()
   }
 
   function moveRepeaterItem(indexOfItem, direction) {
-    const item = repeaterFieldValues[indexOfItem];
-    const withoutItem = repeaterFieldValues.filter((_, i) => i !== indexOfItem);
+    const item = repeaterFieldValues[indexOfItem]
+    const withoutItem = repeaterFieldValues.filter((_, i) => i !== indexOfItem)
     if (direction === 'up') {
       repeaterFieldValues = [
         ...withoutItem.slice(0, indexOfItem - 1),
         item,
         ...withoutItem.slice(indexOfItem - 1),
-      ];
+      ]
     } else if (direction === 'down') {
       repeaterFieldValues = [
         ...withoutItem.slice(0, indexOfItem + 1),
         item,
         ...withoutItem.slice(indexOfItem + 1),
-      ];
+      ]
     } else {
-      console.error('Direction must be up or down');
+      console.error('Direction must be up or down')
     }
-    onInput();
+    onInput()
   }
 
   function createSubfield() {
@@ -59,37 +63,44 @@
       ...subfield,
       id: createUniqueID(),
       value: getPlaceholderValue(subfield),
-    }));
+    }))
   }
 
   let repeaterFieldValues = []
-  getRepeaterFieldValues().then(val => repeaterFieldValues = val)
+  getRepeaterFieldValues().then((val) => (repeaterFieldValues = val))
 
-  $: $locale, getRepeaterFieldValues().then(val => repeaterFieldValues = val)
-  $: setTemplateKeys(repeaterFieldValues) 
+  $: $locale,
+    getRepeaterFieldValues().then((val) => (repeaterFieldValues = val))
+  $: setTemplateKeys(repeaterFieldValues)
 
   async function getRepeaterFieldValues() {
-    await tick() // need to wait for $locale to change parent content 
-    return field.value.map((value) => field.fields.map((subfield) => ({
+    await tick() // need to wait for $locale to change parent content
+    return field.value.map((value) =>
+      field.fields.map((subfield) => ({
         ...subfield,
-        fields: _cloneDeep(subfield.fields.map(sub => ({
-          ...sub,
-          value: value[subfield.key]?.[sub.key]
-        }))),
-        value: value[subfield.key]
-      })))
+        fields: _cloneDeep(
+          subfield.fields.map((sub) => ({
+            ...sub,
+            value: value[subfield.key]?.[sub.key],
+          }))
+        ),
+        value: value[subfield.key],
+      }))
+    )
   }
-  
+
   function setTemplateKeys(val) {
-    repeaterFieldValues = val.map(f => {
+    repeaterFieldValues = val.map((f) => {
       f._key = f._key || createUniqueID()
       return f
     })
   }
 
   function onInput() {
-    field.value = repeaterFieldValues.map((items, i) => _chain(items).keyBy("key").mapValues('value').value());
-    dispatch('input', field);
+    field.value = repeaterFieldValues.map((items, i) =>
+      _chain(items).keyBy('key').mapValues('value').value()
+    )
+    dispatch('input', field)
   }
 
   function getFieldComponent(subfield) {
@@ -102,30 +113,32 @@
   function getImage(repeaterItem) {
     const [firstField] = repeaterItem
     if (firstField && firstField.type === 'image') {
-      return firstField.value.url 
+      return firstField.value.url
     } else return null
   }
 
   function getTitle(repeaterItem) {
-    const firstField = repeaterItem.find(subfield => ['text', 'link', 'number'].includes(subfield.type))
+    const firstField = repeaterItem.find((subfield) =>
+      ['text', 'link', 'number'].includes(subfield.type)
+    )
     if (firstField) {
-      let {value} = repeaterItem[0]
+      let { value } = repeaterItem[0]
       if (firstField.type === 'link') {
         value = value?.label
       }
-      return value 
+      return value
     } else return singularLabel
   }
 
   let visibleRepeaters = {}
-  idb.get(field.id).then(res => {
+  idb.get(field.id).then((res) => {
     if (res) {
       visibleRepeaters = res
     }
   })
 
   onDestroy(() => {
-    // save visible repeaters 
+    // save visible repeaters
     idb.set(field.id, _cloneDeep(visibleRepeaters))
   })
 </script>
@@ -136,37 +149,49 @@
       {@const subfieldID = `${field.key}-${i}`}
       {@const itemImage = getImage(repeaterItem, field)}
       {@const itemTitle = getTitle(repeaterItem, field)}
-      <div
-        class="repeater-item"
-        id="repeater-{field.key}-{i}">
+      <div class="repeater-item" id="repeater-{field.key}-{i}">
         <div class="item-options">
-          <button class="title" on:click={() => visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID]}>
+          <button
+            class="title"
+            on:click={() =>
+              (visibleRepeaters[subfieldID] = !visibleRepeaters[subfieldID])}
+          >
             {#if itemImage}
-              <img src={itemImage} alt={itemTitle || `Preview for item ${i} in ${field.label}`} />
+              <img
+                src={itemImage}
+                alt={itemTitle || `Preview for item ${i} in ${field.label}`}
+              />
             {:else}
               <span>{itemTitle}</span>
             {/if}
-            <Icon icon={visibleRepeaters[subfieldID] ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
+            <Icon
+              icon={visibleRepeaters[subfieldID]
+                ? 'ph:caret-up-bold'
+                : 'ph:caret-down-bold'}
+            />
           </button>
           <div class="primo-buttons">
             {#if i !== 0}
               <button
                 title="Move {singularLabel} up"
-                on:click={() => moveRepeaterItem(i, 'up')}>
-                <i class="fas fa-arrow-up" />
+                on:click={() => moveRepeaterItem(i, 'up')}
+              >
+                <Icon icon="mdi:arrow-up" />
               </button>
             {/if}
             {#if i !== repeaterFieldValues.length - 1}
               <button
                 title="Move {singularLabel} down"
-                on:click={() => moveRepeaterItem(i, 'down')}>
-                <i class="fas fa-arrow-down" />
+                on:click={() => moveRepeaterItem(i, 'down')}
+              >
+                <Icon icon="mdi:arrow-down" />
               </button>
             {/if}
             <button
               title="Delete {singularLabel} item"
-              on:click={() => removeRepeaterItem(i)}>
-              <i class="fas fa-trash" />
+              on:click={() => removeRepeaterItem(i)}
+            >
+              <Icon icon="ion:trash" />
             </button>
           </div>
         </div>
@@ -175,16 +200,23 @@
             {#each repeaterItem as subfield (repeaterItem._key + subfield.key)}
               <div
                 class="repeater-item-field"
-                id="repeater-{field.key}-{i}-{subfield.key}">
+                id="repeater-{field.key}-{i}-{subfield.key}"
+              >
                 {#if subfield.type === 'repeater'}
                   <span class="repeater-label">{subfield.label}</span>
-                  <svelte:self field={subfield} on:input={onInput} level={level+1} visible={true} />
+                  <svelte:self
+                    field={subfield}
+                    on:input={onInput}
+                    level={level + 1}
+                    visible={true}
+                  />
                 {:else}
                   <svelte:component
                     this={getFieldComponent(subfield)}
                     field={subfield}
-                    level={level+1}
-                    on:input={onInput} />
+                    level={level + 1}
+                    on:input={onInput}
+                  />
                 {/if}
               </div>
             {/each}
@@ -192,15 +224,14 @@
         {/if}
       </div>
     {/each}
-    <button class="field-button" on:click={() => addRepeaterItem()}>
-      <i class="fas fa-plus mr-1" />
+    <button class="field-button" on:click={add_repeater_item}>
+      <Icon icon="akar-icons:plus" />
       <span>Add {pluralize.singular(field.label)}</span>
     </button>
   </div>
 </div>
 
 <style lang="postcss">
-
   .fields {
     display: grid;
     gap: 1.5rem;
@@ -211,11 +242,11 @@
   }
 
   .repeater-level-1 {
-    --field-border-color: #3E4041;
+    --field-border-color: #3e4041;
   }
 
   .repeater-level-2 {
-    --field-border-color: #58595B;
+    --field-border-color: #58595b;
   }
 
   .repeater-level-3 {
@@ -277,7 +308,7 @@
         gap: 1rem;
         align-items: center;
         text-align: left;
-        
+
         img {
           width: 3rem;
           border-radius: 2px;
@@ -285,7 +316,6 @@
       }
 
       .primo-buttons button {
-
         &:focus {
           /* outline: 0; */
         }
@@ -321,7 +351,11 @@
   .repeater-item-field:not(:first-child) {
     padding-top: 0;
   }
-  .field-button {
+  button.field-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     width: 100%;
     background: var(--button-background);
     color: var(--button-color);
@@ -347,5 +381,4 @@
       margin-right: 0.5rem;
     }
   }
-
 </style>

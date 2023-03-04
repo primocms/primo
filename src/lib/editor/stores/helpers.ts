@@ -167,12 +167,27 @@ export function getComponentData({
   include_parent_data?: boolean
 }): object {
   const symbol = component.type === 'symbol' ? component : _find(site.symbols, ['id', component.symbolID])
-  const componentData = _chain(symbol.fields)
+  const component_content = _chain(symbol.fields)
     .map(field => {
       const content = site.content[loc][page.id]?.[component.id]?.[field.key]
-      return {
-        key: field.key,
-        value: content !== undefined ? content : (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
+      // if field is static, use value from symbol content
+      if (field.is_static) {
+        const symbol_value = symbol.content?.[loc]?.[field.key]
+        return {
+          key: field.key,
+          value: symbol_value
+        }
+      } else if (content !== undefined) {
+        return {
+          key: field.key,
+          value: content
+        }
+      } else {
+        const default_content = symbol.content?.[loc]?.[field.key]
+        return {
+          key: field.key,
+          value: default_content || (fallback === 'placeholder' ? getPlaceholderValue(field) : getEmptyValue(field))
+        }
       }
     })
     .keyBy('key')
@@ -180,18 +195,18 @@ export function getComponentData({
     .value();
 
   // remove pages from data object (not accessed from component)
-  const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   // remove sections from page content
-  const sectionIDs = page.sections.map(section => section.id)
-  const pageContent = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !sectionIDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
+  const section_IDs = page.sections.map(section => section.id)
+  const page_content = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !section_IDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
 
   return include_parent_data ? {
-    ...siteContent,
-    ...pageContent,
-    ...componentData
-  } : componentData
+    ...site_content,
+    ...page_content,
+    ...component_content
+  } : component_content
 }
 
 export function getPageData({
@@ -205,15 +220,15 @@ export function getPageData({
 }): object {
 
   // remove pages from site data object (not accessed from component)
-  const pageIDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  const siteContent = _chain(Object.entries(site.content[loc]).filter(([page]) => !pageIDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   // remove sections from page data object
-  const sectionIDs = page.sections.map(section => section.id)
-  const pageContent = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !sectionIDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
+  const section_IDs = page.sections.map(section => section.id)
+  const page_content = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !section_IDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
 
   return {
-    ...siteContent,
-    ...pageContent,
+    ...site_content,
+    ...page_content,
   }
 }

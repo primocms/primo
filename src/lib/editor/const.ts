@@ -163,7 +163,8 @@ export type Field = {
   type: string,
   fields: any[],
   options: object,
-  default: any
+  default: any,
+  is_static: boolean
 }
 
 export const Field = (f = {}): Field => ({
@@ -174,6 +175,7 @@ export const Field = (f = {}): Field => ({
   fields: [],
   options: {},
   default: '',
+  is_static: false,
   ...f
 })
 
@@ -198,7 +200,8 @@ export type Symbol = {
     css: string,
     js: string
   },
-  fields: any[]
+  fields: any[],
+  content: object
 }
 
 export const Symbol = (): Symbol => ({
@@ -210,7 +213,8 @@ export const Symbol = (): Symbol => ({
     html: '',
     js: ''
   },
-  fields: []
+  fields: [],
+  content: {}
 })
 
 export const DEFAULTS = {

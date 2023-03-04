@@ -8,6 +8,7 @@ import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '.
 import { Page } from '../const'
 import { validateSiteStructure } from '../utils'
 import { createUniqueID } from '../utilities';
+import { getSymbol } from './helpers'
 
 export async function hydrateSite(data: SiteType): Promise<void> {
   const site = validateSiteStructure(data)
@@ -334,6 +335,18 @@ export async function deleteSection(sectionID) {
   }), false);
 
   timeline.push(get(unsavedSite))
+}
+
+export async function update_symbol_with_static_values(component) {
+  const symbol = getSymbol(component.symbolID)
+  let updated_symbol = cloneDeep(symbol)
+  for (let field of symbol.fields) {
+    if (field.is_static) {
+      const component_field_value = component.content[get(locale)][field.key]
+      updated_symbol.content[get(locale)][field.key] = component_field_value
+    }
+  }
+  symbols.update(updated_symbol)
 }
 
 export async function updateContent(blockID, updatedValue, activeLocale = get(locale)) {

@@ -1,11 +1,17 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
-  import { find, cloneDeep, chain as _chain, set as _set, get as _get } from 'lodash-es';
-  import { _ as C } from 'svelte-i18n';
-  import { Card } from './misc';
+  import { createEventDispatcher } from 'svelte'
+  import {
+    find,
+    cloneDeep,
+    chain as _chain,
+    set as _set,
+    get as _get,
+  } from 'lodash-es'
+  import { _ as C } from 'svelte-i18n'
+  import { Card } from './misc'
 
-  import { userRole, fieldTypes } from '../stores/app';
-  import {Field} from '../const'
+  import { userRole, fieldTypes } from '../stores/app'
+  import { Field } from '../const'
   import FieldItem from '../views/modal/ComponentEditor/FieldItem.svelte'
 
   export let fields
@@ -18,27 +24,26 @@
     dispatch('input')
   }
 
-  function createSubfield({detail:field}) {
+  function createSubfield({ detail: field }) {
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
     handleSubfieldCreation(fields)
 
     function handleSubfieldCreation(fieldsToModify) {
-      if (find(fieldsToModify, ['id', field.id])) { // field is at this level
+      if (find(fieldsToModify, ['id', field.id])) {
+        // field is at this level
         const newField = cloneDeep(field)
-        newField.fields = [
-          ...newField.fields,
-          Field()
-        ]
+        newField.fields = [...newField.fields, Field()]
         _set(updatedFields, idPath, newField)
-      } else { // field is lower
-        fieldsToModify.forEach(field => handleSubfieldCreation(field.fields));
+      } else {
+        // field is lower
+        fieldsToModify.forEach((field) => handleSubfieldCreation(field.fields))
       }
     }
     fields = updatedFields
   }
 
-  function deleteField({detail:field}) {
+  function deleteField({ detail: field }) {
     const idPath = getFieldPath(fields, field.id)
     let updatedFields = cloneDeep(fields)
 
@@ -55,29 +60,28 @@
         const newField = cloneDeep(parentField)
         newField.fields = newField.fields.filter((f) => f.id != field.id)
         _set(updatedFields, idPath.slice(0, -2), newField)
-      }
-      else {
-        fieldsToModify.forEach(field => handleDeleteSubfield(field.fields));
+      } else {
+        fieldsToModify.forEach((field) => handleDeleteSubfield(field.fields))
       }
       fields = updatedFields
     }
   }
 
-  let disabled = false;
+  let disabled = false
 
   function getComponent(field) {
-    const fieldType = find($fieldTypes, ['id', field.type]);
+    const fieldType = find($fieldTypes, ['id', field.type])
     if (fieldType) {
-      return fieldType.component;
+      return fieldType.component
     } else {
       console.warn(
         `Field type '${field.type}' no longer exists, removing '${field.label}' field`
-      );
-      return null;
+      )
+      return null
     }
   }
 
-  function moveField({detail}) {
+  function moveField({ detail }) {
     const { field, direction } = detail
     const idPath = getFieldPath(fields, field.id)
 
@@ -86,29 +90,32 @@
     handleFieldMove(fields)
 
     function handleFieldMove(fieldsToModify) {
-      const indexToMove = fieldsToModify.findIndex(f => f.id === field.id)
-      if (indexToMove > -1) { // field is at this level
-        const withoutItem = fieldsToModify.filter((_, i) => i !== indexToMove);
+      const indexToMove = fieldsToModify.findIndex((f) => f.id === field.id)
+      if (indexToMove > -1) {
+        // field is at this level
+        const withoutItem = fieldsToModify.filter((_, i) => i !== indexToMove)
         const newFields = {
-            up: [
-              ...withoutItem.slice(0, indexToMove - 1),
-              field,
-              ...withoutItem.slice(indexToMove - 1),
-            ],
-            down: [
-              ...withoutItem.slice(0, indexToMove + 1),
-              field,
-              ...withoutItem.slice(indexToMove + 1),
-            ],
-          }[direction]
-        if (idPath.length === 1) { // field is at root level
+          up: [
+            ...withoutItem.slice(0, indexToMove - 1),
+            field,
+            ...withoutItem.slice(indexToMove - 1),
+          ],
+          down: [
+            ...withoutItem.slice(0, indexToMove + 1),
+            field,
+            ...withoutItem.slice(indexToMove + 1),
+          ],
+        }[direction]
+        if (idPath.length === 1) {
+          // field is at root level
           updatedFields = newFields
         } else {
           const path = idPath.slice(0, -1) // modify 'fields' containing field being moved
           _set(updatedFields, path, newFields)
         }
-      } else { // field is lower
-        fieldsToModify.forEach(field => handleFieldMove(field.fields));
+      } else {
+        // field is lower
+        fieldsToModify.forEach((field) => handleFieldMove(field.fields))
       }
     }
     fields = updatedFields
@@ -118,14 +125,13 @@
     for (const [i, field] of fields.entries()) {
       const result = getFieldPath(field.fields, id)
       if (result) {
-        result.unshift(i, 'fields');
+        result.unshift(i, 'fields')
         return result
       } else if (field.id === id) {
         return [i]
-      } 
+      }
     }
   }
-
 </script>
 
 <main>
@@ -138,30 +144,41 @@
         on:delete={deleteField}
         on:move={moveField}
         on:createsubfield={createSubfield}
-        on:input={({detail}) => {
+        on:input={({ detail }) => {
           field = detail
           dispatch('input')
         }}
       />
     {/each}
-    <button class="field-button" on:click={addField} {disabled}><i class="fas fa-plus" />{$C('Add a Field')}</button>
+    <button class="field-button" on:click={addField} {disabled}
+      ><i class="fas fa-plus" />{$C('Add a Field')}</button
+    >
   {:else}
     {#each fields as field}
-      {@const isValid = (field.key || field.type === 'info') && getComponent(field)}
+      {@const isValid =
+        (field.key || field.type === 'info') && getComponent(field)}
       {@const hasChildFields = field.fields.length > 0}
       {#if isValid}
         <Card title={hasChildFields ? field.label : null}>
-          <div class="field-item" id="field-{field.key}" class:repeater={field.key === 'repeater'}>
+          <div
+            class="field-item"
+            id="field-{field.key}"
+            class:repeater={field.key === 'repeater'}
+          >
+            {#if field.is_static}
+              <span>Static Field</span>
+            {/if}
             <svelte:component
               this={getComponent(field)}
               {field}
               fields={fields.filter((f) => f.id !== field.id)}
               on:save
-              on:input />
+              on:input
+            />
           </div>
         </Card>
       {:else}
-        <p class="empty-description">{$C('no_field_key')}</p>
+        <p class="empty-description">Field requires an ID</p>
       {/if}
     {:else}
       <p class="empty-description">

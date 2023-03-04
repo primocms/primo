@@ -1,22 +1,21 @@
 <script>
-  import { fade } from 'svelte/transition';
-  import { createEventDispatcher } from 'svelte';
+  import Icon from '@iconify/svelte'
+  import { createEventDispatcher } from 'svelte'
 
   export let level = 0
-  export let child = false;
-  export let disabled = false;
-  export let isFirst = false;
-  export let isLast = false;
-  export let minimal = false;
+  export let child = false
+  export let disabled = false
+  export let isFirst = false
+  export let isLast = false
+  export let minimal = false
   export let showDefaultValue = true
   export let showVisibilityOptions = false
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
   function moveItem(direction) {
-    dispatch('move', direction);
+    dispatch('move', direction)
   }
-
 </script>
 
 <div
@@ -25,7 +24,8 @@
   class:has-default-value={showDefaultValue}
   class:has-visibility-options={showVisibilityOptions}
   class:child
-  class:minimal>
+  class:minimal
+>
   <label class="type">
     <span>Type</span>
     <slot name="type" />
@@ -45,15 +45,6 @@
         <slot name="key" />
       </label>
     </div>
-    {#if showDefaultValue}
-    <div class="field">
-      <!-- svelte-ignore a11y-label-has-associated-control -->
-      <label>
-        <span>Default Value</span>
-        <slot name="default-value" />
-      </label>
-    </div>
-    {/if}
     {#if showVisibilityOptions}
       <label class="hide">
         <span>Visible</span>
@@ -62,17 +53,21 @@
     {/if}
   {/if}
   <div class="option-buttons">
+    <label title="Static field">
+      <slot name="static" />
+    </label>
     <button disabled={isFirst} title="Move up" on:click={() => moveItem('up')}>
-      <i class="fas fa-arrow-up" />
+      <Icon icon="mdi:arrow-up" />
     </button>
     <button
       disabled={isLast}
       title="Move down"
-      on:click={() => moveItem('down')}>
-      <i class="fas fa-arrow-down" />
+      on:click={() => moveItem('down')}
+    >
+      <Icon icon="mdi:arrow-down" />
     </button>
     <button on:click={() => dispatch('delete')} {disabled} title="delete field">
-      <i class="fas fa-trash" />
+      <Icon icon="ion:trash" />
     </button>
   </div>
 </div>
@@ -128,20 +123,18 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
+      gap: 0.25rem;
+      padding-top: 22px;
 
       button {
         border-radius: 1px;
         transition: color 0.1s;
-        &:hover,
-        &:focus {
+        &:not(disabled):hover,
+        &:not(disabled):focus {
           color: var(--color-gray-4);
-        }
-        &:first-child {
-          margin-right: 0.25rem;
         }
 
         &:last-child {
-          margin-left: 0.5rem;
           color: var(--color-gray-5);
         }
       }
@@ -158,5 +151,4 @@
   span {
     color: var(--color-gray-3);
   }
-
 </style>

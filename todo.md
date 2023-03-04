@@ -2,10 +2,16 @@
 
 Features: 
 - ~~Block picker side panel~~
-- On-page editing (text, images, links)
+- ~~On-page editing (text, images, links)~~
 - ~~Dev mode~~
 - Primo Cloud landing page
 - Static block fields
+  - ~~Symbol gets static value~~
+  - ~~New block instances get static value~~
+  - ~~Store static value in symbol content~~
+  - ~~Handle correct value saving when editing from page~~
+  - Handle making existing fields non-static (by copying data to instances)
+  - ~~Edit default value and static field values from symbol content button~~
 - Save site data as db records & auto save
 - Design fields
 - Collaboration (lock block)

@@ -2,7 +2,7 @@
   import _ from 'lodash-es'
   import fileSaver from 'file-saver'
   import axios from 'axios'
-  import { hoveredBlock } from '$lib/editor/stores/app/misc'
+  import { locale, hoveredBlock } from '$lib/editor/stores/app/misc'
   import { symbols, pages } from '$lib/editor/stores/data/draft'
   import Icon from '@iconify/svelte'
   import { createUniqueID } from '$lib/editor/utilities'
@@ -11,6 +11,7 @@
   import {
     symbols as actions,
     deleteInstances,
+    updateContent,
   } from '$lib/editor/stores/actions'
   import { get_row } from '$lib/supabase'
 
@@ -93,12 +94,13 @@
   }
 
   function add_to_page(symbol) {
+    const instance = createInstance(symbol)
     if ($hoveredBlock.position === 'top') {
       $pages = $pages.map((page) => ({
         ...page,
         sections: [
           ...page.sections.slice(0, $hoveredBlock.i),
-          createInstance(symbol),
+          instance,
           ...page.sections.slice($hoveredBlock.i),
         ],
       }))
@@ -107,11 +109,12 @@
         ...page,
         sections: [
           ...page.sections.slice(0, $hoveredBlock.i + 1),
-          createInstance(symbol),
+          instance,
           ...page.sections.slice($hoveredBlock.i + 1),
         ],
       }))
     }
+    updateContent(instance.id, symbol.content[$locale]?.['en'])
   }
 </script>
 
@@ -141,7 +144,9 @@
         {#each $symbols as symbol (symbol.id)}
           <Sidebar_Symbol
             {symbol}
-            on:edit={({ detail: updated_symbol }) =>
+            on:edit_code={({ detail: updated_symbol }) =>
+              placeSymbol(updated_symbol)}
+            on:edit_content={({ detail: updated_symbol }) =>
               placeSymbol(updated_symbol)}
             on:download={() => downloadSymbol(symbol)}
             on:delete={() => deleteSymbol(symbol)}

@@ -41,44 +41,44 @@
     align-items: center;
     color: var(--color-gray-3);
     margin-bottom: 1rem;
+  }
 
-    .logo img {
-      height: 4rem;
-      width: 7rem;
-      object-fit: contain;
+  img {
+    height: 4rem;
+    width: 7rem;
+    object-fit: contain;
+  }
+
+  .link {
+    border-bottom: 2px solid transparent;
+    display: flex;
+
+    svg {
+      width: 0.5rem;
     }
+
+    &:hover {
+      border-color: var(--primo-color-brand);
+    }
+
+    &.with-icon {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 0.5rem;
+      place-items: center;
+    }
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 
     .link {
-      border-bottom: 2px solid transparent;
-      display: flex;
+      margin-right: 1rem;
 
-      svg {
-        width: 0.5rem;
-      }
-
-      &:hover {
-        border-color: var(--primo-color-brand);
-      }
-
-      &.with-icon {
-        display: grid;
-        grid-template-columns: auto auto;
-        gap: 0.5rem;
-        place-items: center;
-      }
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .link {
-        margin-right: 1rem;
-
-        &:last-child {
-          margin-right: 0;
-        }
+      &:last-child {
+        margin-right: 0;
       }
     }
   }

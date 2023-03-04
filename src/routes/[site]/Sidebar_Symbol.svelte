@@ -19,7 +19,27 @@
     y: 0,
   }
 
-  function edit_symbol(symbol) {
+  function edit_symbol_content(symbol) {
+    $showingIDE = false
+    modal.show('COMPONENT_EDITOR', {
+      component: symbol,
+      header: {
+        title: `Edit ${symbol.title || 'Block'}`,
+        icon: 'fas fa-check',
+        button: {
+          label: `Save Block`,
+          icon: 'fas fa-check',
+          onclick: (symbol) => {
+            dispatch('edit_content', symbol)
+            modal.hide()
+          },
+        },
+        showSwitch: true,
+      },
+    })
+  }
+
+  function edit_symbol_code(symbol) {
     $showingIDE = true
     modal.show('COMPONENT_EDITOR', {
       component: symbol,
@@ -30,11 +50,11 @@
           label: `Save Block`,
           icon: 'fas fa-check',
           onclick: (symbol) => {
-            dispatch('edit', symbol)
+            dispatch('edit_code', symbol)
             modal.hide()
           },
         },
-        show_switch: false,
+        showSwitch: true,
       },
     })
   }
@@ -186,11 +206,11 @@
       <div class="symbol-options">
         <IconButton
           icon="material-symbols:edit-note-sharp"
-          on:click={() => edit_symbol(symbol)}
+          on:click={() => edit_symbol_content(symbol)}
         />
         <IconButton
           icon="material-symbols:code"
-          on:click={() => edit_symbol(symbol)}
+          on:click={() => edit_symbol_code(symbol)}
         />
         <MenuPopup
           icon="carbon:overflow-menu-vertical"
@@ -229,7 +249,6 @@
     use:draggable={{ position: coordinates }}
     on:neodrag={on_drag}
     on:neodrag:start={() => {
-      console.log('starting')
       dragging = true
       set_dimensions()
     }}

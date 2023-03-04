@@ -24,8 +24,11 @@
     pages,
   } from '../../../stores/data/draft'
   import { locale } from '../../../stores/app/misc'
-  import { getComponentData } from '../../../stores/helpers'
-  import { updateContent } from '../../../stores/actions'
+  import { getComponentData, getPageData } from '../../../stores/helpers'
+  import {
+    updateContent,
+    update_symbol_with_static_values,
+  } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
   import modal from '../../../stores/app/modal'
 
@@ -93,11 +96,19 @@
   ])
   $: $content, $locale, block, setComponentData()
 
-  let componentData
+  let component_data
+  let parent_data
+  $: combined_data = {
+    ...parent_data,
+    ...component_data,
+  }
+
   function setComponentData() {
-    componentData = getComponentData({
+    component_data = getComponentData({
       component: block,
+      include_parent_data: false,
     })
+    parent_data = getPageData({})
   }
 
   let html = ''
@@ -106,8 +117,16 @@
   $: compileComponentCode(symbol.code)
 
   function save_edited_value(key, value) {
-    _.set(componentData, key, value)
-    updateContent(block.id, componentData)
+    _.set(component_data, key, value)
+    updateContent(block.id, component_data)
+    console.log({ block, component_data, key, value })
+    update_symbol_with_static_values({
+      ...block,
+      content: {
+        ...block.content,
+        [$locale]: component_data,
+      },
+    })
   }
 
   let editor
@@ -164,7 +183,7 @@
       const res = await processCode({
         component: {
           ...rawCode,
-          data: componentData,
+          data: combined_data,
         },
         buildStatic: false,
       })
@@ -179,7 +198,7 @@
         const { default: App } = await import(/* @vite-ignore */ url)
         component = new App({
           target: node,
-          props: componentData,
+          props: combined_data,
         })
 
         const elements_with_text = Array.from(
@@ -205,15 +224,8 @@
           }
         })
 
-        console.log({ componentData })
-        const component_data = getComponentData({
-          component: block,
-          include_parent_data: false,
-        })
-        console.log({ component_data })
-
-        // loop over componentData and match to elements
-        const tagged_elements = new Set() // elements that have been matched to a componentData key
+        // loop over component_data and match to elements
+        const tagged_elements = new Set() // elements that have been matched to a component_data key
         for (const [key, val] of Object.entries(component_data)) {
           const is_link =
             typeof val === 'object' &&
@@ -273,8 +285,6 @@
               element.href?.replace(/\/$/, '') &&
             value.label === element.innerText
 
-          console.log({ key, value, element, image_matches })
-
           // if (has_html && !html_matches) {
           // 	console.log('NO MATCH', key, { value, html });
           // }
@@ -282,19 +292,19 @@
           if (link_matches) {
             set_editable_link({ element, key })
             return true
-          } else if (html_matches) {
-            // Markdown Field
-            set_editable_editor({ element, key })
-            return true
           } else if (image_matches) {
             set_editable_image({ element, key })
             return true
           } else if (text_matches) {
-            // Text & Number Field
+            // Markdown Field
             set_editable({ element, key })
             return true
+          } else if (html_matches) {
+            // Text & Number Field
+            set_editable_editor({ element, key })
+            return true
           } else {
-            console.log('no match', { element, key, value })
+            // console.log('no match', { element, key, value })
             return false
           }
         }
@@ -319,10 +329,8 @@
               modal.show('DIALOG', {
                 component: 'IMAGE',
                 onSubmit: ({ url, alt }) => {
-                  // TODO: save alt text
-                  console.log({ key, url, alt })
                   element.src = url
-                  save_edited_value(key, url)
+                  save_edited_value(key, { url, alt })
                   modal.hide()
                 },
                 props: {
@@ -411,7 +419,7 @@
     }
   }
 
-  $: hydrateComponent(componentData)
+  $: hydrateComponent(component_data)
   async function hydrateComponent(data) {
     if (!component) return
     else if (error) {
