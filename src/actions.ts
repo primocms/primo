@@ -32,22 +32,22 @@ export const sites = {
       stores.sites.set(filtered)
     }
   },
-  create: async (newSite) => {
+  create: async ({ data, preview }) => {
     await Promise.all([
       supabaseDB.sites.create({
-        name: newSite.name,
-        id: newSite.id
+        name: data.name,
+        id: data.id
       }),
       supabaseStorage.uploadSiteData({
-        id: newSite.id,
-        data: newSite
+        id: data.id,
+        data
       }),
       supabaseStorage.uploadPagePreview({
-        path: `${newSite.id}/preview.html`,
-        preview: ''
+        path: `${data.id}/preview.html`,
+        preview
       })
     ])
-    stores.sites.update(sites => [...sites, newSite])
+    stores.sites.update(sites => [...sites, { data, preview }])
   },
   update: async ({ id, props }) => {
     stores.sites.update(
@@ -60,20 +60,13 @@ export const sites = {
     await supabaseDB.sites.update(id, props)
   },
   save: async (updatedSite) => {
-    stores.sites.update(sites => sites.map(site => site.id === updatedSite.id ? updatedSite : site))
     const homepage = find(updatedSite.pages, ['id', 'index'])
     const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-    const [res1, res2] = await Promise.all([
-      supabaseStorage.updateSiteData({
-        id: updatedSite.id,
-        data: updatedSite
-      }),
-      supabaseStorage.updatePagePreview({
-        path: `${updatedSite.id}/preview.html`,
-        preview
-      })
-    ])
-    return res1.error || res2.error ? false : true
+    const res = await supabaseDB.sites.update(updatedSite.id, {
+      data: updatedSite,
+      preview
+    })
+    return res
   },
   delete: async (id) => {
     stores.sites.update(sites => sites.filter(s => s.id !== id))

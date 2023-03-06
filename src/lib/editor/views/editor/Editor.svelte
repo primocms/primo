@@ -38,12 +38,6 @@
       e.preventDefault()
       changeLocale()
     })
-
-    // Toggle IDE
-    Mousetrap.bind(['mod+d'], (e) => {
-      e.preventDefault()
-      showingIDE.set(!$showingIDE)
-    })
   })
 
   $: hasFields = $siteFields
@@ -132,11 +126,7 @@
   $: toolbarButtons = $showingIDE ? developerButtons : editorButtons
 </script>
 
-<Toolbar
-  on:signOut
-  buttons={$loadingSite ? [] : toolbarButtons}
-  on:toggleView={() => showingIDE.set(!$showingIDE)}
->
+<Toolbar on:signOut buttons={$loadingSite ? [] : developerButtons}>
   {#if !$timeline.first}
     <ToolbarButton
       id="undo"

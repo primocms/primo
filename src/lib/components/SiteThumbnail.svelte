@@ -1,15 +1,8 @@
 <script>
   import { browser } from '$app/environment'
   import { find as _find } from 'lodash-es'
-  import Spinner from '$lib/ui/Spinner.svelte'
-  import { downloadPagePreview } from '../../supabase/storage'
-  import { buildStaticPage } from '$lib/editor/stores/helpers'
 
-  export let site = null
   export let preview = null
-  export let valid = true
-
-  let generatedPreview
 
   let container
   let scale
@@ -22,70 +15,30 @@
     scale = parentWidth / childWidth
   }
 
-  async function getPreview(site) {
-    try {
-      generatedPreview =
-        (await downloadPagePreview(site.id)) ||
-        (await buildStaticPage({
-          page: _find(site.pages, ['id', 'index']),
-          site,
-        }))
-    } catch (e) {
-      generatedPreview = '<div></div>'
-      valid = true
-      console.warn('Could not retrieve site preview')
-    }
-  }
-
   // wait for processor to load before building preview
   let processorLoaded = false
   setTimeout(() => {
     processorLoaded = true
   }, 500)
-
-  $: !preview && browser && processorLoaded && getPreview(site)
 </script>
 
 <svelte:window on:resize={resizePreview} />
 
 <div class="iframe-root">
   <div bind:this={container} class="iframe-container">
-    {#if !iframeLoaded && valid}
-      <div class="spinner">
-        <Spinner />
-      </div>
-    {/if}
-    {#if preview || generatedPreview}
+    {#if browser}
       <iframe
         tabindex="-1"
         bind:this={iframe}
         style="transform: scale({scale})"
         class:fadein={iframeLoaded}
         title="page preview"
-        srcdoc={preview || generatedPreview}
+        srcdoc={preview}
         on:load={() => {
           resizePreview()
           iframeLoaded = true
         }}
       />
-    {:else if !valid}
-      <div class="invalid-state">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-        <span>Site file is invalid</span>
-      </div>
     {/if}
   </div>
 </div>

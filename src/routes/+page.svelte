@@ -7,6 +7,7 @@
   import sites from '../stores/sites'
   import user from '../stores/user'
   import * as actions from '../actions'
+  import { invalidate } from '$app/navigation'
 
   export let data
 
@@ -28,7 +29,7 @@
       props: {
         onSuccess: async (site) => {
           await actions.sites.create(site)
-          // goto(site.id) // broken in production
+          invalidate('app:data')
           hide()
         },
       },
@@ -40,7 +41,8 @@
       `Are you sure you want to delete this site? You won't be able to get it back.`
     )
     if (!confirm) return
-    actions.sites.delete(siteID)
+    await actions.sites.delete(siteID)
+    invalidate('app:data')
   }
 
   async function editSite(site) {
@@ -64,10 +66,10 @@
       <DashboardToolbar />
       <div class="sites-container">
         <ul class="sites">
-          {#each $sites as site, i (site.id)}
+          {#each data.sites as site, i (site.id)}
             <li class="xyz-in">
               <a class="site-link" href={site.id}>
-                <SiteThumbnail {site} />
+                <SiteThumbnail preview={site.preview} />
               </a>
               <div class="site-info">
                 <div class="site-name">
@@ -85,18 +87,7 @@
                   {:else}
                     <a data-sveltekit-prefetch href={site.id}>
                       <span>{site.name}</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        class="s-Uap-jPRb-uiE"
-                        ><path
-                          fill-rule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clip-rule="evenodd"
-                          class="s-Uap-jPRb-uiE"
-                        /></svg
-                      >
+                      <Icon icon="ic:round-chevron-right" />
                     </a>
                   {/if}
                 </div>
@@ -114,36 +105,16 @@
                       class="site-button"
                       on:click={() => (siteBeingEdited = site.id)}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
-                        />
-                        <path
-                          fill-rule="evenodd"
-                          d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
+                      <Icon
+                        icon="material-symbols:edit-square-outline-rounded"
+                      />
                       <span>Rename</span>
                     </button>
                     <button
                       class="site-button"
                       on:click={() => deleteSiteItem(site.id)}
                     >
-                      <svg
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                        ><path
-                          fill-rule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clip-rule="evenodd"
-                        /></svg
-                      >
+                      <Icon icon="pepicons-pop:trash" />
                       <span>Delete</span>
                     </button>
                   </div>
@@ -248,9 +219,8 @@
 
             .site-name {
               a {
-                display: grid;
-                grid-template-columns: auto auto;
-                place-items: center flex-start;
+                display: flex;
+                justify-content: space-between;
 
                 &:hover {
                   color: var(--primo-color-brand);

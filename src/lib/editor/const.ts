@@ -270,12 +270,7 @@ export const Page = (id = createUniqueID(), name = ''): Page => ({
   ...DEFAULTS.page,
   id,
   name,
-  sections: [
-    {
-      id: createUniqueID(),
-      type: 'options',
-    }
-  ],
+  sections: [],
   code: {
     html: {
       head: '',

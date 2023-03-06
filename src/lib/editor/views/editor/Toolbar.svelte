@@ -124,14 +124,6 @@
       </div>
     </div>
     <div class="right">
-      <button
-        class="code-mode"
-        on:click={() => ($showingIDE = !$showingIDE)}
-        class:on={$showingIDE}
-        aria-label="Toggle code mode"
-      >
-        <Icon icon="ic:round-code" />
-      </button>
       <div class="primary-buttons">
         <LocaleSelector />
         <slot />

@@ -24,11 +24,9 @@
       <button on:click={() => dispatch('edit-content')}>
         <Icon icon="material-symbols:edit-square-outline-rounded" />
       </button>
-      {#if $showingIDE}
-        <button on:click={() => dispatch('edit-code')}>
-          <Icon icon="ph:code-bold" />
-        </button>
-      {/if}
+      <button on:click={() => dispatch('edit-code')}>
+        <Icon icon="ph:code-bold" />
+      </button>
     </div>
     <div class="top-right">
       <button on:click={() => dispatch('delete')} class="button-delete">

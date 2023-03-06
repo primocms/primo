@@ -32,7 +32,10 @@
         }
       : Site({ id: siteID, name: siteName })
 
-    onSuccess(siteData)
+    onSuccess({
+      data: siteData,
+      preview: '',
+    })
   }
 
   function validateUrl() {
@@ -60,7 +63,7 @@
   }
 </script>
 
-<main class="primo-modal">
+<main class="primo-reset primo-modal">
   {#if !loading}
     <h1 class="primo-heading-xl">Create a site</h1>
     <form on:submit|preventDefault={createSite}>

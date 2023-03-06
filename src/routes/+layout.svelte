@@ -37,13 +37,15 @@
     }
   })
 
-  if (browser) {
+  if (data.session) {
     user.update((u) => ({
       ...u,
       ...data.session.user,
       signedIn: true,
     }))
+  }
 
+  if (browser) {
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
@@ -148,10 +150,14 @@
   <slot />
 </div>
 
-<style>
-  div {
+<style global>
+  .primo-reset {
+    @tailwind base;
+    font-family: 'Satoshi', sans-serif !important;
+    direction: ltr;
+
     /* height: 100vh; */
-    overflow: hidden;
+    /* overflow: hidden; */
 
     --primo-color-brand: #35d994;
     --primo-color-brand-dark: #097548;
@@ -196,5 +202,68 @@
     --primo-ring-brand: 0px 0px 0px 2px var(--primo-color-brand);
     --primo-ring-brand-thin: 0px 0px 0px 1px var(--primo-color-brand);
     --primo-ring-brand-thick: 0px 0px 0px 3px var(--primo-color-brand);
+  }
+
+  button,
+  a {
+    cursor: pointer;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  .primo-input {
+    appearance: none;
+    border: 0;
+    background-color: transparent;
+    font-size: inherit;
+    background: var(--color-white);
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+
+    /* &:focus {
+  box-shadow: 0 0 0 1px var(--color-primored);
+  border: 0;
+}
+
+&:placeholder {
+  color: var(--color-gray-5);
+} */
+  }
+
+  .primo-modal {
+    color: var(--color-gray-1);
+    /* background: var(--color-gray-9); */
+    padding: 1rem;
+    border-radius: var(--primo-border-radius);
+    margin: 0 auto;
+    width: 100vw;
+  }
+
+  .primo-heading-xl {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+  }
+
+  .primo-heading-lg {
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    line-height: 1.5rem;
+    font-weight: 700;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 </style>
