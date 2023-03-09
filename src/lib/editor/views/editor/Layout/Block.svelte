@@ -5,6 +5,7 @@
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()
   import * as Mousetrap from 'mousetrap'
+  import { invalidate } from '$app/navigation'
   import { positions } from './ComponentNode.svelte'
   import { createUniqueID, move } from '../../../utilities'
   import { getComponentData } from '../../../stores/helpers'
@@ -18,6 +19,7 @@
   import {
     pages,
     updateContent,
+    update_section_content,
     update_symbol_with_static_values,
     symbols,
     updatePreview,
@@ -47,10 +49,11 @@
     } else return false
   }
 
-  function deleteBlock() {
+  async function deleteBlock() {
     $positions = $positions.filter((position) => position.id !== block.id)
-    deleteSection(block.id)
+    await deleteSection(block.id)
     updatePreview()
+    // invalidate('app:data')
   }
 
   function updateSections(newSections) {
@@ -104,7 +107,7 @@
 
     const componentData = getComponentData({ component: block })
 
-    updateContent(newBlock.id, componentData)
+    updateContent(newBlock, componentData)
     updateSections([
       ...$sections.slice(0, i + 1),
       newBlock,
@@ -128,20 +131,20 @@
           button: {
             icon: 'fas fa-check',
             label: 'Save',
-            onclick: (component) => {
+            onclick: async (component) => {
               dispatch('unlock')
-              symbols.update({
-                type: 'symbol',
-                id: component.symbolID,
-                code: component.code,
-                fields: component.fields,
+              await symbols.update({
+                id: component.symbol.id,
+                code: component.symbol.code,
+                fields: component.symbol.fields,
               })
-              Object.entries(component.content).forEach((field) => {
-                const [localeID, localeContent] = field
-                if (localeContent)
-                  updateContent(component.id, localeContent, localeID)
-              })
-              update_symbol_with_static_values(component)
+              update_section_content(component, component.content)
+              // Object.entries(component.content).forEach((field) => {
+              //   const [localeID, localeContent] = field
+              //   if (localeContent)
+              //     updateContent(component, localeContent, localeID)
+              // })
+              // invalidate('app:data')
               modal.hide()
               updatePreview()
             },
@@ -265,8 +268,8 @@
   bind:this={node}
   in:fade={{ duration: 100 }}
   class:locked
-  data-block={block.symbolID}
-  id={block.id}
+  data-block={block.symbol.id}
+  id="block-{block.id}"
   on:mouseenter={() => (hovering = true)}
   on:mouseleave={() => (hovering = false)}
 >
@@ -310,18 +313,16 @@
         />{/if}
     </div>
   {/if}
-  {#if block.type === 'component'}
-    <ComponentNode
-      {i}
-      {block}
-      on:lock
-      on:unlock
-      on:mount={() => {
-        mounted = true
-        dispatch('mount')
-      }}
-    />
-  {/if}
+  <ComponentNode
+    {i}
+    {block}
+    on:lock
+    on:unlock
+    on:mount={() => {
+      mounted = true
+      dispatch('mount')
+    }}
+  />
 </div>
 
 {#if $hoveredBlock.i === i && $hoveredBlock.position === 'bottom'}

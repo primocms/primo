@@ -14,6 +14,7 @@
   export let isLast
   export let level = 0
   export let options = []
+  export let top_level = true
 
   function validateFieldKey(key) {
     // replace dash and space with underscore
@@ -90,6 +91,8 @@
   {level}
   {isFirst}
   {isLast}
+  {top_level}
+  bind:is_static={field.is_static}
   minimal={field.type === 'info'}
   showDefaultValue={['content', 'number', 'url', 'select', 'text'].includes(
     field.type
@@ -176,26 +179,28 @@
       </optgroup>
     {/each}
   </select>
-  <input type="checkbox" bind:checked={field.is_static} slot="static" />
+  <!-- <input type="checkbox" bind:checked={field.is_static} slot="static" /> -->
+
+  {#each field.fields as subfield, i (subfield.id)}
+    <svelte:self
+      field={cloneDeep(subfield)}
+      isFirst={i === 0}
+      isLast={i === field.fields.length - 1}
+      options={visibilityOptions}
+      top_level={false}
+      on:delete
+      on:move
+      on:createsubfield
+      on:input={({ detail: updatedSubfield }) => {
+        field.fields = field.fields.map((subfield) =>
+          subfield.id === updatedSubfield.id ? updatedSubfield : subfield
+        )
+        dispatchUpdate()
+      }}
+      level={level + 1}
+    />
+  {/each}
 </EditField>
-{#each field.fields as subfield, i (subfield.id)}
-  <svelte:self
-    field={cloneDeep(subfield)}
-    isFirst={i === 0}
-    isLast={i === field.fields.length - 1}
-    options={visibilityOptions}
-    on:delete
-    on:move
-    on:createsubfield
-    on:input={({ detail: updatedSubfield }) => {
-      field.fields = field.fields.map((subfield) =>
-        subfield.id === updatedSubfield.id ? updatedSubfield : subfield
-      )
-      dispatchUpdate()
-    }}
-    level={level + 1}
-  />
-{/each}
 {#if field.type === 'select'}
   <SelectField {field} {level} on:input={dispatchUpdate} />
 {/if}

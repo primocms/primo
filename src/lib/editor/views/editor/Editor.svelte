@@ -143,7 +143,7 @@
       on:click={redoSiteChange}
     />
   {/if}
-  <ToolbarButton
+  <!-- <ToolbarButton
     id="save"
     title="Save"
     icon="save"
@@ -151,7 +151,7 @@
     loading={$saving}
     on:click={savePage}
     disabled={$saved}
-  />
+  /> -->
   <ToolbarButton
     type="primo"
     title={pageEmpty

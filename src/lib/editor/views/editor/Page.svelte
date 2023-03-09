@@ -1,4 +1,6 @@
 <script>
+  import _ from 'lodash-es'
+  import { tick } from 'svelte'
   import { fade } from 'svelte/transition'
   import { find, isEqual, cloneDeep } from 'lodash-es'
   import Block from './Layout/Block.svelte'
@@ -14,14 +16,23 @@
   import { updatePreview } from '../../stores/actions'
   import {
     id as pageID,
-    sections,
+    url as pageURL,
     fields as pageFields,
     code as pageCode,
+    content as pageContent,
   } from '../../stores/app/activePage'
+  import sections from '../../stores/data/sections'
   import { processCode, processCSS, wrapInStyleTags } from '../../utils'
   import { getPageData } from '../../stores/helpers'
   import en from '../../languages/en.json'
   import { init, addMessages } from 'svelte-i18n'
+
+  export let id = 'index'
+  export let data
+
+  // console.log({ data })
+
+  // $: $pageID = id
 
   addMessages('en', en)
   init({
@@ -29,49 +40,29 @@
     initialLocale: 'en',
   })
 
-  export let id = 'index'
-  $: $pageID = id
-
   let element
-
-  $: pageExists = findPage(id, $pages)
-  function findPage(id, pages) {
-    const [root] = id.split('/')
-    const rootPage = find(pages, ['id', root])
-    const childPage = rootPage ? find(rootPage?.pages, ['id', id]) : null
-    return childPage || rootPage
-  }
 
   function hydrateInstance(block, symbols) {
     const symbol = find(symbols, ['id', block.symbolID])
     return {
       ...symbol,
       id: block.id,
-      type: block.type,
       symbolID: block.symbolID,
     }
   }
 
-  $: set_page_content(id, $pages)
-  function set_page_content(id, pages) {
-    const [root, child] = id.split('/')
-    const rootPage = find(pages, ['id', root])
-    if (rootPage && !child) {
-      setPageStore(rootPage)
-    } else if (rootPage && child) {
-      const childPage = find(rootPage.pages, ['id', id])
-      if (childPage) setPageStore(childPage)
-    } else {
-      console.warn('Could not navigate to page', id, pages)
-    }
+  $: set_page_content(data.page)
+  async function set_page_content(page_data) {
+    await tick()
+    $sections = data.sections
+
+    $pageID = page_data.id
+    $pageURL = page_data.url
+    $pageFields = page_data.fields
+    $pageCode = page_data.code
+    $pageContent = page_data.content
 
     if (page_mounted) updatePreview()
-
-    function setPageStore(page) {
-      $sections = page.sections
-      $pageFields = page.fields
-      $pageCode = page.code
-    }
   }
 
   let html_head = ''
@@ -137,21 +128,9 @@
   </div>
 {/if}
 <div bind:this={element} id="page" class:fadein={page_mounted} lang={$locale}>
-  {#if pageExists}
-    {#each $sections as block, i (block.id)}
-      {#if block.symbolID}
-        <Block
-          {i}
-          block={hydrateInstance(block, $symbols)}
-          on:mount={() => sections_mounted++}
-        />
-      {:else}
-        <Block on:save on:mount={() => sections_mounted++} {block} {i} />
-      {/if}
-    {:else}
-      <Block block={{ type: 'options' }} />
-    {/each}
-  {/if}
+  {#each $sections as block, i (block.id)}
+    <Block {i} locked={false} {block} on:mount={() => sections_mounted++} />
+  {/each}
 </div>
 {@html html_below || ''}
 
@@ -180,7 +159,7 @@
     transition: 0.1s opacity;
     opacity: 0;
     border-top: 0;
-    height: calc(100vh - 52px);
+    height: calc(100vh - 84px);
     overflow: auto;
   }
 

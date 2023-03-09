@@ -1,4 +1,5 @@
 <script>
+  import Toggle from 'svelte-toggle'
   import Icon from '@iconify/svelte'
   import { createEventDispatcher } from 'svelte'
 
@@ -10,6 +11,8 @@
   export let minimal = false
   export let showDefaultValue = true
   export let showVisibilityOptions = false
+  export let top_level = true
+  export let is_static = false
 
   const dispatch = createEventDispatcher()
 
@@ -18,65 +21,87 @@
   }
 </script>
 
-<div
-  style="margin-left: {level}rem"
-  class="field-container"
-  class:has-default-value={showDefaultValue}
-  class:has-visibility-options={showVisibilityOptions}
-  class:child
-  class:minimal
->
-  <label class="type">
-    <span>Type</span>
-    <slot name="type" />
-  </label>
-  {#if minimal}
-    <slot name="main" />
-  {:else}
-    <!-- svelte-ignore a11y-label-has-associated-control -->
-    <label>
-      <span>Label</span>
-      <slot name="label" />
+<div class="top-container" class:top_level>
+  <div
+    style="margin-left: {level}rem"
+    class="field-container"
+    class:has-default-value={showDefaultValue}
+    class:has-visibility-options={showVisibilityOptions}
+    class:child
+    class:minimal
+  >
+    <label class="type">
+      <span>Type</span>
+      <slot name="type" />
     </label>
-    <!-- svelte-ignore a11y-label-has-associated-control -->
-    <div class="field">
+    {#if minimal}
+      <slot name="main" />
+    {:else}
+      <!-- svelte-ignore a11y-label-has-associated-control -->
       <label>
-        <span>ID</span>
-        <slot name="key" />
+        <span>Label</span>
+        <slot name="label" />
       </label>
-    </div>
-    {#if showVisibilityOptions}
-      <label class="hide">
-        <span>Visible</span>
-        <slot name="hide" />
-      </label>
+      <!-- svelte-ignore a11y-label-has-associated-control -->
+      <div class="field">
+        <label>
+          <span>ID</span>
+          <slot name="key" />
+        </label>
+      </div>
+      {#if showVisibilityOptions}
+        <label class="hide">
+          <span>Visible</span>
+          <slot name="hide" />
+        </label>
+      {/if}
     {/if}
-  {/if}
-  <div class="option-buttons">
-    <label title="Static field">
-      <slot name="static" />
-    </label>
-    <button disabled={isFirst} title="Move up" on:click={() => moveItem('up')}>
-      <Icon icon="mdi:arrow-up" />
-    </button>
-    <button
-      disabled={isLast}
-      title="Move down"
-      on:click={() => moveItem('down')}
-    >
-      <Icon icon="mdi:arrow-down" />
-    </button>
-    <button on:click={() => dispatch('delete')} {disabled} title="delete field">
-      <Icon icon="ion:trash" />
-    </button>
+    <div class="option-buttons">
+      {#if top_level}
+        <div>
+          <Toggle label="Static" bind:toggled={is_static} />
+        </div>
+      {/if}
+      <!-- <button
+        disabled={isFirst}
+        title="Move up"
+        on:click={() => moveItem('up')}
+      >
+        <Icon icon="mdi:arrow-up" />
+      </button>
+      <button
+        disabled={isLast}
+        title="Move down"
+        on:click={() => moveItem('down')}
+      >
+        <Icon icon="mdi:arrow-down" />
+      </button> -->
+      <!-- <button
+        on:click={() => dispatch('delete')}
+        {disabled}
+        title="delete field"
+      >
+        <Icon icon="ion:trash" />
+      </button> -->
+    </div>
+  </div>
+  <div class="children-container">
+    <slot />
   </div>
 </div>
 
 <style lang="postcss">
+  .top-container {
+    &.top_level {
+      border: 1px solid #333333;
+      border-radius: 6px;
+      padding: 20px 24px;
+    }
+  }
+
   .field-container {
     display: grid;
     grid-template-columns: auto 1fr 1fr auto;
-    padding: 0.5rem;
     gap: 1rem;
 
     &.has-default-value {

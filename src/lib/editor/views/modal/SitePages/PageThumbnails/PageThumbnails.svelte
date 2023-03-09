@@ -6,7 +6,7 @@
   import { TextInput } from '../../../../components/inputs'
   import { PrimaryButton } from '../../../../components/buttons'
   import { pages as actions } from '../../../../stores/actions'
-  import activePage, { id } from '../../../../stores/app/activePage'
+  import activePage, { url } from '../../../../stores/app/activePage'
   import { makeValidUrl } from '../../../../utils'
   import { Page } from '../../../../const'
   import {
@@ -38,6 +38,7 @@
 
   async function deletePage(pageId) {
     actions.delete(pageId, currentPath)
+    listedPages = listedPages.filter((page) => page.id !== pageId)
   }
 
   let creatingPage = false
@@ -59,7 +60,7 @@
     creatingPage = true
   }
 
-  let currentPath = buildCurrentPath($id)
+  let currentPath = buildCurrentPath($url)
   $: rootPageId = currentPath[0]
 
   let listedPages = $sitePages
@@ -131,7 +132,7 @@
       <PageItem
         {page}
         disableAdd={!!breadcrumbs}
-        active={$id === page.id}
+        active={$url === page.url}
         on:edit={({ detail }) => editPage(page.id, detail)}
         on:add={() => addSubPage(page.id)}
         on:delete={() => deletePage(page.id)}

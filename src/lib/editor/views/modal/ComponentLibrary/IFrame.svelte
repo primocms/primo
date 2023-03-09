@@ -1,40 +1,40 @@
 <script>
-  import {tick} from 'svelte'
-  import Spinner from '../../../components/misc/Spinner.svelte';
-  import { componentPreview } from '../../../components/misc/misc';
+  import { tick } from 'svelte'
+  import Spinner from '../../../components/misc/Spinner.svelte'
+  import { componentPreview } from '../../../components/misc/misc'
 
   export let componentCode
-  export let height;
+  export let height
 
-  let container;
-  let iframe;
-  let iframeLoaded;
-  let finishedResizing = false;
-  $: iframeLoaded && setIframeContent();
+  let container
+  let iframe
+  let iframeLoaded
+  let finishedResizing = false
+  $: iframeLoaded && setIframeContent()
   async function setIframeContent() {
-    setScaleRatio();
+    setScaleRatio()
     await tick()
     setHeight()
   }
 
   function setHeight() {
-    iframe.height = '';
-    const newHeight = iframe.contentWindow.document.body.scrollHeight * scaleRatio;
-    iframe.height = newHeight;
-    height = newHeight;
+    iframe.height = ''
+    const newHeight =
+      iframe.contentWindow.document.body.scrollHeight * scaleRatio
+    iframe.height = newHeight
+    height = newHeight
     container_height = iframe.contentWindow.document.body.scrollHeight
-    finishedResizing = true;
+    finishedResizing = true
   }
 
   function setScaleRatio() {
-    const { clientWidth: parentWidth } = container;
-    const { clientWidth: childWidth } = iframe;
-    scaleRatio = parentWidth / childWidth;
+    const { clientWidth: parentWidth } = container
+    const { clientWidth: childWidth } = iframe
+    scaleRatio = parentWidth / childWidth
   }
 
-  let scaleRatio = 1;
+  let scaleRatio = 1
   let container_height
-
 </script>
 
 <svelte:window on:resize={setScaleRatio} />
@@ -45,7 +45,11 @@
       <Spinner />
     </div>
   {/if}
-  <div bind:this={container} class="iframe-container" style:height="{container_height*scaleRatio}px">
+  <div
+    bind:this={container}
+    class="iframe-container"
+    style:height="{container_height * scaleRatio}px"
+  >
     {#if componentCode}
       <iframe
         class:fadein={finishedResizing}
@@ -54,7 +58,8 @@
         title="Preview HTML"
         on:load={() => (iframeLoaded = true)}
         srcdoc={componentPreview(componentCode)}
-        bind:this={iframe} />
+        bind:this={iframe}
+      />
     {/if}
   </div>
 </div>
@@ -64,7 +69,7 @@
     position: relative;
     /* height: 100%; */
   }
-  
+
   .spinner-container {
     background: var(--color-gray-9);
     width: 100%;
@@ -99,5 +104,4 @@
       }
     }
   }
-
 </style>

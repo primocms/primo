@@ -4,7 +4,7 @@ import { createStack } from '../../libraries/svelte-undo';
 
 export const id = writable('default');
 export const name = writable('');
-export const pages = writable([Page('index')]);
+export const pages = writable([ Page('index') ]);
 export const fields = writable([]);
 export const symbols = writable([]);
 export const code = writable(Site().code);

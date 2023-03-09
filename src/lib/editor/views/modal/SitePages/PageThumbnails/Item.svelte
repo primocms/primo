@@ -3,66 +3,65 @@
 </script>
 
 <script>
-  import { fade } from 'svelte/transition';
-  import { createEventDispatcher, getContext } from 'svelte';
-  const dispatch = createEventDispatcher();
-  import { TextInput } from '../../../../components/inputs';
-  import { PrimaryButton } from '../../../../components/buttons';
-  import Preview from '../../../../components/misc/Preview.svelte';
+  import { fade } from 'svelte/transition'
+  import { createEventDispatcher, getContext } from 'svelte'
+  const dispatch = createEventDispatcher()
+  import { TextInput } from '../../../../components/inputs'
+  import { PrimaryButton } from '../../../../components/buttons'
+  import Preview from '../../../../components/misc/Preview.svelte'
 
-  import modal from '../../../../stores/app/modal';
-  import { buildStaticPage } from '../../../../stores/helpers';
-  import { site } from '../../../../stores/data/draft';
+  import modal from '../../../../stores/app/modal'
+  import { buildStaticPage } from '../../../../stores/helpers'
+  import { site } from '../../../../stores/data/draft'
 
   const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'
 
-  export let page;
-  export let active = false;
-  export let disableAdd = false;
-  export let displayOnly = false;
+  export let page
+  export let active = false
+  export let disableAdd = false
+  export let displayOnly = false
 
-  let preview = '';
-  $: if (page) build_preview();
-  async function build_preview() {
-    if (compilations.has(page)) {
-      preview = compilations.get(page);
-    } else {
-      preview = await buildStaticPage({ page, site: $site });
-      compilations.set(page, preview);
-    }
-  }
+  let preview = page.preview
+  // $: if (page) build_preview()
+  // async function build_preview() {
+  //   if (compilations.has(page)) {
+  //     preview = compilations.get(page)
+  //   } else {
+  //     preview = await buildStaticPage({ page, site: $site })
+  //     compilations.set(page, preview)
+  //   }
+  // }
 
   // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
   function open_page(url) {
-    modal.hide();
+    modal.hide()
     goto(url)
   }
 
-  let editing_page = false;
-  let name = page.name || '';
-  let id = page.id || '';
-  $: disableSave = !name || !id;
+  let editing_page = false
+  let name = page.name || ''
+  let url = page.url || ''
+  $: disableSave = !name || !url
 
   const siteID = window.location.pathname.split('/')[1]
 
-  const pageURL = isTryPrimo ? 
-    `/${page.id === 'index' ? '' : page.id || ''}` :  
-    `/${siteID}/${page.id === 'index' ? '' : page.id || ''}`;
+  const pageURL = isTryPrimo
+    ? `/${page.url === 'index' ? '' : page.url || ''}`
+    : `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
 
-  // strip parent page from id
-  function get_simple_page_id(id) {
-    if (id === 'index') return id
-    const i = id.indexOf('/') + 1
-    return i ? id.slice(i, id.length) : id
+  // strip parent page from url
+  function get_simple_page_id(url) {
+    if (url === 'index') return url
+    const i = url.indexOf('/') + 1
+    return i ? url.slice(i, url.length) : url
   }
-
 </script>
 
 <div class="page-item">
   <div class="page-info">
     <a href={pageURL} on:click={() => modal.hide()}>
       <span class="title">{page.name}</span>
-      <span class="subtitle">{get_simple_page_id(page.id)}</span>
+      <span class="subtitle">{get_simple_page_id(page.url)}</span>
     </a>
     {#if !displayOnly}
       <div class="primo-buttons">
@@ -73,12 +72,12 @@
           <button title="Show child pages" on:click={() => dispatch('list')}>
             <i class="fas fa-th-large" />
           </button>
-        {:else if page.id !== 'index' && !disableAdd}
+        {:else if page.url !== 'index' && !disableAdd}
           <button title="Add child page" on:click={() => dispatch('add')}>
             <i class="fas fa-plus" />
           </button>
         {/if}
-        {#if page.id !== 'index'}
+        {#if page.url !== 'index'}
           <button
             title="Delete page"
             on:click={() => dispatch('delete')}
@@ -94,8 +93,8 @@
     {#if editing_page}
       <form
         on:submit|preventDefault={() => {
-          editing_page = false;
-          dispatch('edit', { name, id });
+          editing_page = false
+          dispatch('edit', { name, url })
         }}
         in:fade={{ duration: 100 }}
       >
@@ -106,9 +105,9 @@
           label="Page Label"
           placeholder="About Us"
         />
-        {#if id !== 'index'}
+        {#if url !== 'index'}
           <TextInput
-            bind:value={id}
+            bind:value={url}
             id="page-url"
             label="Page URL"
             prefix="/"
@@ -126,7 +125,12 @@
         </div>
       </div>
     {:else}
-      <a class="page-link" href={pageURL} class:active on:click={() => modal.hide()}>
+      <a
+        class="page-link"
+        href={pageURL}
+        class:active
+        on:click={() => modal.hide()}
+      >
         <div class="page-container">
           <Preview {preview} preventClicks={true} />
         </div>
@@ -224,7 +228,7 @@
         overflow: hidden;
         transition: var(--transition-colors);
         min-height: 10rem;
-        
+
         &.active {
           cursor: default;
           pointer-events: none;

@@ -3,7 +3,8 @@ import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { processors } from '../component.js'
 import { pages, site as activeSite, symbols, fields as siteFields } from './data/draft'
-import activePage, { id, fields as pageFields, code as pageCode, sections } from './app/activePage'
+import sections from './data/sections'
+import activePage, { id, fields as pageFields, code as pageCode } from './app/activePage'
 import { locale } from './app/misc'
 import { processCSS, getPlaceholderValue, getEmptyValue } from '../utils'
 import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
@@ -19,12 +20,13 @@ export function resetActivePage() {
 export function getSymbolUseInfo(symbolID) {
   const info = { pages: [], frequency: 0 }
   get(pages).forEach(page => {
-    page.sections.forEach(section => {
-      if (section.symbolID === symbolID) {
-        info.frequency++
-        if (!info.pages.includes(page.id)) info.pages.push(page.name)
-      }
-    })
+    // TODO: fix this
+    // page.sections.forEach(section => {
+    //   if (section.symbolID === symbolID) {
+    //     info.frequency++
+    //     if (!info.pages.includes(page.id)) info.pages.push(page.name)
+    //   }
+    // })
   })
   return info
 }
@@ -37,7 +39,7 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site, locale = 'en', separateModules = false }: { page: PageType, site: SiteType, locale?: string, separateModules?: boolean }) {
+export async function buildStaticPage({ page, site = get(activeSite), locale = 'en', separateModules = false }: { page: PageType, site?: SiteType, locale?: string, separateModules?: boolean }) {
   const component = await Promise.all([
     (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
@@ -54,42 +56,26 @@ export async function buildStaticPage({ page, site, locale = 'en', separateModul
         data
       }
     })(),
-    ...page.sections.map(async section => {
-      if (section.type === 'component') {
-        const symbol = _find(site.symbols, ['id', section.symbolID])
-        const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
-        const data = getComponentData({
-          component: section,
-          page,
-          site,
-          loc: locale
-        })
-        const { css, error } = await processors.css(postcss || '')
-        return {
-          html: `
-            <div class="section has-component" id="${section.id}">
-              <div class="component">
-                ${html} 
-              </div>
-            </div>`,
-          js,
-          css,
-          data
-        }
-      } else if (section.type === 'content') {
-        const html = site.content[locale][page.id][section.id]
-        const data = getPageData({ page, site, loc: locale })
-        return {
-          html: `
-            <div class="section has-content" id="${section.id}">
-              <div class="content">
-                ${html || ''} 
-              </div>
-            </div>`,
-          js: '',
-          css: '',
-          data
-        }
+    ...get(sections).map(async section => {
+      const symbol = section.symbol || _find(site.symbols, ['id', section.symbolID])
+      const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
+      const data = getComponentData({
+        component: section,
+        page,
+        site,
+        loc: locale
+      })
+      const { css, error } = await processors.css(postcss || '')
+      return {
+        html: `
+          <div class="section has-component" id="${section.id}">
+            <div class="component">
+              ${html} 
+            </div>
+          </div>`,
+        js,
+        css,
+        data
       }
     }).filter(Boolean), // remove options blocks
     (async () => {
@@ -166,8 +152,8 @@ export function getComponentData({
   fallback?: 'placeholder' | 'empty',
   include_parent_data?: boolean
 }): object {
-  const symbol = component.type === 'symbol' ? component : _find(site.symbols, ['id', component.symbolID])
-  const component_content = _chain(symbol.fields)
+  const symbol = Object.hasOwn(component, 'fields') && component ? component : (component.symbol || _find(site.symbols, ['id', component.symbolID]))
+  const symbol_content = symbol.content || _chain(symbol.fields)
     .map(field => {
       const content = site.content[loc][page.id]?.[component.id]?.[field.key]
       // if field is static, use value from symbol content
@@ -193,17 +179,21 @@ export function getComponentData({
     .keyBy('key')
     .mapValues('value')
     .value();
+  const component_content = component.content?.[loc] || symbol_content
 
   // remove pages from data object (not accessed from component)
-  const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  // const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  // const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   // remove sections from page content
-  const section_IDs = page.sections.map(section => section.id)
-  const page_content = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !section_IDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
+  // const section_IDs = page.sections.map(section => section.id)
+  const page_content = page.content
+  // const page_content = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !section_IDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
 
+
+  // TODO: include page and site content
   return include_parent_data ? {
-    ...site_content,
+    // ...site_content,
     ...page_content,
     ...component_content
   } : component_content
@@ -220,15 +210,16 @@ export function getPageData({
 }): object {
 
   // remove pages from site data object (not accessed from component)
-  const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
+  // const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
+  // const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
 
   // remove sections from page data object
-  const section_IDs = page.sections.map(section => section.id)
-  const page_content = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !section_IDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
+  // const section_IDs = page.sections.map(section => section.id)
+  // const page_content = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !section_IDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
 
+  // TODO: use page & site data
   return {
-    ...site_content,
-    ...page_content,
+    // ...site_content,
+    // ...page_content,
   }
 }

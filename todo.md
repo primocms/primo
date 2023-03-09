@@ -8,11 +8,11 @@ Features:
 - Save site data as db records & auto save
 - Design fields
 - Collaboration (lock block)
+- New fields UI
+- Primo Cloud service (or just make it closed beta, invite only)
 
 Marketing: 
-- Primo Cloud service (or just make it closed beta, invite only)
-- Primo Cloud landing page
-- primocms.org landing page
+- primocms.org landing page w/ cloud 
 
 Also: 
 - ~~Obfuscate app classes to prevent clashing with user classes~~
@@ -27,7 +27,6 @@ Follow up on:
 - Side panel
 - On-page image & link editor UI
 - primocms.org
-- primocloud.io
 - Design fields
 
 ## Considerations

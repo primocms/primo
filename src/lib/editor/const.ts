@@ -236,7 +236,7 @@ export const DEFAULTS = {
       js: ''
     },
     fields: [],
-    pages: [],
+    // pages: [],
   },
   code: {
     html: {
@@ -252,6 +252,7 @@ export const DEFAULTS = {
 
 export type Page = {
   id: string,
+  url: string,
   name: string,
   sections: any[],
   code: {
@@ -263,12 +264,13 @@ export type Page = {
     js: string
   },
   fields: any[],
-  pages: any[],
+  content: object
+  // pages: any[],
 }
 
-export const Page = (id = createUniqueID(), name = ''): Page => ({
+export const Page = (url, name = ''): Page => ({
   ...DEFAULTS.page,
-  id,
+  url,
   name,
   sections: [],
   code: {
@@ -280,13 +282,14 @@ export const Page = (id = createUniqueID(), name = ''): Page => ({
     js: ''
   },
   fields: [],
-  pages: [],
+  content: {}
+  // pages: [],
 })
 
 export type Site = {
   id: string,
   name: string,
-  pages: any[],
+  // pages: any[],
   code: {
     html: {
       head: string,
@@ -303,9 +306,9 @@ export type Site = {
 export const Site = ({ id, name } = { id: 'default', name: 'Default' }): Site => ({
   id,
   name,
-  pages: [
-    Page('index', 'Home Page')
-  ],
+  // pages: [
+  //   Page('index', 'Home Page')
+  // ],
   code: {
     html: {
       head: `

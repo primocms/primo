@@ -292,13 +292,6 @@
           font-weight: 600;
           color: var(--color-gray-2);
 
-          svg {
-            border-radius: 50%;
-            transition: background 0.1s;
-            height: 2rem;
-            width: 2rem;
-          }
-
           &:active {
             background: var(--primo-color-brand);
             color: var(--primo-color-black);

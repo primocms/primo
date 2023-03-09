@@ -16,6 +16,7 @@
   import FloatingMenu from '@tiptap/extension-floating-menu'
   import { tick, createEventDispatcher, getContext } from 'svelte'
   import { browser } from '$app/environment'
+  import { invalidate } from '$app/navigation'
   import { processCode } from '../../../utils'
   import {
     site as unsavedSite,
@@ -27,6 +28,7 @@
   import { getComponentData, getPageData } from '../../../stores/helpers'
   import {
     updateContent,
+    update_section_content,
     update_symbol_with_static_values,
   } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
@@ -47,8 +49,8 @@
 
   $: $sections, set_position()
   async function set_position() {
-    if (!node) return
     await tick()
+    if (!node) return
 
     let imagesLoaded = 0
     let totalImages = node.querySelectorAll('img').length
@@ -81,7 +83,7 @@
       {
         i,
         id: block.id,
-        symbol: block.symbolID,
+        symbol: block.symbol.id,
         top: y,
         bottom: y + height,
         left,
@@ -89,12 +91,7 @@
     ]
   }
 
-  const is_preview = getContext('is-preview')
-
-  $: symbol = _.find(is_preview ? site.symbols : $symbols, [
-    'id',
-    block.symbolID,
-  ])
+  $: symbol = block.symbol
   $: $content, $locale, block, setComponentData()
 
   let component_data
@@ -117,16 +114,21 @@
   let js = ''
   $: compileComponentCode(symbol.code)
 
-  function save_edited_value(key, value) {
+  async function save_edited_value(key, value) {
     _.set(component_data, key, value)
-    updateContent(block.id, component_data)
-    update_symbol_with_static_values({
-      ...block,
-      content: {
-        ...block.content,
-        [$locale]: component_data,
-      },
+    await update_section_content(block, {
+      ...block.content,
+      [$locale]: component_data,
     })
+
+    // invalidate('app:data')
+    // update_symbol_with_static_values({
+    //   ...block,
+    //   content: {
+    //     ...block.content,
+    //     [$locale]: component_data,
+    //   },
+    // })
   }
 
   let editor
@@ -185,15 +187,14 @@
   }
 
   let error = ''
-  async function compileComponentCode(rawCode, force_recompile = false) {
+  async function compileComponentCode(rawCode) {
+    if (!node) {
+      setTimeout(() => compileComponentCode(rawCode), 200)
+      return
+    }
     // workaround for this function re-running anytime something changes on the page
     // (as opposed to when the code actually changes)
-    if (
-      force_recompile ||
-      html !== rawCode.html ||
-      css !== rawCode.css ||
-      js !== rawCode.js
-    ) {
+    if (html !== rawCode.html || css !== rawCode.css || js !== rawCode.js) {
       html = rawCode.html
       css = rawCode.css
       js = rawCode.js
@@ -224,6 +225,7 @@
   }
 
   async function make_content_editable() {
+    if (!node) return
     const elements_with_text = Array.from(node.querySelectorAll('*')).filter(
       (element) => {
         if (['STYLE', 'TITLE'].includes(element.tagName)) return false
@@ -344,7 +346,6 @@
     async function set_editable_image({ element, key = '' }) {
       let rect
       element.setAttribute(`data-key`, key)
-      // console.log({ image_editor });
       element.style.transition = 'box-shadow 0.1s'
       element.onmouseover = async (e) => {
         image_editor_is_visible = true
@@ -470,10 +471,13 @@
   let component
 
   // Fade in component on mount
-  const observer = new MutationObserver(() => {
-    dispatch('mount')
-    reroute_links()
-  })
+  let observer
+  if (browser) {
+    observer = new MutationObserver(() => {
+      dispatch('mount')
+      reroute_links()
+    })
+  }
 
   // Reroute links to correctly open externally and internally
   async function reroute_links() {
@@ -699,6 +703,7 @@
     border-bottom-right-radius: 4px;
     z-index: 99;
     transform-origin: top left;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
 
     button {
       padding: 4px 8px;

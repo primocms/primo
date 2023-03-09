@@ -68,7 +68,11 @@
     }
   }
 
-  let local_component: SymbolType = cloneDeep(component) // local copy of component to modify & save
+  const is_symbol = !component.symbol
+
+  let local_component: SymbolType = cloneDeep(
+    is_symbol ? component : component.symbol
+  ) // local copy of component to modify & save
   let local_content =
     component.type === 'symbol' && component.content
       ? component.content
@@ -92,8 +96,7 @@
 
   // parse component-specific content out of site content tree (keeping separate locales)
   function getComponentContent(siteContent): object {
-    const symbol =
-      component.type !== 'symbol' ? getSymbol(component.symbolID) : component
+    const symbol = component.symbol || component
     console.log({ component, symbol })
     return _chain(Object.entries(siteContent))
       .map(([locale]) => {
@@ -231,8 +234,6 @@
   // on-screen fields
   let fields = local_component.fields
 
-  console.log({ fields })
-
   let componentApp // holds compiled component
   let compilationError // holds compilation error
 
@@ -330,9 +331,13 @@
     })
 
     if (!disableSave) {
-      const component = ExtractedComponent(local_component)
-      console.log('final', component)
-      header.button.onclick(component)
+      const extracted_component = is_symbol
+        ? ExtractedComponent(local_component)
+        : ExtractedComponent({
+            ...component,
+            symbol: local_component,
+          })
+      header.button.onclick(extracted_component)
     }
   }
 </script>

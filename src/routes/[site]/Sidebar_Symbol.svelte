@@ -86,6 +86,7 @@
       }
     } else {
       dragging_over_block = true
+      $hoveredBlock = { ...$hoveredBlock, i: 0 }
     }
 
     const top = matching_block?.top || 0

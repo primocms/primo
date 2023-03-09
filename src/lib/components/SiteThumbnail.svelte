@@ -83,17 +83,4 @@
     justify-content: center;
     align-items: center;
   }
-  .invalid-state {
-    height: 100%;
-    color: var(--primo-color-white);
-    display: grid;
-    place-content: center;
-    place-items: center;
-    gap: 0.25rem;
-
-    svg {
-      width: 2rem;
-      height: 2rem;
-    }
-  }
 </style>

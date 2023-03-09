@@ -1,28 +1,33 @@
 <script>
+  import { tick } from 'svelte'
   import _ from 'lodash-es'
   import fileSaver from 'file-saver'
   import axios from 'axios'
   import { locale, hoveredBlock } from '$lib/editor/stores/app/misc'
-  import { symbols, pages } from '$lib/editor/stores/data/draft'
+  import site from '$lib/editor/stores/data/draft'
+  import activePage, { sections } from '$lib/editor/stores/app/activePage'
   import Icon from '@iconify/svelte'
   import { createUniqueID } from '$lib/editor/utilities'
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
   import {
-    symbols as actions,
+    symbols,
+    pages,
+    active_page,
     deleteInstances,
     updateContent,
   } from '$lib/editor/stores/actions'
-  import { get_row } from '$lib/supabase'
+  // import { pages } from '../../supabase/db'
+  import { invalidate } from '$app/navigation'
+
+  // export let data
 
   let active_tab = 'site'
 
   function createInstance(symbol) {
-    const instanceID = createUniqueID()
     return {
-      type: 'component',
-      id: instanceID,
-      symbolID: symbol.id,
+      symbol: symbol,
+      content: symbol.content,
     }
   }
 
@@ -32,17 +37,23 @@
   }
 
   async function placeSymbol(symbol) {
-    const exists = _.some($symbols, ['id', symbol.id])
+    const exists = _.some($site.symbols, ['id', symbol.id])
     if (exists) {
-      actions.update(symbol)
+      await symbols.update({
+        ...symbol,
+        site: $site.id,
+      })
     } else {
-      actions.create(symbol)
+      return await symbols.create({
+        ...symbol,
+        site: $site.id,
+      })
     }
   }
 
   async function deleteSymbol(symbol) {
-    await deleteInstances(symbol)
-    actions.delete(symbol)
+    // await deleteInstances(symbol)
+    symbols.delete(symbol)
   }
 
   async function duplicateSymbol(symbol) {
@@ -74,17 +85,16 @@
     fileSaver.saveAs(blob, `${copied_symbol.name || copied_symbol.id}.json`)
   }
 
-  async function get_primo_block() {
-    // const { data: breezly_blocks, error } = await get_row(
-    //   'emails',
-    //   '0e2c6a9f-0225-4a68-9e2f-ea105fc60a23'
-    // )
-
+  async function get_primo_blocks() {
     const { data: symbols } = await axios.get(
       'https://api.primo.so/public-library'
     )
-    console.log({ symbols })
-    return symbols
+    return symbols.map((s) => ({
+      name: s.name,
+      fields: s.fields,
+      content: s.content,
+      code: s.code,
+    }))
     // if (error) {
     //   console.log(error)
     //   return []
@@ -93,30 +103,35 @@
     // }
   }
 
-  function add_to_page(symbol) {
-    const instance = createInstance(symbol)
-    if ($hoveredBlock.position === 'top') {
-      $pages = $pages.map((page) => ({
-        ...page,
-        sections: [
-          ...page.sections.slice(0, $hoveredBlock.i),
-          instance,
-          ...page.sections.slice($hoveredBlock.i),
-        ],
-      }))
+  async function add_to_page(symbol) {
+    if (!$hoveredBlock.i) {
+      active_page.add_block(symbol, 0)
+    } else if ($hoveredBlock.position === 'top') {
+      active_page.add_block(symbol, $hoveredBlock.i)
+      // pages.active_page.update({
+      //   sections: [
+      //     ...$sections.slice(0, $hoveredBlock.i),
+      //     instance,
+      //     ...$sections.slice($hoveredBlock.i),
+      //   ],
+      // })
     } else {
-      $pages = $pages.map((page) => ({
-        ...page,
-        sections: [
-          ...page.sections.slice(0, $hoveredBlock.i + 1),
-          instance,
-          ...page.sections.slice($hoveredBlock.i + 1),
-        ],
-      }))
+      active_page.add_block(symbol, $hoveredBlock.i + 1)
+      // pages.active_page.update({
+      //   sections: [
+      //     ...$sections.slice(0, $hoveredBlock.i + 1),
+      //     instance,
+      //     ...$sections.slice($hoveredBlock.i + 1),
+      //   ],
+      // })
     }
-    if (symbol.content?.[$locale]) {
-      updateContent(instance.id, symbol.content[$locale]['en'])
-    }
+    // invalidate('app:data')
+
+    // if symbol has content, add it to the block content
+    // if (symbol.content?.[$locale]) {
+    //   const instance = createInstance(symbol)
+    //   updateContent(instance, symbol.content[$locale]['en'])
+    // }
   }
 </script>
 
@@ -132,7 +147,7 @@
     >
   </div>
   {#if active_tab === 'site'}
-    {#if $symbols.length > 0}
+    {#if $site.symbols.length > 0}
       <div class="buttons">
         <button class="button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
@@ -143,7 +158,7 @@
         </label>
       </div>
       <div class="symbols">
-        {#each $symbols as symbol (symbol.id)}
+        {#each $site.symbols as symbol (symbol.id)}
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
@@ -179,8 +194,8 @@
     {/if}
   {:else}
     <div class="symbols">
-      {#await get_primo_block() then blocks}
-        {#each blocks as symbol (symbol.id)}
+      {#await get_primo_blocks() then blocks}
+        {#each blocks as symbol}
           <Sidebar_Symbol
             {symbol}
             controls_enabled={false}
@@ -189,9 +204,13 @@
             on:download={() => downloadSymbol(symbol)}
             on:delete={() => deleteSymbol(symbol)}
             on:duplicate={() => duplicateSymbol(symbol)}
-            on:add_to_page={() => {
-              placeSymbol(symbol)
-              add_to_page(symbol)
+            on:add_to_page={async () => {
+              const symbol_id = await placeSymbol(symbol)
+              await tick()
+              add_to_page({
+                id: symbol_id,
+                ...symbol,
+              })
             }}
           />
         {/each}
@@ -206,7 +225,7 @@
     z-index: 9;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 52px);
+    height: calc(100vh - 84px);
     gap: 1rem;
     /* position: fixed; */
     /* margin-top: 52px; */

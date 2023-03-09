@@ -109,11 +109,11 @@ export const sites = {
     }
     return site
   },
-  create: async ({ id, name }) => {
+  create: async (site_data) => {
     const { data, error } = await supabase
       .from('sites')
       .insert([
-        { id, name }
+        site_data
       ])
       .select()
     if (error) {
@@ -302,4 +302,44 @@ export const config = {
     }
     return data[0] ? true : false
   }
+}
+
+export const pages = {
+  create: async (page_data) => {
+    const { data, error } = await supabase
+      .from('pages')
+      .insert([
+        page_data
+      ])
+      .select()
+    if (error) {
+      console.error(error)
+      return null
+    }
+    return data[0]
+  },
+  save: async (id, page_data) => {
+    // const json = JSON.stringify(site)
+    const { data, error } = await supabase
+      .from('pages')
+      .update(page_data)
+      .filter('id', 'eq', id)
+    if (error) {
+      console.error(error)
+      return false
+    }
+    return true
+  },
+  update: async (id, props) => {
+    console.log('update', id, props)
+    const { error } = await supabase
+      .from('pages')
+      .update(props)
+      .filter('id', 'eq', id)
+    if (error) {
+      console.error(error)
+      return null
+    }
+    return true
+  },
 }

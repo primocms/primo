@@ -17,8 +17,8 @@
   import { Site } from './const'
 
   import { options as options_store, saved } from './stores/app/misc'
-  import { setTimeline } from './stores/data/draft'
-  import { site as draft } from './stores/data/draft'
+  import { pages, setTimeline } from './stores/data/draft'
+  import { symbols, site as draft } from './stores/data/draft'
   import { hydrateSite, updatePreview } from './stores/actions'
   import en from './languages/en.json'
   import es from './languages/es.json'
@@ -28,7 +28,7 @@
   import { init, addMessages } from 'svelte-i18n'
 
   export let data: SiteType = Site()
-  export let page_id = 'index'
+  // export let page_id = 'index'
   export let role: 'developer' | 'content' = 'developer'
   export let saving: boolean = false
   export let language: string = 'en'
@@ -49,10 +49,13 @@
 
   hydrateSite(data)
   setTimeline(data)
-  onMount(() => updatePreview(data))
+  // onMount(() => updatePreview(data))
+
+  symbols.set(data.symbols)
+  pages.set(data.pages)
 
   $: {
-    data = $draft
+    // data = $draft
   }
 
   function saveSite(): void {
@@ -61,21 +64,21 @@
 
   // refresh draft data when passing in updated data
   let cachedData: Site | undefined
-  $: if (cachedData && cachedData.id !== data.id) {
-    cachedData = cloneDeep(data)
-    hydrateSite(data)
-    setTimeline(data)
-    updatePreview(data)
-  } else if (!cachedData) {
-    cachedData = cloneDeep(data)
-  }
+  // $: if (cachedData && cachedData.id !== data.id) {
+  //   cachedData = cloneDeep(data)
+  //   hydrateSite(data)
+  //   setTimeline(data)
+  //   updatePreview(data)
+  // } else if (!cachedData) {
+  //   cachedData = cloneDeep(data)
+  // }
 
-  $: $pageId = getPageId(page_id)
-  function getPageId(pagePath: string = ''): string {
-    if (pagePath === '') pagePath = 'index'
-    const [root, child] = pagePath.split('/')
-    return child ? `${root}/${child}` : root
-  }
+  // $: $pageId = getPageId(page_id)
+  // function getPageId(pagePath: string = ''): string {
+  //   if (pagePath === '') pagePath = 'index'
+  //   const [root, child] = pagePath.split('/')
+  //   return child ? `${root}/${child}` : root
+  // }
 
   $: activeModal = getActiveModal($modal.type)
   function getActiveModal(modalType) {
@@ -91,15 +94,15 @@
       : null
   }
 
-  $: checkFor404($pageId, $draft)
-  function checkFor404(id: string, site: SiteType) {
-    const [root, child] = id.split('/')
-    const exists: boolean =
-      some(site.pages, ['id', root]) || some(site.pages, ['id', child])
-    if (!exists && site.id !== 'default') {
-      $pageId = 'index'
-    }
-  }
+  // $: checkFor404($pageId, $draft)
+  // function checkFor404(id: string, site: SiteType) {
+  //   const [root, child] = id.split('/')
+  //   const exists: boolean =
+  //     some(site.pages, ['id', root]) || some(site.pages, ['id', child])
+  //   if (!exists && site.id !== 'default') {
+  //     $pageId = 'index'
+  //   }
+  // }
 
   onMount(() => {
     Mousetrap.bind('mod', () => ($showKeyHint = true), 'keydown')

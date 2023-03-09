@@ -217,9 +217,9 @@ export function validateSiteStructure(site): Site {
     const updated: Site = {
       id: site.id,
       name: site.name,
-      pages: convertPages(site.pages, (page) => {
-        siteContent[page.id] = page.content
-      }),
+      // pages: convertPages(site.pages, (page) => {
+      //   siteContent[page.id] = page.content
+      // }),
       code: convertCode(site),
       symbols: convertSymbols(site.symbols),
       fields: convertFields(site.fields, (field) => {

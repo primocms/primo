@@ -1,14 +1,14 @@
 <script lang="ts">
-  import {get, set} from 'idb-keyval'
+  import { get, set } from 'idb-keyval'
   import Icon from '@iconify/svelte'
-  import PageThumbnails from './PageThumbnails/PageThumbnails.svelte';
-  import ModalHeader from '../ModalHeader.svelte';
+  import PageThumbnails from './PageThumbnails/PageThumbnails.svelte'
+  import ModalHeader from '../ModalHeader.svelte'
   import PageList from './PageList/PageList.svelte'
-  import { id as siteID } from '../../../stores/data/draft';
+  import { id as siteID } from '../../../stores/data/draft'
 
   let activeTab = 0
 
-  get(`${$siteID}--page-tab`).then(tab => {
+  get(`${$siteID}--page-tab`).then((tab) => {
     if (tab) {
       activeTab = tab
     }
@@ -17,7 +17,6 @@
     activeTab = i
     set(`${$siteID}--page-tab`, i)
   }
-
 </script>
 
 <ModalHeader icon="fas fa-th-large" title="Pages">
@@ -32,7 +31,6 @@
 </ModalHeader>
 
 <main>
-
   {#if activeTab === 0}
     <PageThumbnails />
   {:else}
@@ -61,5 +59,4 @@
     background: var(--primo-color-black);
     overflow-y: scroll;
   }
-
 </style>

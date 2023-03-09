@@ -34,39 +34,37 @@ export const sites = {
   },
   create: async ({ data, preview }) => {
     await Promise.all([
-      supabaseDB.sites.create({
-        name: data.name,
-        id: data.id
-      }),
-      supabaseStorage.uploadSiteData({
-        id: data.id,
-        data
-      }),
-      supabaseStorage.uploadPagePreview({
-        path: `${data.id}/preview.html`,
+      supabaseDB.sites.create(data),
+      supabaseDB.pages.create({
+        site: data.id,
+        url: 'index',
+        name: 'Home',
         preview
-      })
+      }),
     ])
-    stores.sites.update(sites => [...sites, { data, preview }])
+    // stores.sites.update(sites => [...sites, { data, preview }])
   },
   update: async ({ id, props }) => {
-    stores.sites.update(
-      sites => sites.map(
-        s => s.id !== id
-          ? s
-          : ({ ...s, ...props })
-      )
-    )
+    // stores.sites.update(
+    //   sites => sites.map(
+    //     s => s.id !== id
+    //       ? s
+    //       : ({ ...s, ...props })
+    //   )
+    // )
     await supabaseDB.sites.update(id, props)
   },
-  save: async (updatedSite) => {
-    const homepage = find(updatedSite.pages, ['id', 'index'])
-    const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-    const res = await supabaseDB.sites.update(updatedSite.id, {
-      data: updatedSite,
-      preview
-    })
-    return res
+  save: async (id, updatedSite) => {
+    console.log({ id, updatedSite })
+    // const homepage = find(updatedSite.pages, ['id', 'index'])
+    // const preview = await buildStaticPage({ page: homepage, site: updatedSite })
+    // const res = await supabaseDB.sites.update(id, updatedSite)
+    // await supabaseDB.pages.save('index', {
+    //   data: updatedSite,
+    //   preview
+    // })
+    // await supabaseDB.pages.save('index', homepage)
+    // return res
   },
   delete: async (id) => {
     stores.sites.update(sites => sites.filter(s => s.id !== id))
