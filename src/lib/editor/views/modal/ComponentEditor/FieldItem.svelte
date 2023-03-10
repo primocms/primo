@@ -1,6 +1,7 @@
 <script>
   import { cloneDeep, chain as _chain, isEqual } from 'lodash-es'
   import Icon from '@iconify/svelte'
+  import Toggle from 'svelte-toggle'
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
 
@@ -92,7 +93,6 @@
   {isFirst}
   {isLast}
   {top_level}
-  bind:is_static={field.is_static}
   minimal={field.type === 'info'}
   showDefaultValue={['content', 'number', 'url', 'select', 'text'].includes(
     field.type
@@ -179,6 +179,15 @@
       </optgroup>
     {/each}
   </select>
+  <div slot="toggle">
+    <Toggle
+      label="Static"
+      toggled={field.is_static}
+      on:toggle={({ detail }) => {
+        field.is_static = detail
+      }}
+    />
+  </div>
   <!-- <input type="checkbox" bind:checked={field.is_static} slot="static" /> -->
 
   {#each field.fields as subfield, i (subfield.id)}

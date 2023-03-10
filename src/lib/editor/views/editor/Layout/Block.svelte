@@ -19,7 +19,6 @@
   import sections from '../../../stores/data/sections'
   import {
     pages,
-    updateContent,
     update_section_content,
     update_symbol_with_static_values,
     symbols,
@@ -59,55 +58,14 @@
   }
 
   function updateSections(newSections) {
-    // pages.update($id, (page) => ({
-    //   ...page,
-    //   sections: newSections,
-    // }))
     sections.set(newSections)
     updatePreview()
     $saved = false
   }
 
-  // function insertOptionsRow(i, position) {
-  //   hovering = false
-  //   modal.show(
-  //     'SYMBOL_LIBRARY',
-  //     {
-  //       onselect: (component) => {
-  //         modal.hide()
-  //         if (position === 'above') {
-  //           updateSections([
-  //             ...$sections.slice(0, i),
-  //             component,
-  //             ...$sections.slice(i),
-  //           ])
-  //         } else {
-  //           updateSections([
-  //             ...$sections.slice(0, i + 1),
-  //             component,
-  //             ...$sections.slice(i + 1),
-  //           ])
-  //         }
-  //       },
-  //     },
-  //     {
-  //       hideLocaleSelector: true,
-  //     }
-  //   )
-  // }
-
   function duplicateBlock() {
-    const newBlock = _.cloneDeep(block)
-    newBlock.id = createUniqueID()
-
-    const componentData = getComponentData({ component: block })
-
-    updateContent(newBlock, componentData)
-    updateSections([
-      ...$sections.slice(0, i + 1),
-      newBlock,
-      ...$sections.slice(i + 1),
-    ])
+    const new_symbol = _.cloneDeep(block.symbol)
+    active_page.add_symbol(new_symbol, i + 1)
   }
 
   function editComponent(showIDE = false) {
@@ -128,18 +86,34 @@
             label: 'Save',
             onclick: async (component) => {
               dispatch('unlock')
+              // update symbol with static values
+              const updated_symbol_content = {}
+              Object.entries(component.content).forEach(
+                ([locale_key, locale_value]) => {
+                  Object.entries(locale_value).forEach(
+                    ([field_key, field_value]) => {
+                      const matching_field = _.find(component.symbol.fields, [
+                        'key',
+                        field_key,
+                      ])
+                      if (matching_field.is_static) {
+                        updated_symbol_content[locale_key] = {
+                          ...updated_symbol_content[locale_key],
+                          [field_key]: field_value,
+                        }
+                      }
+                    }
+                  )
+                }
+              )
+
               await symbols.update({
                 id: component.symbol.id,
                 code: component.symbol.code,
                 fields: component.symbol.fields,
+                content: updated_symbol_content,
               })
               update_section_content(component, component.content)
-              // Object.entries(component.content).forEach((field) => {
-              //   const [localeID, localeContent] = field
-              //   if (localeContent)
-              //     updateContent(component, localeContent, localeID)
-              // })
-              // invalidate('app:data')
               modal.hide()
               updatePreview()
             },

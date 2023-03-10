@@ -68,7 +68,7 @@ export const Symbol = (): Symbol => ({
 })
 
 export type Page = {
-  id?: string,
+  id?: number,
   url: string,
   name: string,
   sections: any[],

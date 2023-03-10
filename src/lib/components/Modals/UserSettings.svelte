@@ -20,32 +20,11 @@
       icon: 'globe',
     },
     {
-      label: 'Server',
-      icon: 'server',
-    },
-    {
       label: 'Customize',
       icon: 'palette',
     },
   ]
   let activeTab = tabs[0]
-
-  let token = null
-  async function createToken() {
-    const tokenToSet = createUniqueID(25).toUpperCase()
-    const success = await supabaseDB.config.update({
-      id: 'server-token',
-      value: tokenToSet,
-    })
-    if (success) {
-      token = tokenToSet
-    }
-  }
-
-  onMount(async () => {
-    const res = await supabaseDB.config.get('server-token')
-    token = res
-  })
 </script>
 
 <main>
@@ -59,28 +38,6 @@
         >
       </h1>
       <Hosting />
-    {:else if activeTab.label === 'Server'}
-      <h1 class="primo-heading-lg">
-        Primo Server
-        {#if token}
-          <span
-            >Paste your token into Primo Desktop to manage your sites from
-            there. Note that creating a new token will invalidate the current
-            one.</span
-          >
-        {:else}
-          <span>Create a token to manage your sites from your desktop</span>
-        {/if}
-      </h1>
-      <div>
-        {#if token}
-          <CopyButton label={token} />
-          <button on:click={createToken}>Create New Token</button>
-          <!-- <PrimaryButton on:click={createToken}></PrimaryButton> -->
-        {:else}
-          <PrimaryButton on:click={createToken}>Create Token</PrimaryButton>
-        {/if}
-      </div>
     {:else if activeTab.label === 'Customize'}
       <h1 class="primo-heading-lg">Customize</h1>
       <div>

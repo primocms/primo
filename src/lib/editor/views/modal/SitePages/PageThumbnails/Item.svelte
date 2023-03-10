@@ -22,15 +22,6 @@
   export let displayOnly = false
 
   let preview = page.preview
-  // $: if (page) build_preview()
-  // async function build_preview() {
-  //   if (compilations.has(page)) {
-  //     preview = compilations.get(page)
-  //   } else {
-  //     preview = await buildStaticPage({ page, site: $site })
-  //     compilations.set(page, preview)
-  //   }
-  // }
 
   // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
   function open_page(url) {
@@ -45,9 +36,7 @@
 
   const siteID = window.location.pathname.split('/')[1]
 
-  const pageURL = isTryPrimo
-    ? `/${page.url === 'index' ? '' : page.url || ''}`
-    : `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
+  const pageURL = `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
 
   // strip parent page from url
   function get_simple_page_id(url) {

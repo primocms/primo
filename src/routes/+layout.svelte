@@ -148,7 +148,7 @@
     --primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
     --primo-color-black: rgb(17, 17, 17);
-    --primo-color-black-opaque: rgba(17, 17, 17, 0.9);
+    --primo-color-black-opaque: rgba(17, 17, 17, 0.95);
 
     --color-gray-1: rgb(245, 245, 245);
     --color-gray-2: rgb(229, 229, 229);

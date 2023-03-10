@@ -70,9 +70,10 @@
 
   const is_symbol = !component.symbol
 
-  let local_component: SymbolType = cloneDeep(
-    is_symbol ? component : component.symbol
-  ) // local copy of component to modify & save
+  let local_component: SymbolType = is_symbol
+    ? cloneDeep(component)
+    : cloneDeep(component.symbol) // local copy of component to modify & save
+
   let local_content =
     component.type === 'symbol' && component.content
       ? component.content
@@ -192,8 +193,6 @@
     // TODO
     // save field value to all locales where block is used
     // when block gets added to page, add static value as content to locale
-
-    console.log({ fields })
     local_content = {
       ...local_content,
       [$locale]: {
@@ -204,16 +203,8 @@
     console.log({ local_content })
   }
 
-  function saveLocalValue(
-    property: 'html' | 'css' | 'js' | 'fields',
-    value: any
-  ): void {
-    if (property === 'fields') {
-      local_component.fields = value
-      fields = getFieldValues(value, $locale)
-    } else {
-      local_component.code[property] = value
-    }
+  function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {
+    local_component.code[property] = value
   }
 
   let loading = false
@@ -321,22 +312,29 @@
       await refreshPreview()
     }
 
-    const ExtractedComponent = (component) => ({
+    const FinalInstance = {
+      ...component,
+      content: local_content,
+      symbol: {
+        ...local_component,
+        fields: fields.map((field) => {
+          delete field.value
+          return field
+        }),
+      },
+    }
+
+    const FinalSymbol = {
       ...component,
       content: local_content,
       fields: fields.map((field) => {
         delete field.value
         return field
       }),
-    })
+    }
 
     if (!disableSave) {
-      const extracted_component = is_symbol
-        ? ExtractedComponent(local_component)
-        : ExtractedComponent({
-            ...component,
-            symbol: local_component,
-          })
+      const extracted_component = is_symbol ? FinalSymbol : FinalInstance
       header.button.onclick(extracted_component)
     }
   }

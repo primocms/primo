@@ -27,7 +27,6 @@
   import { locale } from '../../../stores/app/misc'
   import { getComponentData, getPageData } from '../../../stores/helpers'
   import {
-    updateContent,
     update_section_content,
     update_symbol_with_static_values,
   } from '../../../stores/actions'

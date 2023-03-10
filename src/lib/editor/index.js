@@ -9,7 +9,7 @@ import fieldTypes from './stores/app/fieldTypes'
 import modal from './stores/app/modal'
 import {buildStaticPage} from './stores/helpers'
 import {registerProcessors} from './component'
-import { DEFAULTS, Page, Site } from './const'
+import { Page, Site } from './const'
 import PrimoFieldTypes from './field-types'
 
 import * as utils from './utils'
@@ -29,7 +29,6 @@ export {
   modal,
   utils,
   components,
-  DEFAULTS,
   Page,
   Site,
   fieldTypes,

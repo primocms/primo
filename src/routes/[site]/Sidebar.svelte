@@ -3,33 +3,15 @@
   import _ from 'lodash-es'
   import fileSaver from 'file-saver'
   import axios from 'axios'
-  import { locale, hoveredBlock } from '$lib/editor/stores/app/misc'
+  import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
-  import activePage, { sections } from '$lib/editor/stores/app/activePage'
   import Icon from '@iconify/svelte'
   import { createUniqueID } from '$lib/editor/utilities'
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
-  import {
-    symbols,
-    pages,
-    active_page,
-    deleteInstances,
-    updateContent,
-  } from '$lib/editor/stores/actions'
-  // import { pages } from '../../supabase/db'
-  import { invalidate } from '$app/navigation'
-
-  // export let data
+  import { symbols, active_page } from '$lib/editor/stores/actions'
 
   let active_tab = 'site'
-
-  function createInstance(symbol) {
-    return {
-      symbol: symbol,
-      content: symbol.content,
-    }
-  }
 
   async function createSymbol() {
     const symbol = Symbol()
@@ -58,7 +40,8 @@
 
   async function duplicateSymbol(symbol) {
     const new_symbol = _.cloneDeep(symbol)
-    new_symbol.id = createUniqueID()
+    delete new_symbol.id
+    delete new_symbol.created_at
     new_symbol.name = `${new_symbol.name} (copy)`
     placeSymbol(new_symbol)
   }
@@ -95,44 +78,17 @@
       content: s.content,
       code: s.code,
     }))
-    // if (error) {
-    //   console.log(error)
-    //   return []
-    // } else {
-    //   return breezly_blocks.symbols
-    // }
   }
 
   async function add_to_page(symbol) {
     console.log({ $hoveredBlock })
     if (!$hoveredBlock.i) {
-      active_page.add_block(symbol, 0)
+      active_page.add_symbol(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {
-      active_page.add_block(symbol, $hoveredBlock.i)
-      // pages.active_page.update({
-      //   sections: [
-      //     ...$sections.slice(0, $hoveredBlock.i),
-      //     instance,
-      //     ...$sections.slice($hoveredBlock.i),
-      //   ],
-      // })
+      active_page.add_symbol(symbol, $hoveredBlock.i)
     } else {
-      active_page.add_block(symbol, $hoveredBlock.i + 1)
-      // pages.active_page.update({
-      //   sections: [
-      //     ...$sections.slice(0, $hoveredBlock.i + 1),
-      //     instance,
-      //     ...$sections.slice($hoveredBlock.i + 1),
-      //   ],
-      // })
+      active_page.add_symbol(symbol, $hoveredBlock.i + 1)
     }
-    // invalidate('app:data')
-
-    // if symbol has content, add it to the block content
-    // if (symbol.content?.[$locale]) {
-    //   const instance = createInstance(symbol)
-    //   updateContent(instance, symbol.content[$locale]['en'])
-    // }
   }
 </script>
 

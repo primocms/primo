@@ -35,7 +35,7 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site = get(activeSite), locale = 'en', separateModules = false }: { page: PageType, site?: SiteType, locale?: string, separateModules?: boolean }) {
+export async function buildStaticPage({ page, site = get(activeSite), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
@@ -100,7 +100,7 @@ export async function buildStaticPage({ page, site = get(activeSite), locale = '
     </head>
     <body id="page">
       ${res.html}
-      <script type="module">${buildModule(res.js)}</script>
+      ${!no_js ? `<script type="module">${buildModule(res.js)}</script>` : ``}
     </body>
   </html>
   `

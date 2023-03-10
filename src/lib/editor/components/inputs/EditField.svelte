@@ -1,18 +1,12 @@
 <script>
-  import Toggle from 'svelte-toggle'
-  import Icon from '@iconify/svelte'
   import { createEventDispatcher } from 'svelte'
 
   export let level = 0
   export let child = false
-  export let disabled = false
-  export let isFirst = false
-  export let isLast = false
   export let minimal = false
   export let showDefaultValue = true
   export let showVisibilityOptions = false
   export let top_level = true
-  export let is_static = false
 
   const dispatch = createEventDispatcher()
 
@@ -58,9 +52,7 @@
     {/if}
     <div class="option-buttons">
       {#if top_level}
-        <div>
-          <Toggle label="Static" bind:toggled={is_static} />
-        </div>
+        <slot name="toggle" />
       {/if}
       <!-- <button
         disabled={isFirst}
