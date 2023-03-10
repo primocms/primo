@@ -57,24 +57,6 @@ export async function processCSS(raw: string): Promise<string> {
   }
 }
 
-export function convertFieldsToData(fields: any[]): object {
-  const parsedFields = fields.map((field) => {
-    if (field.type === "group") {
-      if (field.fields) {
-        field.value = _.chain(field.fields)
-          .keyBy("key")
-          .mapValues("value")
-          .value();
-      }
-    }
-    return field;
-  })
-
-  if (!parsedFields.length) return {}
-
-  return _.chain(parsedFields).keyBy("key").mapValues("value").value()
-}
-
 // Lets us debounce from reactive statements
 export function createDebouncer(time) {
   return _.debounce((val) => {
@@ -111,14 +93,6 @@ export const LoremIpsum = (nSentences = 1) => {
   return lorem.generateSentences(nSentences)
 }
 
-
-export function hydrateFieldsWithPlaceholders(fields) {
-  return fields.map(field => ({
-    ...field,
-    value: getPlaceholderValue(field)
-  }))
-}
-
 export function getPlaceholderValue(field: Field) {
   if (field.default) return field.default
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
@@ -148,13 +122,6 @@ export function getPlaceholderValue(field: Field) {
   function getGroupValue(field) {
     return _chain(field.fields).keyBy('key').mapValues((field) => getPlaceholderValue(field)).value()
   }
-}
-
-export function hydrateFieldsWithEmptyValues(fields: Array<Field>) {
-  return fields.map(field => ({
-    ...field,
-    value: getPlaceholderValue(field)
-  }))
 }
 
 export function getEmptyValue(field: Field) {

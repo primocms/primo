@@ -418,34 +418,25 @@ export async function updateContent(block, updatedValue, activeLocale = get(loca
     await supabase.from('sites').update({
       content: updated_content
     }).filter('id', 'eq', get(unsavedSite)['id'])
-    // content.update(content => ({
-    //   ...content,
-    //   [activeLocale]: {
-    //     ...content[activeLocale],
-    //     [pageID]: {
-    //       ...content[activeLocale][pageID],
-    //       [blockID]: updatedValue
-    //     }
-    //   }
-    // }))
+
   } else {
     // create matching block in all locales
     // console.log('updated_content', updated_content)
 
-    const updated_content = _.mapValues(_.keyBy(Object.keys(currentContent).map(locale => ({
-      locale,
-      value: {
-        ...currentContent[locale],
-        [pageID]: {
-          ...currentContent[locale][pageID],
-          [blockID]: updatedValue
-        }
-      }
-    })), 'locale'), 'value')
+    // const updated_content = _.mapValues(_.keyBy(Object.keys(currentContent).map(locale => ({
+    //   locale,
+    //   value: {
+    //     ...currentContent[locale],
+    //     [pageID]: {
+    //       ...currentContent[locale][pageID],
+    //       [blockID]: updatedValue
+    //     }
+    //   }
+    // })), 'locale'), 'value')
 
-    await supabase.from('sites').update({
-      content: updated_content
-    }).filter('id', 'eq', get(unsavedSite)['id'])
+    // await supabase.from('sites').update({
+    //   content: updated_content
+    // }).filter('id', 'eq', get(unsavedSite)['id'])
 
   }
 

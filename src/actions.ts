@@ -10,28 +10,6 @@ import { buildStaticPage } from '$lib/editor/stores/helpers'
 import { sitePassword } from './stores/misc'
 
 export const sites = {
-  get: async (siteID, password) => {
-    // const res = await dbSites.get({id: siteID})
-    const [dbRes, storageRes] = await Promise.all([
-      dbSites.get({ id: siteID }),
-      supabaseStorage.downloadSiteData(siteID)
-    ])
-
-    return {
-      ...dbRes,
-      ...storageRes
-    }
-  },
-  initialize: async () => {
-    const sites = await supabaseDB.sites.get({ query: `id, name, password, active_deployment, host` })
-    const userAllowedSites = get(stores.user)['sites']
-    if (!userAllowedSites) { // all sites allowed
-      stores.sites.set(sites)
-    } else {
-      const filtered = sites.filter(site => userAllowedSites.includes(site.id))
-      stores.sites.set(filtered)
-    }
-  },
   create: async ({ data, preview }) => {
     await Promise.all([
       supabaseDB.sites.create(data),
@@ -53,18 +31,6 @@ export const sites = {
     //   )
     // )
     await supabaseDB.sites.update(id, props)
-  },
-  save: async (id, updatedSite) => {
-    console.log({ id, updatedSite })
-    // const homepage = find(updatedSite.pages, ['id', 'index'])
-    // const preview = await buildStaticPage({ page: homepage, site: updatedSite })
-    // const res = await supabaseDB.sites.update(id, updatedSite)
-    // await supabaseDB.pages.save('index', {
-    //   data: updatedSite,
-    //   preview
-    // })
-    // await supabaseDB.pages.save('index', homepage)
-    // return res
   },
   delete: async (id) => {
     stores.sites.update(sites => sites.filter(s => s.id !== id))
@@ -101,16 +67,6 @@ export const sites = {
       }
     })
     return success
-  },
-  validatePassword: async (siteID, password) => {
-    try {
-      const { data: json } = await axios.get(`/api/${siteID}?password=${password}`)
-      const data = JSON.parse(json)
-      return data ? true : false
-    } catch (e) {
-      return false
-    }
-    // return !!data.id
   },
   publish: async ({ siteID, host, files }) => {
     const { data: auth } = await supabase.auth.getSession()
@@ -171,12 +127,6 @@ export const sites = {
 }
 
 export const hosts = {
-  initialize: async () => {
-    const { data: hosts } = await axios.get('/api/hosts')
-    if (hosts) {
-      stores.hosts.set(hosts)
-    }
-  },
   create: async (provider) => {
     stores.hosts.update(hosts => [...hosts, provider])
     await supabaseDB.hosts.create(provider)
@@ -184,39 +134,6 @@ export const hosts = {
   delete: async (name) => {
     stores.hosts.update(hosts => hosts.filter(p => p.name !== name))
     await supabaseDB.hosts.delete(name)
-  }
-}
-
-export const users = {
-
-}
-
-let siteBeingEdited = null
-export async function setActiveEditor({ siteID, lock = true, password = null }) {
-  // Set the active editor and fire `remove_active_editor`, 
-  // which triggers a Supabase Postgres function which 
-  // waits ten seconds, then removes the active editor
-  // when that returns, the function repeats
-  if (lock) {
-    if (siteBeingEdited === siteID) return
-    siteBeingEdited = siteID
-    await Promise.all([
-      supabaseDB.sites.update(siteID, {
-        'active_editor': get(stores.user).email
-      }),
-      supabase.rpc('remove_active_editor', {
-        site: siteID,
-      })
-    ])
-    if (siteBeingEdited === siteID) {
-      siteBeingEdited = null
-      setActiveEditor({ siteID, lock, password })
-    }
-  } else {
-    siteBeingEdited = null
-    supabaseDB.sites.update(siteID, {
-      'active_editor': ''
-    })
   }
 }
 

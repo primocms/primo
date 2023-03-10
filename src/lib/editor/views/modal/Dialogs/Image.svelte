@@ -194,10 +194,6 @@
 
       &:hover {
         opacity: 0.95;
-
-        svg {
-          color: var(--primo-color-brand);
-        }
       }
 
       span {
@@ -209,10 +205,6 @@
         border: 0;
         width: 0;
         position: absolute;
-      }
-
-      svg {
-        max-width: 4rem;
       }
     }
 

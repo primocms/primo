@@ -2,47 +2,6 @@ import supabase from './core'
 
 const bucketID = 'sites'
 
-export async function downloadPagePreview(id) {
-  const { data } = await supabase
-  .storage
-  .from(bucketID)
-  .download(`${id}/preview.html`)
-  return data ? await data.text() : "";
-}
-
-export async function uploadPagePreview({ path, preview }) {
-  let res = await supabase
-    .storage
-    .from(bucketID)
-    .upload(path, preview, {
-      upsert: true
-    })
-
-  return res
-}
-
-export async function updatePagePreview({ path, preview }) {
-  let res = await supabase
-    .storage
-    .from(bucketID)
-    .update(path, preview, {
-      upsert: true
-    })
-
-  return res
-}
-
-export async function uploadSiteData({ id, data }) {
-  const json = JSON.stringify(data)
-  const res = await supabase
-    .storage
-    .from(bucketID)
-    .upload(`${id}/site.json`, json, {
-      upsert: true
-    })
-  return res
-}
-
 export async function uploadSiteFile({ id, file }) {
   const path = `${id}/site-files/${file.file}`
   await supabase
@@ -52,17 +11,6 @@ export async function uploadSiteFile({ id, file }) {
       upsert: true
     })
   return file.file
-}
-
-export async function updateSiteData({ id, data }) {
-  const json = JSON.stringify(data)
-  const res = await supabase
-    .storage
-    .from(bucketID)
-    .update(`${id}/site.json`, json, {
-      upsert: true
-    })
-  return res
 }
 
 export async function uploadSiteImage({ id, file }) {
@@ -89,21 +37,4 @@ export async function downloadSiteImage(key) {
     .from(bucketID)
     .download(key)
   return data || false
-}
-
-export async function downloadSiteData(id) {
-  const {data} = await supabase
-    .storage
-    .from(bucketID)
-    .download(`${id}/site.json?${Date.now()}`) // bust the cache (i.e. prevent outdated data)
-  const json = await data.text()
-  return JSON.parse(json)
-}
-
-export async function deleteSiteData(id) {
-  const { data, error } = await supabase
-  .storage
-  .from(bucketID)
-  .remove([id])
-  return data ? true : false
 }

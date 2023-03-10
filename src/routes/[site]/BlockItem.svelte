@@ -16,11 +16,9 @@
   import { code as siteCode } from '$lib/editor/stores/data/draft'
   import { code as pageCode } from '$lib/editor/stores/app/activePage'
 
-  export let titleEditable = true
   export let symbol
   export let name = symbol.name || ''
   export let buttons = []
-  export let hovering = false
   export let action = null
 
   let height = browser ? localStorage.getItem(`symbol-height-${symbol.id}`) : 0

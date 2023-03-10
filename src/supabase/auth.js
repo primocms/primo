@@ -5,19 +5,6 @@ export async function signUp({ email, password }) {
 	return res;
 }
 
-export async function signInWithGithub({ redirectTo = '/dashboard' }) {
-	const { user, session, error } = await supabase.auth.signInWithOAuth(
-		{
-			// provider can be 'github', 'google', 'gitlab', or 'bitbucket'
-			provider: 'github',
-		},
-		{
-			scopes: 'public_repo',
-			redirectTo,
-		}
-	);
-}
-
 export function watchForAutoLogin(cb) {
 	supabase.auth.onAuthStateChange(cb);
 }
@@ -39,7 +26,6 @@ export const auth = supabase.auth;
 export default {
 	signUp,
 	signIn,
-	signInWithGithub,
 	signOut,
 	resetPassword,
 	watchForAutoLogin,

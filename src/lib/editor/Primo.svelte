@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { find, some, isEqual, cloneDeep, clone } from 'lodash-es'
   import * as Mousetrap from 'mousetrap'
   import '@fontsource/fira-code/index.css'
 
@@ -11,7 +10,6 @@
 
   const dispatch = createEventDispatcher()
 
-  import { id as pageId } from './stores/app/activePage'
   import { userRole } from './stores/app'
   import { saving as savingStore, showKeyHint } from './stores/app/misc'
   import { Site } from './const'
@@ -62,24 +60,6 @@
     dispatch('save', $draft)
   }
 
-  // refresh draft data when passing in updated data
-  let cachedData: Site | undefined
-  // $: if (cachedData && cachedData.id !== data.id) {
-  //   cachedData = cloneDeep(data)
-  //   hydrateSite(data)
-  //   setTimeline(data)
-  //   updatePreview(data)
-  // } else if (!cachedData) {
-  //   cachedData = cloneDeep(data)
-  // }
-
-  // $: $pageId = getPageId(page_id)
-  // function getPageId(pagePath: string = ''): string {
-  //   if (pagePath === '') pagePath = 'index'
-  //   const [root, child] = pagePath.split('/')
-  //   return child ? `${root}/${child}` : root
-  // }
-
   $: activeModal = getActiveModal($modal.type)
   function getActiveModal(modalType) {
     return modalType
@@ -93,20 +73,10 @@
       : null
   }
 
-  // $: checkFor404($pageId, $draft)
-  // function checkFor404(id: string, site: SiteType) {
-  //   const [root, child] = id.split('/')
-  //   const exists: boolean =
-  //     some(site.pages, ['id', root]) || some(site.pages, ['id', child])
-  //   if (!exists && site.id !== 'default') {
-  //     $pageId = 'index'
-  //   }
-  // }
-
-  onMount(() => {
-    Mousetrap.bind('mod', () => ($showKeyHint = true), 'keydown')
-    Mousetrap.bind('mod', () => ($showKeyHint = false), 'keyup')
-  })
+  // onMount(() => {
+  //   Mousetrap.bind('mod', () => ($showKeyHint = true), 'keydown')
+  //   Mousetrap.bind('mod', () => ($showKeyHint = false), 'keyup')
+  // })
 </script>
 
 <Editor on:save={saveSite} />

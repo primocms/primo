@@ -31,10 +31,6 @@ export function getSymbolUseInfo(symbolID) {
   return info
 }
 
-export function getAllFields(componentFields: any[] = [], exclude = () => true) {
-  return unionBy(componentFields, get(pageFields).filter(exclude), get(siteFields), "key").filter(exclude);
-}
-
 export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
@@ -180,23 +176,8 @@ export function getComponentData({
     .keyBy('key')
     .mapValues('value')
     .value();
-  // const component_content = component.content?.[loc] || symbol_content?.[loc] || {}
 
-  // remove pages from data object (not accessed from component)
-  // const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  // const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
-
-  // remove sections from page content
-  // const section_IDs = page.sections.map(section => section.id)
   const page_content = page.content
-  // const page_content = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !section_IDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
-
-  // return component_content
-
-  // console.log({
-  //   ...page_content,
-  //   ...component_content
-  // })
 
   // // TODO: include page and site content
   return include_parent_data ? {
@@ -215,14 +196,6 @@ export function getPageData({
   site?: SiteType,
   loc?: string
 }): object {
-
-  // remove pages from site data object (not accessed from component)
-  // const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
-  // const site_content = _chain(Object.entries(site.content[loc]).filter(([page]) => !page_IDs.includes(page))).map(([page, sections]) => ({ page, sections })).keyBy('page').mapValues('sections').value()
-
-  // remove sections from page data object
-  // const section_IDs = page.sections.map(section => section.id)
-  // const page_content = _chain(Object.entries(site.content[loc]?.[page.id] || []).filter(([key]) => !section_IDs.includes(key) && key)).map(([key, value]) => ({ key, value })).keyBy('key').mapValues('value').value()
 
   // TODO: use page & site data
   return {

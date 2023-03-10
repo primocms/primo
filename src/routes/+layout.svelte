@@ -119,24 +119,6 @@
   //     console.warn('NEW AUTH EVENT', event)
   //   }
   // })
-
-  $: if (!$user.signedIn) {
-    // show({
-    //   id: 'AUTH',
-    //   options: {
-    //     disableClose: true,
-    //   },
-    //   props: {
-    //     onSignIn: async () => {
-    //       await Promise.all([
-    //         actions.sites.initialize(),
-    //         actions.hosts.initialize(),
-    //       ])
-    //       hide()
-    //     },
-    //   },
-    // })
-  }
 </script>
 
 <svelte:window

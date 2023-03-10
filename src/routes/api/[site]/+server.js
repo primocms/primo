@@ -115,11 +115,6 @@ export async function POST(event) {
 			return json({
 				body: publicUrl,
 			})
-		} else if (action === 'SAVE_SITE') {
-			const res = await saveSite(payload.site, payload.preview)
-			return json({
-				body: !!res,
-			})
 		} else if (action === 'PUBLISH') {
 			const { siteID, files, host } = payload;
 

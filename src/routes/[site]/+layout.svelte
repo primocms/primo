@@ -42,35 +42,6 @@
 
   let currentPath
   let siteLocked = false
-  // async function fetchSite(fullPath) {
-  //   if (currentPath === fullPath) return
-  //   currentPath = fullPath
-  //   const res = await actions.sites.get(siteID)
-  //   if (res?.active_editor && res.active_editor !== $user.email) {
-  //     siteLocked = true
-  //     modal.show('DIALOG', {
-  //       component: LockAlert,
-  //       props: {
-  //         email: res.active_editor,
-  //         canGoToDashboard: false,
-  //       },
-  //       options: {
-  //         disableClose: true,
-  //       },
-  //     })
-  //   } else if (res) {
-  //     // actions.setActiveEditor({ siteID })
-  //     $activeSite = res
-  //   }
-  // }
-
-  async function saveData(updatedSite) {
-    saving = true
-    const success = await actions.sites.save(data.site.id, updatedSite)
-    invalidate('app:data')
-    stores.saved.set(success)
-    saving = false
-  }
 
   let saving = false
 
@@ -117,7 +88,6 @@
     logo: $config.customization.logo.url,
   }}
   {saving}
-  on:save={async ({ detail: data }) => saveData(data)}
 />
 
 <div id="app-version">
