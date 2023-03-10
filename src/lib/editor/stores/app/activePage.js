@@ -20,6 +20,8 @@ export function set(val) {
   }
   if (val.code) {
     code.set(val.code)}
+  if (val.content) {
+    content.set(val.content)}
   if (val.fields) {
     fields.set(val.fields)
   }
@@ -27,13 +29,14 @@ export function set(val) {
 
 // conveniently get the entire site
 export default derived(
-  [ id, url, sections, code, fields ], 
-  ([id, url, sections, code, fields]) => {
+  [ id, url, sections, code, content, fields ], 
+  ([id, url, sections, code, content, fields]) => {
   return {
     id,
     url,
     sections, 
     code, 
+    content,
     fields
   }
 })

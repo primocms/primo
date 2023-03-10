@@ -66,9 +66,8 @@
       ? {
           SITE_PAGES: modals.SitePages,
           COMPONENT_EDITOR: modals.ComponentEditor,
-          FIELDS: modals.Fields,
-          WRAPPER: modals.HTML,
-          STYLES: modals.CSS,
+          PAGE_EDITOR: modals.PageEditor,
+          SITE_EDITOR: modals.SiteEditor,
         }[modalType] || $modal.component
       : null
   }

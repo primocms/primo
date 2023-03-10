@@ -20,30 +20,26 @@
   import { CodePreview } from '../../../components/misc'
   import GenericFields from '../../../components/GenericFields.svelte'
   import { autoRefresh } from '../../../components/misc/CodePreview.svelte'
-
-  import { processCode, processCSS, wrapInStyleTags } from '../../../utils'
+  import { buildStaticPage } from '../../../stores/helpers'
   import { locale, onMobile } from '../../../stores/app/misc'
-
-  import { content, code as siteCode } from '../../../stores/data/draft'
-  import {
-    id as pageID,
-    code as pageCode,
-  } from '../../../stores/app/activePage'
+  import { modal } from '../../../stores/app'
+  import { active_site } from '../../../stores/actions'
+  import site, {
+    content as site_content,
+    code as site_code,
+    fields as site_fields,
+  } from '../../../stores/data/draft'
   import { showingIDE } from '../../../stores/app'
-  import { Component } from '../../../const'
-  import type {
-    Component as ComponentType,
-    Symbol as SymbolType,
-    Field as FieldType,
-  } from '../../../const'
-  import {
-    getPageData,
-    getSymbol,
-    getComponentData,
-  } from '../../../stores/helpers'
   import { tick } from 'svelte'
 
-  export let component: ComponentType | SymbolType = Component()
+  let local_code = cloneDeep($site_code)
+  let local_content = cloneDeep($site_content)
+  let local_fields = cloneDeep($site_fields).map((field) => ({
+    ...field,
+    value: local_content[$locale][field.key],
+  }))
+
+  // export let component: ComponentType | SymbolType = Component()
   export let header = {
     label: 'Create Component',
     icon: 'fas fa-code',
@@ -68,47 +64,10 @@
     }
   }
 
-  const is_symbol = !component.symbol
-
-  let local_component: SymbolType = is_symbol
-    ? cloneDeep(component)
-    : cloneDeep(component.symbol) // local copy of component to modify & save
-
-  let local_content = cloneDeep(component.content || {}) // local copy of component content to modify & save
-
   // component data w/ page/site data included (for compilation)
   $: data = {
-    ...getPageData({ loc: $locale }),
-    ...getSymbolPlaceholders(fields), // empty?
+    // ...getPageData({ loc: $locale }),
     ...local_content[$locale],
-  }
-
-  function getSymbolPlaceholders(fields) {
-    return _chain(fields)
-      .keyBy('key')
-      .mapValues((f) => {
-        return f.default || getCachedPlaceholder(f)
-      })
-      .value()
-  }
-
-  // parse component-specific content out of site content tree (keeping separate locales)
-  function getComponentContent(siteContent): object {
-    const symbol = component.symbol || component
-    console.log({ component, symbol })
-    return _chain(Object.entries(siteContent))
-      .map(([locale]) => {
-        return {
-          locale,
-          content: getComponentData({
-            loc: locale,
-            component: local_component,
-          }),
-        }
-      })
-      .keyBy('locale')
-      .mapValues('content')
-      .value()
   }
 
   $: setupComponent($locale) // swap content out of on-screen fields
@@ -117,31 +76,21 @@
   }
 
   // hydrate fields with content (placeholder if passed component is a Symbol)
-  function getFieldValues(fields: Array<FieldType>, loc: string): Array<any> {
+  function getFieldValues(fields, loc: string) {
     return fields.map((field) => {
-      if (component.type === 'symbol') {
-        const field_value = component.content?.[loc]?.[field.key]
-        const value =
-          field_value !== undefined ? field_value : getCachedPlaceholder(field)
-        return {
-          ...field,
-          value,
-        }
-      } else {
-        const field_value = local_content[loc]?.[field.key]
-        const value =
-          field_value !== undefined ? field_value : getCachedPlaceholder(field)
-        return {
-          ...field,
-          value,
-        }
+      const field_value = local_content[loc]?.[field.key]
+      const value =
+        field_value !== undefined ? field_value : getCachedPlaceholder(field)
+      return {
+        ...field,
+        value,
       }
     })
   }
 
   // Ensure all content keys match field keys
-  $: component.type !== 'symbol' && syncFieldKeys(fields)
-  $: component.type !== 'symbol' && syncLocales($content)
+  // $: syncFieldKeys(fields)
+  // $: syncLocales($content)
 
   function syncLocales(content) {
     // runs when adding new locale from ComponentEditor
@@ -201,17 +150,18 @@
   }
 
   function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {
-    local_component.code[property] = value
+    local_code[property] = value
   }
 
   let loading = false
 
-  // raw code bound to code editor
-  let rawHTML = local_component.code.html
-  let rawCSS = local_component.code.css
-  let rawJS = local_component.code.js
+  // bind raw code to code editor
+  console.log({ local_code })
+  let rawHTML = local_code.html.head
+  let rawCSS = local_code.css
+  let rawJS = local_code.js
 
-  // changing codes triggers compilation
+  // changing code triggers compilation
   $: $autoRefresh &&
     compileComponentCode({
       html: rawHTML,
@@ -220,30 +170,36 @@
     })
 
   // on-screen fields
-  let fields = local_component.fields
+  let fields = local_fields
+
+  let preview = ''
 
   let componentApp // holds compiled component
   let compilationError // holds compilation error
 
-  // ensure placeholder values always conform to form
-  // TODO: do for remaining fields
-  $: fields = fields.map((field) => {
-    if (
-      component.type === 'symbol' &&
-      field.type === 'link' &&
-      !field.value?.url
-    )
-      return {
-        ...field,
-        value: getCachedPlaceholder(field),
-      }
-    else return field
-  })
+  // // ensure placeholder values always conform to form
+  // // TODO: do for remaining fields
+  // $: fields = fields.map((field) => {
+  //   if (
+  //     component.type === 'symbol' &&
+  //     field.type === 'link' &&
+  //     !field.value?.url
+  //   )
+  //     return {
+  //       ...field,
+  //       value: getCachedPlaceholder(field),
+  //     }
+  //   else return field
+  // })
 
   let disableSave = false
   async function compileComponentCode({ html, css, js }) {
     disableSave = true
     loading = true
+
+    saveLocalValue('html', html)
+    saveLocalValue('css', css)
+    saveLocalValue('js', js)
 
     await compile()
     disableSave = compilationError
@@ -252,30 +208,20 @@
     }, 200)
 
     async function compile() {
-      const parentCSS = await processCSS($siteCode.css + $pageCode.css)
-      const res = await processCode({
-        component: {
-          html: `
-      <svelte:head>
-        ${$siteCode.html.head}
-        ${$pageCode.html.head}
-        ${wrapInStyleTags(parentCSS, 'parent-styles')}
-      </svelte:head>
-      ${html}
-      ${$pageCode.html.below}
-      ${$siteCode.html.below}
-      `,
-          css,
-          js,
-          data,
+      preview = await buildStaticPage({
+        site: {
+          ...$site,
+          code: {
+            ...local_code,
+            html: {
+              head: html,
+            },
+          },
+          content: local_content,
         },
-        buildStatic: false,
       })
-      compilationError = res.error
-      componentApp = res.js
-      saveLocalValue('html', html)
-      saveLocalValue('css', css)
-      saveLocalValue('js', js)
+
+      console.log({ preview })
     }
   }
 
@@ -309,20 +255,14 @@
       await refreshPreview()
     }
 
-    const FinalInstance = {
-      ...component,
-      content: local_content,
-      symbol: {
-        ...local_component,
-        fields: fields.map((field) => {
-          delete field.value
-          return field
-        }),
+    const Final = {
+      code: {
+        ...local_code,
+        html: {
+          head: local_code.html,
+          below: '',
+        },
       },
-    }
-
-    const FinalSymbol = {
-      ...component,
       content: local_content,
       fields: fields.map((field) => {
         delete field.value
@@ -331,23 +271,29 @@
     }
 
     if (!disableSave) {
-      const extracted_component = is_symbol ? FinalSymbol : FinalInstance
-      header.button.onclick(extracted_component)
+      active_site.update(Final)
+      modal.hide()
     }
   }
 </script>
 
 <ModalHeader
-  {...header}
+  label="Page"
   warn={() => {
-    if (!isEqual(local_component, component)) {
-      const proceed = window.confirm(
-        'Undrafted changes will be lost. Continue?'
-      )
-      return proceed
-    } else return true
+    // if (!isEqual(local_component, component)) {
+    //   const proceed = window.confirm(
+    //     'Undrafted changes will be lost. Continue?'
+    //   )
+    //   return proceed
+    // } else return true
+    return true
   }}
-  button={{ ...header.button, onclick: saveComponent, disabled: disableSave }}
+  button={{
+    icon: 'material-symbols:save',
+    label: 'Save Site',
+    onclick: saveComponent,
+    disabled: disableSave,
+  }}
 />
 
 <main class:showing-ide={$showingIDE} class:showing-cms={!$showingIDE}>
@@ -404,8 +350,7 @@
         bind:orientation={$orientation}
         view="small"
         {loading}
-        {componentApp}
-        {data}
+        {preview}
         error={compilationError}
       />
     </div>

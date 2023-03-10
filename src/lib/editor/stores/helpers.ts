@@ -35,7 +35,7 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page, site = get(activeSite), locale = 'en', separateModules = false, no_js = false }) {
+export async function buildStaticPage({ page = get(activePage), site = get(activeSite), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
@@ -140,14 +140,7 @@ export function getComponentData({
   loc = get(locale),
   fallback = 'placeholder',
   include_parent_data = true
-}: {
-  component: ComponentType | SymbolType,
-  page?: PageType,
-  site?: SiteType,
-  loc?: string,
-  fallback?: 'placeholder' | 'empty',
-  include_parent_data?: boolean
-}): object {
+}) {
 
   const symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol
   const component_content = _chain(symbol.fields)
@@ -177,11 +170,12 @@ export function getComponentData({
     .mapValues('value')
     .value();
 
-  const page_content = page.content
+  const site_content = site.content[loc]
+  const page_content = page.content[loc]
 
   // // TODO: include page and site content
   return include_parent_data ? {
-    // ...site_content,
+    ...site_content,
     ...page_content,
     ...component_content
   } : component_content
@@ -191,15 +185,11 @@ export function getPageData({
   page = get(activePage),
   site = get(activeSite),
   loc = get(locale)
-}: {
-  page?: PageType,
-  site?: SiteType,
-  loc?: string
-}): object {
-
-  // TODO: use page & site data
+}) {
+  const page_content = page.content[loc]
+  const site_content = site.content[loc]
   return {
-    // ...site_content,
-    // ...page_content,
+    ...site_content,
+    ...page_content,
   }
 }

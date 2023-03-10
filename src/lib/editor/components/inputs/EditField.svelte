@@ -19,7 +19,6 @@
   <div
     style="margin-left: {level}rem"
     class="field-container"
-    class:has-default-value={showDefaultValue}
     class:has-visibility-options={showVisibilityOptions}
     class:child
     class:minimal
@@ -96,16 +95,8 @@
     grid-template-columns: auto 1fr 1fr auto;
     gap: 1rem;
 
-    &.has-default-value {
-      grid-template-columns: auto 1fr 1fr 1fr auto;
-    }
-
     &.has-visibility-options {
       grid-template-columns: auto 1fr 1fr minmax(4rem, auto) auto;
-    }
-
-    &.has-default-value.has-visibility-options {
-      grid-template-columns: auto 1fr 1fr 1fr minmax(4rem, auto) auto;
     }
 
     &.child {

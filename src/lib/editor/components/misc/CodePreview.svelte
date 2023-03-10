@@ -1,28 +1,30 @@
 <script context="module">
-  import {writable} from 'svelte/store'
+  import { writable } from 'svelte/store'
   export const autoRefresh = writable(true)
 </script>
 
 <script>
-  import { onMount, tick } from 'svelte';
-  import { slide, fade } from 'svelte/transition';
-  import { iframePreview } from './misc';
-  import {locale,highlightedElement} from '../../stores/app/misc'
-  import JSONTree from 'svelte-json-tree';
+  import { onMount, tick } from 'svelte'
+  import { slide, fade } from 'svelte/transition'
+  import { iframePreview } from './misc'
+  import { locale, highlightedElement } from '../../stores/app/misc'
+  import JSONTree from 'svelte-json-tree'
   import Icon from '@iconify/svelte'
+  import Preview from '../../components/misc/Preview.svelte'
 
-  export let view = 'small';
+  export let view = 'small'
   export let orientation = 'horizontal'
-  export let loading = false;
-  export let hideControls = false;
-  export let componentApp;
-  export let error = null;
+  export let loading = false
+  export let hideControls = false
+  export let componentApp = null
+  export let preview = null
+  export let error = null
   export let data = {}
 
   let channel
   onMount(() => {
-    channel = new BroadcastChannel('component_preview');
-    channel.onmessage = ({data}) => {
+    channel = new BroadcastChannel('component_preview')
+    channel.onmessage = ({ data }) => {
       const { event, payload } = data
       if (event === 'BEGIN') {
         consoleLog = null
@@ -36,23 +38,25 @@
 
   let consoleLog
 
-  let iframe;
-  $: if (iframe) {    
+  let iframe
+  $: if (iframe) {
     // open clicked links in browser
-    iframe.contentWindow.document.querySelectorAll('a').forEach((link) => { link.target = '_blank' })
+    iframe.contentWindow.document.querySelectorAll('a').forEach((link) => {
+      link.target = '_blank'
+    })
   }
 
-  let container;
-  let iframeLoaded = false;
+  let container
+  let iframeLoaded = false
 
   let scale
   let height
   async function resizePreview() {
     if (view && container && iframe) {
       await tick()
-      const { clientWidth: parentWidth } = container;
-      const { clientWidth: childWidth } = iframe;
-      const scaleRatio = parentWidth / childWidth;
+      const { clientWidth: parentWidth } = container
+      const { clientWidth: childWidth } = iframe
+      const scaleRatio = parentWidth / childWidth
       scale = `scale(${scaleRatio})`
       height = 100 / scaleRatio + '%'
     }
@@ -67,7 +71,7 @@
       set_preview(static_widths.desktop)
     } else {
       set_preview(static_widths.phone)
-    } 
+    }
     resizePreview()
   }
 
@@ -77,55 +81,56 @@
 
   async function changeView() {
     if (view === 'small') {
-      view = 'large';
+      view = 'large'
       resizePreview()
     } else {
-      view = 'small';
+      view = 'small'
     }
   }
 
   $: componentData = data
 
-  $: setIframeApp({
-    iframeLoaded,
-    componentApp
-  });
+  $: componentApp &&
+    setIframeApp({
+      iframeLoaded,
+      componentApp,
+    })
   function setIframeApp({ iframeLoaded, componentApp }) {
     if (iframeLoaded) {
       channel.postMessage({
         event: 'SET_APP',
-        payload: { componentApp, componentData }
-      });
+        payload: { componentApp, componentData },
+      })
     }
   }
 
-  $: setIframeData(componentData);
+  $: setIframeData(componentData)
   function setIframeData(componentData) {
     if (iframeLoaded) {
       channel.postMessage({
         event: 'SET_APP_DATA',
-        payload: { componentData }
-      });
+        payload: { componentData },
+      })
     }
   }
 
   function setLoading() {
     if (!iframeLoaded) {
-      iframeLoaded = true;
-      return;
+      iframeLoaded = true
+      return
     }
-    iframeLoaded = false;
-    iframe.srcdoc = iframePreview($locale);
+    iframeLoaded = false
+    iframe.srcdoc = iframePreview($locale)
   }
 
-  let previewWidth;
+  let previewWidth
   $: previewWidth, resizePreview()
 
   const static_widths = {
     phone: 300,
     tablet: 600,
     laptop: 1200,
-    desktop: 1600
+    desktop: 1600,
   }
   let active_static_width = static_widths.laptop
 
@@ -133,11 +138,11 @@
   $: active_static_icon = getIcon(active_static_width)
   function getIcon(width) {
     if (width < static_widths.tablet) {
-      return "bi:phone"
+      return 'bi:phone'
     } else if (width < static_widths.laptop) {
       return 'ant-design:tablet-outlined'
     } else if (width < static_widths.desktop) {
-      return "bi:laptop"
+      return 'bi:laptop'
     } else {
       return 'akar-icons:desktop-device'
     }
@@ -150,14 +155,11 @@
       orientation = 'vertical'
     }
   }
-
 </script>
 
 <div class="code-preview">
   {#if error}
-    <pre
-      transition:slide={{ duration: 100 }}
-      class="error-container">
+    <pre transition:slide={{ duration: 100 }} class="error-container">
       {@html error}
     </pre>
   {/if}
@@ -168,7 +170,7 @@
         {#if typeof consoleLog === 'object'}
           <JSONTree value={consoleLog} />
         {:else}
-          <pre>{@html consoleLog}</pre> 
+          <pre>{@html consoleLog}</pre>
         {/if}
       </div>
     </div>
@@ -178,15 +180,29 @@
     class="preview-container"
     class:loading
     bind:this={container}
-    bind:clientWidth={previewWidth}>
-    <iframe
-      style:transform={view === 'large' ? scale : ''}
-      style:height={view === 'large' ? height : '100%'}
-      style:width={view === 'large' ? `${active_static_width}px` : '100%'}
-      on:load={setLoading}
-      title="Preview HTML"
-      srcdoc={iframePreview($locale)}
-      bind:this={iframe} />
+    bind:clientWidth={previewWidth}
+  >
+    {#if componentApp}
+      <iframe
+        style:transform={view === 'large' ? scale : ''}
+        style:height={view === 'large' ? height : '100%'}
+        style:width={view === 'large' ? `${active_static_width}px` : '100%'}
+        on:load={setLoading}
+        title="Preview HTML"
+        srcdoc={iframePreview($locale)}
+        bind:this={iframe}
+      />
+    {:else}
+      <iframe
+        style:transform={view === 'large' ? scale : ''}
+        style:height={view === 'large' ? height : '100%'}
+        style:width={view === 'large' ? `${active_static_width}px` : '100%'}
+        on:load={() => (iframeLoaded = true)}
+        title="Preview"
+        srcdoc={preview}
+        bind:this={iframe}
+      />
+    {/if}
   </div>
   {#if !hideControls}
     <div class="footer-buttons">
@@ -196,15 +212,22 @@
             <Icon icon={active_static_icon} height="1rem" />
           </button>
           <button>
-            <div class="static-width" contenteditable="true" on:keydown={(e) => {
-              if (e.code === 'Enter') {
-                e.preventDefault()
-                e.target.blur()
-              }
-            }} on:keyup={(e) => {
-              active_static_width = Number(e.target.textContent)
-              resizePreview()
-            }}>{active_static_width}</div>
+            <div
+              class="static-width"
+              contenteditable="true"
+              on:keydown={(e) => {
+                if (e.code === 'Enter') {
+                  e.preventDefault()
+                  e.target.blur()
+                }
+              }}
+              on:keyup={(e) => {
+                active_static_width = Number(e.target.textContent)
+                resizePreview()
+              }}
+            >
+              {active_static_width}
+            </div>
           </button>
         {:else}
           <span>
@@ -216,7 +239,11 @@
         {/if}
       </div>
       <button class="switch-view" on:click={changeView}>
-        <i class="fas { view === 'small' ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'}" />
+        <i
+          class="fas {view === 'small'
+            ? 'fa-compress-arrows-alt'
+            : 'fa-expand-arrows-alt'}"
+        />
         {#if view === 'large'}
           <span>static width</span>
         {:else}
@@ -227,10 +254,15 @@
         {#if orientation === 'vertical'}
           <Icon icon="charm:layout-rows" />
         {:else if orientation === 'horizontal'}
-        <Icon icon="charm:layout-columns" />
+          <Icon icon="charm:layout-columns" />
         {/if}
       </button>
-      <button title="Toggle auto-refresh (refresh with Command R)" class="auto-refresh" class:toggled={$autoRefresh} on:click={() => $autoRefresh = !$autoRefresh}>
+      <button
+        title="Toggle auto-refresh (refresh with Command R)"
+        class="auto-refresh"
+        class:toggled={$autoRefresh}
+        on:click={() => ($autoRefresh = !$autoRefresh)}
+      >
         <Icon icon="bx:refresh" />
       </button>
     </div>
@@ -324,8 +356,12 @@
       }
 
       .static-width {
-        &:focus-visible { outline: none }
-        &::selection { background: var(--color-gray-7) } 
+        &:focus-visible {
+          outline: none;
+        }
+        &::selection {
+          background: var(--color-gray-7);
+        }
       }
     }
 
@@ -365,5 +401,4 @@
       }
     }
   }
-
 </style>

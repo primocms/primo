@@ -1,15 +1,13 @@
 import ComponentEditor from './ComponentEditor/ComponentEditor.svelte'
+import PageEditor from './PageEditor/PageEditor.svelte'
+import SiteEditor from './SiteEditor/SiteEditor.svelte'
 import SitePages from './SitePages/SitePages.svelte'
-import Fields from './Fields.svelte'
-import HTML from './HTML.svelte'
-import CSS from './CSS.svelte'
 import Dialog from './Dialog.svelte'
 
 export {
   ComponentEditor,
+  PageEditor,
+  SiteEditor,
   SitePages,
-  CSS,
-  Fields,
-  HTML,
   Dialog
 }

@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
+  import Icon from '@iconify/svelte'
   import Spinner from '../../components/misc/Spinner.svelte'
   import { showKeyHint, onMobile } from '../../stores/app/misc'
 
@@ -27,7 +28,7 @@
 <button
   {id}
   aria-label={title}
-  class="{buttonStyles} {variant}"
+  class="button"
   class:primo={type === 'primo'}
   class:active
   class:has-subbuttons={buttons}
@@ -49,8 +50,8 @@
       <Spinner />
     {:else if label && icon}
       <span class="label">{label}</span>
-      <!-- {:else if icon}
-    <div class="icon" class:hidden={$showKeyHint && key}>{@html svg(icon)}</div> -->
+    {:else if icon}
+      <Icon {icon} />
     {/if}
   {:else}
     <slot>
@@ -60,7 +61,7 @@
 </button>
 
 <style lang="postcss">
-  button {
+  .button {
     font-size: 0.85rem;
     user-select: none;
 
@@ -81,48 +82,14 @@
       opacity: 0.35;
       pointer-events: none;
     }
-
-    .icon {
-      pointer-events: none;
-      fill: var(--primo-color-white);
-      width: 0.75rem;
-    }
   }
 
-  .hidden {
-    opacity: 0;
-  }
   .primo {
     color: var(--primo-color-white);
     border: 2px solid var(--primo-color-brand);
   }
 
-  .key-hint {
-    pointer-events: none;
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    left: 0;
-    opacity: 0;
-  }
-
-  .key-hint.active {
-    opacity: 1;
-    transition: opacity 0.1s;
-  }
-  .button-container {
-    display: flex;
-    justify-content: center;
-    position: relative;
-  }
-
-  :global(.heading2) {
-    font-size: 14px !important;
-    position: relative;
-    top: 1px;
-  }
-
-  button {
+  .button {
     background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
     font-weight: 700;
@@ -147,12 +114,12 @@
     }
   }
 
-  button.key-hint {
+  .button.key-hint {
     opacity: 1;
     transition: opacity 0.1s;
   }
 
-  button[disabled] {
+  .button[disabled] {
     opacity: 0.1;
     cursor: default;
     transition: var(--transition-colors);
@@ -161,34 +128,6 @@
     &:focus {
       box-shadow: none;
     }
-  }
-
-  button.outlined {
-    border: 1px solid var(--color-gray-8);
-  }
-
-  button.inverted {
-    border: 0;
-    background: var(--color-gray-3);
-    color: var(--primo-color-codeblack);
-  }
-
-  button.inverted:hover,
-  button.inverted:focus {
-    background: var(--color-gray-8);
-    color: var(--primo-color-white);
-    transition: var(--transition-colors);
-  }
-
-  button.primored {
-    border: 0;
-    background: var(--primo-color-primored);
-    color: var(--color-gray-1);
-  }
-
-  button.primored:hover,
-  button.primored:focus {
-    background: var(--color-gray-8);
   }
 
   @keyframes spin {

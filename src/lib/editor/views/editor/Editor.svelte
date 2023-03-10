@@ -79,9 +79,8 @@
     [
       {
         id: 'toolbar--pages',
-        label: $C('Pages'),
         title: $C('Pages'),
-        icon: 'fa-solid:th-large',
+        icon: 'fa:th-large',
         onclick: () =>
           modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
         showSwitch: false,
@@ -89,32 +88,16 @@
     ],
     [
       {
-        id: 'toolbar--html',
-        title: 'HTML',
-        label: 'HTML',
-        icon: 'icomoon-free:html-five2',
-        onclick: () => modal.show('WRAPPER'),
+        id: 'toolbar--page',
+        title: 'Page',
+        label: 'Page',
+        onclick: () => modal.show('PAGE_EDITOR', {}, { showSwitch: true }),
       },
       {
-        id: 'toolbar--css',
-        title: 'CSS',
-        label: 'CSS',
-        icon: 'ci:css3',
-        onclick: () => modal.show('STYLES'),
-      },
-      {
-        id: 'toolbar--fields',
-        title: $C('Fields'),
-        label: $C('Fields'),
-        icon: 'bxs:edit',
-        onclick: () =>
-          modal.show(
-            'FIELDS',
-            {},
-            {
-              showSwitch: true,
-            }
-          ),
+        id: 'toolbar--site',
+        title: 'Site',
+        label: 'Site',
+        onclick: () => modal.show('SITE_EDITOR', {}, { showSwitch: true }),
       },
     ],
   ]

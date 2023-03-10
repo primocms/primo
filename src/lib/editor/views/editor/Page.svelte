@@ -42,15 +42,6 @@
 
   let element
 
-  function hydrateInstance(block, symbols) {
-    const symbol = find(symbols, ['id', block.symbolID])
-    return {
-      ...symbol,
-      id: block.id,
-      symbolID: block.symbolID,
-    }
-  }
-
   $: set_page_content(data.page)
   async function set_page_content(page_data) {
     await tick()

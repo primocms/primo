@@ -23,14 +23,14 @@ export const sites = {
     // stores.sites.update(sites => [...sites, { data, preview }])
   },
   update: async ({ id, props }) => {
-    // stores.sites.update(
-    //   sites => sites.map(
-    //     s => s.id !== id
-    //       ? s
-    //       : ({ ...s, ...props })
-    //   )
-    // )
-    await supabaseDB.sites.update(id, props)
+    stores.sites.update(
+      sites => sites.map(
+        s => s.id !== id
+          ? s
+          : ({ ...s, ...props })
+      )
+    )
+    await supabase.from('sites').update(props).eq('id', id)
   },
   delete: async (id) => {
     stores.sites.update(sites => sites.filter(s => s.id !== id))

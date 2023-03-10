@@ -6,7 +6,7 @@ import { id as activePageID } from './app/activePage'
 import sections from './data/sections'
 import { saved, locale, hoveredBlock } from './app/misc'
 import * as stores from './data/draft'
-import { content, code, fields, timeline, site as unsavedSite } from './data/draft'
+import { update as update_site, content, code, fields, timeline, site as unsavedSite } from './data/draft'
 import { buildStaticPage } from './helpers'
 import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '../const'
 import { Page } from '../const'
@@ -165,6 +165,13 @@ export const symbols = {
   }
 }
 
+export const active_site = {
+  update: async (props) => {
+    update_site(props)
+    await supabase.from('sites').update(props).eq('id', get(unsavedSite)['id'])
+  }
+}
+
 export const active_page = {
   add_symbol: async (symbol, position) => {
 
@@ -181,7 +188,7 @@ export const active_page = {
       ...sections.slice(position),
     ])
 
-    const preview = await buildStaticPage({ page: get(activePage.default) })
+    const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
     stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
     await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
 
@@ -202,7 +209,7 @@ export const active_page = {
 
     await supabase.from('pages').update(obj).match(
       {
-        url: get(activePageID),
+        id: get(activePageID),
         site: get(unsavedSite)['id']
       })
 
@@ -338,7 +345,7 @@ export async function deleteSection(sectionID) {
   const updatedSections = get(sections).filter(s => s.id !== sectionID)
   sections.set(updatedSections)
 
-  const preview = await buildStaticPage({ page: get(activePage.default) })
+  const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
   stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
 
   await supabase.from('sections').delete().eq('id', sectionID)
