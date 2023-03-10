@@ -15,7 +15,8 @@
   import { hoveredBlock } from '../../../stores/app/misc'
   import { onMobile, saved, showingIDE } from '../../../stores/app/misc'
   import modal from '../../../stores/app/modal'
-  import { id, sections } from '../../../stores/app/activePage'
+  import { id } from '../../../stores/app/activePage'
+  import sections from '../../../stores/data/sections'
   import {
     pages,
     updateContent,
@@ -24,6 +25,7 @@
     symbols,
     updatePreview,
     deleteSection,
+    active_page,
   } from '../../../stores/actions'
 
   export let locked
@@ -57,49 +59,42 @@
   }
 
   function updateSections(newSections) {
-    pages.update($id, (page) => ({
-      ...page,
-      sections: newSections,
-    }))
+    // pages.update($id, (page) => ({
+    //   ...page,
+    //   sections: newSections,
+    // }))
+    sections.set(newSections)
     updatePreview()
     $saved = false
   }
 
-  function insertOptionsRow(i, position) {
-    hovering = false
-    modal.show(
-      'SYMBOL_LIBRARY',
-      {
-        onselect: (component) => {
-          modal.hide()
-          if (position === 'above') {
-            updateSections([
-              ...$sections.slice(0, i),
-              component,
-              ...$sections.slice(i),
-            ])
-          } else {
-            updateSections([
-              ...$sections.slice(0, i + 1),
-              component,
-              ...$sections.slice(i + 1),
-            ])
-          }
-        },
-      },
-      {
-        hideLocaleSelector: true,
-      }
-    )
-  }
-
-  function moveBlock(i, direction) {
-    if (direction === 'up') {
-      updateSections(move($sections, i, i - 1))
-    } else {
-      updateSections(move($sections, i, i + 1))
-    }
-  }
+  // function insertOptionsRow(i, position) {
+  //   hovering = false
+  //   modal.show(
+  //     'SYMBOL_LIBRARY',
+  //     {
+  //       onselect: (component) => {
+  //         modal.hide()
+  //         if (position === 'above') {
+  //           updateSections([
+  //             ...$sections.slice(0, i),
+  //             component,
+  //             ...$sections.slice(i),
+  //           ])
+  //         } else {
+  //           updateSections([
+  //             ...$sections.slice(0, i + 1),
+  //             component,
+  //             ...$sections.slice(i + 1),
+  //           ])
+  //         }
+  //       },
+  //     },
+  //     {
+  //       hideLocaleSelector: true,
+  //     }
+  //   )
+  // }
 
   function duplicateBlock() {
     const newBlock = _.cloneDeep(block)
@@ -295,19 +290,11 @@
           optionsAbove={hasOptionsAbove(i, $sections)}
           optionsBelow={hasOptionsBelow(i, $sections)}
           on:moveUp={() => {
-            moveBlock(i, 'up')
+            active_page.move_block(i, i - 1)
             dispatch('contentChanged')
           }}
           on:moveDown={() => {
-            moveBlock(i, 'down')
-            dispatch('contentChanged')
-          }}
-          on:addOptionsAbove={() => {
-            insertOptionsRow(i, 'above')
-            dispatch('contentChanged')
-          }}
-          on:addOptionsBelow={() => {
-            insertOptionsRow(i, 'below')
+            active_page.move_block(i, i + 1)
             dispatch('contentChanged')
           }}
         />{/if}

@@ -68,10 +68,18 @@ export const sites = {
   },
   delete: async (id) => {
     stores.sites.update(sites => sites.filter(s => s.id !== id))
+
+    const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.site', 'eq', id)
+    await Promise.all(
+      sections_to_delete.map(async section => {
+        await supabase.from('sections').delete().eq('id', section.id)
+      })
+    )
     await Promise.all([
-      supabaseDB.sites.delete(id),
-      supabaseStorage.deleteSiteData(id)
+      supabase.from('pages').delete().match({ site: id }),
+      supabase.from('symbols').delete().match({ site: id })
     ])
+    await supabase.from('sites').delete().eq('id', id)
   },
   addUser: async ({ site, password, user }) => {
     // send server adduser request

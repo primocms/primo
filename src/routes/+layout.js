@@ -8,10 +8,10 @@ export const load = async (event) => {
     throw redirect(303, '/auth')
   } else if (session) {
     // const site = event.params['site'] 
-    const {data:sites} = await supabaseClient.from('sites').select('*')
+    const {data:sites} = await supabaseClient.from('sites').select('*, pages (preview)').eq('pages.url', 'index')
     return {
       session,
-      sites,
+      sites: sites?.map(s => ({ ...s, preview: s.pages[0]?.['preview']})),
     }
   }
 }

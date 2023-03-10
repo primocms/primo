@@ -12,7 +12,7 @@ export const load = async (event) => {
   const site_id = event.params['site'] 
   const page_url = 'index'
 
- const {data:page} = await supabaseClient.from('pages').select().match({ site: site_id, url: page_url })
+ const {data:page} = await supabaseClient.from('pages').select('*, pages(*)').match({ site: site_id, url: page_url })
 
   // let {data} =  await supabaseClient.from('sites').select(`id, name, created_at, data, page:data->pages->index`).filter('id', 'eq', site_id)
   const [{data:site}, {data:pages}, {data:symbols}, {data:sections}] = await Promise.all([

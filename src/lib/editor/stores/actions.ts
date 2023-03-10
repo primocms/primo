@@ -16,6 +16,7 @@ import { getSymbol } from './helpers'
 import * as supabaseDB from '$lib/supabase'
 import { supabase } from '$lib/supabase'
 import { invalidate } from '$app/navigation'
+import { swap_array_item_index } from '$lib/utils'
 
 export async function hydrateSite(data: SiteType): Promise<void> {
   const site = validateSiteStructure(data)
@@ -33,19 +34,29 @@ export async function hydrateSite(data: SiteType): Promise<void> {
 
 export async function updateHTML({ page, site }) {
   // active page
-  pages.update(get(activePageID), (s) => ({
-    ...s,
+  // pages.update(get(activePageID), (s) => ({
+  //   ...s,
+  //   code: {
+  //     ...s.code,
+  //     html: page
+  //   }
+  // }));
+
+  // page
+  activePage.set({
     code: {
-      ...s.code,
+      ...get(activePage).code,
       html: page
     }
-  }));
+  })
 
   // site
   code.update(c => ({
     ...c,
     html: site
   }))
+
+  // await supabase.from('pages').update({ code })
 
   timeline.push(get(unsavedSite))
 }
@@ -175,6 +186,14 @@ export const active_page = {
     // create row in sections table w/ given order
     // modify other rows w/ new indeces or order by last updated
 
+  },
+  move_block: async (from, to) => {
+    const block = get(sections)[from]
+    const block_being_replaced = get(sections)[to]
+    const updated = swap_array_item_index(get(sections), from, to)
+    sections.set(updated)
+    await supabase.from('sections').update({ index: from }).eq('id', block_being_replaced.id)
+    await supabase.from('sections').update({ index: to }).eq('id', block.id)
   },
   update: async (obj, updateTimeline = true) => {
     activePage.set(obj)

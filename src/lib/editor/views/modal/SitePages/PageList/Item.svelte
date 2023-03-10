@@ -1,14 +1,13 @@
 <script>
   import Icon from '@iconify/svelte'
-  import {get, set} from 'idb-keyval'
-  import { fade, slide } from 'svelte/transition';
-  import { createEventDispatcher, getContext } from 'svelte';
-  const dispatch = createEventDispatcher();
-  import { TextInput } from '../../../../components/inputs';
-  import { PrimaryButton } from '../../../../components/buttons';
-  import modal from '../../../../stores/app/modal';
-  import { id as activePageID } from '../../../../stores/app/activePage';
-  const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'
+  import { get, set } from 'idb-keyval'
+  import { fade, slide } from 'svelte/transition'
+  import { createEventDispatcher, getContext } from 'svelte'
+  const dispatch = createEventDispatcher()
+  import { TextInput } from '../../../../components/inputs'
+  import { PrimaryButton } from '../../../../components/buttons'
+  import modal from '../../../../stores/app/modal'
+  import { id as activePageID } from '../../../../stores/app/activePage'
 
   const siteID = window.location.pathname.split('/')[1]
 
@@ -18,29 +17,28 @@
 
   // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
   function open_page(url) {
-    modal.hide();
+    modal.hide()
     goto(url)
   }
 
   let editing_page = false
-  let name = page.name || '';
-  let id = page.id || '';
-  $: disableSave = !name || !id;
+  let name = page.name || ''
+  let id = page.id || ''
+  $: disableSave = !name || !id
 
-  const pageURL = isTryPrimo ? 
-    `/${page.id === 'index' ? '' : page.id || ''}` :  
-    `/${siteID}/${page.id === 'index' ? '' : page.id || ''}`;
+  const pageURL = `/${siteID}/${page.id === 'index' ? '' : page.id || ''}`
 
   let showing_children = true
-  $: has_children = page.pages.length > 0
+  // $: has_children = page.pages.length > 0
+  $: has_children = false
 
-  get(`${siteID}--page-list-toggle--${page.id}`).then(toggled => {
+  get(`${siteID}--page-list-toggle--${page.id}`).then((toggled) => {
     if (toggled !== undefined) showing_children = toggled
   })
   $: set(`${siteID}--page-list-toggle--${page.id}`, showing_children)
 
   // strip parent page from id
-  function get_simple_page_id(id) {
+  function get_simple_page_url(id) {
     if (id === 'index') return id
     const i = id.indexOf('/') + 1
     return i ? id.slice(i, id.length) : id
@@ -50,11 +48,11 @@
 {#if editing_page}
   <form
     on:submit|preventDefault={() => {
-      editing_page = false;
-      dispatch('edit', { name, id });
+      editing_page = false
+      dispatch('edit', { name, id })
     }}
     in:fade={{ duration: 100 }}
-    >
+  >
     <TextInput
       bind:value={name}
       id="page-label"
@@ -80,16 +78,21 @@
     <div class="left">
       <a class="name" class:active href={pageURL} on:click={() => modal.hide()}>
         <span>{page.name}</span>
-        <span>/{get_simple_page_id(page.id)}</span>
+        <span>/{get_simple_page_url(page.url)}</span>
       </a>
       {#if has_children}
-        <button class="toggle" class:active={showing_children} on:click={() => showing_children = !showing_children} aria-label="Toggle child pages">
+        <button
+          class="toggle"
+          class:active={showing_children}
+          on:click={() => (showing_children = !showing_children)}
+          aria-label="Toggle child pages"
+        >
           <Icon icon="mdi:chevron-down" />
         </button>
       {/if}
     </div>
     <div class="options">
-      <button on:click={() => editing_page = true}>
+      <button on:click={() => (editing_page = true)}>
         <Icon icon="clarity:edit-solid" />
       </button>
       {#if is_parent}
@@ -107,15 +110,15 @@
 {/if}
 
 <div class="slot">
-  <slot></slot>
+  <slot />
 </div>
 
 {#if showing_children && has_children}
   <ul class="page-list child">
     {#each page.pages as subpage}
       <li>
-        <svelte:self 
-          page={subpage} 
+        <svelte:self
+          page={subpage}
           active={$activePageID === subpage.id}
           is_parent={false}
           on:edit
@@ -191,7 +194,7 @@
     border-radius: var(--primo-border-radius);
 
     li:not(:last-child) {
-      border-bottom: 1px solid #4B4D4E;
+      border-bottom: 1px solid #4b4d4e;
     }
   }
 </style>

@@ -1,3 +1,5 @@
+import _ from 'lodash-es'
+
 export const makeValidUrl = (str = '') => {
   if (str) {
     return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase()
@@ -23,4 +25,11 @@ export function clickOutside(node) {
       document.removeEventListener('click', handleClick, true);
     }
   }
+}
+
+export function swap_array_item_index(arr, from, to) {
+  let new_array = _.cloneDeep(arr)
+  new_array[from] = arr[to]
+  new_array[to] = arr[from]
+  return new_array
 }

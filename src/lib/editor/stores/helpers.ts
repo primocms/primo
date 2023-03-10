@@ -152,10 +152,11 @@ export function getComponentData({
   fallback?: 'placeholder' | 'empty',
   include_parent_data?: boolean
 }): object {
-  const symbol = Object.hasOwn(component, 'fields') && component ? component : (component.symbol || _find(site.symbols, ['id', component.symbolID]))
-  const symbol_content = symbol.content || _chain(symbol.fields)
+
+  const symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol
+  const component_content = _chain(symbol.fields)
     .map(field => {
-      const content = site.content[loc][page.id]?.[component.id]?.[field.key]
+      const field_value = component.content?.[loc]?.[field.key]
       // if field is static, use value from symbol content
       if (field.is_static) {
         const symbol_value = symbol.content?.[loc]?.[field.key]
@@ -163,10 +164,10 @@ export function getComponentData({
           key: field.key,
           value: symbol_value
         }
-      } else if (content !== undefined) {
+      } else if (field_value !== undefined) {
         return {
           key: field.key,
-          value: content
+          value: field_value
         }
       } else {
         const default_content = symbol.content?.[loc]?.[field.key]
@@ -179,7 +180,7 @@ export function getComponentData({
     .keyBy('key')
     .mapValues('value')
     .value();
-  const component_content = component.content?.[loc] || symbol_content
+  // const component_content = component.content?.[loc] || symbol_content?.[loc] || {}
 
   // remove pages from data object (not accessed from component)
   // const page_IDs = _flattenDeep(site.pages.map(page => [page.id, ...page.pages.map(p => p.id)]))
@@ -190,8 +191,14 @@ export function getComponentData({
   const page_content = page.content
   // const page_content = _chain(Object.entries(site.content[loc][page.id]).filter(([section_id]) => !section_IDs.includes(section_id))).map(([section, content]) => ({ section, content })).keyBy('section').mapValues('content').value()
 
+  // return component_content
 
-  // TODO: include page and site content
+  // console.log({
+  //   ...page_content,
+  //   ...component_content
+  // })
+
+  // // TODO: include page and site content
   return include_parent_data ? {
     // ...site_content,
     ...page_content,
