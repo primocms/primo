@@ -104,6 +104,7 @@
   }
 
   async function add_to_page(symbol) {
+    console.log({ $hoveredBlock })
     if (!$hoveredBlock.i) {
       active_page.add_block(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {

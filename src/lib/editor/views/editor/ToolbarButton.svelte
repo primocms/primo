@@ -1,64 +1,62 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  import { fade } from 'svelte/transition';
+  import { createEventDispatcher } from 'svelte'
+  import { fade } from 'svelte/transition'
   import Spinner from '../../components/misc/Spinner.svelte'
-  import { showKeyHint, onMobile } from '../../stores/app/misc';
-  import svg from '../../svg'
+  import { showKeyHint, onMobile } from '../../stores/app/misc'
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
-  export let id = null;
-  export let title = '';
-  export let label = null;
-  export let buttonStyles = '';
-  export let key = null;
-  export let icon = null;
-  export let disabled = false;
-  export let onclick = null;
-  export let variant = '';
-  export let loading = false;
-  export let active = false;
-  export let buttons = null;
-  export let type = null;
-  export let style = '';
+  export let id = null
+  export let title = ''
+  export let label = null
+  export let buttonStyles = ''
+  export let key = null
+  export let icon = null
+  export let disabled = false
+  export let onclick = null
+  export let variant = ''
+  export let loading = false
+  export let active = false
+  export let buttons = null
+  export let type = null
+  export let style = ''
 
-  let subButtonsActive = false;
-
+  let subButtonsActive = false
 </script>
 
 <button
-{id}
-aria-label={title}
-class="{buttonStyles} {variant}"
-class:primo={type === 'primo'}
-class:active
-class:has-subbuttons={buttons}
-{style}
-in:fade={{ duration: 200 }}
-{disabled}
-on:click={() => {
-  subButtonsActive = !subButtonsActive;
-  onclick ? onclick() : dispatch('click');
-}}>
-{#if icon}
-  {#if key}
-    <span
-      class="key-hint"
-      class:active={$showKeyHint}
-      aria-hidden>&#8984;{key.toUpperCase()}</span>
+  {id}
+  aria-label={title}
+  class="{buttonStyles} {variant}"
+  class:primo={type === 'primo'}
+  class:active
+  class:has-subbuttons={buttons}
+  {style}
+  in:fade={{ duration: 200 }}
+  {disabled}
+  on:click={() => {
+    subButtonsActive = !subButtonsActive
+    onclick ? onclick() : dispatch('click')
+  }}
+>
+  {#if icon}
+    {#if key}
+      <span class="key-hint" class:active={$showKeyHint} aria-hidden
+        >&#8984;{key.toUpperCase()}</span
+      >
+    {/if}
+    {#if loading}
+      <Spinner />
+    {:else if label && icon}
+      <span class="label">{label}</span>
+      <!-- {:else if icon}
+    <div class="icon" class:hidden={$showKeyHint && key}>{@html svg(icon)}</div> -->
+    {/if}
+  {:else}
+    <slot>
+      <span>{label}</span>
+    </slot>
   {/if}
-  {#if loading}
-    <Spinner />
-  {:else if label && icon}
-    <span class="label">{label}</span>
-  {:else if icon}
-    <div class="icon" class:hidden={$showKeyHint && key}>{@html svg(icon)}</div>
-  {/if}
-{:else}
-  <slot>
-    <span>{label}</span>
-  </slot>
-{/if}
 </button>
 
 <style lang="postcss">
@@ -147,7 +145,6 @@ on:click={() => {
       background: var(--primo-color-brand);
       color: var(--color-gray-8);
     }
-
   }
 
   button.key-hint {
@@ -160,7 +157,8 @@ on:click={() => {
     cursor: default;
     transition: var(--transition-colors);
 
-    &:hover, &:focus {
+    &:hover,
+    &:focus {
       box-shadow: none;
     }
   }
@@ -201,5 +199,4 @@ on:click={() => {
       transform: rotate(360deg);
     }
   }
-
 </style>
