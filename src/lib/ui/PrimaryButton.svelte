@@ -2,6 +2,7 @@
   import Spinner from '$lib/ui/Spinner.svelte'
 
   export let label = ''
+  export let icon = null
   export let id = null
   export let variants = ''
   export let type = 'button'
@@ -15,7 +16,9 @@
       <Spinner />
     {/if}
     <span class:hidden={loading}>
-      <slot name="icon" />
+      <slot name="icon">
+        <Icon {icon} />
+      </slot>
     </span>
     <slot name="label" />
     <slot>
@@ -54,8 +57,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    padding: 0.5rem 0;
+    /* width: 100%; */
+    padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-weight: 400;
     font-size: 14px;

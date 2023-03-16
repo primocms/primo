@@ -9,17 +9,17 @@ export const load = async (event) => {
     throw redirect(303, '/auth')
   }
 
-  const site_id = event.params['site'] 
+  const site_url = event.params['site'] 
+  const {data:site} = await supabaseClient.from('sites').select().filter('url', 'eq', site_url).single()
+
   const page_url = 'index'
+  const {data:page} = await supabaseClient.from('pages').select('*').match({ site: site.id, url: page_url }).single()
 
- const {data:page} = await supabaseClient.from('pages').select('*, pages(*)').match({ site: site_id, url: page_url })
-
-  // let {data} =  await supabaseClient.from('sites').select(`id, name, created_at, data, page:data->pages->index`).filter('id', 'eq', site_id)
-  const [{data:site}, {data:pages}, {data:symbols}, {data:sections}] = await Promise.all([
-    await supabaseClient.from('sites').select().filter('id', 'eq', site_id),
-    await supabaseClient.from('pages').select().match({site: site_id}),
-    await supabaseClient.from('symbols').select().match({site: site_id}),
-    await supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page?.[0]['id']}),
+  // let {data} =  await supabaseClient.from('sites').select(`id, name, created_at, data, page:data->pages->index`).filter('id', 'eq', site.id)
+  const [{data:pages}, {data:symbols}, {data:sections}] = await Promise.all([
+    await supabaseClient.from('pages').select().match({site: site.id}),
+    await supabaseClient.from('symbols').select().match({site: site.id}),
+    await supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
   ]) 
 
   const ordered_sections = sections?.sort((a, b) => {
@@ -35,12 +35,9 @@ export const load = async (event) => {
   })
 
   return {
-    site: {
-      id: site?.[0]['id'],
-      ...site?.[0]
-    },
+    site,
     pages: ordered_pages,
-    page: page?.[0],
+    page: page,
     sections: ordered_sections,
     symbols
   }

@@ -35,7 +35,7 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page = get(activePage), site = get(activeSite), locale = 'en', separateModules = false, no_js = false }) {
+export async function buildStaticPage({ page = get(activePage), site = get(activeSite), page_sections = get(sections), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
@@ -52,11 +52,12 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
         data
       }
     })(),
-    ...get(sections).map(async section => {
-      const symbol = section.symbol || _find(site.symbols, ['id', section.symbolID])
+    ...page_sections.map(async section => {
+      const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(site.symbols, ['id', section.symbol])
       const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
       const data = getComponentData({
         component: section,
+        symbol,
         page,
         site,
         loc: locale
@@ -69,6 +70,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
               ${html} 
             </div>
           </div>`,
+        html,
         js,
         css,
         data
@@ -135,6 +137,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
 // Include page/site content alongside the component's content
 export function getComponentData({
   component,
+  symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol,
   page = get(activePage),
   site = get(activeSite),
   loc = get(locale),
@@ -142,7 +145,7 @@ export function getComponentData({
   include_parent_data = true
 }) {
 
-  const symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol
+  // const symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol
   const component_content = _chain(symbol.fields)
     .map(field => {
       const field_value = component.content?.[loc]?.[field.key]
@@ -173,7 +176,6 @@ export function getComponentData({
   const site_content = site.content[loc]
   const page_content = page.content[loc]
 
-  // // TODO: include page and site content
   return include_parent_data ? {
     ...site_content,
     ...page_content,

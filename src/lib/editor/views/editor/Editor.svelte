@@ -44,57 +44,25 @@
     ? [...$siteFields, ...$pageFields].length > 0
     : false
 
-  $: editorButtons = [
-    [
-      {
-        id: 'pages',
-        title: $C('Pages'),
-        label: $C('Pages'),
-        icon: 'fa-solid:th-large',
-        onclick: () =>
-          modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
-        showSwitch: false,
-      },
-    ],
-    hasFields
-      ? [
-          {
-            icon: 'bxs:edit',
-            title: $C('Content'),
-            label: $C('Content'),
-            onclick: () =>
-              modal.show(
-                'FIELDS',
-                {},
-                {
-                  showSwitch: true,
-                }
-              ),
-          },
-        ]
-      : [],
-  ]
-
   const developerButtons = [
-    [
-      {
-        id: 'toolbar--pages',
-        title: $C('Pages'),
-        icon: 'fa:th-large',
-        onclick: () =>
-          modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
-        showSwitch: false,
-      },
-    ],
+    {
+      id: 'toolbar--pages',
+      title: $C('Pages'),
+      icon: 'system-uicons:grid-squares-add',
+      onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
+      showSwitch: false,
+    },
     [
       {
         id: 'toolbar--page',
         title: 'Page',
         label: 'Page',
+        svg: '<svg width="10" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" fill="#121212"/><rect x="2.41675" y="3.625" width="2" height="2" fill="#D9D9D9"/><rect x="2.41675" y="7.125" width="6" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="9.375" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.41675" y="11.625" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.425" y="0.925" width="10.4834" height="14.15" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>',
         onclick: () => modal.show('PAGE_EDITOR', {}, { showSwitch: true }),
       },
       {
         id: 'toolbar--site',
+        svg: `<svg width="12" height="18" viewBox="0 0 15 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="3.50831" y="0.925" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.09169" y="2.34199" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" fill="#121212"/><rect x="2.66669" y="6.4165" width="2" height="2" fill="#D9D9D9"/><rect x="2.66669" y="9.6665" width="5.75" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="11.6665" width="5" height="0.75" fill="#D9D9D9"/><rect x="2.66669" y="13.6665" width="6.5" height="0.75" fill="#D9D9D9"/><rect x="0.675" y="3.75801" width="10.4834" height="13.3167" rx="1.575" stroke="#CECECE" stroke-width="0.85"/></svg>`,
         title: 'Site',
         label: 'Site',
         onclick: () => modal.show('SITE_EDITOR', {}, { showSwitch: true }),
@@ -105,8 +73,6 @@
   function savePage() {
     dispatch('save')
   }
-
-  $: toolbarButtons = $showingIDE ? developerButtons : editorButtons
 </script>
 
 <Toolbar on:signOut buttons={$loadingSite ? [] : developerButtons}>

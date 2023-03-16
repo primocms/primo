@@ -54,7 +54,7 @@
     position: fixed;
     z-index: 999999999;
     inset: 0;
-    top: 28px;
+    top: 0;
 
     &.small .modal-card {
       max-width: 30rem;
@@ -83,7 +83,7 @@
     border-radius: var(--primo-border-radius);
     flex: 1;
     max-height: 100vh;
-    padding: 0 1rem; /* pushes content out of sight on windows if vertical */
+    /* padding: 0 1rem; pushes content out of sight on windows if vertical */
     /* height: 100%;  make component editor full height when in cms) */
 
     &.fullscreen {

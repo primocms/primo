@@ -150,7 +150,7 @@
     transition: 0.1s opacity;
     opacity: 0;
     border-top: 0;
-    height: calc(100vh - 84px);
+    height: calc(100vh - 54px);
     overflow: auto;
   }
 

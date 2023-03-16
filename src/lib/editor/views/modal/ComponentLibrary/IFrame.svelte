@@ -18,16 +18,18 @@
   }
 
   function setHeight() {
-    iframe.height = ''
+    // iframe.height = '';
     const newHeight =
       iframe.contentWindow.document.body.scrollHeight * scaleRatio
-    iframe.height = newHeight
+    // iframe.height = newHeight;
+    // iframe.width = newHeight;
     height = newHeight
     container_height = iframe.contentWindow.document.body.scrollHeight
     finishedResizing = true
   }
 
   function setScaleRatio() {
+    if (!container || !iframe) return
     const { clientWidth: parentWidth } = container
     const { clientWidth: childWidth } = iframe
     scaleRatio = parentWidth / childWidth
@@ -35,6 +37,23 @@
 
   let scaleRatio = 1
   let container_height
+
+  let load_observer
+  let resize_observer
+  $: if (container && iframe) {
+    if (load_observer) load_observer.disconnect()
+    if (resize_observer) resize_observer.disconnect()
+    resize_observer = new ResizeObserver(setScaleRatio).observe(
+      container.closest('.sidebar')
+    )
+    load_observer = new ResizeObserver(() => {
+      // workaround for on:load not working reliably
+      if (iframe?.contentWindow.document.body?.childNodes) {
+        setScaleRatio()
+        setHeight()
+      }
+    }).observe(iframe)
+  }
 </script>
 
 <svelte:window on:resize={setScaleRatio} />
@@ -53,7 +72,8 @@
     {#if componentCode}
       <iframe
         class:fadein={finishedResizing}
-        style="transform: scale({scaleRatio}); height: {100 / scaleRatio + '%'}"
+        style:transform="scale({scaleRatio})"
+        style:height={100 / scaleRatio + '%'}
         scrolling="no"
         title="Preview HTML"
         on:load={() => (iframeLoaded = true)}
@@ -71,7 +91,7 @@
   }
 
   .spinner-container {
-    background: var(--color-gray-9);
+    /* background: var(--color-gray-9); */
     width: 100%;
     height: 100%;
     position: absolute;
@@ -83,6 +103,7 @@
     z-index: 50;
   }
   .iframe-container {
+    border-radius: 0.5rem;
     background: var(--primo-color-white);
     /* position: absolute; */
     inset: 0;

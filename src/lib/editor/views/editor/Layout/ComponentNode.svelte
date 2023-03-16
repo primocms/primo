@@ -137,14 +137,6 @@
   let image_editor
   let image_editor_is_visible = false
 
-  let actively_hovered_image
-  function set_hovered_image_position() {
-    if (actively_hovered_image) {
-      const rect = actively_hovered_image.getBoundingClientRect()
-      image_editor.style.top = `${rect.top}px`
-    }
-  }
-
   let link_editor
   let link_editor_is_visible = false
 
@@ -307,27 +299,35 @@
       const html_matches =
         typeof value === 'object' && value.html && value.html.trim() === html
 
-      const image_matches =
-        typeof value === 'object' &&
-        value.alt !== undefined &&
-        value.url &&
-        value.alt === element.alt &&
-        value.url === element.src
-      const link_matches =
-        typeof value === 'object' &&
-        value.url?.replace(/\/$/, '') === element.href?.replace(/\/$/, '') &&
-        value.label === element.innerText
+      const is_image =
+        typeof value === 'object' && value.alt !== undefined && value.url
 
-      // if (has_html && !html_matches) {
-      // 	console.log('NO MATCH', key, { value, html });
-      // }
+      const is_link =
+        typeof value === 'object' &&
+        Object.hasOwn(value, 'url') &&
+        Object.hasOwn(value, 'label')
 
-      if (link_matches) {
-        set_editable_link({ element, key })
-        return true
-      } else if (image_matches) {
-        set_editable_image({ element, key })
-        return true
+      if (is_link) {
+        const external_url_matches =
+          value.url?.replace(/\/$/, '') === element.href?.replace(/\/$/, '')
+        const internal_url_matches =
+          window.location.origin + value.url?.replace(/\/$/, '') ===
+          element.href?.replace(/\/$/, '')
+
+        if (
+          (external_url_matches || internal_url_matches) &&
+          value.label === element.innerText
+        ) {
+          set_editable_link({ element, key, url: value.url })
+          return true
+        }
+      } else if (is_image) {
+        const image_matches =
+          value.alt === element.alt && value.url === element.src
+        if (image_matches) {
+          set_editable_image({ element, key })
+          return true
+        }
       } else if (text_matches) {
         // Markdown Field
         set_editable({ element, key })
@@ -345,26 +345,32 @@
     async function set_editable_image({ element, key = '' }) {
       let rect
       element.setAttribute(`data-key`, key)
-      element.style.transition = 'box-shadow 0.1s'
       element.onmouseover = async (e) => {
         image_editor_is_visible = true
         await tick()
-        element.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.5)'
         rect = element.getBoundingClientRect()
         image_editor.style.left = `${rect.left}px`
         image_editor.style.top = `${rect.top}px`
-
-        // image_editor.style.width = `${rect.width}px`
-        // image_editor.style.height = `${rect.height}px`
-        actively_hovered_image = element
-
-        const button = image_editor.querySelector('button')
-        button.onclick = () => {
+        image_editor.style.width = `${rect.width}px`
+        image_editor.style.height = `${rect.height}px`
+        image_editor.style.borderRadius = getComputedStyle(element).borderRadius
+        image_editor.onmouseleave = (e) => {
+          const is_outside =
+            e.x >= Math.floor(rect.right) ||
+            e.y >= Math.floor(rect.bottom) ||
+            e.x <= Math.floor(rect.left) ||
+            e.y <= Math.floor(rect.top)
+          if (is_outside) {
+            image_editor_is_visible = false
+          }
+        }
+        image_editor.onclick = () => {
           modal.show('DIALOG', {
             component: 'IMAGE',
             onSubmit: ({ url, alt }) => {
               element.src = url
               save_edited_value(key, { url, alt })
+              image_editor_is_visible = false
               modal.hide()
             },
             props: {
@@ -374,18 +380,6 @@
               },
             },
           })
-        }
-      }
-      element.onmouseleave = (e) => {
-        const is_outside =
-          e.x >= Math.floor(rect.right) ||
-          e.y >= Math.floor(rect.bottom) ||
-          e.x <= Math.floor(rect.left) ||
-          e.y <= Math.floor(rect.top)
-        if (is_outside) {
-          element.style.boxShadow = 'none'
-          image_editor_is_visible = false
-          actively_hovered_image = null
         }
       }
     }
@@ -398,7 +392,7 @@
       create_editor(element.innerHTML.trim())
     }
 
-    async function set_editable_link({ element, key }) {
+    async function set_editable_link({ element, key, url }) {
       element.style.outline = '0'
       element.setAttribute(`data-key`, key)
       element.contentEditable = true
@@ -412,12 +406,8 @@
         link_editor.style.left = `${rect.left}px`
         link_editor.style.top = `${rect.top + rect.height}px`
 
-        // on_click_outside(link_editor, () => {
-        //   link_editor_is_visible = false
-        // })
-
         const input = link_editor.querySelector('input')
-        input.value = element.href
+        input.value = url
 
         const form = link_editor.querySelector('form')
         form.onsubmit = (e) => {
@@ -534,7 +524,8 @@
 
   function on_page_scroll() {
     set_position()
-    set_hovered_image_position()
+    image_editor_is_visible = false
+    link_editor_is_visible = false
   }
 
   // Workaround for meny breaking when rearranging
@@ -555,15 +546,13 @@
 </script>
 
 {#if image_editor_is_visible}
-  <div
+  <button
     in:fade={{ duration: 100 }}
     class="primo-reset image-editor"
     bind:this={image_editor}
   >
-    <button class="icon">
-      <Icon icon="uil:image-upload" />
-    </button>
-  </div>
+    <Icon icon="uil:image-upload" />
+  </button>
 {/if}
 
 {#if link_editor_is_visible}
@@ -697,20 +686,16 @@
   .image-editor {
     position: fixed;
     font-size: 14px;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.8);
     color: white;
     border-bottom-right-radius: 4px;
     z-index: 99;
     transform-origin: top left;
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2);
-
-    button {
-      padding: 4px 8px;
-
-      &:hover {
-        background: var(--color-gray-8);
-      }
-    }
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    overflow: hidden;
   }
 
   .link-editor {

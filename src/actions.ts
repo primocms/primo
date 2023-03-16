@@ -11,16 +11,24 @@ import { sitePassword } from './stores/misc'
 
 export const sites = {
   create: async ({ data, preview }) => {
+    const { pages, symbols, sections } = data
+    const site = {
+      id: data.id,
+      url: data.url,
+      name: data.name,
+      code: data.code,
+      content: data.content,
+      fields: data.fields,
+    }
+
+    await supabaseDB.sites.create(site)
     await Promise.all([
-      supabaseDB.sites.create(data),
-      supabaseDB.pages.create({
-        site: data.id,
-        url: 'index',
-        name: 'Home',
-        preview
-      }),
+      ...symbols.map(symbol => supabase.from('symbols').insert(symbol)),
+      ...pages.map(page => supabase.from('pages').insert(page))
     ])
-    // stores.sites.update(sites => [...sites, { data, preview }])
+    await Promise.all(sections.map(section => supabase.from('sections').insert(section)))
+
+    await supabase.from('pages').update({ preview }).match({ url: 'index', site: site.id })
   },
   update: async ({ id, props }) => {
     stores.sites.update(
@@ -135,6 +143,16 @@ export const hosts = {
     stores.hosts.update(hosts => hosts.filter(p => p.name !== name))
     await supabaseDB.hosts.delete(name)
   }
+}
+
+export const github_token = {
+  set: async (token) => {
+    stores.config.update(config => ({
+      ...config,
+      github_token: token
+    }))
+    await supabase.from('config').update({ value: token }).eq('id', 'github-token')
+  },
 }
 
 

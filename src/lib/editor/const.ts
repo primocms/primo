@@ -1,5 +1,6 @@
 // import { createUniqueID } from './utilities'
 import { customAlphabet } from 'nanoid/non-secure'
+import { v4 as uuidv4 } from 'uuid';
 
 function createUniqueID(length: number = 5): string {
   const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
@@ -104,6 +105,7 @@ export const Page = (url, name = ''): Page => ({
 
 export type Site = {
   id: string,
+  url: string,
   name: string,
   // pages: any[],
   code: {
@@ -119,8 +121,9 @@ export type Site = {
   content: {}
 }
 
-export const Site = ({ id, name } = { id: 'default', name: 'Default' }): Site => ({
-  id,
+export const Site = ({ url, name } = { url: 'default', name: 'Default' }): Site => ({
+  id: uuidv4(),
+  url,
   name,
   // pages: [
   //   Page('index', 'Home Page')
@@ -259,8 +262,6 @@ html {
   fields: [],
   content: {
     'en': { // locale
-      'index': { // page
-      },
     }
   },
   symbols: []

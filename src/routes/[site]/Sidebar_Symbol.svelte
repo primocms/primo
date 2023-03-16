@@ -96,6 +96,7 @@
     if (mouse_y > top && mouse_y < center) {
       // mouse is in top half of block
       $hoveredBlock = {
+        ...$hoveredBlock,
         ...matching_block,
         position: 'top',
       }
@@ -104,6 +105,7 @@
     } else if (mouse_y > center) {
       // mouse is below bottom half of block
       $hoveredBlock = {
+        ...$hoveredBlock,
         ...matching_block,
         position: 'bottom',
       }
@@ -267,13 +269,11 @@
     }
 
     header {
-      background: white;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 6px 0;
-      color: #2d3039;
-      font-weight: 600;
+      color: #e7e7e7;
       font-size: 12px;
       line-height: 12px;
 
@@ -283,7 +283,7 @@
       .symbol-options {
         display: flex;
         align-items: center;
-        color: #2d3039;
+        color: #e7e7e7;
 
         :global(svg) {
           height: 1rem;
@@ -293,7 +293,7 @@
     }
     .symbol {
       width: 100%;
-      border: 1px solid #e3e4e8;
+      /* border: 1px solid #e3e4e8; */
       border-radius: 6px;
       /* overflow: hidden; */
       cursor: grab;

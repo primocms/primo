@@ -10,7 +10,7 @@ import { update as update_site, content, code, fields, timeline, site as unsaved
 import { buildStaticPage } from './helpers'
 import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '../const'
 import { Page } from '../const'
-import { validateSiteStructure } from '../utils'
+import { validate_site_structure_v2 } from '../utils'
 import { createUniqueID } from '../utilities';
 import { getSymbol } from './helpers'
 import * as supabaseDB from '$lib/supabase'
@@ -19,7 +19,8 @@ import { invalidate } from '$app/navigation'
 import { swap_array_item_index } from '$lib/utils'
 
 export async function hydrateSite(data: SiteType): Promise<void> {
-  const site = validateSiteStructure(data)
+  // const site = validate_site_structure_v2(data)
+  const site = data
   if (!site) return
   sections.set([])
   stores.id.set(site.id)
@@ -169,11 +170,28 @@ export const active_site = {
   update: async (props) => {
     update_site(props)
     await supabase.from('sites').update(props).eq('id', get(unsavedSite)['id'])
+  },
+  create_repo: async () => {
+
   }
 }
 
 export const active_page = {
   add_symbol: async (symbol, position) => {
+
+    const instance = {
+      id: null,
+      index: position,
+      page: get(activePageID),
+      content: symbol.content,
+      symbol
+    }
+
+    sections.update(sections => [
+      ...sections.slice(0, position),
+      instance,
+      ...sections.slice(position),
+    ])
 
     const { data } = await supabase.from('sections').insert({
       symbol: symbol.id,
@@ -182,11 +200,7 @@ export const active_page = {
       content: symbol.content || {},
     }).select('*, symbol(*)')
 
-    sections.update(sections => [
-      ...sections.slice(0, position),
-      data[0],
-      ...sections.slice(position),
-    ])
+    sections.update(sections => sections.map(section => section.id === null ? data[0] : section))
 
     const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
     stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))

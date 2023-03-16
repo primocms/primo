@@ -146,7 +146,6 @@
         ..._chain(fields).keyBy('key').mapValues('value').value(),
       },
     }
-    console.log({ local_content })
   }
 
   function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {
@@ -156,7 +155,6 @@
   let loading = false
 
   // bind raw code to code editor
-  console.log({ local_code })
   let rawHTML = local_code.html.head
   let rawCSS = local_code.css
   let rawJS = local_code.js
@@ -220,8 +218,6 @@
           content: local_content,
         },
       })
-
-      console.log({ preview })
     }
   }
 

@@ -1,22 +1,14 @@
 <script>
-  import { onDestroy, setContext } from 'svelte'
+  import { onDestroy } from 'svelte'
   import { browser } from '$app/environment'
   import Primo, { stores } from '$lib/editor'
   import modal from '$lib/editor/stores/app/modal'
-  import * as actions from '../../actions'
-  import user from '../../stores/user'
-  import { sitePassword } from '../../stores/misc'
-  import { activeSite } from '../../stores/site'
   import { page } from '$app/stores'
   // import * as primo from '../../package.json'
   import config from '../../stores/config'
-  import Page from '$lib/editor/views/editor/Page.svelte'
   import Sidebar from './Sidebar.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import HSplitPane from '$lib/editor/views/modal/ComponentEditor/HSplitPane.svelte'
-  import JSONTree from 'svelte-json-tree'
-  import { site } from '$lib/editor/stores/data/draft'
-  import { invalidate } from '$app/navigation'
 
   export let data
   // $: console.log({ data })
@@ -46,10 +38,6 @@
   let saving = false
 
   // $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
-
-  $: if (browser && $sitePassword) {
-    setContext('hidePrimoButton', true)
-  }
 
   onDestroy(() => {
     // if (browser && !siteLocked) actions.setActiveEditor({ siteID, lock: false })
@@ -99,10 +87,10 @@
   main {
     overflow: hidden;
     transition: 0.1s;
-    height: calc(100vh - 84px);
+    height: calc(100vh - 54px);
     overflow: hidden;
     transition: 0.1s;
-    margin-top: 84px;
+    margin-top: 54px;
   }
   [slot='right'] {
     width: 100%;
@@ -118,5 +106,13 @@
     span:first-child {
       margin-right: 0.5rem;
     }
+  }
+  [slot='left'] {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #121212;
+    color: white;
   }
 </style>

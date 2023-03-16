@@ -34,7 +34,6 @@
   }
 
   async function deleteSymbol(symbol) {
-    // await deleteInstances(symbol)
     symbols.delete(symbol)
   }
 
@@ -81,8 +80,8 @@
   }
 
   async function add_to_page(symbol) {
-    console.log({ $hoveredBlock })
-    if (!$hoveredBlock.i) {
+    if ($hoveredBlock.id === null) {
+      // no blocks on page, add to top
       active_page.add_symbol(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {
       active_page.add_symbol(symbol, $hoveredBlock.i)
@@ -178,11 +177,12 @@
 
 <style lang="postcss">
   .sidebar {
-    background: #fff;
+    width: 100%;
+    background: #171717;
     z-index: 9;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 84px);
+    height: calc(100vh - 54px);
     gap: 1rem;
     /* position: fixed; */
     /* margin-top: 52px; */
@@ -194,14 +194,14 @@
   }
 
   .tabs {
-    border-bottom: 1px solid #e3e4e8;
+    background: #171717;
+    border-bottom: 1px solid #292929;
     padding-top: 1rem;
     padding-inline: 1.5rem;
     display: flex;
     gap: 1rem;
     position: sticky;
     top: 0;
-    background: white;
     z-index: 1;
 
     button {
@@ -214,8 +214,8 @@
       transition: 0.1s;
 
       &.active {
-        color: #1d5ffc;
-        border-bottom: 3px solid #1d5ffc;
+        color: #dadada;
+        border-bottom: 2px solid var(--primo-color-brand);
       }
     }
   }
@@ -231,12 +231,13 @@
 
   .buttons {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     padding-inline: 1.5rem;
 
     .button {
-      padding: 6px;
-      background: #ebecef;
+      padding: 3px;
+      color: #b6b6b6;
+      background: #292929;
       border-radius: 4px;
       cursor: pointer;
       display: flex;

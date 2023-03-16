@@ -105,8 +105,8 @@
     position: absolute;
     right: 0;
     top: 25px;
-    background: white;
-    box-shadow: 0px 0px 3px 0px rgba(0, 0, 0, 0.2);
+    background: #171717;
+    border: 1px solid #292929;
     z-index: 1;
 
     .options {
@@ -126,7 +126,7 @@
       white-space: nowrap;
 
       &:hover {
-        background: #f4f4f6;
+        background: #292929;
       }
     }
   }

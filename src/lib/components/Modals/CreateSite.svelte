@@ -6,18 +6,20 @@
   import { makeValidUrl } from '$lib/utils'
   import { Site } from '$lib/editor/const'
   import Icon from '@iconify/svelte'
-  import { validateSiteStructure } from '$lib/editor/utils'
+  import { validate_site_structure_v2 } from '$lib/editor/utils'
+  import { buildStaticPage } from '$lib/editor/stores/helpers'
 
   export let onSuccess = (newSite) => {}
   let loading
-  let siteName = ``
-  let siteID = ``
+  let site_name = ``
+  let site_url = ``
   let siteIDFocused = false
   let message = ''
-  // $: siteURL = siteID
-  $: canCreateSite = siteName && siteID
+  // $: siteURL = site_url
+  $: canCreateSite = site_name && site_url
 
   let siteData
+  let preview
 
   async function createSite() {
     loading = true
@@ -27,19 +29,21 @@
     siteData = siteData
       ? {
           ...siteData,
-          id: siteID,
-          name: siteName,
+          url: site_url,
+          name: site_name,
         }
-      : Site({ id: siteID, name: siteName })
+      : Site({ url: site_url, name: site_name })
+
+    // TODO: populate blank site
 
     onSuccess({
       data: siteData,
-      preview: '',
+      preview,
     })
   }
 
   function validateUrl() {
-    siteID = makeValidUrl(siteIDFocused ? siteID : siteName)
+    site_url = makeValidUrl(siteIDFocused ? site_url : site_name)
   }
 
   let duplicatingSite = false
@@ -50,10 +54,17 @@
       if (typeof target.result !== 'string') return
 
       const uploaded = JSON.parse(target.result)
-      const converted = validateSiteStructure(uploaded)
-
-      if (converted) siteData = converted
-      else {
+      const converted = validate_site_structure_v2(uploaded)
+      if (converted) {
+        siteData = converted
+        preview = await buildStaticPage({
+          page: siteData.pages[0],
+          site: siteData,
+          page_sections: siteData.sections.filter(
+            (section) => section.page === siteData.pages[0].id
+          ),
+        })
+      } else {
         duplicateFileIsValid = false
       }
 
@@ -72,18 +83,18 @@
           autofocus={true}
           label="Site Name"
           on:input={validateUrl}
-          bind:value={siteName}
+          bind:value={site_name}
         />
         <TextField
-          label="Site ID"
-          bind:value={siteID}
+          label="Site URL"
+          bind:value={site_url}
           on:input={validateUrl}
           on:focus={() => (siteIDFocused = true)}
         />
       </div>
       {#if duplicatingSite}
         <div class="site-thumbnail">
-          <SiteThumbnail bind:valid={duplicateFileIsValid} site={siteData} />
+          <SiteThumbnail bind:valid={duplicateFileIsValid} {preview} />
         </div>
       {/if}
       <footer>
@@ -114,7 +125,7 @@
     </form>
   {:else}
     <div class="creating-site">
-      <span>{duplicatingSite ? 'Duplicating' : 'Creating'} {siteName}</span>
+      <span>{duplicatingSite ? 'Duplicating' : 'Creating'} {site_name}</span>
       {#key message}
         <p>{message}</p>
       {/key}

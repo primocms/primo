@@ -220,7 +220,7 @@
     padding: 1rem;
     border-radius: var(--primo-border-radius);
     margin: 0 auto;
-    width: 100vw;
+    /* width: 100vw; */
   }
 
   .primo-heading-xl {

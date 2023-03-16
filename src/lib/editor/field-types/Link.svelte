@@ -1,23 +1,23 @@
 <script>
-  import {createEventDispatcher} from 'svelte'
+  import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
-  import SplitButton from '../ui/inputs/SplitButton.svelte';
-  import TextInput from '../components/inputs/TextInput.svelte';
-  import { pages } from '../stores/data/draft';
-  import {locale} from '../stores/app/misc'
+  import SplitButton from '../ui/inputs/SplitButton.svelte'
+  import TextInput from '../components/inputs/TextInput.svelte'
+  import { pages } from '../stores/data/draft'
+  import { locale } from '../stores/app/misc'
 
   const link = {
     label: '',
     url: '',
     active: false,
-  };
+  }
 
   export let field = {
     value: link,
-  };
+  }
 
   if (!field.value || !field.value.label) {
-    field.value = link;
+    field.value = link
   }
 
   $: if (typeof field.value === 'string' || !field.value) {
@@ -25,35 +25,33 @@
       label: '',
       url: '',
       active: false,
-    };
+    }
   } else if (field.value.title && !field.value.label) {
     // Fix old values using `title` instead of `label`
     field.value = {
       ...field.value,
       label: field.value.title,
-    };
+    }
   }
 
-  let selected = urlMatchesPage(field.value.url);
+  let selected = urlMatchesPage(field.value.url)
 
   function urlMatchesPage(url) {
     if (url && url.startsWith('/')) {
-      return 'Page';
+      return 'Page'
     } else {
-      return 'URL';
+      return 'URL'
     }
   }
 
   function getPageUrl(page, loc) {
     const prefix = loc === 'en' ? '/' : `/${loc}/`
-    let url
-    if (page.id === 'index') {
+    if (page.url === 'index') {
       return prefix
     } else {
-      return prefix + page.id
-    } 
+      return prefix + page.url
+    }
   }
-
 </script>
 
 <div class="link">
@@ -64,17 +62,28 @@
       bind:value={field.value.label}
       id="page-label"
       label="Label"
-      placeholder="About Us" />
+      placeholder="About Us"
+    />
     <div class="url-select">
-      <SplitButton bind:selected buttons={[{ id: 'Page', icon: 'fa-solid:clone' }, { id: 'URL', icon: 'akar-icons:link-chain' }]} />
+      <SplitButton
+        bind:selected
+        buttons={[
+          { id: 'Page', icon: 'fa-solid:clone' },
+          { id: 'URL', icon: 'akar-icons:link-chain' },
+        ]}
+      />
       {#if selected === 'Page'}
-        <select bind:value={field.value.url} on:change={() => dispatch('input')}>
+        <select
+          bind:value={field.value.url}
+          on:change={() => dispatch('input')}
+        >
           {#each $pages as page}
             <option value={getPageUrl(page, $locale)}>
               {page.name}
               <pre>({getPageUrl(page, $locale)})</pre>
             </option>
-            {#if page.pages.length > 0}
+            <!-- TODO: Fix this -->
+            <!-- {#if page.pages.length > 0}
               <optgroup label={page.name}>
                 {#each page.pages as childpage}
                   <option value={getPageUrl(childpage, $locale)}>
@@ -83,7 +92,7 @@
                   </option>
                 {/each}
               </optgroup>
-            {/if}
+            {/if} -->
           {/each}
         </select>
       {:else}
@@ -91,7 +100,8 @@
           on:input={() => dispatch('input', field)}
           bind:value={field.value.url}
           type="url"
-          placeholder="https://somewhere.com" />
+          placeholder="https://somewhere.com"
+        />
       {/if}
     </div>
   </div>
@@ -104,8 +114,8 @@
     flex-direction: column;
 
     span {
-      font-size: var( --title-font-size, 1rem);
-      font-weight: var( --title-font-weight, 700);
+      font-size: var(--title-font-size, 1rem);
+      font-weight: var(--title-font-weight, 700);
       padding-bottom: 1rem;
       letter-spacing: 1px;
     }
@@ -144,5 +154,4 @@
       }
     }
   }
-
 </style>

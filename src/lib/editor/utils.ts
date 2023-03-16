@@ -2,6 +2,13 @@ import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum/src";
 import type { Site, Page, Field } from './const'
+import { v4 as uuidv4 } from 'uuid';
+import { createUniqueID } from "./utilities";
+import showdown from '$lib/editor/libraries/showdown/showdown.min.js'
+import showdownHighlight from 'showdown-highlight'
+export const converter = new showdown.Converter({
+  extensions: [showdownHighlight()],
+})
 
 const componentsCache = new Map();
 export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }: { component: any, buildStatic?: boolean, format?: string, locale?: string, hydrated?: boolean, ignoreCachedData?: boolean }) {
@@ -151,7 +158,152 @@ export function getEmptyValue(field: Field) {
   }
 }
 
+export function validate_site_structure_v2(site) {
 
+  // TODO: save site file w/ version 2
+  if (site.version === 2) return site
+
+  site = validateSiteStructure(site)
+
+  const site_id = uuidv4()
+
+  const Field = (field) => {
+    if (field.type === 'content') {
+      field.type = 'markdown'
+    }
+    delete field.default
+    return {
+      ...field,
+      fields: field.fields.map(Field)
+    }
+  }
+
+  const Symbol = (symbol) => {
+    const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
+      accumulator[locale] = {}
+      symbol.fields.forEach(field => {
+        accumulator[locale][field.key] = getPlaceholderValue(field)
+      })
+      return accumulator
+    }, {})
+
+    return {
+      id: uuidv4(),
+      site: site_id,
+      name: symbol.name,
+      code: symbol.code,
+      fields: symbol.fields.map(Field),
+      _old_id: symbol.id,
+      content
+    }
+  }
+
+  const symbols = [...site.symbols.map(symbol => Symbol(symbol)), {
+    id: uuidv4(),
+    site: site_id,
+    name: 'Content',
+    code: {
+      html: `<div class="content">{@html content}</div>`,
+      css: '',
+      js: ''
+    },
+    fields: [{
+      id: createUniqueID(),
+      key: 'content',
+      label: 'Content',
+      type: 'markdown',
+      fields: [],
+      options: {},
+      is_static: false,
+    }],
+    content: {
+      en: {
+        'content': {
+          markdown: '# This is a content block',
+          html: '<h1>This is a content block</h1>'
+        }
+      }
+    },
+    _old_id: null
+  }]
+
+  const Page = (page) => {
+
+    const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
+      accumulator[locale] = {}
+      page.fields.forEach(field => {
+        accumulator[locale][field.key] = value?.[page.id]?.[field.key] || getEmptyValue(field)
+      })
+      return accumulator
+    }, {})
+
+    return {
+      id: uuidv4(),
+      name: page.name,
+      url: page.id,
+      code: page.code,
+      fields: page.fields.map(Field),
+      sections: page.sections, // for use later, to be removed
+      content,
+      site: site_id
+    }
+  }
+
+  const Section = (section, page) => {
+
+    let symbol
+
+    if (section.type === 'component') {
+      symbol = symbols.find(s => s._old_id === section.symbolID)
+    } else if (section.type === 'content') {
+      symbol = symbols.at(-1)
+    }
+
+    const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
+      accumulator[locale] = value?.[page.url]?.[section.id]
+      return accumulator
+    }, {})
+
+    return ({
+      id: uuidv4(),
+      page: page.id,
+      symbol: symbol.id,
+      content,
+      index: page.sections.findIndex((s) => s.id === section.id)
+    })
+  }
+
+  const pages = _.flatten(site.pages.map(page => [Page(page), ...page.pages.map(child => Page(child))]))
+
+  const sections = _.flatten(pages.map(page => page.sections.map(s => Section(s, page))))
+
+  const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
+    accumulator[locale] = {}
+    site.fields.forEach(field => {
+      accumulator[locale][field.key] = value?.[field.key] || getEmptyValue(field)
+    })
+    return accumulator
+  }, {})
+
+  return {
+    id: site_id,
+    url: site.id,
+    name: site.name,
+    code: site.code,
+    fields: site.fields,
+    content,
+    pages: pages.map(page => {
+      delete page.sections
+      return page
+    }),
+    sections,
+    symbols: symbols.map(symbol => {
+      delete symbol._old_id
+      return symbol
+    })
+  }
+
+}
 
 export function validateSiteStructure(site): Site {
 

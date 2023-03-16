@@ -14,20 +14,19 @@
   }
 </script>
 
-<button
+<a
   class="button"
   class:bg-primored={showingDropdown}
   class:chevron={showingDropdown}
   aria-label="See all sites"
   href="/"
-  on:click={() => (showingDropdown = !showingDropdown)}
 >
   {#if $loadingSite}
     <Spinner />
   {:else}
     <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
   {/if}
-</button>
+</a>
 
 {#if showingDropdown}
   <ul xyz="fade stagger stagger-1" class="dropdown">
@@ -50,7 +49,6 @@
 <style lang="postcss">
   .button {
     aspect-ratio: 1;
-    margin-right: 0.5rem;
     padding: 0.5rem;
     border-radius: var(--primo-border-radius);
     display: block;

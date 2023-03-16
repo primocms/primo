@@ -10,12 +10,11 @@
   export let id = null
   export let title = ''
   export let label = null
-  export let buttonStyles = ''
   export let key = null
   export let icon = null
+  export let svg = null
   export let disabled = false
   export let onclick = null
-  export let variant = ''
   export let loading = false
   export let active = false
   export let buttons = null
@@ -32,6 +31,7 @@
   class:primo={type === 'primo'}
   class:active
   class:has-subbuttons={buttons}
+  class:has-icon-button={!label && icon}
   {style}
   in:fade={{ duration: 200 }}
   {disabled}
@@ -40,7 +40,7 @@
     onclick ? onclick() : dispatch('click')
   }}
 >
-  {#if icon}
+  {#if icon || svg}
     {#if key}
       <span class="key-hint" class:active={$showKeyHint} aria-hidden
         >&#8984;{key.toUpperCase()}</span
@@ -48,7 +48,13 @@
     {/if}
     {#if loading}
       <Spinner />
+    {:else if label && svg}
+      <div class="svg">
+        {@html svg}
+      </div>
+      <span class="label">{label}</span>
     {:else if label && icon}
+      <Icon {icon} />
       <span class="label">{label}</span>
     {:else if icon}
       <Icon {icon} />
@@ -64,10 +70,11 @@
   .button {
     font-size: 0.85rem;
     user-select: none;
+    border-radius: 0;
 
     --Spinner-size: 0.75rem;
 
-    &:first-child {
+    /* &:first-child {
       border-top-left-radius: var(--primo-border-radius);
       border-bottom-left-radius: var(--primo-border-radius);
     }
@@ -75,7 +82,7 @@
     &:last-child {
       border-top-right-radius: var(--primo-border-radius);
       border-bottom-right-radius: var(--primo-border-radius);
-    }
+    } */
 
     &[disabled] {
       background: none;
@@ -90,10 +97,12 @@
   }
 
   .button {
+    height: 100%;
     background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
     font-weight: 700;
-    padding: 0.5rem 1rem;
+    font-size: 12px;
+    padding: 10px 12px;
     transition: 0.1s box-shadow;
     outline: 0;
     position: relative;
@@ -101,6 +110,24 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+
+    &.has-icon-button {
+      padding: 0 8px;
+
+      :global(svg) {
+        width: 25px;
+        height: auto;
+      }
+    }
+    &:first-child {
+      border-top-left-radius: var(--primo-border-radius);
+      border-bottom-left-radius: var(--primo-border-radius);
+    }
+
+    &:last-child {
+      border-top-right-radius: var(--primo-border-radius);
+      border-bottom-right-radius: var(--primo-border-radius);
+    }
 
     &:hover,
     &:focus {

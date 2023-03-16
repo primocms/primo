@@ -42,8 +42,6 @@
     value: local_content[$locale][field.key],
   }))
 
-  console.log({ local_content })
-
   // export let component: ComponentType | SymbolType = Component()
   export let header = {
     label: 'Create Component',

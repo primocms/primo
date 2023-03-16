@@ -21,8 +21,7 @@
   export let buttons = []
   export let action = null
 
-  let height = browser ? localStorage.getItem(`symbol-height-${symbol.id}`) : 0
-  $: browser && localStorage.setItem(`symbol-height-${symbol.id}`, height + 32)
+  let height = 0
 
   function changeName() {
     window.document.activeElement.blur()

@@ -322,7 +322,7 @@
     }
 
     const FinalSymbol = {
-      ...component,
+      ...local_component,
       content: local_content,
       fields: fields.map((field) => {
         delete field.value
