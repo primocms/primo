@@ -9,10 +9,8 @@
   import activePage, { url } from '../../../../stores/app/activePage'
   import { makeValidUrl } from '../../../../utils'
   import { Page } from '../../../../const'
-  import {
-    id as siteID,
-    pages as sitePages,
-  } from '../../../../stores/data/draft'
+  import pages from '$lib/editor/stores/data/pages'
+  import { page } from '$app/stores'
 
   let shouldDuplicatePage = true
 
@@ -36,9 +34,9 @@
     shouldDuplicatePage = true
   }
 
-  async function deletePage(pageId) {
-    actions.delete(pageId, currentPath)
-    listedPages = listedPages.filter((page) => page.id !== pageId)
+  async function deletePage(page_id) {
+    actions.delete(page_id)
+    listedPages = listedPages.filter((page) => page.id !== page_id)
   }
 
   let creatingPage = false
@@ -50,46 +48,44 @@
       .toLowerCase()
   }
 
-  function editPage(pageId, args: { name: string; id: string }) {
-    actions.edit(pageId, args)
+  function editPage(page_url, args: { name: string; id: string }) {
+    actions.edit(page_url, args)
   }
 
-  function addSubPage(pageId) {
-    listPages(pageId)
-    currentPath = [pageId]
+  function addSubPage(page_id) {
+    list_pages(page_id)
+    currentPath = [page_id]
     creatingPage = true
   }
 
   let currentPath = buildCurrentPath($url)
-  $: rootPageId = currentPath[0]
+  $: root_page_url = currentPath[0]
 
-  let listedPages = $sitePages
-  listPages(currentPath[0]) // list initial pages
-  $: $sitePages, listPages(rootPageId) // update listed pages when making page store updates
+  let listedPages = []
+  list_pages($page.data.page)
 
-  function listPages(pageId = null) {
-    if (!pageId) {
-      // root page
-      listedPages = $sitePages
-      currentPath = []
+  // $: $pages, list_pages(root_page_url) // update listed pages when making page store updates
+
+  function list_pages(page = null, list_children = false) {
+    if (!list_children) {
+      listedPages = $pages.filter((p) => p.parent === page.parent)
     } else {
-      listedPages = find($sitePages, ['id', pageId])['pages']
-      currentPath = [pageId]
+      listedPages = $pages.filter((p) => p.parent === page.id)
     }
   }
 
-  $: breadcrumbs = getBreadCrumbs(rootPageId)
-  function getBreadCrumbs(rootPageId) {
-    if (rootPageId) {
-      const rootPage = find($sitePages, ['id', rootPageId])
+  $: breadcrumbs = getBreadCrumbs(root_page_url)
+  function getBreadCrumbs(root_page_url) {
+    if (root_page_url) {
+      const root_page = find($pages, ['id', $page.data.page.parent])
       return [
         {
           label: 'Site',
-          id: null,
+          page: $pages.find((p) => p.url === 'index'),
         },
         {
-          label: rootPage.name,
-          path: rootPage.id,
+          label: root_page.name,
+          page: root_page,
         },
       ]
     } else return null
@@ -114,29 +110,32 @@
 </script>
 
 {#if breadcrumbs}
-  <div in:fade class="breadcrumbs">
-    {#each breadcrumbs as { label, id }, i}
+  <div class="breadcrumbs">
+    {#each breadcrumbs as { label, page }, i}
+      {@const is_last = i === breadcrumbs.length - 1}
       <div class="breadcrumb">
-        {#if i === breadcrumbs.length - 1}
+        {#if is_last}
           <span>{label}</span>
         {:else}
-          <button on:click={() => listPages(id)}>{label}</button>
+          <button on:click={() => list_pages(page)}>{label}</button>
         {/if}
       </div>
     {/each}
   </div>
 {/if}
-<ul class="page-thumbnails" xyz="fade stagger stagger-1">
-  {#each listedPages as page, i}
-    <li class="xyz-in" data-page-i={i}>
+<ul class="page-thumbnails">
+  {#each listedPages as page, i (page.id)}
+    {@const has_children = $pages.some((p) => p.parent === page.id)}
+    <li data-page-i={i}>
       <PageItem
         {page}
+        {has_children}
         disableAdd={!!breadcrumbs}
         active={$url === page.url}
-        on:edit={({ detail }) => editPage(page.id, detail)}
-        on:add={() => addSubPage(page.id)}
+        on:edit={({ detail }) => editPage(page.url, detail)}
+        on:add={() => addSubPage(page.url)}
         on:delete={() => deletePage(page.id)}
-        on:list={() => listPages(page.id)}
+        on:list={() => list_pages(page, true)}
       />
     </li>
   {/each}

@@ -4,6 +4,7 @@ import { get } from 'svelte/store'
 import * as activePage from './app/activePage'
 import { id as activePageID } from './app/activePage'
 import sections from './data/sections'
+import pages_store from './data/pages'
 import { saved, locale, hoveredBlock } from './app/misc'
 import * as stores from './data/draft'
 import { update as update_site, content, code, fields, timeline, site as unsavedSite } from './data/draft'
@@ -25,7 +26,7 @@ export async function hydrateSite(data: SiteType): Promise<void> {
   sections.set([])
   stores.id.set(site.id)
   stores.name.set(site.name)
-  stores.pages.set(site.pages)
+  // stores.pages.set(site.pages)
 
   code.set(site.code)
   fields.set(site.fields)
@@ -203,7 +204,7 @@ export const active_page = {
     sections.update(sections => sections.map(section => section.id === null ? data[0] : section))
 
     const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-    stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+    pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
     await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
 
     // create row in sections table w/ given order
@@ -226,6 +227,10 @@ export const active_page = {
         id: get(activePageID),
         site: get(unsavedSite)['id']
       })
+
+    const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
+    pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+    await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
 
     if (updateTimeline) timeline.push(get(unsavedSite))
   },
@@ -284,7 +289,7 @@ export const pages = {
   },
   add: async (newPage: PageType, path: Array<string>, updateTimeline = true) => {
     saved.set(false)
-    const currentPages: Array<PageType> = get(stores.pages)
+    const currentPages: Array<PageType> = get(pages_store)
     let updatedPages: Array<PageType> = cloneDeep(currentPages)
     if (path.length > 0) {
       const rootPage: PageType = find(updatedPages, ['id', path[0]])
@@ -298,13 +303,13 @@ export const pages = {
       ...newPage,
       site: get(unsavedSite)['id']
     }).select()
-    stores.pages.set(updatedPages)
+    pages_store.set(updatedPages)
 
     if (updateTimeline) timeline.push(get(unsavedSite))
   },
   delete: async (pageId: string, updateTimeline = true) => {
     // saved.set(false)
-    stores.pages.update(pages => pages.filter(page => page.id !== pageId))
+    pages_store.update(pages => pages.filter(page => page.id !== pageId))
 
     const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.id', 'eq', pageId)
     await Promise.all(
@@ -318,7 +323,7 @@ export const pages = {
   },
   update: async (pageId: string, fn, updateTimeline = true) => {
     saved.set(false)
-    const newPages = get(stores.pages).map(page => {
+    const newPages = get(pages_store).map(page => {
       if (page.id === pageId) {
         return fn(page)
       } else if (some(page.pages, ['id', pageId])) {
@@ -328,11 +333,11 @@ export const pages = {
         }
       } else return page
     })
-    stores.pages.set(newPages)
+    pages_store.set(newPages)
     if (updateTimeline) timeline.push(get(unsavedSite))
   },
   edit: async (pageId: string, updatedPage: { id: string, name: string }, updateTimeline = true) => {
-    const newPages = get(stores.pages).map(page => {
+    const newPages = get(pages_store).map(page => {
       if (page.id === pageId) { // root page
         return {
           ...page,
@@ -350,7 +355,7 @@ export const pages = {
       } else return page
     })
 
-    stores.pages.set(newPages)
+    pages_store.set(newPages)
     if (updateTimeline) timeline.push(get(unsavedSite))
   }
 }
@@ -360,7 +365,7 @@ export async function deleteSection(sectionID) {
   sections.set(updatedSections)
 
   const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-  stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+  pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
 
   await supabase.from('sections').delete().eq('id', sectionID)
 

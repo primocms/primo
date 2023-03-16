@@ -119,15 +119,6 @@
       ...block.content,
       [$locale]: component_data,
     })
-
-    // invalidate('app:data')
-    // update_symbol_with_static_values({
-    //   ...block,
-    //   content: {
-    //     ...block.content,
-    //     [$locale]: component_data,
-    //   },
-    // })
   }
 
   let editor

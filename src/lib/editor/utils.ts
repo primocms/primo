@@ -242,7 +242,7 @@ export function validate_site_structure_v2(site) {
       name: page.name,
       url: page.id,
       code: page.code,
-      fields: page.fields.map(Field),
+      fields: page.fields.map(Field) || [],
       sections: page.sections, // for use later, to be removed
       content,
       site: site_id

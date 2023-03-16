@@ -3,7 +3,7 @@
   const dispatch = createEventDispatcher()
   import SplitButton from '../ui/inputs/SplitButton.svelte'
   import TextInput from '../components/inputs/TextInput.svelte'
-  import { pages } from '../stores/data/draft'
+  import pages from '../stores/data/pages'
   import { locale } from '../stores/app/misc'
 
   const link = {

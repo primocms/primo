@@ -65,12 +65,11 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
       const { css, error } = await processors.css(postcss || '')
       return {
         html: `
-          <div class="section has-component" id="${section.id}">
+          <div class="section" id="section-${section.id}">
             <div class="component">
               ${html} 
             </div>
           </div>`,
-        html,
         js,
         css,
         data

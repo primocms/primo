@@ -3,7 +3,7 @@
   import Item from './Item.svelte'
   import { PrimaryButton } from '../../../../components/buttons'
   import { TextInput } from '../../../../components/inputs'
-  import { pages } from '../../../../stores/data/draft'
+  import pages from '$lib/editor/stores/data/pages'
   import { pages as actions } from '../../../../stores/actions'
   import activePage, {
     id as activePageID,
@@ -67,21 +67,15 @@
     pageURL = ''
     shouldDuplicatePage = true
   }
-
-  function buildCurrentPath(pagePath = '') {
-    const [root, child] = pagePath.split('/')
-    if (!root || !child) {
-      // on index or top-level page
-      return []
-    } else return [root, child]
-  }
 </script>
 
 <ul class="page-list root">
-  {#each $pages as page, i}
+  {#each $pages.filter((p) => !p.parent) as page, i}
+    {@const children = $pages.filter((p) => p.parent === page.id)}
     <li>
       <Item
         {page}
+        {children}
         active={$activePageID === page.id}
         on:edit={({ detail }) => edit_page(page.id, detail)}
         on:add={({ detail: page }) => add_subpage(page.id)}

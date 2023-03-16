@@ -4,7 +4,6 @@
   import SiteFooter from '$lib/components/SiteFooter.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
-  import sites from '../stores/sites'
   import user from '../stores/user'
   import * as actions from '../actions'
   import { invalidate } from '$app/navigation'
@@ -15,7 +14,7 @@
 
   function beginInvitation(site): void {
     show({
-      id: 'COLLABORATION',
+      id: 'INVITE_SITE_COLLABORATOR',
       props: {
         site,
       },
@@ -25,7 +24,7 @@
   let loading
   function createSite(): void {
     show({
-      id: 'SITE_CREATION',
+      id: 'CREATE_SITE',
       props: {
         onSuccess: async (site) => {
           await actions.sites.create(site)
@@ -67,8 +66,8 @@
       <div class="sites-container">
         <ul class="sites">
           {#each data.sites as site, i (site.id)}
-            <li class="xyz-in">
-              <a class="site-link" href={site.id}>
+            <li>
+              <a class="site-link" href={site.url}>
                 <SiteThumbnail preview={site.preview} />
               </a>
               <div class="site-info">
@@ -85,13 +84,13 @@
                       />
                     </form>
                   {:else}
-                    <a data-sveltekit-prefetch href={site.id}>
+                    <a data-sveltekit-prefetch href={site.url}>
                       <span>{site.name}</span>
                       <Icon icon="ic:round-chevron-right" />
                     </a>
                   {/if}
                 </div>
-                <span class="site-url">{site.id}</span>
+                <span class="site-url">{site.url}</span>
                 {#if !$user.sites}
                   <div class="buttons">
                     <button
@@ -298,11 +297,6 @@
     font-size: 0.75rem;
     color: var(--color-gray-2);
     text-decoration: underline;
-    svg {
-      padding-right: 0.25rem;
-      width: 1.25rem;
-      height: 1.25rem;
-    }
     &:hover {
       color: var(--primo-color-brand);
     }

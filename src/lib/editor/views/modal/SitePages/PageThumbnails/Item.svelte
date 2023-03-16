@@ -4,19 +4,16 @@
 
 <script>
   import { fade } from 'svelte/transition'
+  import Icon from '@iconify/svelte'
   import { createEventDispatcher, getContext } from 'svelte'
   const dispatch = createEventDispatcher()
   import { TextInput } from '../../../../components/inputs'
   import { PrimaryButton } from '../../../../components/buttons'
   import Preview from '../../../../components/misc/Preview.svelte'
-
   import modal from '../../../../stores/app/modal'
-  import { buildStaticPage } from '../../../../stores/helpers'
-  import { site } from '../../../../stores/data/draft'
-
-  const isTryPrimo = getContext('ENVIRONMENT') === 'TRY'
 
   export let page
+  export let has_children
   export let active = false
   export let disableAdd = false
   export let displayOnly = false
@@ -55,15 +52,15 @@
     {#if !displayOnly}
       <div class="primo-buttons">
         <button title="Edit" on:click={() => (editing_page = !editing_page)}>
-          <i class="fas fa-edit" />
+          <Icon icon="fa-solid:edit" />
         </button>
-        {#if page.pages && page.pages.length > 0 && !disableAdd}
+        {#if has_children && !disableAdd}
           <button title="Show child pages" on:click={() => dispatch('list')}>
-            <i class="fas fa-th-large" />
+            <Icon icon="fa-solid:th-large" />
           </button>
         {:else if page.url !== 'index' && !disableAdd}
           <button title="Add child page" on:click={() => dispatch('add')}>
-            <i class="fas fa-plus" />
+            <Icon icon="fa-solid:plus" />
           </button>
         {/if}
         {#if page.url !== 'index'}
@@ -72,7 +69,7 @@
             on:click={() => dispatch('delete')}
             class="delete"
           >
-            <i class="fas fa-trash" />
+            <Icon icon="fa-solid:trash" />
           </button>
         {/if}
       </div>

@@ -12,6 +12,7 @@
   const siteID = window.location.pathname.split('/')[1]
 
   export let page
+  export let children = []
   export let active
   export let is_parent = true
 
@@ -26,11 +27,11 @@
   let id = page.id || ''
   $: disableSave = !name || !id
 
-  const pageURL = `/${siteID}/${page.id === 'index' ? '' : page.id || ''}`
+  const pageURL = `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
 
   let showing_children = true
   // $: has_children = page.pages.length > 0
-  $: has_children = false
+  $: has_children = children.length > 0
 
   get(`${siteID}--page-list-toggle--${page.id}`).then((toggled) => {
     if (toggled !== undefined) showing_children = toggled
@@ -115,7 +116,7 @@
 
 {#if showing_children && has_children}
   <ul class="page-list child">
-    {#each page.pages as subpage}
+    {#each children as subpage}
       <li>
         <svelte:self
           page={subpage}

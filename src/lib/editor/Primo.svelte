@@ -15,7 +15,7 @@
   import { Site } from './const'
 
   import { options as options_store, saved } from './stores/app/misc'
-  import { pages, setTimeline } from './stores/data/draft'
+  import { setTimeline } from './stores/data/draft'
   import { symbols, site as draft } from './stores/data/draft'
   import { hydrateSite, updatePreview } from './stores/actions'
   import en from './languages/en.json'
@@ -50,7 +50,7 @@
   // onMount(() => updatePreview(data))
 
   symbols.set(data.symbols)
-  pages.set(data.pages)
+  // pages.set(data.pages)
 
   $: {
     // data = $draft
