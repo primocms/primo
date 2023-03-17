@@ -32,9 +32,6 @@
   export let i
 
   let node
-  $: if (node) {
-    // get top and bottom positions of node
-  }
 
   function hasOptionsAbove(rowIndex, rows) {
     const rowAbove = rows[rowIndex - 1]
@@ -55,12 +52,6 @@
     await deleteSection(block.id)
     updatePreview()
     // invalidate('app:data')
-  }
-
-  function updateSections(newSections) {
-    sections.set(newSections)
-    updatePreview()
-    $saved = false
   }
 
   function duplicateBlock() {
@@ -150,14 +141,6 @@
   }
 
   let mounted = false
-  if (block.type === 'content') {
-    // delay mount to line up with components
-    setTimeout(() => {
-      mounted = true
-    }, 1000)
-  } else if (block.type !== 'component') {
-    mounted = true
-  }
 
   async function positionBlock() {
     // await tick()
@@ -245,7 +228,7 @@
   {#if locked || hovering || $onMobile}
     <div bind:this={container} class="block-buttons-container">
       {#if locked}
-        <LockedOverlay />
+        <LockedOverlay {locked} />
       {:else}
         <BlockButtons
           {i}

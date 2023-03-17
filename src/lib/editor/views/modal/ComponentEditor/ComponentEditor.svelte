@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts">
+  import { setContext } from 'svelte'
   import { _ as C } from 'svelte-i18n'
   import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es'
   import HSplitPane from './HSplitPane.svelte'
@@ -55,6 +56,8 @@
       },
     },
   }
+
+  setContext('show_static_field', true)
 
   const placeholders = new Map()
   function getCachedPlaceholder(field) {

@@ -1,5 +1,6 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, getContext } from 'svelte'
+  import Icon from '@iconify/svelte'
   import {
     find,
     cloneDeep,
@@ -12,7 +13,7 @@
 
   import { userRole, fieldTypes } from '../stores/app'
   import { Field } from '../const'
-  import FieldItem from '../views/modal/ComponentEditor/FieldItem.svelte'
+  import FieldItem from './FieldItem.svelte'
 
   export let fields
   export let showCode = true
@@ -150,9 +151,10 @@
         }}
       />
     {/each}
-    <button class="field-button" on:click={addField} {disabled}
-      ><i class="fas fa-plus" />{$C('Add a Field')}</button
-    >
+    <button class="field-button" on:click={addField} {disabled}>
+      <Icon icon="fa-solid:plus" />
+      <span>{$C('Add a Field')}</span>
+    </button>
   {:else}
     {#each fields as field}
       {@const isValid =
@@ -225,6 +227,10 @@
     padding: 0.5rem 0;
     border-radius: 1px;
     transition: background 0.1s, color 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 
     font-size: 0.875rem;
     padding: 0.75rem;

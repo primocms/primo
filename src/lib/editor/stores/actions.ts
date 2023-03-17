@@ -127,15 +127,12 @@ export function redoSiteChange(): void {
 }
 
 export const symbols = {
-  create: async (symbol: SymbolType): void => {
+  create: async (symbol) => {
     // saved.set(false)
-    // supabaseDB.update_row('sites', get(unsavedSite)['id'], {
-    //   symbols: [...get(unsavedSite)['symbols'], symbol]
-    // })
-    stores.symbols.update(s => [cloneDeep(symbol), ...s])
-    const { id } = await supabaseDB.create_row('symbols', symbol)
+    stores.symbols.update(s => [symbol, ...s])
+    const res = await supabase.from('symbols').insert(symbol)
     timeline.push(get(unsavedSite))
-    return id
+    // return data.id
   },
   update: async (toUpdate) => {
     // saved.set(false)

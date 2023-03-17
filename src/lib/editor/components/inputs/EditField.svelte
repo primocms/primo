@@ -1,10 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte'
 
-  export let level = 0
+  export let level
   export let child = false
   export let minimal = false
-  export let showDefaultValue = true
   export let showVisibilityOptions = false
   export let top_level = true
 
@@ -13,25 +12,31 @@
   function moveItem(direction) {
     dispatch('move', direction)
   }
+
+  let width
+  $: collapsed = width < 560
 </script>
 
 <div class="top-container" class:top_level>
   <div
-    style="margin-left: {level}rem"
     class="field-container"
     class:has-visibility-options={showVisibilityOptions}
     class:child
     class:minimal
+    class:collapsed
+    bind:clientWidth={width}
   >
     <label class="type">
       <span>Type</span>
       <slot name="type" />
     </label>
     {#if minimal}
-      <slot name="main" />
+      <div class="main">
+        <slot name="main" />
+      </div>
     {:else}
       <!-- svelte-ignore a11y-label-has-associated-control -->
-      <label>
+      <label class="label">
         <span>Label</span>
         <slot name="label" />
       </label>
@@ -49,40 +54,24 @@
         </label>
       {/if}
     {/if}
-    <div class="option-buttons">
-      {#if top_level}
+    {#if top_level && !minimal}
+      <div class="toggle">
         <slot name="toggle" />
-      {/if}
-      <!-- <button
-        disabled={isFirst}
-        title="Move up"
-        on:click={() => moveItem('up')}
-      >
-        <Icon icon="mdi:arrow-up" />
-      </button>
-      <button
-        disabled={isLast}
-        title="Move down"
-        on:click={() => moveItem('down')}
-      >
-        <Icon icon="mdi:arrow-down" />
-      </button> -->
-      <!-- <button
-        on:click={() => dispatch('delete')}
-        {disabled}
-        title="delete field"
-      >
-        <Icon icon="ion:trash" />
-      </button> -->
+      </div>
+    {/if}
+  </div>
+  {#if $$slots}
+    <div class="children-container" style:padding-left="{level + 1}rem">
+      <slot />
     </div>
-  </div>
-  <div class="children-container">
-    <slot />
-  </div>
+  {/if}
 </div>
 
 <style lang="postcss">
   .top-container {
+    display: grid;
+    gap: 1rem;
+
     &.top_level {
       border: 1px solid #333333;
       border-radius: 6px;
@@ -92,8 +81,31 @@
 
   .field-container {
     display: grid;
-    grid-template-columns: auto 1fr 1fr auto;
+    grid-template-columns: 110px 1fr 1fr auto;
     gap: 1rem;
+
+    &.collapsed {
+      grid-template-columns: 2fr 2fr !important;
+
+      .label {
+        grid-column: 1;
+      }
+
+      .field {
+        grid-column: 2;
+      }
+
+      .toggle {
+        grid-column: 2;
+        grid-row: 1;
+      }
+    }
+
+    &.collapsed.minimal {
+      .main {
+        grid-column: 1 / span 2;
+      }
+    }
 
     &.has-visibility-options {
       grid-template-columns: auto 1fr 1fr minmax(4rem, auto) auto;
@@ -116,9 +128,8 @@
       flex: 1;
 
       span {
-        font-weight: 600;
         font-size: var(--font-size-1);
-        padding-bottom: 2px;
+        padding-bottom: 0.25rem;
       }
     }
 
@@ -152,6 +163,7 @@
       grid-template-columns: auto 1fr auto;
     }
   }
+
   button[disabled] {
     color: var(--color-gray-7);
     cursor: default;

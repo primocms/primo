@@ -1,19 +1,19 @@
 <script>
   import { cloneDeep, chain as _chain, isEqual } from 'lodash-es'
-  import Icon from '@iconify/svelte'
+  import { getContext } from 'svelte'
   import Toggle from 'svelte-toggle'
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
 
-  import { EditField } from '../../../components/inputs'
-  import fieldTypes from '../../../stores/app/fieldTypes'
-  import SelectField from '../../../field-types/SelectField.svelte'
-  import { getPlaceholderValue, getEmptyValue } from '../../../utils'
+  import EditField from '$lib/editor/components/inputs/EditField.svelte'
+  import fieldTypes from '$lib/editor/stores/app/fieldTypes'
+  import SelectField from '$lib/editor/field-types/SelectField.svelte'
+  import { getPlaceholderValue } from '$lib/editor/utils'
 
+  export let level = 0
   export let field
   export let isFirst
   export let isLast
-  export let level = 0
   export let options = []
   export let top_level = true
 
@@ -180,14 +180,17 @@
     {/each}
   </select>
   <div slot="toggle">
-    <Toggle
-      label="Static"
-      toggled={field.is_static}
-      on:toggle={({ detail }) => {
-        field.is_static = detail
-      }}
-    />
+    {#if getContext('show_static_field')}
+      <Toggle
+        label="Static"
+        toggled={field.is_static}
+        on:toggle={({ detail }) => {
+          field.is_static = detail
+        }}
+      />
+    {/if}
   </div>
+
   <!-- <input type="checkbox" bind:checked={field.is_static} slot="static" /> -->
 
   {#each field.fields as subfield, i (subfield.id)}
@@ -197,6 +200,7 @@
       isLast={i === field.fields.length - 1}
       options={visibilityOptions}
       top_level={false}
+      level={level + 1}
       on:delete
       on:move
       on:createsubfield
@@ -206,40 +210,43 @@
         )
         dispatchUpdate()
       }}
-      level={level + 1}
     />
   {/each}
+  {#if field.type === 'repeater' || field.type === 'group'}
+    <button
+      class="subfield-button"
+      data-level={level}
+      on:click={() => dispatch('createsubfield', field)}
+    >
+      Create Subfield
+    </button>
+  {/if}
 </EditField>
 {#if field.type === 'select'}
   <SelectField {field} {level} on:input={dispatchUpdate} />
 {/if}
-{#if field.type === 'repeater' || field.type === 'group'}
-  <button
-    class="field-button subfield-button"
-    data-level={level}
-    on:click={() => dispatch('createsubfield', field)}
-    style:transform="translateX({1.5 + level}rem)"
-    style:width="calc(100% - {1.5 + level}rem)"
-  >
-    <Icon icon="akar-icons:plus" />
-    <span>Create Subfield</span>
-  </button>
-{/if}
 
 <style lang="postcss">
-  select {
+  select[slot='type'] {
+    height: 100%;
     width: 100%;
-    border-right: 4px solid transparent;
-    background: var(--color-gray-9);
+    border: 1px solid #6e6e6e;
+    border-radius: 0.25rem;
+    /* background: var(--color-gray-9); */
     color: var(--color-gray-2);
     font-size: var(--font-size-2);
     font-weight: 600;
-    border: 0;
-    padding: 0.5rem !important;
-  }
-  textarea {
-    color: var(--primo-color-black);
     padding: 0.5rem;
+    background: transparent;
+  }
+  .info {
+    border: 1px solid #6e6e6e;
+    background: transparent;
+    color: var(--color-gray-2);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    width: 100%;
+    font-size: 0.875rem;
   }
   .field-button {
     width: 100%;
@@ -262,41 +269,41 @@
   .field-button:hover {
     background: var(--button-hover-background);
   }
-  .field-button.subfield-button {
-    /* width: calc(100% - 1rem); */
-    border-radius: 2px;
-    /* margin-left: 1.5rem; */
+  .subfield-button {
+    width: 100%;
+    border: 1px solid #6e6e6e;
+    border-radius: 0.25rem;
     margin-top: 8px;
     margin-bottom: 8px;
+    padding: 0.25rem 1rem;
     font-size: var(--font-size-2);
     background: var(--primo-color-codeblack);
     color: var(--color-gray-2);
     transition: var(--transition-colors);
     outline: 0;
-  }
-  .field-button.subfield-button:hover {
-    background: var(--color-gray-9);
-  }
-  .field-button.subfield-button:focus {
-    background: var(--color-gray-8);
+    display: block;
+
+    &:hover {
+      background: var(--color-gray-9);
+    }
+    &:focus {
+      background: var(--color-gray-8);
+    }
   }
 
   .input {
-    padding: 0.5rem;
-  }
-
-  input {
-    background: var(--color-gray-8);
+    border: 1px solid #6e6e6e;
+    background: transparent;
     color: var(--color-gray-2);
-    padding: 4px;
-    border-radius: 2px;
-    border: 0;
-    padding: 0.5rem;
-  }
-  input::placeholder {
-    color: var(--color-gray-7);
-  }
-  input:focus {
-    outline: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    height: 100%;
+
+    &::placeholder {
+      color: var(--color-gray-8);
+    }
+    &:focus {
+      outline: 0;
+    }
   }
 </style>

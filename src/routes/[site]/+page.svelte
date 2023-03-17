@@ -4,4 +4,4 @@
   export let data
 </script>
 
-<Page id="index" {data} />
+<Page {data} />

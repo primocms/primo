@@ -1,6 +1,6 @@
 <script>
   import { show } from '$lib/components/Modal.svelte'
-  import user from '../../stores/user'
+  import { page } from '$app/stores'
   import { config } from '../../stores'
 </script>
 
@@ -12,10 +12,10 @@
     />
   </div>
   <nav>
-    {#if !$user.sites}
-      <button class="link" on:click={() => show('INVITE_COLLABORATORS')}
+    {#if $page.data.user.admin}
+      <!-- <button class="link" on:click={() => show('INVITE_COLLABORATORS')}
         >Members</button
-      >
+      > -->
       <button class="link" on:click={() => show('USER_SETTINGS')}
         >Settings</button
       >

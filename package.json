@@ -66,6 +66,7 @@
 		"lodash": "^4.17.21",
 		"lodash-es": "^4.17.21",
 		"lorem-ipsum": "^2.0.8",
+		"mailgun-js": "^0.22.0",
 		"mini-svg-data-uri": "^1.4.4",
 		"mousetrap": "^1.6.5",
 		"nanoid": "^3.1.23",

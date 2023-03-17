@@ -45,8 +45,9 @@ export async function create_row(table, row) {
     .from(table)
     .insert([row])
     .select()
+    .single()
   if (error) console.error(error)
-  return data?.[0]
+  return data
 }
 
 export async function update_row(table, id, value) {

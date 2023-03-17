@@ -111,7 +111,7 @@ export function getPlaceholderValue(field: Field) {
     size: null
   }
   else if (field.type === 'text') return _capitalize(lorem.generateWords(3))
-  else if (field.type === 'content') return lorem.generateSentences(2)
+  else if (field.type === 'markdown') return lorem.generateSentences(2)
   else if (field.type === 'link') return {
     label: lorem.generateWords(1),
     url: '/'

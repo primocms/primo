@@ -26,13 +26,31 @@
   import { getPageData } from '../../stores/helpers'
   import en from '../../languages/en.json'
   import { init, addMessages } from 'svelte-i18n'
+  import { supabase } from '$lib/supabase'
+  import { track, locked_blocks } from '$lib/realtime'
+  import { invalidate } from '$app/navigation'
 
-  export let id = 'index'
   export let data
 
-  // console.log({ data })
+  $: console.log({ data })
 
   // $: $pageID = id
+
+  supabase
+    .channel('schema-db-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'sections',
+        filter: `page=eq.${data.page.id}`,
+      },
+      (payload) => {
+        invalidate('app:data')
+      }
+    )
+    .subscribe()
 
   addMessages('en', en)
   init({
@@ -107,6 +125,22 @@
   $: if ($siteID !== 'default' && sections_mounted === $sections.length) {
     page_mounted = true
   }
+
+  async function lock_block(block_id) {
+    track({
+      active_block: block_id,
+      user: data.user,
+    })
+  }
+
+  function unlock_block() {
+    // workaround to prevent issue when unlocking immediately before locking when switching from one block to another
+    setTimeout(() => {
+      track({
+        active_block: null,
+      })
+    }, 100)
+  }
 </script>
 
 <svelte:head>
@@ -120,7 +154,14 @@
 {/if}
 <div bind:this={element} id="page" class:fadein={page_mounted} lang={$locale}>
   {#each $sections as block, i (block.id)}
-    <Block {i} locked={false} {block} on:mount={() => sections_mounted++} />
+    <Block
+      {i}
+      locked={find($locked_blocks, ['block_id', block.id])}
+      {block}
+      on:lock={() => lock_block(block.id)}
+      on:unlock={() => unlock_block()}
+      on:mount={() => sections_mounted++}
+    />
   {/each}
 </div>
 {@html html_below || ''}

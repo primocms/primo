@@ -38,8 +38,6 @@
 
   export let i
   export let block
-  // export let node
-  export let site = $unsavedSite
 
   let node
   $: if (node) {

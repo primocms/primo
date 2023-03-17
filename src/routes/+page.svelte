@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from '@iconify/svelte'
+  import { page } from '$app/stores'
   import DashboardToolbar from '$lib/components/DashboardToolbar.svelte'
   import SiteFooter from '$lib/components/SiteFooter.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
@@ -91,7 +92,7 @@
                   {/if}
                 </div>
                 <span class="site-url">{site.url}</span>
-                {#if !$user.sites}
+                {#if $page.data.user.admin}
                   <div class="buttons">
                     <button
                       on:click={() => beginInvitation(site)}
@@ -121,7 +122,7 @@
               </div>
             </li>
           {/each}
-          {#if !$user.sites}
+          {#if $page.data.user.admin}
             <li>
               <button class="create-site" on:click={createSite}>
                 {#if loading}
@@ -146,16 +147,16 @@
     min-height: 100vh;
     position: relative;
     z-index: 0;
-    padding-top: 1rem;
 
     .container {
       display: flex;
       flex-direction: column;
       border-radius: var(--primo-border-radius);
       margin: 0 auto;
-      padding: 2rem;
+      padding: 1rem 2rem;
       min-height: 100vh;
     }
+
     .sites-container {
       display: grid;
       gap: 1rem;

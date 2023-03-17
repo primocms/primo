@@ -9,11 +9,11 @@ export const load = async (event) => {
     return { page: null }
   } 
   
-  const site_id = event.params['site'] 
+  const site_url = event.params['site'] 
   const page_url = event.params['page'] 
 
-  const {data:page} = await supabaseClient.from('pages').select('*, pages (id)').match({url: page_url, site: site_id})
-  const {data:sections} = await supabaseClient.from('sections').select('*, symbol (*)').match({page: page?.[0]['id']})
+  const {data:page} = await supabaseClient.from('pages').select('*, pages (id), sites (*)').eq('url', page_url).eq('sites.url', site_url).single()
+  const {data:sections} = await supabaseClient.from('sections').select('*, symbol (*)').match({page: page.id})
 
   const ordered_sections = sections?.sort((a, b) => {
     if (a.index === b.index) {
@@ -24,7 +24,7 @@ export const load = async (event) => {
   })
 
   return {
-    page: page?.[0],
+    page,
     sections: ordered_sections
   }
 }

@@ -15,17 +15,15 @@
   import HSplitPane from './HSplitPane.svelte'
   import { getPlaceholderValue, getEmptyValue } from '../../../utils'
   import ModalHeader from '../ModalHeader.svelte'
-  import { Tabs, Card } from '../../../components/misc'
+  import { Tabs } from '../../../components/misc'
   import FullCodeEditor from './FullCodeEditor.svelte'
   import { CodePreview } from '../../../components/misc'
   import GenericFields from '../../../components/GenericFields.svelte'
   import { autoRefresh } from '../../../components/misc/CodePreview.svelte'
   import { buildStaticPage } from '../../../stores/helpers'
-  import { processCode, processCSS, wrapInStyleTags } from '../../../utils'
   import { locale, onMobile } from '../../../stores/app/misc'
   import { modal } from '../../../stores/app'
   import { active_page } from '../../../stores/actions'
-  import { content, code as siteCode } from '../../../stores/data/draft'
   import activePage, {
     id as pageID,
     code as pageCode,
@@ -159,7 +157,6 @@
   let loading = false
 
   // bind raw code to code editor
-  console.log({ local_code })
   let rawHTML = local_code.html.head
   let rawCSS = local_code.css
   let rawJS = local_code.js

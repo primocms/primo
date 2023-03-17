@@ -26,7 +26,7 @@ export default [
     component: ContentField
   },
   {
-    id: 'content',
+    id: 'markdown',
     label: 'Markdown',
     component: Markdown
   },
