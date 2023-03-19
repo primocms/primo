@@ -100,6 +100,7 @@
   showVisibilityOptions={field.type !== 'select' && options.length > 0
     ? options
     : false}
+  on:duplicate={() => dispatch('duplicate', field)}
   on:delete={() => dispatch('delete', field)}
   on:move={({ detail: direction }) => dispatch('move', { field, direction })}
 >
@@ -200,6 +201,7 @@
       isLast={i === field.fields.length - 1}
       options={visibilityOptions}
       top_level={false}
+      has_subfields={field.fields.length > 0}
       level={level + 1}
       on:delete
       on:move
@@ -211,7 +213,11 @@
         dispatchUpdate()
       }}
     />
+    {#if i !== field.fields.length - 1}
+      <hr />
+    {/if}
   {/each}
+
   {#if field.type === 'repeater' || field.type === 'group'}
     <button
       class="subfield-button"

@@ -10,6 +10,7 @@
   } from 'lodash-es'
   import { _ as C } from 'svelte-i18n'
   import { Card } from './misc'
+  import { createUniqueID } from '$lib/editor/utilities'
 
   import { userRole, fieldTypes } from '../stores/app'
   import { Field } from '../const'
@@ -82,6 +83,43 @@
     }
   }
 
+  function duplicateField({ detail }) {
+    const field = detail
+    const idPath = getFieldPath(fields, field.id)
+
+    let updatedFields = cloneDeep(fields)
+
+    handle_field_duplicate(fields)
+
+    function handle_field_duplicate(fieldsToModify) {
+      const indexToMove = fieldsToModify.findIndex((f) => f.id === field.id)
+      if (indexToMove > -1) {
+        // field is at this level
+        const newFields = [
+          ...fieldsToModify.slice(0, indexToMove + 1),
+          cloneDeep({
+            ...field,
+            id: createUniqueID(),
+            key: field.key + '_copy',
+            label: field.label + ' copy',
+          }),
+          ...fieldsToModify.slice(indexToMove + 1),
+        ]
+        if (idPath.length === 1) {
+          // field is at root level
+          updatedFields = newFields
+        } else {
+          const path = idPath.slice(0, -1) // modify 'fields' containing field being moved
+          _set(updatedFields, path, newFields)
+        }
+      } else {
+        // field is lower
+        fieldsToModify.forEach((field) => handle_field_duplicate(field.fields))
+      }
+    }
+    fields = updatedFields
+  }
+
   function moveField({ detail }) {
     const { field, direction } = detail
     const idPath = getFieldPath(fields, field.id)
@@ -142,6 +180,7 @@
         {field}
         isFirst={i === 0}
         isLast={i === fields.length - 1}
+        on:duplicate={duplicateField}
         on:delete={deleteField}
         on:move={moveField}
         on:createsubfield={createSubfield}
