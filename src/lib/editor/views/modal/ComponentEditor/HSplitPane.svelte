@@ -351,7 +351,8 @@
     /* height: 100%; */ /* causing overflow in ComponentEditor code view */
   }
   div.separator {
-    background: var(--color-gray-8);
+    /* background: var(--color-gray-8); */
+    background: #222;
     color: var(--color-gray-2);
     cursor: col-resize;
     height: auto;

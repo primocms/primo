@@ -1,7 +1,7 @@
 import { getSupabase } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 import {supabaseAdmin, get_row, delete_row} from '$lib/supabaseAdmin'
-import {sign_up} from '$lib/supabase'
+import {supabase, sign_up} from '$lib/supabase'
 // import {join_workspace, sign_up} from '$lib/supabase'
 
 export async function load(event) {
@@ -34,11 +34,11 @@ export const actions = {
 
     // if invitation exists, send signup to server to create user and add to workspace/editors
     if (invitation_id) {
-      // const success = await join_workspace(invitation_id, res.user.id)
-      // return {
-      //   success,
-      //   error: success ? null : 'Could not join workspace'
-      // }
+      const success = await accept_invitation(invitation_id, res)
+      return {
+        success,
+        error: success ? null : 'Could not join site'
+      }
     } else {
       return {
         success: true,
@@ -82,16 +82,10 @@ export const actions = {
           id: res.user.id, 
           email: res.user.email 
         })
-      await supabaseAdmin
-        .from('workspaces')
-        .insert({ 
-          owner: res.user.id,
-          name: 'My Workspace',
-        })
 
       // add editor if invitation exists
       if (invitation) {
-        // await join_workspace(invitation_id, res)
+        await accept_invitation(invitation_id, res.user)
       } 
 
       const {error:signin_error} = await supabaseClient.auth.signInWithPassword({email, password})
@@ -104,3 +98,18 @@ export const actions = {
 
   },
 };
+
+async function accept_invitation(invitation_id, invitee) {
+  const {site, email, role} = await get_row('invitations', invitation_id)
+
+  // if invitation email matches user email, add user to site
+  const {data, error} = await supabase.from('collaborators').insert({ site, user: invitee.id, role })
+
+  if (!error) {
+    // delete invitation
+    await delete_row('invitations', invitation_id)
+    return true
+  } else {
+    return false
+  }
+}

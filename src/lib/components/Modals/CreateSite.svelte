@@ -6,7 +6,7 @@
   import { makeValidUrl } from '$lib/utils'
   import { Site } from '$lib/editor/const'
   import Icon from '@iconify/svelte'
-  import { validate_site_structure_v2 } from '$lib/editor/utils'
+  import { validate_site_structure_v2 } from '$lib/converter'
   import { buildStaticPage } from '$lib/editor/stores/helpers'
 
   export let onSuccess = (newSite) => {}

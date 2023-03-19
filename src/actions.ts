@@ -8,6 +8,7 @@ import * as supabaseStorage from './supabase/storage'
 import * as stores from './stores'
 import { buildStaticPage } from '$lib/editor/stores/helpers'
 import { sitePassword } from './stores/misc'
+import { page } from '$app/stores'
 
 export const sites = {
   create: async ({ data, preview }) => {
@@ -19,6 +20,7 @@ export const sites = {
       code: data.code,
       content: data.content,
       fields: data.fields,
+      owner: get(page).data.user.id
     }
 
     await supabaseDB.sites.create(site)
