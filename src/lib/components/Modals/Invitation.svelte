@@ -1,7 +1,6 @@
 <script>
   import axios from 'axios'
   import * as timeago from 'timeago.js'
-  import Modal from '../../../routes/Modal.svelte'
   import { page } from '$app/stores'
   import { createEventDispatcher } from 'svelte'
   import { supabase, create_row } from '$lib/supabase'

@@ -1,12 +1,11 @@
 <script>
-  export let label;
-  export let value;
-  export let disabled = false;
-  export let variants = '';
-  export let options;
-  export let info = null;
-  export let size = 'medium';
-
+  export let label = null
+  export let value
+  export let options
+  export let disabled = false
+  export let variants = ''
+  export let info = null
+  export let size = 'medium'
 </script>
 
 <label class="{variants} {size}">
@@ -26,6 +25,7 @@
 
 <style lang="postcss">
   label {
+    flex: 1;
     display: flex;
     flex-direction: column;
 
@@ -40,10 +40,13 @@
     }
 
     select {
-      outline-color: var(--primo-color-brand);
+      height: 100%;
+      /* outline-color: var(--primo-color-brand); */
       background: var(--color-gray-9);
       padding: 0.5rem;
-      border: 2px solid var(--color-gray-2);
+      /* border: 2px solid var(--color-gray-2); */
+      border: 1px solid #858585;
+      border-radius: var(--primo-border-radius);
     }
   }
 
@@ -68,5 +71,4 @@
   label.medium select {
     padding: 0 0.5rem;
   }
-
 </style>

@@ -264,6 +264,7 @@
 <style lang="postcss">
   .sidebar-symbol {
     --IconButton-opacity: 0;
+
     &:hover:not(.dragging) {
       --IconButton-opacity: 1;
     }
@@ -294,11 +295,12 @@
     .symbol {
       width: 100%;
       /* border: 1px solid #e3e4e8; */
-      border-radius: 6px;
+      /* border-radius: 6px; */
       /* overflow: hidden; */
       cursor: grab;
       min-height: 2rem;
       transition: box-shadow 0.2s;
+      background: var(--primo-color-white);
 
       &.dragging {
         cursor: grabbing;

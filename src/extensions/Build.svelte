@@ -1,4 +1,5 @@
 <script>
+  import axios from 'axios'
   import { flattenDeep, uniqBy, find } from 'lodash-es'
   import JSZip from 'jszip'
   import fileSaver from 'file-saver'
@@ -9,6 +10,7 @@
   import { site, modal, buildStaticPage } from '$lib/editor'
   import hosts from '../stores/hosts'
   import allSites from '../stores/sites'
+  import config from '../stores/config'
   import { sites } from '../actions'
   import ModalHeader from '$lib/editor/views/modal/ModalHeader.svelte'
   import { page } from '$app/stores'
@@ -45,7 +47,6 @@
       }
     })
     const uniqueFiles = uniqBy(files, 'file') // modules are duplicated
-    sites.save($site)
     const activeHost = $hosts[0]
     const { deployment, error } = await sites.publish({
       siteID,
@@ -165,14 +166,16 @@
 <main class="primo-reset">
   <div class="publish">
     <div>
-      <Hosting
-        buttons={[
-          {
-            label: 'Download Site',
-            onclick: downloadSite,
-          },
-        ]}
-      />
+      <!-- If no repo connected, give option to connect w/ token -->
+      {#if !$config.github_token}
+        <Hosting />
+      {:else}
+        <!-- If token but no repo connected, give option to connect to existing repo or create new repo -->
+        Connect to existing repo or create new repo
+        <button on:click={() => {}}>Create new repo</button>
+        <button on:click={() => {}}>Publish to existing repo</button>
+      {/if}
+      <!-- If repo connected, give option to publish to repo -->
     </div>
     <div>
       <header class="review">

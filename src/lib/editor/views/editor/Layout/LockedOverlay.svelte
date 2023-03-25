@@ -7,7 +7,7 @@
 
 <div class="locked-overlay primo-reset" transition:fade={{ duration: 200 }}>
   <Icon icon="carbon:locked" />
-  <span>Being edited by {locked.user.email}</span>
+  <span>Being edited by {locked.user?.email}</span>
 </div>
 
 <style lang="postcss">

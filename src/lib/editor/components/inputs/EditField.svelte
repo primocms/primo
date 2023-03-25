@@ -178,6 +178,8 @@
   }
 
   .children-container {
+    display: grid;
+    gap: 1rem;
     margin: 1rem 0;
     border-color: var(--color-gray-8);
   }

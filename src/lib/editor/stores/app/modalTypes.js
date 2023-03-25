@@ -1,6 +1,13 @@
-import {ComponentEditor,PageEditor,SiteEditor,SitePages,Dialog} from '../../views/modal'
+import {Deploy,ComponentEditor,PageEditor,SiteEditor,SitePages,Dialog} from '../../views/modal'
 
 export const modalTypes = {
+  'DEPLOY' : {
+    component: Deploy,
+    header: {
+      title: 'Deploy',
+      icon: 'fas fa-cloud-upload-alt'
+    }
+  },
   'COMPONENT_EDITOR' : {
     component: ComponentEditor,
     header: {

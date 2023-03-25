@@ -16,6 +16,7 @@ const initialState = {
   variants: '',
   disableClose: false,
   disabledBgClose: false,
+  maxWidth: null,
   showSwitch: false,
   noPadding: false
 }

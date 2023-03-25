@@ -11,7 +11,6 @@ import { update as update_site, content, code, fields, timeline, site as unsaved
 import { buildStaticPage } from './helpers'
 import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '../const'
 import { Page } from '../const'
-import { validate_site_structure_v2 } from '../utils'
 import { createUniqueID } from '../utilities';
 import { getSymbol } from './helpers'
 import * as supabaseDB from '$lib/supabase'

@@ -110,7 +110,8 @@
     icon="globe"
     style="margin-left:0.25rem;"
     active={false}
-    on:click={() => modal.show('BUILD')}
+    on:click={() =>
+      modal.show('DEPLOY', {}, { maxWidth: '400px', hideLocaleSelector: true })}
     disabled={pageEmpty}
   />
 </Toolbar>

@@ -93,6 +93,7 @@
   {isFirst}
   {isLast}
   {top_level}
+  has_subfields={field.type === 'group' || field.type === 'repeater'}
   minimal={field.type === 'info'}
   showDefaultValue={['content', 'number', 'url', 'select', 'text'].includes(
     field.type
@@ -201,7 +202,6 @@
       isLast={i === field.fields.length - 1}
       options={visibilityOptions}
       top_level={false}
-      has_subfields={field.fields.length > 0}
       level={level + 1}
       on:delete
       on:move
@@ -214,7 +214,7 @@
       }}
     />
     {#if i !== field.fields.length - 1}
-      <hr />
+      <hr class="hr" />
     {/if}
   {/each}
 
@@ -233,6 +233,11 @@
 {/if}
 
 <style lang="postcss">
+  select[slot='hide'] {
+    background: transprarent;
+    border: 1px solid var(--color-gray-7);
+    padding: 0.25rem;
+  }
   select[slot='type'] {
     height: 100%;
     width: 100%;
@@ -254,27 +259,6 @@
     width: 100%;
     font-size: 0.875rem;
   }
-  .field-button {
-    width: 100%;
-    background: var(--button-background);
-    color: var(--button-color);
-    padding: 0.5rem 0;
-    border-bottom-right-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
-    transition: var(--transition-colors);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    span {
-      font-weight: 500;
-      margin-left: 0.25rem;
-    }
-  }
-  .field-button:hover {
-    background: var(--button-hover-background);
-  }
   .subfield-button {
     width: 100%;
     border: 1px solid #6e6e6e;
@@ -295,6 +279,11 @@
     &:focus {
       background: var(--color-gray-8);
     }
+  }
+
+  .hr {
+    margin: 1rem 0;
+    border-color: var(--color-gray-8);
   }
 
   .input {

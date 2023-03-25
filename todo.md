@@ -5,32 +5,28 @@ Features:
 - ~~On-page editing (text, images, links)~~
 - ~~Dev mode~~
 - ~~Static block fields~~
-- Save site data as db records & auto save
-- Design fields
+- ~~Save site data as db records & auto save~~
+- Save to Github
 - Collaboration (lock block)
 - New fields UI
-- Primo Cloud service (or just make it closed beta, invite only)
 
 Marketing: 
 - primocms.org landing page w/ cloud 
 
 Also: 
+- ~~Importability of V2 Site files~~
 - ~~Obfuscate app classes to prevent clashing with user classes~~
-- Refactor to use SvelteKit SSR features
-- Consolidate HTML, CSS, JS, and Fields for Page and Site
+- ~~Refactor to use SvelteKit SSR features~~
+- ~~Consolidate HTML, CSS, JS, and Fields for Page and Site~~
 
 Follow up on:
 - on-page: some html blocks not working
 - on-page: some links not working
 
 ## Need designs for
-- Side panel
-- On-page image & link editor UI
+- ~~Side panel~~
 - primocms.org
 - Design fields
-
-## Considerations
-- No dev mode, just dev role always shows dev options
 
 APIs: 
 - Mailgun for emailing invitations & notifications

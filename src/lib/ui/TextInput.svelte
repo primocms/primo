@@ -33,6 +33,7 @@
 
 <style lang="postcss">
   label {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: flex-start;

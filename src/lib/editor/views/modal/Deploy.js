@@ -1,0 +1,159 @@
+import {get} from 'svelte/store'
+import pages from '$lib/editor/stores/data/pages'
+import axios from 'axios'
+import beautify from 'js-beautify'
+import { supabase } from '$lib/supabase'
+import { buildStaticPage } from '$lib/editor/stores/helpers'
+import _ from 'lodash-es'
+
+export async function push_site({ token, repo }) {
+  const files = (
+    await buildSiteBundle({
+      pages: get(pages),
+    })
+  ).map((file) => {
+    return {
+      file: file.path,
+      data: file.content,
+    }
+  })
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github.v3+json',
+  }
+
+  const [{data:existing_repo}, {data: [latest_commit]}] = await Promise.all([
+    axios.get(`https://api.github.com/repos/${repo}`, { headers }),
+    axios.get(`https://api.github.com/repos/${repo}/commits?sha=main`, { headers })
+  ])
+  const activeSha = latest_commit?.sha
+
+  const tree = await createTree()
+  const commit = await createCommit(tree.sha)
+  const final = await pushCommit(commit.sha)
+
+  return {
+    deploy_id: final.object.sha,
+    repo: existing_repo,
+    created: Date.now(),
+  }
+
+  async function buildSiteBundle({ pages }) {
+    const page_files = await Promise.all([
+      ...pages.map((page) => buildPageTree(page)),
+      // ...Object.entries(site.content).map((item) => ({
+      //   path: `${item[0]}.json`,
+      //   content: JSON.stringify(item[1]),
+      // })),
+    ])
+    return buildSiteTree(page_files)
+
+    async function buildPageTree(page) {
+      const { url } = page
+      const { data: sections } = await supabase
+        .from('sections')
+        .select('*')
+        .eq('page', page.id)
+        .order('index', { ascending: true })
+      const { html, js } = await buildStaticPage({
+        page,
+        page_sections: sections,
+        separateModules: true,
+      })
+      const formattedHTML = await beautify.html(html)
+
+      let path
+      if (url === 'index' || url === '404') {
+        path = `${url}.html`
+      } else {
+        path = `${url}/index.html`
+      }
+
+      const page_tree = [
+        {
+          path,
+          content: formattedHTML,
+        },
+      ]
+
+      if (js) {
+        page_tree.push({
+          path: url === 'index' ? '_module.js' : `${url}/_module.js`,
+          content: js,
+        })
+      }
+
+      // if (page.pages) {
+      //   const child_pages = await Promise.all(
+      //     page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
+      //   )
+      //   page_tree.push(...child_pages)
+      // }
+
+      return page_tree
+    }
+
+    async function buildSiteTree(pages) {
+      // const json = JSON.stringify(site)
+
+      return [
+        ..._.flattenDeep(pages),
+        // ...Object.entries(site.content).map(([locale, content]) => ({
+        //   path: `${locale}.json`,
+        //   content: JSON.stringify(content),
+        // })),
+        // {
+        //   path: `primo.json`,
+        //   content: json,
+        // },
+        {
+          path: 'robots.txt',
+          content: `User-agent: *`,
+        },
+      ]
+    }
+  }
+
+  async function createTree() {
+    const bundle = files.map((file) => ({
+      path: file.file,
+      content: file.data,
+      type: 'blob',
+      mode: '100644',
+    }))
+    const { data } = await axios.post(
+      `https://api.github.com/repos/${repo}/git/trees`,
+      {
+        tree: bundle,
+      },
+      { headers }
+    )
+    return data
+  }
+
+  async function createCommit(tree) {
+    const { data } = await axios.post(
+      `https://api.github.com/repos/${repo}/git/commits`,
+      {
+        message: 'Update site',
+        tree,
+        ...(activeSha ? { parents: [activeSha] } : {}),
+      },
+      { headers }
+    )
+    return data
+  }
+
+  async function pushCommit(commitSha) {
+    const { data } = await axios.patch(
+      `https://api.github.com/repos/${repo}/git/refs/heads/main`,
+      {
+        sha: commitSha,
+        force: true,
+      },
+      { headers }
+    )
+    return data
+  }
+}

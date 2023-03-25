@@ -80,7 +80,7 @@
 
 <div id="app-version">
   <!-- <span>primo v{primo.version}</span> -->
-  <span>server v{__SERVER_VERSION__}</span>
+  <!-- <span>server v{__SERVER_VERSION__}</span> -->
 </div>
 
 <style lang="postcss">

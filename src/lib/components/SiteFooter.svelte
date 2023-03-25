@@ -9,7 +9,7 @@
 <footer class="container">
   <span class="disclaimer">
     <!-- <span>primo v{primo.version}</span> -->
-    <span>server v{__SERVER_VERSION__}</span>
+    <!-- <span>server v{__SERVER_VERSION__}</span> -->
   </span>
   <div class="footer-links">
     <div>

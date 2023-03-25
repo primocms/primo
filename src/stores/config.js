@@ -1,8 +1,9 @@
+import _ from 'lodash-es'
 import { writable } from 'svelte/store';
+import {supabase} from '$lib/supabase'
 
 const store = writable({
-  saveDir: '',
-  hosts: '',
+  github_token: null,
   customization: {
     color: '#35d994',
     logo: {
@@ -29,6 +30,14 @@ const store = writable({
     },
     hide_version: false
   }
+})
+
+supabase.from('config').select('*').then(({data}) => {
+  const github_token = _.find(data, {key: 'github_token'})
+  store.update((s) => ({
+    ...s,
+    github_token: github_token?.value
+  }))
 })
 
 store.subscribe((c) => {

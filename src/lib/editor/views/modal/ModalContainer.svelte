@@ -15,8 +15,6 @@
     })
   })
 
-  $: variants = $modal.variants || ''
-
   function switchView() {
     $showingIDE = !$showingIDE
   }
@@ -33,7 +31,7 @@
       class:hovered={!$modal.disabledBgClose}
       on:click={$modal.disabledBgClose ? () => {} : () => modal.hide()}
     />
-    <div class="modal-card">
+    <div class="modal-card" style:max-width={$modal.maxWidth}>
       <div class="modal-card-body">
         <slot />
       </div>
@@ -50,6 +48,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    align-items: center;
     overflow: hidden;
     position: fixed;
     z-index: 999999999;
