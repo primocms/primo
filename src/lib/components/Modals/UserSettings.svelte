@@ -5,7 +5,6 @@
   import Tabs from '$lib/ui/Tabs.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import CopyButton from '$lib/ui/CopyButton.svelte'
-  import Hosting from '../Hosting.svelte'
   import * as supabaseDB from '../../../supabase/db'
   import { setCustomization } from '../../../actions'
   import config from '../../../stores/config'
@@ -15,10 +14,10 @@
   import TextField from '$lib/editor/field-types/ContentField.svelte'
 
   const tabs = [
-    {
-      label: 'Hosting',
-      icon: 'globe',
-    },
+    // {
+    //   label: 'Hosting',
+    //   icon: 'globe',
+    // },
     {
       label: 'Customize',
       icon: 'palette',

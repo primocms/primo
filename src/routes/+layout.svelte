@@ -5,20 +5,14 @@
   import { goto } from '$app/navigation'
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
-  import {
-    modal as primoModal,
-    fieldTypes,
-    registerProcessors,
-    dropdown,
-    stores,
-  } from '$lib/editor'
+  import { fieldTypes, registerProcessors, dropdown, stores } from '$lib/editor'
   import user from '../stores/user'
   import { config } from '../stores'
   import { supabase as supabaseClient } from '$lib/supabase'
   import { watchForAutoLogin } from '../supabase/auth'
   import { users } from '../supabase/db'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
-  import Build from '../extensions/Build.svelte'
+  // import Build from '../extensions/Build.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import { invalidate } from '$app/navigation'
@@ -49,24 +43,24 @@
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
-    primoModal.register([
-      {
-        id: 'BUILD',
-        component: Build,
-        componentProps: {
-          siteName: 'Website', // TODO - change
-        },
-        options: {
-          route: 'build',
-          width: 'md',
-          header: {
-            title: 'Build to Github',
-            icon: 'fab fa-github',
-          },
-          hideLocaleSelector: true,
-        },
-      },
-    ])
+    // primoModal.register([
+    //   {
+    //     id: 'BUILD',
+    //     component: Build,
+    //     componentProps: {
+    //       siteName: 'Website', // TODO - change
+    //     },
+    //     options: {
+    //       route: 'build',
+    //       width: 'md',
+    //       header: {
+    //         title: 'Build to Github',
+    //         icon: 'fab fa-github',
+    //       },
+    //       hideLocaleSelector: true,
+    //     },
+    //   },
+    // ])
     fieldTypes.register([
       {
         id: 'image',
