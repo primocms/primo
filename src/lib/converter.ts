@@ -118,7 +118,7 @@ export function validate_site_structure_v2(site) {
         accumulator[locale] = {
           content: {
             html,
-            markdown: html ? converter.makeMarkdown(html) : ''
+            markdown: typeof (html) === 'string' && html ? converter.makeMarkdown(html) : ''
           }
         }
         return accumulator

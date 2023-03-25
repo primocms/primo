@@ -29,6 +29,7 @@
   import { supabase } from '$lib/supabase'
   import { track, locked_blocks } from '$lib/realtime'
   import { invalidate } from '$app/navigation'
+  import { browser } from '$app/environment'
 
   export let data
 
@@ -36,21 +37,23 @@
 
   // $: $pageID = id
 
-  supabase
-    .channel('schema-db-changes')
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'sections',
-        filter: `page=eq.${data.page.id}`,
-      },
-      (payload) => {
-        invalidate('app:data')
-      }
-    )
-    .subscribe()
+  if (browser) {
+    supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'sections',
+          filter: `page=eq.${data.page.id}`,
+        },
+        (payload) => {
+          invalidate('app:data')
+        }
+      )
+      .subscribe()
+  }
 
   addMessages('en', en)
   init({
