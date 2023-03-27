@@ -36,7 +36,7 @@
     })
   }
 
-  async function deleteSiteItem(siteID: string): Promise<any> {
+  async function delete_site(siteID: string): Promise<any> {
     const confirm = window.confirm(
       `Are you sure you want to delete this site? You won't be able to get it back.`
     )
@@ -112,7 +112,7 @@
                     </button>
                     <button
                       class="site-button"
-                      on:click={() => deleteSiteItem(site.id)}
+                      on:click={() => delete_site(site.id)}
                     >
                       <Icon icon="pepicons-pop:trash" />
                       <span>Delete</span>

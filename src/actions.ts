@@ -53,7 +53,9 @@ export const sites = {
     )
     await Promise.all([
       supabase.from('pages').delete().match({ site: id }),
-      supabase.from('symbols').delete().match({ site: id })
+      supabase.from('symbols').delete().match({ site: id }),
+      supabase.from('invitations').delete().match({ site: id }),
+      supabase.from('collaborators').delete().match({ site: id }),
     ])
     await supabase.from('sites').delete().eq('id', id)
   },
