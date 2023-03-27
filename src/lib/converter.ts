@@ -115,6 +115,7 @@ export function validate_site_structure_v2(site) {
       symbol = symbols.at(-1)
       content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
         const html = value?.[page.url]?.[section.id]
+        console.log({ html })
         accumulator[locale] = {
           content: {
             html,
