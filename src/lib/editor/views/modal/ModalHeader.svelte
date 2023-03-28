@@ -23,15 +23,9 @@
   const SHOW_SINGLE_LOCALE = getContext('SIMPLE')
 </script>
 
-<header class={variants} xyz="fade">
+<header class={variants}>
   <div class="left-container">
-    <button
-      on:click={closeModal}
-      type="button"
-      xyz="small"
-      class="xyz-in"
-      aria-label="Close modal"
-    >
+    <button on:click={closeModal} type="button" aria-label="Close modal">
       <svg stroke="currentColor" fill="none" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"

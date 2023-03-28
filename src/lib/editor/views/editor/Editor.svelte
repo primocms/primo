@@ -10,7 +10,8 @@
 
   import { showingIDE } from '../../stores/app'
   import { fields as siteFields, timeline } from '../../stores/data/draft'
-  import { fields as pageFields, sections } from '../../stores/app/activePage'
+  import { fields as pageFields } from '../../stores/app/activePage'
+  import sections from '../../stores/data/sections'
   import { saving, saved, loadingSite } from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
   import {

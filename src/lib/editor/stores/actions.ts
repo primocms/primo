@@ -17,6 +17,7 @@ import * as supabaseDB from '$lib/supabase'
 import { supabase } from '$lib/supabase'
 import { invalidate } from '$app/navigation'
 import { swap_array_item_index } from '$lib/utils'
+import { v4 as uuidv4 } from 'uuid';
 
 export async function hydrateSite(data: SiteType): Promise<void> {
   // const site = validate_site_structure_v2(data)
@@ -233,20 +234,38 @@ export const active_page = {
 }
 
 export const pages = {
-  duplicate: ({ page, path = [], details, updateTimeline = true }) => {
-    // TODO
-
+  duplicate: async ({ page, path = [], details, updateTimeline = true }) => {
     // saved.set(false)
-    // const currentPages = get(stores.pages)
-    // let updatedPages = cloneDeep(currentPages)
 
-    // const [newSections, IDs] = scrambleIds(page.sections)
-    // const newPage = cloneDeep({
-    //   ...Page(),
-    //   ...page,
-    //   ...details,
-    //   sections: newSections
-    // });
+    const new_page = {
+      id: uuidv4(),
+      name: details.name,
+      url: details.url,
+      code: page.code,
+      content: page.content,
+      fields: page.fields,
+      preview: page.preview,
+      site: get(unsavedSite)['id']
+    }
+
+    pages.add(new_page, [])
+
+    const { data: sections } = await supabase.from('sections').select().eq('page', page.id)
+
+    const newest = await supabase.from('sections').insert(sections.map(section => ({
+      content: section.content,
+      index: section.index,
+      page: new_page.id,
+      symbol: section.symbol
+    })))
+
+
+    if (updateTimeline) timeline.push(get(unsavedSite))
+
+  },
+  add: async (newPage: PageType, path: Array<string>, updateTimeline = true) => {
+    saved.set(false)
+    const currentPages = get(pages_store)
 
     // if (path.length > 0) {
     //   const rootPage: PageType = find(updatedPages, ['id', path[0]])
@@ -255,51 +274,18 @@ export const pages = {
     //   updatedPages = [...updatedPages, newPage]
     // }
 
-    // const updatedContent = chain(Object.entries(get(stores.content)).map(([locale, pages]) => {
-    //   const duplicatedSectionContent = chain(newPage.sections).keyBy('id').mapValues((section) => {
-    //     const { old } = find(IDs, i => i.new === section.id)
-    //     return pages[page.id][old] // set content from duplicated page
-    //   }).value()
-    //   const duplicatedPageContent = chain(newPage.fields).keyBy('key').mapValues(field => pages[page.id][field.key]).value()
-
-    //   return {
-    //     locale,
-    //     content: {
-    //       ...pages,
-    //       [newPage.id]: {
-    //         ...duplicatedSectionContent,
-    //         ...duplicatedPageContent
-    //       }
-    //     }
-    //   }
-    // })).keyBy('locale').mapValues('content').value()
-
-    // stores.content.set(updatedContent)
-    // stores.pages.set(updatedPages)
-
-    supabase.from('pages').insert(page)
-    invalidate('app:data')
-
-    if (updateTimeline) timeline.push(get(unsavedSite))
-
-  },
-  add: async (newPage: PageType, path: Array<string>, updateTimeline = true) => {
-    saved.set(false)
-    const currentPages: Array<PageType> = get(pages_store)
-    let updatedPages: Array<PageType> = cloneDeep(currentPages)
-    if (path.length > 0) {
-      const rootPage: PageType = find(updatedPages, ['id', path[0]])
-      rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
-    } else {
-      updatedPages = [...updatedPages, newPage]
-    }
-
-    delete newPage.id
-    await supabase.from('pages').insert({
+    console.log({ newPage })
+    pages_store.set([...cloneDeep(currentPages), newPage])
+    const { data } = await supabase.from('pages').insert({
       ...newPage,
       site: get(unsavedSite)['id']
     }).select()
-    pages_store.set(updatedPages)
+
+    if (data) {
+      pages_store.update(store => store.map(page => page.id === newPage.id ? data[0] : page))
+    } else {
+      pages_store.update(store => store.filter(page => page.id !== newPage.id))
+    }
 
     if (updateTimeline) timeline.push(get(unsavedSite))
   },

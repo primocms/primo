@@ -72,7 +72,6 @@ export type Page = {
   id?: number,
   url: string,
   name: string,
-  sections: any[],
   code: {
     html: {
       head: string,
@@ -87,9 +86,9 @@ export type Page = {
 }
 
 export const Page = (url, name = ''): Page => ({
+  id: uuidv4(),
   url,
   name,
-  sections: [],
   code: {
     html: {
       head: '',

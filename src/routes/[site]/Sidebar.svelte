@@ -10,6 +10,8 @@
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
   import { symbols, active_page } from '$lib/editor/stores/actions'
+  import { v4 as uuidv4 } from 'uuid'
+  import { validate_symbol } from '$lib/converter'
 
   let active_tab = 'site'
 
@@ -49,12 +51,16 @@
     var reader = new window.FileReader()
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return
-      const uploaded = JSON.parse(target.result)
-      placeSymbol({
-        ...uploaded,
-        id: createUniqueID(),
-        type: 'symbol',
-      })
+      try {
+        const uploaded = JSON.parse(target.result)
+        const validated = validate_symbol(uploaded)
+        placeSymbol({
+          ...validated,
+          id: uuidv4(),
+        })
+      } catch (error) {
+        console.error(error)
+      }
     }
     reader.readAsText(target.files[0])
   }
@@ -235,7 +241,7 @@
     padding-inline: 1.5rem;
 
     .button {
-      padding: 3px;
+      padding: 0.25rem 0.5rem;
       color: #b6b6b6;
       background: #292929;
       border-radius: 4px;

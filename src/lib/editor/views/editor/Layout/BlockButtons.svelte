@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { sections } from '../../../stores/app/activePage'
+  import sections from '../../../stores/data/sections'
   import Icon from '@iconify/svelte'
   import { showingIDE } from '../../../stores/app/misc'
 

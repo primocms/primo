@@ -2,6 +2,11 @@ import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum/src";
 import type { Field } from './const'
+import showdown from '$lib/editor/libraries/showdown/showdown.min.js'
+import showdownHighlight from 'showdown-highlight'
+export const converter = new showdown.Converter({
+  extensions: [showdownHighlight()],
+})
 
 const componentsCache = new Map();
 export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }: { component: any, buildStatic?: boolean, format?: string, locale?: string, hydrated?: boolean, ignoreCachedData?: boolean }) {
@@ -104,7 +109,10 @@ export function getPlaceholderValue(field: Field) {
     size: null
   }
   else if (field.type === 'text') return _capitalize(lorem.generateWords(3))
-  else if (field.type === 'markdown') return lorem.generateSentences(2)
+  else if (field.type === 'markdown' || field.type === 'content') return {
+    html: converter.makeHtml(`# This is some markdown`),
+    markdown: `# This is some markdown`
+  }
   else if (field.type === 'link') return {
     label: lorem.generateWords(1),
     url: '/'

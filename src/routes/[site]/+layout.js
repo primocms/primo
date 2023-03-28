@@ -30,15 +30,14 @@ export const load = async (event) => {
     }
   })
 
-  const ordered_pages = pages?.sort((a, b) => {
-    return new Date(a.created_at) - new Date(b.created_at)
-  })
+  const ordered_pages = pages?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  const ordered_symbols = symbols?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
 
   return {
     site,
     pages: ordered_pages,
     page: page,
     sections: ordered_sections,
-    symbols
+    symbols: ordered_symbols
   }
 }

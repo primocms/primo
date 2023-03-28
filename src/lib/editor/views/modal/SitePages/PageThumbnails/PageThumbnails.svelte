@@ -20,9 +20,9 @@
     url = currentPath[0] ? `${currentPath[0]}/${url}` : url // prepend parent page to id (i.e. about/team)
     if (shouldDuplicatePage) {
       await actions.duplicate({
-        page: $activePage,
+        page: $page.data.page,
         path: currentPath,
-        details: { name, id: url },
+        details: { name, url },
       })
     } else {
       await actions.add(Page(url, name), currentPath)
@@ -62,7 +62,7 @@
   $: root_page_url = currentPath[0]
 
   let listedPages = []
-  list_pages($page.data.page)
+  $: $pages, list_pages($page.data.page)
 
   // $: $pages, list_pages(root_page_url) // update listed pages when making page store updates
 
@@ -246,7 +246,10 @@
 
         #duplicate {
           color: var(--primo-color-white);
-          margin-bottom: 1rem;
+
+          label {
+            display: flex;
+          }
 
           input {
             margin-right: 0.5rem;

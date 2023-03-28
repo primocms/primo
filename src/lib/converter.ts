@@ -9,6 +9,17 @@ export const converter = new showdown.Converter({
   extensions: [showdownHighlight()],
 })
 
+const Field = (field) => {
+  if (field.type === 'content') {
+    field.type = 'markdown'
+  }
+  delete field.default
+  return {
+    ...field,
+    fields: field.fields.map(Field)
+  }
+}
+
 export function validate_site_structure_v2(site) {
 
   // TODO: save site file w/ version 2
@@ -17,17 +28,6 @@ export function validate_site_structure_v2(site) {
   site = validateSiteStructure(site)
 
   const site_id = uuidv4()
-
-  const Field = (field) => {
-    if (field.type === 'content') {
-      field.type = 'markdown'
-    }
-    delete field.default
-    return {
-      ...field,
-      fields: field.fields.map(Field)
-    }
-  }
 
   const Symbol = (symbol) => {
     const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
@@ -167,6 +167,25 @@ export function validate_site_structure_v2(site) {
     })
   }
 
+}
+
+export function validate_symbol(symbol) {
+  if (!symbol.content || _.isEmpty(symbol.content)) {
+    // turn symbol fields into content object
+    const content = Object.entries(symbol.fields).reduce((accumulator, [_, field]) => {
+      accumulator[field.key] = getPlaceholderValue(field)
+      console.log({ accumulator, field })
+      return accumulator
+    }, {})
+
+    symbol.content = {
+      'en': content
+    }
+  }
+
+  symbol.fields = symbol.fields.map(Field)
+
+  return symbol
 }
 
 export function validateSiteStructure(site): Site {

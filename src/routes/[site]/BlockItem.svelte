@@ -9,7 +9,7 @@
     getComponentData,
     getSymbolUseInfo,
   } from '$lib/editor/stores/helpers'
-  import { browser } from '$app/environment'
+  import { html_head } from '$lib/editor/views/editor/Page.svelte'
 
   import IFrame from '$lib/editor/views/modal/ComponentLibrary/IFrame.svelte'
   import { processCode, processCSS, wrapInStyleTags } from '$lib/editor/utils'
@@ -31,24 +31,29 @@
   }
 
   let componentCode
-  $: compileComponentCode(symbol)
-  async function compileComponentCode(symbol) {
-    const componentData = getComponentData({ component: symbol })
-    const parentCss = await processCSS($siteCode.css + $pageCode.css)
-    const res = await processCode({
+  $: compile_component_code(symbol)
+  async function compile_component_code(symbol) {
+    const component_data = getComponentData({ component: symbol })
+    const parent_css = await processCSS($siteCode.css + $pageCode.css)
+    let res = await processCode({
       component: {
         ...symbol.code,
-        head: $pageCode.html.head,
-        css: parentCss + symbol.code.css,
+        head:
+          $siteCode.html.head +
+          $pageCode.html.head +
+          wrapInStyleTags(parent_css),
+        css: symbol.code.css,
         html: `
           ${symbol.code.html}
           ${$pageCode.html.below}`,
-        data: componentData,
+        data: component_data,
       },
       buildStatic: true,
       hydrated: false,
       ignoreCachedData: true,
     })
+    res.head = $html_head + res.head
+    res.css = res.css + parent_css
     componentCode = res
   }
 

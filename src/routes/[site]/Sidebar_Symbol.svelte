@@ -9,7 +9,7 @@
   import MenuPopup from '$lib/components/MenuPopup.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import Block from './BlockItem.svelte'
-  import { sections } from '$lib/editor/stores/app/activePage'
+  import sections from '$lib/editor/stores/data/sections'
 
   export let symbol
   export let controls_enabled = true

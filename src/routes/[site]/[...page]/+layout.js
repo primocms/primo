@@ -12,7 +12,10 @@ export const load = async (event) => {
   const site_url = event.params['site'] 
   const page_url = event.params['page'] 
 
-  const {data:page} = await supabaseClient.from('pages').select('*, pages (id), sites (*)').eq('url', page_url).eq('sites.url', site_url).single()
+  const {data:page} = await supabaseClient.from('pages').select('*, pages (id), site!inner(*)').match({
+    url: page_url,
+    'site.url': site_url
+  }).single()
   const {data:sections} = await supabaseClient.from('sections').select('*, symbol (*)').match({page: page.id})
 
   const ordered_sections = sections?.sort((a, b) => {

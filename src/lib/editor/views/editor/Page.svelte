@@ -1,3 +1,10 @@
+<script context="module">
+  import { writable } from 'svelte/store'
+
+  export const html_head = writable('')
+  export const html_below = writable('')
+</script>
+
 <script>
   import _ from 'lodash-es'
   import { tick } from 'svelte'
@@ -77,8 +84,6 @@
     if (page_mounted) updatePreview()
   }
 
-  let html_head = ''
-  let html_below = ''
   let cached = { pageCode: null, siteCode: null }
   $: $content, set_page_html($pageCode, $siteCode)
   async function set_page_html(pageCode, siteCode) {
@@ -112,8 +117,8 @@
         },
       }),
     ])
-    html_head = !head.error ? head.head : ''
-    html_below = !below.error ? below.html : ''
+    $html_head = !head.error ? head.head : ''
+    $html_below = !below.error ? below.html : ''
   }
 
   // Fade in page when all components mounted
@@ -147,7 +152,7 @@
 </script>
 
 <svelte:head>
-  {@html html_head || ''}
+  {@html $html_head || ''}
 </svelte:head>
 
 {#if !page_mounted}
@@ -167,7 +172,7 @@
     />
   {/each}
 </div>
-{@html html_below || ''}
+{@html $html_below || ''}
 
 {#if page_is_empty}
   <div class="empty-state">

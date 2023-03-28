@@ -15,8 +15,16 @@
 
   let showing_sidebar = false
 
-  let leftPaneSize = browser ? window.innerWidth / 5 + `px` : '200px'
-  let rightPaneSize = browser ? (window.innerWidth / 5) * 5 + 'px' : 'auto'
+  let leftPaneSize = browser
+    ? showing_sidebar
+      ? window.innerWidth / 5 + `px`
+      : '0px'
+    : '200px'
+  let rightPaneSize = browser
+    ? showing_sidebar
+      ? (window.innerWidth / 5) * 5 + 'px'
+      : 'auto'
+    : 'auto'
 
   $: if (parseInt(leftPaneSize) < 100) {
     leftPaneSize = '20px'
@@ -114,5 +122,9 @@
     justify-content: center;
     background: #121212;
     color: white;
+  }
+  .expand {
+    height: 100%;
+    display: flex;
   }
 </style>

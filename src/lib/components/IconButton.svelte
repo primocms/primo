@@ -14,6 +14,7 @@
 
 <style lang="postcss">
   button.show-menu {
+    flex: 1;
     padding: 0.25rem;
     transition: 0.1s;
     border-radius: 4px;

@@ -8,7 +8,7 @@
   import { fade } from 'svelte/transition'
   import Icon from '@iconify/svelte'
   import { Editor, Extension } from '@tiptap/core'
-  import { sections } from '../../../stores/app/activePage'
+  import sections from '../../../stores/data/sections'
   import StarterKit from '@tiptap/starter-kit'
   import Highlight from '@tiptap/extension-highlight'
   import Link from '@tiptap/extension-link'
@@ -296,7 +296,7 @@
         Object.hasOwn(value, 'url') &&
         Object.hasOwn(value, 'label')
 
-      if (is_link) {
+      if (is_link && typeof element.href === 'string') {
         const external_url_matches =
           value.url?.replace(/\/$/, '') === element.href?.replace(/\/$/, '')
         const internal_url_matches =
