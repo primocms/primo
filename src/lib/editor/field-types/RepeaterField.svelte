@@ -123,11 +123,12 @@
     )
     if (firstField) {
       let { value } = repeaterItem[0]
-      if (firstField.type === 'link') {
-        value = value?.label
-      }
-      return value
-    } else return singularLabel
+      if (firstField.type === 'link') return value?.label
+      else if (firstField.type === 'markdown') return value?.markdown
+      else return value
+    } else {
+      return singularLabel
+    }
   }
 
   let visibleRepeaters = {}
