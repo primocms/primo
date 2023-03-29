@@ -58,10 +58,6 @@
     position: absolute;
     inset: 0px;
   }
-
-  .is-content {
-    box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
-  }
   .component-button {
     display: flex;
     left: 0px;
@@ -98,33 +94,11 @@
       var(--tw-ring-shadow, 0 0 #0000), 0 10px 15px -3px rgba(0, 0, 0, 0.1),
       0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-    svg {
-      height: 1.25rem;
-      width: 1.25rem;
-    }
-
     &:hover {
       z-index: 1; /* show full shadow */
       /* box-shadow: var(--primo-ring-primogreen); */
       background: var(--primo-color-brand);
       color: var(--colr-gray-9);
-    }
-
-    /* &:active {
-			background: var(--primo-color-brand);
-			color: var(--color-gray-8);
-		} */
-
-    &.top-right:first-child {
-      border-bottom-left-radius: 0.25rem;
-    }
-
-    &.bottom-right:first-child {
-      border-top-left-radius: 0.25rem;
-
-      svg {
-        transform: rotate(180deg);
-      }
     }
   }
   button:focus {
@@ -139,11 +113,6 @@
     /* width: 100%; */
     inset: 0px;
   }
-  .component-svg {
-    display: flex;
-    position: absolute;
-    right: 0px;
-  }
   .bottom {
     display: flex;
     justify-content: flex-end;
@@ -151,8 +120,5 @@
     bottom: 0px;
     right: 0px;
     position: absolute;
-  }
-  span {
-    margin-left: 0.5rem /* 8px */;
   }
 </style>

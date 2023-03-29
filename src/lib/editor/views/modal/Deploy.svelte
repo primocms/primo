@@ -359,10 +359,6 @@
       display: flex;
       gap: 0.5rem;
     }
-
-    label {
-      flex: 1;
-    }
   }
   :global(form > label) {
     flex: 1;

@@ -26,6 +26,7 @@
     class="primo-modal modal mousetrap primo-reset"
     transition:fade={{ duration: 100 }}
   >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="modal-background"
       class:hovered={!$modal.disabledBgClose}
@@ -54,11 +55,6 @@
     z-index: 999999999;
     inset: 0;
     top: 0;
-
-    &.small .modal-card {
-      max-width: 30rem;
-      margin: 0 auto;
-    }
   }
 
   .modal-background {
@@ -84,10 +80,6 @@
     max-height: 100vh;
     /* padding: 0 1rem; pushes content out of sight on windows if vertical */
     /* height: 100%;  make component editor full height when in cms) */
-
-    &.fullscreen {
-      height: 100%;
-    }
   }
 
   .modal-card-body {

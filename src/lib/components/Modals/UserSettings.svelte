@@ -1,11 +1,6 @@
 <script>
   import { cloneDeep as _cloneDeep } from 'lodash-es'
-  import { onMount } from 'svelte'
-  import { createUniqueID } from '$lib/editor/utilities'
   import Tabs from '$lib/ui/Tabs.svelte'
-  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import CopyButton from '$lib/ui/CopyButton.svelte'
-  import * as supabaseDB from '../../../supabase/db'
   import { setCustomization } from '../../../actions'
   import config from '../../../stores/config'
   import ImageField from '../../../extensions/FieldTypes/ImageField.svelte'
@@ -14,10 +9,6 @@
   import TextField from '$lib/editor/field-types/ContentField.svelte'
 
   const tabs = [
-    // {
-    //   label: 'Hosting',
-    //   icon: 'globe',
-    // },
     {
       label: 'Customize',
       icon: 'palette',
@@ -29,15 +20,7 @@
 <main>
   <Tabs {tabs} bind:activeTab />
   <div class="content-container">
-    {#if activeTab.label === 'Hosting'}
-      <h1 class="primo-heading-lg">
-        Hosting <span
-          >Connect to your favorite webhost to publish your primo sites to the
-          internet</span
-        >
-      </h1>
-      <Hosting />
-    {:else if activeTab.label === 'Customize'}
+    {#if activeTab.label === 'Customize'}
       <h1 class="primo-heading-lg">Customize</h1>
       <div>
         <ImageField
@@ -107,18 +90,6 @@
     flex-direction: column;
     line-height: 1.4;
     margin-bottom: 1rem;
-
-    span {
-      font-weight: 500;
-      font-size: 0.75rem;
-      color: var(--color-gray-4);
-    }
-  }
-  button {
-    font-size: 0.75rem;
-    margin: 1rem 0;
-    text-decoration: underline;
-    color: var(--color-gray-4);
   }
   main {
     color: var(--color-gray-1);

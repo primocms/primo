@@ -40,19 +40,6 @@
     value: local_content[$locale][field.key],
   }))
 
-  // export let component: ComponentType | SymbolType = Component()
-  export let header = {
-    label: 'Create Component',
-    icon: 'fas fa-code',
-    button: {
-      icon: 'fas fa-plus',
-      label: 'Add to page',
-      onclick: (component) => {
-        console.warn('Component not going anywhere', component)
-      },
-    },
-  }
-
   const placeholders = new Map()
   function getCachedPlaceholder(field) {
     const key = JSON.stringify(field)

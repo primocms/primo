@@ -8,7 +8,6 @@
   export let value
   export let placeholder = ''
   export let variants = ''
-  export let autofocus = false
   export let type = 'text'
 
   // Note: Svelte seems to have some issues with two-way binding, so if this is acting up it's probably that

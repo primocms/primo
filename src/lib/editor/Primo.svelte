@@ -1,5 +1,4 @@
 <script lang="ts">
-  import * as Mousetrap from 'mousetrap'
   import '@fontsource/fira-code/index.css'
 
   import { createEventDispatcher, onMount } from 'svelte'

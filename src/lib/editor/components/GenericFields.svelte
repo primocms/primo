@@ -279,9 +279,5 @@
     &:hover {
       background: var(--button-hover-color);
     }
-
-    i {
-      margin-right: 0.5rem;
-    }
   }
 </style>

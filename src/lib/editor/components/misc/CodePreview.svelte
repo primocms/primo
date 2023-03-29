@@ -311,11 +311,6 @@
     width: 100%;
     opacity: 1;
     transform-origin: top left;
-
-    &.scaled {
-      width: 100vw;
-      transform-origin: top left;
-    }
   }
   .preview-container {
     background: var(--primo-color-white);

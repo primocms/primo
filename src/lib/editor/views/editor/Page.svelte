@@ -95,6 +95,7 @@
     cached.pageCode = pageCode
     cached.siteCode = siteCode
     const css = await processCSS(siteCode.css + pageCode.css)
+    console.log({ css })
     const data = getPageData({})
     const [head, below] = await Promise.all([
       processCode({
@@ -149,6 +150,12 @@
       })
     }, 100)
   }
+
+  $: console.log({ $html_head })
+
+  function foo(el) {
+    console.log(el)
+  }
 </script>
 
 <svelte:head>
@@ -160,7 +167,10 @@
     <Spinner />
   </div>
 {/if}
-<div bind:this={element} id="page" class:fadein={page_mounted} lang={$locale}>
+
+<svelte:document use:foo />
+
+<div id="page" bind:this={element} class:fadein={page_mounted} lang={$locale}>
   {#each $sections as block, i (block.id)}
     <Block
       {i}

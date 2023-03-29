@@ -181,6 +181,7 @@
 <div bind:this={element} class="sidebar-symbol" style:width style:height>
   <header>
     {#if renaming}
+      <!-- svelte-ignore a11y-autofocus -->
       <div
         bind:this={name_el}
         contenteditable

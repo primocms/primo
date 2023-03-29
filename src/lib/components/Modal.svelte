@@ -64,6 +64,7 @@
 
 {#if $visible}
   <div class="modal mousetrap primo-reset" transition:fade={{ duration: 100 }}>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
       class="modal-background"
       on:click={hideModal}

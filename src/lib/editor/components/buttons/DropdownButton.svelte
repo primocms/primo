@@ -1,25 +1,26 @@
 <script>
-  export let button;
+  export let button
 
   function click(e) {
-    if (button.onClick) button.onClick(e);
+    if (button.onClick) button.onClick(e)
   }
 </script>
 
 {#if button.href}
-   <a href={button.href} on:click={click}>
-    <i class="{button.icon} mr-1" />
+  <a href={button.href} on:click={click}>
+    <i class={button.icon} />
     <span>{button.label}</span>
   </a>
 {:else}
-  <button on:click={warn} id={button.id}>
-    <i class="{button.icon} mr-1" />
+  <button on:click={button.onClick} id={button.id}>
+    <i class={button.icon} />
     <span>{button.label}</span>
   </button>
 {/if}
 
 <style lang="postcss">
-  button, a {
+  button,
+  a {
     border: 2px solid var(--color-gray-8);
     background: var(--primo-color-codeblack) !important;
     color: var(--color-gray-1) !important;

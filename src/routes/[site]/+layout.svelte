@@ -103,18 +103,6 @@
   [slot='right'] {
     width: 100%;
   }
-  #app-version {
-    font-family: 'Satoshi', sans-serif;
-    font-size: 0.75rem;
-    color: var(--color-gray-4);
-    position: fixed;
-    bottom: 0.5rem;
-    left: 0.5rem;
-
-    span:first-child {
-      margin-right: 0.5rem;
-    }
-  }
   [slot='left'] {
     height: 100%;
     display: flex;

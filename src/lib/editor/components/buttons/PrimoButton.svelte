@@ -5,8 +5,6 @@
   import PrimoLogo from '../svg/PrimoLogo.svelte'
   import DropdownButton from './DropdownButton.svelte'
 
-  export let variants = ''
-
   let showingDropdown = false
 
   function handleToggle() {

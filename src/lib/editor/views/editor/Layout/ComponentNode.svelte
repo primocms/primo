@@ -16,20 +16,11 @@
   import FloatingMenu from '@tiptap/extension-floating-menu'
   import { tick, createEventDispatcher, getContext } from 'svelte'
   import { browser } from '$app/environment'
-  import { invalidate } from '$app/navigation'
   import { processCode } from '../../../utils'
-  import {
-    site as unsavedSite,
-    content,
-    symbols,
-    pages,
-  } from '../../../stores/data/draft'
+  import { content, pages } from '../../../stores/data/draft'
   import { locale } from '../../../stores/app/misc'
   import { getComponentData, getPageData } from '../../../stores/helpers'
-  import {
-    update_section_content,
-    update_symbol_with_static_values,
-  } from '../../../stores/actions'
+  import { update_section_content } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
   import modal from '../../../stores/app/modal'
   import { converter } from '$lib/editor/field-types/Markdown.svelte'
@@ -701,13 +692,6 @@
       align-items: center;
       padding: 0 5px;
       border-right: 1px solid var(--color-gray-6);
-    }
-
-    a {
-      background: var(--color-gray-7);
-      display: flex;
-      align-items: center;
-      padding: 0 5px;
     }
 
     input {

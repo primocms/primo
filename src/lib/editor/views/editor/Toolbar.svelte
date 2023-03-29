@@ -134,11 +134,6 @@
       display: none;
     }
   }
-  .desktop-header {
-    @media (max-width: 900px) {
-      display: none;
-    }
-  }
 
   #primo-toolbar {
     position: fixed;
@@ -164,27 +159,6 @@
   .left .button-group {
     display: flex;
     flex-direction: row;
-  }
-
-  .key-hint {
-    pointer-events: none;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    inset: 0;
-    color: var(--primo-color-white);
-    z-index: 1;
-    opacity: 1;
-    font-size: 0.75rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: saturate(180%) blur(5px);
-    transform: scale(1.1);
   }
 
   .menu-container {
@@ -221,11 +195,5 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-  }
-
-  .icon-button {
-    button {
-      padding-inline: 8px;
-    }
   }
 </style>

@@ -1,5 +1,6 @@
 <script>
   import Spinner from '$lib/ui/Spinner.svelte'
+  import Icon from '@iconify/svelte'
 
   export let label = ''
   export let icon = null

@@ -246,40 +246,9 @@
       }
     }
 
-    .option-buttons {
-      /* padding: 0.25rem 0.5rem; */
-      color: var(--color-gray-3);
-      background: var(--color-gray-900);
-      z-index: 10;
-      border-radius: var(--primo-border-radius);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.25rem;
-      padding-top: 22px;
-
-      button {
-        border-radius: 1px;
-        transition: color 0.1s;
-        &:not(disabled):hover,
-        &:not(disabled):focus {
-          color: var(--color-gray-4);
-        }
-
-        &:last-child {
-          color: var(--color-gray-5);
-        }
-      }
-    }
-
     &.minimal {
       grid-template-columns: auto 1fr auto;
     }
-  }
-
-  button[disabled] {
-    color: var(--color-gray-7);
-    cursor: default;
   }
   span {
     color: var(--color-gray-3);

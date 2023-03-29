@@ -216,12 +216,6 @@
                 &:hover {
                   color: var(--primo-color-brand);
                 }
-
-                svg {
-                  width: 1.5rem;
-                  margin-top: 3px;
-                  justify-self: flex-end;
-                }
               }
 
               a,
@@ -237,11 +231,6 @@
 
                 &:hover {
                   color: var(--primo-color-brand);
-                }
-
-                svg {
-                  width: 1rem;
-                  height: 1rem;
                 }
               }
             }

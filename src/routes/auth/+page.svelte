@@ -55,9 +55,9 @@
   }
   header {
     padding-bottom: 10px;
-    img {
+    /* img {
       padding-bottom: 40px;
-    }
+    } */
     h1 {
       font-weight: 700;
       font-size: 40px;

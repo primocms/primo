@@ -141,11 +141,6 @@
     }
   }
 
-  .button.key-hint {
-    opacity: 1;
-    transition: opacity 0.1s;
-  }
-
   .button[disabled] {
     opacity: 0.1;
     cursor: default;
