@@ -37,6 +37,7 @@
   import { track, locked_blocks } from '$lib/realtime'
   import { invalidate } from '$app/navigation'
   import { browser } from '$app/environment'
+  import { beforeNavigate } from '$app/navigation'
 
   export let data
 
@@ -151,37 +152,18 @@
     }, 100)
   }
 
-  $: console.log({ $html_head })
-
   // necessary because svelte:head doesn't manage html strings well
-  $: $html_head, attach_head()
 
-  function attach_head() {
-    if (!browser) return
-    detach_head()
-
-    const head_nodes = new DOMParser().parseFromString($html_head, 'text/html')
-    const children = head_nodes.firstChild?.firstChild?.children
-
-    if (!children) return
-    const tags = Array.from(children).map((tag) => {
-      tag.dataset.primoHeadTag = true
-      return tag
-    })
-    tags.forEach((tag) => {
-      window.document.head.append(tag)
-    })
-  }
-
-  // onDestroy(detach_head)
-  function detach_head() {
-    window.document.head
-      .querySelectorAll('[data-primo-head-tag]')
-      .forEach((tag) => {
-        tag.remove()
-      })
-  }
+  beforeNavigate(async () => {
+    console.log('now')
+    $html_head = ''
+    // await tick()
+  })
 </script>
+
+<svelte:head>
+  {@html $html_head}
+</svelte:head>
 
 {#if !page_mounted}
   <div class="spinner-container" out:fade={{ duration: 200 }}>
