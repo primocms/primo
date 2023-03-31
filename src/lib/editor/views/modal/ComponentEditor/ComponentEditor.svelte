@@ -77,7 +77,11 @@
     ? cloneDeep(component)
     : cloneDeep(component.symbol) // local copy of component to modify & save
 
-  let local_content = cloneDeep(component.content || {}) // local copy of component content to modify & save
+  let local_content = cloneDeep(
+    component.content || {
+      en: {},
+    }
+  ) // local copy of component content to modify & save
 
   // component data w/ page/site data included (for compilation)
   $: data = {
