@@ -41,8 +41,6 @@
 
   export let data
 
-  $: console.log({ data })
-
   // $: $pageID = id
 
   if (browser) {
@@ -96,7 +94,6 @@
     cached.pageCode = pageCode
     cached.siteCode = siteCode
     const css = await processCSS(siteCode.css + pageCode.css)
-    console.log({ css })
     const data = getPageData({})
     const [head, below] = await Promise.all([
       processCode({
@@ -155,7 +152,6 @@
   // necessary because svelte:head doesn't manage html strings well
 
   beforeNavigate(async () => {
-    console.log('now')
     $html_head = ''
     // await tick()
   })
