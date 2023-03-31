@@ -50,14 +50,14 @@
   class:mounted
 >
   <div class="menu-container">
-    <div class="mobile-header">
+    <!-- <div class="mobile-header">
       <div class="mobile-dropdowns">
         {#if !getContext('hidePrimoButton')}
           <PrimoButton on:signOut />
         {/if}
         <Dropdown options={flattenDeep(buttons)} />
       </div>
-    </div>
+    </div> -->
     <div class="left">
       {#if !getContext('hidePrimoButton')}
         <PrimoButton on:signOut />

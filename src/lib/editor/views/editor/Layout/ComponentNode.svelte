@@ -276,8 +276,7 @@
 
       const text_matches = typeof value == 'string' && value.trim() === text
 
-      const html_matches =
-        typeof value === 'object' && value.html && value.html.trim() === html
+      const is_html = typeof value === 'object' && !!value.html
 
       const is_image =
         typeof value === 'object' && value.alt !== undefined && value.url
@@ -286,6 +285,20 @@
         typeof value === 'object' &&
         Object.hasOwn(value, 'url') &&
         Object.hasOwn(value, 'label')
+
+      const key_matches = element.dataset.key === key
+      if (key_matches) {
+        if (is_html) {
+          set_editable_editor({ element, key })
+        } else if (is_image) {
+          set_editable_image({ element, key })
+        } else if (is_link) {
+          set_editable_link({ element, key, url: value.url })
+        } else {
+          set_editable({ element, key })
+        }
+        return true
+      }
 
       if (is_link && typeof element.href === 'string') {
         const external_url_matches =
@@ -312,10 +325,12 @@
         // Markdown Field
         set_editable({ element, key })
         return true
-      } else if (html_matches) {
-        // Text & Number Field
-        set_editable_editor({ element, key })
-        return true
+      } else if (is_html) {
+        const html_matches = html === value.html
+        if (html_matches) {
+          set_editable_editor({ element, key })
+          return true
+        }
       } else {
         // console.log('no match', { element, key, value })
         return false
