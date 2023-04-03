@@ -1,20 +1,11 @@
-<script context="module">
-  import { writable } from 'svelte/store'
-
-  export const html_head = writable('')
-  export const html_below = writable('')
-</script>
-
 <script>
   import _ from 'lodash-es'
-  import { tick, onMount, onDestroy } from 'svelte'
+  import { tick } from 'svelte'
   import { fade } from 'svelte/transition'
   import { find, isEqual, cloneDeep } from 'lodash-es'
   import Block from './Layout/Block.svelte'
   import Spinner from '../../ui/misc/Spinner.svelte'
   import {
-    pages,
-    symbols,
     code as siteCode,
     id as siteID,
     content,
@@ -41,7 +32,8 @@
 
   export let data
 
-  // $: $pageID = id
+  let html_head = ''
+  let html_below = ''
 
   if (browser) {
     supabase
@@ -116,8 +108,8 @@
         },
       }),
     ])
-    $html_head = !head.error ? head.head : ''
-    $html_below = !below.error ? below.html : ''
+    html_head = !head.error ? head.head : ''
+    html_below = !below.error ? below.html : ''
   }
 
   // Fade in page when all components mounted
@@ -150,15 +142,10 @@
   }
 
   // necessary because svelte:head doesn't manage html strings well
-
-  beforeNavigate(async () => {
-    $html_head = ''
-    // await tick()
-  })
 </script>
 
 <svelte:head>
-  {@html $html_head}
+  {@html html_head}
 </svelte:head>
 
 {#if !page_mounted}
@@ -179,7 +166,7 @@
     />
   {/each}
 </div>
-{@html $html_below || ''}
+{@html html_below || ''}
 
 {#if page_is_empty}
   <div class="empty-state">

@@ -81,14 +81,15 @@ export type Page = {
     js: string
   },
   fields: any[],
-  content: object
+  content: object,
+  parent: string | null,
   // pages: any[],
 }
 
-export const Page = (url, name = ''): Page => ({
+export const Page = (page = {}): Page => ({
   id: uuidv4(),
-  url,
-  name,
+  url: '',
+  name: '',
   code: {
     html: {
       head: '',
@@ -98,8 +99,9 @@ export const Page = (url, name = ''): Page => ({
     js: ''
   },
   fields: [],
-  content: {}
-  // pages: [],
+  content: {},
+  parent: null,
+  ...page,
 })
 
 export type Site = {

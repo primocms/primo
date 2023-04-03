@@ -10,6 +10,9 @@ export async function GET(event) {
   const site_url = event.params['site'] 
   const {data:site} = await supabaseAdmin.from('sites').select().filter('url', 'eq', site_url).single()
 
+  if (!site) {
+    return json({error: 'not found'})
+  } 
   const page_url = 'index'
   const {data:page} = await supabaseAdmin.from('pages').select('*').match({ site: site.id, url: page_url }).single()
 

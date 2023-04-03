@@ -10,21 +10,23 @@
   } from '../../../../stores/app/activePage'
   import { makeValidUrl } from '../../../../utils'
   import { Page } from '../../../../const'
+  import { page } from '$app/stores'
 
-  let currentPath = [$activePage.url]
+  let currentPath = []
+  $: root_page = currentPath[0]
 
-  function edit_page(pageId, args: { name: string; id: string }) {
-    actions.edit(pageId, args)
+  function edit_page(page_id, args: { name: string; id: string }) {
+    actions.edit(page_id, args)
   }
 
-  async function delete_page(pageId) {
-    actions.delete(pageId)
+  async function delete_page(page_id) {
+    actions.delete(page_id)
   }
 
-  function add_subpage(pageId) {
-    currentPath = [pageId]
+  function add_subpage(page) {
+    currentPath = [page]
     creating_page = false
-    creating_subpage = pageId
+    creating_subpage = page.id
   }
 
   // Page Creation
@@ -50,15 +52,14 @@
   async function finish_creating_page() {
     let name = pageName
     let url = pageURL
-    url = currentPath[0] ? `${currentPath[0]}/${url}` : url // prepend parent page to id (i.e. about/team)
+    url = currentPath[0] ? `${currentPath[0]['url']}/${url}` : url // prepend parent page to id (i.e. about/team)
     if (shouldDuplicatePage) {
       await actions.duplicate({
-        page: $activePage,
-        path: currentPath,
-        details: { name, id: url },
+        page: $page.data.page,
+        details: { name, url, parent: root_page?.id },
       })
     } else {
-      await actions.add(Page(url, name), currentPath)
+      await actions.add(Page({ url, name, parent: root_page?.id }))
     }
 
     creating_page = false
@@ -78,13 +79,13 @@
         {children}
         active={$activePageID === page.id}
         on:edit={({ detail }) => edit_page(page.id, detail)}
-        on:add={({ detail: page }) => add_subpage(page.id)}
+        on:add={({ detail: page }) => add_subpage(page)}
         on:delete={({ detail: page }) => delete_page(page.id)}
       >
         {#if creating_subpage === page.id}
           <form
             on:submit|preventDefault={() => {
-              currentPath = [page.url]
+              currentPath = [page]
               finish_creating_page()
             }}
             in:fade={{ duration: 100 }}

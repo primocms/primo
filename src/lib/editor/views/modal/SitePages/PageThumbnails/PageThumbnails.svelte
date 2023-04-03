@@ -25,7 +25,14 @@
         details: { name, url },
       })
     } else {
-      await actions.add(Page(url, name), currentPath)
+      if (currentPath.length > 0) {
+        await actions.add(
+          Page({ url, name, parent: root_page.id }),
+          currentPath
+        )
+      } else {
+        await actions.add(Page({ url, name }), currentPath)
+      }
     }
 
     creatingPage = false
@@ -36,7 +43,7 @@
 
   async function deletePage(page_id) {
     actions.delete(page_id)
-    listedPages = listedPages.filter((page) => page.id !== page_id)
+    listed_pages = listed_pages.filter((page) => page.id !== page_id)
   }
 
   let creatingPage = false
@@ -52,32 +59,31 @@
     actions.edit(page_url, args)
   }
 
-  function addSubPage(page_id) {
-    list_pages(page_id)
-    currentPath = [page_id]
+  function add_subpage(page) {
+    list_pages(page, true)
+    currentPath = [page]
     creatingPage = true
   }
 
   let currentPath = buildCurrentPath($url)
-  $: root_page_url = currentPath[0]
+  $: root_page = currentPath[0]
 
-  let listedPages = []
+  let listed_pages = []
   $: $pages, list_pages($page.data.page)
 
-  // $: $pages, list_pages(root_page_url) // update listed pages when making page store updates
+  // $: $pages, list_pages(root_page) // update listed pages when making page store updates
 
   function list_pages(page = null, list_children = false) {
     if (!list_children) {
-      listedPages = $pages.filter((p) => p.parent === page.parent)
+      listed_pages = $pages.filter((p) => p.parent === page.parent)
     } else {
-      listedPages = $pages.filter((p) => p.parent === page.id)
+      listed_pages = $pages.filter((p) => p.parent === page.id)
     }
   }
 
-  $: breadcrumbs = getBreadCrumbs(root_page_url)
-  function getBreadCrumbs(root_page_url) {
-    if (root_page_url) {
-      const root_page = find($pages, ['id', $page.data.page.parent])
+  $: breadcrumbs = getBreadCrumbs(root_page)
+  function getBreadCrumbs(root_page) {
+    if (root_page) {
       return [
         {
           label: 'Site',
@@ -124,7 +130,7 @@
   </div>
 {/if}
 <ul class="page-thumbnails">
-  {#each listedPages as page, i (page.id)}
+  {#each listed_pages as page, i (page.id)}
     {@const has_children = $pages.some((p) => p.parent === page.id)}
     <li data-page-i={i}>
       <PageItem
@@ -133,7 +139,7 @@
         disableAdd={!!breadcrumbs}
         active={$url === page.url}
         on:edit={({ detail }) => editPage(page.url, detail)}
-        on:add={() => addSubPage(page.url)}
+        on:add={() => add_subpage(page)}
         on:delete={() => deletePage(page.id)}
         on:list={() => list_pages(page, true)}
       />
@@ -246,6 +252,8 @@
 
         #duplicate {
           color: var(--primo-color-white);
+          margin-bottom: 0.5rem;
+          font-size: 0.875rem;
 
           label {
             display: flex;

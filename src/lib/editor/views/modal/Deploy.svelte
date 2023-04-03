@@ -1,5 +1,4 @@
 <script>
-  import _ from 'lodash'
   import Icon from '@iconify/svelte'
   import axios from 'axios'
   import { format } from 'timeago.js'
@@ -79,7 +78,7 @@
   $: if (github_account) get_repos()
   async function get_repos() {
     const { data } = await axios.get(
-      `https://api.github.com/users/${github_account.login}/repos`
+      `https://api.github.com/users/${github_account.login}/repos?per_page=100`
     )
     user_repos = data?.map((repo) => {
       return {

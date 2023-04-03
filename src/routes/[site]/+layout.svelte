@@ -40,7 +40,6 @@
     showing_sidebar = true
   }
 
-  let currentPath
   let siteLocked = false
 
   let saving = false

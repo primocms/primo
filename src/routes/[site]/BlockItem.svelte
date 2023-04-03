@@ -9,7 +9,6 @@
     getComponentData,
     getSymbolUseInfo,
   } from '$lib/editor/stores/helpers'
-  import { html_head } from '$lib/editor/views/editor/Page.svelte'
 
   import IFrame from '$lib/editor/views/modal/ComponentLibrary/IFrame.svelte'
   import { processCode, processCSS, wrapInStyleTags } from '$lib/editor/utils'
@@ -52,7 +51,7 @@
       hydrated: false,
       ignoreCachedData: true,
     })
-    res.head = $html_head + res.head
+    res.head = $siteCode.html + $pageCode.html.head + res.head
     res.css = res.css + parent_css
     componentCode = res
   }

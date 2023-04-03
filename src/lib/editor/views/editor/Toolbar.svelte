@@ -167,11 +167,6 @@
     justify-content: space-between;
     margin: 0 auto;
     padding: 0.5rem 1rem;
-
-    .mobile-dropdowns {
-      display: flex;
-      gap: 0.5rem;
-    }
   }
 
   .menu-container:after {

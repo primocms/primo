@@ -234,13 +234,14 @@ export const active_page = {
 }
 
 export const pages = {
-  duplicate: async ({ page, path = [], details, updateTimeline = true }) => {
+  duplicate: async ({ page, details, updateTimeline = true }) => {
     // saved.set(false)
 
     const new_page = {
       id: uuidv4(),
       name: details.name,
       url: details.url,
+      parent: details.parent,
       code: page.code,
       content: page.content,
       fields: page.fields,
@@ -263,7 +264,7 @@ export const pages = {
     if (updateTimeline) timeline.push(get(unsavedSite))
 
   },
-  add: async (newPage: PageType, path: Array<string>, updateTimeline = true) => {
+  add: async (newPage: PageType, updateTimeline = true) => {
     saved.set(false)
     const currentPages = get(pages_store)
 

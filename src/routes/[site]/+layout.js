@@ -9,35 +9,32 @@ export const load = async (event) => {
     throw redirect(303, '/auth')
   }
 
+  // Get site
   const site_url = event.params['site'] 
   const {data:site} = await supabaseClient.from('sites').select().filter('url', 'eq', site_url).single()
 
+  if (!site) return
+
+  // Get page
   const page_url = 'index'
   const {data:page} = await supabaseClient.from('pages').select('*').match({ site: site.id, url: page_url }).single()
 
-  // let {data} =  await supabaseClient.from('sites').select(`id, name, created_at, data, page:data->pages->index`).filter('id', 'eq', site.id)
-  const [{data:pages}, {data:symbols}, {data:sections}] = await Promise.all([
-    await supabaseClient.from('pages').select().match({site: site.id}),
-    await supabaseClient.from('symbols').select().match({site: site.id}),
-    await supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
-  ]) 
-
-  const ordered_sections = sections?.sort((a, b) => {
-    if (a.index === b.index) {
-      return new Date(a.created_at) - new Date(b.created_at)
-    } else {
-      return a.index - b.index
-    }
-  })
-
-  const ordered_pages = pages?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  const ordered_symbols = symbols?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  // Get sorted pages, symbols, and sections
+  const { pages, symbols, sections } = await Promise.all([
+    supabaseClient.from('pages').select().match({site: site.id}),
+    supabaseClient.from('symbols').select().match({site: site.id}),
+    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
+  ]).then(([{data:pages}, {data:symbols}, {data:sections}]) => ({
+    pages: pages?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+    symbols: symbols?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+    sections: sections?.sort((a, b) => (a.index === b.index) ? new Date(a.created_at) - new Date(b.created_at) : a.index - b.index  )
+  }))
 
   return {
     site,
-    pages: ordered_pages,
-    page: page,
-    sections: ordered_sections,
-    symbols: ordered_symbols
+    page,
+    pages,
+    sections,
+    symbols
   }
 }

@@ -1,5 +1,4 @@
 <script>
-  import Icon from '@iconify/svelte'
   import { draggable } from '@neodrag/svelte'
   import MenuPopup from '$lib/components/MenuPopup.svelte'
   import { createEventDispatcher } from 'svelte'
