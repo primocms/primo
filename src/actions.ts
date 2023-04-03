@@ -1,18 +1,16 @@
 import axios from 'axios'
-import { find } from 'lodash-es'
 import { get } from 'svelte/store'
 import supabase from './supabase/core'
 import * as supabaseDB from './supabase/db'
-import { sites as dbSites } from './supabase/db'
 import * as supabaseStorage from './supabase/storage'
 import * as stores from './stores'
-import { buildStaticPage } from '$lib/editor/stores/helpers'
 import { sitePassword } from './stores/misc'
 import { page } from '$app/stores'
 
 export const sites = {
   create: async ({ data, preview }) => {
-    const { pages, symbols, sections } = data
+
+    // create site 
     const site = {
       id: data.id,
       url: data.url,
@@ -22,15 +20,29 @@ export const sites = {
       fields: data.fields,
       owner: get(page).data.user.id
     }
-
     await supabaseDB.sites.create(site)
+
+    // create symbols and root pages 
+    const { pages, symbols, sections } = data
+    const home_page = pages.find(page => page.url === 'index')
+    const root_pages = pages.filter(page => page.parent === null && page.id !== home_page.id)
+    const child_pages = pages.filter(page => page.parent !== null)
+
+    // create home page first (to ensure it appears first)
+    await supabase.from('pages').insert(home_page)
+
     await Promise.all([
       ...symbols.map(symbol => supabase.from('symbols').insert(symbol)),
-      ...pages.map(page => supabase.from('pages').insert(page))
+      ...root_pages.map(page => supabase.from('pages').insert(page)),
+      supabase.from('pages').update({ preview }).match({ id: home_page.id })
     ])
+
+    // create child pages (dependant on parent page IDs)
+    await Promise.all(child_pages.map(page => supabase.from('pages').insert(page)))
+
+    // create sections (dependant on page IDs)
     await Promise.all(sections.map(section => supabase.from('sections').insert(section)))
 
-    await supabase.from('pages').update({ preview }).match({ url: 'index', site: site.id })
   },
   update: async ({ id, props }) => {
     stores.sites.update(

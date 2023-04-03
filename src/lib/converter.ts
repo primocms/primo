@@ -94,7 +94,8 @@ export function validate_site_structure_v2(site) {
       url: page.id,
       code: page.code,
       fields: page.fields.map(Field) || [],
-      sections: page.sections, // for use later, to be removed
+      sections: page.sections, // for later use, to be removed
+      pages: page.pages || [], // for later use, to be removed
       content,
       site: site_id
     }
@@ -115,7 +116,6 @@ export function validate_site_structure_v2(site) {
       symbol = symbols.at(-1)
       content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
         const html = value?.[page.url]?.[section.id]
-        console.log({ html })
         accumulator[locale] = {
           content: {
             html,
@@ -125,8 +125,6 @@ export function validate_site_structure_v2(site) {
         return accumulator
       }, {})
     }
-
-    console.log({ content })
 
     return ({
       id: uuidv4(),
@@ -138,6 +136,15 @@ export function validate_site_structure_v2(site) {
   }
 
   const pages = _.flatten(site.pages.map(page => [Page(page), ...page.pages.map(child => Page(child))]))
+
+  // children need to be derived after page IDs have been assigned
+  const pages_with_children = pages.map(page => {
+    const parent = pages.find(p => p.pages.find(c => c.id === page.url))
+    return {
+      ...page,
+      parent: parent?.id || null
+    }
+  })
 
   const sections = _.flatten(pages.map(page => page.sections.map(s => Section(s, page))))
 
@@ -156,8 +163,9 @@ export function validate_site_structure_v2(site) {
     code: site.code,
     fields: site.fields,
     content,
-    pages: pages.map(page => {
+    pages: pages_with_children.map(page => {
       delete page.sections
+      delete page.pages
       return page
     }),
     sections,
@@ -174,7 +182,6 @@ export function validate_symbol(symbol) {
     // turn symbol fields into content object
     const content = Object.entries(symbol.fields).reduce((accumulator, [_, field]) => {
       accumulator[field.key] = getPlaceholderValue(field)
-      console.log({ accumulator, field })
       return accumulator
     }, {})
 
