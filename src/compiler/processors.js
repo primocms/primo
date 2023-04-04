@@ -1,16 +1,18 @@
 import {clone as _cloneDeep} from 'lodash-es'
 import PromiseWorker from 'promise-worker';
-import svelteWorker from './workers/worker?worker'
 import {get} from 'svelte/store'
 import {site} from '$lib/editor/stores/data/draft'
 import {locale} from '$lib/editor/stores/app/misc'
 
-import postCSSWorker from './workers/postcss.worker?worker'
-const PostCSSWorker = new postCSSWorker
-const cssPromiseWorker = new PromiseWorker(PostCSSWorker);
+const svelteWorker = new Worker(new URL('./workers/worker', import.meta.url), {
+  type: 'module',
+})
+const postCSSWorker = new Worker(new URL('./workers/postcss.worker', import.meta.url), {
+  type: 'module',
+})
 
-const SvelteWorker = new svelteWorker()
-const htmlPromiseWorker = new PromiseWorker(SvelteWorker);
+const cssPromiseWorker = new PromiseWorker(postCSSWorker);
+const htmlPromiseWorker = new PromiseWorker(svelteWorker);
 
 const componentsMap = new Map();
 

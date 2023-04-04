@@ -5,9 +5,20 @@ import ClassMangler from './class-mangler';
 const config = {
 	plugins: [
     sveltekit(),
-    // ClassMangler({
-    //   dev: true
-    // })
+    ClassMangler({
+      dev: true
+    }),
+    {
+      name: 'remove-manifest',
+      configResolved(c) {
+        const manifestPlugin = c.worker.plugins.findIndex((p) => p.name === 'vite:manifest');
+        c.worker.plugins.splice(manifestPlugin, 1);
+        const ssrManifestPlugin = c.worker.plugins.findIndex(
+          (p) => p.name === 'vite:ssr-manifest'
+        );
+        c.plugins.splice(ssrManifestPlugin, 1);
+      }
+    }
   ],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
@@ -17,7 +28,6 @@ const config = {
       // throws an error without this when importing Fira font
       allow: ['..', 'node_modules/@fontsource/fira-code']
     },
-    proxy: {},
     // port: 5174,
     // headers: {
     //   'Access-Control-Allow-Origin': '*',
