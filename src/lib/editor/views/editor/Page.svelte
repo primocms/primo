@@ -113,7 +113,7 @@
   }
 
   // Fade in page when all components mounted
-  let page_mounted = true
+  let page_mounted = false
   $: page_is_empty =
     $sections.length <= 1 &&
     $sections.length !== 0 &&
@@ -121,7 +121,7 @@
 
   // detect when all sections are mounted
   let sections_mounted = 0
-  $: if ($siteID !== 'default' && sections_mounted === $sections.length) {
+  $: if (sections_mounted === $sections.length && $sections.length !== 0) {
     page_mounted = true
   }
 
@@ -141,7 +141,15 @@
     }, 100)
   }
 
-  // necessary because svelte:head doesn't manage html strings well
+  // necessary to clear svelte:head
+  beforeNavigate(async (e) => {
+    if (!e.willUnload && !e.to?.params?.site) {
+      page_mounted = false
+      await tick()
+      html_head = ''
+      html_below = ''
+    }
+  })
 </script>
 
 <svelte:head>
@@ -162,7 +170,9 @@
       {block}
       on:lock={() => lock_block(block.id)}
       on:unlock={() => unlock_block()}
-      on:mount={() => sections_mounted++}
+      on:mount={() => {
+        sections_mounted++
+      }}
     />
   {/each}
 </div>
@@ -190,17 +200,15 @@
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);
   }
   #page {
-    transition: 0.1s opacity;
+    transition: 0.2s opacity;
     opacity: 0;
     border-top: 0;
     height: calc(100vh - 54px);
     overflow: auto;
   }
-
   #page.fadein {
     opacity: 1;
   }
-
   .empty-state {
     position: absolute;
     inset: 0;
