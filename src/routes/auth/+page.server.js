@@ -100,16 +100,21 @@ export const actions = {
 };
 
 async function accept_invitation(invitation_id, invitee) {
-  const {site, email, role} = await get_row('invitations', invitation_id)
+  const {site, email, server_invitation, role} = await get_row('invitations', invitation_id)
 
-  // if invitation email matches user email, add user to site
-  const {data, error} = await supabase.from('collaborators').insert({ site, user: invitee.id, role })
+  // if invitation email matches, add user to site/server
+  if (email === invitee.email) {
 
-  if (!error) {
-    // delete invitation
-    await delete_row('invitations', invitation_id)
-    return true
-  } else {
-    return false
+    const {error} = server_invitation ? 
+      await supabase.from('server_members').insert({ user: invitee.id, role }) :
+      await supabase.from('collaborators').insert({ site, user: invitee.id, role, server_member: server_invitation })
+
+    if (!error) {
+      // delete invitation
+      await delete_row('invitations', invitation_id)
+      return true
+    } else {
+      return false
+    }
   }
 }

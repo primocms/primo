@@ -50,7 +50,12 @@
       id: 'toolbar--pages',
       title: $C('Pages'),
       icon: 'system-uicons:grid-squares-add',
-      onclick: () => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true }),
+      onclick: () =>
+        modal.show(
+          'SITE_PAGES',
+          {},
+          { hideLocaleSelector: true, maxWidth: '600px' }
+        ),
       showSwitch: false,
     },
     [

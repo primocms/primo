@@ -2,14 +2,7 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { createEventDispatcher } from 'svelte'
   import { supabase, create_row } from '$lib/supabase'
-
-  const dispatch = createEventDispatcher()
-
-  export let site
-
-  const owner = $page.data.session.user
 
   let email = ''
   let role = 'DEV'
@@ -17,25 +10,19 @@
   async function invite_editor() {
     const { id } = await create_row('invitations', {
       email,
-      inviter_email: owner.email,
-      site: site.id,
+      inviter_email: $page.data.user.email,
       role,
+      server_invitation: true,
     })
     const { data: success } = await axios.post('/api/invitations', {
       id,
       email,
-      site,
+      site: { name: 'a Primo server' },
       url: $page.url.origin,
-      inviter_email: owner.email,
+      inviter_email: $page.data.user.email,
     })
     if (success) {
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('site', site.id)
-      if (data) {
-        invitations = data
-      }
+      invitations = await get_invitations()
     } else {
       alert('Could not send invitation. Please try again.')
     }
@@ -43,33 +30,40 @@
   }
 
   let editors = []
-  get_collaborators(site.id).then((res) => {
+  get_collaborators().then((res) => {
+    console.log({ res })
     editors = res
   })
 
   let invitations = []
-  get_invitations(site.id).then((res) => {
+  get_invitations().then((res) => {
     invitations = res
   })
 
-  async function get_invitations(site_id) {
+  async function get_invitations() {
     const { data, error } = await supabase
       .from('invitations')
       .select('*')
-      .eq('site', site_id)
+      .eq('server_invitation', true)
     return data || []
   }
 
-  export async function get_collaborators(site_id) {
+  export async function get_collaborators() {
     const { data, error } = await supabase
-      .from('collaborators')
-      .select(`user (*)`)
-      .filter('site', 'eq', site_id)
+      .from('server_members')
+      .select('*, user(*)')
+    console.log({ data })
     if (error) {
       console.error(error)
       return []
-    } else return data.map((item) => item.user)
+    } else return data
   }
+
+  const Role = (role) =>
+    ({
+      DEV: 'Developer',
+      EDITOR: 'Content Editor',
+    }[role])
 </script>
 
 <div class="Invitation">
@@ -86,8 +80,8 @@
             name="email"
           />
           <select bind:value={role}>
-            <option value="DEV">Developer</option>
-            <option value="EDITOR">Content Editor</option>
+            <option value="DEV">{Role('DEV')}</option>
+            <option value="EDITOR">{Role('EDITOR')}</option>
           </select>
         </div>
         <button type="submit">Send invite</button>
@@ -110,16 +104,18 @@
     <section>
       <h3 class="subheading">People with Access</h3>
       <ul>
-        <li>
-          <span class="letter">{owner.email[0]}</span>
-          <span class="email">{owner.email}</span>
-          <span class="role">Owner</span>
-        </li>
-        {#each editors as { email }}
+        <!-- {#if owner}
           <li>
-            <span class="letter">{email[0]}</span>
-            <span class="email">{email}</span>
-            <span class="role">Editor</span>
+            <span class="letter">{owner.email[0]}</span>
+            <span class="email">{owner.email}</span>
+            <span class="role">Owner</span>
+          </li>
+        {/if} -->
+        {#each editors as { user, role }}
+          <li>
+            <span class="letter">{user.email[0]}</span>
+            <span class="email">{user.email}</span>
+            <span class="role">{Role(role)}</span>
           </li>
         {/each}
       </ul>

@@ -129,12 +129,6 @@
 </nav>
 
 <style lang="postcss">
-  .mobile-header {
-    @media (min-width: 900px) {
-      display: none;
-    }
-  }
-
   #primo-toolbar {
     position: fixed;
     left: 0;

@@ -13,9 +13,9 @@
   </div>
   <nav>
     {#if $page.data.user.admin}
-      <!-- <button class="link" on:click={() => show('INVITE_COLLABORATORS')}
+      <button class="link" on:click={() => show('INVITE_COLLABORATORS')}
         >Members</button
-      > -->
+      >
       <button class="link" on:click={() => show('USER_SETTINGS')}
         >Settings</button
       >

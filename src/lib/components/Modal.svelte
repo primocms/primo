@@ -37,7 +37,7 @@
   import UserSettings from './Modals/UserSettings.svelte'
   import Authentication from './Modals/Authentication.svelte'
   import Collaboration from './Modals/Collaboration.svelte'
-  import InviteCollaborators from './Modals/InviteCollaborators.svelte'
+  import ServerInvitation from './Modals/ServerInvitation.svelte'
   import InviteSiteCollaborator from './Modals/Invitation.svelte'
 
   const modals = {
@@ -45,7 +45,7 @@
     CREATE_SITE: CreateSite,
     USER_SETTINGS: UserSettings,
     COLLABORATION: Collaboration,
-    INVITE_COLLABORATORS: InviteCollaborators,
+    INVITE_COLLABORATORS: ServerInvitation,
     INVITE_SITE_COLLABORATOR: InviteSiteCollaborator,
   }
 

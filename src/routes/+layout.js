@@ -8,15 +8,30 @@ export const load = async (event) => {
     throw redirect(303, '/auth')
   } else if (session) {
     // const site = event.params['site'] 
-    const [{data:sites},{data:user},{data:config}] = await Promise.all([
-      supabaseClient.from('sites')
-      .select('id, name, url, owner, pages (preview), collaborators (*)')
-      .eq('pages.url', 'index'),
-      supabaseClient.from('users').select('*').eq('id', session.user.id).single(),
+    const {sites, user, config} = await Promise.all([
+      supabaseClient.from('sites').select('id, name, url, owner, pages (preview), collaborators (*)'),
+      supabaseClient.from('users').select('*, server_members (admin, role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
-    ])
+    ]).then(([{data:sites},{data:user},{data:config}]) => {
+      const [server_member] = user.server_members
+      return {
+        sites, 
+        user: server_member ? {
+          ...user,
+          server_member: true,
+          admin: server_member.admin,
+          role: server_member.role,
+        } : user, 
+        config
+      }
+    })
 
-    const user_sites = sites?.filter(s => s.collaborators.some(c => c.user === user.id) || s.owner === user.id)
+    // TODO: do this w/ sql
+    const user_sites = sites?.filter(site => 
+      /*user is server member*/ user.server_member ||
+      /*user owns site*/ site.owner === user.id || 
+      /*user is collaborator*/ site.collaborators.some(collaborator => collaborator.user === user.id) 
+    )
 
     return {
       session,
