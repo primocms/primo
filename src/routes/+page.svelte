@@ -122,7 +122,7 @@
               </div>
             </li>
           {/each}
-          {#if $page.data.user.admin}
+          {#if $page.data.user.server_member}
             <li>
               <button class="create-site" on:click={createSite}>
                 {#if loading}
