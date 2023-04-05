@@ -3,20 +3,27 @@ import PromiseWorker from 'promise-worker';
 import {get} from 'svelte/store'
 import {site} from '$lib/editor/stores/data/draft'
 import {locale} from '$lib/editor/stores/app/misc'
+import svelteWorker from './workers/worker?worker'
+import postCSSWorker from './workers/postcss.worker?worker'
 
-const svelteWorker = new Worker(new URL('./workers/worker', import.meta.url), {
-  type: 'module',
-})
-const postCSSWorker = new Worker(new URL('./workers/postcss.worker', import.meta.url), {
-  type: 'module',
-})
+// const svelteWorker = new Worker(new URL('./workers/worker', import.meta.url), {
+//   type: 'module',
+// })
 
-const cssPromiseWorker = new PromiseWorker(postCSSWorker);
-const htmlPromiseWorker = new PromiseWorker(svelteWorker);
+// const postCSSWorker = new Worker(new URL('./workers/postcss.worker', import.meta.url), {
+//   type: 'module',
+// })
+
+const cssPromiseWorker = new PromiseWorker(new postCSSWorker());
+const htmlPromiseWorker = new PromiseWorker(new svelteWorker());
 
 const componentsMap = new Map();
 
 export async function html({ component, buildStatic = true, format = 'esm'}) {
+
+  // return {
+  //   error: 'none'
+  // }
 
   let cacheKey
   if (!buildStatic) {
@@ -95,6 +102,9 @@ export async function html({ component, buildStatic = true, format = 'esm'}) {
 
 const cssMap = new Map()
 export async function css(raw) {
+  // return {
+  //   css: ''
+  // }
   if (cssMap.has(raw)) {
     return ({ css: cssMap.get(raw) })
   }

@@ -5,9 +5,9 @@ import ClassMangler from './class-mangler';
 const config = {
 	plugins: [
     sveltekit(),
-    ClassMangler({
-      dev: true
-    }),
+    // ClassMangler({
+    //   dev: true
+    // }),
     {
       name: 'remove-manifest',
       configResolved(c) {
@@ -17,7 +17,8 @@ const config = {
           (p) => p.name === 'vite:ssr-manifest'
         );
         c.plugins.splice(ssrManifestPlugin, 1);
-      }
+      },
+      apply: 'build', // or 'serve'
     }
   ],
 	test: {
