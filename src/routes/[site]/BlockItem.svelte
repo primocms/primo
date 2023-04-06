@@ -37,11 +37,8 @@
     let res = await processCode({
       component: {
         ...symbol.code,
-        head:
-          $siteCode.html.head +
-          $pageCode.html.head +
-          wrapInStyleTags(parent_css),
-        css: symbol.code.css,
+        head: $siteCode.html.head + $pageCode.html.head,
+        css: parent_css + symbol.code.css,
         html: `
           ${symbol.code.html}
           ${$pageCode.html.below}`,
@@ -51,7 +48,7 @@
       hydrated: false,
       ignoreCachedData: true,
     })
-    res.head = $siteCode.html + $pageCode.html.head + res.head
+    // res.head = $siteCode.html.head + $pageCode.html.head + res.head
     res.css = res.css + parent_css
     componentCode = res
   }
