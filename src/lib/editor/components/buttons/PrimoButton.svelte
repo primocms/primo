@@ -22,7 +22,7 @@
   {#if $loadingSite}
     <Spinner />
   {:else}
-    <PrimoLogo style={showingDropdown ? 'white' : 'red'} />
+    <PrimoLogo />
   {/if}
 </a>
 

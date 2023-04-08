@@ -63,6 +63,7 @@
 
   $: set_page_content(data.page)
   async function set_page_content(page_data) {
+    if (!page_data) return
     await tick()
     $sections = data.sections
 
@@ -144,10 +145,12 @@
   // necessary to clear svelte:head
   beforeNavigate(async (e) => {
     if (!e.willUnload && !e.to?.params?.site) {
+      // going to dashboard
       page_mounted = false
       await tick()
       html_head = ''
       html_below = ''
+      await tick()
     }
   })
 </script>
@@ -218,6 +221,6 @@
     color: var(--color-gray-4);
     pointer-events: none;
     z-index: -2;
-    font-family: Satoshi, sans-serif;
+    font-family: Inter, sans-serif;
   }
 </style>

@@ -34,7 +34,7 @@ export default {
     id.set(site.id)
     name.set(site.name)
     fields.set(site.fields)
-    code.set(code)
+    code.set(site.code)
     symbols.set(site.symbols)
     pages.set(site.pages)
   },

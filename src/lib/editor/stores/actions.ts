@@ -3,51 +3,30 @@ import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import * as activePage from './app/activePage'
 import { id as activePageID } from './app/activePage'
-import sections from './data/sections'
-import pages_store from './data/pages'
-import { saved, locale, hoveredBlock } from './app/misc'
-import * as stores from './data/draft'
-import { update as update_site, content, code, fields, timeline, site as unsavedSite } from './data/draft'
+import { saved, locale } from './app/misc'
+import stores, { update_timeline } from './data'
+import { update as update_site, content, code, fields, site as unsavedSite } from './data/draft'
+import { timeline } from './data'
 import { buildStaticPage } from './helpers'
-import type { Site as SiteType, Symbol as SymbolType, Page as PageType } from '../const'
-import { Page } from '../const'
-import { createUniqueID } from '../utilities';
-import { getSymbol } from './helpers'
+import type { Symbol as SymbolType, Page as PageType } from '../const'
 import * as supabaseDB from '$lib/supabase'
 import { supabase } from '$lib/supabase'
-import { invalidate } from '$app/navigation'
 import { swap_array_item_index } from '$lib/utils'
 import { v4 as uuidv4 } from 'uuid';
 
-export async function hydrateSite(data: SiteType): Promise<void> {
-  // const site = validate_site_structure_v2(data)
-  const site = data
-  if (!site) return
-  sections.set([])
-  stores.id.set(site.id)
-  stores.name.set(site.name)
-  // stores.pages.set(site.pages)
-
-  code.set(site.code)
-  fields.set(site.fields)
-  stores.symbols.set(site.symbols)
-  stores.content.set(site.content)
+export async function hydrate_active_data(data) {
+  stores.sections.set(data.sections)
+  stores.pages.set(data.pages)
+  stores.symbols.set(data.symbols)
+  update_site(data.site)
 }
 
 export async function updateHTML({ page, site }) {
-  // active page
-  // pages.update(get(activePageID), (s) => ({
-  //   ...s,
-  //   code: {
-  //     ...s.code,
-  //     html: page
-  //   }
-  // }));
 
   // page
   activePage.set({
     code: {
-      ...get(activePage).code,
+      ...get(activePage.default).code,
       html: page
     }
   })
@@ -58,9 +37,7 @@ export async function updateHTML({ page, site }) {
     html: site
   }))
 
-  // await supabase.from('pages').update({ code })
-
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function updateActivePageCSS(css: string): Promise<void> {
@@ -71,7 +48,7 @@ export async function updateActivePageCSS(css: string): Promise<void> {
       css
     }
   }));
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function updateSiteCSS(css: string): Promise<void> {
@@ -79,88 +56,97 @@ export async function updateSiteCSS(css: string): Promise<void> {
     ...c,
     css
   }))
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
-// when a Symbol is deleted from the Site Library, 
-// delete every instance of it on the site as well (and their content)
-export async function deleteInstances(symbol: SymbolType): Promise<void> {
+export function undo_change(): void {
+  const { current } = get(timeline)
+  current?.undoing(current.data)
 
-  // remove from page sections
-  const sectionsToDeleteFromContent = []
-  const updatedPages = cloneDeep(get(stores.pages)).map(removeInstancesFromPage)
-  function removeInstancesFromPage(page) {
-    const updatedSections = page.sections.filter(section => {
-      if (section.symbolID === symbol.id) {
-        const sectionPath = [page.id, section.id]
-        sectionsToDeleteFromContent.push(sectionPath)
-      } else return true
-    })
-    return {
-      ...page,
-      sections: updatedSections,
-      // pages: page.pages.map(removeInstancesFromPage)
-    };
-  }
-
-  // remove sections from content tree
-  const updatedSiteContent = cloneDeep(get(stores.site).content)
-  const locales = Object.keys(get(stores.site).content)
-  locales.forEach(locale => {
-    sectionsToDeleteFromContent.forEach(path => unset(updatedSiteContent, [locale, ...path]))
-  })
-
-  stores.content.set(updatedSiteContent)
-  stores.pages.set(updatedPages)
-  timeline.push(get(unsavedSite))
-}
-
-
-export function undoSiteChange(): void {
   const undone = timeline.undo();
-  hydrateSite(undone)
+  // hydrate_active_data(undone.data)
 }
 
-export function redoSiteChange(): void {
-  const redone = timeline.redo()
-  hydrateSite(redone)
+export function redo_change(): void {
+  const { data, doing } = timeline.redo()
+  // hydrate_active_data(data)
+  doing(data)
 }
 
 export const symbols = {
   create: async (symbol) => {
     // saved.set(false)
-    stores.symbols.update(s => [symbol, ...s])
-    const res = await supabase.from('symbols').insert(symbol)
-    timeline.push(get(unsavedSite))
-    // return data.id
-  },
-  update: async (toUpdate) => {
-    // saved.set(false)
-    stores.symbols.update(symbols => {
-      return symbols.map(symbol => symbol.id === toUpdate.id ? ({
-        ...symbol,
-        ...toUpdate
-      }) : symbol)
+
+    // tested
+    update_timeline({
+      doing: async () => {
+        stores.symbols.update(s => [symbol, ...s])
+        await supabase.from('symbols').insert(symbol)
+      },
+      undoing: async () => {
+        stores.symbols.update(store => store.filter(s => s.id !== symbol.id))
+        await supabase.from('symbols').delete().eq('id', symbol.id)
+      }
     })
-
-    sections.update(s => s.map(section => ({
-      ...section,
-      symbol: section.symbol.id === toUpdate.id ? {
-        ...section.symbol,
-        ...toUpdate
-      } : section.symbol
-    })))
-
-    await supabaseDB.update_row('symbols', toUpdate.id, toUpdate)
-
-    timeline.push(get(unsavedSite))
   },
-  delete: async (toDelete: SymbolType) => {
+  update: async (updated_symbol) => {
     // saved.set(false)
-    stores.symbols.update(symbols => symbols.filter(s => s.id !== toDelete.id))
-    await supabase.from('sections').delete().eq('symbol', toDelete.id) // delete instances
-    await supabaseDB.delete_row('symbols', toDelete.id)
-    timeline.push(get(unsavedSite))
+
+    const original_symbol = _.cloneDeep(find(get(stores.symbols), { id: updated_symbol.id }))
+    const original_symbols = _.cloneDeep(get(stores.symbols))
+    const original_sections = _.cloneDeep(get(stores.sections))
+
+    update_timeline({
+      doing: async () => {
+
+        stores.symbols.update(store => store.map(symbol => symbol.id === updated_symbol.id ? ({
+          ...store,
+          ...updated_symbol
+        }) : symbol))
+
+        stores.sections.update(store => store.map(section => ({
+          ...section,
+          symbol: section.symbol.id === updated_symbol.id ? {
+            ...section.symbol,
+            ...updated_symbol
+          } : section.symbol
+        })))
+
+        await supabaseDB.update_row('symbols', updated_symbol.id, updated_symbol)
+      },
+      undoing: async () => {
+        stores.symbols.set(original_symbols)
+        stores.sections.set(original_sections)
+        await supabaseDB.update_row('symbols', updated_symbol.id, original_symbol)
+      }
+    })
+  },
+  delete: async (symbol_to_delete: SymbolType) => {
+    // saved.set(false)
+
+    const original_symbols = _.cloneDeep(get(stores.symbols))
+    const original_sections = _.cloneDeep(get(stores.sections))
+
+    let deleted_sections
+
+    // tested
+    update_timeline({
+      doing: async () => {
+        stores.sections.update(store => store.filter(section => section.symbol.id !== symbol_to_delete.id))
+        const res = await supabase.from('sections').delete().eq('symbol', symbol_to_delete.id).select() // delete instances
+        deleted_sections = res.data // to re-add in undoing
+
+        stores.symbols.update(symbols => symbols.filter(s => s.id !== symbol_to_delete.id))
+        await supabase.from('symbols').delete().eq('id', symbol_to_delete.id)
+        console.log({ deleted_sections })
+      },
+      undoing: async () => {
+        stores.symbols.set(original_symbols)
+        stores.sections.set(original_sections)
+        await supabase.from('symbols').insert(symbol_to_delete)
+        await supabase.from('sections').insert(deleted_sections) // re-add instances
+      }
+    })
   }
 }
 
@@ -176,47 +162,95 @@ export const active_site = {
 
 export const active_page = {
   add_symbol: async (symbol, position) => {
+    const original_sections = _.cloneDeep(get(stores.sections))
 
-    const instance = {
-      id: null,
+    const new_section = {
+      id: uuidv4(),
       index: position,
       page: get(activePageID),
       content: symbol.content,
       symbol
     }
 
-    sections.update(sections => [
-      ...sections.slice(0, position),
-      instance,
-      ...sections.slice(position),
-    ])
+    update_timeline({
+      doing: async () => {
+        stores.sections.update(store => [
+          ...store.slice(0, position),
+          new_section,
+          ...store.slice(position),
+        ])
 
-    const { data } = await supabase.from('sections').insert({
-      symbol: symbol.id,
-      page: get(activePageID),
-      index: position,
-      content: symbol.content || {},
-    }).select('*, symbol(*)')
+        await supabase.from('sections').insert({
+          ...new_section,
+          symbol: symbol.id
+        }).select('*, symbol(*)')
 
-    sections.update(sections => sections.map(section => section.id === null ? data[0] : section))
-
-    const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-    pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
-    await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
-
-    // create row in sections table w/ given order
-    // modify other rows w/ new indeces or order by last updated
-
+        const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
+        stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+        await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
+      },
+      undoing: () => {
+        stores.sections.set(original_sections)
+        supabase.from('sections').delete().eq('id', new_section.id)
+      }
+    })
   },
   move_block: async (from, to) => {
-    const block = get(sections)[from]
-    const block_being_replaced = get(sections)[to]
-    const updated = swap_array_item_index(get(sections), from, to)
-    sections.set(updated)
-    await supabase.from('sections').update({ index: from }).eq('id', block_being_replaced.id)
-    await supabase.from('sections').update({ index: to }).eq('id', block.id)
+    const block_being_moved = _.find(get(stores.sections), ['index', from])
+    const block_being_replaced = _.find(get(stores.sections), ['index', to])
+
+    const original_sections = cloneDeep(get(stores.sections))
+    const updated_sections = swap_array_item_index(get(stores.sections), from, to).map((section) => {
+      if (section.id === block_being_moved.id) {
+        return {
+          ...section,
+          index: to
+        }
+      } else if (section.id === block_being_replaced.id) {
+        return {
+          ...section,
+          index: from
+        }
+      } else return section
+    })
+
+    update_timeline({
+      doing: async () => {
+        stores.sections.set(updated_sections)
+        await supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_replaced.id)
+        await supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_moved.id)
+      },
+      undoing: () => {
+        stores.sections.set(original_sections)
+        supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_replaced.id)
+        supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_moved.id)
+      }
+    })
+  },
+  delete_block: async (block) => {
+    const original_sections = _.cloneDeep(get(stores.sections))
+    update_timeline({
+      doing: async () => {
+        stores.sections.update(store => store.filter(section => section.id !== block.id))
+        await supabase.from('sections').delete().eq('id', block.id)
+
+        const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
+        stores.pages.update(store => store.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+
+      },
+      undoing: async () => {
+        stores.sections.set(original_sections)
+        await supabase.from('sections').insert({
+          ...block,
+          symbol: block.symbol.id
+        })
+      }
+    })
   },
   update: async (obj, updateTimeline = true) => {
+
+    const current_page = _.cloneDeep(get(activePage.default))
+
     activePage.set(obj)
 
     await supabase.from('pages').update(obj).match(
@@ -226,10 +260,22 @@ export const active_page = {
       })
 
     const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-    pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+    stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
     await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
 
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    if (updateTimeline) update_timeline({
+      doing: () => {
+        activePage.set(current_page)
+        supabase.from('pages').update(current_page).match(
+          {
+            id: current_page.id,
+            site: get(unsavedSite)['id']
+          })
+      },
+      undoing: () => {
+        //TODO
+      }
+    })
   },
 }
 
@@ -249,24 +295,25 @@ export const pages = {
       site: get(unsavedSite)['id']
     }
 
-    pages.add(new_page, [])
+    pages.add(new_page)
 
-    const { data: sections } = await supabase.from('sections').select().eq('page', page.id)
+    const { data: page_blocks } = await supabase.from('sections').select().eq('page', page.id)
 
-    const newest = await supabase.from('sections').insert(sections.map(section => ({
-      content: section.content,
-      index: section.index,
-      page: new_page.id,
-      symbol: section.symbol
-    })))
+    if (page_blocks) {
+      await supabase.from('sections').insert(page_blocks.map(section => ({
+        content: section.content,
+        index: section.index,
+        page: new_page.id,
+        symbol: section.symbol
+      })))
+    }
 
-
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    if (updateTimeline) update_timeline()
 
   },
   add: async (newPage: PageType, updateTimeline = true) => {
     saved.set(false)
-    const currentPages = get(pages_store)
+    const currentPages = get(stores.pages)
 
     // if (path.length > 0) {
     //   const rootPage: PageType = find(updatedPages, ['id', path[0]])
@@ -275,24 +322,23 @@ export const pages = {
     //   updatedPages = [...updatedPages, newPage]
     // }
 
-    console.log({ newPage })
-    pages_store.set([...cloneDeep(currentPages), newPage])
+    stores.pages.set([...cloneDeep(currentPages), newPage])
     const { data } = await supabase.from('pages').insert({
       ...newPage,
       site: get(unsavedSite)['id']
     }).select()
 
     if (data) {
-      pages_store.update(store => store.map(page => page.id === newPage.id ? data[0] : page))
+      stores.pages.update(store => store.map(page => page.id === newPage.id ? data[0] : page))
     } else {
-      pages_store.update(store => store.filter(page => page.id !== newPage.id))
+      stores.pages.update(store => store.filter(page => page.id !== newPage.id))
     }
 
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    if (updateTimeline) update_timeline()
   },
   delete: async (pageId: string, updateTimeline = true) => {
     // saved.set(false)
-    pages_store.update(pages => pages.filter(page => page.id !== pageId))
+    stores.pages.update(pages => pages.filter(page => page.id !== pageId))
 
     const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.id', 'eq', pageId)
     await Promise.all(
@@ -302,11 +348,11 @@ export const pages = {
     )
     await supabase.from('pages').delete().eq('id', pageId)
 
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    if (updateTimeline) update_timeline()
   },
   update: async (pageId: string, fn, updateTimeline = true) => {
     saved.set(false)
-    const newPages = get(pages_store).map(page => {
+    const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) {
         return fn(page)
       } else if (some(page.pages, ['id', pageId])) {
@@ -316,11 +362,11 @@ export const pages = {
         }
       } else return page
     })
-    pages_store.set(newPages)
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    stores.pages.set(newPages)
+    if (updateTimeline) update_timeline()
   },
   edit: async (pageId: string, updatedPage: { id: string, name: string }, updateTimeline = true) => {
-    const newPages = get(pages_store).map(page => {
+    const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) { // root page
         return {
           ...page,
@@ -338,21 +384,21 @@ export const pages = {
       } else return page
     })
 
-    pages_store.set(newPages)
-    if (updateTimeline) timeline.push(get(unsavedSite))
+    stores.pages.set(newPages)
+    if (updateTimeline) update_timeline()
   }
 }
 
 export async function deleteSection(sectionID) {
-  const updatedSections = get(sections).filter(s => s.id !== sectionID)
-  sections.set(updatedSections)
+  const updatedSections = get(stores.sections).filter(s => s.id !== sectionID)
+  stores.sections.set(updatedSections)
 
   const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-  pages_store.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
+  stores.pages.update(store => store.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
 
   await supabase.from('sections').delete().eq('id', sectionID)
 
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function update_symbol_with_static_values(component) {
@@ -374,8 +420,20 @@ export async function update_symbol_with_static_values(component) {
 }
 
 export async function update_section_content(section, updated_content) {
-  sections.set(get(sections).map(s => s.id === section.id ? { ...s, content: updated_content } : s))
-  await supabase.from('sections').update({ content: updated_content }).eq('id', section.id)
+
+  const original_sections = _.cloneDeep(get(stores.sections))
+  const original_content = _.cloneDeep(section.content)
+
+  update_timeline({
+    doing: async () => {
+      stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: updated_content } : s))
+      await supabase.from('sections').update({ content: updated_content }).eq('id', section.id)
+    },
+    undoing: async () => {
+      stores.sections.set(original_sections)
+      await supabase.from('sections').update({ content: original_content }).eq('id', section.id)
+    }
+  })
 }
 
 export async function saveFields(newPageFields, newSiteFields, newContent) {
@@ -385,7 +443,7 @@ export async function saveFields(newPageFields, newSiteFields, newContent) {
   }));
   fields.set(newSiteFields);
   content.set(newContent)
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function addLocale(key) {
@@ -393,7 +451,7 @@ export async function addLocale(key) {
     ...s,
     [key]: s['en']
   }))
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function removeLocale(key) {
@@ -403,7 +461,7 @@ export async function removeLocale(key) {
     delete updatedContent[key]
     return updatedContent
   })
-  timeline.push(get(unsavedSite))
+  update_timeline()
 }
 
 export async function changeLocale() {

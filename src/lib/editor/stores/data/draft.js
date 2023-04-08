@@ -1,6 +1,5 @@
 import { get, writable, derived } from 'svelte/store';
 import { Page, Site } from '../../const';
-import { createStack } from '../../libraries/svelte-undo';
 
 export const id = writable('default');
 export const name = writable('');
@@ -48,8 +47,3 @@ export const site = derived([id, name, pages, code, fields, symbols, content], (
 });
 
 export default site;
-
-export let timeline = createStack(get(site));
-export function setTimeline(site) {
-	timeline.set(site);
-}

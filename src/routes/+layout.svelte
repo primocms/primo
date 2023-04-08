@@ -126,10 +126,12 @@
   <slot />
 </div>
 
-<style global>
+<style global lang="postcss">
+  @import url(https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800);
+
   .primo-reset {
     @tailwind base;
-    font-family: 'Satoshi', sans-serif !important;
+    font-family: 'Inter', serif !important;
     direction: ltr;
 
     /* height: 100vh; */

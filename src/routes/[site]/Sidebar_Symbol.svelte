@@ -295,13 +295,16 @@
     }
     .symbol {
       width: 100%;
+      border-radius: 0.25rem;
+      overflow: hidden;
       /* border: 1px solid #e3e4e8; */
       /* border-radius: 6px; */
       /* overflow: hidden; */
       cursor: grab;
       min-height: 2rem;
       transition: box-shadow 0.2s;
-      background: var(--primo-color-white);
+      border: 1px solid var(--color-gray-8);
+      /* background: var(--primo-color-white); */
 
       &.dragging {
         cursor: grabbing;

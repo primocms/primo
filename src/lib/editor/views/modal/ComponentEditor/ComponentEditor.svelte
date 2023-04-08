@@ -98,26 +98,6 @@
       })
       .value()
   }
-
-  // parse component-specific content out of site content tree (keeping separate locales)
-  function getComponentContent(siteContent): object {
-    const symbol = component.symbol || component
-    console.log({ component, symbol })
-    return _chain(Object.entries(siteContent))
-      .map(([locale]) => {
-        return {
-          locale,
-          content: getComponentData({
-            loc: locale,
-            component: local_component,
-          }),
-        }
-      })
-      .keyBy('locale')
-      .mapValues('content')
-      .value()
-  }
-
   $: setupComponent($locale) // swap content out of on-screen fields
   function setupComponent(loc) {
     fields = getFieldValues(fields, loc)

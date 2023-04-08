@@ -14,9 +14,9 @@
   import { Site } from './const'
 
   import { options as options_store, saved } from './stores/app/misc'
-  import { setTimeline } from './stores/data/draft'
-  import { symbols, site as draft } from './stores/data/draft'
-  import { hydrateSite, updatePreview } from './stores/actions'
+  import { set_timeline } from './stores/data'
+  import { site as draft } from './stores/data/draft'
+  import { hydrate_active_data, updatePreview } from './stores/actions'
   import en from './languages/en.json'
   import es from './languages/es.json'
 
@@ -44,11 +44,11 @@
     initialLocale: language,
   })
 
-  hydrateSite(data)
-  setTimeline(data)
+  hydrate_active_data(data)
+  set_timeline(data)
   // onMount(() => updatePreview(data))
 
-  symbols.set(data.symbols)
+  // symbols.set(data.symbols)
   // pages.set(data.pages)
 
   $: {
@@ -143,7 +143,7 @@
     --title-font-weight: 700;
 
     --button-color: #fafafa;
-    --button-background: #37383a;
+    --primo-button-background: #37383a;
     --button-hover-color: #7d8082;
 
     box-shadow: 0 0 #0000 0 0 #0000, 0 1px 2px 0 rgba(0, 0, 0, 0.05);

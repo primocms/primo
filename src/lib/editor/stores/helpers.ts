@@ -110,9 +110,8 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
   function buildModule(js): string {
     return separateModules ? `\
       const path = window.location.pathname === '/' ? '' : window.location.pathname
-      const [ {default:App}, data ] = await Promise.all([
-        import(path + '/_module.js'),
-        fetch('/${locale}.json').then(res => res.json())
+      const [ {default:App} ] = await Promise.all([
+        import(path + '/_module.js')
       ]).catch(e => console.error(e))
       new App({
         target: document.querySelector('body'),

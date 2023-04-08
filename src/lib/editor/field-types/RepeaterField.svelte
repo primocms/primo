@@ -358,7 +358,7 @@
     justify-content: center;
     gap: 0.5rem;
     width: 100%;
-    background: var(--button-background);
+    background: var(--primo-button-background);
     color: var(--button-color);
     padding: 0.5rem 0;
     border-radius: 1px;

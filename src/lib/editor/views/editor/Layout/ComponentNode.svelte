@@ -111,7 +111,6 @@
   }
 
   let editor
-  let local_html, local_element, local_key
   let floatingMenu, bubbleMenu
 
   let image_editor
@@ -120,10 +119,10 @@
   let link_editor
   let link_editor_is_visible = false
 
-  function create_editor(html = null) {
-    editor = new Editor({
-      content: html || local_html,
-      element: local_element,
+  function create_editor({ key, html, element }) {
+    const editor = new Editor({
+      content: html,
+      element,
       extensions: [
         StarterKit,
         Link.configure({
@@ -146,8 +145,8 @@
           },
           onBlur() {
             dispatch('unlock')
-            const html = local_element.children[0].innerHTML // editor.getHTML() gets old value
-            save_edited_value(local_key, {
+            const html = editor.getHTML()
+            save_edited_value(key, {
               html,
               markdown: converter.makeMarkdown(html),
             })
@@ -197,7 +196,7 @@
 
   async function make_content_editable() {
     if (!node) return
-    const elements_with_text = Array.from(node.querySelectorAll('*')).filter(
+    const valid_elements = Array.from(node.querySelectorAll('*')).filter(
       (element) => {
         if (['STYLE', 'TITLE'].includes(element.tagName)) return false
 
@@ -257,7 +256,7 @@
     }
 
     function search_elements_for_value(key, val) {
-      for (const element of elements_with_text) {
+      for (const element of valid_elements) {
         if (tagged_elements.has(element)) continue // element is already tagged, skip
 
         const matched = match_value_to_element(key, val, element)
@@ -380,11 +379,13 @@
     }
 
     async function set_editable_editor({ element, key = '' }) {
-      local_html = element.innerHTML.trim()
-      local_element = element
-      local_key = key
+      const html = element.innerHTML.trim()
       element.innerHTML = ''
-      create_editor(element.innerHTML.trim())
+      create_editor({
+        key,
+        html,
+        element,
+      })
     }
 
     async function set_editable_link({ element, key, url }) {
@@ -529,7 +530,7 @@
         if (e[0].addedNodes.length === 0) {
           // menu is janky, so we need to re-create it
           editor.destroy()
-          create_editor()
+          // create_editor()
         }
       })
     : null

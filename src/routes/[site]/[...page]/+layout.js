@@ -16,6 +16,11 @@ export const load = async (event) => {
     url: page_url,
     'site.url': site_url
   }).single()
+
+  if (!page) return {
+    page: null,
+    site: null
+  }
   const {data:sections} = await supabaseClient.from('sections').select('*, symbol (*)').match({page: page.id})
 
   const ordered_sections = sections?.sort((a, b) => {

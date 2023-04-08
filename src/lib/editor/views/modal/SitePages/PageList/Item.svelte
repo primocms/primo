@@ -143,7 +143,7 @@
       gap: 0.5rem;
 
       .name {
-        font-weight: 700;
+        font-weight: 500;
         font-size: 1.125rem;
         line-height: 1.5rem;
         display: flex;

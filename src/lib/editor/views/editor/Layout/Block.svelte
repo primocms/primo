@@ -49,7 +49,7 @@
 
   async function deleteBlock() {
     $positions = $positions.filter((position) => position.id !== block.id)
-    await deleteSection(block.id)
+    await active_page.delete_block(block)
     updatePreview()
     // invalidate('app:data')
   }

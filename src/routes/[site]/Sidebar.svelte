@@ -5,11 +5,14 @@
   import axios from 'axios'
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
+  import symbols from '$lib/editor/stores/data/symbols'
   import Icon from '@iconify/svelte'
-  import { createUniqueID } from '$lib/editor/utilities'
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
-  import { symbols, active_page } from '$lib/editor/stores/actions'
+  import {
+    symbols as symbol_actions,
+    active_page,
+  } from '$lib/editor/stores/actions'
   import { v4 as uuidv4 } from 'uuid'
   import { validate_symbol } from '$lib/converter'
 
@@ -21,14 +24,14 @@
   }
 
   async function placeSymbol(symbol) {
-    const exists = _.some($site.symbols, ['id', symbol.id])
+    const exists = _.some($symbols, ['id', symbol.id])
     if (exists) {
-      await symbols.update({
+      await symbol_actions.update({
         ...symbol,
         site: $site.id,
       })
     } else {
-      return await symbols.create({
+      return await symbol_actions.create({
         ...symbol,
         site: $site.id,
       })
@@ -36,7 +39,7 @@
   }
 
   async function deleteSymbol(symbol) {
-    symbols.delete(symbol)
+    symbol_actions.delete(symbol)
   }
 
   async function duplicateSymbol(symbol) {
@@ -212,7 +215,7 @@
 
     button {
       color: #71788e;
-      font-weight: 500;
+      font-weight: 400;
       font-size: 14px;
       white-space: nowrap;
       border-bottom: 3px solid transparent;

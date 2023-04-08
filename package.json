@@ -59,7 +59,7 @@
 		"promise-worker": "^2.0.1",
 		"prosemirror-schema-basic": "^1.1.2",
 		"showdown-highlight": "^3.1.0",
-		"svelte": "^3.57.0",
+		"svelte": "^3.58.0",
 		"svelte-i18n": "^3.4.0",
 		"svelte-undo": "^1.0.2",
 		"timeago.js": "^4.0.2",
@@ -68,7 +68,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
 		"@sveltejs/adapter-auto": "next",
-		"@sveltejs/kit": "^1.14.0",
+		"@sveltejs/kit": "^1.15.1",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
 		"autoprefixer": "^10.3.6",

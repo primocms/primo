@@ -1,20 +1,15 @@
 <script>
-  import { onMount, createEventDispatcher, getContext } from 'svelte'
-  import { fade } from 'svelte/transition'
-  import { _ as C } from 'svelte-i18n'
-  import Icon from '@iconify/svelte'
+  import { onMount, createEventDispatcher } from 'svelte'
   import { find as _find, flattenDeep } from 'lodash-es'
   import ToolbarButton from './ToolbarButton.svelte'
-  import Dropdown from '../../components/Dropdown/Dropdown.svelte'
   import LocaleSelector from './LocaleSelector.svelte'
+  import { timeline } from '../../stores/data'
+  import { undo_change, redo_change } from '../../stores/actions'
   import { PrimoButton } from '../../components/buttons'
-  import site, { name } from '../../stores/data/draft'
-  import { showingIDE, userRole } from '../../stores/app'
-  import { showKeyHint } from '../../stores/app/misc'
+  import site from '../../stores/data/draft'
   import { id as pageID } from '../../stores/app/activePage'
-  import { onMobile } from '../../stores/app/misc'
-  import modal from '../../stores/app/modal'
   const dispatch = createEventDispatcher()
+  import { page } from '$app/stores'
 
   export let buttons
   export let element
@@ -59,32 +54,23 @@
       </div>
     </div> -->
     <div class="left">
-      {#if !getContext('hidePrimoButton')}
-        <PrimoButton on:signOut />
-      {/if}
-      {#each buttons as button}
-        {#if Array.isArray(button)}
-          {@const group = button}
-          <div class="button-group">
-            {#each group as button}
+      <PrimoButton on:signOut />
+      <div class="buttons">
+        {#each buttons as button}
+          {#if Array.isArray(button)}
+            {@const group = button}
+            <div class="button-group">
+              {#each group as button}
+                <ToolbarButton {...button} />
+              {/each}
+            </div>
+          {:else}
+            <div class="icon-button">
               <ToolbarButton {...button} />
-            {/each}
-          </div>
-        {:else}
-          <div class="icon-button">
-            <ToolbarButton {...button} />
-          </div>
-        {/if}
-      {/each}
-      {#if getContext('ENVIRONMENT') === 'DESKTOP'}
-        <button
-          class="create-preview"
-          on:click={showPreview}
-          aria-label="Show page preview"
-        >
-          <Icon icon="bi:window" color="white" />
-        </button>
-      {/if}
+            </div>
+          {/if}
+        {/each}
+      </div>
       <!-- <a
         href="https://docs.primo.so"
         class="toolbar-link text-link"
@@ -121,7 +107,29 @@
         </button>
       {/if} -->
     </div>
+    {#if $page.data.site}
+      <div class="site-name">
+        <span class="site">{$page.data.site.name} /</span>
+        <span class="page">{$page.data.page.name}</span>
+      </div>
+    {/if}
     <div class="right">
+      {#if !$timeline.first}
+        <ToolbarButton
+          id="undo"
+          title="Undo"
+          icon="material-symbols:undo"
+          on:click={undo_change}
+        />
+      {/if}
+      {#if !$timeline.last}
+        <ToolbarButton
+          id="redo"
+          title="Redo"
+          icon="material-symbols:redo"
+          on:click={redo_change}
+        />
+      {/if}
       <LocaleSelector />
       <slot />
     </div>
@@ -135,6 +143,7 @@
     right: 0;
     top: 0;
     z-index: 99999999;
+    border-bottom: 1px solid var(--color-gray-8);
   }
 
   button.create-preview {
@@ -144,15 +153,30 @@
   }
 
   .left {
-    width: 100%;
+    /* width: 100%; */
     display: flex;
     justify-content: flex-start;
     gap: 1rem;
   }
 
+  .buttons {
+    display: flex;
+    margin-left: 0.25rem;
+  }
+
   .left .button-group {
     display: flex;
     flex-direction: row;
+  }
+
+  .site-name {
+    font-size: 14px;
+    .site {
+      color: #b6b6b6;
+    }
+    .page {
+      color: white;
+    }
   }
 
   .menu-container {
@@ -177,6 +201,7 @@
 
   .right {
     display: flex;
+    align-items: center;
     /* gap: 1rem; */
   }
 

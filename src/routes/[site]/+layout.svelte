@@ -44,10 +44,7 @@
 
   let saving = false
 
-  // $: if ($user.signedIn && browser) fetchSite($page.url.pathname)
-
   onDestroy(() => {
-    // if (browser && !siteLocked) actions.setActiveEditor({ siteID, lock: false })
     if (siteLocked) modal.hide()
   })
 </script>
@@ -73,11 +70,7 @@
 </main>
 
 <Primo
-  data={{
-    ...data.site,
-    symbols: data.symbols,
-    pages: data.pages,
-  }}
+  {data}
   page_id={$page.params.page}
   options={{
     logo: $config.customization.logo.url,

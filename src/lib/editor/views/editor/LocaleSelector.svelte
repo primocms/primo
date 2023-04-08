@@ -50,8 +50,7 @@
     }}
   >
     <svg
-      width="16"
-      height="17"
+      width="13"
       viewBox="0 0 16 17"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -64,8 +63,7 @@
     <span>{$locale.toUpperCase()}</span>
     <svg
       id="chevron"
-      width="12"
-      height="15"
+      width="10"
       viewBox="0 0 12 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -147,7 +145,8 @@
     display: grid;
     color: var(--primo-color-white);
     position: relative;
-    background: #171717;
+    font-size: 14px;
+    font-weight: 400;
 
     &.left {
       place-content: center;
@@ -156,7 +155,8 @@
   }
 
   button.label {
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -176,7 +176,6 @@
   }
 
   .select-container {
-    font-weight: 500;
     position: absolute;
     top: 100%;
     margin-top: 0.5rem;
@@ -184,6 +183,8 @@
     /* border-radius: var(--primo-border-radius); */
     overflow: hidden;
     z-index: 999999999;
+    border-bottom-right-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
 
     .locale-list {
       display: grid;
@@ -196,8 +197,12 @@
 
       button {
         &:hover,
+        &:focus,
         &.active {
           background: var(--color-gray-8);
+        }
+        &:focus {
+          outline: 0;
         }
       }
 

@@ -7,6 +7,7 @@
 
   export let variants = ''
   export let icon = ''
+  export let svg = ''
   export let title = ''
   export let button = null
   export let warn = () => true
@@ -37,10 +38,12 @@
     </button>
   </div>
   <div class="center-container">
-    <p>
-      {#if icon}<span class="icon"> <i class={icon} /> </span>{/if}
-      <span class="modal-title">{title}</span>
-    </p>
+    {#if icon}
+      <span class="icon"> <i class={icon} /> </span>
+    {:else if svg}
+      <div class="svg">{@html svg}</div>
+    {/if}
+    <span class="modal-title">{title}</span>
   </div>
   <div class="right-container">
     <slot />
@@ -143,13 +146,16 @@
       align-items: center;
       justify-content: center;
       padding: 0.5rem 1rem;
+      font-size: var(--font-size-2);
+      font-weight: 600;
+      gap: 0.25rem;
 
-      span.icon {
-        margin-right: 0.25rem;
-      }
-
-      p {
-        font-size: var(--font-size-2);
+      .svg {
+        :global(svg) {
+          --size: 1rem;
+          weight: var(--size);
+          height: var(--size);
+        }
       }
     }
 

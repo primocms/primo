@@ -56,6 +56,10 @@
     {:else if label && icon}
       <Icon {icon} />
       <span class="label">{label}</span>
+    {:else if svg}
+      <div class="svg">
+        {@html svg}
+      </div>
     {:else if icon}
       <Icon {icon} />
     {/if}
@@ -91,17 +95,18 @@
     }
   }
 
-  .primo {
+  .button.primo {
+    padding: 7px 14px;
     color: var(--primo-color-white);
-    border: 2px solid var(--primo-color-brand);
+    border: 1.5px solid var(--primo-color-brand);
+    border-radius: 0.25rem;
   }
 
   .button {
     height: 100%;
-    background: var(--primo-color-codeblack);
     color: var(--primo-color-white);
-    font-weight: 700;
-    font-size: 12px;
+    font-weight: 400;
+    font-size: 14px;
     padding: 10px 12px;
     transition: 0.1s box-shadow;
     outline: 0;
@@ -112,7 +117,7 @@
     gap: 0.5rem;
 
     &.has-icon-button {
-      padding: 0 8px;
+      padding: 8px;
 
       :global(svg) {
         width: 25px;
@@ -131,13 +136,16 @@
 
     &:hover,
     &:focus {
-      box-shadow: var(--primo-ring-primogreen);
-      z-index: 2;
+      /* background: var(--primo-color-codeblack); */
+      background: #1f1f1f;
+      /* z-index: 2; */
     }
 
     &:active {
-      background: var(--primo-color-brand);
-      color: var(--color-gray-8);
+      background: #404040;
+      /* box-shadow: var(--primo-ring-primogreen); */
+      /* background: var(--primo-color-brand); */
+      /* color: var(--color-gray-8); */
     }
   }
 

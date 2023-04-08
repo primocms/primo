@@ -6,6 +6,7 @@
 
   export let id = null
   export let title = null
+  export let pill = null
 
   let hidden = false
 
@@ -32,7 +33,12 @@
       }}
     >
       <header>
-        <span>{title}</span>
+        <div>
+          <span>{title}</span>
+          {#if pill}
+            <span class="pill">{pill.label}</span>
+          {/if}
+        </div>
         {#if hidden}
           <Icon icon="ph:caret-down-bold" />
         {:else}
@@ -71,6 +77,16 @@
     font-weight: var(--label-font-weight);
     display: flex;
     justify-content: space-between;
+
+    .pill {
+      background: #b6b6b6;
+      border-radius: 100px;
+      padding: 3px 7px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #121212;
+      margin-left: 0.5rem;
+    }
   }
   .card-body {
     border-top: 1px solid transparent;

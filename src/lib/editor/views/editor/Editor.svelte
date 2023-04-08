@@ -7,18 +7,12 @@
 
   import Toolbar from './Toolbar.svelte'
   import ToolbarButton from './ToolbarButton.svelte'
-
-  import { showingIDE } from '../../stores/app'
-  import { fields as siteFields, timeline } from '../../stores/data/draft'
+  import { fields as siteFields } from '../../stores/data/draft'
   import { fields as pageFields } from '../../stores/app/activePage'
   import sections from '../../stores/data/sections'
-  import { saving, saved, loadingSite } from '../../stores/app/misc'
+  import { loadingSite } from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
-  import {
-    undoSiteChange,
-    redoSiteChange,
-    changeLocale,
-  } from '../../stores/actions'
+  import { changeLocale } from '../../stores/actions'
 
   $: pageEmpty =
     $sections &&
@@ -49,7 +43,7 @@
     {
       id: 'toolbar--pages',
       title: $C('Pages'),
-      icon: 'system-uicons:grid-squares-add',
+      svg: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="2.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="10.5" y="2.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="2.5" y="10.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="10.5" y="10.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/></svg>',
       onclick: () =>
         modal.show(
           'SITE_PAGES',
@@ -82,22 +76,6 @@
 </script>
 
 <Toolbar on:signOut buttons={$loadingSite ? [] : developerButtons}>
-  {#if !$timeline.first}
-    <ToolbarButton
-      id="undo"
-      title="Undo"
-      icon="undo"
-      on:click={undoSiteChange}
-    />
-  {/if}
-  {#if !$timeline.last}
-    <ToolbarButton
-      id="redo"
-      title="Redo"
-      icon="redo"
-      on:click={redoSiteChange}
-    />
-  {/if}
   <!-- <ToolbarButton
     id="save"
     title="Save"
@@ -113,8 +91,6 @@
       ? 'Add a content block or component to your page to publish it'
       : 'Publish'}
     label={$C('Publish')}
-    icon="globe"
-    style="margin-left:0.25rem;"
     active={false}
     on:click={() =>
       modal.show('DEPLOY', {}, { maxWidth: '400px', hideLocaleSelector: true })}

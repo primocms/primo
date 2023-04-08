@@ -55,7 +55,7 @@
             })
           }}
         /> -->
-        <br /><br />
+        <!-- <br /><br />
         <Link
           field={{
             key: 'docs',
@@ -67,8 +67,8 @@
               docs: detail.value,
             })
           }}
-        />
-        <br /><br />
+        /> -->
+        <!-- <br /><br />
         <TextField
           field={_cloneDeep({
             label: 'Brand Color',
@@ -78,7 +78,7 @@
             setCustomization({
               color: detail.value,
             })}
-        />
+        /> -->
       </div>
     {/if}
   </div>

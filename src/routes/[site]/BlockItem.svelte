@@ -26,7 +26,7 @@
     window.document.activeElement.blur()
     symbol.name = name
     dispatch('update', symbol)
-    editingTitle = false
+    editing_title = false
   }
 
   let componentCode
@@ -64,7 +64,7 @@
 
   let active
 
-  let editingTitle = false
+  let editing_title = false
 </script>
 
 {#if buttons.length === 1 && action}
@@ -186,7 +186,7 @@
     position: relative;
     /* box-shadow: var(--primo-box-shadow); */
     overflow: hidden;
-    content-visibility: auto;
+    /* content-visibility: auto; breaking the sidebar */
     color: var(--primo-color-white);
     /* border: 1px solid var(--color-gray-9); */
     display: grid;

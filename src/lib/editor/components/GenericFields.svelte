@@ -200,15 +200,15 @@
         (field.key || field.type === 'info') && getComponent(field)}
       {@const hasChildFields = field.fields.length > 0}
       {#if isValid}
-        <Card title={hasChildFields ? field.label : null}>
+        <Card
+          title={hasChildFields ? field.label : null}
+          pill={field.is_static ? { label: 'Static', info: 'some info' } : null}
+        >
           <div
             class="field-item"
             id="field-{field.key}"
             class:repeater={field.key === 'repeater'}
           >
-            {#if field.is_static}
-              <span>Static Field</span>
-            {/if}
             <svelte:component
               this={getComponent(field)}
               {field}
@@ -261,7 +261,7 @@
   }
   .field-button {
     width: 100%;
-    background: var(--button-background);
+    background: var(--primo-button-background);
     color: var(--button-color);
     padding: 0.5rem 0;
     border-radius: 1px;

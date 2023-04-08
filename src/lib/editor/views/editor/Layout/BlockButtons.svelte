@@ -85,8 +85,11 @@
     justify-content: center;
     align-items: center;
     height: 2rem;
-    background-color: var(--primo-color-black-opaque);
-    color: var(--primo-color-white);
+    /* color: var(--primo-color-white); */
+    /* background-color: var(--primo-color-black-opaque); */
+    background: #1f1f1f;
+    color: #cecece;
+
     font-size: var(--font-size-2);
     font-weight: 500;
     transition: background-color 0.1s, color 0.1s;
@@ -97,8 +100,10 @@
     &:hover {
       z-index: 1; /* show full shadow */
       /* box-shadow: var(--primo-ring-primogreen); */
-      background: var(--primo-color-brand);
-      color: var(--colr-gray-9);
+      /* background: var(--primo-color-brand); */
+      /* color: var(--colr-gray-9); */
+      background: #292929;
+      color: #E7E7E7l;
     }
   }
   button:focus {

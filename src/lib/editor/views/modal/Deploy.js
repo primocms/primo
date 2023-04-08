@@ -5,6 +5,7 @@ import beautify from 'js-beautify'
 import { supabase } from '$lib/supabase'
 import { buildStaticPage } from '$lib/editor/stores/helpers'
 import _ from 'lodash-es'
+import {page} from '$app/stores'
 
 export async function push_site({ token, repo }) {
   const files = (
@@ -94,12 +95,12 @@ export async function push_site({ token, repo }) {
       return page_tree
     }
 
+
     async function buildSiteTree(pages) {
       // const json = JSON.stringify(site)
-
       return [
         ..._.flattenDeep(pages),
-        // ...Object.entries(site.content).map(([locale, content]) => ({
+        // ...Object.entries(content).map(([locale, content]) => ({
         //   path: `${locale}.json`,
         //   content: JSON.stringify(content),
         // })),
@@ -107,6 +108,22 @@ export async function push_site({ token, repo }) {
         //   path: `primo.json`,
         //   content: json,
         // },
+        {
+          path: 'edit/index.html',
+          content: `<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta http-equiv="Refresh" content="0; url='${get(page).url.href}'" />
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Primo</title>
+            </head>
+            <body style="margin:0">
+              <h1>redirecting to Primo server</h1>
+            </body>
+          </html>
+          `
+        },
         {
           path: 'robots.txt',
           content: `User-agent: *`,
