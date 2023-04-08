@@ -112,7 +112,7 @@
     >
   </div>
   {#if active_tab === 'site'}
-    {#if $site.symbols.length > 0}
+    {#if $symbols.length > 0}
       <div class="buttons">
         <button class="button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
@@ -123,7 +123,7 @@
         </label>
       </div>
       <div class="symbols">
-        {#each $site.symbols as symbol (symbol.id)}
+        {#each $symbols as symbol (symbol.id)}
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>

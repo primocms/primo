@@ -2,8 +2,9 @@ import { unionBy, find as _find, chain as _chain, flattenDeep as _flattenDeep } 
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { processors } from '../component.js'
-import { pages, site as activeSite, symbols, fields as siteFields } from './data/draft'
+import { pages, site as activeSite, fields as siteFields } from './data/draft'
 import sections from './data/sections'
+import symbols from './data/symbols'
 import activePage, { id, fields as pageFields, code as pageCode } from './app/activePage'
 import { locale } from './app/misc'
 import { processCSS, getPlaceholderValue, getEmptyValue } from '../utils'
@@ -53,7 +54,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
       }
     })(),
     ...page_sections.map(async section => {
-      const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(site.symbols, ['id', section.symbol])
+      const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(get(symbols), ['id', section.symbol])
       const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
       const data = getComponentData({
         component: section,

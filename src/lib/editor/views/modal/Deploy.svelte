@@ -10,6 +10,7 @@
   import pages from '$lib/editor/stores/data/pages'
   import { page } from '$app/stores'
   import { push_site } from './Deploy'
+  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
 
   let stage = 'INITIAL'
 
@@ -63,6 +64,7 @@
   }
 
   async function deploy_to_repo() {
+    loading = true
     active_deployment = await push_site({
       token: github_token,
       repo: repo_name || active_deployment.repo.full_name,
@@ -72,6 +74,7 @@
       .update({ active_deployment })
       .eq('id', $page.data.site.id)
     stage = 'CONNECT_REPO__ACTIVE__SUCCESS'
+    loading = false
   }
 
   let user_repos = []
@@ -90,7 +93,7 @@
 
   const Title = (stage) => {
     const titles = {
-      INITIAL: 'Publish Site',
+      INITIAL: 'Deploy Site',
       CONNECT_GITHUB: 'Connect to Github',
       CONNECT_REPO: 'Deploy to Repository',
     }
@@ -106,6 +109,8 @@
 
     return proxy[stage]
   }
+
+  let loading = false
 </script>
 
 <div class="Deploy primo-reset">
@@ -207,9 +212,8 @@
           <form on:submit|preventDefault={deploy_to_repo}>
             <p class="form-label">Select repo</p>
             <div>
-              <!-- <TextInput bind:value={repo_name} placeholder="Site" /> -->
               <Select bind:value={repo_name} options={user_repos} />
-              <button class="button primary">Deploy</button>
+              <PrimaryButton label="Deploy" />
             </div>
           </form>
           <footer>
@@ -233,9 +237,7 @@
         </div>
         {#if stage !== 'CONNECT_REPO__ACTIVE__SUCCESS'}
           <div class="buttons">
-            <button class="button primary" on:click={deploy_to_repo}
-              >Deploy</button
-            >
+            <PrimaryButton label="Deploy" {loading} on:click={deploy_to_repo} />
           </div>
         {/if}
       {/if}
