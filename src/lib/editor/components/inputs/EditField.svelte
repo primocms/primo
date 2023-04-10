@@ -47,11 +47,7 @@
   }
 </script>
 
-<div
-  class="top-container"
-  class:top_level
-  use:draggable={{ position: coordinates }}
->
+<div class="top-container" class:top_level>
   <div
     class="field-container"
     class:has-visibility-options={showVisibilityOptions}
@@ -94,12 +90,12 @@
           <slot name="key" />
         </label>
       </div>
-      {#if showVisibilityOptions}
+      <!-- {#if showVisibilityOptions}
         <label class="hide">
           <span>Visible</span>
           <slot name="hide" />
         </label>
-      {/if}
+      {/if} -->
     {/if}
     {#if top_level && !minimal}
       <div class="toggle">
