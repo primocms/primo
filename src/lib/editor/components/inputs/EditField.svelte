@@ -90,7 +90,7 @@
       <!-- svelte-ignore a11y-label-has-associated-control -->
       <div class="field">
         <label>
-          <span>ID</span>
+          <span>Key</span>
           <slot name="key" />
         </label>
       </div>

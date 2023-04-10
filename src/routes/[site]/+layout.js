@@ -27,7 +27,7 @@ export const load = async (event) => {
   ]).then(([{data:pages}, {data:symbols}, {data:sections}]) => ({
     pages: pages?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
     symbols: symbols?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
-    sections: sections?.sort((a, b) => (a.index === b.index) ? new Date(a.created_at) - new Date(b.created_at) : a.index - b.index  )
+    sections: sections?.sort((a, b) => a.index - b.index  )
   }))
 
   return {

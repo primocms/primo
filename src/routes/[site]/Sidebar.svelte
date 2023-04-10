@@ -6,6 +6,7 @@
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
   import symbols from '$lib/editor/stores/data/symbols'
+  import sections from '$lib/editor/stores/data/sections'
   import Icon from '@iconify/svelte'
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
@@ -89,7 +90,9 @@
   }
 
   async function add_to_page(symbol) {
-    if ($hoveredBlock.id === null) {
+    // no existing sections, add as 0
+
+    if ($hoveredBlock.id === null || $sections.length === 0) {
       // no blocks on page, add to top
       active_page.add_symbol(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {
@@ -104,12 +107,16 @@
   <div class="tabs">
     <button
       on:click={() => (active_tab = 'site')}
-      class:active={active_tab === 'site'}>Site Blocks</button
+      class:active={active_tab === 'site'}
     >
+      Site Blocks
+    </button>
     <button
       on:click={() => (active_tab = 'primo')}
-      class:active={active_tab === 'primo'}>Primo Blocks</button
+      class:active={active_tab === 'primo'}
     >
+      Primo Blocks
+    </button>
   </div>
   {#if active_tab === 'site'}
     {#if $symbols.length > 0}

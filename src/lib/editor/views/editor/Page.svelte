@@ -122,7 +122,7 @@
 
   // detect when all sections are mounted
   let sections_mounted = 0
-  $: if (sections_mounted === $sections.length && $sections.length !== 0) {
+  $: if (sections_mounted === $sections.length) {
     page_mounted = true
   }
 
@@ -183,7 +183,8 @@
 
 {#if page_is_empty}
   <div class="empty-state">
-    if you're seeing this, <br />your website is empty
+    if you're seeing this, <br />
+    your website is empty
   </div>
 {/if}
 

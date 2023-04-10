@@ -47,19 +47,19 @@
     } else return false
   }
 
-  async function deleteBlock() {
+  async function delete_block() {
     $positions = $positions.filter((position) => position.id !== block.id)
     await active_page.delete_block(block)
     updatePreview()
     // invalidate('app:data')
   }
 
-  function duplicateBlock() {
+  function duplicate_block() {
     const new_symbol = _.cloneDeep(block.symbol)
     active_page.add_symbol(new_symbol, i + 1)
   }
 
-  function editComponent(showIDE = false) {
+  function edit_component(showIDE = false) {
     dispatch('lock')
     $showingIDE = showIDE
     modal.show(
@@ -187,7 +187,7 @@
   }
 
   function bindEdit() {
-    Mousetrap.bind('mod+e', editComponent, 'keydown')
+    Mousetrap.bind('mod+e', edit_component, 'keydown')
   }
 
   function unbindEdit() {
@@ -235,15 +235,15 @@
           editable={block.type === 'component'}
           bind:node={buttons}
           on:delete={() => {
-            deleteBlock()
+            delete_block()
             dispatch('contentChanged')
           }}
           on:duplicate={() => {
-            duplicateBlock()
+            duplicate_block()
             dispatch('contentChanged')
           }}
-          on:edit-code={() => editComponent(true)}
-          on:edit-content={() => editComponent()}
+          on:edit-code={() => edit_component(true)}
+          on:edit-content={() => edit_component()}
           optionsAbove={hasOptionsAbove(i, $sections)}
           optionsBelow={hasOptionsBelow(i, $sections)}
           on:moveUp={() => {

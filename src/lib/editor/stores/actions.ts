@@ -174,6 +174,14 @@ export const active_page = {
 
     update_timeline({
       doing: async () => {
+
+        const block_at_position = _.find(get(stores.sections), ['index', new_section.index])
+        if (block_at_position) {
+          const new_position = position + 1
+          await supabase.from('sections').update({ index: new_position }).eq('id', block_at_position.id)
+          stores.sections.update(store => store.map(section => section.id === block_at_position.id ? ({ ...block_at_position, index: new_position }) : section))
+        }
+
         stores.sections.update(store => [
           ...store.slice(0, position),
           new_section,
@@ -217,13 +225,17 @@ export const active_page = {
     update_timeline({
       doing: async () => {
         stores.sections.set(updated_sections)
-        await supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_replaced.id)
-        await supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_moved.id)
+        await Promise.all([
+          supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_replaced.id),
+          supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_moved.id)
+        ])
       },
-      undoing: () => {
+      undoing: async () => {
         stores.sections.set(original_sections)
-        supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_replaced.id)
-        supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_moved.id)
+        await Promise.all([
+          supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_replaced.id),
+          supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_moved.id)
+        ])
       }
     })
   },
