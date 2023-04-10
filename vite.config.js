@@ -5,9 +5,9 @@ import ClassMangler from './class-mangler';
 const config = {
 	plugins: [
     sveltekit(),
-    // ClassMangler({
-    //   dev: true
-    // }),
+    ClassMangler({
+      // dev: true
+    }),
     {
       name: 'remove-manifest',
       configResolved(c) {
