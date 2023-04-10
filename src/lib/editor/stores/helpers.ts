@@ -36,7 +36,7 @@ export function getSymbol(symbolID): SymbolType {
   return _find(get(symbols), ['id', symbolID]);
 }
 
-export async function buildStaticPage({ page = get(activePage), site = get(activeSite), page_sections = get(sections), locale = 'en', separateModules = false, no_js = false }) {
+export async function buildStaticPage({ page = get(activePage), site = get(activeSite), page_sections = get(sections), page_symbols = get(symbols), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {
       const css: string = await processCSS(site.code.css + page.code.css)
@@ -54,7 +54,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
       }
     })(),
     ...page_sections.map(async section => {
-      const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(get(symbols), ['id', section.symbol])
+      const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(page_symbols, ['id', section.symbol])
       const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
       const data = getComponentData({
         component: section,

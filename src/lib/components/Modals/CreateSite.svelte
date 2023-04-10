@@ -63,6 +63,7 @@
           page_sections: siteData.sections.filter(
             (section) => section.page === siteData.pages[0].id
           ),
+          page_symbols: siteData.symbols,
         })
       } else {
         duplicateFileIsValid = false
