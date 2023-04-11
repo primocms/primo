@@ -692,6 +692,11 @@
     align-items: center;
     font-size: 2rem;
     overflow: hidden;
+
+    :global(svg) {
+      height: clamp(0.5rem, 50%, 4rem);
+      width: auto;
+    }
   }
 
   .link-editor {

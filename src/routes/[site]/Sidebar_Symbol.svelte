@@ -276,10 +276,10 @@
       justify-content: space-between;
       padding: 6px 0;
       color: #e7e7e7;
-      font-size: 12px;
-      line-height: 12px;
 
       .name {
+        font-size: 13px;
+        line-height: 16px;
       }
 
       .symbol-options {
