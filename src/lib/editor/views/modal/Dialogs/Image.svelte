@@ -4,9 +4,10 @@
 
   const dispatch = createEventDispatcher()
   import imageCompression from 'browser-image-compression'
-  import svgToMiniDataURI from 'mini-svg-data-uri'
   import PrimaryButton from '../../../components/buttons/PrimaryButton.svelte'
   import Spinner from '../../../components/misc/Spinner.svelte'
+  import { supabase } from '$lib/supabase'
+  import { page } from '$app/stores'
 
   const defaultValue = {
     alt: '',
@@ -32,55 +33,36 @@
     }
   }
 
-  async function convertBlobToBase64(blob) {
-    return new Promise((resolve, _) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve(reader.result)
-      reader.readAsDataURL(blob)
-    })
-  }
-
   async function encodeImageFileAsURL({ target }) {
     loading = true
     const { files } = target
     if (files.length > 0) {
-      const file = files[0]
+      const image = files[0]
 
-      let dataUri
-      let size
-      if (file.type === 'image/svg+xml') {
-        const contents = await file.text()
-        dataUri = svgToMiniDataURI(contents)
-        size = new Blob([file]).size
-      } else {
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 0.25,
-        })
-        dataUri = await convertBlobToBase64(compressed)
-        size = new Blob([compressed]).size
-      }
-
-      imagePreview = dataUri
-      setValue({
-        url: dataUri,
-        size: Math.round(size / 1000),
+      const compressed = await imageCompression(image, {
+        maxSizeMB: 0.5,
       })
+      let size = new Blob([compressed]).size
 
-      loading = false
-      dispatch('input')
+      const key = `${$page.data.site.id}/${image.name + image.lastModified}`
+      const { data, error } = await supabase.storage
+        .from('images')
+        .upload(key, compressed)
 
-      async function convertSvgToDataUri(file) {
-        const reader = new FileReader()
-        return new Promise((resolve, reject) => {
-          reader.readAsDataURL(file)
-          reader.addEventListener(
-            'load',
-            () => {
-              resolve(reader.result)
-            },
-            false
-          )
+      if (data || error?.statusCode === '409') {
+        const { data: res } = supabase.storage.from('images').getPublicUrl(key)
+
+        imagePreview = res.publicUrl
+
+        setValue({
+          url: res.publicUrl,
+          size: Math.round(size / 1000),
         })
+
+        loading = false
+        dispatch('input')
+      } else {
+        loading = false
       }
     }
   }

@@ -243,7 +243,7 @@
     background: var(--primo-color-black);
     min-width: 23rem;
     height: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
     place-content: flex-start;
     justify-content: stretch;
 

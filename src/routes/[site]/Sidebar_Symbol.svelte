@@ -209,7 +209,7 @@
     {#if controls_enabled}
       <div class="symbol-options">
         <IconButton
-          icon="material-symbols:edit-note-sharp"
+          icon="material-symbols:edit-square-outline-rounded"
           on:click={() => edit_symbol_content(symbol)}
         />
         <IconButton

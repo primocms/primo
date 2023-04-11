@@ -2,13 +2,10 @@
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
   import imageCompression from 'browser-image-compression'
-  import svgToMiniDataURI from 'mini-svg-data-uri'
   import TextInput from '$lib/editor/components/inputs/TextInput.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
-  import { sites } from '../../actions'
   import { page } from '$app/stores'
-
-  const siteID = $page.params.site
+  import { supabase } from '$lib/supabase'
 
   const defaultValue = {
     alt: '',
@@ -45,25 +42,26 @@
       })
       let size = new Blob([compressed]).size
 
-      let dataUri = await convertBlobToBase64(compressed)
-      const base64 = dataUri.replace(/data:.+?,/, '')
-      const url = await sites.uploadImage({
-        siteID,
-        image: {
-          name: image.name,
-          base64,
-        },
-      })
+      const key = `${$page.data.site.id}/${image.lastModified + image.name}`
+      const { data, error } = await supabase.storage
+        .from('images')
+        .upload(key, compressed)
 
-      imagePreview = url
+      if (data || error?.statusCode === '409') {
+        const { data: res } = supabase.storage.from('images').getPublicUrl(key)
 
-      setValue({
-        url: url,
-        size: Math.round(size / 1000),
-      })
+        imagePreview = res.publicUrl
 
-      loading = false
-      dispatch('input', field)
+        setValue({
+          url: res.publicUrl,
+          size: Math.round(size / 1000),
+        })
+
+        loading = false
+        dispatch('input', field)
+      } else {
+        loading = false
+      }
     }
   }
 
@@ -73,51 +71,6 @@
       reader.onloadend = () => resolve(reader.result)
       reader.readAsDataURL(blob)
     })
-  }
-
-  async function encodeImageFileAsURL({ target }) {
-    loading = true
-    const { files } = target
-    if (files.length > 0) {
-      const file = files[0]
-
-      let dataUri
-      let size
-      if (file.type === 'image/svg+xml') {
-        const contents = await file.text()
-        dataUri = svgToMiniDataURI(contents)
-        size = new Blob([file]).size
-      } else {
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 0.25,
-        })
-        dataUri = await convertBlobToBase64(compressed)
-        size = new Blob([compressed]).size
-      }
-
-      imagePreview = dataUri
-      setValue({
-        url: dataUri,
-        size: Math.round(size / 1000),
-      })
-
-      loading = false
-      dispatch('input', field)
-
-      async function convertSvgToDataUri(file) {
-        const reader = new FileReader()
-        return new Promise((resolve, reject) => {
-          reader.readAsDataURL(file)
-          reader.addEventListener(
-            'load',
-            () => {
-              resolve(reader.result)
-            },
-            false
-          )
-        })
-      }
-    }
   }
 
   async function hydratePreview() {
