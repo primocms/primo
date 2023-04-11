@@ -106,7 +106,7 @@
     height: 100%;
     color: var(--primo-color-white);
     font-weight: 400;
-    font-size: 14px;
+    font-size: 13px;
     padding: 10px 12px;
     transition: 0.1s box-shadow;
     outline: 0;

@@ -278,7 +278,7 @@
       color: #e7e7e7;
 
       .name {
-        font-size: 14px;
+        font-size: 13px;
         line-height: 16px;
       }
 
