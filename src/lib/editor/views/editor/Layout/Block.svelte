@@ -18,12 +18,9 @@
   import { id } from '../../../stores/app/activePage'
   import sections from '../../../stores/data/sections'
   import {
-    pages,
     update_section_content,
-    update_symbol_with_static_values,
     symbols,
     updatePreview,
-    deleteSection,
     active_page,
   } from '../../../stores/actions'
 
