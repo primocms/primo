@@ -54,7 +54,7 @@
   }
 </script>
 
-<div class="link">
+<div class="primo-link">
   <span>{field.label}</span>
   <div class="inputs">
     <TextInput
@@ -109,7 +109,7 @@
 <slot />
 
 <style lang="postcss">
-  .link {
+  .primo-link {
     display: flex;
     flex-direction: column;
 
