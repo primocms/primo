@@ -39,7 +39,9 @@
   </div>
   <div class="center-container">
     {#if icon}
-      <span class="icon"> <i class={icon} /> </span>
+      <span class="icon">
+        <Icon {icon} />
+      </span>
     {:else if svg}
       <div class="svg">{@html svg}</div>
     {/if}
@@ -73,24 +75,24 @@
     {/if}
     {#if button && button.onclick}
       <button
-        class="xyz-in primo-button primary"
+        class="primo-button primary"
         disabled={button.loading || button.disabled}
         on:click={button.onclick}
       >
         {#if button.icon}
-          <i class={button.loading ? 'fas fa-spinner' : button.icon} />
+          <Icon icon={button.loading ? 'gg:spinner' : button.icon} />
         {/if}
-        <span> {button.label} </span>
+        <span>{button.label}</span>
       </button>
     {:else if button && button.href}
       <a
-        class="xyz-in primo-button primary"
+        class="primo-button primary"
         disabled={button.loading || button.disabled}
         href={button.href}
         target="blank"
       >
         {#if button.icon}
-          <i class={button.loading ? 'fas fa-spinner' : button.icon} />
+          <Icon icon={button.loading ? 'gg:spinner' : button.icon} />
         {/if}
         <span>{button.label}</span>
       </a>

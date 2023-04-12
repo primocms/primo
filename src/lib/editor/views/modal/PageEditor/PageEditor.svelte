@@ -77,7 +77,7 @@
   }
 
   // Ensure all content keys match field keys
-  // $: syncFieldKeys(fields)
+  $: syncFieldKeys(fields)
   // $: syncLocales($content)
 
   function syncLocales(content) {
