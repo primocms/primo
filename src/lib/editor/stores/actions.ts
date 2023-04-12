@@ -1,4 +1,4 @@
-import { find, last, cloneDeep, some, chain, unset, omit, omitBy, isEqual } from 'lodash-es'
+import { find, cloneDeep, some } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import * as activePage from './app/activePage'
@@ -399,7 +399,9 @@ export const pages = {
 export async function update_page_preview(page = get(activePage.default)) {
   const preview = await buildStaticPage({ page, no_js: true })
   stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
-  await supabase.from('pages').update({ preview }).eq('id', page.id)
+  const { data: file, error } = await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
+  if (!file) return
+  await supabase.from('pages').update({ preview: file[0].path }).eq('id', get(stores.site).id)
 }
 
 export async function update_symbol_with_static_values(component) {
