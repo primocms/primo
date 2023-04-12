@@ -27,7 +27,7 @@
 <button
   {id}
   aria-label={title}
-  class="button"
+  class="primo-button"
   class:primo={type === 'primo'}
   class:active
   class:has-subbuttons={buttons}
