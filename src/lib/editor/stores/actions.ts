@@ -1,4 +1,4 @@
-import { find, last, cloneDeep, some, chain, unset, omit, omitBy, isEqual } from 'lodash-es'
+import { find, cloneDeep, some } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import * as activePage from './app/activePage'
@@ -192,16 +192,13 @@ export const active_page = {
           ...new_section,
           symbol: symbol.id
         }).select('*, symbol(*)')
-
-        const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-        stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
-        await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
       },
       undoing: () => {
         stores.sections.set(original_sections)
         supabase.from('sections').delete().eq('id', new_section.id)
       }
     })
+    update_page_preview()
   },
   move_block: async (from, to) => {
     const block_being_moved = _.find(get(stores.sections), ['index', from])
@@ -238,6 +235,7 @@ export const active_page = {
         ])
       }
     })
+    update_page_preview()
   },
   delete_block: async (block) => {
     const original_sections = _.cloneDeep(get(stores.sections))
@@ -245,10 +243,6 @@ export const active_page = {
       doing: async () => {
         stores.sections.update(store => store.filter(section => section.id !== block.id))
         await supabase.from('sections').delete().eq('id', block.id)
-
-        const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-        stores.pages.update(store => store.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
-
       },
       undoing: async () => {
         stores.sections.set(original_sections)
@@ -258,6 +252,7 @@ export const active_page = {
         })
       }
     })
+    update_page_preview()
   },
   update: async (obj, updateTimeline = true) => {
 
@@ -401,16 +396,12 @@ export const pages = {
   }
 }
 
-export async function deleteSection(sectionID) {
-  const updatedSections = get(stores.sections).filter(s => s.id !== sectionID)
-  stores.sections.set(updatedSections)
-
-  const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-  stores.pages.update(store => store.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
-
-  await supabase.from('sections').delete().eq('id', sectionID)
-
-  update_timeline()
+export async function update_page_preview(page = get(activePage.default)) {
+  const preview = await buildStaticPage({ page, no_js: true })
+  stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
+  const { data: file, error } = await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
+  if (!file) return
+  await supabase.from('pages').update({ preview: file.path }).eq('id', page.id)
 }
 
 export async function update_symbol_with_static_values(component) {
@@ -432,7 +423,6 @@ export async function update_symbol_with_static_values(component) {
 }
 
 export async function update_section_content(section, updated_content) {
-
   const original_sections = _.cloneDeep(get(stores.sections))
   const original_content = _.cloneDeep(section.content)
 
@@ -446,6 +436,7 @@ export async function update_section_content(section, updated_content) {
       await supabase.from('sections').update({ content: original_content }).eq('id', section.id)
     }
   })
+  update_page_preview()
 }
 
 export async function saveFields(newPageFields, newSiteFields, newContent) {

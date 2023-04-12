@@ -1,5 +1,6 @@
 import { getSupabase } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
+import _ from 'lodash'
 
 export const load = async (event) => {
   event.depends('app:data')
@@ -9,7 +10,7 @@ export const load = async (event) => {
   } else if (session) {
     // const site = event.params['site'] 
     const {sites, user, config} = await Promise.all([
-      supabaseClient.from('sites').select('id, name, url, owner, pages (preview), collaborators (*)'),
+      supabaseClient.from('sites').select('id, name, url, owner, pages (url, preview), collaborators (*)'),
       supabaseClient.from('users').select('*, server_members (admin, role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
     ]).then(([{data:sites},{data:user},{data:config}]) => {
@@ -37,7 +38,8 @@ export const load = async (event) => {
       session,
       user,
       sites: user_sites?.map(s => ({ 
-        ...s, preview: s.pages[0]?.['preview'], 
+        ...s, 
+        preview: _.find(s.pages, { url: 'index' })?.preview, 
         role: s.collaborators.find(c => c.user === user.id)?.role 
       })),
       config: Object.fromEntries(config.map(c => [c.id, {

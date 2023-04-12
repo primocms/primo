@@ -13,7 +13,7 @@
 </script>
 
 <a
-  class="button"
+  class="primo-button"
   class:bg-primored={showingDropdown}
   class:chevron={showingDropdown}
   aria-label="See all sites"
@@ -27,7 +27,7 @@
 </a>
 
 {#if showingDropdown}
-  <ul xyz="fade stagger stagger-1" class="dropdown">
+  <ul class="dropdown">
     {#each $dropdown as button}
       <li class="xyz-in">
         {#if button.component}
@@ -45,7 +45,7 @@
 {/if}
 
 <style lang="postcss">
-  .button {
+  .primo-button {
     aspect-ratio: 1;
     padding: 0.5rem;
     border-radius: var(--primo-border-radius);

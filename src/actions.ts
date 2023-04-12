@@ -131,8 +131,7 @@ export const sites = {
     return body
   },
   uploadImage: async ({ siteID, image }) => {
-    const { data: auth } = await supabase.auth.getSession()
-    const password = get(sitePassword)
+
 
     const { data: { body: url } } = await axios.post(`/api/${siteID}?password=${password || ''}`, {
       action: 'UPLOAD_IMAGE',
