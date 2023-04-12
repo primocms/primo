@@ -66,7 +66,7 @@
           {#each data.sites as site, i (site.id)}
             <li>
               <a class="site-link" href={site.url}>
-                <SiteThumbnail {site} preview={site.preview} />
+                <SiteThumbnail {site} />
               </a>
               <div class="site-info">
                 <div class="site-name">

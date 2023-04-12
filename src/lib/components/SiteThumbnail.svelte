@@ -4,24 +4,25 @@
   import { page } from '$app/stores'
   import { supabase } from '$lib/supabase'
 
-  export let site
+  export let site = null
+  export let preview = null
 
-  let preview = null
-
-  supabase.storage
-    .from('sites')
-    .download(site.preview)
-    .then(({ data, error }) => {
-      if (error) {
-        console.log('Error downloading file: ', error.message)
-      } else {
-        var reader = new FileReader()
-        reader.onload = function () {
-          preview = reader.result
+  if (!preview && site) {
+    supabase.storage
+      .from('sites')
+      .download(site.preview)
+      .then(({ data, error }) => {
+        if (error) {
+          console.log('Error downloading file: ', error.message)
+        } else {
+          var reader = new FileReader()
+          reader.onload = function () {
+            preview = reader.result
+          }
+          reader.readAsText(data)
         }
-        reader.readAsText(data)
-      }
-    })
+      })
+  }
 
   let container
   let scale

@@ -95,7 +95,7 @@
       </div>
       {#if duplicatingSite}
         <div class="site-thumbnail">
-          <SiteThumbnail bind:valid={duplicateFileIsValid} {preview} />
+          <SiteThumbnail {preview} />
         </div>
       {/if}
       <footer>
