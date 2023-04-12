@@ -130,11 +130,13 @@
         connect to github and then connect them to a host.
       </p>
       <div class="buttons">
-        <button class="button">Download</button>
+        <button class="primo-button">Download</button>
         <button
-          class="button primary"
-          on:click={() => (stage = 'CONNECT_GITHUB')}>Connect to Github</button
+          class="primo-button primary"
+          on:click={() => (stage = 'CONNECT_GITHUB')}
         >
+          Connect to Github
+        </button>
       </div>
     </div>
   {:else if stage === 'CONNECT_GITHUB'}
@@ -148,7 +150,7 @@
         <form on:submit|preventDefault={connect_github}>
           <div>
             <TextInput bind:value={github_token} placeholder="Token" />
-            <button class="button">Connect</button>
+            <button class="primo-button">Connect</button>
           </div>
         </form>
       </div>
@@ -161,40 +163,44 @@
           <span>{github_account?.login}</span>
         </div>
         <button
-          class="link"
+          class="primo-link"
           on:click={() => {
             github_token = ''
             github_account = null
             stage = 'CONNECT_GITHUB'
-          }}>edit</button
+          }}
         >
+          edit
+        </button>
       </div>
       {#if stage === 'CONNECT_REPO'}
         <div class="buttons">
           <button
-            class="button"
+            class="primo-button"
             on:click={() => (stage = 'CONNECT_REPO__USE_EXISTING')}
-            >Use existing repo</button
           >
+            Use existing repo
+          </button>
           <button
-            class="button primary"
+            class="primo-button primary"
             on:click={() => (stage = 'CONNECT_REPO__CREATE_REPO')}
-            >Create new repo</button
           >
+            Create new repo
+          </button>
         </div>
       {:else if stage === 'CONNECT_REPO__CREATE_REPO'}
         <div class="create-repo">
           <header>
             <h3>Create new repo</h3>
-            <button on:click={() => (stage = 'CONNECT_REPO__USE_EXISTING')}
-              >use existing repo instead</button
-            >
+            <button on:click={() => (stage = 'CONNECT_REPO__USE_EXISTING')}>
+              use existing repo instead
+            </button>
           </header>
           <form on:submit|preventDefault={create_repo}>
             <p class="form-label">Enter repo name</p>
             <div>
               <TextInput bind:value={repo_name} placeholder="Site" />
-              <button class="button primary">Deploy</button>
+              <button class="primo-button primary">Deploy</button>
             </div>
           </form>
           <footer>
@@ -205,9 +211,9 @@
         <div class="create-repo">
           <header>
             <h3>Connect to existing repo</h3>
-            <button on:click={() => (stage = 'CONNECT_REPO__CREATE_REPO')}
-              >create new repo instead</button
-            >
+            <button on:click={() => (stage = 'CONNECT_REPO__CREATE_REPO')}>
+              create new repo instead
+            </button>
           </header>
           <form on:submit|preventDefault={deploy_to_repo}>
             <p class="form-label">Select repo</p>
@@ -226,14 +232,17 @@
             <a
               class="name"
               href={active_deployment.repo.html_url}
-              target="_blank">{active_deployment.repo.full_name}</a
+              target="_blank"
             >
-            <span class="last-updated">{format(active_deployment.created)}</span
-            >
+              {active_deployment.repo.full_name}
+            </a>
+            <span class="last-updated">
+              {format(active_deployment.created)}
+            </span>
           </div>
-          <button class="link" on:click={() => (stage = 'CONNECT_REPO')}
-            >edit</button
-          >
+          <button class="primo-link" on:click={() => (stage = 'CONNECT_REPO')}>
+            edit
+          </button>
         </div>
         {#if stage !== 'CONNECT_REPO__ACTIVE__SUCCESS'}
           <div class="buttons">
@@ -292,7 +301,7 @@
     }
   }
 
-  .link {
+  .primo-link {
     font-size: 0.875rem;
     color: var(--color-gray-3);
     text-decoration: underline;
@@ -344,12 +353,12 @@
     align-items: center;
     gap: 1rem;
   }
-  .button {
+  .primo-button {
     padding: 7px 16px;
     background: #1f1f1f;
     border-radius: 0.25rem;
   }
-  .button.primary {
+  .primo-button.primary {
     border: 1px solid #35d994;
     background: transparent;
   }
