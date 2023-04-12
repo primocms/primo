@@ -401,7 +401,7 @@ export async function update_page_preview(page = get(activePage.default)) {
   stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
   const { data: file, error } = await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
   if (!file) return
-  await supabase.from('pages').update({ preview: file[0].path }).eq('id', get(stores.site).id)
+  await supabase.from('pages').update({ preview: file.path }).eq('id', page.id)
 }
 
 export async function update_symbol_with_static_values(component) {

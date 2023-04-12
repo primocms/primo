@@ -55,9 +55,6 @@
   }
 
   let siteBeingEdited
-  function showCollaborators(site) {
-    // modal.show("COLLABORATORS", { site });
-  }
 </script>
 
 <main class="primo-reset">
@@ -69,7 +66,7 @@
           {#each data.sites as site, i (site.id)}
             <li>
               <a class="site-link" href={site.url}>
-                <SiteThumbnail preview={site.preview} />
+                <SiteThumbnail {site} preview={site.preview} />
               </a>
               <div class="site-info">
                 <div class="site-name">

@@ -120,11 +120,11 @@
   </div>
   {#if active_tab === 'site'}
     {#if $symbols.length > 0}
-      <div class="buttons">
-        <button class="button" on:click={createSymbol}>
+      <div class="primo-buttons">
+        <button class="primo-button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
         </button>
-        <label class="button">
+        <label class="primo-button">
           <input on:change={uploadSymbol} type="file" accept=".json" />
           <Icon icon="mdi:upload" />
         </label>
@@ -152,12 +152,12 @@
           Breezly Blocks.
         </p>
       </div>
-      <div class="buttons">
-        <button class="button" on:click={createSymbol}>
+      <div class="primo-buttons">
+        <button class="primo-button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
           <span>Create</span>
         </button>
-        <label class="button">
+        <label class="primo-button">
           <input on:change={uploadSymbol} type="file" accept=".json" />
           <Icon icon="mdi:upload" />
           <span>Upload</span>
@@ -245,12 +245,12 @@
     }
   }
 
-  .buttons {
+  .primo-buttons {
     display: flex;
     gap: 0.5rem;
     padding-inline: 1.5rem;
 
-    .button {
+    .primo-button {
       padding: 0.25rem 0.5rem;
       color: #b6b6b6;
       background: #292929;

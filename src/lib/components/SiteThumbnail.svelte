@@ -1,8 +1,27 @@
 <script>
   import { browser } from '$app/environment'
   import { find as _find } from 'lodash-es'
+  import { page } from '$app/stores'
+  import { supabase } from '$lib/supabase'
 
-  export let preview = null
+  export let site
+
+  let preview = null
+
+  supabase.storage
+    .from('sites')
+    .download(site.preview)
+    .then(({ data, error }) => {
+      if (error) {
+        console.log('Error downloading file: ', error.message)
+      } else {
+        var reader = new FileReader()
+        reader.onload = function () {
+          preview = reader.result
+        }
+        reader.readAsText(data)
+      }
+    })
 
   let container
   let scale
