@@ -71,7 +71,7 @@
 </button>
 
 <style lang="postcss">
-  .button {
+  .primo-button {
     font-size: 0.85rem;
     user-select: none;
     border-radius: 0;
@@ -95,14 +95,14 @@
     }
   }
 
-  .button.primo {
+  .primo-button.primo {
     padding: 7px 14px;
     color: var(--primo-color-white);
     border: 1.5px solid var(--primo-color-brand);
     border-radius: 0.25rem;
   }
 
-  .button {
+  .primo-button {
     height: 100%;
     color: var(--primo-color-white);
     font-weight: 400;
@@ -149,7 +149,7 @@
     }
   }
 
-  .button[disabled] {
+  .primo-button[disabled] {
     opacity: 0.1;
     cursor: default;
     transition: var(--transition-colors);
