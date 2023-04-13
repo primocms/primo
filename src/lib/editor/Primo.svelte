@@ -46,14 +46,6 @@
 
   hydrate_active_data(data)
   set_timeline(data)
-  // onMount(() => updatePreview(data))
-
-  // symbols.set(data.symbols)
-  // pages.set(data.pages)
-
-  $: {
-    // data = $draft
-  }
 
   function saveSite(): void {
     dispatch('save', $draft)

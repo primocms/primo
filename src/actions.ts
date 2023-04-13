@@ -8,7 +8,7 @@ import { sitePassword } from './stores/misc'
 import { page } from '$app/stores'
 
 export const sites = {
-  create: async ({ data, preview }) => {
+  create: async ({ data, preview = null }) => {
 
     // create site 
     const site = {
@@ -34,8 +34,12 @@ export const sites = {
     await Promise.all([
       ...symbols.map(symbol => supabase.from('symbols').insert(symbol)),
       ...root_pages.map(page => supabase.from('pages').insert(page)),
-      supabase.from('pages').update({ preview }).match({ id: home_page.id })
     ])
+
+    // upload preview to supabase storage
+    if (preview) {
+      supabase.storage.from('sites').upload(`${site.id}/${home_page.id}/index.html`, preview)
+    }
 
     // create child pages (dependant on parent page IDs)
     await Promise.all(child_pages.map(page => supabase.from('pages').insert(page)))

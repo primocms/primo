@@ -4,7 +4,7 @@
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { makeValidUrl } from '$lib/utils'
-  import { Site } from '$lib/editor/const'
+  import { Site, Page } from '$lib/editor/const'
   import Icon from '@iconify/svelte'
   import { validate_site_structure_v2 } from '$lib/converter'
   import { buildStaticPage } from '$lib/editor/stores/helpers'
@@ -19,10 +19,12 @@
   $: canCreateSite = site_name && site_url
 
   let siteData
-  let preview
+  let preview = '<div></div>'
 
   async function createSite() {
     loading = true
+
+    const default_site = Site({ url: site_url, name: site_name })
 
     // overwrite the site id & name if it's been cloned
     // otherwise create one from scratch
@@ -32,9 +34,18 @@
           url: site_url,
           name: site_name,
         }
-      : Site({ url: site_url, name: site_name })
-
-    // TODO: populate blank site
+      : {
+          ...default_site,
+          pages: [
+            Page({
+              name: 'Home',
+              url: 'index',
+              site: default_site.id,
+            }),
+          ],
+          sections: [],
+          symbols: [],
+        }
 
     onSuccess({
       data: siteData,

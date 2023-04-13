@@ -99,7 +99,9 @@ export const Page = (page = {}): Page => ({
     js: ''
   },
   fields: [],
-  content: {},
+  content: {
+    en: {}
+  },
   parent: null,
   ...page,
 })

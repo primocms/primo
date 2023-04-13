@@ -5,7 +5,6 @@
   import axios from 'axios'
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
-  import symbols from '$lib/editor/stores/data/symbols'
   import sections from '$lib/editor/stores/data/sections'
   import Icon from '@iconify/svelte'
   import { Symbol } from '$lib/editor/const'
@@ -16,6 +15,7 @@
   } from '$lib/editor/stores/actions'
   import { v4 as uuidv4 } from 'uuid'
   import { validate_symbol } from '$lib/converter'
+  import { page } from '$app/stores'
 
   let active_tab = 'site'
 
@@ -25,7 +25,7 @@
   }
 
   async function placeSymbol(symbol) {
-    const exists = _.some($symbols, ['id', symbol.id])
+    const exists = _.some($page.data.symbols, ['id', symbol.id])
     if (exists) {
       await symbol_actions.update({
         ...symbol,
@@ -119,7 +119,7 @@
     </button>
   </div>
   {#if active_tab === 'site'}
-    {#if $symbols.length > 0}
+    {#if $page.data.symbols.length > 0}
       <div class="primo-buttons">
         <button class="primo-button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
@@ -130,7 +130,7 @@
         </label>
       </div>
       <div class="symbols">
-        {#each $symbols as symbol (symbol.id)}
+        {#each $page.data.symbols as symbol (symbol.id)}
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
