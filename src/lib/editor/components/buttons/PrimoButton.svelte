@@ -18,6 +18,7 @@
   class:chevron={showingDropdown}
   aria-label="See all sites"
   href="/"
+  data-sveltekit-reload
 >
   {#if $loadingSite}
     <Spinner />

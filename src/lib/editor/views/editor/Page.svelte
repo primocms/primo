@@ -143,16 +143,16 @@
   }
 
   // necessary to clear svelte:head
-  beforeNavigate(async (e) => {
-    if (!e.willUnload && !e.to?.params?.site) {
-      // going to dashboard
-      page_mounted = false
-      await tick()
-      html_head = ''
-      html_below = ''
-      await tick()
-    }
-  })
+  // beforeNavigate(async (e) => {
+  //   if (!e.willUnload && !e.to?.params?.site) {
+  //     // going to dashboard
+  //     page_mounted = false
+  //     await tick()
+  //     html_head = ''
+  //     html_below = ''
+  //     await tick()
+  //   }
+  // })
 </script>
 
 <svelte:head>

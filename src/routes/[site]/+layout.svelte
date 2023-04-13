@@ -11,7 +11,6 @@
   import HSplitPane from '$lib/editor/views/modal/ComponentEditor/HSplitPane.svelte'
 
   export let data
-  // $: console.log({ data })
 
   let showing_sidebar = false
 

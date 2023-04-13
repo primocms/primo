@@ -57,6 +57,10 @@
   let siteBeingEdited
 </script>
 
+<!-- <svelte:head>
+  <link rel="icon" href="assets/favicon.png" />
+</svelte:head> -->
+
 <main class="primo-reset">
   {#if $user.signedIn}
     <div class="container">
