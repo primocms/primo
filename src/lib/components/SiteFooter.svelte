@@ -2,7 +2,6 @@
   // import * as primo from '$lib/editor/package.json'
   import { config } from '../../stores'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { sign_out } from '$lib/supabase'
 
   const date = new Date()
   const month = date.toLocaleString('default', { month: 'long' })
@@ -15,9 +14,6 @@
   </span>
   <div class="footer-links">
     <div>
-      <button on:click={sign_out} style="text-decoration: underline">
-        Sign out
-      </button>
       {#each $config.customization.links as link}
         <a href={link.url} rel="external" target="blank">{link.label}</a>
       {/each}
