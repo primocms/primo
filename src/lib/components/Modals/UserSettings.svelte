@@ -7,9 +7,6 @@
   // import RepeaterField from '$lib/editor/field-types/RepeaterField.svelte'
   import Link from '$lib/editor/field-types/Link.svelte'
   import TextField from '$lib/editor/field-types/ContentField.svelte'
-  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { sign_out } from '$lib/supabase'
-  import { hide } from '$lib/components/Modal.svelte'
 
   const tabs = [
     {
@@ -82,14 +79,6 @@
               color: detail.value,
             })}
         /> -->
-        <hr style="border-color: #333" />
-        <PrimaryButton
-          label="Sign Out"
-          on:click={() => {
-            sign_out()
-            hide()
-          }}
-        />
       </div>
     {/if}
   </div>
