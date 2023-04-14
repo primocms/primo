@@ -17,7 +17,7 @@
   on:click_outside={() => (showing_popup = false)}
 >
   <button class="open-popup" on:click={() => (showing_popup = !showing_popup)}>
-    <Letter letter="m" />
+    <Letter letter={$page.data.user.email.slice(0, 1)} />
     <Icon icon="mdi:chevron-down" />
   </button>
 

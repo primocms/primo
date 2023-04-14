@@ -205,7 +205,7 @@
   }
 </script>
 
-{#if $hoveredBlock.i === i && $hoveredBlock.position === 'top'}
+{#if $hoveredBlock.active && $hoveredBlock.i === i && $hoveredBlock.position === 'top'}
   <div
     use:hover_block
     transition:slide={{ duration: 100 }}
@@ -244,11 +244,11 @@
           optionsAbove={hasOptionsAbove(i, $sections)}
           optionsBelow={hasOptionsBelow(i, $sections)}
           on:moveUp={() => {
-            active_page.move_block(i, i - 1)
+            active_page.move_block(block, i - 1)
             dispatch('contentChanged')
           }}
           on:moveDown={() => {
-            active_page.move_block(i, i + 1)
+            active_page.move_block(block, i + 1)
             dispatch('contentChanged')
           }}
         />{/if}
@@ -266,7 +266,7 @@
   />
 </div>
 
-{#if $hoveredBlock.i === i && $hoveredBlock.position === 'bottom'}
+{#if $hoveredBlock.active && $hoveredBlock.i === i && $hoveredBlock.position === 'bottom'}
   <div
     use:hover_block
     transition:slide={{ duration: 100 }}

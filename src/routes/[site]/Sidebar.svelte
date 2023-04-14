@@ -21,10 +21,10 @@
 
   async function createSymbol() {
     const symbol = Symbol()
-    placeSymbol(symbol)
+    saveSymbol(symbol)
   }
 
-  async function placeSymbol(symbol) {
+  async function saveSymbol(symbol) {
     const exists = _.some($page.data.symbols, ['id', symbol.id])
     if (exists) {
       await symbol_actions.update({
@@ -48,7 +48,7 @@
     delete new_symbol.id
     delete new_symbol.created_at
     new_symbol.name = `${new_symbol.name} (copy)`
-    placeSymbol(new_symbol)
+    saveSymbol(new_symbol)
   }
 
   async function uploadSymbol({ target }) {
@@ -58,7 +58,7 @@
       try {
         const uploaded = JSON.parse(target.result)
         const validated = validate_symbol(uploaded)
-        placeSymbol({
+        saveSymbol({
           ...validated,
           id: uuidv4(),
         })
@@ -81,12 +81,14 @@
     const { data: symbols } = await axios.get(
       'https://api.primo.so/public-library'
     )
-    return symbols.map((s) => ({
-      name: s.name,
-      fields: s.fields,
-      content: s.content,
-      code: s.code,
-    }))
+    return symbols.map((s) =>
+      Symbol({
+        name: s.name,
+        fields: s.fields,
+        content: s.content,
+        code: s.code,
+      })
+    )
   }
 
   async function add_to_page(symbol) {
@@ -134,9 +136,9 @@
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
-              placeSymbol(updated_symbol)}
-            on:edit_content={({ detail: updated_symbol }) =>
-              placeSymbol(updated_symbol)}
+              saveSymbol(updated_symbol)}
+            on:edit_content={({ detail: uspdated_symbol }) =>
+              saveSymbol(updated_symbol)}
             on:download={() => downloadSymbol(symbol)}
             on:delete={() => deleteSymbol(symbol)}
             on:duplicate={() => duplicateSymbol(symbol)}
@@ -167,18 +169,16 @@
   {:else}
     <div class="symbols">
       {#await get_primo_blocks() then blocks}
-        {#each blocks as symbol}
+        {#each blocks as symbol, i}
           <Sidebar_Symbol
             {symbol}
             controls_enabled={false}
-            on:edit={({ detail: updated_symbol }) =>
-              placeSymbol(updated_symbol)}
+            on:edit={({ detail: updated_symbol }) => saveSymbol(updated_symbol)}
             on:download={() => downloadSymbol(symbol)}
             on:delete={() => deleteSymbol(symbol)}
             on:duplicate={() => duplicateSymbol(symbol)}
             on:add_to_page={async () => {
-              const symbol_id = await placeSymbol(symbol)
-              await tick()
+              const symbol_id = await saveSymbol(symbol)
               add_to_page({
                 id: symbol_id,
                 ...symbol,

@@ -200,21 +200,20 @@ export const active_page = {
     })
     update_page_preview()
   },
-  move_block: async (from, to) => {
-    const block_being_moved = _.find(get(stores.sections), ['index', from])
+  move_block: async (block_being_moved, to) => {
     const block_being_replaced = _.find(get(stores.sections), ['index', to])
 
     const original_sections = cloneDeep(get(stores.sections))
-    const updated_sections = swap_array_item_index(get(stores.sections), from, to).map((section) => {
+    const updated_sections = swap_array_item_index(get(stores.sections), block_being_moved.index, to).map((section) => {
       if (section.id === block_being_moved.id) {
         return {
           ...section,
           index: to
         }
-      } else if (section.id === block_being_replaced.id) {
+      } else if (section.id === block_being_replaced?.id) {
         return {
           ...section,
-          index: from
+          index: block_being_moved.index
         }
       } else return section
     })
@@ -222,15 +221,16 @@ export const active_page = {
     update_timeline({
       doing: async () => {
         stores.sections.set(updated_sections)
+        if (!block_being_replaced) return
         await Promise.all([
-          supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_replaced.id),
-          supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_moved.id)
+          block_being_replaced && supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_replaced.id),
+          supabase.from('sections').update({ index: to }).eq('id', block_being_moved.id)
         ])
       },
       undoing: async () => {
         stores.sections.set(original_sections)
         await Promise.all([
-          supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_replaced.id),
+          block_being_replaced && supabase.from('sections').update({ index: block_being_replaced.index }).eq('id', block_being_replaced.id),
           supabase.from('sections').update({ index: block_being_moved.index }).eq('id', block_being_moved.id)
         ])
       }

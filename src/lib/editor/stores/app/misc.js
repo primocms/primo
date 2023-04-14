@@ -25,5 +25,6 @@ export const highlightedElement = writable(null)
 export const hoveredBlock = writable({
   i: 0,
   id: null,
-  position: ''
+  position: '',
+  active: false
 })
