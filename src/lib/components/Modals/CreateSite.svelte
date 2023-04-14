@@ -153,6 +153,7 @@
     form {
       .name-url {
         margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
       }
 
       .submit {

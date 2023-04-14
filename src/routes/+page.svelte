@@ -129,9 +129,11 @@
                 {#if loading}
                   <!-- <Spinner /> -->§
                 {:else}
-                  <Icon icon="ic:round-plus" />
+                  <div class="icon">
+                    <Icon icon="ic:round-plus" />
+                  </div>
                 {/if}
-                create a site
+                Create a site
               </button>
             </li>
           {/if}
@@ -222,8 +224,8 @@
               a,
               input {
                 text-align: left;
-                font-size: var(--font-size-4);
-                font-weight: 600;
+                font-size: 1.125rem;
+                font-weight: 500;
               }
 
               button {
@@ -260,7 +262,9 @@
             }
           }
         }
-
+        .icon {
+          font-size: 1.5rem;
+        }
         button.create-site {
           padding: 3rem;
           display: flex;
@@ -270,7 +274,8 @@
           width: 100%;
           height: 100%;
           background: var(--primo-color-black);
-          font-weight: 600;
+          font-weight: 400;
+          font-size: 1.125rem;
           color: var(--color-gray-2);
 
           &:active {

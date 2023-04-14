@@ -18,18 +18,18 @@
 >
   <button class="open-popup" on:click={() => (showing_popup = !showing_popup)}>
     <Letter letter={$page.data.user.email.slice(0, 1)} />
-    <Icon icon="mdi:chevron-down" />
+    <Icon icon="mdi:chevron-{showing_popup ? 'up' : 'down'}" />
   </button>
 
   {#if showing_popup}
     <div class="popup" in:fade={{ duration: 100 }}>
       <div class="row">
         <Letter letter={$page.data.user.email.slice(0, 1)} />
-        <span>{$page.data.user.email}</span>
+        <span class="email">{$page.data.user.email}</span>
       </div>
       <hr />
       <button class="row" on:click={sign_out}>
-        <Icon icon="mdi:sign-out" />
+        <div class="icon"><Icon icon="mdi:sign-out" /></div>
         <span>log out</span>
       </button>
     </div>
@@ -48,7 +48,7 @@
     gap: 0.25rem;
   }
   .popup {
-    padding: 12px;
+    padding: 14px;
     display: grid;
     gap: 0.375rem;
     place-items: normal;
@@ -60,28 +60,39 @@
     background: #171717;
     border: 1px solid #292929;
     z-index: 99;
+    min-width: 190px;
+
+    .email {
+      font-size: 14px;
+    }
 
     hr {
       border-color: #222;
       margin: 0.25rem 0;
-      transform: scale(1.05);
+      transform: scale(1.08);
+      transform-origin: center;
     }
 
     .row {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.75rem;
+    }
+
+    .icon {
+      font-size: 1.125rem;
     }
 
     button {
       display: flex;
       align-items: center;
-      gap: 0.375rem;
+      gap: 0.25rem;
       border-radius: 0.25rem;
-      padding: 0.25rem 0.5rem;
+      padding: 0.5rem 0.75rem;
       width: 100%;
       text-align: left;
       white-space: nowrap;
+      font-size: 14px;
 
       &:hover {
         background: #292929;

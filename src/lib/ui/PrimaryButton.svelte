@@ -53,12 +53,10 @@
   button,
   label {
     --Spinner-size: 1rem;
-
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* width: 100%; */
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
     font-weight: 400;
@@ -75,6 +73,10 @@
     &:active {
       background: var(--primo-color-brand);
       color: var(--primo-color-black);
+    }
+
+    &[type='submit'] {
+      width: 100%;
     }
   }
 

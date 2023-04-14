@@ -14,7 +14,7 @@
       alt={$config.customization.logo.alt}
     />
   </div>
-  <nav>
+  <nav class="nav">
     {#if $page.data.user.admin}
       <button class="link" on:click={() => show('INVITE_COLLABORATORS')}>
         Members
@@ -29,7 +29,7 @@
         href={$config.customization.docs.url}
         target="blank"
       >
-        <span>{$config.customization.docs.label}</span>
+        <span class="docs">{$config.customization.docs.label}</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
           <path
             fill="currentColor"
@@ -51,6 +51,12 @@
     margin-bottom: 1rem;
   }
 
+  .nav {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+  }
+
   img {
     height: 4rem;
     width: 7rem;
@@ -60,9 +66,10 @@
   .link {
     border-bottom: 2px solid transparent;
     display: flex;
+    font-size: 14px;
 
     svg {
-      width: 0.5rem;
+      width: 0.7rem;
     }
 
     &:hover {
@@ -89,8 +96,6 @@
     }
 
     .link {
-      margin-right: 1rem;
-
       &:last-child {
         margin-right: 0;
       }
