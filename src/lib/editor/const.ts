@@ -54,7 +54,7 @@ export type Symbol = {
   content: object
 }
 
-export const Symbol = (): Symbol => ({
+export const Symbol = (symbol): Symbol => ({
   id: uuidv4(),
   name: '',
   code: {
@@ -65,7 +65,8 @@ export const Symbol = (): Symbol => ({
   fields: [],
   content: {
     en: {}
-  }
+  },
+  ...symbol
 })
 
 export type Page = {

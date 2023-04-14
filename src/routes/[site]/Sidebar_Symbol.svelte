@@ -99,6 +99,7 @@
         ...$hoveredBlock,
         ...matching_block,
         position: 'top',
+        active: true,
       }
       // set active_hover store with block above and below hover point
       // from block, show dropzone above or below
@@ -108,9 +109,10 @@
         ...$hoveredBlock,
         ...matching_block,
         position: 'bottom',
+        active: true,
       }
     } else {
-      $hoveredBlock = { i: 0, id: null, position: '' }
+      $hoveredBlock = { i: 0, id: null, position: '', active: false }
     }
   }
 
@@ -160,7 +162,10 @@
 
   function reset_dimensions() {
     dragging = false
-    $hoveredBlock = { i: 0, id: null, position: '' }
+    $hoveredBlock = {
+      ...$hoveredBlock,
+      active: false,
+    }
     coordinates = { x: 0, y: 0 }
     height = null
     width = null
