@@ -219,7 +219,7 @@
             <p class="form-label">Select repo</p>
             <div>
               <Select bind:value={repo_name} options={user_repos} />
-              <PrimaryButton label="Deploy" />
+              <PrimaryButton type="submit" label="Deploy" {loading} />
             </div>
           </form>
           <footer>

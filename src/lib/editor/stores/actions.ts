@@ -100,7 +100,7 @@ export const symbols = {
       doing: async () => {
 
         stores.symbols.update(store => store.map(symbol => symbol.id === updated_symbol.id ? ({
-          ...store,
+          ...symbol,
           ...updated_symbol
         }) : symbol))
 
