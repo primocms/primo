@@ -8,14 +8,14 @@
 
 <style>
   .letter {
-    height: 30px;
-    width: 30px;
+    height: 26px;
+    width: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: #81a6fd;
     color: white;
-    font-weight: 500;
+    font-weight: 400;
     font-size: 14px;
     line-height: 0;
     border-radius: 50%;

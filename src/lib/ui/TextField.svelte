@@ -10,7 +10,7 @@
 
 <!-- svelte-ignore a11y-label-has-associated-control -->
 <label class={variants}>
-  <slot><span>{label}</span></slot>
+  <slot><span class="label">{label}</span></slot>
   <div>
     {#if prefix}
       <span class="prefix">
@@ -28,11 +28,14 @@
   </div>
 </label>
 
-<style>
+<style lang="postcss">
   label {
     display: block;
     margin-bottom: 0.5rem;
 
+    .label {
+      font-size: 12px;
+    }
     & > span {
       color: var(--color-gray-1);
       font-size: 0.875rem;

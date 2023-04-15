@@ -213,7 +213,7 @@
   .primo-modal {
     color: var(--color-gray-1);
     /* background: var(--color-gray-9); */
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: var(--primo-border-radius);
     margin: 0 auto;
     /* width: 100vw; */

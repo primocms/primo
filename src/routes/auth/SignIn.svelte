@@ -10,46 +10,57 @@
   export let password
 </script>
 
-<form method="POST" action="?/sign_in">
-  <label>
-    <span>Email</span>
-    <input bind:value={email} type="text" name="email" />
-  </label>
-  <label>
-    <span>Password</span>
-    <input bind:value={password} type="password" name="password" />
-  </label>
-  <input
-    name="invitation_id"
-    type="text"
-    class="hidden"
-    value={$page.url.searchParams.get('join')}
-  />
+<form class="form" method="POST" action="?/sign_in">
+  <div class="fields">
+    <label>
+      <span>Email</span>
+      <input bind:value={email} type="text" name="email" />
+    </label>
+    <label>
+      <span>Password</span>
+      <input bind:value={password} type="password" name="password" />
+    </label>
+    <input
+      name="invitation_id"
+      type="text"
+      class="hidden"
+      value={$page.url.searchParams.get('join')}
+    />
+  </div>
   <button type="submit">Sign in</button>
 </form>
-<span class="footer-text"
+
+<!-- <span class="footer-text"
   >Don't have an account? <button on:click={() => dispatch('switch')}
     >Sign Up</button
   ></span
->
-
+> -->
 <style lang="postcss">
-  form {
+  .form {
     display: grid;
-    gap: 1rem;
+    gap: 2rem;
+    width: 100%;
+
+    .fields {
+      display: grid;
+      gap: 1rem;
+    }
 
     label {
+      color: #b6b6b6;
       display: grid;
-      gap: 0.25rem;
+      gap: 0.5rem;
       font-size: 0.875rem;
-      font-weight: 600;
+      font-weight: 400;
     }
 
     input {
-      color: var(--color-gray-9);
+      color: #dadada;
       border-radius: 0.25rem;
-      border: 1px solid #ddd;
-      padding: 0.5rem;
+      border: 1px solid #6e6e6e;
+      padding: 0.75rem;
+      background-color: #1c1c1c;
+      font-size: 1rem;
 
       &.hidden {
         display: none;
@@ -57,30 +68,30 @@
     }
 
     button {
-      color: white;
+      color: #cecece;
       display: flex;
       flex-direction: row;
       justify-content: center;
       align-items: center;
-      padding: 0.5rem;
-      background: #1d5ffc;
+      padding: 0.65rem;
+      border: 1.5px solid #35d994;
       border-radius: 0.25rem;
     }
   }
 
-  .footer-text {
+  /* .footer-text {
     font-size: 0.875rem;
     line-height: 1.125rem;
-    color: #71788e;
-    padding: 1.5rem;
-    text-align: center;
+    color: #B6B6B6;
+    margin-top: 1.5rem;
+    justify-content: center;
     display: flex;
     gap: 0.5rem;
 
     button {
       all: unset;
       cursor: pointer;
-      color: #1d5ffc;
+      color: #0276FD;
     }
-  }
+  } */
 </style>

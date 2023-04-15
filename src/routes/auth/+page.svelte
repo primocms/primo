@@ -6,6 +6,7 @@
   import SignUp from './SignUp.svelte'
   import logo_dark from '$lib/assets/logodark.svg'
   // import logo_light from '$lib/assets/breezlywhite.svg';
+  import { config } from '../../stores'
 
   export let form
 
@@ -20,26 +21,34 @@
 {#key signing_in}
   <main in:fade class="primo-reset">
     <div class="left">
-      <header>
-        <!-- <img src={logo_dark} alt="breely logo" /> -->
-        <h1>{signing_in ? 'Sign in' : 'Sign Up'}</h1>
-      </header>
-      {#if error}
-        <div class="error">{error}</div>
-      {/if}
-      {#if signing_in}
-        <SignIn
-          bind:email
-          bind:password
-          on:switch={() => (signing_in = false)}
+      <div class="logo">
+        <img
+          src={$config.customization.logo.url}
+          alt={$config.customization.logo.alt}
         />
-      {:else}
-        <SignUp
-          bind:email
-          bind:password
-          on:switch={() => (signing_in = true)}
-        />
-      {/if}
+      </div>
+      <div class="box">
+        <header>
+          <!-- <img src={logo_dark} alt="breely logo" /> -->
+          <h1>{signing_in ? 'Sign in' : 'Sign Up'}</h1>
+        </header>
+        {#if error}
+          <div class="error">{error}</div>
+        {/if}
+        {#if signing_in}
+          <SignIn
+            bind:email
+            bind:password
+            on:switch={() => (signing_in = false)}
+          />
+        {:else}
+          <SignUp
+            bind:email
+            bind:password
+            on:switch={() => (signing_in = true)}
+          />
+        {/if}
+      </div>
     </div>
     <!-- <div class="right" /> -->
   </main>
@@ -53,30 +62,49 @@
     background: var(--color-gray-9);
     color: white;
   }
+  .logo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 2rem;
+
+    img {
+      width: 10rem;
+    }
+  }
   header {
     padding-bottom: 10px;
     /* img {
       padding-bottom: 40px;
     } */
     h1 {
-      font-weight: 700;
-      font-size: 40px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 24px;
       line-height: 24px;
-      padding-bottom: 2rem;
+      padding-bottom: 1rem;
       /* --typography-spacing-vertical: 1rem; */
     }
   }
   .error {
-    padding: 1.5rem;
-    border-radius: 0.25rem;
-    background: #eee;
-    margin: 20px 0;
+    color: #f72228;
+    margin-bottom: 1rem;
   }
   .left {
     padding: 3rem clamp(3rem, 10vw, 160px);
-    display: grid;
-    place-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
+  .box {
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem;
+    border-radius: 6px;
+    background-color: #1a1a1a;
+  }
+
   /* .right {
 		background: #1D5FFC;
 	} */
