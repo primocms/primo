@@ -30,7 +30,7 @@
       <hr />
       <button class="row" on:click={sign_out}>
         <Icon icon="mdi:sign-out" />
-        <span>log out</span>
+        <span>Sign Out</span>
       </button>
     </div>
   {/if}
