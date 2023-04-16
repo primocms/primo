@@ -6,7 +6,15 @@ import {supabase, sign_up} from '$lib/supabase'
 
 export async function load(event) {
   const { session } = await getSupabase(event)
-  if (session) {
+  const signing_up = event.url.searchParams.has('signup')
+
+  if (!session && !signing_up) {
+    const {data:existing_users} = await supabaseAdmin.from('users').select('*')
+    const initiated = existing_users.length > 0
+    if (!initiated) {
+      throw redirect(303, '?signup')
+    }
+  } else if (session) {
     throw redirect(303, '/')
   }
 }
@@ -48,7 +56,7 @@ export const actions = {
 
   },
   sign_up: async (event) => {
-    const { url, request } = event
+    const { request } = event
     const { supabaseClient } = await getSupabase(event)
 
     const data = await request.formData();
@@ -67,6 +75,7 @@ export const actions = {
     }
 
     const {data:res, error} = await sign_up({email, password})
+    console.log({res})
     
     if (error) {
       console.error(error)
@@ -74,14 +83,30 @@ export const actions = {
         success: false,
         error: error.message
       }
-    } else {
+    } else if (res) {
       // create user and workspace
+      const {data:existing_users} = await supabaseAdmin.from('users').select('*')
+      const admin = existing_users?.length === 0
+      const email_taken = existing_users?.find(user => user.email === email)
+      console.log({existing_users, admin, email_taken})
+      if (email_taken) {
+        console.log('returning false')
+        return {
+          success: false,
+          error: 'Email already in use'
+        }
+      }
       await supabaseAdmin
-        .from('users')
-        .insert({ 
-          id: res.user.id, 
-          email: res.user.email 
-        })
+      .from('users')
+      .insert({ 
+        id: res.user?.id, 
+        email: res.user?.email 
+      }),
+      await supabaseAdmin.from('server_members').insert({
+        user: res.user?.id,
+        role: 'DEV',
+        admin
+      })
 
       // add editor if invitation exists
       if (invitation) {
