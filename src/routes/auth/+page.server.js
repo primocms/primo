@@ -88,7 +88,6 @@ export const actions = {
       const {data:existing_users} = await supabaseAdmin.from('users').select('*')
       const admin = existing_users?.length === 0
       const email_taken = existing_users?.find(user => user.email === email)
-      console.log({existing_users, admin, email_taken})
       if (email_taken) {
         console.log('returning false')
         return {
