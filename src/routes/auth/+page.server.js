@@ -95,17 +95,24 @@ export const actions = {
           error: 'Email already in use'
         }
       }
+
       await supabaseAdmin
-      .from('users')
-      .insert({ 
-        id: res.user?.id, 
-        email: res.user?.email 
-      }),
-      await supabaseAdmin.from('server_members').insert({
-        user: res.user?.id,
-        role: 'DEV',
-        admin
-      })
+        .from('users')
+        .insert({ 
+          id: res.user?.id, 
+          email: res.user?.email 
+        })
+
+      await Promise.all([
+        admin && supabaseAdmin.from('config').update({
+          value: res.user?.id
+        }).eq('id', 'server_owner'),
+        supabaseAdmin.from('server_members').insert({
+          user: res.user?.id,
+          role: 'DEV',
+          admin
+        })
+      ])
 
       // add editor if invitation exists
       if (invitation) {
