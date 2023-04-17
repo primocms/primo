@@ -1,7 +1,9 @@
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { PRIVATE_SUPABASE_PRIVATE_KEY } from '$env/static/private';
 import {createClient} from '@supabase/supabase-js'
 import {find as _find} from 'lodash-es'
 
-const supabaseAdmin = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ADMIN_KEY);
+const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, PRIVATE_SUPABASE_PRIVATE_KEY);
 
 
 export async function getNumberOfUsers() {

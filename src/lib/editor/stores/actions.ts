@@ -100,7 +100,7 @@ export const symbols = {
       doing: async () => {
 
         stores.symbols.update(store => store.map(symbol => symbol.id === updated_symbol.id ? ({
-          ...store,
+          ...symbol,
           ...updated_symbol
         }) : symbol))
 
@@ -112,12 +112,12 @@ export const symbols = {
           } : section.symbol
         })))
 
-        await supabaseDB.update_row('symbols', updated_symbol.id, updated_symbol)
+        await supabase.from('symbols').update(updated_symbol).eq('id', updated_symbol.id)
       },
       undoing: async () => {
         stores.symbols.set(original_symbols)
         stores.sections.set(original_sections)
-        await supabaseDB.update_row('symbols', updated_symbol.id, original_symbol)
+        await supabase.from('symbols').update(original_symbol).eq('id', updated_symbol.id)
       }
     })
   },

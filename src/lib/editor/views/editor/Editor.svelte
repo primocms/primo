@@ -90,7 +90,7 @@
     title={pageEmpty
       ? 'Add a content block or component to your page to publish it'
       : 'Publish'}
-    label={$C('Publish')}
+    label="Deploy"
     active={false}
     on:click={() =>
       modal.show('DEPLOY', {}, { maxWidth: '400px', hideLocaleSelector: true })}

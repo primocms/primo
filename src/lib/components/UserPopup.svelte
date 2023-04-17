@@ -30,7 +30,7 @@
       <hr />
       <button class="row" on:click={sign_out}>
         <div class="icon"><Icon icon="mdi:sign-out" /></div>
-        <span>log out</span>
+        <span>Sign Out</span>
       </button>
     </div>
   {/if}
@@ -96,44 +96,6 @@
 
       &:hover {
         background: #292929;
-      }
-    }
-  }
-  .submenu {
-    header {
-      white-space: nowrap;
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 0.25rem;
-
-      span {
-        font-weight: 500;
-      }
-
-      button {
-        padding: 0.25rem;
-      }
-    }
-    .suboptions {
-      button.selected {
-        color: #1d5ffc;
-        background: #1d5ffc19;
-      }
-    }
-    footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 0.25rem;
-
-      button {
-        width: initial;
-        color: white !important;
-        background: #1d5ffc !important;
-
-        &[disabled] {
-          color: #b8bcc7 !important;
-          background: #1d5ffc0c !important;
-        }
       }
     }
   }

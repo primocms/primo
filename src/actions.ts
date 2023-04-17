@@ -170,7 +170,7 @@ export const github_token = {
       ...config,
       github_token: token
     }))
-    await supabase.from('config').update({ value: token }).eq('id', 'github-token')
+    await supabase.from('config').update({ value: token }).eq('id', 'github_token')
   },
 }
 

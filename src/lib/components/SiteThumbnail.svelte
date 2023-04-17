@@ -14,7 +14,7 @@
       .then(({ data, error }) => {
         if (error) {
           console.log('Error downloading file: ', error.message)
-        } else {
+        } else if (browser) {
           var reader = new FileReader()
           reader.onload = function () {
             preview = reader.result

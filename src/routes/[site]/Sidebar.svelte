@@ -137,7 +137,7 @@
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
               saveSymbol(updated_symbol)}
-            on:edit_content={({ detail: uspdated_symbol }) =>
+            on:edit_content={({ detail: updated_symbol }) =>
               saveSymbol(updated_symbol)}
             on:download={() => downloadSymbol(symbol)}
             on:delete={() => deleteSymbol(symbol)}

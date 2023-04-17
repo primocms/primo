@@ -19,9 +19,9 @@
     stage = 'CONNECT_REPO__ACTIVE'
   }
 
-  let github_token = $page.data.config['github-token']['value'] || ''
+  let github_token = $page.data.config['github_token']['value'] || ''
 
-  let github_account = $page.data.config['github-token']['options']?.user
+  let github_account = $page.data.config['github_token']['options']?.user
   if (github_account && !active_deployment) {
     stage = 'CONNECT_REPO'
   }
@@ -39,7 +39,7 @@
       const res = await supabase
         .from('config')
         .update({ value: github_token, options: { user: github_account } })
-        .eq('id', 'github-token')
+        .eq('id', 'github_token')
     }
   }
 
@@ -219,7 +219,7 @@
             <p class="form-label">Select repo</p>
             <div>
               <Select bind:value={repo_name} options={user_repos} />
-              <PrimaryButton label="Deploy" />
+              <PrimaryButton type="submit" label="Deploy" {loading} />
             </div>
           </form>
           <footer>
