@@ -40,98 +40,6 @@ export async function push_site({ token, repo }) {
     created: Date.now(),
   }
 
-  async function buildSiteBundle({ pages }) {
-    const page_files = await Promise.all([
-      ...pages.map((page) => buildPageTree(page)),
-      // ...Object.entries(site.content).map((item) => ({
-      //   path: `${item[0]}.json`,
-      //   content: JSON.stringify(item[1]),
-      // })),
-    ])
-    return buildSiteTree(page_files)
-
-    async function buildPageTree(page) {
-      const { url } = page
-      const { data: sections } = await supabase
-        .from('sections')
-        .select('*')
-        .eq('page', page.id)
-        .order('index', { ascending: true })
-      const { html, js } = await buildStaticPage({
-        page,
-        page_sections: sections,
-        separateModules: true,
-      })
-      const formattedHTML = await beautify.html(html)
-
-      let path
-      if (url === 'index' || url === '404') {
-        path = `${url}.html`
-      } else {
-        path = `${url}/index.html`
-      }
-
-      const page_tree = [
-        {
-          path,
-          content: formattedHTML,
-        },
-      ]
-
-      if (js) {
-        page_tree.push({
-          path: url === 'index' ? '_module.js' : `${url}/_module.js`,
-          content: js,
-        })
-      }
-
-      // if (page.pages) {
-      //   const child_pages = await Promise.all(
-      //     page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
-      //   )
-      //   page_tree.push(...child_pages)
-      // }
-
-      return page_tree
-    }
-
-
-    async function buildSiteTree(pages) {
-      // const json = JSON.stringify(site)
-      return [
-        ..._.flattenDeep(pages),
-        // ...Object.entries(content).map(([locale, content]) => ({
-        //   path: `${locale}.json`,
-        //   content: JSON.stringify(content),
-        // })),
-        // {
-        //   path: `primo.json`,
-        //   content: json,
-        // },
-        {
-          path: 'edit/index.html',
-          content: `<!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta http-equiv="Refresh" content="0; url='${get(page).url.href}'" />
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Primo</title>
-            </head>
-            <body style="margin:0">
-              <h1>redirecting to Primo server</h1>
-            </body>
-          </html>
-          `
-        },
-        {
-          path: 'robots.txt',
-          content: `User-agent: *`,
-        },
-      ]
-    }
-  }
-
   async function createTree() {
     const bundle = files.map((file) => ({
       path: file.file,
@@ -172,5 +80,102 @@ export async function push_site({ token, repo }) {
       { headers }
     )
     return data
+  }
+}
+
+export async function buildSiteBundle({ pages }) {
+  let all_sections = []
+  let all_pages = []
+
+  const page_files = await Promise.all(pages.map((page) => buildPageTree(page)))
+
+  return buildSiteTree(page_files)
+
+  async function buildPageTree(page) {
+    const { url } = page
+    const { data: sections } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('page', page.id)
+      .order('index', { ascending: true })
+
+    const { html, js } = await buildStaticPage({
+      page,
+      page_sections: sections,
+      separateModules: true,
+    })
+    const formattedHTML = await beautify.html(html)
+
+    let path
+    if (url === 'index' || url === '404') {
+      path = `${url}.html`
+    } else {
+      path = `${url}/index.html`
+    }
+
+    all_sections = [ ...all_sections, ...sections ]
+    all_pages = [ ...all_pages, page ]
+
+    const page_tree = [
+      {
+        path,
+        content: formattedHTML,
+      },
+    ]
+
+    if (js) {
+      page_tree.push({
+        path: url === 'index' ? '_module.js' : `${url}/_module.js`,
+        content: js,
+      })
+    }
+
+    // if (page.pages) {
+    //   const child_pages = await Promise.all(
+    //     page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
+    //   )
+    //   page_tree.push(...child_pages)
+    // }
+
+    return page_tree
+  }
+
+
+  async function buildSiteTree(pages) {
+    const json = JSON.stringify({
+      site: get(page).data.site,
+      pages: all_pages,
+      sections: all_sections,
+      symbols: get(page).data.symbols,
+      version: 2
+    })
+
+    return [
+      ..._.flattenDeep(pages),
+      {
+        path: `primo.json`,
+        content: json,
+      },
+      {
+        path: 'edit/index.html',
+        content: `<!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta http-equiv="Refresh" content="0; url='${get(page).url.href}'" />
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Primo</title>
+          </head>
+          <body style="margin:0">
+            <h1>redirecting to Primo server</h1>
+          </body>
+        </html>
+        `
+      },
+      {
+        path: 'robots.txt',
+        content: `User-agent: *`,
+      },
+    ]
   }
 }

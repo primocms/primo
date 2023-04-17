@@ -1,6 +1,9 @@
 <script>
   import Icon from '@iconify/svelte'
+  import _ from 'lodash-es'
   import axios from 'axios'
+  import JSZip from 'jszip'
+  import { saveAs } from 'file-saver'
   import { format } from 'timeago.js'
   import * as actions from '$lib/editor/stores/actions'
   import TextInput from '$lib/ui/TextInput.svelte'
@@ -9,7 +12,7 @@
   import { supabase } from '$lib/supabase'
   import pages from '$lib/editor/stores/data/pages'
   import { page } from '$app/stores'
-  import { push_site } from './Deploy'
+  import { push_site, buildSiteBundle } from './Deploy'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
 
   let stage = 'INITIAL'
@@ -22,9 +25,6 @@
   let github_token = $page.data.config['github_token']['value'] || ''
 
   let github_account = $page.data.config['github_token']['options']?.user
-  if (github_account && !active_deployment) {
-    stage = 'CONNECT_REPO'
-  }
 
   async function connect_github() {
     const headers = { Authorization: `Bearer ${github_token}` }
@@ -40,6 +40,38 @@
         .from('config')
         .update({ value: github_token, options: { user: github_account } })
         .eq('id', 'github_token')
+    }
+  }
+
+  let files = []
+  async function build_files() {
+    const all_files = await buildSiteBundle({ pages: $pages })
+    files = _.uniqBy(
+      all_files.map((file) => {
+        console.log({ file })
+        return {
+          ...file,
+          file: file.path,
+          data: file.content,
+        }
+      }),
+      'file'
+    ) // remove duplicated modules
+  }
+
+  async function download_site() {
+    loading = true
+    await build_files()
+    const toDownload = await create_site_zip()
+    saveAs(toDownload, `${$page.data.site.name}.zip`)
+    modal.hide()
+
+    async function create_site_zip() {
+      const zip = new JSZip()
+      files.forEach(({ file, data }) => {
+        zip.file(file, data)
+      })
+      return await zip.generateAsync({ type: 'blob' })
     }
   }
 
@@ -130,13 +162,27 @@
         connect to github and then connect them to a host.
       </p>
       <div class="buttons">
-        <button class="primo-button">Download</button>
-        <button
-          class="primo-button primary"
-          on:click={() => (stage = 'CONNECT_GITHUB')}
-        >
-          Connect to Github
+        <button class="primo-button" on:click={download_site}>
+          <Icon icon={loading ? 'eos-icons:loading' : 'ic:baseline-download'} />
+          <span>Download</span>
         </button>
+        {#if github_account}
+          <button
+            class="primo-button primary"
+            on:click={() => (stage = 'CONNECT_REPO')}
+          >
+            <Icon icon="mdi:github" />
+            <span>Deploy to Github</span>
+          </button>
+        {:else}
+          <button
+            class="primo-button primary"
+            on:click={() => (stage = 'CONNECT_GITHUB')}
+          >
+            <Icon icon="mdi:github" />
+            <span>Connect to Github</span>
+          </button>
+        {/if}
       </div>
     </div>
   {:else if stage === 'CONNECT_GITHUB'}
@@ -354,6 +400,9 @@
     gap: 1rem;
   }
   .primo-button {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     padding: 7px 16px;
     background: #1f1f1f;
     border-radius: 0.25rem;
