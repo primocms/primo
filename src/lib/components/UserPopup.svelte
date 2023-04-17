@@ -29,7 +29,7 @@
       </div>
       <hr />
       <button class="row" on:click={sign_out}>
-        <Icon icon="mdi:sign-out" />
+        <div class="icon"><Icon icon="mdi:sign-out" /></div>
         <span>Sign Out</span>
       </button>
     </div>
@@ -77,6 +77,10 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+    }
+
+    .icon {
+      font-size: 1.125rem;
     }
 
     button {
