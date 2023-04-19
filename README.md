@@ -5,7 +5,7 @@
   </a>
 </p>
 
-<h3 align="center">A modern, modular, monolithic CMS</h3>
+<h3 align="center">A modern & modular monolithic CMS</h3>
 <p align="center">Primo makes it a blast to build pages, update content, and edit code - one block at a time.</p>
 
 <p align="center">
