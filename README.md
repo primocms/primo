@@ -40,6 +40,8 @@ Primo is a new type of monolithic CMS that offers the quick setup and easy conte
 
 ## ✨ Features
 
+- Visual, on-page content editing
+
 # How to self-host Primo
 
 Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking this repo and deploying it on a static host like Vercel or Netlify. It should take a few minutes, and only has to be done once since an unlimited number of sites can be managed from a single server.
