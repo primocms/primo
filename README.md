@@ -30,6 +30,8 @@
     </a>
 </p>
 
+![screenshot](/screenshot.png)
+
 ## ⭐ Why Primo? 
 
 Traditional monolithic CMSs like WordPress, Drupal, and Joomla enable quick setup and easy content editing, but rely on antequated view layers. Headless CMSs have popped up to modernize the view layer with modern development practices and frameworks, but have a poor content editing experience. 
