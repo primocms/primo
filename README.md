@@ -30,7 +30,7 @@
     </a>
 </p>
 
-![screenshot](/screenshot.png)
+![screenshot](/screenshot-v2.png)
 
 ## ⭐ Why Primo? 
 
