@@ -77,11 +77,13 @@
       if (converted) {
         siteData = converted
 
+        const home_page = siteData.pages.find((page) => page.url === 'index')
+
         preview = await buildStaticPage({
-          page: siteData.pages.find((page) => page.url === 'index'),
+          page: home_page,
           site: siteData.site,
           page_sections: siteData.sections.filter(
-            (section) => section.page === siteData.pages[0].id
+            (section) => section.page === home_page.id
           ),
           page_symbols: siteData.symbols,
         })

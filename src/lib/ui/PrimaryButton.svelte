@@ -25,7 +25,13 @@
     <slot>
       <span class:hidden={loading}>{label}</span>
     </slot>
-    <input on:change type="file" id="primo-json" accept=".json" />
+    <input
+      on:change
+      type="file"
+      id="primo-json"
+      accept=".json"
+      disabled={disabled || loading}
+    />
   </label>
 {:else}
   <button
@@ -77,6 +83,11 @@
 
     &[type='submit'] {
       width: 100%;
+    }
+
+    &[disabled] {
+      background: var(--color-gray-6);
+      cursor: not-allowed;
     }
   }
 
