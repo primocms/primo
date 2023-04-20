@@ -22,12 +22,49 @@ const Field = (field) => {
 
 export function validate_site_structure_v2(site) {
 
+  const new_site_id = uuidv4()
+
   // TODO: save site file w/ version 2
-  if (site.version === 2) return site
+  if (site.version === 2) {
+    const new_page_ids = new Map()
+    const new_symbol_ids = new Map()
+
+    return {
+      ...site,
+      site: {
+        ...site.site,
+        id: new_site_id
+      },
+      pages: site.pages.map(p => {
+        const new_id = uuidv4()
+        new_page_ids.set(p.id, new_id)
+        return ({
+          ...p,
+          id: new_id,
+          site: new_site_id,
+          preview: `${new_site_id}/${new_id}/index.html`
+        })
+      }),
+      symbols: site.symbols.map(s => {
+        const new_id = uuidv4()
+        new_symbol_ids.set(s.id, new_id)
+        return ({
+          ...s,
+          id: new_id,
+          site: new_site_id
+        })
+      }),
+      sections: site.sections.map(s => ({
+        ...s,
+        id: uuidv4(),
+        symbol: new_symbol_ids.get(s.symbol),
+        page: new_page_ids.get(s.page)
+      })),
+    }
+  }
 
   site = validateSiteStructure(site)
 
-  const site_id = uuidv4()
 
   const Symbol = (symbol) => {
     const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
@@ -40,7 +77,7 @@ export function validate_site_structure_v2(site) {
 
     return {
       id: uuidv4(),
-      site: site_id,
+      site: new_site_id,
       name: symbol.name,
       code: symbol.code,
       fields: symbol.fields.map(Field),
@@ -51,7 +88,7 @@ export function validate_site_structure_v2(site) {
 
   const symbols = [...site.symbols.map(symbol => Symbol(symbol)), {
     id: uuidv4(),
-    site: site_id,
+    site: new_site_id,
     name: 'Content',
     code: {
       html: `<div class="section"><div class="section-container content">{@html content.html}</div></div>`,
@@ -97,7 +134,7 @@ export function validate_site_structure_v2(site) {
       sections: page.sections, // for later use, to be removed
       pages: page.pages || [], // for later use, to be removed
       content,
-      site: site_id
+      site: new_site_id
     }
   }
 
@@ -157,12 +194,14 @@ export function validate_site_structure_v2(site) {
   }, {})
 
   return {
-    id: site_id,
-    url: site.id,
-    name: site.name,
-    code: site.code,
-    fields: site.fields,
-    content,
+    site: {
+      id: new_site_id,
+      url: site.id,
+      name: site.name,
+      code: site.code,
+      fields: site.fields,
+      content
+    },
     pages: pages_with_children.map(page => {
       delete page.sections
       delete page.pages

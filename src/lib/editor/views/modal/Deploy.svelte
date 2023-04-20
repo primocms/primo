@@ -5,7 +5,6 @@
   import JSZip from 'jszip'
   import { saveAs } from 'file-saver'
   import { format } from 'timeago.js'
-  import * as actions from '$lib/editor/stores/actions'
   import TextInput from '$lib/ui/TextInput.svelte'
   import Select from '$lib/editor/ui/inputs/Select.svelte'
   import modal from '$lib/editor/stores/app/modal'

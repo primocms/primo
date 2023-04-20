@@ -10,7 +10,9 @@
   import { buildStaticPage } from '$lib/editor/stores/helpers'
 
   export let onSuccess = (newSite) => {}
-  let loading
+
+  let loading = false
+  let finishing = false
   let site_name = ``
   let site_url = ``
   let siteIDFocused = false
@@ -22,7 +24,7 @@
   let preview = '<div></div>'
 
   async function createSite() {
-    loading = true
+    finishing = true
 
     const default_site = Site({ url: site_url, name: site_name })
 
@@ -31,8 +33,11 @@
     siteData = siteData
       ? {
           ...siteData,
-          url: site_url,
-          name: site_name,
+          site: {
+            ...siteData.site,
+            url: site_url,
+            name: site_name,
+          },
         }
       : {
           ...default_site,
@@ -60,6 +65,9 @@
   let duplicatingSite = false
   let duplicateFileIsValid = true
   function readJsonFile({ target }) {
+    loading = true
+    duplicatingSite = true
+
     var reader = new window.FileReader()
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return
@@ -68,9 +76,10 @@
       const converted = validate_site_structure_v2(uploaded)
       if (converted) {
         siteData = converted
+
         preview = await buildStaticPage({
-          page: siteData.pages[0],
-          site: siteData,
+          page: siteData.pages.find((page) => page.url === 'index'),
+          site: siteData.site,
           page_sections: siteData.sections.filter(
             (section) => section.page === siteData.pages[0].id
           ),
@@ -79,15 +88,14 @@
       } else {
         duplicateFileIsValid = false
       }
-
-      duplicatingSite = true
+      loading = false
     }
     reader.readAsText(target.files[0])
   }
 </script>
 
 <main class="primo-reset primo-modal">
-  {#if !loading}
+  {#if !finishing}
     <h1 class="primo-heading-xl">Create a site</h1>
     <form on:submit|preventDefault={createSite}>
       <div class="name-url">
@@ -122,7 +130,7 @@
             <span>Duplicate from primo.json</span>
           </label>
         </div>
-        <a class="container" href="https://primo.so/marketplace" target="blank">
+        <a class="container" href="https://primocms.org/themes" target="blank">
           <Icon icon="gridicons:themes" />
           <span>Primo Themes</span>
         </a>
@@ -132,6 +140,7 @@
           type="submit"
           label={duplicatingSite ? 'Duplicate' : 'Create'}
           disabled={!canCreateSite && duplicateFileIsValid}
+          {loading}
         />
       </div>
     </form>

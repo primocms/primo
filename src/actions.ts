@@ -12,12 +12,7 @@ export const sites = {
 
     // create site 
     const site = {
-      id: data.id,
-      url: data.url,
-      name: data.name,
-      code: data.code,
-      content: data.content,
-      fields: data.fields,
+      ...data.site,
       owner: get(page).data.user.id
     }
     await supabaseDB.sites.create(site)
