@@ -239,20 +239,16 @@ export const active_page = {
     update_timeline({
       doing: async () => {
         stores.sections.set(new_sections)
-        await Promise.all([
-          supabase.from('sections').upsert(new_sections),
-          supabase.from('sections').delete().eq('id', block.id)
-        ])
+        await supabase.from('sections').delete().eq('id', block.id)
+        await supabase.from('sections').upsert(new_sections)
       },
       undoing: async () => {
         stores.sections.set(original_sections)
-        await Promise.all([
-          supabase.from('sections').upsert(original_sections),
-          supabase.from('sections').insert({
-            ...block,
-            symbol: block.symbol.id
-          })
-        ])
+        await supabase.from('sections').insert({
+          ...block,
+          symbol: block.symbol.id
+        })
+        await supabase.from('sections').upsert(original_sections)
       }
     })
     update_page_preview()
