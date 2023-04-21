@@ -27,8 +27,8 @@ export const sites = {
     await supabase.from('pages').insert(home_page)
 
     await Promise.all([
-      ...symbols.map(symbol => supabase.from('symbols').insert(symbol)),
-      ...root_pages.map(page => supabase.from('pages').insert(page)),
+      supabase.from('symbols').insert(symbols),
+      supabase.from('pages').insert(root_pages)
     ])
 
     // upload preview to supabase storage
@@ -37,10 +37,10 @@ export const sites = {
     }
 
     // create child pages (dependant on parent page IDs)
-    await Promise.all(child_pages.map(page => supabase.from('pages').insert(page)))
+    await supabase.from('pages').insert(child_pages)
 
     // create sections (dependant on page IDs)
-    await Promise.all(sections.map(section => supabase.from('sections').insert(section)))
+    await supabase.from('sections').insert(sections)
 
   },
   update: async ({ id, props }) => {

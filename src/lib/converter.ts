@@ -24,10 +24,22 @@ export function validate_site_structure_v2(site) {
 
   const new_site_id = uuidv4()
 
-  // TODO: save site file w/ version 2
+  // current site version -> replace IDs
   if (site.version === 2) {
     const new_page_ids = new Map()
     const new_symbol_ids = new Map()
+
+    const parent_pages = site.pages.filter(p => p.parent === null).map(page => {
+      const new_id = uuidv4()
+      new_page_ids.set(page.id, new_id)
+      return ({
+        ...page,
+        id: new_id,
+        site: new_site_id,
+        preview: `${new_site_id}/${new_id}/index.html`
+      })
+    })
+    const child_pages = site.pages.filter(p => p.parent !== null)
 
     return {
       ...site,
@@ -35,16 +47,20 @@ export function validate_site_structure_v2(site) {
         ...site.site,
         id: new_site_id
       },
-      pages: site.pages.map(p => {
-        const new_id = uuidv4()
-        new_page_ids.set(p.id, new_id)
-        return ({
-          ...p,
-          id: new_id,
-          site: new_site_id,
-          preview: `${new_site_id}/${new_id}/index.html`
+      pages: [
+        ...parent_pages,
+        ...child_pages.map(page => {
+          const new_id = uuidv4()
+          new_page_ids.set(page.id, new_id)
+          return ({
+            ...page,
+            id: new_id,
+            site: new_site_id,
+            preview: `${new_site_id}/${new_id}/index.html`,
+            parent: new_page_ids.get(page.parent)
+          })
         })
-      }),
+      ],
       symbols: site.symbols.map(s => {
         const new_id = uuidv4()
         new_symbol_ids.set(s.id, new_id)

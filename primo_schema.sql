@@ -403,17 +403,13 @@ CREATE POLICY "Enable ALL for authenticated users" ON "public"."symbols" AS PERM
 
 CREATE POLICY "Enable ALL for authenticated users" ON "public"."users" AS PERMISSIVE FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- Set permissions for tables
--- GRANT ALL ON TABLE public.sites TO postgres;
--- GRANT ALL ON TABLE public.sites TO anon;
--- GRANT ALL ON TABLE public.sites TO authenticated;
--- GRANT ALL ON TABLE public.sites TO service_role;
--- GRANT ALL ON TABLE public.users TO postgres;
--- GRANT ALL ON TABLE public.users TO anon;
--- GRANT ALL ON TABLE public.users TO authenticated;
--- GRANT ALL ON TABLE public.users TO service_role;
--- Path: storage_schema.sql
--- STORAGE (for saving site data & images)
+-- Create storage buckets for site files and images
+INSERT INTO
+    storage.buckets (id, name, public)
+VALUES
+    ('sites', 'sites', TRUE),
+    ('images', 'images', TRUE);
+
 -- Set storage security
 CREATE POLICY "Public access to view sites" ON storage.objects FOR
 SELECT
