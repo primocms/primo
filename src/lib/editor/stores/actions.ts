@@ -161,7 +161,7 @@ export const active_site = {
 }
 
 export const active_page = {
-  add_symbol: async (symbol, position) => {
+  add_block: async (symbol, position) => {
     const original_sections = _.cloneDeep(get(stores.sections))
 
     const new_section = {
@@ -172,26 +172,21 @@ export const active_page = {
       symbol
     }
 
+    const new_sections = [
+      ...original_sections.slice(0, position),
+      new_section,
+      ...original_sections.slice(position)
+    ].map((section, i) => ({ ...section, index: i }))
+
     update_timeline({
       doing: async () => {
 
-        const block_at_position = _.find(get(stores.sections), ['index', new_section.index])
-        if (block_at_position) {
-          const new_position = position + 1
-          await supabase.from('sections').update({ index: new_position }).eq('id', block_at_position.id)
-          stores.sections.update(store => store.map(section => section.id === block_at_position.id ? ({ ...block_at_position, index: new_position }) : section))
-        }
+        const { data, error } = await supabase
+          .from('sections')
+          .upsert(new_sections.map(s => ({ ...s, symbol: s.symbol.id })))
 
-        stores.sections.update(store => [
-          ...store.slice(0, position),
-          new_section,
-          ...store.slice(position),
-        ])
 
-        await supabase.from('sections').insert({
-          ...new_section,
-          symbol: symbol.id
-        }).select('*, symbol(*)')
+        stores.sections.set(new_sections)
       },
       undoing: () => {
         stores.sections.set(original_sections)
@@ -239,17 +234,25 @@ export const active_page = {
   },
   delete_block: async (block) => {
     const original_sections = _.cloneDeep(get(stores.sections))
+    const new_sections = original_sections.filter(section => section.id !== block.id).map((section, i) => ({ ...section, index: i }))
+
     update_timeline({
       doing: async () => {
-        stores.sections.update(store => store.filter(section => section.id !== block.id))
-        await supabase.from('sections').delete().eq('id', block.id)
+        stores.sections.set(new_sections)
+        await Promise.all([
+          supabase.from('sections').upsert(new_sections),
+          supabase.from('sections').delete().eq('id', block.id)
+        ])
       },
       undoing: async () => {
         stores.sections.set(original_sections)
-        await supabase.from('sections').insert({
-          ...block,
-          symbol: block.symbol.id
-        })
+        await Promise.all([
+          supabase.from('sections').upsert(original_sections),
+          supabase.from('sections').insert({
+            ...block,
+            symbol: block.symbol.id
+          })
+        ])
       }
     })
     update_page_preview()

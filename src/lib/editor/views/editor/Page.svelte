@@ -166,7 +166,7 @@
 {/if}
 
 <div id="page" bind:this={element} class:fadein={page_mounted} lang={$locale}>
-  {#each $sections as block, i (block.id)}
+  {#each $sections.sort((a, b) => a.index - b.index) as block, i (block.id)}
     <Block
       {i}
       locked={find($locked_blocks, ['block_id', block.id])}

@@ -96,11 +96,11 @@
 
     if ($hoveredBlock.id === null || $sections.length === 0) {
       // no blocks on page, add to top
-      active_page.add_symbol(symbol, 0)
+      active_page.add_block(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {
-      active_page.add_symbol(symbol, $hoveredBlock.i)
+      active_page.add_block(symbol, $hoveredBlock.i)
     } else {
-      active_page.add_symbol(symbol, $hoveredBlock.i + 1)
+      active_page.add_block(symbol, $hoveredBlock.i + 1)
     }
   }
 </script>
