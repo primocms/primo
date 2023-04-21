@@ -279,12 +279,11 @@
     background: #1f1f1f;
     padding: 0.5rem 0.75rem;
     border-radius: 0.25rem;
-    height: 100%
+    height: 100%;
     font-size: var(--font-size-2);
 
-
     &::placeholder {
-      color:#b6b6b6;;
+      color: #b6b6b6;
     }
     &:focus {
       outline: 0;
