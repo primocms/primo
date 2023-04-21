@@ -261,7 +261,7 @@
   }
   .field-button {
     width: 100%;
-    background: var(--primo-button-background);
+    background: #292929;
     color: var(--button-color);
     padding: 0.5rem 0;
     border-radius: 1px;
@@ -270,14 +270,13 @@
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
-
     font-size: 0.875rem;
     padding: 0.75rem;
     border-radius: 4px;
-    font-weight: 700;
+    font-weight: 400;
 
     &:hover {
-      background: var(--button-hover-color);
+      background: #333333;
     }
   }
 </style>

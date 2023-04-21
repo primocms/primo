@@ -150,9 +150,9 @@
     position: relative;
 
     &.top_level {
-      border: 1px solid #333333;
+      background-color: #1a1a1a;
       border-radius: 6px;
-      padding: 20px 24px;
+      padding: 24px 24px;
     }
   }
 
@@ -238,6 +238,7 @@
       span {
         font-size: var(--font-size-1);
         padding-bottom: 0.25rem;
+        color: #9d9d9d;
       }
     }
 
