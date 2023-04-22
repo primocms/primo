@@ -394,6 +394,20 @@
       element.contentEditable = true
 
       let rect
+      element.onkeydown = (e) => {
+        if (e.code === 'Enter') {
+          e.preventDefault()
+          e.target.blur()
+        }
+      }
+      element.onblur = (e) => {
+        dispatch('unlock')
+        save_edited_value(key, {
+          url: element.href,
+          label: element.innerText,
+        })
+        link_editor_is_visible = false
+      }
       element.addEventListener('click', async () => {
         rect = element.getBoundingClientRect()
 
