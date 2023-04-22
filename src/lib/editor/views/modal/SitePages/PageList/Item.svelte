@@ -24,7 +24,7 @@
 
   let editing_page = false
   let name = page.name || ''
-  let id = page.id || ''
+  let id = page.url || ''
   $: disableSave = !name || !id
 
   const pageURL = `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
