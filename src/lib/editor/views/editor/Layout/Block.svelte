@@ -52,8 +52,7 @@
   }
 
   function duplicate_block() {
-    const new_symbol = _.cloneDeep(block.symbol)
-    active_page.add_block(new_symbol, i + 1)
+    active_page.duplicate_block(block, i + 1)
   }
 
   function edit_component(showIDE = false) {
