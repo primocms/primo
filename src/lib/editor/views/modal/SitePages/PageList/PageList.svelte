@@ -147,8 +147,8 @@
         />
         <div id="duplicate">
           <label>
-            <input bind:checked={shouldDuplicatePage} type="checkbox" />
             <span>Duplicate active page</span>
+            <input bind:checked={shouldDuplicatePage} type="checkbox" />
           </label>
         </div>
         <PrimaryButton
@@ -181,6 +181,11 @@
     &.root > li:not(:first-child) {
       border-top: 1px solid #3e4041;
     }
+  }
+  #duplicate label {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.25rem 0;
   }
   form {
     padding: 0.25rem;
