@@ -298,7 +298,6 @@
           <FullCodeEditor
             bind:html={rawHTML}
             bind:css={rawCSS}
-            bind:js={rawJS}
             {data}
             on:save={saveComponent}
             on:refresh={refreshPreview}

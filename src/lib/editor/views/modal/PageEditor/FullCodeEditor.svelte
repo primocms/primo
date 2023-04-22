@@ -29,6 +29,12 @@
   export let css = ''
   export let js = ''
 
+  if (!$$props.js) {
+    $leftPaneSize = '50%'
+    $centerPaneSize = '50%'
+    $activeTabs = { ...$activeTabs, js: false }
+  }
+
   if (!import.meta.env.SSR) {
     Mousetrap.bind(['mod+1'], () => toggleTab(0))
     Mousetrap.bind(['mod+2'], () => toggleTab(1))
@@ -123,6 +129,7 @@
 {:else}
   <HSplitPane
     hideLeftOverflow={true}
+    hideRightPanel={!$$props.js}
     bind:leftPaneSize={$leftPaneSize}
     bind:centerPaneSize={$centerPaneSize}
     bind:rightPaneSize={$rightPaneSize}
