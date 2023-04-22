@@ -156,7 +156,7 @@
 
   button.label {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -199,7 +199,7 @@
         &:hover,
         &:focus,
         &.active {
-          background: var(--color-gray-8);
+          background: #1f1f1f;
         }
         &:focus {
           outline: 0;
@@ -209,7 +209,7 @@
       button.option {
         flex: 1;
         text-align: left;
-        font-weight: 500;
+        font-weight: 400;
         white-space: nowrap;
         padding: 0.5rem 0.75rem;
         transition: 0.1s background;

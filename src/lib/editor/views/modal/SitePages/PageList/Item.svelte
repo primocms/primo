@@ -136,6 +136,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0.875rem 1.125rem;
+    background: #1a1a1a;
 
     .left {
       display: flex;
@@ -143,14 +144,14 @@
       gap: 0.5rem;
 
       .name {
-        font-weight: 500;
+        font-weight: 400;
         font-size: 1.125rem;
         line-height: 1.5rem;
         display: flex;
         gap: 1rem;
 
         span:last-child {
-          font-weight: 500;
+          font-weight: 400;
           color: var(--color-gray-5);
         }
       }
@@ -185,7 +186,7 @@
   }
 
   .slot {
-    background: #323334;
+    background: #1c1c1c;
     margin: 0 1rem;
   }
 

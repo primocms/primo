@@ -133,8 +133,8 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--primo-color-brand);
-    padding: 0.5rem;
+    background: #1a1a1a;
+    padding: 0.25rem 0.75rem 0.75rem 0.75rem;
 
     .spinner-container {
       height: 100%;
