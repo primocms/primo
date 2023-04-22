@@ -1,14 +1,13 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+  import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
 
-  import { Spinner } from '../misc';
+  import { Spinner } from '../misc'
 
-  export let variants = '';
-  export let type = 'button';
-  export let disabled = false;
-  export let loading = false;
-
+  export let variants = ''
+  export let type = 'button'
+  export let disabled = false
+  export let loading = false
 </script>
 
 <button
@@ -16,7 +15,8 @@
   class:disabled={disabled || loading}
   disabled={disabled || loading}
   on:click={(e) => dispatch('click', e)}
-  {type}>
+  {type}
+>
   {#if loading}
     <Spinner />
   {:else}
@@ -43,5 +43,4 @@
       color: var(--color-gray-9);
     }
   }
-
 </style>

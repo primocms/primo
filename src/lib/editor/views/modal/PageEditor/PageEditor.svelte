@@ -275,7 +275,7 @@
   }}
   button={{
     icon: 'material-symbols:save',
-    label: 'Save Page',
+    label: 'Save',
     onclick: saveComponent,
     disabled: disableSave,
   }}

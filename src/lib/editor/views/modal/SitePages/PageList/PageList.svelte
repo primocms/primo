@@ -174,7 +174,7 @@
   ul.page-list {
     display: grid;
     color: var(--primo-color-white);
-    background: #252627;
+    background: #1a1a1a;
     border-radius: var(--primo-border-radius);
     margin-bottom: 1rem;
 
