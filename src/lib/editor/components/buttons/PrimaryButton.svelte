@@ -1,15 +1,14 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher } from 'svelte'
   import Icon from '@iconify/svelte'
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher()
 
-  export let id = null;
-  export let variants = '';
-  export let type = 'button';
-  export let disabled = false;
-  export let icon = null;
+  export let id = null
+  export let variants = ''
+  export let type = 'button'
+  export let disabled = false
+  export let icon = null
   export let label = ''
-
 </script>
 
 <button
@@ -17,7 +16,8 @@
   class="primary-button {variants}"
   {disabled}
   on:click={(e) => dispatch('click', e)}
-  {type}>
+  {type}
+>
   {#if icon}
     <Icon {icon} />
   {/if}
@@ -29,9 +29,10 @@
 <style lang="postcss">
   .primary-button {
     width: 100%;
-    background: var(--PrimaryButton-bg, var(--primo-color-brand));
-    color: var(--PrimaryButton-color, var(--primo-color-black));
+    border: 1.5px solid #35d994;
+    color: #cecece;
     padding: 0.5rem;
+    font-weight: 00;
     margin-top: var(--PrimaryButton-mt, 0);
     margin-bottom: var(--PrimaryButton-mb, 0);
     margin-left: var(--PrimaryButton-ml, 0);
@@ -51,7 +52,6 @@
     font-weight: 500;
 
     &:hover {
-
       box-shadow: var(--primo-ring-primogreen-thick);
       /* background: var(
         --PrimaryButton-bg-hover,
@@ -61,9 +61,10 @@
     }
 
     &[disabled] {
-      background: var(--color-gray-6);
+      color: #cecece;
+      border: 1px solid #35d994;
+      opacity: 0.2;
       cursor: not-allowed;
     }
   }
-
 </style>

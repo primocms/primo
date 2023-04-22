@@ -64,9 +64,10 @@
   }
 
   header {
-    padding: 1rem;
+    padding: 0.5rem;
     display: flex;
     justify-content: flex-end;
+    background: #1a1a1a;
   }
 
   form {
