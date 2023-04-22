@@ -1,10 +1,13 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
-  import logo from '$lib/assets/logodark.svg'
-  import { sign_in } from '$lib/supabase'
+  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
   import { page } from '$app/stores'
+  import Icon from '@iconify/svelte'
 
-  const dispatch = createEventDispatcher()
+  let inactive = true
+
+  function submit_form() {
+    inactive = false
+  }
 
   export let email
   export let password
@@ -27,7 +30,13 @@
       value={$page.url.searchParams.get('join')}
     />
   </div>
-  <button type="submit">Sign in</button>
+  <button class="button" type="submit" on:click={submit_form}>
+    {#if inactive}
+      <span>Sign in</span>
+    {:else}
+      <div class="icon"><Icon icon="gg:spinner" /></div>
+    {/if}
+  </button>
 </form>
 
 <!-- <span class="footer-text"
@@ -67,8 +76,9 @@
       }
     }
 
-    button {
+    .button {
       color: #cecece;
+      font-weight: 500;
       display: flex;
       flex-direction: row;
       justify-content: center;
@@ -76,6 +86,29 @@
       padding: 0.65rem;
       border: 1.5px solid #35d994;
       border-radius: 0.25rem;
+
+      &:hover {
+        background-color: #35d994;
+        transition: 0.2s;
+        color: #121212;
+      }
+
+      &:focus {
+        background-color: #208259;
+      }
+
+      .icon {
+        animation: icon-spin 1s linear infinite;
+      }
+
+      @keyframes icon-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     }
   }
 

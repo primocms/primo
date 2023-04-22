@@ -213,11 +213,7 @@
         dispatchUpdate()
       }}
     />
-    {#if i !== field.fields.length - 1}
-      <hr class="hr" />
-    {/if}
   {/each}
-
   {#if field.type === 'repeater' || field.type === 'group'}
     <button
       class="subfield-button"
@@ -235,23 +231,22 @@
 <style lang="postcss">
   select[slot='hide'] {
     background: transprarent;
-    border: 1px solid var(--color-gray-7);
+    border: 1px solid #333333;
     padding: 0.25rem;
   }
   select[slot='type'] {
     height: 100%;
     width: 100%;
-    border: 1px solid #6e6e6e;
+    border: 1px solid #333333;
     border-radius: 0.25rem;
-    /* background: var(--color-gray-9); */
-    color: var(--color-gray-2);
+    background: #1f1f1f;
+    color: #b6b6b6;
     font-size: var(--font-size-2);
-    font-weight: 600;
+    font-weight: 400;
     padding: 0.5rem;
-    background: transparent;
   }
   .info {
-    border: 1px solid #6e6e6e;
+    border: 1px solid #333333;
     background: transparent;
     color: var(--color-gray-2);
     padding: 0.5rem 0.75rem;
@@ -261,41 +256,34 @@
   }
   .subfield-button {
     width: 100%;
-    border: 1px solid #6e6e6e;
     border-radius: 0.25rem;
-    margin-top: 8px;
-    margin-bottom: 8px;
-    padding: 0.25rem 1rem;
+    margin-top: 10px;
+    padding: 0.45rem 1rem;
     font-size: var(--font-size-2);
-    background: var(--primo-color-codeblack);
+    background-color: #292929;
     color: var(--color-gray-2);
     transition: var(--transition-colors);
     outline: 0;
     display: block;
 
     &:hover {
-      background: var(--color-gray-9);
+      background: #333333;
     }
-    &:focus {
+    /* &:focus {
       background: var(--color-gray-8);
-    }
-  }
-
-  .hr {
-    margin: 1rem 0;
-    border-color: var(--color-gray-8);
+    } */
   }
 
   .input {
-    border: 1px solid #6e6e6e;
-    background: transparent;
-    color: var(--color-gray-2);
+    border: 1px solid #333333;
+    background: #1f1f1f;
     padding: 0.5rem 0.75rem;
     border-radius: 0.25rem;
     height: 100%;
+    font-size: var(--font-size-2);
 
     &::placeholder {
-      color: var(--color-gray-8);
+      color: #b6b6b6;
     }
     &:focus {
       outline: 0;
