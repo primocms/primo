@@ -1,6 +1,13 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import { page } from '$app/stores'
+  import Icon from '@iconify/svelte'
+
+  let inactive = true
+
+  function submit_form() {
+    inactive = false
+  }
 
   const dispatch = createEventDispatcher()
 
@@ -25,7 +32,13 @@
       value={$page.url.searchParams.get('join')}
     />
   </div>
-  <button type="submit">Create account</button>
+  <button class="button" type="submit" on:click={submit_form}>
+    {#if inactive}
+      <span>Create account</span>
+    {:else}
+      <div class="icon"><Icon icon="gg:spinner" /></div>
+    {/if}
+  </button>
 </form>
 <span class="footer-text"
   >Already have an account? <button on:click={() => dispatch('switch')}
@@ -65,8 +78,9 @@
       }
     }
 
-    button {
+    .button {
       color: #cecece;
+      font-weight: 500;
       display: flex;
       flex-direction: row;
       justify-content: center;
@@ -74,7 +88,30 @@
       padding: 0.65rem;
       border: 1.5px solid #35d994;
       border-radius: 0.25rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
+
+      &:hover {
+        background-color: #35d994;
+        transition: 0.2s;
+        color: #121212;
+      }
+
+      &:focus {
+        background-color: #208259;
+      }
+
+      .icon {
+        animation: icon-spin 1s linear infinite;
+      }
+
+      @keyframes icon-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     }
   }
 
