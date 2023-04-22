@@ -184,7 +184,6 @@
         ..._chain(fields).keyBy('key').mapValues('value').value(),
       },
     }
-    console.log({ local_content })
   }
 
   function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {

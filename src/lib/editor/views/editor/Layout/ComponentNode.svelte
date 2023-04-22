@@ -398,6 +398,7 @@
         if (e.code === 'Enter') {
           e.preventDefault()
           e.target.blur()
+          link_editor_is_visible = false
         }
       }
       element.onblur = (e) => {

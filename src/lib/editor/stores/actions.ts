@@ -232,6 +232,37 @@ export const active_page = {
     })
     update_page_preview()
   },
+  duplicate_block: async (block, position) => {
+    const original_sections = _.cloneDeep(get(stores.sections))
+
+    const new_block = {
+      ...block,
+      id: uuidv4()
+    }
+
+    const new_sections = [
+      ...original_sections.slice(0, position),
+      new_block,
+      ...original_sections.slice(position)
+    ].map((section, i) => ({ ...section, index: i }))
+
+    update_timeline({
+      doing: async () => {
+
+        const { data, error } = await supabase
+          .from('sections')
+          .upsert(new_sections.map(s => ({ ...s, symbol: s.symbol.id })))
+
+
+        stores.sections.set(new_sections)
+      },
+      undoing: () => {
+        stores.sections.set(original_sections)
+        supabase.from('sections').delete().eq('id', new_block.id)
+      }
+    })
+    update_page_preview()
+  },
   delete_block: async (block) => {
     const original_sections = _.cloneDeep(get(stores.sections))
     const new_sections = original_sections.filter(section => section.id !== block.id).map((section, i) => ({ ...section, index: i }))
