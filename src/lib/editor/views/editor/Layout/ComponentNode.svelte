@@ -406,7 +406,6 @@
           url: element.href,
           label: element.innerText,
         })
-        link_editor_is_visible = false
       }
       element.addEventListener('click', async () => {
         rect = element.getBoundingClientRect()
