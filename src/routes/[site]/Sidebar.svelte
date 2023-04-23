@@ -6,6 +6,7 @@
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
   import sections from '$lib/editor/stores/data/sections'
+  import symbols from '$lib/editor/stores/data/symbols'
   import Icon from '@iconify/svelte'
   import { Symbol } from '$lib/editor/const'
   import Sidebar_Symbol from './Sidebar_Symbol.svelte'
@@ -25,7 +26,7 @@
   }
 
   async function saveSymbol(symbol) {
-    const exists = _.some($page.data.symbols, ['id', symbol.id])
+    const exists = _.some($symbols, ['id', symbol.id])
     if (exists) {
       await symbol_actions.update({
         ...symbol,
@@ -121,7 +122,7 @@
     </button>
   </div>
   {#if active_tab === 'site'}
-    {#if $page.data.symbols.length > 0}
+    {#if $symbols.length > 0}
       <div class="primo-buttons">
         <button class="primo-button" on:click={createSymbol}>
           <Icon icon="mdi:plus" />
@@ -132,7 +133,7 @@
         </label>
       </div>
       <div class="symbols">
-        {#each $page.data.symbols as symbol (symbol.id)}
+        {#each $symbols as symbol (symbol.id)}
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
