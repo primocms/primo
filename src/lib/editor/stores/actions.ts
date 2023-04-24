@@ -74,13 +74,17 @@ export function redo_change(): void {
 }
 
 export const symbols = {
-  create: async (symbol) => {
+  create: async (symbol, index = 0) => {
     // saved.set(false)
 
     // tested
     update_timeline({
       doing: async () => {
-        stores.symbols.update(s => [symbol, ...s])
+        stores.symbols.update(store => [
+          ...store.slice(0, index),
+          symbol,
+          ...store.slice(index)
+        ])
         await supabase.from('symbols').insert(symbol)
       },
       undoing: async () => {
