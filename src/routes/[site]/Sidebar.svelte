@@ -20,7 +20,7 @@
 
   let active_tab = 'site'
 
-  async function createSymbol() {
+  async function create_symbol() {
     const symbol = Symbol()
     saveSymbol(symbol)
   }
@@ -40,19 +40,25 @@
     }
   }
 
-  async function deleteSymbol(symbol) {
+  async function delete_symbol(symbol) {
     symbol_actions.delete(symbol)
   }
 
-  async function duplicateSymbol(symbol) {
+  async function duplicate_symbol(symbol, index) {
     const new_symbol = _.cloneDeep(symbol)
     delete new_symbol.id
     delete new_symbol.created_at
     new_symbol.name = `${new_symbol.name} (copy)`
-    saveSymbol(new_symbol)
+    symbol_actions.create(
+      {
+        ...new_symbol,
+        site: $site.id,
+      },
+      index
+    )
   }
 
-  async function uploadSymbol({ target }) {
+  async function upload_symbol({ target }) {
     var reader = new window.FileReader()
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return
@@ -70,7 +76,7 @@
     reader.readAsText(target.files[0])
   }
 
-  async function downloadSymbol(symbol) {
+  async function download_symbol(symbol) {
     const copied_symbol = _.cloneDeep(symbol)
     delete copied_symbol.type
     const json = JSON.stringify(copied_symbol)
@@ -124,25 +130,25 @@
   {#if active_tab === 'site'}
     {#if $symbols.length > 0}
       <div class="primo-buttons">
-        <button class="primo-button" on:click={createSymbol}>
+        <button class="primo-button" on:click={create_symbol}>
           <Icon icon="mdi:plus" />
         </button>
         <label class="primo-button">
-          <input on:change={uploadSymbol} type="file" accept=".json" />
+          <input on:change={upload_symbol} type="file" accept=".json" />
           <Icon icon="mdi:upload" />
         </label>
       </div>
       <div class="symbols">
-        {#each $symbols as symbol (symbol.id)}
+        {#each $symbols as symbol, i (symbol.id)}
           <Sidebar_Symbol
             {symbol}
             on:edit_code={({ detail: updated_symbol }) =>
               saveSymbol(updated_symbol)}
             on:edit_content={({ detail: updated_symbol }) =>
               saveSymbol(updated_symbol)}
-            on:download={() => downloadSymbol(symbol)}
-            on:delete={() => deleteSymbol(symbol)}
-            on:duplicate={() => duplicateSymbol(symbol)}
+            on:download={() => download_symbol(symbol)}
+            on:delete={() => delete_symbol(symbol)}
+            on:duplicate={() => duplicate_symbol(symbol, i + 1)}
             on:add_to_page={() => add_to_page(symbol)}
           />
         {/each}
@@ -156,12 +162,12 @@
         </p>
       </div>
       <div class="primo-buttons">
-        <button class="primo-button" on:click={createSymbol}>
+        <button class="primo-button" on:click={create_symbol}>
           <Icon icon="mdi:plus" />
           <span>Create</span>
         </button>
         <label class="primo-button">
-          <input on:change={uploadSymbol} type="file" accept=".json" />
+          <input on:change={upload_symbol} type="file" accept=".json" />
           <Icon icon="mdi:upload" />
           <span>Upload</span>
         </label>
@@ -175,9 +181,9 @@
             {symbol}
             controls_enabled={false}
             on:edit={({ detail: updated_symbol }) => saveSymbol(updated_symbol)}
-            on:download={() => downloadSymbol(symbol)}
-            on:delete={() => deleteSymbol(symbol)}
-            on:duplicate={() => duplicateSymbol(symbol)}
+            on:download={() => download_symbol(symbol)}
+            on:delete={() => delete_symbol(symbol)}
+            on:duplicate={() => duplicate_symbol(symbol)}
             on:add_to_page={async () => {
               const symbol_id = await saveSymbol(symbol)
               add_to_page({
