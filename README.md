@@ -5,7 +5,7 @@
   </a>
 </p>
 
-<h3 align="center">A modern monolithic CMS</h3>
+<h3 align="center">The modern monolithic CMS</h3>
 <p align="center">Primo makes it a blast to build pages, update content, and edit code - one block at a time.</p>
 
 <p align="center">
@@ -62,7 +62,7 @@ Third-party services (all can be signed into with Github):
 - A static web host for the final site (can be same host used for Primo itself).
 - A Mailgun account for emailing collaborators with server invitations.
 
-1. First, prepare your Supabase instance by copying the schema and pasting it into the SQL editor. 
+1. First, prepare your Supabase instance by copying the [schema](https://github.com/primocms/primo/blob/just-server/primo_schema.sql) and pasting it into the SQL editor. 
 1. Then fork this repository
 1. Go to your host and create a new project from your new repository, inputting your service credentials. 
 - PRIVATE_MAILGUN_KEY
