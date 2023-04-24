@@ -194,7 +194,7 @@
   else if (!import.meta.env.SSR) unbindEdit()
 
   function hover_block(el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
   $: if (node) {

@@ -179,7 +179,7 @@
     margin-bottom: 1rem;
 
     &.root > li:not(:first-child) {
-      border-top: 1px solid #3e4041;
+      border-top: 1px solid #222;
     }
   }
   #duplicate label {

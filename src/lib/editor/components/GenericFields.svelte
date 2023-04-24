@@ -238,6 +238,7 @@
     display: grid;
     gap: 1rem;
     padding: 0.5rem 0;
+    padding-right: 0.5rem;
     padding-bottom: 1rem;
     color: var(--color-gray-2);
     background: var(--primo-color-black);
