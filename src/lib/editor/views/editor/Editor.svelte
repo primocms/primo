@@ -43,7 +43,7 @@
     {
       id: 'toolbar--pages',
       title: $C('Pages'),
-      svg: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="2.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="10.5" y="2.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="2.5" y="10.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/><rect x="10.5" y="10.5" width="5" height="5" rx="0.5" fill="#CECECE" stroke="#CECECE"/></svg>',
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M10 19q-.425 0-.713-.288T9 18q0-.425.288-.713T10 17h10q.425 0 .713.288T21 18q0 .425-.288.713T20 19H10Zm0-6q-.425 0-.713-.288T9 12q0-.425.288-.713T10 11h10q.425 0 .713.288T21 12q0 .425-.288.713T20 13H10Zm0-6q-.425 0-.713-.288T9 6q0-.425.288-.713T10 5h10q.425 0 .713.288T21 6q0 .425-.288.713T20 7H10ZM5 20q-.825 0-1.413-.588T3 18q0-.825.588-1.413T5 16q.825 0 1.413.588T7 18q0 .825-.588 1.413T5 20Zm0-6q-.825 0-1.413-.588T3 12q0-.825.588-1.413T5 10q.825 0 1.413.588T7 12q0 .825-.588 1.413T5 14Zm0-6q-.825 0-1.413-.588T3 6q0-.825.588-1.413T5 4q.825 0 1.413.588T7 6q0 .825-.588 1.413T5 8Z"/></svg>',
       onclick: () =>
         modal.show(
           'SITE_PAGES',
