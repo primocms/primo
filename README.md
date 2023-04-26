@@ -1,6 +1,6 @@
 &nbsp;
 <p align="center">
-  <a href="https://ghost.org/#gh-dark-mode-only" target="_blank">
+  <a href="https://primocms.org" target="_blank">
     <img src="./static/logo.svg" alt="Primo" width="200px">
   </a>
 </p>
@@ -14,20 +14,7 @@
     <a href="https://docs.primocms.org/docs/">Docs</a> •
     <a href="https://docs.primocms.org/docs/">Newsletter</a> •
     <!-- <a href="https://github.com/primocms/primo">Contributing</a> • -->
-    <a href="https://twitter.com/ghost">YouTube</a>
-    <br /><br />
-    <!-- <a href="https://ghost.org/">
-        <img src="https://img.shields.io/badge/downloads-3M-brightgreen.svg" alt="Downloads" />
-    </a> -->
-    <a href="https://github.com/TryGhost/Ghost/releases/">
-        <img src="https://img.shields.io/github/release/TryGhost/Ghost.svg" alt="Latest release" />
-    </a>
-    <!-- <a href="https://github.com/TryGhost/Ghost/actions">
-        <img src="https://github.com/TryGhost/Ghost/workflows/Test%20Suite/badge.svg?branch=main" alt="Build status" />
-    </a> -->
-    <a href="https://github.com/TryGhost/Ghost/contributors/">
-        <img src="https://img.shields.io/github/contributors/TryGhost/Ghost.svg" alt="Contributors" />
-    </a>
+    <a href="https://www.youtube.com/@primocms">YouTube</a>
 </p>
 
 ![screenshot](/screenshot-v2.png)
