@@ -75,5 +75,3 @@ Third-party services (all can be signed into with Github):
 
 ## Updating
 You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.
-
-
