@@ -149,7 +149,7 @@
   $: $autoRefresh &&
     compileComponentCode({
       html: rawHTML,
-      css: rawCSS,
+      css: rawCSS
     })
 
   // on-screen fields
