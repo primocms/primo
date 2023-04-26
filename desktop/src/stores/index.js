@@ -1,1 +1,0 @@
-export { default as sites } from './sites'

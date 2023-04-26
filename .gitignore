@@ -1,7 +1,7 @@
 .env 
 .DS_Store
 .vercel_build_output
-
+.svelte-kit
 node_modules
 desktop/out
 desktop/build

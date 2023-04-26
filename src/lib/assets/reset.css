@@ -1,0 +1,69 @@
+.primo-reset {
+  @tailwind base;
+  direction: ltr;
+  color-scheme: dark;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+body {
+  margin: 0;
+}
+
+.primo-input {
+appearance: none;
+border: 0;
+background-color: transparent;
+font-size: inherit;
+background: var(--color-white);
+padding: 0.5rem 0.75rem;
+width: 100%;
+
+/* &:focus {
+  box-shadow: 0 0 0 1px var(--color-primored);
+  border: 0;
+}
+
+&:placeholder {
+  color: var(--color-gray-5);
+} */
+}
+
+.primo-modal {
+  color: var(--color-gray-1);
+  /* background: var(--color-gray-9); */
+  padding: 1rem;
+  border-radius: var(--primo-border-radius);
+  margin: 0 auto;
+  width: 100vw;
+}
+
+.primo-heading-xl {
+margin-bottom: 0.5rem;
+font-size: 1.25rem;
+line-height: 1.75rem;
+font-weight: 700;
+}
+
+.primo-heading-lg {
+margin-bottom: 0.25rem;
+font-size: 1.1rem;
+line-height: 1.5rem;
+font-weight: 700;
+}
+
+.sr-only {
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0, 0, 0, 0);
+white-space: nowrap;
+border-width: 0;
+}
+

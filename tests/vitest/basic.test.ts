@@ -1,11 +1,11 @@
 import { assert, expect, it, suite, test, describe } from 'vitest'
-import { move } from '@primo-app/primo/src/utilities'
-import { convertFieldsToData, makeValidUrl } from '@primo-app/primo/src/utils'
-import { Field } from '@primo-app/primo/src/const'
+import { move } from '$lib/editor/src/utilities'
+import { convertFieldsToData, makeValidUrl } from '$lib/editor/src/utils'
+import { Field } from '$lib/editor/src/const'
 
 describe('Utility functions', () => {
-  test('move', async() => {
-    const initial = [ 'first', 'second', 'third', 'fourth' ]
+  test('move', async () => {
+    const initial = ['first', 'second', 'third', 'fourth']
     const updated = move(initial, 2, 0)
     expect(updated).toStrictEqual(['third', 'first', 'second', 'fourth'])
   })
@@ -15,9 +15,9 @@ describe('Utility functions', () => {
       Field({ key: 'heading', value: 'This is a heading' }),
       Field({ type: 'content', key: 'description', value: '<h2>subheading</h2>' }),
       Field({ type: 'link', key: 'button', value: { label: 'Go home', url: '/' } }),
-      Field({ 
-        type: 'repeater', 
-        key: 'items', 
+      Field({
+        type: 'repeater',
+        key: 'items',
         value: [
           {
             link: {
@@ -35,7 +35,7 @@ describe('Utility functions', () => {
             },
             icon: 'plus'
           }
-        ], 
+        ],
         fields: [
           {
             id: "wlgig",
@@ -51,7 +51,7 @@ describe('Utility functions', () => {
             value: "",
             type: "text"
           }
-        ] 
+        ]
       }),
     ])
     expect(data).toStrictEqual({
@@ -65,7 +65,7 @@ describe('Utility functions', () => {
     })
   })
 
-  test('makeValidUrl', async() => {
+  test('makeValidUrl', async () => {
 
   })
 })
