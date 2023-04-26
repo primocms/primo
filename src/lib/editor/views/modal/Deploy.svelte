@@ -77,6 +77,7 @@
   let repo_name = ''
   let repo = active_deployment?.repo.full_name
   async function create_repo() {
+    loading = true
     const headers = { Authorization: `Bearer ${github_token}` }
     const { data } = await axios.post(
       `https://api.github.com/user/repos`,
@@ -92,6 +93,7 @@
       repo: repo.full_name,
     })
     stage = 'CONNECT_REPO__ACTIVE__SUCCESS'
+    loading = false
   }
 
   async function deploy_to_repo() {
@@ -245,7 +247,13 @@
             <p class="form-label">Enter repo name</p>
             <div>
               <TextInput bind:value={repo_name} placeholder="Site" />
-              <button class="primo-button primary">Deploy</button>
+              <button class="primo-button primary" disabled={loading}>
+                {#if loading}
+                  <Icon icon="eos-icons:loading" />
+                {:else}
+                  <span>Deploy</span>
+                {/if}
+              </button>
             </div>
           </form>
           <footer>

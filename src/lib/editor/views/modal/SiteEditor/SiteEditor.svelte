@@ -144,14 +144,12 @@
   // bind raw code to code editor
   let rawHTML = local_code.html.head
   let rawCSS = local_code.css
-  let rawJS = local_code.js
 
   // changing code triggers compilation
   $: $autoRefresh &&
     compileComponentCode({
       html: rawHTML,
       css: rawCSS,
-      js: rawJS,
     })
 
   // on-screen fields
@@ -159,7 +157,6 @@
 
   let preview = ''
 
-  let componentApp // holds compiled component
   let compilationError // holds compilation error
 
   // // ensure placeholder values always conform to form
@@ -178,13 +175,12 @@
   // })
 
   let disableSave = false
-  async function compileComponentCode({ html, css, js }) {
+  async function compileComponentCode({ html, css }) {
     disableSave = true
     loading = true
 
     saveLocalValue('html', html)
     saveLocalValue('css', css)
-    saveLocalValue('js', js)
 
     await compile()
     disableSave = compilationError
@@ -222,13 +218,12 @@
   ]
 
   let previewUpToDate = false
-  $: rawHTML, rawCSS, rawJS, (previewUpToDate = false) // reset when code changes
+  $: rawHTML, rawCSS, (previewUpToDate = false) // reset when code changes
 
   async function refreshPreview() {
     await compileComponentCode({
       html: rawHTML,
       css: rawCSS,
-      js: rawJS,
     })
     previewUpToDate = true
   }
@@ -296,7 +291,6 @@
           <FullCodeEditor
             bind:html={rawHTML}
             bind:css={rawCSS}
-            bind:js={rawJS}
             {data}
             on:save={saveComponent}
             on:refresh={refreshPreview}
