@@ -13,7 +13,6 @@
     <a href="https://forum.primo.so">Forum</a> •
     <a href="https://docs.primocms.org/docs/">Docs</a> •
     <a href="https://docs.primocms.org/docs/">Newsletter</a> •
-    <!-- <a href="https://github.com/primocms/primo">Contributing</a> • -->
     <a href="https://www.youtube.com/@primocms">YouTube</a>
 </p>
 
