@@ -257,7 +257,7 @@
             </div>
           </form>
           <footer>
-            after deploying this repo will be create in your Github account.
+            after deploying this repo will be created in your Github account.
           </footer>
         </div>
       {:else if stage === 'CONNECT_REPO__USE_EXISTING'}
@@ -276,7 +276,7 @@
             </div>
           </form>
           <footer>
-            after deploying this repo will be create in your Github account.
+            after deploying this repo will be created in your Github account.
           </footer>
         </div>
       {:else if stage.startsWith('CONNECT_REPO__ACTIVE')}

@@ -8,7 +8,7 @@ import { sitePassword } from './stores/misc'
 import { page } from '$app/stores'
 
 export const sites = {
-  create: async ({ data, preview = null }) => {
+  create: async (data, preview = null) => {
 
     // create site 
     const site = {
@@ -33,7 +33,7 @@ export const sites = {
 
     // upload preview to supabase storage
     if (preview) {
-      supabase.storage.from('sites').upload(`${site.id}/${home_page.id}/index.html`, preview)
+      supabase.storage.from('sites').upload(`${site.id}/preview.html`, preview)
     }
 
     // create child pages (dependant on parent page IDs)

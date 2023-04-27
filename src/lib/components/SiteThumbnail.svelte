@@ -10,7 +10,7 @@
   if (!preview && site) {
     supabase.storage
       .from('sites')
-      .download(site.preview)
+      .download(`${site.id}/preview.html`)
       .then(({ data, error }) => {
         if (error) {
           console.log('Error downloading file: ', error.message)

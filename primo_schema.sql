@@ -79,7 +79,6 @@ CREATE TABLE "public"."pages" (
     "fields" "jsonb" DEFAULT '[]' :: "jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
-    "preview" "text",
     "url" "text",
     "content" "jsonb" DEFAULT '{}' :: "jsonb" NOT NULL,
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
@@ -137,7 +136,6 @@ ADD
 CREATE TABLE "public"."sites" (
     "id" "uuid" NOT NULL,
     "name" "text",
-    "host" "text",
     "active_deployment" "jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "code" "jsonb" DEFAULT '{"js": "", "css": "", "html": {"head": "", "below": ""}}' :: "jsonb" NOT NULL,

@@ -9,7 +9,7 @@
   import { validate_site_structure_v2 } from '$lib/converter'
   import { buildStaticPage } from '$lib/editor/stores/helpers'
 
-  export let onSuccess = (newSite) => {}
+  export let onSuccess = (newSite, preview) => {}
 
   let loading = false
   let finishing = false
@@ -52,10 +52,7 @@
           symbols: [],
         }
 
-    onSuccess({
-      data: siteData,
-      preview,
-    })
+    onSuccess(siteData, preview)
   }
 
   function validateUrl() {

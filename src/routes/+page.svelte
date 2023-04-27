@@ -27,8 +27,8 @@
     show({
       id: 'CREATE_SITE',
       props: {
-        onSuccess: async (site) => {
-          await actions.sites.create(site)
+        onSuccess: async (site, preview) => {
+          await actions.sites.create(site, preview)
           invalidate('app:data')
           hide()
         },
