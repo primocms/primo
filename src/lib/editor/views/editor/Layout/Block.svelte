@@ -63,7 +63,7 @@
       {
         component: block,
         header: {
-          title: `Edit ${block.name || 'Block'}`,
+          title: `Edit ${block.symbol.name || 'Block'}`,
           icon: $showingIDE ? 'fas fa-code' : 'fas fa-edit',
           onclose: () => {
             dispatch('unlock')
@@ -74,6 +74,7 @@
             onclick: async (component) => {
               dispatch('unlock')
               update_section_content(component, component.content)
+              symbols.update(component.symbol)
               modal.hide()
             },
           },
