@@ -21,7 +21,7 @@ export const load = async (event) => {
     page: null,
     site: null
   }
-  const {data:sections} = await supabaseClient.from('sections').select('*, symbol (*)').match({page: page.id})
+  const {data:sections} = await supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page.id})
 
   const ordered_sections = sections?.sort((a, b) => {
     if (a.index === b.index) {
