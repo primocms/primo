@@ -16,12 +16,6 @@
   export let active
   export let is_parent = true
 
-  // workaround for sveltekit bug: https://github.com/sveltejs/kit/issues/6496
-  function open_page(url) {
-    modal.hide()
-    goto(url)
-  }
-
   let editing_page = false
   let name = page.name || ''
   let id = page.url || ''
@@ -75,7 +69,7 @@
     </PrimaryButton>
   </form>
 {:else}
-  <div class="page-item-container">
+  <div class="page-item-container" class:active={page.id === $activePageID}>
     <div class="left">
       <a class="name" class:active href={pageURL} on:click={() => modal.hide()}>
         <span>{page.name}</span>
@@ -137,6 +131,10 @@
     justify-content: space-between;
     padding: 0.875rem 1.125rem;
     background: #1a1a1a;
+
+    &.active {
+      background: #222;
+    }
 
     .left {
       display: flex;
