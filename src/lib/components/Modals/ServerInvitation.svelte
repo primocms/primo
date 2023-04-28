@@ -31,7 +31,6 @@
 
   let editors = []
   get_collaborators().then((res) => {
-    console.log({ res })
     editors = res
   })
 
@@ -52,7 +51,6 @@
     const { data, error } = await supabase
       .from('server_members')
       .select('*, user(*)')
-    console.log({ data })
     if (error) {
       console.error(error)
       return []

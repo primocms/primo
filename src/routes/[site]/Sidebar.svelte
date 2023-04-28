@@ -85,17 +85,10 @@
   }
 
   async function get_primo_blocks() {
-    const { data: symbols } = await axios.get(
-      'https://api.primo.so/public-library'
+    const { data } = await axios.get(
+      'https://raw.githubusercontent.com/mateomorris/primo-library/main/primo.json'
     )
-    return symbols.map((s) =>
-      Symbol({
-        name: s.name,
-        fields: s.fields,
-        content: s.content,
-        code: s.code,
-      })
-    )
+    return data.symbols
   }
 
   async function add_to_page(symbol) {
