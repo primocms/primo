@@ -142,7 +142,6 @@ export const symbols = {
 
         stores.symbols.update(symbols => symbols.filter(s => s.id !== symbol_to_delete.id))
         await supabase.from('symbols').delete().eq('id', symbol_to_delete.id)
-        console.log({ deleted_sections })
       },
       undoing: async () => {
         stores.symbols.set(original_symbols)
@@ -184,17 +183,13 @@ export const active_page = {
 
     update_timeline({
       doing: async () => {
-
-        const { data, error } = await supabase
-          .from('sections')
-          .upsert(new_sections.map(s => ({ ...s, symbol: s.symbol.id })))
-
-
         stores.sections.set(new_sections)
+        await supabase.from('sections').upsert(new_sections.map(s => ({ ...s, symbol: s.symbol.id })))
       },
-      undoing: () => {
+      undoing: async () => {
         stores.sections.set(original_sections)
-        supabase.from('sections').delete().eq('id', new_section.id)
+        await supabase.from('sections').delete().eq('id', new_section.id)
+        await supabase.from('sections').upsert(original_sections)
       }
     })
     update_page_preview()
@@ -275,7 +270,7 @@ export const active_page = {
       doing: async () => {
         stores.sections.set(new_sections)
         await supabase.from('sections').delete().eq('id', block.id)
-        await supabase.from('sections').upsert(new_sections)
+        await supabase.from('sections').upsert(new_sections.map(s => ({ ...s, symbol: s.symbol.id })))
       },
       undoing: async () => {
         stores.sections.set(original_sections)
@@ -283,7 +278,7 @@ export const active_page = {
           ...block,
           symbol: block.symbol.id
         })
-        await supabase.from('sections').upsert(original_sections)
+        await supabase.from('sections').upsert(original_sections.map(s => ({ ...s, symbol: s.symbol.id })))
       }
     })
     update_page_preview()
@@ -460,14 +455,42 @@ export async function update_section_content(section, updated_content) {
   const original_sections = _.cloneDeep(get(stores.sections))
   const original_content = _.cloneDeep(section.content)
 
+  // Update static content in symbol
+  const original_symbol_content = _.cloneDeep(section.symbol.content)
+  const updated_symbol_content = _.cloneDeep(section.symbol.content)
+  Object.entries(updated_content).forEach(
+    ([locale_key, locale_value]) => {
+      Object.entries(locale_value).forEach(([field_key, field_value]) => {
+        const matching_field = find(section.symbol.fields, [
+          'key',
+          field_key,
+        ])
+        if (matching_field.is_static) {
+          updated_symbol_content[locale_key] = {
+            ...updated_symbol_content[locale_key],
+            [field_key]: field_value,
+          }
+        }
+      })
+    }
+  )
+
   update_timeline({
     doing: async () => {
+      stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: updated_symbol_content } : s))
       stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: updated_content } : s))
-      await supabase.from('sections').update({ content: updated_content }).eq('id', section.id)
+      await Promise.all([
+        supabase.from('sections').update({ content: updated_content }).eq('id', section.id),
+        supabase.from('symbols').update({ content: updated_symbol_content }).eq('id', section.symbol.id)
+      ])
     },
     undoing: async () => {
+      stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: original_symbol_content } : s))
       stores.sections.set(original_sections)
-      await supabase.from('sections').update({ content: original_content }).eq('id', section.id)
+      await Promise.all([
+        supabase.from('sections').update({ content: original_content }).eq('id', section.id),
+        supabase.from('symbols').update({ content: original_symbol_content }).eq('id', section.symbol.id)
+      ])
     }
   })
   update_page_preview()

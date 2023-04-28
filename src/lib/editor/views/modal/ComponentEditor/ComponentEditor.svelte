@@ -295,18 +295,6 @@
       await refreshPreview()
     }
 
-    const FinalInstance = {
-      ...component,
-      content: local_content,
-      symbol: {
-        ...local_component,
-        fields: fields.map((field) => {
-          delete field.value
-          return field
-        }),
-      },
-    }
-
     const FinalSymbol = {
       ...local_component,
       content: local_content,
@@ -314,6 +302,12 @@
         delete field.value
         return field
       }),
+    }
+
+    const FinalInstance = {
+      ...component,
+      content: local_content,
+      symbol: FinalSymbol,
     }
 
     if (!disableSave) {

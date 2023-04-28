@@ -16,13 +16,16 @@
   } from '$lib/editor/stores/actions'
   import { v4 as uuidv4 } from 'uuid'
   import { validate_symbol } from '$lib/converter'
-  import { page } from '$app/stores'
 
   let active_tab = 'site'
 
   async function create_symbol() {
     const symbol = Symbol()
-    saveSymbol(symbol)
+    await symbol_actions.create({
+      ...symbol,
+      name: 'New Block',
+      site: $site.id,
+    })
   }
 
   async function saveSymbol(symbol) {
@@ -103,6 +106,17 @@
       active_page.add_block(symbol, $hoveredBlock.i + 1)
     }
   }
+
+  async function add_primo_block(symbol) {
+    const new_symbol = {
+      ...symbol,
+      id: uuidv4(),
+      site: $site.id,
+    }
+
+    await symbol_actions.create(new_symbol)
+    add_to_page(new_symbol)
+  }
 </script>
 
 <div class="sidebar primo-reset">
@@ -177,13 +191,7 @@
             on:download={() => download_symbol(symbol)}
             on:delete={() => delete_symbol(symbol)}
             on:duplicate={() => duplicate_symbol(symbol)}
-            on:add_to_page={async () => {
-              const symbol_id = await saveSymbol(symbol)
-              add_to_page({
-                id: symbol_id,
-                ...symbol,
-              })
-            }}
+            on:add_to_page={() => add_primo_block(symbol)}
           />
         {/each}
       {/await}

@@ -144,7 +144,6 @@ export function getComponentData({
   include_parent_data = true
 }) {
 
-  // const symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol
   const component_content = _chain(symbol.fields)
     .map(field => {
       const field_value = component.content?.[loc]?.[field.key]

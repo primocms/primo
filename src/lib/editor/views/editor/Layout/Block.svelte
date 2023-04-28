@@ -73,36 +73,8 @@
             label: 'Save',
             onclick: async (component) => {
               dispatch('unlock')
-              // update symbol with static values
-              const updated_symbol_content = {}
-              Object.entries(component.content).forEach(
-                ([locale_key, locale_value]) => {
-                  Object.entries(locale_value).forEach(
-                    ([field_key, field_value]) => {
-                      const matching_field = _.find(component.symbol.fields, [
-                        'key',
-                        field_key,
-                      ])
-                      if (matching_field.is_static) {
-                        updated_symbol_content[locale_key] = {
-                          ...updated_symbol_content[locale_key],
-                          [field_key]: field_value,
-                        }
-                      }
-                    }
-                  )
-                }
-              )
-
-              await symbols.update({
-                id: component.symbol.id,
-                code: component.symbol.code,
-                fields: component.symbol.fields,
-                content: updated_symbol_content,
-              })
               update_section_content(component, component.content)
               modal.hide()
-              updatePreview()
             },
           },
         },
