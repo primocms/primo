@@ -76,11 +76,11 @@ export const actions = {
 
       // disable email confirmation and add user
       await Promise.all([
-        await supabaseAdmin.auth.admin.updateUserById(
-          res.user?.id,
+        supabaseAdmin.auth.admin.updateUserById(
+          res.user.id,
           { email_confirm: true }
         ),
-        await supabaseAdmin
+        supabaseAdmin
           .from('users')
           .insert({ 
             id: res.user?.id, 

@@ -14,6 +14,7 @@ export const load = async (event) => {
       supabaseClient.from('users').select('*, server_members (admin, role), collaborators (role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
     ]).then(([{data:sites},{data:user},{data:config}]) => {
+
       const [server_member] = user.server_members
       const [collaborator] = user.collaborators
 
@@ -30,7 +31,7 @@ export const load = async (event) => {
       }
 
       return {
-        sites, 
+        sites: sites || [], 
         user: user_final, 
         config
       }
