@@ -6,8 +6,7 @@ CREATE TABLE "public"."collaborators" (
     "created_at" timestamp with time zone DEFAULT "now"(),
     "site" "uuid",
     "user" "uuid" NOT NULL,
-    "role" "text" NOT NULL,
-    "server_member" boolean
+    "role" "text" NOT NULL
 );
 
 ALTER TABLE
@@ -157,7 +156,6 @@ CREATE TABLE "public"."symbols" (
     "fields" "jsonb" DEFAULT '[]' :: "jsonb" NOT NULL,
     "content" "jsonb" DEFAULT '{}' :: "jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "preview" "text",
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "site" "uuid" NOT NULL
 );

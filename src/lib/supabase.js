@@ -13,10 +13,6 @@ export const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLIC
   },
 })
 
-export async function on_auth_change(cb) {
-  return supabase.auth.onAuthStateChange(cb)
-}
-
 export async function sign_up({ email, password }) {
   let { data, error } = await supabase.auth.signUp({ email, password })
   return {data, error}

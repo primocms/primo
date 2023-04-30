@@ -5,24 +5,33 @@ import _ from 'lodash'
 export const load = async (event) => {
   event.depends('app:data')
   const { session, supabaseClient } = await getSupabase(event)
-  if (!session && event.url.pathname !== '/auth') {
+  if (!session && !event.url.pathname.startsWith('/auth')) {
     throw redirect(303, '/auth')
   } else if (session) {
     // const site = event.params['site'] 
     const {sites, user, config} = await Promise.all([
       supabaseClient.from('sites').select('id, name, url, owner, pages (url, preview), collaborators (*)'),
-      supabaseClient.from('users').select('*, server_members (admin, role)').eq('id', session.user.id).single(),
+      supabaseClient.from('users').select('*, server_members (admin, role), collaborators (role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
     ]).then(([{data:sites},{data:user},{data:config}]) => {
       const [server_member] = user.server_members
+      const [collaborator] = user.collaborators
+
+      const user_final = server_member ? {
+        ...user,
+        server_member: true,
+        admin: server_member.admin,
+        role: server_member.role,
+      } : {
+        ...user,
+        server_member: false,
+        admin: false,
+        role: collaborator.role,
+      }
+
       return {
         sites, 
-        user: server_member ? {
-          ...user,
-          server_member: true,
-          admin: server_member.admin,
-          role: server_member.role,
-        } : user, 
+        user: user_final, 
         config
       }
     })

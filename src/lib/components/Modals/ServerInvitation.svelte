@@ -1,31 +1,35 @@
 <script>
   import axios from 'axios'
+  import Icon from '@iconify/svelte'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
   import { supabase, create_row } from '$lib/supabase'
 
+  let loading = false
   let email = ''
   let role = 'DEV'
 
   async function invite_editor() {
-    const { id } = await create_row('invitations', {
+    loading = true
+    await create_row('invitations', {
       email,
       inviter_email: $page.data.user.email,
       role,
       server_invitation: true,
     })
-    const { data: success } = await axios.post('/api/invitations', {
-      id,
-      email,
-      site: { name: 'a Primo server' },
+    const { data } = await axios.post('/api/invitations', {
       url: $page.url.origin,
-      inviter_email: $page.data.user.email,
+      email,
+      role,
+      server_invitation: true,
     })
-    if (success) {
+
+    if (data.success) {
       invitations = await get_invitations()
     } else {
-      alert('Could not send invitation. Please try again.')
+      alert(data.error)
     }
+    loading = false
     email = ''
   }
 
@@ -82,7 +86,13 @@
             <option value="EDITOR">{Role('EDITOR')}</option>
           </select>
         </div>
-        <button type="submit">Send invite</button>
+        <button type="submit" disabled={!email}>
+          {#if loading}
+            <Icon icon="eos-icons:loading" />
+          {:else}
+            <span>Send invite</span>
+          {/if}
+        </button>
       </div>
     </form>
     {#if invitations.length > 0}
@@ -172,6 +182,10 @@
         padding: 10px 12px;
         background: var(--color-gray-7);
         border-radius: 4px;
+
+        &:disabled {
+          opacity: 0.5;
+        }
       }
     }
   }

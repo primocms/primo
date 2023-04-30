@@ -35,13 +35,11 @@
   import { fade } from 'svelte/transition'
   import CreateSite from './Modals/CreateSite.svelte'
   import UserSettings from './Modals/UserSettings.svelte'
-  import Authentication from './Modals/Authentication.svelte'
   import Collaboration from './Modals/Collaboration.svelte'
   import ServerInvitation from './Modals/ServerInvitation.svelte'
-  import InviteSiteCollaborator from './Modals/Invitation.svelte'
+  import InviteSiteCollaborator from './Modals/SiteInvitation.svelte'
 
   const modals = {
-    AUTH: Authentication,
     CREATE_SITE: CreateSite,
     USER_SETTINGS: UserSettings,
     COLLABORATION: Collaboration,
@@ -52,7 +50,6 @@
   let activeModal = modals[$type.id]
   $: showModal($type.id)
   async function showModal(typeID) {
-    const modal = modals[typeID]
     activeModal = modals[typeID]
   }
 

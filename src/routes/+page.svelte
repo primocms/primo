@@ -127,7 +127,9 @@
             <li>
               <button class="create-site" on:click={createSite}>
                 {#if loading}
-                  <!-- <Spinner /> -->§
+                  <div class="icon">
+                    <Icon icon="eos-icons:loading" />
+                  </div>
                 {:else}
                   <div class="icon">
                     <Icon icon="ic:round-plus" />
@@ -293,6 +295,7 @@
     font-size: 0.75rem;
     color: var(--color-gray-2);
     text-decoration: underline;
+    text-align: left;
     &:hover {
       color: var(--primo-color-brand);
     }

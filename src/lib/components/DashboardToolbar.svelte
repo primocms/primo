@@ -23,13 +23,13 @@
         Settings
       </button>
     {/if}
-    {#if $config.customization.docs.label}
+    {#if $page.data.user.role === 'DEV'}
       <a
         class="link with-icon"
-        href={$config.customization.docs.url}
+        href="https://docs.primocms.org/"
         target="blank"
       >
-        <span class="docs">{$config.customization.docs.label}</span>
+        <span class="docs">Docs</span>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
           <path
             fill="currentColor"

@@ -4,6 +4,7 @@
   import modal from '$lib/editor/stores/app/modal'
   import { hoveredBlock, showingIDE } from '$lib/editor/stores/app/misc'
   import { mouse_position } from '$lib/stores'
+  import { page } from '$app/stores'
   import { draggable } from '@neodrag/svelte'
   import { positions } from '$lib/editor/views/editor/Layout/ComponentNode.svelte'
   import MenuPopup from '$lib/components/MenuPopup.svelte'
@@ -217,10 +218,12 @@
           icon="material-symbols:edit-square-outline-rounded"
           on:click={() => edit_symbol_content(symbol)}
         />
-        <IconButton
-          icon="material-symbols:code"
-          on:click={() => edit_symbol_code(symbol)}
-        />
+        {#if $page.data.user.role === 'DEV'}
+          <IconButton
+            icon="material-symbols:code"
+            on:click={() => edit_symbol_code(symbol)}
+          />
+        {/if}
         <MenuPopup
           icon="carbon:overflow-menu-vertical"
           options={[

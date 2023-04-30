@@ -1,11 +1,8 @@
 <script>
-  // import { browser } from '$app/environment';
   import { page } from '$app/stores'
   import { fade } from 'svelte/transition'
   import SignIn from './SignIn.svelte'
   import SignUp from './SignUp.svelte'
-  import logo_dark from '$lib/assets/logodark.svg'
-  // import logo_light from '$lib/assets/breezlywhite.svg';
   import { config } from '../../stores'
 
   export let form
@@ -104,8 +101,4 @@
     border-radius: 6px;
     background-color: #1a1a1a;
   }
-
-  /* .right {
-		background: #1D5FFC;
-	} */
 </style>

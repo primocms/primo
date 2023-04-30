@@ -111,20 +111,4 @@
       }
     }
   }
-
-  /* .footer-text {
-    font-size: 0.875rem;
-    line-height: 1.125rem;
-    color: #B6B6B6;
-    margin-top: 1.5rem;
-    justify-content: center;
-    display: flex;
-    gap: 0.5rem;
-
-    button {
-      all: unset;
-      cursor: pointer;
-      color: #0276FD;
-    }
-  } */
 </style>

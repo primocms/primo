@@ -5,10 +5,6 @@ export async function signUp({ email, password }) {
 	return res;
 }
 
-export function watchForAutoLogin(cb) {
-	supabase.auth.onAuthStateChange(cb);
-}
-
 export async function signOut() {
 	await supabase.auth.signOut();
 }
@@ -27,6 +23,5 @@ export default {
 	signUp,
 	signIn,
 	signOut,
-	resetPassword,
-	watchForAutoLogin,
+	resetPassword
 };

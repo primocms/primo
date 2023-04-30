@@ -3,6 +3,7 @@
   import _ from 'lodash-es'
   import fileSaver from 'file-saver'
   import axios from 'axios'
+  import { page } from '$app/stores'
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
   import site from '$lib/editor/stores/data/draft'
   import sections from '$lib/editor/stores/data/sections'
@@ -137,9 +138,11 @@
   {#if active_tab === 'site'}
     {#if $symbols.length > 0}
       <div class="primo-buttons">
-        <button class="primo-button" on:click={create_symbol}>
-          <Icon icon="mdi:plus" />
-        </button>
+        {#if $page.data.user.role === 'DEV'}
+          <button class="primo-button" on:click={create_symbol}>
+            <Icon icon="mdi:plus" />
+          </button>
+        {/if}
         <label class="primo-button">
           <input on:change={upload_symbol} type="file" accept=".json" />
           <Icon icon="mdi:upload" />

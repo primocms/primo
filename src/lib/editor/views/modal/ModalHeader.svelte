@@ -1,6 +1,7 @@
 <script>
   import { getContext } from 'svelte'
   import Icon from '@iconify/svelte'
+  import { page } from '$app/stores'
   import modal from '../../stores/app/modal'
   import { showingIDE, userRole } from '../../stores/app/misc'
   import LocaleSelector from '../../views/editor/LocaleSelector.svelte'
@@ -20,8 +21,6 @@
       modal.hide()
     }
   }
-
-  const SHOW_SINGLE_LOCALE = getContext('SIMPLE')
 </script>
 
 <header class={variants}>
@@ -49,7 +48,7 @@
   </div>
   <div class="right-container">
     <slot />
-    {#if !$showingIDE && !$modal.hideLocaleSelector && showLocaleSelector && !SHOW_SINGLE_LOCALE}
+    {#if !$showingIDE && !$modal.hideLocaleSelector && showLocaleSelector}
       <LocaleSelector align="left" />
     {/if}
     {#if $userRole === 'developer' && $modal.showSwitch}
@@ -62,7 +61,7 @@
         >
           <Icon icon="material-symbols:edit-square-outline-rounded" />
         </button>
-      {:else}
+      {:else if $page.data.user.role === 'DEV'}
         <button
           class="code-mode"
           on:click={() => ($showingIDE = !$showingIDE)}

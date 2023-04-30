@@ -4,6 +4,7 @@
   import sections from '../../../stores/data/sections'
   import Icon from '@iconify/svelte'
   import { showingIDE } from '../../../stores/app/misc'
+  import { page } from '$app/stores'
 
   const dispatch = createEventDispatcher()
 
@@ -24,9 +25,11 @@
       <button on:click={() => dispatch('edit-content')}>
         <Icon icon="material-symbols:edit-square-outline-rounded" />
       </button>
-      <button on:click={() => dispatch('edit-code')}>
-        <Icon icon="ph:code-bold" />
-      </button>
+      {#if $page.data.user.role === 'DEV'}
+        <button on:click={() => dispatch('edit-code')}>
+          <Icon icon="ph:code-bold" />
+        </button>
+      {/if}
     </div>
     <div class="top-right">
       <button on:click={() => dispatch('delete')} class="button-delete">

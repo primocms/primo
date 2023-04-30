@@ -2,17 +2,13 @@
   import { setContext } from 'svelte'
   import '$lib/assets/reset.css'
   import { browser } from '$app/environment'
-  import { goto } from '$app/navigation'
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
   import { fieldTypes, registerProcessors, dropdown, stores } from '$lib/editor'
   import user from '../stores/user'
   import { config } from '../stores'
   import { supabase as supabaseClient } from '$lib/supabase'
-  import { watchForAutoLogin } from '../supabase/auth'
-  import { users } from '../supabase/db'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
-  // import Build from '../extensions/Build.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import { invalidate } from '$app/navigation'
@@ -88,31 +84,6 @@
     ])
     setContext('track', () => {})
   }
-
-  // watchForAutoLogin(async (event, session) => {
-  //   if (event === 'SIGNED_IN') {
-  //     const { id, email } = session.user
-  //     const [userData] = await users.get(null, 'role, sites', email)
-  //     if (!userData) return
-  //     user.update((u) => ({
-  //       ...u,
-  //       uid: id,
-  //       id,
-  //       email,
-  //       signedIn: true,
-  //       admin: userData.role === 'admin',
-  //       role: userData.role === 'admin' ? 'developer' : userData.role,
-  //       sites: userData.sites,
-  //     }))
-  //   } else if (event === 'SIGNED_OUT') {
-  //     user.reset()
-  //     goto('/')
-  //   } else if (event === 'PASSWORD_RECOVERY') {
-  //     // passwordResetToken = session.access_token;
-  //   } else {
-  //     console.warn('NEW AUTH EVENT', event)
-  //   }
-  // })
 </script>
 
 <svelte:window

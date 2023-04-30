@@ -2,31 +2,30 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { createEventDispatcher } from 'svelte'
   import { supabase, create_row } from '$lib/supabase'
-
-  const dispatch = createEventDispatcher()
 
   export let site
 
   const owner = $page.data.session.user
 
+  let loading = false
   let email = ''
   let role = 'DEV'
 
   async function invite_editor() {
-    const { id } = await create_row('invitations', {
+    loading = true
+    await create_row('invitations', {
       email,
       inviter_email: owner.email,
       site: site.id,
       role,
     })
     const { data: success } = await axios.post('/api/invitations', {
-      id,
+      site: site.id,
       email,
-      site,
+      role,
+      server_invitation: false,
       url: $page.url.origin,
-      inviter_email: owner.email,
     })
     if (success) {
       const { data, error } = await supabase
@@ -40,6 +39,7 @@
       alert('Could not send invitation. Please try again.')
     }
     email = ''
+    loading = false
   }
 
   let editors = []
