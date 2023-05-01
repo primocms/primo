@@ -168,7 +168,7 @@
         <p>You don't have any blocks in your site yet</p>
         <p>
           Create a Block from scratch, upload an existing Block, or use the
-          Breezly Blocks.
+          Primo Blocks.
         </p>
       </div>
       <div class="primo-buttons">

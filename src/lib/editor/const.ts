@@ -121,7 +121,6 @@ export type Site = {
     js: string
   },
   fields: any[],
-  symbols: any[],
   content: {}
 }
 
@@ -129,40 +128,13 @@ export const Site = ({ url, name } = { url: 'default', name: 'Default' }): Site 
   id: uuidv4(),
   url,
   name,
-  // pages: [
-  //   Page('index', 'Home Page')
-  // ],
   code: {
     html: {
-      head: `
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-<meta charset="UTF-8">
-      `,
+      head: ``,
       below: ''
     },
-    css: `\
+    css: `
 @import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css");
-
-html {
-
-  /* Colors */
-  --color-accent: #154BF4;
-
-  /* Default property values */
-  --background: white;
-  --color: #222;
-  --padding: 2rem; 
-  --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.2); 
-  --border-radius: 8px; 
-  --max-width: 1200px;
-  --border-color: #CBCACE;
-  --transition-time: 0.1s;
-  --transition: var(--transition-time) color,
-    var(--transition-time) background-color,
-      var(--transition-time) border-color,
-        var(--transition-time) text-decoration-color,
-          var(--transition-time) box-shadow, var(--transtion-time) transform;
-}
 
 #page {
   font-family: system-ui, sans-serif;
@@ -170,64 +142,6 @@ html {
   line-height: 1.6; 
   font-size: 1rem;
   background: var(--background);
-}
-
-.section .content {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--padding);
-
-  img {
-    width: 100%;
-    margin: 2rem 0;
-    box-shadow: var(--box-shadow);
-    border-radius: var(--border-radius);
-  }
-
-  p {
-    padding: 0.25rem 0;
-    line-height: 1.5;
-  }
-
-  a {
-    text-decoration: underline;
-  }
-
-  h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-
-  h2 {
-    font-size: 2.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  h3 {
-    font-size: 1.75rem; 
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-
-  ul {
-    list-style: disc;
-    padding: 0.5rem 0;
-    padding-left: 1.25rem;
-  }
-
-  ol {
-    list-style: decimal;
-    padding: 0.5rem 0;
-    padding-left: 1.25rem;
-  }
-
-  blockquote {
-    padding: 2rem;
-    box-shadow: var(--box-shadow);
-    border-radius: var(--border-radius);
-  }
 }
 
 .section-container {
@@ -260,15 +174,14 @@ html {
     border: 2px solid var(--color-accent);
   }
 }
-    `,
+`,
     js: ''
   },
   fields: [],
   content: {
     'en': { // locale
     }
-  },
-  symbols: []
+  }
 })
 
 

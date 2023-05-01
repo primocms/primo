@@ -108,7 +108,65 @@ export function validate_site_structure_v2(site) {
     name: 'Content',
     code: {
       html: `<div class="section"><div class="section-container content">{@html content.html}</div></div>`,
-      css: '',
+      css: `
+.content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--padding);
+
+  img {
+    width: 100%;
+    margin: 2rem 0;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+  }
+
+  p {
+    padding: 0.25rem 0;
+    line-height: 1.5;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem; 
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  ul {
+    list-style: disc;
+    padding: 0.5rem 0;
+    padding-left: 1.25rem;
+  }
+
+  ol {
+    list-style: decimal;
+    padding: 0.5rem 0;
+    padding-left: 1.25rem;
+  }
+
+  blockquote {
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+  }
+}
+      `,
       js: ''
     },
     fields: [{

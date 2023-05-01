@@ -40,7 +40,7 @@
           },
         }
       : {
-          ...default_site,
+          site: default_site,
           pages: [
             Page({
               name: 'Home',
@@ -137,7 +137,7 @@
       <div class="submit">
         <PrimaryButton
           type="submit"
-          label={duplicatingSite ? 'Duplicate' : 'Create'}
+          label={duplicatingSite ? 'Duplicate' : 'Create Blank Site'}
           disabled={!canCreateSite && duplicateFileIsValid}
           {loading}
         />
