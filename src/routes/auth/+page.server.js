@@ -9,7 +9,7 @@ export async function load(event) {
 
   if (!session && !signing_up) {
     const {data:existing_users} = await supabaseAdmin.from('users').select('*')
-    const initiated = existing_users.length > 0
+    const initiated = existing_users?.length > 0
     if (!initiated) {
       throw redirect(303, '?signup')
     }
