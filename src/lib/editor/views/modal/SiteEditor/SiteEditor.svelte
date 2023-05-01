@@ -149,7 +149,7 @@
   $: $autoRefresh &&
     compileComponentCode({
       html: rawHTML,
-      css: rawCSS
+      css: rawCSS,
     })
 
   // on-screen fields
@@ -196,6 +196,7 @@
             ...local_code,
             html: {
               head: html,
+              below: '', // TODO
             },
           },
           content: local_content,

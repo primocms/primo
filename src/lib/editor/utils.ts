@@ -143,7 +143,7 @@ export function getEmptyValue(field: Field) {
     size: null
   }
   else if (field.type === 'text') return ''
-  else if (field.type === 'content') return ''
+  else if (field.type === 'markdown') return { html: '', markdown: '' }
   else if (field.type === 'link') return {
     label: '',
     url: ''

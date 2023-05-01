@@ -17,9 +17,8 @@
   import { tick, createEventDispatcher, getContext } from 'svelte'
   import { browser } from '$app/environment'
   import { processCode } from '../../../utils'
-  import { content, pages } from '../../../stores/data/draft'
+  import { pages } from '../../../stores/data/draft'
   import { locale } from '../../../stores/app/misc'
-  import { getComponentData, getPageData } from '../../../stores/helpers'
   import { update_section_content } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
   import modal from '../../../stores/app/modal'
@@ -80,22 +79,8 @@
   }
 
   $: symbol = block.symbol
-  $: $content, $locale, block, setComponentData()
 
-  let component_data
-  let parent_data
-  $: combined_data = {
-    ...parent_data,
-    ...component_data,
-  }
-
-  function setComponentData() {
-    component_data = getComponentData({
-      component: block,
-      include_parent_data: false,
-    })
-    parent_data = getPageData({})
-  }
+  $: component_data = block.content[$locale]
 
   let html = ''
   let css = ''
@@ -103,14 +88,13 @@
   $: compileComponentCode(symbol.code)
 
   async function save_edited_value(key, value) {
-    _.set(component_data, key, value)
+    _.set(local_component_data, key, value)
     await update_section_content(block, {
       ...block.content,
-      [$locale]: component_data,
+      [$locale]: local_component_data,
     })
   }
 
-  let editor
   let floatingMenu, bubbleMenu
 
   let image_editor
@@ -119,7 +103,10 @@
   let link_editor
   let link_editor_is_visible = false
 
-  function create_editor({ key, html, element }) {
+  let active_editor
+  function create_editor({ key, element }) {
+    const html = element.innerHTML.trim()
+    element.innerHTML = ''
     const editor = new Editor({
       content: html,
       element,
@@ -141,13 +128,14 @@
         }),
         Extension.create({
           onFocus() {
+            active_editor = editor
             dispatch('lock')
           },
           onBlur() {
             dispatch('unlock')
-            const html = editor.getHTML()
+            const updated_html = editor.getHTML()
             save_edited_value(key, {
-              html,
+              html: updated_html,
               markdown: converter.makeMarkdown(html),
             })
           },
@@ -171,7 +159,7 @@
       const res = await processCode({
         component: {
           ...rawCode,
-          data: combined_data,
+          data: component_data,
         },
         buildStatic: false,
       })
@@ -186,7 +174,7 @@
         const { default: App } = await import(/* @vite-ignore */ url)
         component = new App({
           target: node,
-          props: combined_data,
+          props: component_data,
         })
 
         make_content_editable()
@@ -221,45 +209,37 @@
 
     // loop over component_data and match to elements
     const tagged_elements = new Set() // elements that have been matched to a component_data key
-    for (const [key, val] of Object.entries(component_data)) {
-      const is_link =
-        typeof val === 'object' &&
-        Object.hasOwn(val, 'url') &&
-        Object.hasOwn(val, 'label')
+    for (const [key, value] of Object.entries(component_data)) {
+      const type = get_value_type(value)
 
-      const is_image =
-        typeof val === 'object' &&
-        Object.hasOwn(val, 'url') &&
-        Object.hasOwn(val, 'alt')
-
-      const is_markdown =
-        typeof val === 'object' &&
-        Object.hasOwn(val, 'html') &&
-        Object.hasOwn(val, 'markdown')
-
-      if (typeof val === 'string' || is_link || is_image || is_markdown) {
-        // value is text
-        search_elements_for_value(key, val)
-      } else if (Array.isArray(val)) {
-        // value is repeater
-        for (const [index, item] of Object.entries(val)) {
-          for (const [subkey, val] of Object.entries(item)) {
-            search_elements_for_value(`${key}[${index}].${subkey}`, val)
+      if (['TEXT', 'LINK', 'IMAGE', 'MARKDOWN'].includes(type)) {
+        search_elements_for_value({ key, value, type })
+      } else if (type === 'REPEATER') {
+        for (const [index, item] of Object.entries(value)) {
+          for (const [subkey, subvalue] of Object.entries(item)) {
+            search_elements_for_value({
+              key: `${key}[${index}].${subkey}`,
+              value: subvalue,
+              type: get_value_type(value),
+            })
           }
         }
-      } else if (typeof val === 'object' && val !== null) {
-        // value is group
-        Object.entries(val).forEach(([subkey, subvalue]) => {
-          search_elements_for_value(`${key}.${subkey}`, subvalue)
+      } else if (type === 'GROUP') {
+        Object.entries(value).forEach(([subkey, subvalue]) => {
+          search_elements_for_value({
+            key: `${key}.${subkey}`,
+            value: subvalue,
+            type: get_value_type(value),
+          })
         })
       }
     }
 
-    function search_elements_for_value(key, val) {
+    function search_elements_for_value({ key, value, type }) {
       for (const element of valid_elements) {
         if (tagged_elements.has(element)) continue // element is already tagged, skip
 
-        const matched = match_value_to_element(key, val, element)
+        const matched = match_value_to_element({ key, value, type, element })
         if (matched) {
           tagged_elements.add(element)
           break
@@ -267,31 +247,17 @@
       }
     }
 
-    function match_value_to_element(key, value, element) {
+    function match_value_to_element({ key, value, type, element }) {
       if (value === '' || !value) return false
 
-      const html = element.innerHTML?.trim()
-      const text = element.innerText?.trim()
-
-      const text_matches = typeof value == 'string' && value.trim() === text
-
-      const is_html = typeof value === 'object' && !!value.html
-
-      const is_image =
-        typeof value === 'object' && value.alt !== undefined && value.url
-
-      const is_link =
-        typeof value === 'object' &&
-        Object.hasOwn(value, 'url') &&
-        Object.hasOwn(value, 'label')
-
+      // First, match by explicitly set key
       const key_matches = element.dataset.key === key
       if (key_matches) {
-        if (is_html) {
-          set_editable_editor({ element, key })
-        } else if (is_image) {
+        if (type === 'MARKDOWN') {
+          create_editor({ element, key })
+        } else if (type === 'IMAGE') {
           set_editable_image({ element, key })
-        } else if (is_link) {
+        } else if (type === 'LINK') {
           set_editable_link({ element, key, url: value.url })
         } else {
           set_editable({ element, key })
@@ -299,41 +265,73 @@
         return true
       }
 
-      if (is_link && typeof element.href === 'string') {
+      if (type === 'LINK' && typeof element.href === 'string') {
         const external_url_matches =
           value.url?.replace(/\/$/, '') === element.href?.replace(/\/$/, '')
         const internal_url_matches =
           window.location.origin + value.url?.replace(/\/$/, '') ===
           element.href?.replace(/\/$/, '')
-
-        if (
+        const link_matches =
           (external_url_matches || internal_url_matches) &&
           value.label === element.innerText
-        ) {
+
+        if (link_matches) {
           set_editable_link({ element, key, url: value.url })
           return true
         }
-      } else if (is_image) {
+      } else if (type === 'IMAGE') {
         const image_matches =
           value.alt === element.alt && value.url === element.src
         if (image_matches) {
           set_editable_image({ element, key })
           return true
         }
-      } else if (text_matches) {
-        // Markdown Field
-        set_editable({ element, key })
-        return true
-      } else if (is_html) {
+      } else if (type === 'MARKDOWN') {
+        const html = element.innerHTML?.trim()
         const html_matches = html === value.html
         if (html_matches) {
-          set_editable_editor({ element, key })
+          create_editor({ element, key })
           return true
         }
       } else {
-        // console.log('no match', { element, key, value })
-        return false
+        const text = element.innerText?.trim()
+        const text_matches = typeof value == 'string' && value.trim() === text
+
+        // All other field types are text
+        if (text_matches) {
+          set_editable({ element, key })
+          return true
+        } else return false
       }
+    }
+
+    function get_value_type(value) {
+      const is_link =
+        typeof value === 'object' &&
+        Object.hasOwn(value, 'url') &&
+        Object.hasOwn(value, 'label')
+
+      const is_image =
+        typeof value === 'object' &&
+        Object.hasOwn(value, 'url') &&
+        Object.hasOwn(value, 'alt')
+
+      const is_markdown =
+        typeof value === 'object' &&
+        Object.hasOwn(value, 'html') &&
+        Object.hasOwn(value, 'markdown')
+
+      const is_repeater = Array.isArray(value)
+      const is_group = typeof value === 'object' && value !== null
+
+      let type = 'TEXT'
+      if (is_link) type = 'LINK'
+      else if (is_image) type = 'IMAGE'
+      else if (is_markdown) type = 'MARKDOWN'
+      else if (is_repeater) type = 'REPEATER'
+      else if (is_group) type = 'GROUP'
+
+      return type
     }
 
     async function set_editable_image({ element, key = '' }) {
@@ -376,16 +374,6 @@
           })
         }
       }
-    }
-
-    async function set_editable_editor({ element, key = '' }) {
-      const html = element.innerHTML.trim()
-      element.innerHTML = ''
-      create_editor({
-        key,
-        html,
-        element,
-      })
     }
 
     async function set_editable_link({ element, key, url }) {
@@ -452,7 +440,7 @@
     }
   }
 
-  let local_component_data
+  let local_component_data = block.content[$locale]
   $: hydrateComponent(component_data)
   async function hydrateComponent(data) {
     if (!component) return
@@ -479,6 +467,7 @@
   }
 
   // Reroute links to correctly open externally and internally
+  // TODO: fix
   async function reroute_links() {
     const { pathname, origin } = window.location
     const [site] = pathname.split('/').slice(1)
@@ -543,7 +532,7 @@
     ? new MutationObserver((e) => {
         if (e[0].addedNodes.length === 0) {
           // menu is janky, so we need to re-create it
-          editor.destroy()
+          // active_editor.destroy()
           // create_editor()
         }
       })
@@ -595,26 +584,27 @@
 {/if}
 
 <div class="menu floating-menu primo-reset" bind:this={floatingMenu}>
-  {#if editor}
+  {#if active_editor}
     <CopyButton
       icon="heading"
-      on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      on:click={() =>
+        active_editor.chain().focus().toggleHeading({ level: 1 }).run()}
     />
     <CopyButton
       icon="code"
-      on:click={() => editor.chain().focus().toggleCodeBlock().run()}
+      on:click={() => active_editor.chain().focus().toggleCodeBlock().run()}
     />
     <CopyButton
       icon="quote-left"
-      on:click={() => editor.chain().focus().toggleBlockquote().run()}
+      on:click={() => active_editor.chain().focus().toggleBlockquote().run()}
     />
     <CopyButton
       icon="list-ul"
-      on:click={() => editor.chain().focus().toggleBulletList().run()}
+      on:click={() => active_editor.chain().focus().toggleBulletList().run()}
     />
     <CopyButton
       icon="list-ol"
-      on:click={() => editor.chain().focus().toggleOrderedList().run()}
+      on:click={() => active_editor.chain().focus().toggleOrderedList().run()}
     />
     <!-- <CopyButton
 			icon="image"
@@ -622,7 +612,7 @@
 				modal.show('DIALOG', {
 					component: 'IMAGE',
 					onSubmit: ({ url, alt }) => {
-						editor.chain().focus().setImage({ src: url, alt }).run();
+						active_editor.chain().focus().setImage({ src: url, alt }).run();
 						modal.hide();
 					}
 				})}
@@ -630,32 +620,32 @@
   {/if}
 </div>
 <div class="menu bubble-menu primo-reset" bind:this={bubbleMenu}>
-  {#if editor}
+  {#if active_editor}
     <CopyButton
       icon="link"
       on:click={() =>
         modal.show('DIALOG', {
           component: 'LINK',
           onSubmit: (val) => {
-            editor.chain().focus().setLink({ href: val }).run()
+            active_editor.chain().focus().setLink({ href: val }).run()
             modal.hide()
           },
         })}
     />
     <CopyButton
       icon="bold"
-      on:click={() => editor.chain().focus().toggleBold().run()}
-      active={editor.isActive('bold')}
+      on:click={() => active_editor.chain().focus().toggleBold().run()}
+      active={active_editor.isActive('bold')}
     />
     <CopyButton
       icon="italic"
-      on:click={() => editor.chain().focus().toggleItalic().run()}
-      active={editor.isActive('italic')}
+      on:click={() => active_editor.chain().focus().toggleItalic().run()}
+      active={active_editor.isActive('italic')}
     />
     <CopyButton
       icon="highlighter"
-      on:click={editor.chain().focus().toggleHighlight().run()}
-      active={editor.isActive('highlight')}
+      on:click={() => active_editor.chain().focus().toggleHighlight().run()}
+      active={active_editor.isActive('highlight')}
     />
   {/if}
 </div>

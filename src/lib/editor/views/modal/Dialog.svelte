@@ -38,11 +38,13 @@
     {#if component === 'IMAGE'}
       <Image on:submit={({ detail }) => onSubmit(detail)} {...props} />
     {:else if component === 'LINK'}
-      <div class="message">Enter URL</div>
-      <form on:submit|preventDefault={() => onSubmit(value)}>
-        <!-- svelte-ignore a11y-autofocus -->
-        <input type="url" bind:value autofocus />
-      </form>
+      <div class="link">
+        <div class="message">Enter URL</div>
+        <form on:submit|preventDefault={() => onSubmit(value)}>
+          <!-- svelte-ignore a11y-autofocus -->
+          <input type="url" bind:value autofocus />
+        </form>
+      </div>
     {:else if component === 'FEEDBACK'}
       <Feedback />
     {:else if typeof component !== 'string'}
@@ -73,7 +75,7 @@
   form {
     input {
       padding: 0.5rem;
-      color: var(--primo-color-black);
+      color: white;
     }
   }
 </style>

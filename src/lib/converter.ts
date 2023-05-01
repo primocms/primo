@@ -110,57 +110,54 @@ export function validate_site_structure_v2(site) {
       html: `<div class="section"><div class="section-container content">{@html content.html}</div></div>`,
       css: `
 .content {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: var(--padding);
 
-  img {
+  :global(img) {
     width: 100%;
     margin: 2rem 0;
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
   }
 
-  p {
+  :global(p) {
     padding: 0.25rem 0;
     line-height: 1.5;
   }
 
-  a {
+  :global(a) {
     text-decoration: underline;
   }
 
-  h1 {
+  :global(h1) {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
   }
 
-  h2 {
+  :global(h2) {
     font-size: 2.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
   }
 
-  h3 {
+  :global(h3) {
     font-size: 1.75rem; 
     font-weight: 600;
     margin-bottom: 0.25rem;
   }
 
-  ul {
+  :global(ul) {
     list-style: disc;
     padding: 0.5rem 0;
     padding-left: 1.25rem;
   }
 
-  ol {
+  :global(ol) {
     list-style: decimal;
     padding: 0.5rem 0;
     padding-left: 1.25rem;
   }
 
-  blockquote {
+  :global(blockquote) {
     padding: 2rem;
     box-shadow: var(--box-shadow);
     border-radius: var(--border-radius);
