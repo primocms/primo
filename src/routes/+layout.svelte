@@ -5,15 +5,12 @@
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
   import { fieldTypes, registerProcessors, dropdown, stores } from '$lib/editor'
-  import user from '../stores/user'
-  import { config } from '../stores'
+  import config from '../stores/config'
   import { supabase as supabaseClient } from '$lib/supabase'
   import Modal, { show, hide } from '$lib/components/Modal.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import SiteButtons from '$lib/components/SiteButtons.svelte'
   import { invalidate } from '$app/navigation'
-
-  export let data
 
   const { saved } = stores
 
@@ -27,36 +24,10 @@
     }
   })
 
-  if (data.session) {
-    user.update((u) => ({
-      ...u,
-      ...data.session.user,
-      signedIn: true,
-    }))
-  }
-
   if (browser) {
     import('../compiler/processors').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
-    // primoModal.register([
-    //   {
-    //     id: 'BUILD',
-    //     component: Build,
-    //     componentProps: {
-    //       siteName: 'Website', // TODO - change
-    //     },
-    //     options: {
-    //       route: 'build',
-    //       width: 'md',
-    //       header: {
-    //         title: 'Build to Github',
-    //         icon: 'fab fa-github',
-    //       },
-    //       hideLocaleSelector: true,
-    //     },
-    //   },
-    // ])
     fieldTypes.register([
       {
         id: 'image',

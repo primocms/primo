@@ -35,14 +35,12 @@
   import { fade } from 'svelte/transition'
   import CreateSite from './Modals/CreateSite.svelte'
   import UserSettings from './Modals/UserSettings.svelte'
-  import Collaboration from './Modals/Collaboration.svelte'
   import ServerInvitation from './Modals/ServerInvitation.svelte'
   import InviteSiteCollaborator from './Modals/SiteInvitation.svelte'
 
   const modals = {
     CREATE_SITE: CreateSite,
     USER_SETTINGS: UserSettings,
-    COLLABORATION: Collaboration,
     INVITE_COLLABORATORS: ServerInvitation,
     INVITE_SITE_COLLABORATOR: InviteSiteCollaborator,
   }

@@ -37,11 +37,7 @@
     Symbol as SymbolType,
     Field as FieldType,
   } from '../../../const'
-  import {
-    getPageData,
-    getSymbol,
-    getComponentData,
-  } from '../../../stores/helpers'
+  import { getPageData, getComponentData } from '../../../stores/helpers'
   import { tick } from 'svelte'
 
   export let component: ComponentType | SymbolType = Component()

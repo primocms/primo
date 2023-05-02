@@ -1,10 +1,7 @@
 <script>
-  // import * as primo from '$lib/editor/package.json'
-  import { config } from '../../stores'
-  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
+  import config from '../../stores/config'
 
   const date = new Date()
-  const month = date.toLocaleString('default', { month: 'long' })
 </script>
 
 <footer class="container">
@@ -36,8 +33,7 @@
     margin-top: auto;
   }
 
-  a,
-  button {
+  a {
     color: var(--color-gray-3);
     transition: color 0.2s;
     &:hover {

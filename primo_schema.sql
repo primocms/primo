@@ -140,8 +140,7 @@ CREATE TABLE "public"."sites" (
     "code" "jsonb" DEFAULT '{"js": "", "css": "", "html": {"head": "", "below": ""}}' :: "jsonb" NOT NULL,
     "fields" "jsonb" DEFAULT '[]' :: "jsonb" NOT NULL,
     "content" "jsonb" DEFAULT '{}' :: "jsonb" NOT NULL,
-    "url" "text" NOT NULL,
-    "owner" "uuid" NOT NULL
+    "url" "text" NOT NULL
 );
 
 ALTER TABLE
@@ -335,14 +334,6 @@ ALTER TABLE
     ONLY "public"."server_members"
 ADD
     CONSTRAINT "server_members_user_fkey" FOREIGN KEY ("user") REFERENCES "public"."users"("id") ON DELETE CASCADE;
-
---
--- Name: sites sites_owner_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-ALTER TABLE
-    ONLY "public"."sites"
-ADD
-    CONSTRAINT "sites_owner_fkey" FOREIGN KEY ("owner") REFERENCES "public"."users"("id");
 
 --
 -- Name: symbols symbols_site_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres

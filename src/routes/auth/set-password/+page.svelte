@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores'
   import { fade } from 'svelte/transition'
-  import { config } from '../../../stores'
+  import config from '../../../stores/config'
 
   export let form
 

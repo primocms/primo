@@ -1,10 +1,8 @@
 <script>
-  import Icon from '@iconify/svelte'
-  // import Letter from '$lib/ui/Letter.svelte'
   import UserPopup from './UserPopup.svelte'
   import { show } from '$lib/components/Modal.svelte'
   import { page } from '$app/stores'
-  import { config } from '../../stores'
+  import config from '../../stores/config'
 </script>
 
 <header role="navigation" aria-label="main navigation">
@@ -88,12 +86,6 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-
-    #user-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
 
     .link {
       &:last-child {

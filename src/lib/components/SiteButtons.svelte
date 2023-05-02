@@ -1,10 +1,8 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import sites from '../../stores/sites'
   import { stores } from '$lib/editor'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
-  // import { setActiveEditor } from '../../actions'
   const dispatch = createEventDispatcher()
 
   const { saved } = stores
@@ -20,12 +18,10 @@
       dispatch('toggle')
     }
   }
-
-  $: featuredSites = $sites.slice(0, 5)
 </script>
 
-<ul class="primo-reset" xyz="fade stagger stagger-2">
-  {#each featuredSites as site (site.id)}
+<ul class="primo-reset">
+  {#each [] as site (site.id)}
     <li class="site-item xyz-in">
       <a
         on:click={(e) => {
@@ -45,12 +41,13 @@
             fill="currentColor"
             viewBox="0 0 20 20"
             xmlns="http://www.w3.org/2000/svg"
-            ><path
+          >
+            <path
               fill-rule="evenodd"
               d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
               clip-rule="evenodd"
-            /></svg
-          >
+            />
+          </svg>
         </div>
       </a>
     </li>
