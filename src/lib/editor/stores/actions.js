@@ -12,6 +12,10 @@ import { supabase } from '$lib/supabase'
 import { swap_array_item_index } from '$lib/utils'
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Hydrates the active site, page, section, and symbol stores for th editor
+ * @param {import('$lib').Site_Data} data - Combined data object from the server
+ */
 export async function hydrate_active_data(data) {
   stores.sections.set(data.sections)
   stores.pages.set(data.pages)
@@ -38,6 +42,7 @@ export async function updateHTML({ page, site }) {
   update_timeline()
 }
 
+/** @returns {Promise<void>} */
 export async function updateActivePageCSS(css) {
   pages.update(get(activePageID), (page) => ({
     ...page,
@@ -49,6 +54,7 @@ export async function updateActivePageCSS(css) {
   update_timeline()
 }
 
+/** @returns {Promise<void>} */
 export async function updateSiteCSS(css) {
   code.update(c => ({
     ...c,
@@ -57,6 +63,7 @@ export async function updateSiteCSS(css) {
   update_timeline()
 }
 
+/** @returns {void} */
 export function undo_change() {
   const { current } = get(timeline)
   current?.undoing(current.data)
@@ -65,6 +72,7 @@ export function undo_change() {
   // hydrate_active_data(undone.data)
 }
 
+/** @returns {void} */
 export function redo_change() {
   const { data, doing } = timeline.redo()
   // hydrate_active_data(data)
@@ -73,9 +81,6 @@ export function redo_change() {
 
 export const symbols = {
   create: async (symbol, index = 0) => {
-    // saved.set(false)
-
-    // tested
     update_timeline({
       doing: async () => {
         stores.symbols.update(store => [

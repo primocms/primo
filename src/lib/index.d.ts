@@ -83,3 +83,10 @@ export type User = {
 	created_at: Date;
 	updated_at: Date;
 }
+
+export type Site_Data = {
+	site: Site;
+	pages: Array<Page>;
+	sections: Array<Section>;
+	symbols: Array<Symbol>;
+}
