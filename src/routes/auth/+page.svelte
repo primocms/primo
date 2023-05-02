@@ -3,7 +3,7 @@
   import { fade } from 'svelte/transition'
   import SignIn from './SignIn.svelte'
   import SignUp from './SignUp.svelte'
-  import { config } from '../../stores'
+  import ServerLogo from '$lib/ui/ServerLogo.svelte'
 
   export let form
 
@@ -19,10 +19,9 @@
   <main in:fade class="primo-reset">
     <div class="left">
       <div class="logo">
-        <img
-          src={$config.customization.logo.url}
-          alt={$config.customization.logo.alt}
-        />
+        <div class="logo-container">
+          <ServerLogo />
+        </div>
       </div>
       <div class="box">
         <header>
@@ -65,7 +64,7 @@
     width: 100%;
     margin-bottom: 2rem;
 
-    img {
+    .logo-container {
       width: 10rem;
     }
   }

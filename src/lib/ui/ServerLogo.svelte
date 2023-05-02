@@ -26,6 +26,9 @@
 </div>
 
 <style>
+  .logo {
+    width: 100%;
+  }
   img {
     width: 100%;
   }
