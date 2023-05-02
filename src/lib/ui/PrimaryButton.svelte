@@ -88,6 +88,7 @@
     &[disabled] {
       background: var(--color-gray-6);
       cursor: not-allowed;
+      box-shadow: none;
     }
   }
 

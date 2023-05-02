@@ -428,8 +428,13 @@ export const pages = {
 export async function update_page_preview(page = get(activePage.default)) {
   const preview = await buildStaticPage({ page, no_js: true })
   // stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
-  const { data: file, error } = await supabase.storage.from('sites').upload(`${get(stores.site).id}/preview.html`, preview as string, { upsert: true })
-  if (!file) return
+
+  if (page.url === 'index') {
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/preview.html`, preview as string, { upsert: true })
+  } else {
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
+  }
   // await supabase.from('pages').update({ preview: file.path }).eq('id', page.id)
 }
 

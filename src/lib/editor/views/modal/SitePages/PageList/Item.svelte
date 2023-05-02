@@ -179,7 +179,7 @@
     padding: 0.25rem;
     display: grid;
     gap: 0.25rem;
-    max-width: 400px;
+    max-width: 450px;
     padding: 0.825rem 1.125rem;
   }
 

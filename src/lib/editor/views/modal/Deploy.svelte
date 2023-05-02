@@ -113,10 +113,16 @@
   let user_repos = []
   $: if (github_account) get_repos()
   async function get_repos() {
-    const { data } = await axios.get(
-      `https://api.github.com/users/${github_account.login}/repos?per_page=100`
-    )
-    user_repos = data?.map((repo) => {
+    const res = await Promise.all([
+      axios.get(
+        `https://api.github.com/users/${github_account.login}/repos?per_page=100`
+      ),
+      axios.get(
+        `https://api.github.com/users/${github_account.login}/repos?per_page=100&page=2`
+      ),
+    ]).then((res) => res.map(({ data }) => data))
+
+    user_repos = _.flatten(res).map((repo) => {
       return {
         id: repo.full_name,
         label: repo.name,

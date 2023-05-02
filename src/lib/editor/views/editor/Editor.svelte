@@ -93,7 +93,7 @@
     label="Deploy"
     active={false}
     on:click={() =>
-      modal.show('DEPLOY', {}, { maxWidth: '400px', hideLocaleSelector: true })}
+      modal.show('DEPLOY', {}, { maxWidth: '450px', hideLocaleSelector: true })}
     disabled={pageEmpty}
   />
 </Toolbar>

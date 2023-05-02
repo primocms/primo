@@ -96,7 +96,7 @@
   }
   .box {
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     padding: 2.5rem;
     border-radius: 6px;
     background-color: #1a1a1a;

@@ -2,50 +2,6 @@ import supabase from './core'
 
 const subscriptions = {}
 
-export async function acceptInvitation(pass, userID) {
-  const {data,error} = await supabase
-    .from('sites')
-    .select('password, id, collaborators, owner (username, id, websites)')
-    .or(`password.eq.CONTENT-${pass},password.eq.DEV-${pass}`)
-  const site = data[0]
-  if (!site || error) { // password incorrect
-    console.error(error)
-    return {error}
-  }
-
-  const collaborators = site.collaborators || []
-  const {websites} = await users.get(userID, `websites`)
-
-  const role = site.password.includes('DEV') ? 'DEV' : 'CONTENT'
-  const date = (new Date()).toJSON()
-
-  // link is valid, add collaborator to site (user id, role)
-  const [ collaboratorAdded ] = await Promise.all([
-    sites.update(site.id, { 
-      collaborators: JSON.stringify([ ...collaborators, {
-        id: userID,
-        role: 'DEV',
-        created: date,
-        loggedin: date
-      }]),
-      password: '' 
-    }),
-    users.update(userID, {
-      websites: [ ...websites, site.id ] // concat 
-    })
-  ])
-  
-  return collaboratorAdded
-}
-
-export async function checkUsernameAvailability(username) {
-  const {data,error} = await supabase
-    .from('users')
-    .select('id')
-    .filter('username', 'eq', username)
-  return data[0] ? false : true
-}
-
 const DEFAULT_SITES_QUERY = `
   id,
   name,
