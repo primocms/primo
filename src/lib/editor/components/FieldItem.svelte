@@ -283,7 +283,7 @@
     font-size: var(--font-size-2);
 
     &::placeholder {
-      color: #b6b6b6;
+      color: var(--color-gray-7);
     }
     &:focus {
       outline: 0;

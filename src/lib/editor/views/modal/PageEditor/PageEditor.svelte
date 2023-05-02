@@ -9,7 +9,7 @@
   const activeTab = writable(0)
 </script>
 
-<script lang="ts">
+<script>
   import { _ as C } from 'svelte-i18n'
   import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es'
   import HSplitPane from './HSplitPane.svelte'
@@ -64,7 +64,7 @@
   }
 
   // hydrate fields with content (placeholder if passed component is a Symbol)
-  function getFieldValues(fields, loc: string) {
+  function getFieldValues(fields, loc) {
     return fields.map((field) => {
       const field_value = local_content[loc]?.[field.key]
       const value =
@@ -123,7 +123,7 @@
     }
   }
 
-  function saveLocalContent(): void {
+  function saveLocalContent() {
     // TODO
     // save field value to all locales where block is used
     // when block gets added to page, add static value as content to locale
@@ -137,7 +137,7 @@
     console.log({ local_content })
   }
 
-  function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {
+  function saveLocalValue(property, value) {
     local_code[property] = value
   }
 
@@ -161,7 +161,6 @@
 
   let preview = ''
 
-  let componentApp // holds compiled component
   let compilationError // holds compilation error
 
   // // ensure placeholder values always conform to form

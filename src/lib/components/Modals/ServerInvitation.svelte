@@ -169,6 +169,7 @@
       font-size: 0.75rem;
 
       .input-group {
+        flex: 1;
         border-radius: 4px;
         border: 1px solid #eee;
         color: var(--color-gray-2);

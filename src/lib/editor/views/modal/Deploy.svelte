@@ -22,7 +22,6 @@
   }
 
   let github_token = $page.data.config['github_token']['value'] || ''
-
   let github_account = $page.data.config['github_token']['options']?.user
 
   async function connect_github() {

@@ -1,13 +1,11 @@
-<script lang="ts">
+<script>
   import { fade } from 'svelte/transition'
   import Item from './Item.svelte'
   import { PrimaryButton } from '../../../../components/buttons'
   import { TextInput } from '../../../../components/inputs'
   import pages from '$lib/editor/stores/data/pages'
   import { pages as actions } from '../../../../stores/actions'
-  import activePage, {
-    id as activePageID,
-  } from '../../../../stores/app/activePage'
+  import { id as activePageID } from '../../../../stores/app/activePage'
   import { makeValidUrl } from '../../../../utils'
   import { Page } from '../../../../const'
   import { page } from '$app/stores'
@@ -15,7 +13,11 @@
   let currentPath = []
   $: root_page = currentPath[0]
 
-  function edit_page(page_id, args: { name: string; id: string }) {
+  /**
+   * @param {string} page_id
+   * @param {{ name: string, url: string }} args
+   */
+  function edit_page(page_id, args) {
     actions.edit(page_id, args)
   }
 

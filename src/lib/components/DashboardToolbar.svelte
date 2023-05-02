@@ -2,23 +2,17 @@
   import UserPopup from './UserPopup.svelte'
   import { show } from '$lib/components/Modal.svelte'
   import { page } from '$app/stores'
-  import config from '../../stores/config'
+  import ServerLogo from '$lib/ui/ServerLogo.svelte'
 </script>
 
 <header role="navigation" aria-label="main navigation">
   <div class="logo">
-    <img
-      src={$config.customization.logo.url}
-      alt={$config.customization.logo.alt}
-    />
+    <ServerLogo />
   </div>
   <nav class="nav">
     {#if $page.data.user.admin}
       <button class="link" on:click={() => show('INVITE_COLLABORATORS')}>
         Members
-      </button>
-      <button class="link" on:click={() => show('USER_SETTINGS')}>
-        Settings
       </button>
     {/if}
     {#if $page.data.user.role === 'DEV'}
@@ -55,8 +49,7 @@
     align-items: center;
   }
 
-  img {
-    height: 4rem;
+  .logo {
     width: 7rem;
     object-fit: contain;
   }

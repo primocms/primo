@@ -18,13 +18,12 @@
 
   let editing_page = false
   let name = page.name || ''
-  let id = page.url || ''
-  $: disableSave = !name || !id
+  let url = page.url || ''
+  $: disableSave = !name || !url
 
-  const pageURL = `/${siteID}/${page.url === 'index' ? '' : page.url || ''}`
+  const pageURL = `/${siteID}/${url === 'index' ? '' : url || ''}`
 
   let showing_children = true
-  // $: has_children = page.pages.length > 0
   $: has_children = children.length > 0
 
   get(`${siteID}--page-list-toggle--${page.id}`).then((toggled) => {
@@ -33,10 +32,10 @@
   $: set(`${siteID}--page-list-toggle--${page.id}`, showing_children)
 
   // strip parent page from id
-  function get_simple_page_url(id) {
-    if (id === 'index') return id
-    const i = id.indexOf('/') + 1
-    return i ? id.slice(i, id.length) : id
+  function get_simple_page_url(url) {
+    if (url === 'index') return url
+    const i = url.indexOf('/') + 1
+    return i ? url.slice(i, url.length) : url
   }
 </script>
 
@@ -44,7 +43,7 @@
   <form
     on:submit|preventDefault={() => {
       editing_page = false
-      dispatch('edit', { name, id })
+      dispatch('edit', { name, url })
     }}
     in:fade={{ duration: 100 }}
   >
@@ -55,9 +54,9 @@
       label="Page Label"
       placeholder="About Us"
     />
-    {#if id !== 'index'}
+    {#if url !== 'index'}
       <TextInput
-        bind:value={id}
+        bind:value={url}
         id="page-url"
         label="Page URL"
         prefix="/"
@@ -95,7 +94,7 @@
           <Icon icon="akar-icons:plus" />
         </button>
       {/if}
-      {#if page.id !== 'index'}
+      {#if url !== 'index'}
         <button on:click={() => dispatch('delete', page)}>
           <Icon icon="fluent:delete-20-filled" />
         </button>

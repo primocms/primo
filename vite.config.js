@@ -8,6 +8,7 @@ const config = {
     // ClassMangler({
     //   // dev: true
     // }),
+    // workaround for a bug in vite-plugin-ssr
     {
       name: 'remove-manifest',
       configResolved(c) {

@@ -3,6 +3,7 @@ import { redirect } from '@sveltejs/kit'
 import {supabaseAdmin, get_row, delete_row} from '$lib/supabaseAdmin'
 import {supabase, sign_up} from '$lib/supabase'
 
+/** @type {import('@sveltejs/kit').Load} */
 export async function load(event) {
   const { session } = await getSupabase(event)
   const signing_up = event.url.searchParams.has('signup')
@@ -88,17 +89,12 @@ export const actions = {
           })
       ])
 
-      // set server_owner and add user to server_members
-      await Promise.all([
-        admin && supabaseAdmin.from('config').update({
-          value: res.user?.id
-        }).eq('id', 'server_owner'),
-        supabaseAdmin.from('server_members').insert({
-          user: res.user?.id,
-          role: 'DEV',
-          admin
-        })
-      ])
+      // add user to server_members as admin
+      await supabaseAdmin.from('server_members').insert({
+        user: res.user?.id,
+        role: 'DEV',
+        admin
+      })
 
       const {error:signin_error} = await supabaseClient.auth.signInWithPassword({email, password})
 

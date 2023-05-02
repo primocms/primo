@@ -2,7 +2,7 @@
   const scrollPositions = new Map()
 </script>
 
-<script lang="ts">
+<script>
   import { flattenDeep as _flattenDeep } from 'lodash-es'
   import { createEventDispatcher } from 'svelte'
   import { fade } from 'svelte/transition'

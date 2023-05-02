@@ -65,25 +65,8 @@
     }
   }
 
-  async function convertBlobToBase64(blob) {
-    return new Promise((resolve, _) => {
-      const reader = new FileReader()
-      reader.onloadend = () => resolve(reader.result)
-      reader.readAsDataURL(blob)
-    })
-  }
-
-  async function hydratePreview() {
-    // const imageKey = field.value.url.slice(12)
-    // const file = await downloadSiteImage(imageKey)
-    // const b64 = await convertBlobToBase64(file)
-    // imagePreview = b64
-  }
-
   let imagePreview = field.value.url || ''
   let loading = false
-
-  $: if (imagePreview.startsWith('primo:')) hydratePreview()
 </script>
 
 <div class="image-field">

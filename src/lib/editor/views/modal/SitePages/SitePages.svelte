@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import ModalHeader from '../ModalHeader.svelte'
   import PageList from './PageList/PageList.svelte'
 </script>

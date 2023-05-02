@@ -1,7 +1,6 @@
 <script>
   import { browser } from '$app/environment'
   import { find as _find } from 'lodash-es'
-  import { page } from '$app/stores'
   import { supabase } from '$lib/supabase'
 
   export let site = null

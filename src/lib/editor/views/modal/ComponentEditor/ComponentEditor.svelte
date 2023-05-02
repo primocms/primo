@@ -9,7 +9,7 @@
   const activeTab = writable(0)
 </script>
 
-<script lang="ts">
+<script>
   import { setContext } from 'svelte'
   import { _ as C } from 'svelte-i18n'
   import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es'
@@ -26,21 +26,16 @@
   import { locale, onMobile } from '../../../stores/app/misc'
 
   import { content, code as siteCode } from '../../../stores/data/draft'
-  import {
-    id as pageID,
-    code as pageCode,
-  } from '../../../stores/app/activePage'
+  import { code as pageCode } from '../../../stores/app/activePage'
   import { showingIDE } from '../../../stores/app'
-  import { Component } from '../../../const'
-  import type {
-    Component as ComponentType,
-    Symbol as SymbolType,
-    Field as FieldType,
-  } from '../../../const'
   import { getPageData, getComponentData } from '../../../stores/helpers'
   import { tick } from 'svelte'
 
-  export let component: ComponentType | SymbolType = Component()
+  // TODO: separate into Symbol Editor and Section Editor
+
+  /** @type {import('$lib').Section} */
+  export let component
+
   export let header = {
     label: 'Create Component',
     icon: 'fas fa-code',
@@ -53,6 +48,7 @@
     },
   }
 
+  // Show Static Field toggle within Field Item
   setContext('show_static_field', true)
 
   const placeholders = new Map()
@@ -69,7 +65,7 @@
 
   const is_symbol = !component.symbol
 
-  let local_component: SymbolType = is_symbol
+  let local_component = is_symbol
     ? cloneDeep(component)
     : cloneDeep(component.symbol) // local copy of component to modify & save
 
@@ -100,7 +96,7 @@
   }
 
   // hydrate fields with content (placeholder if passed component is a Symbol)
-  function getFieldValues(fields: Array<FieldType>, loc: string): Array<any> {
+  function getFieldValues(fields, loc) {
     return fields.map((field) => {
       if (component.type === 'symbol') {
         const field_value = component.content?.[loc]?.[field.key]
@@ -169,7 +165,7 @@
     }
   }
 
-  function saveLocalContent(): void {
+  function saveLocalContent() {
     // TODO
     // save field value to all locales where block is used
     // when block gets added to page, add static value as content to locale
@@ -182,7 +178,7 @@
     }
   }
 
-  function saveLocalValue(property: 'html' | 'css' | 'js', value: any): void {
+  function saveLocalValue(property, value) {
     local_component.code[property] = value
   }
 
@@ -210,11 +206,7 @@
   // ensure placeholder values always conform to form
   // TODO: do for remaining fields
   $: fields = fields.map((field) => {
-    if (
-      component.type === 'symbol' &&
-      field.type === 'link' &&
-      !field.value?.url
-    )
+    if (field.type === 'link' && !field.value?.url)
       return {
         ...field,
         value: getCachedPlaceholder(field),

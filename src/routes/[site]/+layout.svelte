@@ -4,8 +4,6 @@
   import Primo, { stores } from '$lib/editor'
   import modal from '$lib/editor/stores/app/modal'
   import { page } from '$app/stores'
-  // import * as primo from '../../package.json'
-  import config from '../../stores/config'
   import Sidebar from './Sidebar.svelte'
   import IconButton from '$lib/components/IconButton.svelte'
   import HSplitPane from '$lib/editor/views/modal/ComponentEditor/HSplitPane.svelte'
@@ -68,14 +66,7 @@
   </HSplitPane>
 </main>
 
-<Primo
-  {data}
-  page_id={$page.params.page}
-  options={{
-    logo: $config.customization.logo.url,
-  }}
-  {saving}
-/>
+<Primo {data} page_id={$page.params.page} {saving} />
 
 <div id="app-version">
   <!-- <span>primo v{primo.version}</span> -->

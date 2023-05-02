@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import '@fontsource/fira-code/index.css'
 
   import { createEventDispatcher, onMount } from 'svelte'
@@ -10,26 +10,30 @@
   const dispatch = createEventDispatcher()
 
   import { userRole } from './stores/app'
-  import { saving as savingStore, showKeyHint } from './stores/app/misc'
+  import { saving as savingStore } from './stores/app/misc'
   import { Site } from './const'
 
   import { options as options_store, saved } from './stores/app/misc'
   import { set_timeline } from './stores/data'
   import { site as draft } from './stores/data/draft'
-  import { hydrate_active_data, updatePreview } from './stores/actions'
+  import { hydrate_active_data } from './stores/actions'
   import en from './languages/en.json'
   import es from './languages/es.json'
 
-  import type { Site as SiteType, Page as PageType } from './const'
-
   import { init, addMessages } from 'svelte-i18n'
 
-  export let data: SiteType = Site()
-  // export let page_id = 'index'
-  export let role: 'developer' | 'content' = 'developer'
-  export let saving: boolean = false
-  export let language: string = 'en'
-  export let options: object = {}
+  /** @type {{
+   * site: import('$lib').Site
+   * pages: Array<import('$lib').Page>
+   * sections: Array<import('$lib').Section>
+   * symbols: Array<import('$lib').Symbol>
+  }} */
+  export let data
+
+  export let role
+  export let saving = false
+  export let language = 'en'
+  export let options = {}
 
   options_store.update((s) => ({ ...s, ...options }))
 
@@ -47,7 +51,7 @@
   hydrate_active_data(data)
   set_timeline(data)
 
-  function saveSite(): void {
+  function saveSite() {
     dispatch('save', $draft)
   }
 
@@ -62,11 +66,6 @@
         }[modalType] || $modal.component
       : null
   }
-
-  // onMount(() => {
-  //   Mousetrap.bind('mod', () => ($showKeyHint = true), 'keydown')
-  //   Mousetrap.bind('mod', () => ($showKeyHint = false), 'keyup')
-  // })
 </script>
 
 <Editor on:save={saveSite} />

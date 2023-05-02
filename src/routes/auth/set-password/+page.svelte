@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores'
   import { fade } from 'svelte/transition'
-  import config from '../../../stores/config'
+  import ServerLogo from '$lib/ui/ServerLogo.svelte'
 
   export let form
 
@@ -15,10 +15,9 @@
 
 <main in:fade class="primo-reset">
   <div class="logo">
-    <img
-      src={$config.customization.logo.url}
-      alt={$config.customization.logo.alt}
-    />
+    <div class="logo-container">
+      <ServerLogo />
+    </div>
   </div>
   <div class="box">
     <header>
@@ -78,7 +77,7 @@
     width: 100%;
     margin-bottom: 2rem;
 
-    img {
+    .logo-container {
       width: 10rem;
     }
   }
