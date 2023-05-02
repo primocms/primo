@@ -1,60 +1,28 @@
-// import { createUniqueID } from './utilities'
 import { customAlphabet } from 'nanoid/non-secure'
 import { v4 as uuidv4 } from 'uuid';
 
-function createUniqueID(length: number = 5): string {
-  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
-  return nanoid()
-}
-
-export type Field = {
-  id: string,
-  key: string,
-  label: string,
-  type: string,
-  fields: any[],
-  options: object,
-  default: any,
-  is_static: boolean
-}
-
-export const Field = (f = {}): Field => ({
+/**
+ * Creates a new field object with default values.
+ * @param field - The field properties to be applied to the new field
+ * @returns {import('$lib').Field} 
+ */
+export const Field = (field = {}) => ({
   id: createUniqueID(),
   key: '',
   label: '',
   type: 'text',
   fields: [],
   options: {},
-  default: '',
   is_static: false,
-  ...f
+  ...field
 })
 
-export type Component = {
-  type: 'component',
-  id: string,
-  symbolID: string | null
-}
-
-export const Component = (): Component => ({
-  type: 'component',
-  id: createUniqueID(),
-  symbolID: null
-})
-
-export type Symbol = {
-  id: string,
-  name: string,
-  code: {
-    html: string,
-    css: string,
-    js: string
-  },
-  fields: any[],
-  content: object
-}
-
-export const Symbol = (symbol = {}): Symbol => ({
+/**
+ * Creates a new symbol object with default values.
+ * @param symbol - The symbol properties to be applied to the new symbol
+ * @returns {import('$lib').Symbol} 
+ */
+export const Symbol = (symbol = {}) => ({
   id: uuidv4(),
   name: '',
   code: {
@@ -69,25 +37,12 @@ export const Symbol = (symbol = {}): Symbol => ({
   ...symbol
 })
 
-export type Page = {
-  id?: number,
-  url: string,
-  name: string,
-  code: {
-    html: {
-      head: string,
-      below: string
-    },
-    css: string,
-    js: string
-  },
-  fields: any[],
-  content: object,
-  parent: string | null,
-  // pages: any[],
-}
-
-export const Page = (page = {}): Page => ({
+/**
+ * Creates a new page object with default values.
+ * @param page - The page properties to be applied to the new page
+ * @returns {import('$lib').Page} 
+ */
+export const Page = (page = {}) => ({
   id: uuidv4(),
   url: '',
   name: '',
@@ -104,27 +59,16 @@ export const Page = (page = {}): Page => ({
     en: {}
   },
   parent: null,
+  site: '',
   ...page,
 })
 
-export type Site = {
-  id: string,
-  url: string,
-  name: string,
-  // pages: any[],
-  code: {
-    html: {
-      head: string,
-      below: string
-    },
-    css: string,
-    js: string
-  },
-  fields: any[],
-  content: {}
-}
-
-export const Site = ({ url, name } = { url: 'default', name: 'Default' }): Site => ({
+/**
+ * Creates a new site object with default values.
+ * @param site - The site properties to be applied to the new site
+ * @returns {import('$lib').Site} 
+ */
+export const Site = ({ url, name } = { url: 'default', name: 'Default' }) => ({
   id: uuidv4(),
   url,
   name,
@@ -181,7 +125,8 @@ export const Site = ({ url, name } = { url: 'default', name: 'Default' }): Site 
   content: {
     'en': { // locale
     }
-  }
+  },
+  active_deployment: null,
 })
 
 
@@ -403,3 +348,8 @@ export const locales = [
     name: "Estonian",
   },
 ];
+
+function createUniqueID(length = 5) {
+  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
+  return nanoid()
+}

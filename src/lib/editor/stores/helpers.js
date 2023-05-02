@@ -1,22 +1,13 @@
-import { unionBy, find as _find, chain as _chain, flattenDeep as _flattenDeep } from 'lodash-es'
+import { find as _find, chain as _chain, flattenDeep as _flattenDeep } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { processors } from '../component.js'
-import { pages, site as activeSite, fields as siteFields } from './data/draft'
-import sections from './data/sections'
-import symbols from './data/symbols'
-import activePage, { id, fields as pageFields, code as pageCode } from './app/activePage'
-import { locale } from './app/misc'
-import { processCSS, getPlaceholderValue, getEmptyValue } from '../utils'
-import type { Page as PageType, Site as SiteType, Symbol as SymbolType, Component as ComponentType, Field } from '../const'
-import { Page } from '../const'
-
-export function resetActivePage() {
-  id.set('index')
-  sections.set([])
-  pageFields.set([])
-  pageCode.set(Page().code)
-}
+import { pages, site as activeSite } from './data/draft.js'
+import sections from './data/sections.js'
+import symbols from './data/symbols.js'
+import activePage from './app/activePage.js'
+import { locale } from './app/misc.js'
+import { processCSS, getPlaceholderValue, getEmptyValue } from '../utils.js'
 
 export function getSymbolUseInfo(symbolID) {
   const info = { pages: [], frequency: 0 }
@@ -32,14 +23,14 @@ export function getSymbolUseInfo(symbolID) {
   return info
 }
 
-export function getSymbol(symbolID): SymbolType {
+export function getSymbol(symbolID) {
   return _find(get(symbols), ['id', symbolID]);
 }
 
 export async function buildStaticPage({ page = get(activePage), site = get(activeSite), page_sections = get(sections), page_symbols = get(symbols), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {
-      const css: string = await processCSS(site.code.css + page.code.css)
+      const css = await processCSS(site.code.css + page.code.css)
       const data = getPageData({ page, site, loc: locale })
       return {
         html: `
@@ -55,7 +46,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
     })(),
     ...page_sections.map(async section => {
       const symbol = typeof (section.symbol) === 'object' ? section.symbol : _find(page_symbols, ['id', section.symbol])
-      const { html, css: postcss, js }: { html: string, css: string, js: string } = symbol.code
+      const { html, css: postcss, js } = symbol.code
       const data = getComponentData({
         component: section,
         symbol,
@@ -108,7 +99,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
   `
 
   // fetch module & content to hydrate component
-  function buildModule(js): string {
+  function buildModule(js) {
     return separateModules ? `\
       const path = window.location.pathname === '/' ? '' : window.location.pathname
       const [ {default:App} ] = await Promise.all([

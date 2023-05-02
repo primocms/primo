@@ -1,7 +1,6 @@
 import _, { chain as _chain, capitalize as _capitalize } from "lodash-es";
 import { processors } from './component'
 import { LoremIpsum as lipsum } from "lorem-ipsum/src";
-import type { Field } from './const'
 import showdown from '$lib/editor/libraries/showdown/showdown.min.js'
 import showdownHighlight from 'showdown-highlight'
 export const converter = new showdown.Converter({
@@ -9,7 +8,7 @@ export const converter = new showdown.Converter({
 })
 
 const componentsCache = new Map();
-export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }: { component: any, buildStatic?: boolean, format?: string, locale?: string, hydrated?: boolean, ignoreCachedData?: boolean }) {
+export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }) {
   let css = ''
   if (component.css) {
     css = await processCSS(component.css || '')
@@ -45,7 +44,7 @@ export async function processCode({ component, buildStatic = true, format = 'esm
 }
 
 const cssCache = new Map();
-export async function processCSS(raw: string): Promise<string> {
+export async function processCSS(raw) {
   if (cssCache.has(raw)) {
     return cssCache.get(raw)
   }
@@ -70,12 +69,12 @@ export function createDebouncer(time) {
   }, time);
 }
 
-export function wrapInStyleTags(css: string, id: string = null): string {
+export function wrapInStyleTags(css, id) {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
 }
 
 // make a url string valid
-export const makeValidUrl = (str: string = ''): string => {
+export const makeValidUrl = (str = '') => {
   if (str) {
     return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase()
   } else {
@@ -98,7 +97,7 @@ export const LoremIpsum = (nSentences = 1) => {
   return lorem.generateSentences(nSentences)
 }
 
-export function getPlaceholderValue(field: Field) {
+export function getPlaceholderValue(field) {
   if (field.default) return field.default
   if (field.type === 'repeater') return getRepeaterValue(field.fields)
   else if (field.type === 'group') return getGroupValue(field)
@@ -132,7 +131,7 @@ export function getPlaceholderValue(field: Field) {
   }
 }
 
-export function getEmptyValue(field: Field) {
+export function getEmptyValue(field) {
   if (field.default) return field.default
   if (field.type === 'repeater') return []
   else if (field.type === 'group') return getGroupValue(field)

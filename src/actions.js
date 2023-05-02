@@ -1,12 +1,9 @@
-import { get } from 'svelte/store'
 import supabase from './supabase/core'
-import * as supabaseDB from './supabase/db'
-import config from './stores/config'
 
 export const sites = {
   create: async (data, preview = null) => {
 
-    await supabaseDB.sites.create(data.site)
+    await supabase.from('sites').insert(data.site)
 
     // create symbols and root pages 
     const { pages, symbols, sections } = data
@@ -53,14 +50,7 @@ export const sites = {
 
 
 export async function setCustomization(options, update_on_server = true) {
-  config.update(c => ({
-    ...c,
-    customization: {
-      ...c.customization,
-      ...options
-    }
-  }))
   if (update_on_server) {
-    supabase.from('config').update(get(config)['customization']).eq('id', 'customization')
+    supabase.from('config').update(options).eq('id', 'customization')
   }
 }

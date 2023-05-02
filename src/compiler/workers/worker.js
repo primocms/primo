@@ -87,12 +87,12 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
             hydratable: true
         })
 
-        const output: string = (await bundle.generate({ format })).output[0].code;
+        const output = (await bundle.generate({ format })).output[0].code;
         final.ssr = output
 
     } else {
         const bundle = await compile()
-        const output: string = (await bundle.generate({ format })).output[0].code;
+        const output = (await bundle.generate({ format })).output[0].code;
         final.dom = output
     }
 
@@ -102,7 +102,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
             css: false,
             hydratable: true
         })
-        const output: string = (await bundle.generate({ format })).output[0].code;
+        const output = (await bundle.generate({ format })).output[0].code;
         final.dom = output
     }
 
@@ -112,7 +112,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
             plugins: [
                 {
                     name: "repl-plugin",
-                    async resolveId(importee: string, importer: string) {
+                    async resolveId(importee, importer) {
 
                         // handle imports from 'svelte'
 
@@ -158,7 +158,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                         return importee; // everything else
 
                     },
-                    async load(id: string) {
+                    async load(id) {
                         // local repl components are stored in memory
                         // this is our virtual filesystem
                         if (component_lookup.has(id))
@@ -167,7 +167,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                         // everything else comes from a cdn
                         return await fetch_package(id);
                     },
-                    async transform(code: string, id: string) {
+                    async transform(code, id) {
                         // our only transform is to compile svelte components
                         //@ts-ignore
                         if (/.*\.svelte/.test(id)) {

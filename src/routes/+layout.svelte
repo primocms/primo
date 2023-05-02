@@ -4,15 +4,11 @@
   import { browser } from '$app/environment'
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
-  import { fieldTypes, registerProcessors, dropdown, stores } from '$lib/editor'
-  import config from '../stores/config'
+  import { fieldTypes, registerProcessors } from '$lib/editor'
   import { supabase as supabaseClient } from '$lib/supabase'
-  import Modal, { show, hide } from '$lib/components/Modal.svelte'
+  import Modal from '$lib/components/Modal.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
-  import SiteButtons from '$lib/components/SiteButtons.svelte'
   import { invalidate } from '$app/navigation'
-
-  const { saved } = stores
 
   onMount(() => {
     const { data } = supabaseClient.auth.onAuthStateChange(() => {
@@ -35,24 +31,6 @@
         component: ImageField,
       },
     ])
-    dropdown.set([
-      {
-        label: 'Back to Dashboard',
-        icon: 'fas fa-arrow-left',
-        href: '/',
-        onClick: (e) => {
-          if (!$saved) {
-            e.preventDefault()
-            window.alert(
-              `Save your site before navigating away so you don't lose your changes`
-            )
-          }
-        },
-      },
-      {
-        component: SiteButtons,
-      },
-    ])
     setContext('track', () => {})
   }
 </script>
@@ -63,10 +41,8 @@
   }}
 />
 
-<div style:--primo-color-brand={$config.customization.color}>
-  <Modal />
-  <slot />
-</div>
+<Modal />
+<slot />
 
 <style global lang="postcss">
   @import url(https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800);

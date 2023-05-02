@@ -1,7 +1,8 @@
 import supabaseAdmin from '../supabase/admin'
 import { getServerSession } from '@supabase/auth-helpers-sveltekit'
 
-export const load = async (event) => {
+/** @type {import('@sveltejs/kit').Load} */
+export async function load(event) {
   const {data} = await supabaseAdmin.from('config').select('*').eq('id', 'customization')
   if (data && data[0]) {
     return {

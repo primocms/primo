@@ -1,7 +1,7 @@
 import { getSupabase } from '@supabase/auth-helpers-sveltekit'
-import { redirect } from '@sveltejs/kit'
 
-export const load = async (event) => {
+/** @type {import('@sveltejs/kit').Load} */
+export async function load(event) {
   event.depends('app:data')
   const { session, supabaseClient } = await getSupabase(event)
 

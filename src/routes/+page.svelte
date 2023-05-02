@@ -1,18 +1,23 @@
-<script lang="ts">
+<script>
   import Icon from '@iconify/svelte'
   import { page } from '$app/stores'
   import DashboardToolbar from '$lib/components/DashboardToolbar.svelte'
-  import SiteFooter from '$lib/components/SiteFooter.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import { show, hide } from '$lib/components/Modal.svelte'
   import * as actions from '../actions'
   import { invalidate } from '$app/navigation'
 
+  /** @type {{
+   sites: Array<import('$lib').Site>
+   session: any
+   user: import('$lib').User
+   config: any
+  }} */
   export let data
 
   if (data) actions.setCustomization(data, false)
 
-  function beginInvitation(site): void {
+  function beginInvitation(site) {
     show({
       id: 'INVITE_SITE_COLLABORATOR',
       props: {
@@ -22,7 +27,7 @@
   }
 
   let loading
-  function createSite(): void {
+  function createSite() {
     show({
       id: 'CREATE_SITE',
       props: {
@@ -35,7 +40,7 @@
     })
   }
 
-  async function delete_site(siteID: string): Promise<any> {
+  async function delete_site(siteID) {
     const confirm = window.confirm(
       `Are you sure you want to delete this site? You won't be able to get it back.`
     )
@@ -106,7 +111,7 @@
             </div>
           </li>
         {/each}
-        {#if $page.data.user.server_member}
+        {#if data.user.server_member}
           <li>
             <button class="create-site" on:click={createSite}>
               {#if loading}
@@ -124,7 +129,6 @@
         {/if}
       </ul>
     </div>
-    <SiteFooter />
   </div>
 </main>
 

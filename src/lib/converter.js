@@ -1,5 +1,4 @@
 import _ from 'lodash-es'
-import type { Site, Page, Field } from '$lib/editor/const'
 import { v4 as uuidv4 } from 'uuid';
 import { createUniqueID } from "$lib/editor/utilities";
 import { getPlaceholderValue, getEmptyValue } from '$lib/editor/utils'
@@ -24,7 +23,7 @@ export function validate_site_structure_v2(site) {
 
   const new_site_id = uuidv4()
 
-  // current site version -> replace IDs
+  // current site version -> replace IDs & return
   if (site.version === 2) {
     const new_page_ids = new Map()
     const new_symbol_ids = new Map()
@@ -305,7 +304,7 @@ export function validate_symbol(symbol) {
   return symbol
 }
 
-export function validateSiteStructure(site): Site {
+export function validateSiteStructure(site) {
 
   let validated
   try {
@@ -333,7 +332,7 @@ export function validateSiteStructure(site): Site {
   function convertSite(site) {
 
     const siteContent = {}
-    const updated: Site = {
+    const updated = {
       id: site.id,
       name: site.name,
       // pages: convertPages(site.pages, (page) => {
@@ -353,7 +352,7 @@ export function validateSiteStructure(site): Site {
     return updated
 
     function convertPages(pages = [], fn = (_) => { }) {
-      return pages.map((page): Page => {
+      return pages.map((page) => {
         const pageContent = {}
         const updatedPage = {
           id: page.id,
@@ -414,7 +413,7 @@ export function convertSymbols(symbols) {
   }))
 }
 
-export function convertFields(fields = [], fn: Function = () => { }): Array<Field> {
+export function convertFields(fields = [], fn = () => { }) {
   return fields.map(field => {
     fn({
       id: field.key,

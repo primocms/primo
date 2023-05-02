@@ -1,7 +1,8 @@
 import { getSupabase } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 
-export const load = async (event) => {
+/** @type {import('@sveltejs/kit').Load} */
+export async function load(event) {
   event.depends('app:data')
 
   const { session, supabaseClient } = await getSupabase(event)
@@ -13,7 +14,9 @@ export const load = async (event) => {
   const site_url = event.params['site'] 
   const {data:site} = await supabaseClient.from('sites').select().filter('url', 'eq', site_url).single()
 
-  if (!site) return
+  if (!site) {
+    throw redirect(303, '/')
+  }
 
   // Get page
   const page_url = 'index'
@@ -21,7 +24,7 @@ export const load = async (event) => {
 
   // Get sorted pages, symbols, and sections
   const { pages, symbols, sections } = await Promise.all([
-    supabaseClient.from('pages').select().match({site: site.id}),
+    supabaseClient.from('pages').select('id, url, name, parent').match({site: site.id}),
     supabaseClient.from('symbols').select().match({site: site.id}),
     supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
   ]).then(([{data:pages}, {data:symbols}, {data:sections}]) => ({

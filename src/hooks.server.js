@@ -1,7 +1,8 @@
 import '$lib/supabase'
 import supabaseAdmin from './supabase/admin';
 
-export const handle = async ({ resolve, event }) => {
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ resolve, event }) {
   const response = await resolve(event);
 
   const is_preview = event.url.searchParams.has('preview')

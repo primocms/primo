@@ -8,8 +8,6 @@ import stores, { update_timeline } from './data'
 import { update as update_site, content, code, fields, site as unsavedSite } from './data/draft'
 import { timeline } from './data'
 import { buildStaticPage } from './helpers'
-import type { Symbol as SymbolType, Page as PageType } from '../const'
-import * as supabaseDB from '$lib/supabase'
 import { supabase } from '$lib/supabase'
 import { swap_array_item_index } from '$lib/utils'
 import { v4 as uuidv4 } from 'uuid';
@@ -40,7 +38,7 @@ export async function updateHTML({ page, site }) {
   update_timeline()
 }
 
-export async function updateActivePageCSS(css: string): Promise<void> {
+export async function updateActivePageCSS(css) {
   pages.update(get(activePageID), (page) => ({
     ...page,
     code: {
@@ -51,7 +49,7 @@ export async function updateActivePageCSS(css: string): Promise<void> {
   update_timeline()
 }
 
-export async function updateSiteCSS(css: string): Promise<void> {
+export async function updateSiteCSS(css) {
   code.update(c => ({
     ...c,
     css
@@ -59,7 +57,7 @@ export async function updateSiteCSS(css: string): Promise<void> {
   update_timeline()
 }
 
-export function undo_change(): void {
+export function undo_change() {
   const { current } = get(timeline)
   current?.undoing(current.data)
 
@@ -67,7 +65,7 @@ export function undo_change(): void {
   // hydrate_active_data(undone.data)
 }
 
-export function redo_change(): void {
+export function redo_change() {
   const { data, doing } = timeline.redo()
   // hydrate_active_data(data)
   doing(data)
@@ -125,7 +123,7 @@ export const symbols = {
       }
     })
   },
-  delete: async (symbol_to_delete: SymbolType) => {
+  delete: async (symbol_to_delete) => {
     // saved.set(false)
 
     const original_symbols = _.cloneDeep(get(stores.symbols))
@@ -347,16 +345,9 @@ export const pages = {
     if (updateTimeline) update_timeline()
 
   },
-  add: async (newPage: PageType, updateTimeline = true) => {
+  add: async (newPage, updateTimeline = true) => {
     saved.set(false)
     const currentPages = get(stores.pages)
-
-    // if (path.length > 0) {
-    //   const rootPage: PageType = find(updatedPages, ['id', path[0]])
-    //   rootPage.pages = rootPage.pages ? [...rootPage.pages, newPage] : [newPage]
-    // } else {
-    //   updatedPages = [...updatedPages, newPage]
-    // }
 
     stores.pages.set([...cloneDeep(currentPages), newPage])
     const { data } = await supabase.from('pages').insert({
@@ -372,7 +363,7 @@ export const pages = {
 
     if (updateTimeline) update_timeline()
   },
-  delete: async (pageId: string, updateTimeline = true) => {
+  delete: async (pageId, updateTimeline = true) => {
     // saved.set(false)
     stores.pages.update(pages => pages.filter(page => page.id !== pageId))
 
@@ -386,7 +377,7 @@ export const pages = {
 
     if (updateTimeline) update_timeline()
   },
-  update: async (pageId: string, fn, updateTimeline = true) => {
+  update: async (pageId, fn, updateTimeline = true) => {
     saved.set(false)
     const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) {
@@ -401,7 +392,7 @@ export const pages = {
     stores.pages.set(newPages)
     if (updateTimeline) update_timeline()
   },
-  edit: async (pageId: string, updatedPage: { id: string, name: string }, updateTimeline = true) => {
+  edit: async (pageId, updatedPage, updateTimeline = true) => {
     const newPages = get(stores.pages).map(page => {
       if (page.id === pageId) { // root page
         return {
@@ -430,10 +421,10 @@ export async function update_page_preview(page = get(activePage.default)) {
   // stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
 
   if (page.url === 'index') {
-    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
-    await supabase.storage.from('sites').upload(`${get(stores.site).id}/preview.html`, preview as string, { upsert: true })
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview, { upsert: true })
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/preview.html`, preview, { upsert: true })
   } else {
-    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview as string, { upsert: true })
+    await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview, { upsert: true })
   }
   // await supabase.from('pages').update({ preview: file.path }).eq('id', page.id)
 }

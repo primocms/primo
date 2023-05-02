@@ -2,7 +2,8 @@ import { getSupabase } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
 import _ from 'lodash'
 
-export const load = async (event) => {
+/** @type {import('@sveltejs/kit').Load} */
+export async function load(event) {
   event.depends('app:data')
   const { session, supabaseClient } = await getSupabase(event)
   if (!session && !event.url.pathname.startsWith('/auth')) {
@@ -40,7 +41,7 @@ export const load = async (event) => {
     // TODO: do this w/ sql
     const user_sites = sites?.filter(site => 
       /*user is server member*/ user.server_member ||
-      /*user is collaborator*/ site.collaborators.some(collaborator => collaborator.user === user.id) 
+      /*user is site collaborator*/ site.collaborators.some(collaborator => collaborator.user === user.id) 
     )
 
     return {
