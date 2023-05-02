@@ -7,7 +7,7 @@ export const handle = async ({ resolve, event }) => {
   const is_preview = event.url.searchParams.has('preview')
   if (is_preview) {
     // retrieve site and page from db
-    const {data:site} = await supabaseAdmin.from('sites').select('id, name, url, owner, collaborators (*)').eq('url', event.params.site).single()
+    const {data:site} = await supabaseAdmin.from('sites').select('id, name, url, collaborators (*)').eq('url', event.params.site).single()
     const {data:page} = await supabaseAdmin.from('pages').select('id, name, url, site!inner(*)').match({
       url: event.params.page || 'index',
       'site.url': event.params.site

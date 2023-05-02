@@ -10,12 +10,7 @@ import { page } from '$app/stores'
 export const sites = {
   create: async (data, preview = null) => {
 
-    // create site 
-    const site = {
-      ...data.site,
-      owner: get(page).data.user.id
-    }
-    await supabaseDB.sites.create(site)
+    await supabaseDB.sites.create(data.site)
 
     // create symbols and root pages 
     const { pages, symbols, sections } = data
@@ -33,7 +28,7 @@ export const sites = {
 
     // upload preview to supabase storage
     if (preview) {
-      supabase.storage.from('sites').upload(`${site.id}/preview.html`, preview)
+      supabase.storage.from('sites').upload(`${data.site.id}/preview.html`, preview)
     }
 
     // create child pages (dependant on parent page IDs)

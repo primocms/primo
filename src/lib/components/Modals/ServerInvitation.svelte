@@ -118,13 +118,6 @@
     <section>
       <h3 class="subheading">People with Access</h3>
       <ul>
-        <!-- {#if owner}
-          <li>
-            <span class="letter">{owner.email[0]}</span>
-            <span class="email">{owner.email}</span>
-            <span class="role">Owner</span>
-          </li>
-        {/if} -->
         {#each editors as { user, role }}
           <li>
             <span class="letter">{user.email[0]}</span>
@@ -148,7 +141,7 @@
   main {
     display: grid;
     gap: 1.5rem;
-    max-width: 400px;
+    max-width: 450px;
   }
   header {
     h2 {
