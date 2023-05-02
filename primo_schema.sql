@@ -57,17 +57,7 @@ ALTER TABLE
 INSERT INTO
     public.config (id, value, options, created_at, updated_at)
 VALUES
-    ('server_owner', null, null, now(), now());
-
-INSERT INTO
-    public.config (id, value, options, created_at, updated_at)
-VALUES
     ('github_token', null, null, now(), now());
-
-INSERT INTO
-    public.config (id, value, options, created_at, updated_at)
-VALUES
-    ('customization', null, null, now(), now());
 
 --
 -- Name: pages; Type: TABLE; Schema: public; Owner: postgres
