@@ -23,6 +23,7 @@
   import CopyButton from './CopyButton.svelte'
   import modal from '../../../stores/app/modal'
   import { converter } from '$lib/editor/field-types/Markdown.svelte'
+  import { getComponentData } from '../../../stores/helpers'
 
   const dispatch = createEventDispatcher()
 
@@ -80,7 +81,11 @@
 
   $: symbol = block.symbol
 
-  $: component_data = block.content[$locale]
+  $: component_data = getComponentData({
+    component: block,
+    include_parent_data: false,
+    loc: $locale,
+  })
 
   let html = ''
   let css = ''
@@ -147,6 +152,7 @@
   let error = ''
   async function compileComponentCode(rawCode) {
     if (!node) {
+      // Wait for node to mount
       setTimeout(() => compileComponentCode(rawCode), 200)
       return
     }
@@ -440,7 +446,10 @@
     }
   }
 
-  let local_component_data = block.content[$locale]
+  let local_component_data = getComponentData({
+    component: block,
+    include_parent_data: false,
+  })
   $: hydrateComponent(component_data)
   async function hydrateComponent(data) {
     if (!component) return

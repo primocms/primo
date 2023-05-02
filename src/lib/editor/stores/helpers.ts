@@ -133,7 +133,7 @@ export async function buildStaticPage({ page = get(activePage), site = get(activ
   } : final
 }
 
-// Include page/site content alongside the component's content
+// Include static content alongside the component's content
 export function getComponentData({
   component,
   symbol = Object.hasOwn(component, 'fields') && component ? component : component.symbol,

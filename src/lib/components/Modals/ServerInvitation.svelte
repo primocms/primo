@@ -70,7 +70,13 @@
 
 <div class="Invitation">
   <main>
-    <h2>Invite site collaborator</h2>
+    <header>
+      <h2>Invite Server Member</h2>
+      <h3>
+        Server members have access to all the sites on this server and can
+        create new sites.
+      </h3>
+    </header>
     <form on:submit|preventDefault={invite_editor}>
       <label class="subheading" for="email">Enter collaborator email</label>
       <div>
@@ -142,19 +148,27 @@
   main {
     display: grid;
     gap: 1.5rem;
+    max-width: 400px;
   }
-  h2 {
-    font-weight: 700;
-    font-size: 1rem;
+  header {
+    h2 {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    h3 {
+      font-size: 0.875rem;
+      color: var(--color-gray-2);
+    }
   }
   .subheading {
     font-weight: 700;
     font-size: 0.75rem;
-    margin-bottom: 0.5rem;
   }
   form {
     display: grid;
     gap: 0.25rem;
+    flex: 1;
 
     div {
       display: flex;
