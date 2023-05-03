@@ -17,7 +17,7 @@
   import { tick, createEventDispatcher, getContext } from 'svelte'
   import { browser } from '$app/environment'
   import { processCode } from '../../../utils'
-  import { pages } from '../../../stores/data/draft'
+  import pages from '../../../stores/data/pages'
   import { locale } from '../../../stores/app/misc'
   import { update_section_content } from '../../../stores/actions'
   import CopyButton from './CopyButton.svelte'
