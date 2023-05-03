@@ -5,17 +5,13 @@
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()
   import * as Mousetrap from 'mousetrap'
-  import { invalidate } from '$app/navigation'
   import { positions } from './ComponentNode.svelte'
-  import { createUniqueID, move } from '../../../utilities'
-  import { getComponentData } from '../../../stores/helpers'
   import ComponentNode from './ComponentNode.svelte'
   import BlockButtons from './BlockButtons.svelte'
   import LockedOverlay from './LockedOverlay.svelte'
   import { hoveredBlock } from '../../../stores/app/misc'
   import { onMobile, saved, showingIDE } from '../../../stores/app/misc'
   import modal from '../../../stores/app/modal'
-  import { id } from '../../../stores/app/activePage'
   import sections from '../../../stores/data/sections'
   import {
     update_section_content,
