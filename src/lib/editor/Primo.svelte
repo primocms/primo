@@ -78,14 +78,6 @@
   />
 </Modal>
 
-<!-- Prevent leaving Primo without saving -->
-<svelte:window
-  on:beforeunload={(e) => {
-    if ($saved || import.meta.env.DEV) delete e['returnValue']
-    else e.returnValue = ''
-  }}
-/>
-
 <svelte:head>
   <link
     rel="stylesheet"

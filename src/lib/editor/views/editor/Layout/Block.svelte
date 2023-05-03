@@ -20,8 +20,13 @@
     active_page,
   } from '../../../stores/actions'
 
+  /** @type {boolean} */
   export let locked
+
+  /** @type {import('$lib').Section} */
   export let block
+
+  /** @type {number} */
   export let i
 
   let node
@@ -196,8 +201,8 @@
         <LockedOverlay {locked} />
       {:else}
         <BlockButtons
+          {block}
           {i}
-          editable={block.type === 'component'}
           bind:node={buttons}
           on:delete={() => {
             delete_block()

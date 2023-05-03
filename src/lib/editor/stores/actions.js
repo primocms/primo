@@ -330,7 +330,6 @@ export const pages = {
       code: page.code,
       content: page.content,
       fields: page.fields,
-      preview: page.preview,
       site: get(unsavedSite)['id']
     }
 

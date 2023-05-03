@@ -3,11 +3,11 @@
   import { fade } from 'svelte/transition'
   import sections from '../../../stores/data/sections'
   import Icon from '@iconify/svelte'
-  import { showingIDE } from '../../../stores/app/misc'
   import { page } from '$app/stores'
 
   const dispatch = createEventDispatcher()
 
+  export let block
   export let i
   export let node = null
 
@@ -29,6 +29,9 @@
         <button on:click={() => dispatch('edit-code')}>
           <Icon icon="ph:code-bold" />
         </button>
+      {/if}
+      {#if import.meta.env.DEV}
+        <span class="block-id">{block.id}</span>
       {/if}
     </div>
     <div class="top-right">
@@ -68,6 +71,13 @@
     button:last-child {
       border-bottom-right-radius: 0.25rem;
     }
+  }
+
+  .block-id {
+    background: rgba(250, 0, 0, 0.2);
+    display: inline;
+    height: 2rem;
+    pointer-events: all;
   }
 
   .top-right {

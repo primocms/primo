@@ -193,7 +193,7 @@
     border-radius: var(--primo-border-radius);
 
     li:not(:last-child) {
-      border-bottom: 1px solid #4b4d4e;
+      /* border-bottom: 1px solid #222; */
     }
   }
 </style>

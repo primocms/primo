@@ -29,19 +29,8 @@
     })
   }
 
-  async function saveSymbol(symbol) {
-    const exists = _.some($symbols, ['id', symbol.id])
-    if (exists) {
-      await symbol_actions.update({
-        ...symbol,
-        site: $site.id,
-      })
-    } else {
-      return await symbol_actions.create({
-        ...symbol,
-        site: $site.id,
-      })
-    }
+  async function update_symbol(symbol) {
+    await symbol_actions.update(symbol)
   }
 
   async function delete_symbol(symbol) {
@@ -69,9 +58,10 @@
       try {
         const uploaded = JSON.parse(target.result)
         const validated = validate_symbol(uploaded)
-        saveSymbol({
+        await symbol_actions.create({
           ...validated,
           id: uuidv4(),
+          site: $site.id,
         })
       } catch (error) {
         console.error(error)
@@ -96,8 +86,6 @@
   }
 
   async function add_to_page(symbol) {
-    // no existing sections, add as 0
-
     if ($hoveredBlock.id === null || $sections.length === 0) {
       // no blocks on page, add to top
       active_page.add_block(symbol, 0)
@@ -152,10 +140,8 @@
         {#each $symbols as symbol, i (symbol.id)}
           <Sidebar_Symbol
             {symbol}
-            on:edit_code={({ detail: updated_symbol }) =>
-              saveSymbol(updated_symbol)}
-            on:edit_content={({ detail: updated_symbol }) =>
-              saveSymbol(updated_symbol)}
+            on:edit_code={({ detail: updated }) => update_symbol(updated)}
+            on:edit_content={({ detail: updated }) => update_symbol(updated)}
             on:download={() => download_symbol(symbol)}
             on:delete={() => delete_symbol(symbol)}
             on:duplicate={() => duplicate_symbol(symbol, i + 1)}
@@ -165,7 +151,7 @@
       </div>
     {:else}
       <div class="empty">
-        <p>You don't have any blocks in your site yet</p>
+        <p>You don't have any Blocks in your site yet</p>
         <p>
           Create a Block from scratch, upload an existing Block, or use the
           Primo Blocks.
@@ -190,7 +176,6 @@
           <Sidebar_Symbol
             {symbol}
             controls_enabled={false}
-            on:edit={({ detail: updated_symbol }) => saveSymbol(updated_symbol)}
             on:download={() => download_symbol(symbol)}
             on:delete={() => delete_symbol(symbol)}
             on:duplicate={() => duplicate_symbol(symbol)}

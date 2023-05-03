@@ -50,7 +50,7 @@
   <HSplitPane bind:leftPaneSize bind:rightPaneSize>
     <div slot="left">
       {#if showing_sidebar}
-        <Sidebar {data} />
+        <Sidebar />
       {:else}
         <div class="expand primo-reset">
           <IconButton

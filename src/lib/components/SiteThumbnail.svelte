@@ -3,7 +3,8 @@
   import { find as _find } from 'lodash-es'
   import { supabase } from '$lib/supabase'
 
-  export let site = null
+  /** @type {import('$lib').Site} */
+  export let site
   export let preview = null
 
   if (!preview && site) {

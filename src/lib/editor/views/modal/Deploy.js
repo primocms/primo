@@ -130,16 +130,8 @@ export async function buildSiteBundle({ pages }) {
       })
     }
 
-    // if (page.pages) {
-    //   const child_pages = await Promise.all(
-    //     page.pages.map((subpage) => buildPageTree({ page: subpage, site }))
-    //   )
-    //   page_tree.push(...child_pages)
-    // }
-
     return page_tree
   }
-
 
   async function buildSiteTree(pages) {
     const json = JSON.stringify({

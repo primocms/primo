@@ -226,7 +226,7 @@
             search_elements_for_value({
               key: `${key}[${index}].${subkey}`,
               value: subvalue,
-              type: get_value_type(value),
+              type: get_value_type(subvalue),
             })
           }
         }
@@ -235,7 +235,7 @@
           search_elements_for_value({
             key: `${key}.${subkey}`,
             value: subvalue,
-            type: get_value_type(value),
+            type: get_value_type(subvalue),
           })
         })
       }
@@ -255,7 +255,6 @@
 
     function match_value_to_element({ key, value, type, element }) {
       if (value === '' || !value) return false
-
       // First, match by explicitly set key
       const key_matches = element.dataset.key === key
       if (key_matches) {
@@ -266,7 +265,7 @@
         } else if (type === 'LINK') {
           set_editable_link({ element, key, url: value.url })
         } else {
-          set_editable({ element, key })
+          set_editable_text({ element, key })
         }
         return true
       }
@@ -305,7 +304,7 @@
 
         // All other field types are text
         if (text_matches) {
-          set_editable({ element, key })
+          set_editable_text({ element, key })
           return true
         } else return false
       }
@@ -431,7 +430,7 @@
       })
     }
 
-    async function set_editable({ element, key = '' }) {
+    async function set_editable_text({ element, key = '' }) {
       element.style.outline = '0'
       element.setAttribute(`data-key`, key)
       element.onblur = (e) => {
@@ -717,7 +716,7 @@
     font-size: 14px;
     background: rgba(0, 0, 0, 0.9);
     color: white;
-    z-index: 99;
+    z-index: 999;
     display: flex;
 
     button {
