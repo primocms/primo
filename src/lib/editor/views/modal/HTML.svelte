@@ -1,32 +1,30 @@
 <script context="module">
-  import {writable} from 'svelte/store'
+  import { writable } from 'svelte/store'
   const activeTab = writable(0)
 </script>
 
 <script>
-  import {_ as C} from 'svelte-i18n';
-  import { cloneDeep, isEqual } from 'lodash-es';
-  import { Tabs } from '../../components/misc';
-  import { CodeMirror } from '../../components';
-  import ModalHeader from './ModalHeader.svelte';
+  import { _ as C } from 'svelte-i18n'
+  import { cloneDeep, isEqual } from 'lodash-es'
+  import { Tabs } from '../../components/misc'
+  import { CodeMirror } from '../../components'
+  import ModalHeader from './ModalHeader.svelte'
 
-  import modal from '../../stores/app/modal';
-  import { code as pageCode } from '../../stores/app/activePage';
-  import { saved } from '../../stores/app/misc';
-  import { code as siteCode } from '../../stores/data/draft';
-  import {
-    updateHTML
-  } from '../../stores/actions';
+  import modal from '../../stores/app/modal'
+  import { code as pageCode } from '../../stores/app/activePage'
+  import { saved } from '../../stores/app/misc'
+  import { code as siteCode } from '../../stores/data/site'
+  import { updateHTML } from '../../stores/actions'
 
-  let localPageHTML = cloneDeep($pageCode.html);
-  let localSiteHTML = cloneDeep($siteCode.html);
+  let localPageHTML = cloneDeep($pageCode.html)
+  let localSiteHTML = cloneDeep($siteCode.html)
 
   async function saveFinalHTML() {
     updateHTML({
       page: localPageHTML,
-      site: localSiteHTML
+      site: localSiteHTML,
     })
-    $saved = false;
+    $saved = false
   }
 
   const tabs = [
@@ -40,8 +38,7 @@
       label: $C('Site'),
       icon: 'th',
     },
-  ];
-
+  ]
 </script>
 
 <ModalHeader
@@ -51,8 +48,8 @@
     label: `Draft`,
     icon: 'fas fa-check',
     onclick: () => {
-      saveFinalHTML();
-      modal.hide();
+      saveFinalHTML()
+      modal.hide()
     },
   }}
   warn={() => {
@@ -62,9 +59,9 @@
     ) {
       const proceed = window.confirm(
         'Undrafted changes will be lost. Continue?'
-      );
-      return proceed;
-    } else return true;
+      )
+      return proceed
+    } else return true
   }}
 />
 

@@ -1,9 +1,7 @@
 import Primo from "./Primo.svelte";
 
 import {saved,onMobile,userRole} from './stores/app/misc'
-import {site, content} from './stores/data/draft'
-import savedSite from './stores/data/site'
-import dropdown from './stores/app/dropdown'
+import {site, content} from './stores/data/site'
 import activePage from './stores/app/activePage'
 import fieldTypes from './stores/app/fieldTypes'
 import modal from './stores/app/modal'
@@ -22,7 +20,6 @@ const stores = {
 }
 
 export {
-  savedSite,
   site,
   content,
   activePage,
@@ -33,7 +30,6 @@ export {
   Site,
   fieldTypes,
   PrimoFieldTypes,
-  dropdown,
   stores,
   registerProcessors,
   buildStaticPage

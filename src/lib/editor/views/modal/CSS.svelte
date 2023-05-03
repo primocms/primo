@@ -1,33 +1,30 @@
 <script context="module">
-  import {writable} from 'svelte/store'
+  import { writable } from 'svelte/store'
   const activeTab = writable(0)
 </script>
 
 <script>
-  import {_ as C} from 'svelte-i18n'
-  import { isEqual, find } from 'lodash-es';
-  import { CodeMirror } from '../../components';
-  import { Tabs } from '../../components/misc';
-  import Preview from '../../components/misc/Preview.svelte';
-  import ModalHeader from './ModalHeader.svelte';
+  import { _ as C } from 'svelte-i18n'
+  import { isEqual, find } from 'lodash-es'
+  import { CodeMirror } from '../../components'
+  import { Tabs } from '../../components/misc'
+  import Preview from '../../components/misc/Preview.svelte'
+  import ModalHeader from './ModalHeader.svelte'
 
-  import activePage from '../../stores/app/activePage';
-  import { saved } from '../../stores/app/misc';
-  import modal from '../../stores/app/modal';
-  import { updateActivePageCSS, updateSiteCSS } from '../../stores/actions';
+  import activePage from '../../stores/app/activePage'
+  import { saved } from '../../stores/app/misc'
+  import modal from '../../stores/app/modal'
+  import { updateActivePageCSS, updateSiteCSS } from '../../stores/actions'
 
-  import { code as pageCode } from '../../stores/app/activePage';
-  import {
-    site,
-    code as siteCode
-  } from '../../stores/data/draft';
-  import { buildStaticPage } from '../../stores/helpers';
+  import { code as pageCode } from '../../stores/app/activePage'
+  import { site, code as siteCode } from '../../stores/data/site'
+  import { buildStaticPage } from '../../stores/helpers'
 
-  let unsavedPageCSS = $pageCode.css;
-  let unsavedSiteCSS = $siteCode.css;
+  let unsavedPageCSS = $pageCode.css
+  let unsavedSiteCSS = $siteCode.css
 
-  let preview = '';
-  updatePagePreview();
+  let preview = ''
+  updatePagePreview()
   async function updatePagePreview() {
     preview = await buildStaticPage({
       page: {
@@ -35,19 +32,19 @@
         code: {
           ...$activePage.code,
           css: unsavedPageCSS,
-        }
+        },
       },
       site: {
         ...$site,
         code: {
           ...$site.code,
-          css: unsavedSiteCSS
-        }
+          css: unsavedSiteCSS,
+        },
       },
-    });
+    })
   }
 
-  let loading = false;
+  let loading = false
 
   const primaryTabs = [
     {
@@ -60,21 +57,21 @@
       label: $C('Site'),
       icon: 'th',
     },
-  ];
+  ]
 
   let primaryTab =
     find(primaryTabs, ['id', localStorage.getItem('primaryTab')]) ||
-    primaryTabs[0];
+    primaryTabs[0]
 
   $: {
-    localStorage.setItem('primaryTab', primaryTab.id);
+    localStorage.setItem('primaryTab', primaryTab.id)
   }
 
   async function saveStyles() {
     updateActivePageCSS(unsavedPageCSS)
     updateSiteCSS(unsavedSiteCSS)
-    $saved = false;
-    modal.hide();
+    $saved = false
+    modal.hide()
   }
 </script>
 
@@ -94,9 +91,9 @@
     ) {
       const proceed = window.confirm(
         'Undrafted changes will be lost. Continue?'
-      );
-      return proceed;
-    } else return true;
+      )
+      return proceed
+    } else return true
   }}
 />
 
@@ -147,7 +144,7 @@
         display: flex;
         flex-direction: column;
         max-height: calc(100vh - 100px); /* stopgap for scrolling issue */
-        overflow-y: scroll; 
+        overflow-y: scroll;
       }
 
       .preview-container {

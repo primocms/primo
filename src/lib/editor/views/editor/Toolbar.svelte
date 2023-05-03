@@ -6,7 +6,7 @@
   import { timeline } from '../../stores/data'
   import { undo_change, redo_change } from '../../stores/actions'
   import { PrimoButton } from '../../components/buttons'
-  import site from '../../stores/data/draft'
+  import site from '../../stores/data/site'
   import { id as pageID } from '../../stores/app/activePage'
   const dispatch = createEventDispatcher()
   import { page } from '$app/stores'

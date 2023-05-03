@@ -25,7 +25,7 @@
   import { processCode, processCSS, wrapInStyleTags } from '../../../utils'
   import { locale, onMobile } from '../../../stores/app/misc'
 
-  import { content, code as siteCode } from '../../../stores/data/draft'
+  import { content, code as siteCode } from '../../../stores/data/site'
   import { code as pageCode } from '../../../stores/app/activePage'
   import { showingIDE } from '../../../stores/app'
   import { getPageData, getComponentData } from '../../../stores/helpers'

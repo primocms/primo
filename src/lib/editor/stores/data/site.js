@@ -1,36 +1,39 @@
-import { writable, get } from 'svelte/store';
-import { Site } from '../../const'
+import { writable, derived } from 'svelte/store';
+import { Site } from '../../const';
 
-import {fields,id,name,code} from './draft'
+export const id = writable('default');
+export const name = writable('');
+export const fields = writable([]);
+export const code = writable(Site().code);
+export const content = writable(Site().content);
 
-let site
-const {subscribe,set} = writable(Site())
-subscribe(s => {
-  site = s
-})
-
-export default {
-  save: () => {
-    set({
-      ...site,
-      id: get(id),
-      name: get(name),
-      fields: get(fields),
-      code: get(code),
-    })
-  },
-  get: () => ({
-    ...site,
-    id: get(id),
-    name: get(name),
-    fields: get(fields),
-    code: get(code),
-  }),
-  hydrate: (site) => {
-    id.set(site.id)
-    name.set(site.name)
-    fields.set(site.fields)
-    code.set(site.code)
-  },
-  subscribe
+export function update(props) {
+	if (props.id) {
+		id.set(props.id);
+	}
+	if (props.name) {
+		name.set(props.name);
+	}
+	if (props.code) {
+		code.set(props.code);
+	}
+	if (props.fields) {
+		fields.set(props.fields);
+	}
+	if (props.content) {
+		content.set(props.content);
+	}
 }
+
+// conveniently get the entire site
+export const site = derived([id, name, code, fields, content], ([id, name, code, fields, content]) => {
+	return {
+		id,
+		name,
+		code,
+		fields,
+		content,
+	};
+});
+
+export default site;

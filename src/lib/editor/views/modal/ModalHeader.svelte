@@ -154,7 +154,7 @@
       .svg {
         :global(svg) {
           --size: 1rem;
-          weight: var(--size);
+          width: var(--size);
           height: var(--size);
         }
       }

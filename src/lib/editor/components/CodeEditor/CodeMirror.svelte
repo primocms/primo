@@ -11,7 +11,7 @@
   import { abbreviationTracker } from '../../libraries/emmet/plugin'
 
   import { highlightedElement } from '../../stores/app/misc'
-  import { code as site_code } from '../../stores/data/draft'
+  import { code as site_code } from '../../stores/data/site'
   import { code as page_code } from '../../stores/app/activePage'
   import { basicSetup } from 'codemirror'
   import { EditorView, keymap } from '@codemirror/view'

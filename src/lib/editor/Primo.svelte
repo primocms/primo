@@ -15,7 +15,7 @@
 
   import { options as options_store, saved } from './stores/app/misc'
   import { set_timeline } from './stores/data'
-  import { site as draft } from './stores/data/draft'
+  import { site as draft } from './stores/data/site'
   import { hydrate_active_data } from './stores/actions'
   import en from './languages/en.json'
   import es from './languages/es.json'

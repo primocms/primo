@@ -2,7 +2,7 @@ import { find as _find, chain as _chain, flattenDeep as _flattenDeep } from 'lod
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { processors } from '../component.js'
-import { site as activeSite } from './data/draft.js'
+import { site as activeSite } from './data/site.js'
 import sections from './data/sections.js'
 import symbols from './data/symbols.js'
 import pages from './data/pages.js'

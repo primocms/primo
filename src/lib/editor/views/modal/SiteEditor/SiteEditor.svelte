@@ -28,7 +28,7 @@
     content as site_content,
     code as site_code,
     fields as site_fields,
-  } from '../../../stores/data/draft'
+  } from '../../../stores/data/site'
   import { showingIDE } from '../../../stores/app'
   import { tick } from 'svelte'
 

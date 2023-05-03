@@ -7,7 +7,7 @@
 
   import Toolbar from './Toolbar.svelte'
   import ToolbarButton from './ToolbarButton.svelte'
-  import { fields as siteFields } from '../../stores/data/draft'
+  import { fields as siteFields } from '../../stores/data/site'
   import { fields as pageFields } from '../../stores/app/activePage'
   import sections from '../../stores/data/sections'
   import { loadingSite } from '../../stores/app/misc'

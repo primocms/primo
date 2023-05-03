@@ -5,7 +5,7 @@
   import axios from 'axios'
   import { page } from '$app/stores'
   import { hoveredBlock } from '$lib/editor/stores/app/misc'
-  import site from '$lib/editor/stores/data/draft'
+  import site from '$lib/editor/stores/data/site'
   import sections from '$lib/editor/stores/data/sections'
   import symbols from '$lib/editor/stores/data/symbols'
   import Icon from '@iconify/svelte'

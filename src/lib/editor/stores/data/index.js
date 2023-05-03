@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { createStack } from '../../libraries/svelte-undo';
 import {get} from 'svelte/store'
-import site from './draft'
+import site from './site'
 import pages from './pages'
 import sections from './sections'
 import symbols from './symbols'

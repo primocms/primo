@@ -12,7 +12,7 @@
 
   import IFrame from '$lib/editor/views/modal/ComponentLibrary/IFrame.svelte'
   import { processCode, processCSS, wrapInStyleTags } from '$lib/editor/utils'
-  import { code as siteCode } from '$lib/editor/stores/data/draft'
+  import { code as siteCode } from '$lib/editor/stores/data/site'
   import { code as pageCode } from '$lib/editor/stores/app/activePage'
 
   export let symbol
@@ -104,9 +104,9 @@
           />
         </svg>
       {/if}
-      <span
-        >{active && action.clicked ? action.clicked.label : action.label}</span
-      >
+      <span>
+        {active && action.clicked ? action.clicked.label : action.label}
+      </span>
     </div>
   </button>
 {:else}
@@ -139,11 +139,9 @@
                 />
               </svg>
             {/if}
-            <span
-              >{active && action.clicked
-                ? action.clicked.label
-                : action.label}</span
-            >
+            <span>
+              {active && action.clicked ? action.clicked.label : action.label}
+            </span>
           </div>
         </button>
       </div>

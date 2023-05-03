@@ -9,7 +9,7 @@
     code as siteCode,
     id as siteID,
     content,
-  } from '../../stores/data/draft'
+  } from '../../stores/data/site'
   import { locale } from '../../stores/app/misc'
   import { updatePreview } from '../../stores/actions'
   import {

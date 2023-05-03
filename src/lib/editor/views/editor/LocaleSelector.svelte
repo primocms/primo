@@ -6,7 +6,7 @@
   import { locale } from '../../stores/app/misc'
   import { addLocale, removeLocale } from '../../stores/actions'
   import { locales as availableLocales } from '../../const'
-  import { content } from '../../stores/data/draft'
+  import { content } from '../../stores/data/site'
 
   export let align = 'right'
 
@@ -90,8 +90,9 @@
                 }}
                 class="option"
                 class:active={localeID === $locale}
-                >{LocaleName(localeID)} ({localeID})</button
               >
+                {LocaleName(localeID)} ({localeID})
+              </button>
               {#if localeID !== 'en'}
                 <button class="remove" on:click={() => removeLocale(localeID)}>
                   <Icon icon="bi:x" />
@@ -99,9 +100,9 @@
               {/if}
             </div>
           {/each}
-          <button class="option" on:click={() => (addingLanguage = true)}
-            >+ add new language</button
-          >
+          <button class="option" on:click={() => (addingLanguage = true)}>
+            + add new language
+          </button>
         </div>
       {:else}
         <div class="search-container">
@@ -130,8 +131,9 @@
                 }}
                 class="option"
                 class:active={loc.key === $locale}
-                >{loc.name} ({loc.key})</button
               >
+                {loc.name} ({loc.key})
+              </button>
             {/each}
           </div>
         </div>
