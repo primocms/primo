@@ -2,9 +2,10 @@ import { find as _find, chain as _chain, flattenDeep as _flattenDeep } from 'lod
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import { processors } from '../component.js'
-import { pages, site as activeSite } from './data/draft.js'
+import { site as activeSite } from './data/draft.js'
 import sections from './data/sections.js'
 import symbols from './data/symbols.js'
+import pages from './data/pages.js'
 import activePage from './app/activePage.js'
 import { locale } from './app/misc.js'
 import { processCSS, getPlaceholderValue, getEmptyValue } from '../utils.js'
@@ -27,6 +28,18 @@ export function getSymbol(symbolID) {
   return _find(get(symbols), ['id', symbolID]);
 }
 
+/** 
+ * @param {{ 
+ *  page?: import('$lib').Page 
+ *  site?: import('$lib').Site
+ *  page_sections?: import('$lib').Section[]
+ *  page_symbols?: import('$lib').Symbol[]
+ *  locale?: string
+ *  separateModules?: boolean
+ *  no_js?: boolean
+ * }} details
+ * @returns {Promise<string | { html: string, js: string}>} 
+ * */
 export async function buildStaticPage({ page = get(activePage), site = get(activeSite), page_sections = get(sections), page_symbols = get(symbols), locale = 'en', separateModules = false, no_js = false }) {
   const component = await Promise.all([
     (async () => {

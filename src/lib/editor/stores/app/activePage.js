@@ -1,11 +1,11 @@
 import {writable,get,derived} from 'svelte/store'
 import {Page} from '../../const'
 
-export const id = writable(0)
+export const id = writable('')
 export const url = writable('index')
 // export const sections = writable([])
 export const code = writable(Page().code)
-export const content = writable({})
+export const content = writable({ en: {} })
 export const fields = writable(Page().fields)
 
 export function set(val) {
@@ -15,9 +15,6 @@ export function set(val) {
   if (val.url) {
     url.set(val.url)
   }
-  // if (val.sections) {
-  //   sections.set(val.sections)
-  // }
   if (val.code) {
     code.set(val.code)}
   if (val.content) {

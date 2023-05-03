@@ -20,26 +20,28 @@
   // $: siteURL = site_url
   $: canCreateSite = site_name && site_url
 
-  let siteData
+  let duplicated_site = null
   let preview = '<div></div>'
 
   async function createSite() {
     finishing = true
 
-    const default_site = Site({ url: site_url, name: site_name })
-
-    // overwrite the site id & name if it's been cloned
-    // otherwise create one from scratch
-    siteData = siteData
-      ? {
-          ...siteData,
+    if (duplicated_site) {
+      onSuccess(
+        {
+          ...duplicated_site,
           site: {
-            ...siteData.site,
+            ...duplicated_site.site,
             url: site_url,
             name: site_name,
           },
-        }
-      : {
+        },
+        preview
+      )
+    } else {
+      const default_site = Site({ url: site_url, name: site_name })
+      onSuccess(
+        {
           site: default_site,
           pages: [
             Page({
@@ -50,9 +52,10 @@
           ],
           sections: [],
           symbols: [],
-        }
-
-    onSuccess(siteData, preview)
+        },
+        preview
+      )
+    }
   }
 
   function validateUrl() {
@@ -72,17 +75,19 @@
       const uploaded = JSON.parse(target.result)
       const converted = validate_site_structure_v2(uploaded)
       if (converted) {
-        siteData = converted
+        duplicated_site = converted
 
-        const home_page = siteData.pages.find((page) => page.url === 'index')
+        const home_page = duplicated_site.pages.find(
+          (page) => page.url === 'index'
+        )
 
         preview = await buildStaticPage({
           page: home_page,
-          site: siteData.site,
-          page_sections: siteData.sections.filter(
+          site: duplicated_site.site,
+          page_sections: duplicated_site.sections.filter(
             (section) => section.page === home_page.id
           ),
-          page_symbols: siteData.symbols,
+          page_symbols: duplicated_site.symbols,
         })
       } else {
         duplicateFileIsValid = false

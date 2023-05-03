@@ -177,6 +177,10 @@
     .page {
       color: white;
     }
+
+    @media (max-width: 670px) {
+      display: none;
+    }
   }
 
   .menu-container {

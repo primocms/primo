@@ -19,6 +19,7 @@ const Field = (field) => {
   }
 }
 
+/** @returns {import('$lib').Site_Data} */
 export function validate_site_structure_v2(site) {
 
   const new_site_id = uuidv4()
@@ -34,8 +35,7 @@ export function validate_site_structure_v2(site) {
       return ({
         ...page,
         id: new_id,
-        site: new_site_id,
-        preview: `${new_site_id}/${new_id}/index.html`
+        site: new_site_id
       })
     })
     const child_pages = site.pages.filter(p => p.parent !== null)
@@ -55,7 +55,6 @@ export function validate_site_structure_v2(site) {
             ...page,
             id: new_id,
             site: new_site_id,
-            preview: `${new_site_id}/${new_id}/index.html`,
             parent: new_page_ids.get(page.parent)
           })
         })
@@ -185,6 +184,7 @@ export function validate_site_structure_v2(site) {
     _old_id: null
   }]
 
+  /** @returns {import('$lib').Page} */
   const Page = (page) => {
 
     const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
@@ -208,6 +208,7 @@ export function validate_site_structure_v2(site) {
     }
   }
 
+  /** @returns {import('$lib').Section} */
   const Section = (section, page) => {
 
     let symbol
@@ -253,6 +254,7 @@ export function validate_site_structure_v2(site) {
     }
   })
 
+  /** @returns {Array<import('$lib').Section>} */
   const sections = _.flatten(pages.map(page => page.sections.map(s => Section(s, page))))
 
   const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {

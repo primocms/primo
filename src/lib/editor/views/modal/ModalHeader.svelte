@@ -51,7 +51,7 @@
     {#if !$showingIDE && !$modal.hideLocaleSelector && showLocaleSelector}
       <LocaleSelector align="left" />
     {/if}
-    {#if $userRole === 'developer' && $modal.showSwitch}
+    {#if $page.data.user.role === 'DEV' && $modal.showSwitch}
       {#if $showingIDE}
         <button
           class="code-mode"
@@ -61,7 +61,7 @@
         >
           <Icon icon="material-symbols:edit-square-outline-rounded" />
         </button>
-      {:else if $page.data.user.role === 'DEV'}
+      {:else}
         <button
           class="code-mode"
           on:click={() => ($showingIDE = !$showingIDE)}

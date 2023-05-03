@@ -24,7 +24,7 @@ export async function load(event) {
 
   // Get sorted pages, symbols, and sections
   const { pages, symbols, sections } = await Promise.all([
-    supabaseClient.from('pages').select('id, url, name, parent').match({site: site.id}),
+    supabaseClient.from('pages').select().match({site: site.id}),
     supabaseClient.from('symbols').select().match({site: site.id}),
     supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
   ]).then(([{data:pages}, {data:symbols}, {data:sections}]) => ({

@@ -32,10 +32,10 @@ export type Page_Code = {
 
 export type Content = {
 	en: {
-		[field_key: string]: any; //
+		[field_key?: string]: any; //
 	};
 	[locale: string]: {
-		[field_key: string]: any; //
+		[field_key?: string]: any; //
 	};
 }
 
