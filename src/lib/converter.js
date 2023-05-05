@@ -79,7 +79,6 @@ export function validate_site_structure_v2(site) {
 
   site = validateSiteStructure(site)
 
-
   const Symbol = (symbol) => {
     const content = Object.entries(site.content).reduce((accumulator, [locale, value]) => {
       accumulator[locale] = {}
@@ -263,7 +262,9 @@ export function validate_site_structure_v2(site) {
       accumulator[locale][field.key] = value?.[field.key] || getEmptyValue(field)
     })
     return accumulator
-  }, {})
+  }, {
+    en: {}
+  })
 
   return {
     site: {

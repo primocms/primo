@@ -69,7 +69,7 @@ export type Site = {
 	code: Page_Code;
 	fields: Array<Field>;
 	content: Content;
-	active_deployment: object | null;
+	active_deployment?: object | null;
 	created_at?: Date;
 	updated_at?: Date;
 }

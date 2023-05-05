@@ -3,7 +3,7 @@ import _ from 'lodash-es'
 import { get } from 'svelte/store'
 import * as activePage from './app/activePage'
 import { id as activePageID } from './app/activePage'
-import { saved, locale } from './app/misc'
+import { locale } from './app/misc'
 import stores, { update_timeline } from './data'
 import { update as update_site, content, code, fields, site as unsavedSite } from './data/site'
 import { timeline } from './data'
@@ -21,46 +21,6 @@ export async function hydrate_active_data(data) {
   stores.pages.set(data.pages)
   stores.symbols.set(data.symbols)
   update_site(data.site)
-}
-
-export async function updateHTML({ page, site }) {
-
-  // page
-  activePage.set({
-    code: {
-      ...get(activePage.default).code,
-      html: page
-    }
-  })
-
-  // site
-  code.update(c => ({
-    ...c,
-    html: site
-  }))
-
-  update_timeline()
-}
-
-/** @returns {Promise<void>} */
-export async function updateActivePageCSS(css) {
-  pages.update(get(activePageID), (page) => ({
-    ...page,
-    code: {
-      ...page.code,
-      css
-    }
-  }));
-  update_timeline()
-}
-
-/** @returns {Promise<void>} */
-export async function updateSiteCSS(css) {
-  code.update(c => ({
-    ...c,
-    css
-  }))
-  update_timeline()
 }
 
 /** @returns {void} */
@@ -286,151 +246,101 @@ export const active_page = {
     })
     update_page_preview()
   },
-  update: async (obj, updateTimeline = true) => {
-
+  update: async (obj) => {
     const current_page = _.cloneDeep(get(activePage.default))
 
-    activePage.set(obj)
-
-    await supabase.from('pages').update(obj).match(
-      {
-        id: get(activePageID),
-        site: get(unsavedSite)['id']
-      })
-
-    const preview = await buildStaticPage({ page: get(activePage.default), no_js: true })
-    stores.pages.update(pages => pages.map(page => page.id === get(activePageID) ? ({ ...page, preview }) : page))
-    await supabase.from('pages').update({ preview }).eq('id', get(activePageID))
-
-    if (updateTimeline) update_timeline({
-      doing: () => {
-        activePage.set(current_page)
-        supabase.from('pages').update(current_page).match(
-          {
-            id: current_page.id,
-            site: get(unsavedSite)['id']
-          })
+    update_timeline({
+      doing: async () => {
+        activePage.set(obj)
+        await supabase.from('pages').update(obj).eq('id', current_page.id)
       },
-      undoing: () => {
-        //TODO
+      undoing: async () => {
+        activePage.set(current_page)
+        await supabase.from('pages').update(current_page).eq('id', current_page.id)
       }
     })
+    update_page_preview()
   },
 }
 
 export const pages = {
-  duplicate: async ({ page, details, updateTimeline = true }) => {
-    // saved.set(false)
+  create: async (new_page) => {
+    const original_pages = cloneDeep(get(stores.pages))
 
-    const new_page = {
-      id: uuidv4(),
-      name: details.name,
-      url: details.url,
-      parent: details.parent,
-      code: page.code,
-      content: page.content,
-      fields: page.fields,
-      site: get(unsavedSite)['id']
-    }
-
-    pages.add(new_page)
-
-    const { data: page_blocks } = await supabase.from('sections').select().eq('page', page.id)
-
-    if (page_blocks) {
-      await supabase.from('sections').insert(page_blocks.map(section => ({
-        content: section.content,
-        index: section.index,
-        page: new_page.id,
-        symbol: section.symbol
-      })))
-    }
-
-    if (updateTimeline) update_timeline()
-
-  },
-  add: async (newPage, updateTimeline = true) => {
-    saved.set(false)
-    const currentPages = get(stores.pages)
-
-    stores.pages.set([...cloneDeep(currentPages), newPage])
-    const { data } = await supabase.from('pages').insert({
-      ...newPage,
-      site: get(unsavedSite)['id']
-    }).select()
-
-    if (data) {
-      stores.pages.update(store => store.map(page => page.id === newPage.id ? data[0] : page))
-    } else {
-      stores.pages.update(store => store.filter(page => page.id !== newPage.id))
-    }
-
-    if (updateTimeline) update_timeline()
-  },
-  delete: async (pageId, updateTimeline = true) => {
-    // saved.set(false)
-    stores.pages.update(pages => pages.filter(page => page.id !== pageId))
-
-    const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.id', 'eq', pageId)
-    await Promise.all(
-      sections_to_delete.map(async section => {
-        await supabase.from('sections').delete().eq('id', section.id)
-      })
-    )
-    await supabase.from('pages').delete().eq('id', pageId)
-
-    if (updateTimeline) update_timeline()
-  },
-  update: async (pageId, fn, updateTimeline = true) => {
-    saved.set(false)
-    const newPages = get(stores.pages).map(page => {
-      if (page.id === pageId) {
-        return fn(page)
-      } else if (some(page.pages, ['id', pageId])) {
-        return {
-          ...page,
-          // pages: page.pages.map(page => page.id === pageId ? fn(page) : page)
-        }
-      } else return page
+    update_timeline({
+      doing: async () => {
+        stores.pages.update(store => [...store, new_page])
+        await supabase.from('pages').insert({
+          ...new_page,
+          site: get(unsavedSite)['id']
+        }).select().single()
+      },
+      undoing: async () => {
+        stores.pages.set(original_pages)
+        await supabase.from('pages').delete().eq('id', new_page.id)
+      }
     })
-    stores.pages.set(newPages)
-    if (updateTimeline) update_timeline()
   },
-  edit: async (pageId, updatedPage, updateTimeline = true) => {
-    const newPages = get(stores.pages).map(page => {
-      if (page.id === pageId) { // root page
-        return {
-          ...page,
-          ...updatedPage,
-          // pages: page.pages.map(subpage => ({ // update child page IDs
-          //   ...subpage,
-          //   id: subpage.id.replace(pageId, updatedPage.id)
-          // }))
-        }
-      } else if (some(page.pages, ['id', pageId])) { // child page
-        return {
-          ...page,
-          // pages: page.pages.map(subpage => subpage.id === pageId ? ({ ...subpage, ...updatedPage }) : subpage)
-        }
-      } else return page
-    })
+  delete: async (page_id) => {
+    const original_pages = cloneDeep(get(stores.pages))
+    const updated_pages = original_pages.filter(page => page.id !== page_id && page.parent !== page_id)
+    let deleted_sections = []
+    let deleted_pages = original_pages.filter(page => page.id === page_id || page.parent === page_id)
 
-    stores.pages.set(newPages)
-    if (updateTimeline) update_timeline()
+    update_timeline({
+      doing: async () => {
+        stores.pages.set(updated_pages)
+
+        // Delete child pages
+        const child_pages = original_pages.filter(page => page.parent === page_id)
+        if (child_pages.length > 0) {
+          await Promise.all(
+            child_pages.map(async page => {
+              const { data: sections_to_delete = [] } = await supabase.from('sections').delete().eq('page', page.id).select()
+              deleted_sections = sections_to_delete ? [...deleted_sections, ...sections_to_delete] : deleted_sections
+              await supabase.from('pages').delete().eq('id', page.id).select()
+            })
+          ) 
+        }
+
+        // Delete page
+        const { data: sections_to_delete } = await supabase.from('sections').select('id, page').eq('page', page_id)
+        deleted_sections = sections_to_delete ? [...deleted_sections, ...sections_to_delete] : deleted_sections
+        await supabase.from('pages').delete().eq('id', page_id)
+      },
+      undoing: async () => {
+        stores.pages.set(original_pages)
+        await supabase.from('pages').insert(deleted_pages)
+        await supabase.from('sections').insert(deleted_sections)
+      }
+    })
+  },
+  update: async (page_id, obj) => {
+    const original_page = cloneDeep(get(stores.pages).find(page => page.id === page_id))
+    const current_pages = cloneDeep(get(stores.pages))
+    const updated_pages = current_pages.map(page => page.id === page_id ? { ...page, ...obj } : page)
+    stores.pages.set(updated_pages)
+    update_timeline({
+      doing: async () => {
+        stores.pages.set(updated_pages)
+        await supabase.from('pages').update(obj).eq('id', page_id)
+      },
+      undoing: async () => {
+        stores.pages.set(current_pages)
+        await supabase.from('pages').update(original_page).eq('id', page_id)
+      }
+    })
   }
 }
 
 export async function update_page_preview(page = get(activePage.default)) {
   const preview = await buildStaticPage({ page, no_js: true })
-  // stores.pages.update(store => store.map(item => item.id === page.id ? ({ ...item, preview }) : item))
-
   if (page.url === 'index') {
     await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview, { upsert: true })
     await supabase.storage.from('sites').upload(`${get(stores.site).id}/preview.html`, preview, { upsert: true })
   } else {
     await supabase.storage.from('sites').upload(`${get(stores.site).id}/${page.id}/index.html`, preview, { upsert: true })
   }
-  // await supabase.from('pages').update({ preview: file.path }).eq('id', page.id)
 }
 
 export async function update_symbol_with_static_values(component) {
@@ -494,16 +404,6 @@ export async function update_section_content(section, updated_content) {
     }
   })
   update_page_preview()
-}
-
-export async function saveFields(newPageFields, newSiteFields, newContent) {
-  pages.update(get(activePageID), (page) => ({
-    ...page,
-    fields: cloneDeep(newPageFields),
-  }));
-  fields.set(newSiteFields);
-  content.set(newContent)
-  update_timeline()
 }
 
 export async function addLocale(key) {

@@ -1,17 +1,24 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+  import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
 
-  export let id = null;
-  export let label = null;
-  export let prefix = '';
-  export let value;
-  export let placeholder = '';
-  export let variants = '';
-  export let type = 'text';
+  /** @type {string | null} */
+  export let id = null
+
+  /** @type {string | null} */
+  export let label = null
+
+  /** @type {string} */
+  export let prefix = ''
+
+  /** @type {string} */
+  export let value
+  export let placeholder = ''
+  export let variants = ''
+  export let type = 'text'
+  export let autofocus = false
 
   // Note: Svelte seems to have some issues with two-way binding, so if this is acting up it's probably that
-
 </script>
 
 <!-- svelte-ignore a11y-label-has-associated-control -->
@@ -23,10 +30,12 @@
       {value}
       {type}
       {placeholder}
+      {autofocus}
       on:input={({ target }) => {
-        value = target.value;
-        dispatch('input', value);
-      }} />
+        value = target.value
+        dispatch('input', value)
+      }}
+    />
   </div>
 </label>
 
@@ -61,7 +70,7 @@
       input {
         display: block;
         width: 100%;
-        background: var(--input-background, #58595B);
+        background: var(--input-background, #58595b);
         border: var(--input-border);
         color: var(--color-gray-1);
         outline-color: var(--primo-color-brand);
@@ -80,5 +89,4 @@
       }
     }
   }
-
 </style>

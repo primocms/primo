@@ -25,7 +25,6 @@
   import { modal } from '../../../stores/app'
   import { active_page } from '../../../stores/actions'
   import activePage, {
-    id as pageID,
     code as pageCode,
     fields as pageFields,
     content as pageContent,

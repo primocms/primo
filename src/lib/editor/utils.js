@@ -73,16 +73,6 @@ export function wrapInStyleTags(css, id) {
   return `<style type="text/css" ${id ? `id = "${id}"` : ""}>${css}</style>`;
 }
 
-// make a url string valid
-export const makeValidUrl = (str = '') => {
-  if (str) {
-    return str.replace(/\s+/g, '-').replace(/[^0-9a-z\-._]/ig, '').toLowerCase()
-  } else {
-    return ''
-  }
-}
-
-
 const lorem = new lipsum({
   sentencesPerParagraph: {
     max: 8,

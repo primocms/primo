@@ -36,7 +36,8 @@ export function set_timeline(data) {
   });
 }
 
-export async function update_timeline({ doing, undoing } = { doing: () => {}, undoing: () => {}}) {
+/** @param {{ doing: () => Promise<void>, undoing: () => Promise<void> }} functions */
+export async function update_timeline({ doing, undoing }) {
   await doing()
   timeline.push({
     doing,

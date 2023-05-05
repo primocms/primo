@@ -3,7 +3,7 @@
   import Spinner from '$lib/ui/Spinner.svelte'
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { makeValidUrl } from '$lib/utils'
+  import { validate_url } from '$lib/editor/utilities'
   import { Site, Page } from '$lib/editor/const'
   import Icon from '@iconify/svelte'
   import { validate_site_structure_v2 } from '$lib/converter'
@@ -59,7 +59,7 @@
   }
 
   function validateUrl() {
-    site_url = makeValidUrl(siteIDFocused ? site_url : site_name)
+    site_url = validate_url(siteIDFocused ? site_url : site_name)
   }
 
   let duplicatingSite = false

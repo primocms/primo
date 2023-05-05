@@ -10,7 +10,7 @@
   import { locale, highlightedElement } from '../../stores/app/misc'
   import JSONTree from 'svelte-json-tree'
   import Icon from '@iconify/svelte'
-  import Preview from '../../components/misc/Preview.svelte'
+  import { content_editable } from '$lib/editor/utilities'
 
   export let view = 'small'
   export let orientation = 'horizontal'
@@ -214,16 +214,11 @@
           <button>
             <div
               class="static-width"
-              contenteditable="true"
-              on:keydown={(e) => {
-                if (e.code === 'Enter') {
-                  e.preventDefault()
-                  e.target.blur()
-                }
-              }}
-              on:keyup={(e) => {
-                active_static_width = Number(e.target.textContent)
-                resizePreview()
+              use:content_editable={{
+                on_change: (e) => {
+                  active_static_width = Number(e.target.textContent)
+                  resizePreview()
+                },
               }}
             >
               {active_static_width}

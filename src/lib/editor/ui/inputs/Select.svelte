@@ -1,4 +1,5 @@
 <script>
+  /** @type {string | null} */
   export let label = null
   export let value
   export let options
@@ -18,13 +19,18 @@
 
   <select bind:value {disabled} {...$$restProps}>
     {#each options as option}
-      <option value={option.id}>{option.label}</option>
+      {#if option.id === 'DIVIDER'}
+        <option disabled>───────</option>
+      {:else}
+        <option value={option.id}>{option.label}</option>
+      {/if}
     {/each}
   </select>
 </label>
 
 <style lang="postcss">
   label {
+    width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
