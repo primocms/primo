@@ -568,11 +568,7 @@
     class="primo-reset link-editor"
     bind:this={link_editor}
   >
-    <button
-      on:click={() => {
-        link_editor_is_visible = false
-      }}
-    >
+    <button on:click={() => (link_editor_is_visible = false)}>
       <Icon icon="ic:round-close" />
     </button>
     <button class="icon" data-link>

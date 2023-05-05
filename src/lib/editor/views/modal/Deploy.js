@@ -95,7 +95,7 @@ export async function buildSiteBundle({ pages }) {
     const { url } = page
     const { data: sections } = await supabase
       .from('sections')
-      .select('*')
+      .select()
       .eq('page', page.id)
       .order('index', { ascending: true })
 
@@ -134,11 +134,42 @@ export async function buildSiteBundle({ pages }) {
   }
 
   async function buildSiteTree(pages) {
+    const site = get(page).data.site
+    const symbols = get(page).data.symbols
     const json = JSON.stringify({
-      site: get(page).data.site,
-      pages: all_pages,
-      sections: all_sections,
-      symbols: get(page).data.symbols,
+      site: {
+        id: site.id,
+        name: site.name,
+        url: site.url,
+        code: site.code,
+        fields: site.fields,
+        content: site.content
+      },
+      pages: all_pages.map(p => ({
+        id: p.id,
+        url: p.url,
+        name: p.name,
+        code: p.code,
+        fields: p.fields,
+        content: p.content,
+        site: p.site,
+        parent: p.parent
+      })),
+      sections: all_sections.map(s => ({
+        id: s.id,
+        content: s.content,
+        page: s.page,
+        site: s.site,
+        symbol: s.symbol
+      })),
+      symbols: symbols.map(s => ({
+        id: s.id,
+        name: s.name,
+        code: s.code,
+        fields: s.fields,
+        content: s.content,
+        site: s.site
+      })),
       version: 2
     })
 
@@ -159,7 +190,7 @@ export async function buildSiteBundle({ pages }) {
             <title>Primo</title>
           </head>
           <body style="margin:0">
-            <h1>redirecting to Primo server</h1>
+            <h1 style="font-family:sans-serif">redirecting to Primo server</h1>
           </body>
         </html>
         `
