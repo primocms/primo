@@ -54,7 +54,16 @@ export const actions = {
     const email = data.get('email');
     const password = data.get('password');
 
-    const {data:res, error} = await sign_up({email, password})
+    const {data:res, error} = await supabaseAdmin.auth.admin.createUser({
+      // @ts-ignore
+      email: email,
+      // @ts-ignore
+      password: password,
+      user_metadata: {
+        some_data: data,
+      },
+      email_confirm: true,
+    });
     
     if (error) {
       console.error(error)
@@ -76,18 +85,12 @@ export const actions = {
       }
 
       // disable email confirmation and add user
-      await Promise.all([
-        supabaseAdmin.auth.admin.updateUserById(
-          res.user.id,
-          { email_confirm: true }
-        ),
-        supabaseAdmin
-          .from('users')
-          .insert({ 
-            id: res.user?.id, 
-            email: res.user?.email 
-          })
-      ])
+      await supabaseAdmin
+        .from('users')
+        .insert({ 
+          id: res.user?.id, 
+          email: res.user?.email 
+        })
 
       // add user to server_members as admin
       await supabaseAdmin.from('server_members').insert({
