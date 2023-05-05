@@ -115,10 +115,7 @@
 
   // Fade in page when all components mounted
   let page_mounted = false
-  $: page_is_empty =
-    $sections.length <= 1 &&
-    $sections.length !== 0 &&
-    $sections[0]['type'] === 'options'
+  $: page_is_empty = $sections.length === 0
 
   // detect when all sections are mounted
   let sections_mounted = 0
@@ -141,18 +138,6 @@
       })
     }, 100)
   }
-
-  // necessary to clear svelte:head
-  // beforeNavigate(async (e) => {
-  //   if (!e.willUnload && !e.to?.params?.site) {
-  //     // going to dashboard
-  //     page_mounted = false
-  //     await tick()
-  //     html_head = ''
-  //     html_below = ''
-  //     await tick()
-  //   }
-  // })
 </script>
 
 <svelte:head>
@@ -182,10 +167,7 @@
 {@html html_below || ''}
 
 {#if page_is_empty}
-  <div class="empty-state">
-    if you're seeing this, <br />
-    your website is empty
-  </div>
+  <div class="empty-state">This is an empty page</div>
 {/if}
 
 <style lang="postcss">
@@ -223,5 +205,8 @@
     pointer-events: none;
     z-index: -2;
     font-family: Inter, sans-serif;
+    color: #999;
+    z-index: 1;
+    text-align: center;
   }
 </style>
