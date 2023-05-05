@@ -93,6 +93,11 @@ CREATE TABLE "public"."sections" (
 ALTER TABLE
     "public"."sections" OWNER TO "postgres";
 
+-- Enable realtime for 'sections' table
+alter publication supabase_realtime
+add
+    table sections;
+
 --
 -- Name: server_members; Type: TABLE; Schema: public; Owner: postgres
 --
