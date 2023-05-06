@@ -75,13 +75,14 @@
       return within_left && above_bottom && below_top
     })
 
+    // if no matching block, check if hovering below last block
     if (!matching_block && $positions.length > 0) {
       // hovering below last block
       if (mouse_y > $positions.at(0)['bottom']) {
-        matching_block = $positions.at(0)
+        matching_block = $positions.at(-1)
         dragging_over_block = true
       } else {
-        $hoveredBlock = { i: 0, id: null, position: '' }
+        $hoveredBlock = { i: 0, id: null, position: '', active: false }
         dragging_over_block = false
         return
       }
