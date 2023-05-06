@@ -31,8 +31,7 @@ CREATE TABLE "public"."config" (
     "id" "text" NOT NULL,
     "value" "text",
     "options" "jsonb",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp with time zone DEFAULT "now"()
 );
 
 ALTER TABLE
@@ -55,7 +54,7 @@ ALTER TABLE
     "public"."invitations" OWNER TO "postgres";
 
 INSERT INTO
-    public.config (id, value, options, created_at, updated_at)
+    public.config (id, value, options, created_at)
 VALUES
     ('github_token', null, null, now(), now());
 
@@ -67,7 +66,6 @@ CREATE TABLE "public"."pages" (
     "name" "text",
     "fields" "jsonb" DEFAULT '[]' :: "jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
     "url" "text",
     "content" "jsonb" DEFAULT '{}' :: "jsonb" NOT NULL,
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
@@ -163,7 +161,6 @@ ALTER TABLE
 CREATE TABLE "public"."users" (
     "email" "text",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
     "id" "uuid" NOT NULL
 );
 

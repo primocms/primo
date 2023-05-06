@@ -61,7 +61,6 @@ export const Page = (page = {}) => ({
   parent: null,
   site: '',
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
   ...page,
 })
 
@@ -130,7 +129,6 @@ export const Site = ({ url, name } = { url: 'default', name: 'Default' }) => ({
   },
   active_deployment: null,
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
 })
 
 

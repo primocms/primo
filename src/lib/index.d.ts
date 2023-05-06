@@ -59,7 +59,6 @@ export type Page = {
 	site: string;
 	parent: string | null;
 	created_at?: string;
-	updated_at?: string;
 }
 
 export type Site = {
@@ -71,7 +70,6 @@ export type Site = {
 	content: Content;
 	active_deployment?: object | null;
 	created_at?: string;
-	updated_at?: string;
 }
 
 export type User = {
@@ -81,7 +79,6 @@ export type User = {
 	admin: boolean;
 	role: 'DEV' | 'EDITOR';
 	created_at: string;
-	updated_at: string;
 }
 
 export type Site_Data = {
