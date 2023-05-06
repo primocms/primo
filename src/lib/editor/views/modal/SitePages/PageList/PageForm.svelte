@@ -76,20 +76,24 @@
     display: flex;
     gap: 0.5rem;
     padding: 0.825rem 1.125rem;
+    place-items: center;
 
     --TextInput-label-font-size: 0.75rem;
 
     .select {
       max-width: 6rem;
-      display: flex;
     }
 
     button {
       border: 1px solid var(--primo-color-brand);
       border-radius: 0.25rem;
-      padding: 0.5rem 0.75rem;
-      margin-top: 27px;
+      padding: 9px 0.75rem;
+      margin-top: 23px;
       margin-left: 0.25rem;
+
+      &:disabled {
+        opacity: 20%;
+      }
     }
   }
 </style>

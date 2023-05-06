@@ -38,9 +38,10 @@
     span {
       margin-bottom: 0.5rem;
       font-size: var(--font-size-2);
+      color: #9d9d9d;
 
       i {
-        color: var(--color-gray-3);
+        color: #9d9d9d;
         font-size: var(--font-size-1);
       }
     }
@@ -48,11 +49,13 @@
     select {
       height: 100%;
       /* outline-color: var(--primo-color-brand); */
-      background: var(--color-gray-9);
+      background: #1f1f1f;
       padding: 0.5rem;
       /* border: 2px solid var(--color-gray-2); */
-      border: 1px solid #858585;
+      border: 1px solid #404040;
       border-radius: var(--primo-border-radius);
+      font-size: 1rem;
+      color: #cecece;
     }
   }
 
@@ -72,9 +75,9 @@
   }
   label.medium span {
     font-size: var(--font-size-1);
-    margin-bottom: 0.5rme;
+    margin-bottom: 0.3rem;
   }
   label.medium select {
-    padding: 0 0.5rem;
+    padding: 0.4rem 0.5rem;
   }
 </style>

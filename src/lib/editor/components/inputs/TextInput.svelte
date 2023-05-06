@@ -54,7 +54,8 @@
     span.label {
       font-size: var(--TextInput-label-font-size, 0.875rem);
       margin-bottom: 0.25rem;
-      color: var(--color-gray-2);
+      color: #9d9d9d;
+      font-weight: 400;
     }
 
     .input-container {
@@ -70,21 +71,22 @@
       input {
         display: block;
         width: 100%;
-        background: var(--input-background, #58595b);
-        border: var(--input-border);
-        color: var(--color-gray-1);
-        outline-color: var(--primo-color-brand);
-        font-weight: 500;
+        background: #1f1f1f;
+        border: 1px solid #404040;
+        color: #cecece;
+        font-weight: 400;
         border-radius: var(--input-border-radius);
-        padding: 0.5rem 0.75rem;
+        padding: 0.3rem 0.75rem;
         flex: 1;
+        transition: 0.1s border;
 
         &:focus {
           outline: 0;
+          border-color: var(--primo-color-brand);
         }
 
-        &:placeholder {
-          color: var(--color-gray-7);
+        &::placeholder {
+          color: #797979;
         }
       }
     }
