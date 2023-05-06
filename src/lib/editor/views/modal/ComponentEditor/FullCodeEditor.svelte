@@ -61,12 +61,22 @@
     $centerPaneSize = $activeTabs['css'] ? `${panelWidth}%` : '0'
     $rightPaneSize = $activeTabs['js'] ? `${panelWidth}%` : '0'
   }
+
+  // close empty tabs
+  if (!css && $activeTabs['css']) {
+    console.log('togglein')
+    toggleTab(1)
+  }
+  if (!js && $activeTabs['js']) {
+    console.log('no js')
+    toggleTab(2)
+  }
 </script>
 
 {#if $onMobile}
   <div class="mobile-tabs {variants}">
     <div class="tabs">
-      <ul xyz="fade stagger delay-2">
+      <ul>
         <li class="xyz-in" class:is-active={activeTab === 0}>
           <button on:click={() => (activeTab = 0)}>
             <span>HTML</span>

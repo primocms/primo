@@ -22,22 +22,27 @@
 
   function edit_symbol_content(symbol) {
     $showingIDE = false
-    modal.show('COMPONENT_EDITOR', {
-      component: symbol,
-      header: {
-        title: `Edit ${symbol.title || 'Block'}`,
-        icon: 'fas fa-check',
-        button: {
-          label: `Save Block`,
+    modal.show(
+      'COMPONENT_EDITOR',
+      {
+        component: symbol,
+        header: {
+          title: `Edit ${symbol.name || 'Block'}`,
           icon: 'fas fa-check',
-          onclick: (symbol) => {
-            dispatch('edit_content', symbol)
-            modal.hide()
+          button: {
+            label: `Save Block`,
+            icon: 'fas fa-check',
+            onclick: (symbol) => {
+              dispatch('edit_content', symbol)
+              modal.hide()
+            },
           },
         },
-        showSwitch: true,
       },
-    })
+      {
+        showSwitch: true,
+      }
+    )
   }
 
   function edit_symbol_code(symbol) {
@@ -78,8 +83,9 @@
     // if no matching block, check if hovering below last block
     if (!matching_block && $positions.length > 0) {
       // hovering below last block
-      if (mouse_y > $positions.at(0)['bottom']) {
-        matching_block = $positions.at(-1)
+      const last_block = $positions.at(-1)
+      if (mouse_y > last_block.bottom) {
+        matching_block = last_block
         dragging_over_block = true
       } else {
         $hoveredBlock = { i: 0, id: null, position: '', active: false }

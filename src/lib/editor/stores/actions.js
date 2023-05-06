@@ -65,6 +65,7 @@ export const symbols = {
     const original_symbols = _.cloneDeep(get(stores.symbols))
     const original_sections = _.cloneDeep(get(stores.sections))
 
+    if (_.isEqual(original_symbol, updated_symbol)) return
     update_timeline({
       doing: async () => {
 
@@ -393,6 +394,8 @@ export async function update_section_content(section, updated_content) {
   // Update static content in symbol
   const original_symbol_content = _.cloneDeep(section.symbol.content)
   const updated_symbol_content = _.cloneDeep(section.symbol.content)
+
+  let should_update_symbol = false
   Object.entries(updated_content).forEach(
     ([locale_key, locale_value]) => {
       Object.entries(locale_value).forEach(([field_key, field_value]) => {
@@ -401,6 +404,7 @@ export async function update_section_content(section, updated_content) {
           field_key,
         ])
         if (matching_field.is_static) {
+          should_update_symbol = true
           updated_symbol_content[locale_key] = {
             ...updated_symbol_content[locale_key],
             [field_key]: field_value,
@@ -412,20 +416,20 @@ export async function update_section_content(section, updated_content) {
 
   update_timeline({
     doing: async () => {
-      stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: updated_symbol_content } : s))
       stores.sections.update(store => store.map(s => s.id === section.id ? { ...s, content: updated_content } : s))
-      await Promise.all([
-        supabase.from('sections').update({ content: updated_content }).eq('id', section.id),
-        supabase.from('symbols').update({ content: updated_symbol_content }).eq('id', section.symbol.id)
-      ])
+      await supabase.from('sections').update({ content: updated_content }).eq('id', section.id)
+      if (should_update_symbol) {
+        stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: updated_symbol_content } : s))
+        await supabase.from('symbols').update({ content: updated_symbol_content }).eq('id', section.symbol.id)
+      }
     },
     undoing: async () => {
-      stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: original_symbol_content } : s))
       stores.sections.set(original_sections)
-      await Promise.all([
-        supabase.from('sections').update({ content: original_content }).eq('id', section.id),
+      await supabase.from('sections').update({ content: original_content }).eq('id', section.id)
+      if (should_update_symbol) {
+        stores.symbols.update(store => store.map(s => s.id === section.symbol.id ? { ...s, content: original_symbol_content } : s))
         supabase.from('symbols').update({ content: original_symbol_content }).eq('id', section.symbol.id)
-      ])
+      }
     }
   })
   update_page_preview()

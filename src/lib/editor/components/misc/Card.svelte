@@ -36,7 +36,7 @@
         <div>
           <span>{title}</span>
           {#if pill}
-            <span class="pill">{pill.label}</span>
+            <span class="pill">{pill}</span>
           {/if}
         </div>
         {#if hidden}

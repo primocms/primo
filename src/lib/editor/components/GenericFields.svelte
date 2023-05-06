@@ -202,7 +202,7 @@
       {#if isValid}
         <Card
           title={hasChildFields ? field.label : null}
-          pill={field.is_static ? { label: 'Static', info: 'some info' } : null}
+          pill={field.is_static ? 'Static' : null}
         >
           <div
             class="field-item"
@@ -219,7 +219,7 @@
           </div>
         </Card>
       {:else}
-        <p class="empty-description">Field requires an ID</p>
+        <p class="empty-description">Field requires an Key</p>
       {/if}
     {:else}
       <p class="empty-description">
