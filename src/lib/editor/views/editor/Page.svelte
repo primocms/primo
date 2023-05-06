@@ -5,11 +5,7 @@
   import { find, isEqual, cloneDeep } from 'lodash-es'
   import Block from './Layout/Block.svelte'
   import Spinner from '../../ui/misc/Spinner.svelte'
-  import {
-    code as siteCode,
-    id as siteID,
-    content,
-  } from '../../stores/data/site'
+  import { code as siteCode } from '../../stores/data/site'
   import { locale } from '../../stores/app/misc'
   import { updatePreview } from '../../stores/actions'
   import {
@@ -28,7 +24,6 @@
   import { track, locked_blocks } from '$lib/realtime'
   import { invalidate } from '$app/navigation'
   import { browser } from '$app/environment'
-  import { beforeNavigate } from '$app/navigation'
 
   export let data
 
@@ -76,17 +71,26 @@
     if (page_mounted) updatePreview()
   }
 
-  let cached = { pageCode: null, siteCode: null }
-  $: $content, set_page_html($pageCode, $siteCode)
+  const cached = { pageCode: null, siteCode: null }
+  let latest_run
+  $: set_page_html($pageCode, $siteCode)
   async function set_page_html(pageCode, siteCode) {
     if (
       isEqual(pageCode, cached.pageCode) &&
       isEqual(siteCode, cached.siteCode)
     )
       return
-    cached.pageCode = pageCode
-    cached.siteCode = siteCode
+
+    const this_run = Date.now()
+
+    cached.pageCode = cloneDeep(pageCode)
+    cached.siteCode = cloneDeep(siteCode)
     const css = await processCSS(siteCode.css + pageCode.css)
+
+    // workaround to prevent older css from overwriting newer css
+    if (latest_run > this_run) return
+    latest_run = this_run
+
     const data = getPageData({})
     const [head, below] = await Promise.all([
       processCode({
