@@ -15,8 +15,6 @@
   }} */
   export let data
 
-  if (data) actions.setCustomization(data, false)
-
   function beginInvitation(site) {
     show({
       id: 'INVITE_SITE_COLLABORATOR',

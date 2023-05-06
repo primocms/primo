@@ -13,35 +13,16 @@ export default {
   symbols
 }
 
-export function get_data() {
-  return {
-    site: get(site),
-    pages: get(pages),
-    sections: get(sections),
-    symbols: get(symbols)
-  }
-}
-
 export let timeline = createStack({
   doing: () => {console.log('initial doing')},
-  undoing: () => {console.log('initial undoing')},
-  data: get_data()
+  undoing: () => {console.log('initial undoing')}
 });
-
-export function set_timeline(data) {
-	timeline.set({
-    doing: () => {console.log('set_timeline')},
-    undoing: () => {console.log('set timeline undoing')},
-    data
-  });
-}
 
 /** @param {{ doing: () => Promise<void>, undoing: () => Promise<void> }} functions */
 export async function update_timeline({ doing, undoing }) {
   await doing()
   timeline.push({
     doing,
-    undoing,
-    data: get_data()
+    undoing
   })
 }

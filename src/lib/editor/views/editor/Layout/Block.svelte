@@ -1,6 +1,6 @@
 <script>
   import { slide } from 'svelte/transition'
-  import { tick, createEventDispatcher, onDestroy, getContext } from 'svelte'
+  import { createEventDispatcher, getContext } from 'svelte'
   import _ from 'lodash-es'
   import { fade } from 'svelte/transition'
   const dispatch = createEventDispatcher()

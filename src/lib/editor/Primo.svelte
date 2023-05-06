@@ -7,15 +7,8 @@
   import modal from './stores/app/modal'
   import * as modals from './views/modal'
 
-  const dispatch = createEventDispatcher()
-
   import { userRole } from './stores/app'
-  import { saving as savingStore } from './stores/app/misc'
-  import { Site } from './const'
 
-  import { options as options_store, saved } from './stores/app/misc'
-  import { set_timeline } from './stores/data'
-  import { site as draft } from './stores/data/site'
   import { hydrate_active_data } from './stores/actions'
   import en from './languages/en.json'
   import es from './languages/es.json'
@@ -31,13 +24,8 @@
   export let data
 
   export let role
-  export let saving = false
   export let language = 'en'
-  export let options = {}
 
-  options_store.update((s) => ({ ...s, ...options }))
-
-  $: $savingStore = saving
   $: $userRole = role
 
   addMessages('en', en)
@@ -49,11 +37,6 @@
   })
 
   hydrate_active_data(data)
-  set_timeline(data)
-
-  function saveSite() {
-    dispatch('save', $draft)
-  }
 
   $: activeModal = getActiveModal($modal.type)
   function getActiveModal(modalType) {
@@ -68,14 +51,10 @@
   }
 </script>
 
-<Editor on:save={saveSite} />
+<Editor />
 
 <Modal visible={!!activeModal}>
-  <svelte:component
-    this={activeModal}
-    {...$modal.componentProps}
-    on:save={saveSite}
-  />
+  <svelte:component this={activeModal} {...$modal.componentProps} />
 </Modal>
 
 <svelte:head>

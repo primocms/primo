@@ -11,7 +11,7 @@ export async function load(event) {
   } else if (session) {
     // const site = event.params['site'] 
     const {sites, user, config} = await Promise.all([
-      supabaseClient.from('sites').select('id, name, url, collaborators (*)'),
+      supabaseClient.from('sites').select('id, name, url, collaborators (*)').order('created_at', { ascending: true }),
       supabaseClient.from('users').select('*, server_members (admin, role), collaborators (role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
     ]).then(([{data:sites},{data:user},{data:config}]) => {

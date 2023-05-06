@@ -1,5 +1,5 @@
 <script>
-  import { loadingSite, options } from '../../stores/app/misc'
+  import { loadingSite } from '../../stores/app/misc'
   import Spinner from '../../components/misc/Spinner.svelte'
   import PrimoLogo from '../svg/PrimoLogo.svelte'
 </script>

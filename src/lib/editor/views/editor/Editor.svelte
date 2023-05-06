@@ -7,8 +7,6 @@
 
   import Toolbar from './Toolbar.svelte'
   import ToolbarButton from './ToolbarButton.svelte'
-  import { fields as siteFields } from '../../stores/data/site'
-  import { fields as pageFields } from '../../stores/app/activePage'
   import sections from '../../stores/data/sections'
   import { loadingSite } from '../../stores/app/misc'
   import modal from '../../stores/app/modal'
@@ -22,22 +20,12 @@
 
   // setup key-bindings
   onMount(() => {
-    // Save page
-    Mousetrap.bind(['mod+s'], (e) => {
-      e.preventDefault()
-      savePage()
-    })
-
     // Change locale
     Mousetrap.bind(['mod+l'], (e) => {
       e.preventDefault()
       changeLocale()
     })
   })
-
-  $: hasFields = $siteFields
-    ? [...$siteFields, ...$pageFields].length > 0
-    : false
 
   const developerButtons = [
     {
@@ -69,22 +57,9 @@
       },
     ],
   ]
-
-  function savePage() {
-    dispatch('save')
-  }
 </script>
 
 <Toolbar on:signOut buttons={$loadingSite ? [] : developerButtons}>
-  <!-- <ToolbarButton
-    id="save"
-    title="Save"
-    icon="save"
-    key="s"
-    loading={$saving}
-    on:click={savePage}
-    disabled={$saved}
-  /> -->
   <ToolbarButton
     type="primo"
     title={pageEmpty

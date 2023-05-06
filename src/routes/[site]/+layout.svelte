@@ -39,8 +39,6 @@
 
   let siteLocked = false
 
-  let saving = false
-
   onDestroy(() => {
     if (siteLocked) modal.hide()
   })
@@ -66,7 +64,7 @@
   </HSplitPane>
 </main>
 
-<Primo {data} page_id={$page.params.page} {saving} />
+<Primo {data} page_id={$page.params.page} />
 
 <div id="app-version">
   <!-- <span>primo v{primo.version}</span> -->

@@ -9,6 +9,8 @@
 
   export let id = null
   export let title = ''
+
+  /** @type {string | null} */
   export let label = null
   export let key = null
   export let icon = null
@@ -42,9 +44,9 @@
 >
   {#if icon || svg}
     {#if key}
-      <span class="key-hint" class:active={$showKeyHint} aria-hidden
-        >&#8984;{key.toUpperCase()}</span
-      >
+      <span class="key-hint" class:active={$showKeyHint} aria-hidden>
+        &#8984;{key.toUpperCase()}
+      </span>
     {/if}
     {#if loading}
       <Spinner />

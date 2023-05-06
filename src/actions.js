@@ -47,10 +47,3 @@ export const sites = {
     await supabase.from('sites').delete().eq('id', id)
   }
 }
-
-
-export async function setCustomization(options, update_on_server = true) {
-  if (update_on_server) {
-    supabase.from('config').update(options).eq('id', 'customization')
-  }
-}
