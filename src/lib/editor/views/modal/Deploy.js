@@ -106,9 +106,15 @@ export async function buildSiteBundle({ pages }) {
     })
     const formattedHTML = await beautify.html(html)
 
+    const parent = pages.find(p => p.id === page.parent)
+
     let path
+    let full_url = url
     if (url === 'index' || url === '404') {
       path = `${url}.html`
+    } else if (parent){
+      path = `${parent.url}/${url}/index.html`
+      full_url = `${parent.url}/${url}`
     } else {
       path = `${url}/index.html`
     }
@@ -125,7 +131,7 @@ export async function buildSiteBundle({ pages }) {
 
     if (js) {
       page_tree.push({
-        path: url === 'index' ? '_module.js' : `${url}/_module.js`,
+        path: url === 'index' ? '_module.js' : `${full_url}/_module.js`,
         content: js,
       })
     }
