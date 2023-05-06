@@ -12,8 +12,9 @@ export async function load(event) {
 
   // Get site and page
   const site_url = event.params['site'] 
-  const page_url = event.params['page'] || 'index'
-
+  const [ parent_url = 'index', child_url ] = event.params['page']?.split('/') ?? []
+  const page_url = child_url ?? parent_url
+  
   const [{data:site}, {data:page}] = await Promise.all([
     supabaseClient.from('sites').select().filter('url', 'eq', site_url).single(),
     supabaseClient.from('pages').select('*, site!inner(id, url)').match({ 'site.url': site_url, url: page_url }).single()
