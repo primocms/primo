@@ -4,7 +4,7 @@ export type Section = {
 	index: number;
 	symbol: Symbol;
 	page: string;
-	created_at?: Date;
+	created_at?: string;
 }
 
 export type Symbol = {
@@ -58,8 +58,8 @@ export type Page = {
 	content: Content;
 	site: string;
 	parent: string | null;
-	created_at?: Date;
-	updated_at?: Date;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export type Site = {
@@ -70,8 +70,8 @@ export type Site = {
 	fields: Array<Field>;
 	content: Content;
 	active_deployment?: object | null;
-	created_at?: Date;
-	updated_at?: Date;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export type User = {
@@ -80,8 +80,8 @@ export type User = {
 	server_member: boolean;
 	admin: boolean;
 	role: 'DEV' | 'EDITOR';
-	created_at: Date;
-	updated_at: Date;
+	created_at: string;
+	updated_at: string;
 }
 
 export type Site_Data = {

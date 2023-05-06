@@ -10,28 +10,27 @@ export async function load(event) {
     throw redirect(303, '/auth')
   }
 
-  // Get site
+  // Get site and page
   const site_url = event.params['site'] 
-  const {data:site} = await supabaseClient.from('sites').select().filter('url', 'eq', site_url).single()
+  const page_url = event.params['page'] || 'index'
+
+  const [{data:site}, {data:page}] = await Promise.all([
+    supabaseClient.from('sites').select().filter('url', 'eq', site_url).single(),
+    supabaseClient.from('pages').select('*, site!inner(id, url)').match({ 'site.url': site_url, url: page_url }).single()
+  ])
 
   if (!site) {
     throw redirect(303, '/')
+  } else if (!page && page_url !== 'index') {
+    throw redirect(303, `/${site_url}/index`)
   }
 
-  // Get page
-  const page_url = 'index'
-  const {data:page} = await supabaseClient.from('pages').select('*').match({ site: site.id, url: page_url }).single()
-
   // Get sorted pages, symbols, and sections
-  const { pages, symbols, sections } = await Promise.all([
-    supabaseClient.from('pages').select().match({site: site.id}),
-    supabaseClient.from('symbols').select().match({site: site.id}),
-    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}),
-  ]).then(([{data:pages}, {data:symbols}, {data:sections}]) => ({
-    pages: pages?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
-    symbols: symbols?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
-    sections: sections?.sort((a, b) => a.index - b.index )
-  }))
+  const [ {data:pages}, {data:symbols}, {data:sections} ] = await Promise.all([
+    supabaseClient.from('pages').select().match({site: site.id}).order('created_at', {ascending: true}),
+    supabaseClient.from('symbols').select().match({site: site.id}).order('created_at', {ascending: false}),
+    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}).order('index', {ascending: false}),
+  ])
 
   return {
     site,

@@ -49,7 +49,6 @@
     $positions = $positions.filter((position) => position.id !== block.id)
     await active_page.delete_block(block)
     updatePreview()
-    // invalidate('app:data')
   }
 
   function duplicate_block() {
@@ -204,26 +203,14 @@
           {block}
           {i}
           bind:node={buttons}
-          on:delete={() => {
-            delete_block()
-            dispatch('contentChanged')
-          }}
-          on:duplicate={() => {
-            duplicate_block()
-            dispatch('contentChanged')
-          }}
+          on:delete={delete_block}
+          on:duplicate={duplicate_block}
           on:edit-code={() => edit_component(true)}
           on:edit-content={() => edit_component()}
           optionsAbove={hasOptionsAbove(i, $sections)}
           optionsBelow={hasOptionsBelow(i, $sections)}
-          on:moveUp={() => {
-            active_page.move_block(block, i - 1)
-            dispatch('contentChanged')
-          }}
-          on:moveDown={() => {
-            active_page.move_block(block, i + 1)
-            dispatch('contentChanged')
-          }}
+          on:moveUp={() => active_page.move_block(block, i - 1)}
+          on:moveDown={() => active_page.move_block(block, i + 1)}
         />{/if}
     </div>
   {/if}

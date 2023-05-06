@@ -19,9 +19,7 @@
 
 <ul class="page-list root">
   {#each $pages.filter((p) => !p.parent) as page, i}
-    {@const children = $pages
-      .filter((p) => p.parent === page.id)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))}
+    {@const children = $pages.filter((p) => p.parent === page.id)}
     <li>
       <Item
         {page}

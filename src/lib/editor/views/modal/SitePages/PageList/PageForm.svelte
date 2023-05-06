@@ -8,7 +8,6 @@
   import Icon from '@iconify/svelte'
   import { validate_url } from '$lib/editor/utilities'
   import { id as active_page_id } from '$lib/editor/stores/app/activePage'
-  import { Page } from '$lib/editor/const'
 
   /** @type {import('$lib').Page | null} */
   export let page = null
@@ -25,19 +24,20 @@
     ? validate_url(new_page_url)
     : validate_url(new_page_name)
 
-  $: new_page = Page({
-    ...$pages.find((p) => p.id === new_page_source),
+  $: new_page_details = {
     id: uuidv4(),
     name: new_page_name,
     url: new_page_url,
     parent: page?.id || null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  })
+  }
 </script>
 
 <form
-  on:submit|preventDefault={() => dispatch('create', new_page)}
+  on:submit|preventDefault={() =>
+    dispatch('create', {
+      details: new_page_details,
+      source: new_page_source,
+    })}
   in:fade={{ duration: 100 }}
 >
   <TextInput
@@ -59,7 +59,7 @@
       label="Create from"
       bind:value={new_page_source}
       options={[
-        { id: 'blank', label: 'Blank' },
+        { id: null, label: 'Blank' },
         { id: 'DIVIDER' },
         ...$pages.map((p) => ({ id: p.id, label: p.name })),
       ]}

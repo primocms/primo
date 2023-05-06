@@ -1,16 +1,18 @@
 import { find, cloneDeep, some } from 'lodash-es'
 import _ from 'lodash-es'
 import { get } from 'svelte/store'
+import { goto } from '$app/navigation'
 import * as activePage from './app/activePage'
 import { id as activePageID } from './app/activePage'
 import { locale } from './app/misc'
 import stores, { update_timeline } from './data'
-import { update as update_site, content, site as unsavedSite } from './data/site'
+import { update as update_site, content, site } from './data/site'
 import { timeline } from './data'
 import { buildStaticPage } from './helpers'
 import { supabase } from '$lib/supabase'
 import { swap_array_item_index } from '$lib/utils'
 import { v4 as uuidv4 } from 'uuid';
+import {Page} from '../const'
 
 /**
  * Hydrates the active site, page, section, and symbol stores for th editor
@@ -119,7 +121,7 @@ export const symbols = {
 export const active_site = {
   update: async (props) => {
     update_site(props)
-    await supabase.from('sites').update(props).eq('id', get(unsavedSite)['id'])
+    await supabase.from('sites').update(props).eq('id', get(site)['id'])
   },
   create_repo: async () => {
 
@@ -264,16 +266,34 @@ export const active_page = {
 }
 
 export const pages = {
-  create: async (new_page) => {
+  /** @param {{ details: { id: string, name: string, url: string, parent: string | null}, source: string | null }} new_page */
+  create: async ({ details, source = null }) => {
     const original_pages = cloneDeep(get(stores.pages))
 
+    const source_page = find(original_pages, { id: source }) || Page()
+    const new_page = {
+      ...source_page,
+      ...details,
+    }
+
+    let new_sections = []
+    if (source) {
+      const res = await supabase.from('sections').select().eq('page', source)
+      new_sections = res.data?.map(section => ({
+        ...section,
+        id: uuidv4(),
+        page: new_page.id
+      }))
+    }
     update_timeline({
       doing: async () => {
         stores.pages.update(store => [...store, new_page])
         await supabase.from('pages').insert({
           ...new_page,
-          site: get(unsavedSite)['id']
-        }).select().single()
+          site: get(site)['id'],
+          created_at: new Date().toISOString()
+        }).select().single(),
+        await supabase.from('sections').insert(new_sections)
       },
       undoing: async () => {
         stores.pages.set(original_pages)
@@ -304,9 +324,14 @@ export const pages = {
         }
 
         // Delete page
-        const { data: sections_to_delete } = await supabase.from('sections').select('id, page').eq('page', page_id)
+        const { data: sections_to_delete } = await supabase.from('sections').delete().eq('page', page_id)
         deleted_sections = sections_to_delete ? [...deleted_sections, ...sections_to_delete] : deleted_sections
         await supabase.from('pages').delete().eq('id', page_id)
+
+        // Go to home page if active page is deleted
+        if (get(activePageID) === page_id) {
+          await goto(`/${get(site)['url']}`)
+        }
       },
       undoing: async () => {
         stores.pages.set(original_pages)
@@ -433,7 +458,7 @@ export async function changeLocale() {
   })
 }
 
-export async function updatePreview(updatedSite = get(unsavedSite)) {
+export async function updatePreview(updatedSite = get(site)) {
   if (import.meta.env.SSR) return
   const channel = new BroadcastChannel('site_preview')
   channel.postMessage({

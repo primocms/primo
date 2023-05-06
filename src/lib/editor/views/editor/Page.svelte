@@ -2,6 +2,7 @@
   import _ from 'lodash-es'
   import { tick } from 'svelte'
   import { fade } from 'svelte/transition'
+  import { afterNavigate } from '$app/navigation'
   import { find, isEqual, cloneDeep } from 'lodash-es'
   import Block from './Layout/Block.svelte'
   import Spinner from '../../ui/misc/Spinner.svelte'
@@ -41,7 +42,7 @@
           table: 'sections',
           filter: `page=eq.${data.page.id}`,
         },
-        (payload) => {
+        () => {
           invalidate('app:data')
         }
       )
@@ -123,9 +124,14 @@
 
   // detect when all sections are mounted
   let sections_mounted = 0
-  $: if (sections_mounted === $sections.length) {
+  $: if (sections_mounted === $sections.length && sections_mounted !== 0) {
     page_mounted = true
   }
+
+  afterNavigate(() => {
+    page_mounted = false
+    sections_mounted = 0
+  })
 
   async function lock_block(block_id) {
     track({
@@ -148,7 +154,7 @@
   {@html html_head}
 </svelte:head>
 
-{#if !page_mounted}
+{#if !page_mounted && $sections.length > 0}
   <div class="spinner-container" out:fade={{ duration: 200 }}>
     <Spinner />
   </div>

@@ -166,7 +166,8 @@ export async function buildSiteBundle({ pages }) {
         content: s.content,
         page: s.page,
         site: s.site,
-        symbol: s.symbol
+        symbol: s.symbol,
+        index: s.index
       })),
       symbols: symbols.map(s => ({
         id: s.id,
