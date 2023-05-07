@@ -74,9 +74,10 @@
       <slot name="type" />
     </label>
     {#if minimal}
-      <div class="main">
+      <label class="main">
+        <span>Information</span>
         <slot name="main" />
-      </div>
+      </label>
     {:else}
       <!-- svelte-ignore a11y-label-has-associated-control -->
       <label class="label">
@@ -183,6 +184,7 @@
     display: grid;
     grid-template-columns: 110px 1fr 1fr auto;
     gap: 1rem;
+    place-items: start normal;
 
     &.collapsed {
       grid-template-columns: 2fr 2fr !important;

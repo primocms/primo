@@ -1,6 +1,7 @@
 <script>
   import { cloneDeep, chain as _chain, isEqual } from 'lodash-es'
   import { getContext } from 'svelte'
+  import autosize from 'autosize'
   import Toggle from 'svelte-toggle'
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
@@ -86,6 +87,15 @@
       key: f.key,
       options: f.options.options || [],
     }))
+
+  // Auto-fill key when setting label
+  let key_edited = false
+
+  // autosize info textarea
+  let info_textarea
+  $: if (info_textarea) {
+    autosize(info_textarea)
+  }
 </script>
 
 <EditField
@@ -121,9 +131,10 @@
     {/each}
   </select>
   <textarea
+    bind:this={info_textarea}
     slot="main"
     class="info"
-    value={field.options.info}
+    value={field.options.info || ''}
     on:input={({ target }) => {
       field.options.info = target.value
       dispatchUpdate()
@@ -134,6 +145,12 @@
     type="text"
     placeholder="Heading"
     bind:value={field.label}
+    on:input={({ target }) => {
+      if (!key_edited) {
+        field.key = validateFieldKey(target.value)
+      }
+      dispatchUpdate()
+    }}
     slot="label"
   />
   <input
@@ -142,6 +159,7 @@
     placeholder="heading"
     value={field.key}
     on:input={({ target }) => {
+      key_edited = true
       field.key = validateFieldKey(target.value)
       dispatchUpdate()
     }}
