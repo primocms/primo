@@ -100,7 +100,7 @@
           on:input={() => dispatch('input', field)}
           bind:value={field.value.url}
           type="url"
-          placeholder="https://somewhere.com"
+          placeholder="https://primocms.org"
         />
       {/if}
     </div>

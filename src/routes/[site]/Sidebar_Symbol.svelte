@@ -147,9 +147,10 @@
   }
 
   function changeName(new_name) {
-    // window.document.activeElement.blur();
-    symbol.name = new_name
-    dispatch('edit', symbol)
+    dispatch('edit', {
+      ...symbol,
+      name: new_name,
+    })
     renaming = false
   }
 
