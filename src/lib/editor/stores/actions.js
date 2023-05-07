@@ -59,7 +59,6 @@ export const symbols = {
     })
   },
   update: async (updated_symbol) => {
-    // saved.set(false)
 
     const original_symbol = _.cloneDeep(find(get(stores.symbols), { id: updated_symbol.id }))
     const original_symbols = _.cloneDeep(get(stores.symbols))

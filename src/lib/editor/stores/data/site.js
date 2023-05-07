@@ -30,6 +30,7 @@ export function update(props) {
 }
 
 // conveniently get the entire site
+/** @type {import('svelte/store').Readable<import('$lib').Site>} */
 export const site = derived([id, url, name, code, fields, content], ([id, url, name, code, fields, content]) => {
 	return {
 		id,
