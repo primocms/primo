@@ -308,14 +308,19 @@
 <ModalHeader
   {...header}
   warn={() => {
-    if (!isEqual(local_component, component)) {
+    if (!isEqual(local_component, component.symbol || component)) {
       const proceed = window.confirm(
         'Undrafted changes will be lost. Continue?'
       )
       return proceed
     } else return true
   }}
-  button={{ ...header.button, onclick: saveComponent, disabled: disableSave }}
+  button={{
+    ...header.button,
+    onclick: saveComponent,
+    icon: 'material-symbols:save',
+    disabled: disableSave,
+  }}
 />
 
 <main class:showing-ide={$showingIDE} class:showing-cms={!$showingIDE}>
