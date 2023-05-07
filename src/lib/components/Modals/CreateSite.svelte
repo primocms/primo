@@ -8,6 +8,7 @@
   import Icon from '@iconify/svelte'
   import { validate_site_structure_v2 } from '$lib/converter'
   import { buildStaticPage } from '$lib/editor/stores/helpers'
+  import Themes from '../Themes.svelte'
 
   export let onSuccess = (newSite, preview) => {}
 
@@ -15,10 +16,11 @@
   let finishing = false
   let site_name = ``
   let site_url = ``
+  let selected_theme
   let siteIDFocused = false
   let message = ''
-  // $: siteURL = site_url
-  $: canCreateSite = site_name && site_url
+  $: canCreateSite =
+    site_name && site_url && (selected_theme || duplicated_site)
 
   let duplicated_site = null
   let preview = '<div></div>'
@@ -39,19 +41,25 @@
         preview
       )
     } else {
-      const default_site = Site({ url: site_url, name: site_name })
+      const home_page = selected_theme.pages.find(
+        (page) => page.url === 'index'
+      )
+      const preview = await buildStaticPage({
+        page: home_page,
+        site: selected_theme.site,
+        page_sections: selected_theme.sections.filter(
+          (section) => section.page === home_page.id
+        ),
+        page_symbols: selected_theme.symbols,
+      })
       onSuccess(
         {
-          site: default_site,
-          pages: [
-            Page({
-              name: 'Home',
-              url: 'index',
-              site: default_site.id,
-            }),
-          ],
-          sections: [],
-          symbols: [],
+          ...selected_theme,
+          site: {
+            ...selected_theme.site,
+            url: site_url,
+            name: site_name,
+          },
         },
         preview
       )
@@ -120,6 +128,8 @@
         <div class="site-thumbnail">
           <SiteThumbnail {preview} />
         </div>
+      {:else}
+        <Themes on:select={({ detail }) => (selected_theme = detail)} />
       {/if}
       <footer>
         <div id="upload-json">
@@ -134,15 +144,11 @@
             <span>Duplicate from primo.json</span>
           </label>
         </div>
-        <a class="container" href="https://primocms.org/themes" target="blank">
-          <Icon icon="gridicons:themes" />
-          <span>Primo Themes</span>
-        </a>
       </footer>
       <div class="submit">
         <PrimaryButton
           type="submit"
-          label={duplicatingSite ? 'Duplicate' : 'Create Blank Site'}
+          label={duplicatingSite ? 'Duplicate Site' : 'Create Site'}
           disabled={!canCreateSite && duplicateFileIsValid}
           {loading}
         />
