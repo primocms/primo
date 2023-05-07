@@ -39,7 +39,7 @@
 
   async function duplicate_symbol(symbol, index) {
     const new_symbol = _.cloneDeep(symbol)
-    delete new_symbol.id
+    new_symbol.id = uuidv4()
     delete new_symbol.created_at
     new_symbol.name = `${new_symbol.name} (copy)`
     symbol_actions.create(

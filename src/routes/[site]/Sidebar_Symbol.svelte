@@ -47,22 +47,27 @@
 
   function edit_symbol_code(symbol) {
     $showingIDE = true
-    modal.show('COMPONENT_EDITOR', {
-      component: symbol,
-      header: {
-        title: `Edit ${symbol.title || 'Block'}`,
-        icon: 'fas fa-check',
-        button: {
-          label: `Save Block`,
+    modal.show(
+      'COMPONENT_EDITOR',
+      {
+        component: symbol,
+        header: {
+          title: `Edit ${symbol.title || 'Block'}`,
           icon: 'fas fa-check',
-          onclick: (symbol) => {
-            dispatch('edit_code', symbol)
-            modal.hide()
+          button: {
+            label: `Save Block`,
+            icon: 'fas fa-check',
+            onclick: (symbol) => {
+              dispatch('edit_code', symbol)
+              modal.hide()
+            },
           },
         },
-        showSwitch: true,
       },
-    })
+      {
+        showSwitch: true,
+      }
+    )
   }
 
   function on_drag(e) {
