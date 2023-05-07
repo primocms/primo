@@ -1,9 +1,6 @@
 <script>
-  import { createEventDispatcher, onMount, getContext } from 'svelte'
-  import { chain as _chain } from 'lodash-es'
-  import Icon from '@iconify/svelte'
+  import _, { chain as _chain } from 'lodash-es'
   import { fade } from 'svelte/transition'
-  const dispatch = createEventDispatcher()
   import * as Popper from '@popperjs/core'
   import {
     getComponentData,
@@ -11,7 +8,7 @@
   } from '$lib/editor/stores/helpers'
 
   import IFrame from '$lib/editor/views/modal/ComponentLibrary/IFrame.svelte'
-  import { processCode, processCSS, wrapInStyleTags } from '$lib/editor/utils'
+  import { processCode, processCSS } from '$lib/editor/utils'
   import { code as siteCode } from '$lib/editor/stores/data/site'
   import { code as pageCode } from '$lib/editor/stores/app/activePage'
 
@@ -22,16 +19,17 @@
 
   let height = 0
 
-  function changeName() {
-    window.document.activeElement.blur()
-    symbol.name = name
-    dispatch('update', symbol)
-    editing_title = false
-  }
-
   let componentCode
+  let cachedSymbol = {}
   $: compile_component_code(symbol)
   async function compile_component_code(symbol) {
+    if (
+      _.isEqual(cachedSymbol.code, symbol.code) &&
+      _.isEqual(cachedSymbol.content, symbol.content)
+    ) {
+      return
+    }
+
     const component_data = getComponentData({ component: symbol })
     const parent_css = await processCSS($siteCode.css + $pageCode.css)
     let res = await processCode({
@@ -46,11 +44,10 @@
       },
       buildStatic: true,
       hydrated: false,
-      ignoreCachedData: true,
     })
-    // res.head = $siteCode.html.head + $pageCode.html.head + res.head
     res.css = res.css + parent_css
     componentCode = res
+    cachedSymbol = _.cloneDeep({ code: symbol.code, content: symbol.content })
   }
 
   const info = getSymbolUseInfo(symbol.id)
@@ -63,8 +60,6 @@
   }
 
   let active
-
-  let editing_title = false
 </script>
 
 {#if buttons.length === 1 && action}

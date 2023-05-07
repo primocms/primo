@@ -215,7 +215,7 @@
           }
         }}
         on:keyup={(e) => {
-          // changeName(e.target.textContent);
+          changeName(e.target.textContent)
         }}
       >
         {symbol.name}
