@@ -50,13 +50,14 @@ Third-party services (all can be signed into with Github):
 - A Github account to deploy your sites to (unless you plan on downloading the site and connecting to a host).
 
 ## Installation
-Ensure you have an account with all the services listed above.
 
-Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the schema and pasting it into the editor.
+1. Ensure you have an account with all the services listed above.
 
-Fork the Primo repository.
+2. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the schema and pasting it into the editor.
 
-Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
+3. Fork the Primo repository.
+
+4. Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
 
 - PUBLIC_SUPABASE_URL
 
@@ -66,7 +67,7 @@ Go to your web host and create a new project from your new repository, inputting
 
 - Environment Variables
 
-Publish the project and navigate to the Primo authentication screen.
+5. Publish the project and navigate to the Primo authentication screen.
 
 The user account you create will be the server owner. You can manage the project's entire data from the Supabase project dashboard.
 
