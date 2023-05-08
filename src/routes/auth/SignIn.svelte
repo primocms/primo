@@ -1,19 +1,13 @@
 <script>
-  import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { page } from '$app/stores'
+  import { enhance } from '$app/forms'
+  import { page, navigating } from '$app/stores'
   import Icon from '@iconify/svelte'
-
-  let inactive = true
-
-  function submit_form() {
-    inactive = false
-  }
 
   export let email
   export let password
 </script>
 
-<form class="form" method="POST" action="?/sign_in">
+<form class="form" method="POST" action="?/sign_in" use:enhance>
   <div class="fields">
     <label>
       <span>Email</span>
@@ -30,8 +24,8 @@
       value={$page.url.searchParams.get('join')}
     />
   </div>
-  <button class="button" type="submit" on:click={submit_form}>
-    {#if inactive}
+  <button class="button" type="submit">
+    {#if !$navigating}
       <span>Sign in</span>
     {:else}
       <div class="icon"><Icon icon="gg:spinner" /></div>

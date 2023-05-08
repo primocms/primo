@@ -10,9 +10,9 @@
   let email = $page.url.searchParams.get('email') || ''
   let password = ''
 
-  let error = form?.error
+  $: error = form?.error
 
-  let signing_in = $page.url.searchParams.has('signup') ? false : true
+  $: signing_in = $page.url.searchParams.has('signup') ? false : true
 </script>
 
 {#key signing_in}
@@ -75,7 +75,6 @@
     }
   }
   header {
-    padding-bottom: 1.5rem;
     /* img {
       padding-bottom: 40px;
     } */
@@ -89,6 +88,7 @@
     }
     p {
       color: var(--color-gray-3);
+      padding-bottom: 1.5rem;
     }
   }
   .error {
