@@ -8,7 +8,7 @@
   import { fade } from 'svelte/transition'
   import Icon from '@iconify/svelte'
   import { Editor, Extension } from '@tiptap/core'
-  import sections from '../../../stores/data/sections'
+  import sections from '$lib/editor/stores/data/sections'
   import StarterKit from '@tiptap/starter-kit'
   import Highlight from '@tiptap/extension-highlight'
   import Link from '@tiptap/extension-link'
@@ -16,14 +16,15 @@
   import FloatingMenu from '@tiptap/extension-floating-menu'
   import { tick, createEventDispatcher, getContext } from 'svelte'
   import { browser } from '$app/environment'
-  import { processCode } from '../../../utils'
-  import pages from '../../../stores/data/pages'
-  import { locale } from '../../../stores/app/misc'
-  import { update_section_content } from '../../../stores/actions'
+  import { processCode } from '$lib/editor/utils'
+  import { hovering_outside } from '$lib/editor/utilities'
+  import pages from '$lib/editor/stores/data/pages'
+  import { locale } from '$lib/editor/stores/app/misc'
+  import { update_section_content } from '$lib/editor/stores/actions'
   import CopyButton from './CopyButton.svelte'
-  import modal from '../../../stores/app/modal'
+  import modal from '$lib/editor/stores/app/modal'
   import { converter } from '$lib/editor/field-types/Markdown.svelte'
-  import { getComponentData } from '../../../stores/helpers'
+  import { getComponentData } from '$lib/editor/stores/helpers'
 
   const dispatch = createEventDispatcher()
 
@@ -344,7 +345,7 @@
       element.setAttribute(`data-key`, key)
       element.onmouseover = async (e) => {
         image_editor_is_visible = true
-        await tick()
+        await tick() // wait for image_editor to mount
         rect = element.getBoundingClientRect()
         image_editor.style.left = `${rect.left}px`
         image_editor.style.top = `${rect.top}px`
@@ -527,6 +528,11 @@
 
   $: if (browser && node) {
     node.closest('#page').addEventListener('scroll', on_page_scroll)
+    node.closest('body').addEventListener('mouseover', (e) => {
+      if (hovering_outside(e, image_editor)) {
+        image_editor_is_visible = false
+      } 
+    })
   }
 
   function on_page_scroll() {
