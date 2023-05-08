@@ -59,9 +59,6 @@ export const actions = {
       email: email,
       // @ts-ignore
       password: password,
-      user_metadata: {
-        some_data: data,
-      },
       email_confirm: true,
     });
     
