@@ -1,5 +1,4 @@
 <script>
-  import { tick } from 'svelte'
   import _ from 'lodash-es'
   import fileSaver from 'file-saver'
   import axios from 'axios'
@@ -88,23 +87,23 @@
   async function add_to_page(symbol) {
     if ($hoveredBlock.id === null || $sections.length === 0) {
       // no blocks on page, add to top
-      active_page.add_block(symbol, 0)
+      await active_page.add_block(symbol, 0)
     } else if ($hoveredBlock.position === 'top') {
-      active_page.add_block(symbol, $hoveredBlock.i)
+      await active_page.add_block(symbol, $hoveredBlock.i)
     } else {
-      active_page.add_block(symbol, $hoveredBlock.i + 1)
+      await active_page.add_block(symbol, $hoveredBlock.i + 1)
     }
   }
 
   async function add_primo_block(symbol) {
-    const new_symbol = {
-      ...symbol,
-      id: uuidv4(),
-      site: $site.id,
+    if ($hoveredBlock.id === null || $sections.length === 0) {
+      // no blocks on page, add to top
+      await active_page.add_primo_block(symbol, 0)
+    } else if ($hoveredBlock.position === 'top') {
+      await active_page.add_primo_block(symbol, $hoveredBlock.i)
+    } else {
+      await active_page.add_primo_block(symbol, $hoveredBlock.i + 1)
     }
-
-    await symbol_actions.create(new_symbol)
-    add_to_page(new_symbol)
   }
 </script>
 
@@ -237,6 +236,8 @@
     padding-inline: 1.5rem;
 
     p {
+      font-weight: 400;
+      color: var(--color-gray-3);
       font-size: 0.875rem;
       padding-bottom: 0.25rem;
     }
