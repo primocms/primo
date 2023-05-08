@@ -40,7 +40,7 @@
           <input bind:value={password} type="password" name="email" />
         </label>
         <label>
-          <span>Repeat Password</span>
+          <span>Confirm Password</span>
           <input bind:value={password_again} type="password" name="password" />
         </label>
         <input

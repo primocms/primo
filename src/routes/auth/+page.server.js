@@ -6,14 +6,15 @@ import {supabaseAdmin, get_row, delete_row} from '$lib/supabaseAdmin'
 export async function load(event) {
   const {session} = await getSupabase(event)
   const signing_up = event.url.searchParams.has('signup')
+  const joining_server = event.url.pathname.includes('set-password')
 
-  if (!session && !signing_up) {
+  if (!session && !signing_up && !joining_server) {
     const {data:existing_users} = await supabaseAdmin.from('users').select('*')
     const initiated = existing_users?.length > 0
     if (!initiated) {
       throw redirect(303, '?signup')
     }
-  } else if (session) {
+  } else if (session && !joining_server) {
     throw redirect(303, '/')
   }
 }

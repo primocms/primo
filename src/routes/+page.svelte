@@ -88,7 +88,7 @@
                     class="site-button"
                   >
                     <Icon icon="clarity:users-solid" />
-                    <span>Site Members</span>
+                    <span>Collaborators</span>
                   </button>
                   <button
                     class="site-button"

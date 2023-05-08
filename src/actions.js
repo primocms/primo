@@ -21,7 +21,7 @@ export const sites = {
 
     // upload preview to supabase storage
     if (preview) {
-      supabase.storage.from('sites').upload(`${data.site.id}/preview.html`, preview)
+      await supabase.storage.from('sites').upload(`${data.site.id}/preview.html`, preview)
     }
 
     // create child pages (dependant on parent page IDs)
