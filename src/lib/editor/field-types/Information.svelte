@@ -55,4 +55,9 @@
   :global(.main.info-field img) {
     width: 100%;
   }
+
+  :global(.main.info-field ul, .main.info-field ol) {
+    list-style: initial;
+    padding-left: 1rem;
+  }
 </style>

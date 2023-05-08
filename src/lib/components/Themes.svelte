@@ -33,10 +33,10 @@
   }
 
   let active_theme_page = 0
-  $: active_themes = themes.slice(
-    active_theme_page * 4,
-    active_theme_page * 4 + 4
-  )
+  $: active_themes =
+    themes.length > 0
+      ? themes.slice(active_theme_page * 4, active_theme_page * 4 + 4)
+      : []
 </script>
 
 <header>
@@ -59,7 +59,7 @@
   </div>
 </header>
 <div class="themes">
-  {#each active_themes as theme}
+  {#each active_themes as theme (theme.name)}
     <ThemeThumbnail
       selected={selectedTheme === theme.name}
       on:click={() => selectTheme(theme)}
