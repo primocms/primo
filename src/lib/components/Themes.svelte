@@ -41,22 +41,24 @@
 
 <header>
   <h2 class="heading">Themes</h2>
-  <div class="buttons">
-    <button
-      on:click={() => active_theme_page--}
-      type="button"
-      disabled={active_theme_page === 0}
-    >
-      <Icon icon="ic:round-chevron-left" />
-    </button>
-    <button
-      on:click={() => active_theme_page++}
-      disabled={active_theme_page >= themes.length / 4 - 1}
-      type="button"
-    >
-      <Icon icon="ic:round-chevron-right" />
-    </button>
-  </div>
+  {#if themes.length > 0}
+    <div class="buttons">
+      <button
+        on:click={() => active_theme_page--}
+        type="button"
+        disabled={active_theme_page === 0}
+      >
+        <Icon icon="ic:round-chevron-left" />
+      </button>
+      <button
+        on:click={() => active_theme_page++}
+        disabled={active_theme_page >= themes.length / 4 - 1}
+        type="button"
+      >
+        <Icon icon="ic:round-chevron-right" />
+      </button>
+    </div>
+  {/if}
 </header>
 <div class="themes">
   {#each active_themes as theme (theme.name)}

@@ -71,7 +71,7 @@
   }
 
   let duplicatingSite = false
-  let duplicateFileIsValid = true
+  let primo_json_valid = true
   function readJsonFile({ target }) {
     loading = true
     duplicatingSite = true
@@ -80,27 +80,32 @@
     reader.onload = async function ({ target }) {
       if (typeof target.result !== 'string') return
 
-      const uploaded = JSON.parse(target.result)
-      const converted = validate_site_structure_v2(uploaded)
-      if (converted) {
-        duplicated_site = converted
+      try {
+        const uploaded = JSON.parse(target.result)
+        const converted = validate_site_structure_v2(uploaded)
+        if (converted) {
+          duplicated_site = converted
 
-        const home_page = duplicated_site.pages.find(
-          (page) => page.url === 'index'
-        )
+          const home_page = duplicated_site.pages.find(
+            (page) => page.url === 'index'
+          )
 
-        preview = await buildStaticPage({
-          page: home_page,
-          site: duplicated_site.site,
-          page_sections: duplicated_site.sections.filter(
-            (section) => section.page === home_page.id
-          ),
-          page_symbols: duplicated_site.symbols,
-        })
-      } else {
-        duplicateFileIsValid = false
+          preview = await buildStaticPage({
+            page: home_page,
+            site: duplicated_site.site,
+            page_sections: duplicated_site.sections.filter(
+              (section) => section.page === home_page.id
+            ),
+            page_symbols: duplicated_site.symbols,
+          })
+        } else {
+          primo_json_valid = false
+        }
+        loading = false
+      } catch (e) {
+        console.error({ e })
+        primo_json_valid = false
       }
-      loading = false
     }
     reader.readAsText(target.files[0])
   }
@@ -124,9 +129,13 @@
           on:focus={() => (siteIDFocused = true)}
         />
       </div>
-      {#if duplicatingSite}
+      {#if duplicatingSite && primo_json_valid}
         <div class="site-thumbnail">
           <SiteThumbnail {preview} />
+        </div>
+      {:else if duplicatingSite && !primo_json_valid}
+        <div class="error">
+          <p>Invalid Primo site file</p>
         </div>
       {:else}
         <Themes on:select={({ detail }) => (selected_theme = detail)} />
@@ -149,7 +158,7 @@
         <PrimaryButton
           type="submit"
           label={duplicatingSite ? 'Duplicate Site' : 'Create Site'}
-          disabled={!canCreateSite && duplicateFileIsValid}
+          disabled={!canCreateSite && primo_json_valid}
           {loading}
         />
       </div>
@@ -221,6 +230,12 @@
     border-radius: 0.25rem;
     overflow: hidden;
     border: 1px solid var(--color-gray-8);
+  }
+
+  .error {
+    padding: 1rem;
+    background: #b00020;
+    margin-bottom: 1rem;
   }
 
   .creating-site {
