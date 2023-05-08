@@ -38,26 +38,43 @@ Primo is a modern approach to the monolithic CMS that builds on the traditional 
 [Read more in the Docs](https://docs.primocms.org)
 
 # How to self-host Primo
+Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking the [**Primo repo**](<https://github.com/primocms/primo>) and deploying it on a static host like Vercel or Netlify, which should only take a few minutes.
 
-Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking this repo and deploying it on a static host like Vercel or Netlify, which should only take a few minutes.
+Third-party services (all can be signed into with Github):
 
-Third-party services (all can be signed into with Github): 
-- A modern web host like Vercel or Netlify to host the Primo application. 
-- A Supabase account to manage your server's authentication, database, and file storage.
-- A Github account to deploy your sites to (unless you plan on downloading).
-- A static web host for the final site (can be same host used for Primo itself).
-- A Mailgun account for emailing collaborators with server invitations.
+- A modern web host like [**Vercel**](<https://vercel.com/>) or [**Netlify**](<https://netlify.com>) to host the Primo application & published sites.
 
-1. First, prepare your Supabase instance by copying the [schema](https://github.com/primocms/primo/blob/just-server/primo_schema.sql) and pasting it into the SQL editor. 
-1. Then fork this repository
-1. Go to your host and create a new project from your new repository, inputting your service credentials. 
-- PRIVATE_MAILGUN_KEY
-- PRIVATE_MAILGUN_EMAIL
-- PUBLIC_SUPABASE_URL
-- PUBLIC_SUPABASE_PUBLIC_KEY
-- PRIVATE_SUPABASE_PRIVATE_KEY
-4. Publish the project and navigate to the authentication screen. From Supabase, update the project URL (e.g. https://my-primo.vercel.app). 
-5. The user account you create will be the server owner. You can manage the entire project's data from the Supabase backend. 
+- A [**Supabase**](<https://supabase.com>) account to manage your server's authentication, database, and file storage.
+
+- A [**Github**](<https://github.com>) account to deploy your sites to (unless you plan on downloading the site and connecting to a host).
+
+
+<!-- -->
+
+## Installation
+
+1. Ensure you have an account with all the services listed above.
+
+2. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the [**schema**](<https://raw.githubusercontent.com/mateomorris/primo/master/primo_schema.sql>) and pasting it into the editor.
+
+3. Fork the [**Primo repository**](<https://github.com/primocms/primo>).
+
+4. Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
+
+    - PUBLIC\_SUPABASE\_URL
+
+    - PUBLIC\_SUPABASE\_PUBLIC\_KEY
+
+    - PRIVATE\_SUPABASE\_PRIVATE\_KEY
+
+![Environment Variables](https://dbfnrqvkgwkjkzqgnfrd.supabase.co/storage/v1/object/public/images/Screenshot%202023-05-06%20at%206.45.43%20PM.png)
+
+
+5. Publish the project and navigate to the Primo authentication screen.
+
+6. The user account you create will be the server owner. You can manage the project's entire data from the Supabase project dashboard.
+
+For more detials see this step-by-step installaiton [video guide](<https://www.youtube.com/watch?v=LEcKmhJsUzo>)
 
 ## Updating
 You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.
