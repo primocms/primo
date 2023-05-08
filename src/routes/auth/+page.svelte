@@ -27,6 +27,12 @@
         <header>
           <!-- <img src={logo_dark} alt="breely logo" /> -->
           <h1>{signing_in ? 'Sign in' : 'Sign Up'}</h1>
+          {#if !signing_in}
+            <p>
+              Welcome to your new Primo server! Enter an email address and
+              password below you'll use to administrate this server.
+            </p>
+          {/if}
         </header>
         {#if error}
           <div class="error">{error}</div>
@@ -69,7 +75,7 @@
     }
   }
   header {
-    padding-bottom: 10px;
+    padding-bottom: 1.5rem;
     /* img {
       padding-bottom: 40px;
     } */
@@ -80,6 +86,9 @@
       line-height: 24px;
       padding-bottom: 1rem;
       /* --typography-spacing-vertical: 1rem; */
+    }
+    p {
+      color: var(--color-gray-3);
     }
   }
   .error {

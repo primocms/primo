@@ -1,5 +1,4 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
   import { page } from '$app/stores'
   import Icon from '@iconify/svelte'
 
@@ -8,8 +7,6 @@
   function submit_form() {
     inactive = false
   }
-
-  const dispatch = createEventDispatcher()
 
   export let email
   export let password
@@ -40,12 +37,12 @@
     {/if}
   </button>
 </form>
-<span class="footer-text"
+
+<!-- <span class="footer-text"
   >Already have an account? <button on:click={() => dispatch('switch')}
     >Sign in</button
   ></span
->
-
+> -->
 <style lang="postcss">
   .form {
     display: grid;
@@ -115,7 +112,7 @@
     }
   }
 
-  .footer-text {
+  /* .footer-text {
     display: flex;
     gap: 0.25rem;
     font-size: 0.875rem;
@@ -127,5 +124,5 @@
       color: #b6b6b6;
       text-decoration: underline;
     }
-  }
+  } */
 </style>
