@@ -43,13 +43,13 @@ Primo depends on several [freemium] third-party services for easy hosting, authe
 
 Third-party services (all can be signed into with Github):
 
-A modern web host like Vercel or Netlify to host the Primo application & published sites.
+- A modern web host like Vercel or Netlify to host the Primo application & published sites.
 
-A Supabase account to manage your server's authentication, database, and file storage.
+- A Supabase account to manage your server's authentication, database, and file storage.
 
-A Github account to deploy your sites to (unless you plan on downloading the site and connecting to a host).
+- A Github account to deploy your sites to (unless you plan on downloading the site and connecting to a host).
 
-##Installation
+## Installation
 Ensure you have an account with all the services listed above.
 
 Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the schema and pasting it into the editor.
