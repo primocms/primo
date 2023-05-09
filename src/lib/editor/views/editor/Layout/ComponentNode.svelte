@@ -110,7 +110,7 @@
   let link_editor_is_visible = false
 
   let active_editor
-  function create_editor({ key, element }) {
+  function set_editable_markdown({ key, element }) {
     const html = element.innerHTML.trim()
     element.innerHTML = ''
     const editor = new Editor({
@@ -142,7 +142,7 @@
             const updated_html = editor.getHTML()
             save_edited_value(key, {
               html: updated_html,
-              markdown: converter.makeMarkdown(html),
+              markdown: converter.makeMarkdown(updated_html),
             })
           },
         }),
@@ -260,7 +260,7 @@
       const key_matches = element.dataset.key === key
       if (key_matches) {
         if (type === 'MARKDOWN') {
-          create_editor({ element, key })
+          set_editable_markdown({ element, key })
         } else if (type === 'IMAGE') {
           set_editable_image({ element, key })
         } else if (type === 'LINK') {
@@ -296,7 +296,7 @@
         const html = element.innerHTML?.trim()
         const html_matches = html === value.html
         if (html_matches) {
-          create_editor({ element, key })
+          set_editable_markdown({ element, key })
           return true
         }
       } else {
@@ -531,7 +531,7 @@
     node.closest('body').addEventListener('mouseover', (e) => {
       if (hovering_outside(e, image_editor)) {
         image_editor_is_visible = false
-      } 
+      }
     })
   }
 
@@ -547,7 +547,7 @@
         if (e[0].addedNodes.length === 0) {
           // menu is janky, so we need to re-create it
           // active_editor.destroy()
-          // create_editor()
+          // set_editable_markdown()
         }
       })
     : null

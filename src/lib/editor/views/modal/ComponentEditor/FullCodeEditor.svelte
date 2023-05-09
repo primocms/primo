@@ -64,11 +64,9 @@
 
   // close empty tabs
   if (!css && $activeTabs['css']) {
-    console.log('togglein')
     toggleTab(1)
   }
   if (!js && $activeTabs['js']) {
-    console.log('no js')
     toggleTab(2)
   }
 </script>
