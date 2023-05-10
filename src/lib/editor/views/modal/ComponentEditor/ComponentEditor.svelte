@@ -386,6 +386,13 @@
 </main>
 
 <style lang="postcss">
+  :global(html) {
+    overscroll-behavior-x: none;
+  }
+  :global(body) {
+    overscroll-behavior-x: none;
+  }
+
   main {
     display: flex; /* to help w/ positioning child items in code view */
     background: var(--primo-color-black);
