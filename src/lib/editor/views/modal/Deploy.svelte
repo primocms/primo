@@ -194,8 +194,15 @@
   {:else if stage === 'CONNECT_GITHUB'}
     <div class="container">
       <p>
-        This is how you connect to github. Set up an account and do this, see
-        the docs for more details.
+        Generate a new <a
+          href="https://github.com/settings/tokens/new"
+          target="_blank"
+        >
+          Personal Access Token
+        </a>
+        with
+        <strong>repo</strong>
+        access.
       </p>
       <div>
         <p>Enter API Token</p>
@@ -262,7 +269,7 @@
             </div>
           </form>
           <footer>
-            after deploying this repo will be created in your Github account.
+            A new repository will be created in your Github account.
           </footer>
         </div>
       {:else if stage === 'CONNECT_REPO__USE_EXISTING'}
@@ -280,9 +287,6 @@
               <PrimaryButton type="submit" label="Deploy" {loading} />
             </div>
           </form>
-          <footer>
-            after deploying this repo will be created in your Github account.
-          </footer>
         </div>
       {:else if stage.startsWith('CONNECT_REPO__ACTIVE')}
         <div class="repo-card">
