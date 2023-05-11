@@ -30,14 +30,19 @@
     url: new_page_url,
     parent: page?.id || null,
   }
+
+  let loading = false
 </script>
 
 <form
-  on:submit|preventDefault={() =>
+  on:submit|preventDefault={() => {
+    loading = true
     dispatch('create', {
       details: new_page_details,
       source: new_page_source,
-    })}
+    })
+    loading = false
+  }}
   in:fade={{ duration: 100 }}
 >
   <TextInput
@@ -66,7 +71,7 @@
     />
   </div>
   <button disabled={page_creation_disabled}>
-    <Icon icon="akar-icons:check" />
+    <Icon icon={loading ? 'eos:loading' : 'akar-icons:check'} />
   </button>
 </form>
 
