@@ -76,7 +76,7 @@
 
   // on-screen fields
   /** @type {Array<import('$lib').Field>} */
-  let fields = local_component.fields
+  let fields = getFieldValues(local_component.fields, $locale)
 
   $: setupComponent($locale) // swap content out of on-screen fields
   function setupComponent(loc) {
@@ -86,15 +86,13 @@
   // hydrate fields with content (placeholder if passed component is a Symbol)
   function getFieldValues(fields, loc) {
     return fields.map((field) => {
-      if (field.type !== 'group' && field.type !== 'repeater') {
-        const field_value = local_content[loc]?.[field.key]
-        const value =
-          field_value !== undefined ? field_value : getCachedPlaceholder(field)
-        return {
-          ...field,
-          value,
-        }
-      } else return field
+      const field_value = local_content[loc]?.[field.key]
+      const value =
+        field_value !== undefined ? field_value : getCachedPlaceholder(field)
+      return {
+        ...field,
+        value,
+      }
     })
   }
 
@@ -117,7 +115,6 @@
 
     if (field.type === 'repeater') {
       // loop over field.fields, ensure type matches field.value
-
       if (!Array.isArray(field.value)) {
         updated_field.value = []
       } else {
