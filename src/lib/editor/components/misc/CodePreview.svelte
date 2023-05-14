@@ -109,7 +109,7 @@
     if (iframeLoaded) {
       channel.postMessage({
         event: 'SET_APP_DATA',
-        payload: { componentData },
+        payload: { componentApp, componentData },
       })
     }
   }

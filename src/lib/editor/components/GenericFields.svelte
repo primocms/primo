@@ -21,7 +21,7 @@
 
   const dispatch = createEventDispatcher()
 
-  function addField() {
+  function create_field() {
     fields = [...fields, Field()]
     dispatch('input')
   }
@@ -190,9 +190,9 @@
         }}
       />
     {/each}
-    <button class="field-button" on:click={addField} {disabled}>
+    <button class="field-button" on:click={create_field} {disabled}>
       <Icon icon="fa-solid:plus" />
-      <span>{$C('Add a Field')}</span>
+      <span>{$C('Create a Field')}</span>
     </button>
   {:else}
     {#each fields as field}

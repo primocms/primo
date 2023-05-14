@@ -12,7 +12,7 @@
 <script>
   import { setContext } from 'svelte'
   import { _ as C } from 'svelte-i18n'
-  import { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es'
+  import _, { cloneDeep, find, isEqual, chain as _chain } from 'lodash-es'
   import HSplitPane from './HSplitPane.svelte'
   import { getPlaceholderValue, getEmptyValue } from '../../../utils'
   import ModalHeader from '../ModalHeader.svelte'
@@ -30,8 +30,6 @@
   import { showingIDE } from '../../../stores/app'
   import { getPageData, getComponentData } from '../../../stores/helpers'
   import { tick } from 'svelte'
-
-  // TODO: separate into Symbol Editor and Section Editor
 
   /** @type {import('$lib').Section} */
   export let component
@@ -69,27 +67,17 @@
     ? cloneDeep(component)
     : cloneDeep(component.symbol) // local copy of component to modify & save
 
+  /** @type {import('$lib').Content} */
   let local_content = cloneDeep(
     component.content || {
       en: {},
     }
   ) // local copy of component content to modify & save
 
-  // component data w/ page/site data included (for compilation)
-  $: data = {
-    ...getPageData({ loc: $locale }),
-    ...getSymbolPlaceholders(fields), // empty?
-    ...local_content[$locale],
-  }
+  // on-screen fields
+  /** @type {Array<import('$lib').Field>} */
+  let fields = local_component.fields
 
-  function getSymbolPlaceholders(fields) {
-    return _chain(fields)
-      .keyBy('key')
-      .mapValues((f) => {
-        return f.default || getCachedPlaceholder(f)
-      })
-      .value()
-  }
   $: setupComponent($locale) // swap content out of on-screen fields
   function setupComponent(loc) {
     fields = getFieldValues(fields, loc)
@@ -98,15 +86,7 @@
   // hydrate fields with content (placeholder if passed component is a Symbol)
   function getFieldValues(fields, loc) {
     return fields.map((field) => {
-      if (component.type === 'symbol') {
-        const field_value = component.content?.[loc]?.[field.key]
-        const value =
-          field_value !== undefined ? field_value : getCachedPlaceholder(field)
-        return {
-          ...field,
-          value,
-        }
-      } else {
+      if (field.type !== 'group' && field.type !== 'repeater') {
         const field_value = local_content[loc]?.[field.key]
         const value =
           field_value !== undefined ? field_value : getCachedPlaceholder(field)
@@ -114,13 +94,60 @@
           ...field,
           value,
         }
-      }
+      } else return field
     })
   }
 
   // Ensure all content keys match field keys
-  $: component.type !== 'symbol' && syncFieldKeys(fields)
-  $: component.type !== 'symbol' && syncLocales($content)
+  $: fields = fields.map(validate_field_values)
+  $: local_content = sync_content_with_fields(fields)
+  $: data = local_content[$locale]
+
+  function validate_field_values(field) {
+    const updated_field = cloneDeep(field)
+
+    const field_value_is_invalid =
+      (field.type === 'link' && !field.value?.url) ||
+      (field.type === 'image' && !field.value?.alt) ||
+      (field.type === 'select' && typeof field.value !== 'boolean')
+
+    if (field_value_is_invalid) {
+      updated_field.value = getCachedPlaceholder(field)
+    }
+
+    if (field.type === 'repeater') {
+      // loop over field.fields, ensure type matches field.value
+
+      if (!Array.isArray(field.value)) {
+        updated_field.value = []
+      } else {
+        updated_field.value = field.value.map((item) => {
+          const updated_value = cloneDeep(item)
+          field.fields.forEach((subfield) => {
+            const subvalue = item[subfield.key]
+            if (!subvalue) {
+              updated_value[subfield.key] = getCachedPlaceholder(subfield)
+            }
+
+            const subfield_value_is_invalid =
+              (subfield.type === 'link' && !subvalue?.url) ||
+              (subfield.type === 'image' && !subvalue?.alt) ||
+              (subfield.type === 'select' && typeof subvalue !== 'boolean')
+
+            if (subfield_value_is_invalid) {
+              updated_value[subfield.key] = getCachedPlaceholder(subfield)
+            }
+          })
+
+          return updated_value
+        })
+      }
+    }
+
+    return updated_field
+  }
+
+  // $: syncLocales($content) TODO: restore
 
   function syncLocales(content) {
     // runs when adding new locale from ComponentEditor
@@ -134,35 +161,35 @@
     })
   }
 
-  function syncFieldKeys(fields) {
+  function sync_content_with_fields(fields) {
+    let updated_content = cloneDeep(local_content)
+
     removeNonexistantKeys() // delete keys from content that do not appear in fields
-    addMissingKeys() // add keys that do appear in fields
+    addMissingKeys() // add keys that appear in fields
+    refreshPreview()
 
     function addMissingKeys() {
-      let updatedContent = cloneDeep(local_content)
       fields.forEach((field) => {
         if (local_content[$locale][field.key] === undefined) {
           Object.keys(local_content).forEach((loc) => {
-            updatedContent[loc][field.key] = getEmptyValue(field)
+            updated_content[loc][field.key] = getEmptyValue(field)
           })
         }
       })
-      local_content = updatedContent
     }
 
     // Remove content when field deleted
     function removeNonexistantKeys() {
-      let updatedContent = cloneDeep(local_content)
       Object.keys(local_content[$locale]).forEach((key) => {
         if (!find(fields, ['key', key])) {
           Object.keys(local_content).forEach((loc) => {
-            delete updatedContent[loc][key]
+            delete updated_content[loc][key]
           })
         }
       })
-      local_content = updatedContent
-      refreshPreview()
     }
+
+    return updated_content
   }
 
   function saveLocalContent() {
@@ -197,22 +224,8 @@
       js: rawJS,
     })
 
-  // on-screen fields
-  let fields = local_component.fields
-
   let componentApp // holds compiled component
   let compilationError // holds compilation error
-
-  // ensure placeholder values always conform to form
-  // TODO: do for remaining fields
-  $: fields = fields.map((field) => {
-    if (field.type === 'link' && !field.value?.url)
-      return {
-        ...field,
-        value: getCachedPlaceholder(field),
-      }
-    else return field
-  })
 
   let disableSave = false
   async function compileComponentCode({ html, css, js }) {
@@ -348,9 +361,10 @@
         {:else if $activeTab === 1}
           <GenericFields
             bind:fields
-            on:input={() => {
-              refreshPreview()
+            on:input={async () => {
+              await tick() // wait for fields to update
               saveLocalContent()
+              refreshPreview()
             }}
             on:delete={async () => {
               await tick() // wait for fields to update

@@ -40,6 +40,7 @@
         },
       },
       {
+        disabledBgClose: true,
         showSwitch: true,
       }
     )
@@ -65,6 +66,7 @@
         },
       },
       {
+        disabledBgClose: true,
         showSwitch: true,
       }
     )

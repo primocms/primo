@@ -13,7 +13,7 @@ export const modalTypes = {
     header: {
       title: 'Create Component',
       icon: 'fas fa-code'
-    },
+    }
   },
   'PAGE_EDITOR' : {
     component: PageEditor,

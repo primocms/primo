@@ -39,7 +39,6 @@
     else if (field.type === 'repeater') {
       const desired_shape = getRepeaterShape(field.fields)
       const current_shape = getRepeaterShape(field.fields)
-      console.log({ desired_shape, current_shape })
       return isEqual(desired_shape, current_shape)
     } else if (field.type === 'group') {
       if (typeof field.value !== 'object') return false
