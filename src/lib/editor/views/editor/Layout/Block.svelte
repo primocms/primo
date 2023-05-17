@@ -81,6 +81,7 @@
         },
       },
       {
+        disabledBgClose: true,
         showSwitch: true,
       }
     )

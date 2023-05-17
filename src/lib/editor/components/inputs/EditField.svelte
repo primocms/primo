@@ -188,6 +188,8 @@
 
     &.collapsed {
       grid-template-columns: 2fr 2fr !important;
+      border-bottom: 1px solid var(--color-gray-8);
+      padding-bottom: 1.5rem;
 
       .subfield {
         position: static;

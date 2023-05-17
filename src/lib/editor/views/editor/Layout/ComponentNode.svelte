@@ -398,8 +398,20 @@
       element.onblur = (e) => {
         dispatch('unlock')
         save_edited_value(key, {
-          url: element.href,
+          url: element.href.startsWith(window.location.origin)
+            ? element.pathname // page
+            : element.href, // url
           label: element.innerText,
+        })
+        // workaround to correctly detect activeElement
+        setTimeout(() => {
+          // if anything besides link element or link editor is clicked
+          if (
+            document.activeElement !== link_editor?.querySelector('input') &&
+            document.activeElement !== element
+          ) {
+            link_editor_is_visible = false
+          }
         })
       }
       element.addEventListener('click', async () => {
@@ -434,6 +446,12 @@
     async function set_editable_text({ element, key = '' }) {
       element.style.outline = '0'
       element.setAttribute(`data-key`, key)
+      element.onkeydown = (e) => {
+        if (e.code === 'Enter') {
+          e.preventDefault()
+          e.target.blur()
+        }
+      }
       element.onblur = (e) => {
         dispatch('unlock')
         save_edited_value(key, e.target.innerText)
@@ -442,7 +460,6 @@
         dispatch('lock')
       }
       element.contentEditable = true
-      // await tick()
     }
   }
 

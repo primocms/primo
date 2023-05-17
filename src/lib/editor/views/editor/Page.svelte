@@ -191,6 +191,7 @@
     align-items: center;
     justify-content: center;
     z-index: 5;
+    pointer-events: none;
 
     --Spinner-color: var(--primo-color-brand);
     --Spinner-color-opaque: rgba(248, 68, 73, 0.2);

@@ -46,7 +46,8 @@ export type Field = {
 	type: string,
 	fields: Array<Field>,
 	options: object,
-	is_static: boolean
+	is_static: boolean,
+	value?: any
 }
 
 export type Page = {
