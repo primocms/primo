@@ -163,9 +163,15 @@
   </header>
   {#if stage === 'INITIAL'}
     <div class="container">
-      <p>
-        Primo sites are json files you can download them as json files or
-        connect to github and then connect them to a host.
+      <p class="description">
+        To publish your website, you'll need to upload it to a web host. You can
+        either <a href="https://docs.primocms.org/publishing">
+          manually upload
+        </a>
+        your site, or
+        <a href="https://docs.primocms.org/publishing">
+          deploy it from a Github repo.
+        </a>
       </p>
       <div class="buttons">
         <button class="primo-button" on:click={download_site}>
@@ -362,7 +368,11 @@
       }
     }
   }
-
+  .description {
+    a {
+      text-decoration: underline;
+    }
+  }
   .primo-link {
     font-size: 0.875rem;
     color: var(--color-gray-3);
