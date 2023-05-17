@@ -99,7 +99,10 @@
   // Ensure all content keys match field keys
   $: fields = fields.map(validate_field_values)
   $: local_content = sync_content_with_fields(fields)
-  $: data = local_content[$locale]
+  $: data = {
+    ...getPageData({}), // pass in page data for page head
+    ...local_content[$locale],
+  }
 
   function validate_field_values(field) {
     const updated_field = cloneDeep(field)
