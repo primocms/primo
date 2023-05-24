@@ -112,13 +112,14 @@
   let user_repos = []
   $: if (github_account) get_repos()
   async function get_repos() {
+    const headers = { Authorization: `Bearer ${github_token}`, Accept: 'application/vnd.github.v3+json' }
     const res = await Promise.all([
-      axios.get(
-        `https://api.github.com/users/${github_account.login}/repos?per_page=100`
-      ),
-      axios.get(
-        `https://api.github.com/users/${github_account.login}/repos?per_page=100&page=2`
-      ),
+      await axios.get(`https://api.github.com/user/repos?per_page=100`, {
+        headers: { ...headers }
+      }),
+      await axios.get(`https://api.github.com/user/repos?per_page=100&page=2`, {
+        headers: { ...headers }
+      })
     ]).then((res) => res.map(({ data }) => data))
 
     user_repos = _.flatten(res).map((repo) => {
