@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   const dispatch = createEventDispatcher()
   import imageCompression from 'browser-image-compression'
-  import TextInput from '$lib/editor/components/inputs/TextInput.svelte'
+  import TextInput from '$lib/ui/TextInput.svelte'
   import Spinner from '$lib/ui/Spinner.svelte'
   import { page } from '$app/stores'
   import { supabase } from '$lib/supabase'

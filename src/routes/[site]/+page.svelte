@@ -1,7 +1,7 @@
 <script>
-  import Page from '$lib/editor/views/editor/Page.svelte'
+  import { PrimoPage } from '@primocms/builder'
 
   export let data
 </script>
 
-<Page {data} />
+<PrimoPage {data} />

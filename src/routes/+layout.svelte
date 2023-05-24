@@ -4,7 +4,7 @@
   import { browser } from '$app/environment'
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
-  import { fieldTypes, registerProcessors } from '$lib/editor'
+  import { fieldTypes, registerProcessors } from '@primocms/builder'
   import { supabase as supabaseClient } from '$lib/supabase'
   import Modal from '$lib/components/Modal.svelte'
   import ImageField from '../extensions/FieldTypes/ImageField.svelte'
@@ -21,7 +21,7 @@
   })
 
   if (browser) {
-    import('../compiler/processors').then(({ html, css }) => {
+    import('../compiler/processors.js').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
     fieldTypes.register([

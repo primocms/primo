@@ -25,3 +25,10 @@ export function swap_array_item_index(arr, from, to) {
   new_array[to] = arr[from]
   return new_array
 }
+
+export function validate_url(url) {
+  return url
+    .replace(/\s+/g, '-')
+    .replace(/[^0-9a-z\-._]/gi, '')
+    .toLowerCase()
+}
