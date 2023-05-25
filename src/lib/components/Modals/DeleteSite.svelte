@@ -40,7 +40,7 @@
         <div class="options">
           <Switch
             field={{
-              key: 'files',
+              key: 'repo',
               label: 'Also delete Github repo',
               value: false,
             }}
@@ -79,6 +79,8 @@
 <style lang="postcss">
   .primo-modal {
     max-width: var(--primo-max-width-1);
+    display: grid;
+    gap: 1.5rem;
 
     h2 {
       font-weight: 700;
