@@ -7,6 +7,7 @@
   import { show, hide } from '$lib/components/Modal.svelte'
   import * as actions from '../actions'
   import { invalidate } from '$app/navigation'
+  import { error } from '@sveltejs/kit'
 
   /** @type {{
    sites: Array<import('$lib').Site>
@@ -46,21 +47,30 @@
         site,
         onSuccess: async (files, repo) => {
           if (repo) {
-            let github_token = $page.data.config['github_token']['value'] || ''
+            let github_token =
+              $page.data.config['github_token']['value'] || null
             let github_account =
-              $page.data.config['github_token']['options']?.user
+              $page.data.config['github_token']['options'].user.login || null
 
-            const headers = { Authorization: `Bearer ${github_token}` }
+            if (github_token && github_account) {
+              const headers = { Authorization: `Bearer ${github_token}` }
 
-            await axios.delete(
-              `https://api.github.com/repos/${github_account}/${site.active_deployment.repo.name}`,
-              {
-                headers: {
-                  ...headers,
-                  Accept: 'application/vnd.github.v3+json',
-                },
-              }
-            )
+              await axios
+                .delete(
+                  `https://api.github.com/repos/${github_account}/${site.active_deployment.repo.name}`,
+                  {
+                    headers: {
+                      ...headers,
+                      Accept: 'application/vnd.github.v3+json',
+                    },
+                  }
+                )
+                .catch(function (error) {
+                  console.warn(`Github API error: ${error.message}`)
+                })
+            } else {
+              console.warn('Github account not configured properly')
+            }
           }
           await actions.sites.delete(site.id, files)
           invalidate('app:data')
