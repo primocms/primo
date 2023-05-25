@@ -8,7 +8,6 @@
 
   let loading = false
   let finishing = false
-  let message = ''
   let files = false
   let repo = false
 
@@ -52,7 +51,7 @@
         <PrimaryButton
           type="submit"
           label="Delete Site"
-          icon="ion:trash"
+          icon="pepicons-pop:trash"
           {loading}
         />
       </div>
@@ -60,9 +59,6 @@
   {:else}
     <div class="deleting-site">
       <span>Deleting {site.name}</span>
-      {#key message}
-        <p>{message}</p>
-      {/key}
       <Spinner />
     </div>
   {/if}
@@ -82,12 +78,6 @@
         --color-link: var(--color-primored);
       }
     }
-  }
-
-  .error {
-    padding: 1rem;
-    background: #b00020;
-    margin-bottom: 1rem;
   }
 
   .deleting-site {

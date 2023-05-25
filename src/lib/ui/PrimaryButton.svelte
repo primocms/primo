@@ -3,7 +3,9 @@
   import Icon from '@iconify/svelte'
 
   export let label = ''
+  /** @type {string | null} */
   export let icon = null
+  /** @type {string | null} */
   export let id = null
   export let variants = ''
   export let type = 'button'

@@ -43,6 +43,7 @@
     show({
       id: 'DELETE_SITE',
       props: {
+        site,
         onSuccess: async (site, files, repo) => {
           if (repo) {
             let github_token = $page.data.config['github_token']['value'] || ''
