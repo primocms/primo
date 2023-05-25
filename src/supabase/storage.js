@@ -1,6 +1,6 @@
 import supabase from './core';
 
-async function getFiles(bucket, path, files = []) {
+export async function getFiles(bucket, path, files = []) {
     let dirs = []
     const { data: fileList, error: fileListError } = await supabase.storage.from(bucket).list(path)
 
