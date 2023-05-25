@@ -50,7 +50,7 @@ export const sites = {
         const filesToRemove = siteFileList.map((x) => `${id}/${x.name}`)
         await supabase.storage.from('sites').remove(filesToRemove)
       }
-      const { data: siteImageList, error: siteImageListError } = await supabase.storage.from('sites').list(`${id}`)
+      const { data: siteImageList, error: siteImageListError } = await supabase.storage.from('images').list(`${id}`)
       if (!siteImageListError && siteImageList) {
         const imagesToRemove = siteImageList.map((x) => `${id}/${x.name}`)
         await supabase.storage.from('images').remove(imagesToRemove)
