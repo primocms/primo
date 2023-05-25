@@ -1,4 +1,5 @@
 import supabase from './supabase/core'
+import { getFiles } from './supabase/storage'
 
 export const sites = {
   create: async (data, preview = null) => {
@@ -45,16 +46,12 @@ export const sites = {
       supabase.from('collaborators').delete().match({ site: id }),
     ])
     if (files) {
-      const { data: siteFileList, error: siteFileListError } = await supabase.storage.from('sites').list(`${id}`)
-      if (!siteFileListError && siteFileList) {
-        const filesToRemove = siteFileList.map((x) => `${id}/${x.name}`)
-        await supabase.storage.from('sites').remove(filesToRemove)
-      }
-      const { data: siteImageList, error: siteImageListError } = await supabase.storage.from('images').list(`${id}`)
-      if (!siteImageListError && siteImageList) {
-        const imagesToRemove = siteImageList.map((x) => `${id}/${x.name}`)
-        await supabase.storage.from('images').remove(imagesToRemove)
-      }
+      let siteFiles = await getFiles('sites', id)
+      if (siteFiles.length) await supabase.storage.from('sites').remove(siteFiles)
+
+      let imageFiles = await getFiles('images', id)
+      if (imageFiles.length) await supabase.storage.from('images').remove(imageFiles)
+
     }
     await supabase.from('sites').delete().eq('id', id)
   }
