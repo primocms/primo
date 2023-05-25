@@ -8,6 +8,7 @@
   export let variants = ''
   export let type = 'button'
   export let disabled = false
+  /** @type {string | null} */
   export let icon = null
   export let label = ''
 </script>
