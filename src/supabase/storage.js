@@ -1,16 +1,22 @@
 import supabase from './core';
 
-export async function getFiles(bucket, path, files = []) {
+async function getFiles(bucket, path, files = []) {
+    let dirs = []
     const { data: fileList, error: fileListError } = await supabase.storage.from(bucket).list(path)
 
-    if (fileListError) console.warn(`File deletion error: ${fileListError.message}`)
+    if (fileListError) console.warn(`File listing error: ${fileListError.message}`)
 
     if (!fileListError && fileList) {
-        files = [...files, ...fileList.map(async (x) => {
-            if (x.id) return `${path}/${x.name}`
-            return await getFiles(bucket, `${path}/${x.name}`, files)
+        files = [...files, ...fileList.map((x) => {
+            if (!x.id) dirs.push(`${path}/${x.name}`)
+            return `${path}/${x.name}`
         })]
     }
+
+    for (const dir of dirs) {
+        files = await getFiles(bucket, dir, files)
+    }
+
     return files
 }
 
