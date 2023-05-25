@@ -3,23 +3,24 @@
   import Switch from '$lib/editor/field-types/Switch.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
 
-  export let onSuccess = (site, files, repo) => {}
+  export let onSuccess = (files, repo) => {}
   export let site
 
   let loading = false
   let finishing = false
   let files = false
   let repo = false
+  let canDeleteSite = false
 
   async function deleteSite() {
     finishing = true
-    onSuccess(site, files, repo)
+    onSuccess(files, repo)
   }
 </script>
 
 <main class="primo-reset primo-modal">
   {#if !finishing}
-    <h1 class="primo-heading-xl">Delete {site.name}</h1>
+    <h2>Delete {site.name}</h2>
     <p>
       Are you sure you want to delete this site? You won't be able to get it
       back.
@@ -47,11 +48,22 @@
           />
         </div>
       {/if}
+      <div class="options">
+        <Switch
+          field={{
+            key: 'canDeleteSite',
+            label: 'I am sure about this',
+            value: false,
+          }}
+          on:input={() => (canDeleteSite = !canDeleteSite)}
+        />
+      </div>
       <div class="submit">
         <PrimaryButton
           type="submit"
           label="Delete Site"
           icon="pepicons-pop:trash"
+          disabled={!canDeleteSite}
           {loading}
         />
       </div>
@@ -67,6 +79,11 @@
 <style lang="postcss">
   .primo-modal {
     max-width: var(--primo-max-width-1);
+
+    h2 {
+      font-weight: 700;
+      font-size: 1rem;
+    }
 
     form {
       .options {

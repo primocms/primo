@@ -10,11 +10,11 @@ export async function load(event) {
     throw redirect(303, '/auth')
   } else if (session) {
     // const site = event.params['site'] 
-    const {sites, user, config} = await Promise.all([
-      supabaseClient.from('sites').select('id, name, url, collaborators (*)').order('created_at', { ascending: true }),
+    const { sites, user, config } = await Promise.all([
+      supabaseClient.from('sites').select('id, name, url, active_deployment, collaborators (*)').order('created_at', { ascending: true }),
       supabaseClient.from('users').select('*, server_members (admin, role), collaborators (role)').eq('id', session.user.id).single(),
       supabaseClient.from('config').select('*')
-    ]).then(([{data:sites},{data:user},{data:config}]) => {
+    ]).then(([{ data: sites }, { data: user }, { data: config }]) => {
 
       const [server_member] = user.server_members
       const [collaborator] = user.collaborators
@@ -32,16 +32,16 @@ export async function load(event) {
       }
 
       return {
-        sites: sites || [], 
-        user: user_final, 
+        sites: sites || [],
+        user: user_final,
         config
       }
     })
 
     // TODO: do this w/ sql
-    const user_sites = sites?.filter(site => 
+    const user_sites = sites?.filter(site =>
       /*user is server member*/ user.server_member ||
-      /*user is site collaborator*/ site.collaborators.some(collaborator => collaborator.user === user.id) 
+      /*user is site collaborator*/ site.collaborators.some(collaborator => collaborator.user === user.id)
     )
 
     return {
