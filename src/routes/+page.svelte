@@ -1,6 +1,7 @@
 <script>
   import Icon from '@iconify/svelte'
   import { page } from '$app/stores'
+  import axios from 'axios'
   import DashboardToolbar from '$lib/components/DashboardToolbar.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import { show, hide } from '$lib/components/Modal.svelte'
@@ -38,13 +39,44 @@
     })
   }
 
-  async function delete_site(siteID) {
-    const confirm = window.confirm(
-      `Are you sure you want to delete this site? You won't be able to get it back.`
-    )
-    if (!confirm) return
-    await actions.sites.delete(siteID)
-    invalidate('app:data')
+  async function delete_site(site) {
+    show({
+      id: 'DELETE_SITE',
+      props: {
+        site,
+        onSuccess: async (files, repo) => {
+          if (repo) {
+            let github_token =
+              $page.data.config['github_token']['value'] || null
+            let github_account =
+              $page.data.config['github_token']['options'].user.login || null
+
+            if (github_token && github_account) {
+              const headers = { Authorization: `Bearer ${github_token}` }
+
+              await axios
+                .delete(
+                  `https://api.github.com/repos/${github_account}/${site.active_deployment.repo.name}`,
+                  {
+                    headers: {
+                      ...headers,
+                      Accept: 'application/vnd.github.v3+json',
+                    },
+                  }
+                )
+                .catch(function (error) {
+                  console.warn(`Github API error: ${error.message}`)
+                })
+            } else {
+              console.warn('Github account not configured properly')
+            }
+          }
+          await actions.sites.delete(site.id, files)
+          invalidate('app:data')
+          hide()
+        },
+      },
+    })
   }
 
   let siteBeingEdited
@@ -99,7 +131,7 @@
                   </button>
                   <button
                     class="site-button"
-                    on:click={() => delete_site(site.id)}
+                    on:click={() => delete_site(site)}
                   >
                     <Icon icon="pepicons-pop:trash" />
                     <span>Delete</span>
