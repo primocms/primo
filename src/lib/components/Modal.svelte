@@ -34,11 +34,13 @@
 <script>
   import { fade } from 'svelte/transition'
   import CreateSite from './Modals/CreateSite.svelte'
+  import DeleteSite from './Modals/DeleteSite.svelte'
   import ServerInvitation from './Modals/ServerInvitation.svelte'
   import InviteSiteCollaborator from './Modals/SiteInvitation.svelte'
 
   const modals = {
     CREATE_SITE: CreateSite,
+    DELETE_SITE: DeleteSite,
     INVITE_COLLABORATORS: ServerInvitation,
     INVITE_SITE_COLLABORATOR: InviteSiteCollaborator,
   }
