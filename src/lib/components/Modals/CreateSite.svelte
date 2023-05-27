@@ -3,11 +3,10 @@
   import Spinner from '$lib/ui/Spinner.svelte'
   import TextField from '$lib/ui/TextField.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
-  import { validate_url } from '$lib/editor/utilities'
-  import { Site, Page } from '$lib/editor/const'
+  import { validate_url } from '$lib/utils'
+  import { validate_site_structure_v2 } from '@primocms/builder'
   import Icon from '@iconify/svelte'
-  import { validate_site_structure_v2 } from '$lib/converter'
-  import { buildStaticPage } from '$lib/editor/stores/helpers'
+  import { buildStaticPage } from '@primocms/builder'
   import Themes from '../Themes.svelte'
 
   export let onSuccess = (newSite, preview) => {}

@@ -1,4 +1,5 @@
 import _ from 'lodash-es'
+import { customAlphabet } from 'nanoid/non-secure'
 
 export function clickOutside(node) {
     
@@ -24,4 +25,16 @@ export function swap_array_item_index(arr, from, to) {
   new_array[from] = arr[to]
   new_array[to] = arr[from]
   return new_array
+}
+
+export function validate_url(url) {
+  return url
+    .replace(/\s+/g, '-')
+    .replace(/[^0-9a-z\-._]/gi, '')
+    .toLowerCase()
+}
+
+export function createUniqueID(length = 5) {
+  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
+  return nanoid()
 }

@@ -1,21 +1,25 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
+  import { createEventDispatcher } from 'svelte'
+  const dispatch = createEventDispatcher()
 
-  export let field;
+  export let field
 
   function toggleSwitch() {
-    field.value = !field.value;
-    dispatch('input');
+    field.value = !field.value
+    dispatch('input')
   }
-
 </script>
 
 <div class="label-container">
   <label for={field.key}>
     <span class="switch-label" for={field.key}>{field.label}</span>
     <div class="switch-container">
-      <input type="checkbox" id={field.key} on:input={toggleSwitch} checked={field.value} />
+      <input
+        type="checkbox"
+        id={field.key}
+        on:input={toggleSwitch}
+        checked={field.value}
+      />
       <span />
     </div>
   </label>
@@ -83,5 +87,4 @@
       }
     }
   }
-
 </style>
