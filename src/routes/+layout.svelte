@@ -4,10 +4,9 @@
   import { browser } from '$app/environment'
   import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
-  import { fieldTypes, registerProcessors } from '@primocms/builder'
+  import { registerProcessors } from '@primocms/builder'
   import { supabase as supabaseClient } from '$lib/supabase'
   import Modal from '$lib/components/Modal.svelte'
-  import ImageField from '../extensions/FieldTypes/ImageField.svelte'
   import { invalidate } from '$app/navigation'
 
   onMount(() => {
@@ -24,13 +23,6 @@
     import('../compiler/processors.js').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
-    fieldTypes.register([
-      {
-        id: 'image',
-        label: 'Image',
-        component: ImageField,
-      },
-    ])
     setContext('track', () => {})
   }
 </script>

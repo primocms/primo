@@ -1,4 +1,5 @@
 import _ from 'lodash-es'
+import { customAlphabet } from 'nanoid/non-secure'
 
 export function clickOutside(node) {
     
@@ -31,4 +32,9 @@ export function validate_url(url) {
     .replace(/\s+/g, '-')
     .replace(/[^0-9a-z\-._]/gi, '')
     .toLowerCase()
+}
+
+export function createUniqueID(length = 5) {
+  const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz', length);
+  return nanoid()
 }

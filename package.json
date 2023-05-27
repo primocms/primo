@@ -26,6 +26,7 @@
     "@lezer/highlight": "^1.0.0",
     "@neodrag/svelte": "^2.0.3",
     "@popperjs/core": "^2.11.6",
+    "@primocms/builder": "^0.0.3",
     "@replit/codemirror-lang-svelte": "^6.0.0",
     "@supabase/auth-helpers-sveltekit": "^0.8.7",
     "@supabase/supabase-js": "^2.0.0-rc.3",
