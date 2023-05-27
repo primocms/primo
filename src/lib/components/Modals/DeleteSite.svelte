@@ -1,6 +1,6 @@
 <script>
   import Spinner from '$lib/ui/Spinner.svelte'
-  import Switch from '$lib/editor/field-types/Switch.svelte'
+  import Switch from '$lib/ui/Switch.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
 
   export let onSuccess = (files, repo) => {}
