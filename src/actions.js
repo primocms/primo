@@ -1,4 +1,5 @@
 import supabase from './supabase/core'
+import { getFiles } from './supabase/storage'
 
 export const sites = {
   create: async (data, preview = null) => {
@@ -31,7 +32,7 @@ export const sites = {
     await supabase.from('sections').insert(sections)
 
   },
-  delete: async (id) => {
+  delete: async (id, files = false) => {
     const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.site', 'eq', id)
     await Promise.all(
       sections_to_delete.map(async section => {
@@ -44,6 +45,14 @@ export const sites = {
       supabase.from('invitations').delete().match({ site: id }),
       supabase.from('collaborators').delete().match({ site: id }),
     ])
+    if (files) {
+      let siteFiles = await getFiles('sites', id)
+      if (siteFiles.length) await supabase.storage.from('sites').remove(siteFiles)
+
+      let imageFiles = await getFiles('images', id)
+      if (imageFiles.length) await supabase.storage.from('images').remove(imageFiles)
+
+    }
     await supabase.from('sites').delete().eq('id', id)
   }
 }
