@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@iconify/svelte": "^2.2.1",
-    "@primocms/builder": "^0.0.4",
+    "@primocms/builder": "^0.0.5",
     "@supabase/auth-helpers-sveltekit": "^0.8.7",
     "@supabase/supabase-js": "^2.0.0-rc.3",
     "axios": "^0.26.0",
