@@ -24,7 +24,7 @@
 
 ## ⭐ Why Primo? 
 
-Traditional monolithic CMSs like WordPress, Drupal, and Joomla enable quick setup and easy content editing, but rely on antiquated and heavy development practices (often relying on plugins and third-party services to customize the site and add new components). Headless CMSs have popped up to modernize the view layer with modern development practices and frameworks, but have a poorer content editing experience due to their full separation from the site's presentation.
+Traditional monolithic CMSs like WordPress, Drupal, and Joomla enable quick setup and easy content editing, but rely on antiquated and heavy development practices (often relying on plugins and third-party services to customize the site and add new components). Headless CMSs have popped up to modernize the view layer with modern development practices and frameworks, but have a poorer content editing experience due to their decoupling from the content layer.
 
 Primo is a modern approach to the monolithic CMS that builds on the traditional monolith's benefits of a quick setup and easy content editing alongside the benefits of modern development (i.e. Svelte). These combine into a web publishing tool that is significantly easier and more fun to use for both technical and non-technical users and enables you to build faster, more secure, and more unique websites.
 
