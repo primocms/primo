@@ -52,7 +52,6 @@
           filter: `page=eq.${data.page.id}`,
         },
         () => {
-          console.log('CHANGED')
           invalidate('app:data')
         }
       )
