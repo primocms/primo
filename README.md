@@ -20,7 +20,7 @@
     <a href="https://www.youtube.com/@primocms">YouTube</a>
 </p>
 
-![screenshot](/https://github.com/primocms/primo/raw/master/screenshot-v2.png))
+![screenshot](https://github.com/primocms/primo/raw/master/screenshot-v2.png))
 
 ## ⭐ Why Primo? 
 
