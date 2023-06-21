@@ -1,4 +1,3 @@
-&nbsp;
 <p align="center">
   <a href="https://primocms.org#gh-dark-mode-only" target="_blank">
     <img src="https://raw.githubusercontent.com/primocms/primo/master/static/logo.svg" alt="Primo" width="200px">
@@ -7,7 +6,6 @@
     <img src="https://raw.githubusercontent.com/primocms/primo/master/static/logo-light.svg" alt="Primo" width="200px">
   </a>
 </p>
-&nbsp;
 
 <h3 align="center">The modern monolithic CMS</h3>
 <p align="center">Primo makes it a blast to build pages, update content, and edit code - one block at a time.</p>
