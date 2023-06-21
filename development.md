@@ -103,3 +103,137 @@ Fields added to the Page are accessible from the Page HTML and any components on
 
 Site fields can be overwritten by Page fields by using the same field ID, and Component fields can overwrite Page fields by using the same ID.
 
+
+## Templating
+
+Primo utilizes [Svelte](<https://svelte.dev/>) as a templating engine. Svelte is a popular next-generation web development framework used to build interactive web applications. Since Svelte is a superset of HTML and has much more powerful templating capabilities compared to more traditional templating engines like [Handlebars](<https://handlebarsjs.com/>), it's the perfect tool for creating simple, powerful components.
+
+## Fields
+
+Component Fields allow you to define form fields that appear on the CMS side of Primo. When the site is published, the value of those fields is compiled into static HTML.
+
+At the moment, you can define 7 basic input types (text, image, Markdown, number, switch, URL, link), 1 informational type, and 2 composite types (group & repeater).
+
+- Text
+
+- Image - accessible with {image.url} and {image.alt}
+
+- Markdown - accessible with {@html description}
+
+- Number
+
+- Switch (true/false)
+
+- URL
+
+- Link - accessible with {link.url} and {link.label}
+
+- Info (enables writing instructions to CMS users)
+
+- Group (used to group fields together)
+
+- Repeater (used for content lists)
+
+
+<!-- -->
+
+## **Svelte**
+
+Field values can be accessed from the code using the field's key in order to output values into code, conditionally render content, and more.
+
+### [**Text**](<https://svelte.dev/docs#template-syntax-text-expressions>)
+
+Output the value of a text/number field or the value of a JavaScript expression.
+
+```
+<h1>{heading}</h1>
+<h2>{heading.toUpperCase()}</h2>
+```
+
+### [**HTML (Markdown Field)**](<https://svelte.dev/docs#template-syntax-html>)
+
+Output the HTML value of **Markdown** field using the `@html` tag inside a text expression and `.html`. Its Markdown value can be accessed with `.markdown`.
+
+Use the :global() modifier to target tags within the content (e.g. `:global(h1) { font-size: 30px })`.
+
+Note that HTML can only properly render within a `div` tag as it can contain heading elements. Attempting to render it within a `p` or `span` will create issues.
+
+```
+<div>{@html content.html}</div>
+```
+
+### [**If Conditional**](<https://svelte.dev/docs#template-syntax-if>)
+
+Conditionally render a block of code. This is particularly useful with the 'Switch' field type.
+
+```
+{#if image.url}
+  <img src={image.url} />
+{:else if heading}
+  <h2>{heading}</h2>
+{:else}
+  <span>{fallback}</span>
+{/if}
+
+{#if show_footer}
+  <footer>...</footer>
+{/if}
+```
+
+In some cases, it may be preferable to simply use an OR or ternary operator within a text expression.
+
+```html
+<h1>{heading || title || fallback}</h1>
+```
+
+### [**Each Loop**](<https://svelte.dev/docs#template-syntax-each>)
+
+Iteratively render a **Repeater** field.
+
+```
+{#each links as link}
+  <a href={link.url}>{link.label}</a>
+{/each}
+```
+
+## On-page editing
+
+Primo will automatically make fields editable on the page by matching a block's field values to its value within the block's DOM element.
+
+### Implicit
+
+All field types besides 'Select' and 'Switch' will be automatically editable, including those within Repeater and Group fields, so long as they are within their own element without any other text.
+
+```
+<!-- These will work -->
+<h1>
+  <span>{heading}</span>
+  <span>{subheading}</span>
+</h1>
+<div>
+  <span>"</span>
+  <div>{@html quote}</div>
+  <span>"</span>
+</div>
+
+<!-- These will not -->
+<h1>{heading} - {subheading}</h1>
+<div>"{@html quote}"</div>
+```
+
+### Explicit
+
+You can explicitly set a field value to be on-page editable by setting a `data-key` attribute with a value matching the field's key. This should only be necessary in cases where Primo can't automatically detect the field value.
+
+```
+<div data-key="description">{@html description.html}</div>
+
+<!-- Repeater field -->
+<ul>
+  {#each teasers as teaser, i}
+    <li data-key="teasers[{i}].item">{teaser.item}</li>
+  {/each}
+</ul>
+```
+
+
