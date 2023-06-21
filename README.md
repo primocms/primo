@@ -1,10 +1,10 @@
 &nbsp;
 <p align="center">
   <a href="https://primocms.org#gh-dark-mode-only" target="_blank">
-    <img src="./static/logo.svg" alt="Primo" width="200px">
+    <img src="https://raw.githubusercontent.com/primocms/primo/master/static/logo.svg" alt="Primo" width="200px">
   </a>
   <a href="https://primocms.org#gh-light-mode-only" target="_blank">
-    <img src="./static/logo-light.svg" alt="Primo" width="200px">
+    <img src="https://raw.githubusercontent.com/primocms/primo/master/static/logo-light.svg" alt="Primo" width="200px">
   </a>
 </p>
 &nbsp;
@@ -20,7 +20,7 @@
     <a href="https://www.youtube.com/@primocms">YouTube</a>
 </p>
 
-![screenshot](/screenshot-v2.png)
+![screenshot](/https://github.com/primocms/primo/raw/master/screenshot-v2.png))
 
 ## ⭐ Why Primo? 
 
