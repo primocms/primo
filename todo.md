@@ -34,3 +34,6 @@ APIs:
 - Supabase for db, authentication, and file storage/hosting
 - Google translate for i18n translation
 - Vercel, Netlify, or Github Pages for hosting
+
+## Docs
+- Collaborator guide [check this](https://www.tomasbeuzen.com/post/git-fork-branch-pull/)
