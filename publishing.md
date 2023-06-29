@@ -31,7 +31,7 @@ Vercel is the recommended web host since it offers the most straightforward path
 1. Under 'Sites', select 'Import from Git'
 1. Click 'Deploy with Github'
 1. Choose your Primo site's repo as the source
-1. Click 'Deploy demotest'
+1. Click 'Deploy sitename'
 
 ![Netlify](https://github.com/primocms/docs/blob/main/assets/netlify_deployed.png?raw=true)
 
