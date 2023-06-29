@@ -7,8 +7,12 @@ Once you've deployed to your repository, you can publish your site to any modern
 ## Connecting to Github
 1. Go to [Github settings > Generate new token](<https://github.com/settings/tokens/new>).
 1. Give your token a name, select an expiration date (ideally 'No expiration') and **select the repo** permission.
+![Select repo option](https://github.com/primocms/docs/blob/main/assets/connect_to_github_1.png?raw=true)
 1. Copy + paste the generated token token into Primo & click 'Connect'.
+![Select repo option](https://github.com/primocms/docs/blob/main/assets/connect_to_github_2.png?raw=true)
+![Select repo option](https://github.com/primocms/docs/blob/main/assets/connect_to_github_3.png?raw=true)
 1. Once you're connected, you can choose to either deploy to an existing repo or create a new one.
+![Select repo option](https://github.com/primocms/docs/blob/main/assets/connect_to_github_4.png?raw=true)
 
 
 ## Deploying to a web host
