@@ -1,6 +1,6 @@
 # Development
 
-Primo gives developers the ability to develop their site directly from Primo by embedding a development environment within the CMS's interface. This means you can immediately access your site's code & don't need to spend time setting up a local development environment. 
+Primo gives you the ability to develop your site directly from Primo by embedding a development environment within the CMS's interface. This means you can immediately access your site's code & don't need to spend time setting up a local development environment, while still having the option to use a traditional development environment for more advanced components. 
 
 ## Fields
 Fields allow you to define form fields that appear in the CMS. When the site is published, the value of those fields is compiled into static HTML. When you create a new field, you need to integrate it with your code using Svelte syntax (see below).
