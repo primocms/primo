@@ -82,6 +82,51 @@ Iteratively render a **Repeater** field.
 {/each}
 ```
 
+## CSS
+All CSS written in your Blocks is [scoped](https://svelte.dev/docs/svelte-components#style), meaning that it only applies to HTML within that Block and doesn't affect other Blocks. Styles written in your Page apply to all the Blocks on the page, and styles written in your Site apply to all the Blocks on your site.  
+
+### Global Styles
+For CSS written within your Blocks to apply to the corresponding Block's HTML, the HTML needs to be written out, but in cases where HTML is generated (particularly when rendering a Markdown field) it's necessary to use the `global` modifier. 
+
+For example, if in your HTML you have: 
+```html
+<div class="content">{@html content.html}</div>
+```
+
+You can target any HTML created within the `.content` element with:
+```css
+.content {
+  :global(a) {
+    text-decoration: underline yellow;
+  }
+}
+```
+
+### Nesting & Autoprefixing
+Primo preprocesses your CSS using [PostCSS](https://postcss.org) to enable **nesting** & **autoprefixing**. For example:
+
+```scss
+ul {
+  user-select: none;
+
+  li {
+    color: red;
+  }
+}
+```
+Becomes
+```css
+ul {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+ul li {
+  color: red;
+}
+```
+
 ## Importing JS Libraries
 You can import most JS libraries from your Blocks' JavaScript with either an absolute path (without needing to import them first) or a URL. You can also import your own [externally-managed components](https://docs.primocms.org/guides/using-external-svelte-components) using this method. 
 
