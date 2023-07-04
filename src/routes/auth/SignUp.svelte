@@ -5,6 +5,11 @@
 
   export let email
   export let password
+
+  let password_confirmation = password
+
+  $: disabled =
+    !password || !password_confirmation || password !== password_confirmation
 </script>
 
 <form class="form" method="POST" action="?/sign_up" use:enhance>
@@ -17,6 +22,10 @@
       <span>Password</span>
       <input name="password" bind:value={password} type="password" />
     </label>
+    <label>
+      <span>Confirm Password</span>
+      <input bind:value={password_confirmation} type="password" />
+    </label>
     <input
       name="invitation_id"
       type="text"
@@ -24,7 +33,7 @@
       value={$page.url.searchParams.get('join')}
     />
   </div>
-  <button class="button" type="submit">
+  <button class="button" type="submit" {disabled}>
     {#if !$navigating}
       <span>Create account</span>
     {:else}
@@ -82,7 +91,12 @@
       border-radius: 0.25rem;
       margin-bottom: 1rem;
 
-      &:hover {
+      &[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &:not([disabled]):hover {
         background-color: #35d994;
         transition: 0.2s;
         color: #121212;

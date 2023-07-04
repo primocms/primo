@@ -217,6 +217,8 @@
           }
 
           .site-link {
+            overflow: hidden;
+            max-height: 16vw;
             flex: 1;
             background: var(--color-gray-8);
             transition: opacity 0.1s;
