@@ -1,6 +1,6 @@
 import { getSupabase } from '@supabase/auth-helpers-sveltekit'
 import { redirect } from '@sveltejs/kit'
-import _ from 'lodash'
+import _ from 'lodash-es'
 
 /** @type {import('@sveltejs/kit').Load} */
 export async function load(event) {
