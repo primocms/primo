@@ -14,6 +14,10 @@ const config = {
 	vitePlugin: {
 		inspector: true,
 	},
+	onwarn: (warning, handler) => {
+		if(warning.filename.includes('svelte-json-tree')) {return}
+		handler(warning);
+	}
 };
 
 export default config;
