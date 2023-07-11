@@ -48,7 +48,7 @@ Third-party services (all can be signed into with Github):
 
 - A [**Supabase**](<https://supabase.com>) account to manage your server's authentication, database, and file storage.
 
-- A [**Github**](<https://github.com>) account to deploy your sites to (unless you plan on downloading the site and connecting to a host).
+- A [**Github**](<https://github.com>) account to deploy your sites to (unless you plan on manually downloading/uploading your site files to a host).
 
 
 <!-- -->
@@ -74,9 +74,13 @@ Third-party services (all can be signed into with Github):
 
 5. Publish the project and navigate to the Primo authentication screen.
 
-6. The user account you create will be the server owner. You can manage the project's entire data from the Supabase project dashboard.
+6. The user account you create will be the server owner. You can manage all your server's data from the Supabase project dashboard.
 
-For more detials see this step-by-step installaiton [video guide](<https://www.youtube.com/watch?v=LEcKmhJsUzo>)
+7. Finally, go back to your Supabase project & set the Site URL to the URL of your Primo site (under Authentication > URL Configuration > Site URL).
+<img width="750" alt="Screenshot 2023-07-11 at 12 44 26 PM" src="https://github.com/primocms/primo/assets/39444813/aff51c73-3935-4523-bf89-71f86f3f8f09">
+
+
+For more details see this step-by-step installation [video guide](<https://www.youtube.com/watch?v=LEcKmhJsUzo>)
 
 ## Updating
 You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.
