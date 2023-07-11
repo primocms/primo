@@ -21,7 +21,7 @@
   </div>
   <div class="box">
     <header>
-      <h1>Set password</h1>
+      <h1>Create account</h1>
       <h2>
         Enter the password you'll use for this account to finish signing up.
       </h2>
@@ -56,7 +56,7 @@
         {disabled}
         title={disabled ? 'Passwords do not match' : ''}
       >
-        <span>Set password</span>
+        <span>Create Account</span>
       </button>
     </form>
   </div>
