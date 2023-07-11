@@ -11,11 +11,11 @@ export async function load(event) {
   }
 
   // Get site and page
-  const site_url = event.params['site'] 
-  const [ parent_url = 'index', child_url ] = event.params['page']?.split('/') ?? []
-  const page_url = child_url ?? parent_url
-  
-  const [{data:site}, {data:page}] = await Promise.all([
+  const site_url = event.params['site']
+  const client_params = event.params['page']?.split('/') || null
+  const page_url = (client_params === null) ? 'index' : client_params.pop()
+
+  const [{ data: site }, { data: page }] = await Promise.all([
     supabaseClient.from('sites').select().filter('url', 'eq', site_url).single(),
     supabaseClient.from('pages').select('*, site!inner(id, url)').match({ 'site.url': site_url, url: page_url }).single()
   ])
@@ -27,10 +27,10 @@ export async function load(event) {
   }
 
   // Get sorted pages, symbols, and sections
-  const [ {data:pages}, {data:symbols}, {data:sections} ] = await Promise.all([
-    supabaseClient.from('pages').select().match({site: site.id}).order('created_at', {ascending: true}),
-    supabaseClient.from('symbols').select().match({site: site.id}).order('created_at', {ascending: false}),
-    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({page: page['id']}).order('index', {ascending: false}),
+  const [{ data: pages }, { data: symbols }, { data: sections }] = await Promise.all([
+    supabaseClient.from('pages').select().match({ site: site.id }).order('created_at', { ascending: true }),
+    supabaseClient.from('symbols').select().match({ site: site.id }).order('created_at', { ascending: false }),
+    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({ page: page['id'] }).order('index', { ascending: false }),
   ])
 
   return {

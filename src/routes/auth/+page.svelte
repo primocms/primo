@@ -26,11 +26,11 @@
       <div class="box">
         <header>
           <!-- <img src={logo_dark} alt="breely logo" /> -->
-          <h1>{signing_in ? 'Sign in' : 'Sign Up'}</h1>
+          <h1>{signing_in ? 'Sign in' : 'Create your account'}</h1>
           {#if !signing_in}
             <p>
               Welcome to your new Primo server! Enter an email address and
-              password below you'll use to administrate this server.
+              password you'll use to administrate this server.
             </p>
           {/if}
         </header>
@@ -52,14 +52,12 @@
         {/if}
       </div>
     </div>
-    <!-- <div class="right" /> -->
   </main>
 {/key}
 
 <style lang="postcss">
   main {
     display: grid;
-    /* grid-template-columns: 1fr 1fr; */
     min-height: 100vh;
     background: var(--color-gray-9);
     color: white;
