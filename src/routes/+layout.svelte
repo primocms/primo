@@ -1,37 +1,23 @@
 <script>
-  import { setContext } from 'svelte'
   import '$lib/assets/reset.css'
   import { browser } from '$app/environment'
-  import { mouse_position } from '$lib/stores'
-  import { onMount } from 'svelte'
   import { registerProcessors } from '@primocms/builder'
-  import { supabase as supabaseClient } from '$lib/supabase'
   import Modal from '$lib/components/Modal.svelte'
-  import { invalidate } from '$app/navigation'
-
-  onMount(() => {
-    const { data } = supabaseClient.auth.onAuthStateChange(() => {
-      invalidate('supabase:auth')
-    })
-
-    return () => {
-      if (data) data.subscription.unsubscribe()
-    }
-  })
+  import { authentication } from '$lib/services'
+  import { user } from '$lib/stores'
 
   if (browser) {
     import('../compiler/processors.js').then(({ html, css }) => {
       registerProcessors({ html, css })
     })
-    setContext('track', () => {})
+    authentication.on_auth_change((event, res) => {
+      console.log({ event, res })
+      if (event === 'SIGNED_IN') {
+        $user = res.user
+      }
+    })
   }
 </script>
-
-<svelte:window
-  on:mousemove={(event) => {
-    $mouse_position = { x: event.x, y: event.y }
-  }}
-/>
 
 <Modal />
 <slot />

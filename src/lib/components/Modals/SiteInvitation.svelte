@@ -2,11 +2,10 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { supabase, create_row } from '$lib/supabase'
+  import { database } from '$lib/services'
+  import { user } from '$lib/stores'
 
   export let site
-
-  const owner = $page.data.session.user
 
   let loading = false
   let email = ''
@@ -14,9 +13,9 @@
 
   async function invite_editor() {
     loading = true
-    await create_row('invitations', {
+    await database.create_invitation({
       email,
-      inviter_email: owner.email,
+      inviter_email: $user.email, // TODO
       site: site.id,
       role,
     })
@@ -28,13 +27,7 @@
       url: $page.url.origin,
     })
     if (success) {
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('site', site.id)
-      if (data) {
-        invitations = data
-      }
+      invitations = await database.get_collaborator_invitations()
     } else {
       alert('Could not send invitation. Please try again.')
     }
@@ -42,33 +35,18 @@
     loading = false
   }
 
-  let editors = []
-  get_collaborators(site.id).then((res) => {
-    editors = res
+  let collaborators = []
+  get_collaborators().then((res) => {
+    collaborators = res
   })
 
   let invitations = []
-  get_invitations(site.id).then((res) => {
+  database.get_collaborator_invitations().then((res) => {
     invitations = res
   })
 
-  async function get_invitations(site_id) {
-    const { data, error } = await supabase
-      .from('invitations')
-      .select('*')
-      .eq('site', site_id)
-    return data || []
-  }
-
-  export async function get_collaborators(site_id) {
-    const { data, error } = await supabase
-      .from('collaborators')
-      .select(`user (*)`)
-      .filter('site', 'eq', site_id)
-    if (error) {
-      console.error(error)
-      return []
-    } else return data.map((item) => item.user)
+  export async function get_collaborators() {
+    return (await database.get_collaborators(site.id)).map((item) => item.user)
   }
 </script>
 
@@ -111,11 +89,11 @@
       <h3 class="subheading">People with Access</h3>
       <ul>
         <li>
-          <span class="letter">{owner.email[0]}</span>
-          <span class="email">{owner.email}</span>
+          <span class="letter">{$user.email[0]}</span>
+          <span class="email">{$user.email}</span>
           <span class="role">Owner</span>
         </li>
-        {#each editors as { email }}
+        {#each collaborators as { email }}
           <li>
             <span class="letter">{email[0]}</span>
             <span class="email">{email}</span>

@@ -1,13 +1,29 @@
 <script>
-  import { enhance } from '$app/forms'
   import { page, navigating } from '$app/stores'
   import Icon from '@iconify/svelte'
+  import { authentication } from '$lib/services'
+  import { goto } from '$app/navigation'
+  import { user } from '$lib/stores'
 
   export let email
   export let password
+
+  async function sign_in() {
+    const { user: res, error } = await authentication.sign_in({
+      email,
+      password,
+    })
+    console.log({ user, error })
+    if (error) {
+      console.error(error)
+    } else {
+      $user = res
+      goto('/')
+    }
+  }
 </script>
 
-<form class="form" method="POST" action="?/sign_in" use:enhance>
+<form class="form" on:submit|preventDefault={sign_in}>
   <div class="fields">
     <label>
       <span>Email</span>

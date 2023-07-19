@@ -1,10 +1,12 @@
-import supabase from './supabase/core'
-import { getFiles } from './supabase/storage'
+import {database,storage} from '$lib/services'
 
 export const sites = {
   create: async (data, preview = null) => {
 
-    await supabase.from('sites').insert(data.site)
+    await database.insert({
+      table: 'sites',
+      data: data.site
+    })
 
     // create symbols and root pages 
     const { pages, symbols, sections } = data
@@ -13,46 +15,60 @@ export const sites = {
     const child_pages = pages.filter(page => page.parent !== null)
 
     // create home page first (to ensure it appears first)
-    await supabase.from('pages').insert(home_page)
+    await database.insert({
+      table: 'pages',
+      data: home_page
+    })
 
     await Promise.all([
-      supabase.from('symbols').insert(symbols),
-      supabase.from('pages').insert(root_pages)
+      database.insert({ table: 'symbols', data: symbols }),
+      database.insert({ table: 'pages', data: root_pages }),
     ])
 
     // upload preview to supabase storage
     if (preview) {
-      await supabase.storage.from('sites').upload(`${data.site.id}/preview.html`, preview)
+      await storage.upload({
+        bucket: 'sites',
+        key: `${data.site.id}/preview.html`,
+        file: preview,
+      })
     }
 
     // create child pages (dependant on parent page IDs)
-    await supabase.from('pages').insert(child_pages)
+    await database.from({
+      table: 'pages',
+      data: child_pages
+    })
 
     // create sections (dependant on page IDs)
-    await supabase.from('sections').insert(sections)
+    await database.insert({
+      table: 'sections',
+      data: sections
+    })
 
   },
   delete: async (id, files = false) => {
-    const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.site', 'eq', id)
+    const sections_to_delete = await database.get_site_sections(id)
     await Promise.all(
       sections_to_delete.map(async section => {
-        await supabase.from('sections').delete().eq('id', section.id)
+        await database.delete({ table: 'sections', id: section.id })
       })
     )
     await Promise.all([
-      supabase.from('pages').delete().match({ site: id }),
-      supabase.from('symbols').delete().match({ site: id }),
-      supabase.from('invitations').delete().match({ site: id }),
-      supabase.from('collaborators').delete().match({ site: id }),
+      database.delete({ table: 'pages', match: { site: id } }),
+      database.delete({ table: 'symbols', match: { site: id } }),
+      database.delete({ table: 'invitations', match: { site: id } }),
+      database.delete({ table: 'collaborators', match: { site: id } }),
     ])
     if (files) {
-      let siteFiles = await getFiles('sites', id)
-      if (siteFiles.length) await supabase.storage.from('sites').remove(siteFiles)
+      // TODO
+      // let siteFiles = await getFiles('sites', id)
+      // if (siteFiles.length) await supabase.storage.from('sites').remove(siteFiles)
 
-      let imageFiles = await getFiles('images', id)
-      if (imageFiles.length) await supabase.storage.from('images').remove(imageFiles)
-
+      // let imageFiles = await getFiles('images', id)
+      // if (imageFiles.length) await supabase.storage.from('images').remove(imageFiles)
     }
-    await supabase.from('sites').delete().eq('id', id)
+
+    await database.delete({ table: 'sites', id })
   }
 }

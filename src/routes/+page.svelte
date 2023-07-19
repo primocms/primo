@@ -7,14 +7,16 @@
   import { show, hide } from '$lib/components/Modal.svelte'
   import * as actions from '../actions'
   import { invalidate } from '$app/navigation'
+  import { database } from '$lib/services'
+  import { user } from '$lib/stores'
 
-  /** @type {{
-   sites: Array<import('$lib').Site>
-   session: any
-   user: import('$lib').User
-   config: any
-  }} */
-  export let data
+  let loading = true
+  let sites = []
+
+  database.select({ table: 'sites' }).then((data) => {
+    sites = data
+    loading = false
+  })
 
   function beginInvitation(site) {
     show({
@@ -25,8 +27,7 @@
     })
   }
 
-  let loading
-  function createSite() {
+  function create_site() {
     show({
       id: 'CREATE_SITE',
       props: {
@@ -86,78 +87,80 @@
   <div class="container">
     <DashboardToolbar />
     <div class="sites-container">
-      <ul class="sites">
-        {#each data.sites as site, i (site.id)}
-          <li>
-            <a class="site-link" href={site.url}>
-              <SiteThumbnail {site} />
-            </a>
-            <div class="site-info">
-              <div class="site-name">
-                {#if siteBeingEdited === site.id}
-                  <form
-                    on:submit|preventDefault={() => (siteBeingEdited = null)}
-                  >
-                    <input
-                      on:blur={() => (siteBeingEdited = null)}
-                      class="reset-input"
-                      type="text"
-                      bind:value={site.name}
-                    />
-                  </form>
-                {:else}
-                  <a data-sveltekit-prefetch href={site.url}>
-                    <span>{site.name}</span>
-                    <Icon icon="ic:round-chevron-right" />
-                  </a>
+      {#if loading}
+        <div class="loading">
+          <Icon icon="eos-icons:loading" />
+        </div>
+      {:else}
+        <ul class="sites">
+          {#each sites as site, i (site.id)}
+            <li>
+              <a class="site-link" href={site.url}>
+                <SiteThumbnail {site} />
+              </a>
+              <div class="site-info">
+                <div class="site-name">
+                  {#if siteBeingEdited === site.id}
+                    <form
+                      on:submit|preventDefault={() => (siteBeingEdited = null)}
+                    >
+                      <input
+                        on:blur={() => (siteBeingEdited = null)}
+                        class="reset-input"
+                        type="text"
+                        bind:value={site.name}
+                      />
+                    </form>
+                  {:else}
+                    <a href={site.url}>
+                      <span>{site.name}</span>
+                      <Icon icon="ic:round-chevron-right" />
+                    </a>
+                  {/if}
+                </div>
+                <span class="site-url">{site.url}</span>
+                {#if $user.admin}
+                  <div class="buttons">
+                    <button
+                      on:click={() => beginInvitation(site)}
+                      class="site-button"
+                    >
+                      <Icon icon="clarity:users-solid" />
+                      <span>Collaborators</span>
+                    </button>
+                    <button
+                      class="site-button"
+                      on:click={() => (siteBeingEdited = site.id)}
+                    >
+                      <Icon
+                        icon="material-symbols:edit-square-outline-rounded"
+                      />
+                      <span>Rename</span>
+                    </button>
+                    <button
+                      class="site-button"
+                      on:click={() => delete_site(site)}
+                    >
+                      <Icon icon="pepicons-pop:trash" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 {/if}
               </div>
-              <span class="site-url">{site.url}</span>
-              {#if $page.data.user.admin}
-                <div class="buttons">
-                  <button
-                    on:click={() => beginInvitation(site)}
-                    class="site-button"
-                  >
-                    <Icon icon="clarity:users-solid" />
-                    <span>Collaborators</span>
-                  </button>
-                  <button
-                    class="site-button"
-                    on:click={() => (siteBeingEdited = site.id)}
-                  >
-                    <Icon icon="material-symbols:edit-square-outline-rounded" />
-                    <span>Rename</span>
-                  </button>
-                  <button
-                    class="site-button"
-                    on:click={() => delete_site(site)}
-                  >
-                    <Icon icon="pepicons-pop:trash" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              {/if}
-            </div>
-          </li>
-        {/each}
-        {#if data.user.server_member}
-          <li>
-            <button class="create-site" on:click={createSite}>
-              {#if loading}
-                <div class="icon">
-                  <Icon icon="eos-icons:loading" />
-                </div>
-              {:else}
+            </li>
+          {/each}
+          {#if $user.server_member}
+            <li>
+              <button class="create-site" on:click={create_site}>
                 <div class="icon">
                   <Icon icon="ic:round-plus" />
                 </div>
-              {/if}
-              Create a site
-            </button>
-          </li>
-        {/if}
-      </ul>
+                Create a site
+              </button>
+            </li>
+          {/if}
+        </ul>
+      {/if}
     </div>
   </div>
 </main>
@@ -187,6 +190,11 @@
           text-decoration: underline;
           color: var(--color-gray-4);
         }
+      }
+
+      .loading {
+        font-size: 3rem;
+        color: #eee;
       }
 
       ul.sites {

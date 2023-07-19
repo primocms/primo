@@ -3,7 +3,8 @@
   import Icon from '@iconify/svelte'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { supabase, create_row } from '$lib/supabase'
+  import { database } from '$lib/services'
+  import { user } from '$lib/stores'
 
   let loading = false
   let email = ''
@@ -11,9 +12,9 @@
 
   async function invite_editor() {
     loading = true
-    await create_row('invitations', {
+    await database.create_invitation({
       email,
-      inviter_email: $page.data.user.email,
+      inviter_email: $user.email,
       role,
       server_invitation: true,
     })
@@ -25,7 +26,7 @@
     })
 
     if (data.success) {
-      invitations = await get_invitations()
+      invitations = await database.get_member_invitations()
     } else {
       alert(data.error)
     }
@@ -33,33 +34,15 @@
     email = ''
   }
 
-  let editors = []
-  get_collaborators().then((res) => {
-    editors = res
+  let members = []
+  database.get_members().then((res) => {
+    members = res
   })
 
   let invitations = []
-  get_invitations().then((res) => {
+  database.get_member_invitations().then((res) => {
     invitations = res
   })
-
-  async function get_invitations() {
-    const { data, error } = await supabase
-      .from('invitations')
-      .select('*')
-      .eq('server_invitation', true)
-    return data || []
-  }
-
-  export async function get_collaborators() {
-    const { data, error } = await supabase
-      .from('server_members')
-      .select('*, user(*)')
-    if (error) {
-      console.error(error)
-      return []
-    } else return data
-  }
 
   const Role = (role) =>
     ({
@@ -118,7 +101,7 @@
     <section>
       <h3 class="subheading">People with Access</h3>
       <ul>
-        {#each editors as { user, role }}
+        {#each members as { user, role }}
           <li>
             <span class="letter">{user.email[0]}</span>
             <span class="email">{user.email}</span>

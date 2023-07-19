@@ -1,26 +1,20 @@
 <script>
   import { browser } from '$app/environment'
   import { find as _find } from 'lodash-es'
-  import { supabase } from '$lib/supabase'
+  import { storage } from '$lib/services'
 
   /** @type {import('$lib').Site} */
   export let site
   export let preview = null
 
   if (!preview && site) {
-    supabase.storage
-      .from('sites')
-      .download(`${site.id}/preview.html`)
-      .then(({ data, error }) => {
-        if (error) {
-          console.log('Error downloading file: ', error.message)
-        } else if (browser) {
-          var reader = new FileReader()
-          reader.onload = function () {
-            preview = reader.result
-          }
-          reader.readAsText(data)
-        }
+    storage
+      .download({
+        bucket: 'sites',
+        key: `${site.id}/preview.html`,
+      })
+      .then((res) => {
+        preview = res
       })
   }
 

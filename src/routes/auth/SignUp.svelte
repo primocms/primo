@@ -1,7 +1,9 @@
 <script>
-  import { enhance } from '$app/forms'
   import { page, navigating } from '$app/stores'
   import Icon from '@iconify/svelte'
+  import { goto } from '$app/navigation'
+  import { authentication } from '$lib/services'
+  import { user } from '$lib/stores'
 
   export let email
   export let password
@@ -10,9 +12,22 @@
 
   $: disabled =
     !password || !password_confirmation || password !== password_confirmation
+
+  async function sign_up() {
+    const { user: res, error } = await authentication.sign_up({
+      email,
+      password,
+    })
+    if (error) {
+      console.error(error)
+    } else {
+      $user = res
+      goto('/')
+    }
+  }
 </script>
 
-<form class="form" method="POST" action="?/sign_up" use:enhance>
+<form class="form" on:submit|preventDefault={sign_up}>
   <div class="fields">
     <label>
       <span>Email</span>

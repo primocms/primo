@@ -1,62 +1,26 @@
 <script>
-  import {
-    PrimoPage,
-    realtime_subscribe,
-    locked_blocks,
-  } from '@primocms/builder'
-  import { supabase } from '$lib/supabase'
-  import { browser } from '$app/environment'
-  import { invalidate } from '$app/navigation'
-  import { createUniqueID } from '$lib/utils'
+  import { PrimoPage } from '@primocms/builder'
+  import { database } from '$lib/services'
+  import { page as page_store } from '$app/stores'
 
-  export let data
+  let loading = true
+  let page
 
-  const presence_key = createUniqueID()
-  const channel = supabase.channel(`locked-blocks`, {
-    config: { presence: { key: presence_key } },
-  })
-  channel.subscribe(async (status) => {
-    if (status === 'SUBSCRIBED') {
-      channel.track({
-        active_block: null,
-      })
+  const site_url = $page_store.params.site
+  const page_url = 'index'
+
+  Promise.all([
+    database.get_page(site_url, page_url),
+    database.get_page_sections(site_url, page_url),
+  ]).then((res) => {
+    page = {
+      ...res[0],
+      sections: res[1],
     }
+    loading = false
   })
-  channel.on('presence', { event: 'sync' }, () => {
-    const state = channel.presenceState()
-    $locked_blocks = Object.entries(state)
-      .map(([key, value]) => ({
-        key,
-        block_id: value[0]['active_block'],
-        user: value[0]['user'],
-      }))
-      .filter((block) => block.key !== presence_key)
-  })
-
-  realtime_subscribe(async (res) => {
-    channel.track({
-      ...res,
-      presence_key,
-    })
-  })
-
-  if (browser) {
-    supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sections',
-          filter: `page=eq.${data.page.id}`,
-        },
-        () => {
-          invalidate('app:data')
-        }
-      )
-      .subscribe()
-  }
 </script>
 
-<PrimoPage {data} />
+{#if !loading}
+  <PrimoPage {page} />
+{/if}

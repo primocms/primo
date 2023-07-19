@@ -3,10 +3,9 @@
   import { fade } from 'svelte/transition'
   import Icon from '@iconify/svelte'
   import { clickOutside } from '$lib/utils'
-  // import { toast } from '@zerodevx/svelte-toast';
+  import { authentication } from '$lib/services'
+  import { user } from '$lib/stores'
   import Letter from '$lib/ui/Letter.svelte'
-  import { page } from '$app/stores'
-  import { sign_out } from '$lib/supabase'
 
   let showing_popup = false
 </script>
@@ -17,18 +16,18 @@
   on:click_outside={() => (showing_popup = false)}
 >
   <button class="open-popup" on:click={() => (showing_popup = !showing_popup)}>
-    <Letter letter={$page.data.user.email.slice(0, 1)} />
+    <Letter letter={$user?.email?.slice(0, 1)} />
     <Icon icon="mdi:chevron-{showing_popup ? 'up' : 'down'}" />
   </button>
 
   {#if showing_popup}
     <div class="popup" in:fade={{ duration: 100 }}>
       <div class="row">
-        <Letter letter={$page.data.user.email.slice(0, 1)} />
-        <span class="email">{$page.data.user.email}</span>
+        <Letter letter={$user?.email?.slice(0, 1)} />
+        <span class="email">{$user.email}</span>
       </div>
       <hr />
-      <button class="row" on:click={sign_out}>
+      <button class="row" on:click={authentication.sign_out}>
         <div class="icon"><Icon icon="mdi:sign-out" /></div>
         <span>Sign Out</span>
       </button>
