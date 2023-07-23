@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="generator" content="Primo" />
+    <title>Portfolio Theme</title><!-- HEAD_svelte-xwprd8_START -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,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">
+    <link href="https://api.fontshare.com/v2/css?f[]=bespoke-serif@400,700,401,300,500,501,701,301&display=swap" rel="stylesheet">
+    <meta name="description" content="Cupidatat est tempor">
+    <style>
+        /* Reset & standardize default styles */
+        @import url("https://unpkg.com/@primo-app/primo@1.3.64/reset.css") layer;
+
+        /* Design tokens (apply to components) */
+        :root {
+            /* Custom theme options */
+            --color-accent: #5a5a5a;
+            --font-primary: "Bespoke Serif", serif;
+            --font-secondary: "Open Sans", sans-serif;
+
+            /* Base values */
+            --box-shadow: 0px 4px 30px rgba(0, 0, 0, 0.2);
+            --border-radius: 8px;
+            --border-color: #cbcace;
+        }
+
+        /* Root element (use instead of `body`) */
+        #page {
+            font-family: var(--font-secondary), system-ui, sans-serif;
+            color: #222;
+            line-height: 1.5;
+            font-size: 1.125rem;
+            background: white;
+        }
+
+        /* Elements */
+        .section-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        a.link {
+            line-height: 1.25;
+            font-weight: 400;
+            border-bottom: 2px solid var(--color-accent, rebeccapurple);
+            transform: translateY(-2px);
+            /* move link back into place */
+            transition: var(--transition, 0.1s border);
+        }
+
+        a.link:hover {
+            border-color: transparent;
+        }
+
+        .heading {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            line-height: 1.15;
+            font-weight: 500;
+            margin-bottom: 1.25rem;
+        }
+
+        .button {
+            color: white;
+            background: var(--color-accent, rebeccapurple);
+            border-radius: 5px;
+            padding: 8px 20px;
+            transition: var(--transition, 0.1s box-shadow);
+            border: 0;
+        }
+
+        /* reset */
+
+        .button:hover {
+            box-shadow: 0 0 0 2px var(--color-accent, rebeccapurple);
+        }
+
+        .button.inverted {
+            background: transparent;
+            color: var(--color-accent, rebeccapurple);
+        }
+
+        /* Content Section */
+        .section .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section .content p {
+            padding: 0.25rem 0;
+        }
+
+        .section .content img {
+            width: 100%;
+            margin: 2rem 0;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+        }
+
+        .section .content a.link {}
+
+        .section .content h1 {
+            font-family: var(--font-primary);
+            font-size: 3rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .section .content h2 {
+            font-family: var(--font-primary);
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .section .content h3 {
+            font-family: var(--font-primary);
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .section .content ul {
+            list-style: disc;
+            padding: 0.5rem 0;
+            padding-left: 1.25rem;
+        }
+
+        .section .content ol {
+            list-style: decimal;
+            padding: 0.5rem 0;
+            padding-left: 1.25rem;
+        }
+
+        .section .content blockquote {
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+        }
+
+        section.has-content {
+            background: var(--background);
+        }
+    </style><!-- HEAD_svelte-xwprd8_END -->
+    <style>
+        .section-container.svelte-1byd7us.svelte-1byd7us {
+            padding-top: 6rem;
+            padding-bottom: 5rem;
+            display: grid;
+            gap: 2rem
+        }
+
+        .section-container.svelte-1byd7us>div.svelte-1byd7us {
+            display: grid;
+            gap: 1.25rem
+        }
+
+        @media(min-width: 900px) {
+            .section-container.svelte-1byd7us.svelte-1byd7us {
+                gap: 6rem;
+                grid-template-columns: auto auto
+            }
+
+            .section-container.svelte-1byd7us>figure.svelte-1byd7us {
+                grid-column: 2
+            }
+
+            .section-container.svelte-1byd7us>div.svelte-1byd7us {
+                place-content: center;
+                grid-row: 1
+            }
+        }
+
+        .headline.svelte-1byd7us.svelte-1byd7us {
+            font-size: 3rem;
+            font-weight: 500;
+            font-family: var(--font-primary)
+        }
+
+        .description.svelte-1byd7us a {
+            transition: 0.1s border-color;
+            border-bottom: 2px solid var(--color-accent)
+        }
+
+        .description.svelte-1byd7us a:hover {
+            border-color: transparent
+        }
+
+        ul.svelte-1byd7us.svelte-1byd7us {
+            display: flex;
+            align-items: center;
+            margin-top: 0.75rem
+        }
+
+        ul.svelte-1byd7us li.svelte-1byd7us:not(:last-child) {
+            display: flex;
+            align-items: center;
+            margin-right: 1rem
+        }
+
+        ul.svelte-1byd7us li.svelte-1byd7us:not(:last-child):after {
+            content: "";
+            height: 20px;
+            border-right: 2px solid var(--color-accent);
+            padding-right: 1rem
+        }
+
+        ul.svelte-1byd7us a.svelte-1byd7us {
+            display: flex;
+            align-items: center
+        }
+
+        ul.svelte-1byd7us a span.svelte-1byd7us {
+            margin-left: 0.5rem
+        }
+
+        figure.svelte-1byd7us.svelte-1byd7us {
+            position: relative;
+            margin-left: 18px
+        }
+
+        figure.square.svelte-1byd7us.svelte-1byd7us {
+            margin-left: 0
+        }
+
+        figure.square.svelte-1byd7us img.svelte-1byd7us {
+            border-radius: var(--border-radius, 2rem)
+        }
+
+        figure.svelte-1byd7us img.svelte-1byd7us {
+            height: 226px;
+            width: 226px;
+            border-radius: 50%;
+            z-index: 1;
+            position: relative;
+            -o-object-fit: cover;
+            object-fit: cover
+        }
+
+        .heading.svelte-hf1yy6.svelte-hf1yy6 {
+            margin-bottom: 1.75rem
+        }
+
+        ul.items.svelte-hf1yy6.svelte-hf1yy6 {
+            display: grid;
+            gap: 4rem
+        }
+
+        li.svelte-hf1yy6.svelte-hf1yy6 {
+            display: grid;
+            gap: 3rem
+        }
+
+        li.svelte-hf1yy6.svelte-hf1yy6:not(:last-child) {
+            padding-bottom: 4rem;
+            border-bottom: 1px solid var(--border-color)
+        }
+
+        li.svelte-hf1yy6 .post-info .date.svelte-hf1yy6 {
+            font-size: 1rem;
+            font-weight: 400
+        }
+
+        li.svelte-hf1yy6 .post-info .title.svelte-hf1yy6 {
+            font-size: 1.5rem;
+            font-family: var(--font-primary);
+            font-weight: 500;
+            margin-bottom: 1rem
+        }
+
+        li.svelte-hf1yy6 .post-info .description.svelte-hf1yy6 {
+            color: var(--color-text-secondary);
+            margin-bottom: 1.5rem
+        }
+
+        li.svelte-hf1yy6 .post-info .links.svelte-hf1yy6 {
+            display: flex;
+            gap: 1rem
+        }
+
+        li.svelte-hf1yy6 img.svelte-hf1yy6 {
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius)
+        }
+
+        @media(min-width: 600px) {
+            li.svelte-hf1yy6.svelte-hf1yy6 {
+                grid-template-columns: 3fr 1fr;
+                gap: 4rem
+            }
+        }
+
+        .description.svelte-1n9fm19.svelte-1n9fm19 {
+            margin-bottom: 1.5rem
+        }
+
+        ul.svelte-1n9fm19.svelte-1n9fm19 {
+            display: flex;
+            flex-wrap: wrap;
+            row-gap: 1rem
+        }
+
+        ul.svelte-1n9fm19 li.svelte-1n9fm19 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600
+        }
+
+        ul.svelte-1n9fm19 li.svelte-1n9fm19:not(:last-child):after {
+            content: '';
+            border-right: 2px solid var(--color-accent);
+            display: inline-block;
+            height: 20px;
+            padding-left: 1rem;
+            margin-right: 1.5rem
+        }
+
+        .section-container.svelte-i8f0ga.svelte-i8f0ga {
+            padding-bottom: 1rem
+        }
+
+        .primary.svelte-i8f0ga.svelte-i8f0ga {
+            color: var(--color-text-secondary);
+            padding-bottom: 4rem
+        }
+
+        .primary.svelte-i8f0ga a.email.svelte-i8f0ga {
+            display: flex;
+            align-items: center
+        }
+
+        .primary.svelte-i8f0ga a.email span.svelte-i8f0ga {
+            margin-left: 0.75rem
+        }
+
+        .primary.svelte-i8f0ga a.email.svelte-i8f0ga svg {
+            transition: 0.2s transform
+        }
+
+        .primary.svelte-i8f0ga a.email.svelte-i8f0ga:hover svg {
+            transform: translateX(5px)
+        }
+
+        .secondary.svelte-i8f0ga.svelte-i8f0ga {
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+            gap: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem
+        }
+
+        .copyright.svelte-i8f0ga.svelte-i8f0ga {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary, #2D3339)
+        }
+
+        .primo.svelte-i8f0ga.svelte-i8f0ga {
+            font-weight: 600;
+            font-size: 0.75rem
+        }
+
+        .primo.svelte-i8f0ga a.svelte-i8f0ga {
+            text-decoration: underline
+        }
+
+        ul.svelte-i8f0ga.svelte-i8f0ga {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 1.5rem;
+            list-style: none
+        }
+
+        ul.svelte-i8f0ga a.svelte-i8f0ga {
+            transition: var(--transition)
+        }
+
+        ul.svelte-i8f0ga a.svelte-i8f0ga:hover {
+            color: var(--color-accent)
+        }
+
+        @media(min-width: 600px) {
+            .secondary.svelte-i8f0ga.svelte-i8f0ga {
+                flex-direction: row
+            }
+
+            ul.svelte-i8f0ga.svelte-i8f0ga {
+                font-size: 1.25rem
+            }
+        }
+    </style>
+</head>
+
+<body id="page">
+
+    <div class="section" id="section-c01c4214">
+        <header>
+            <div class="section-container svelte-1byd7us">
+                <figure class="svelte-1byd7us"><img src="https://images.unsplash.com/photo-1556015048-4d3aa10df74c?ixlib=rb-4.0.3&amp;ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;auto=format&amp;fit=crop&amp;w=928&amp;q=80" alt="Profile photo of me" class="svelte-1byd7us"></figure>
+                <div class="svelte-1byd7us">
+                    <h1 class="headline svelte-1byd7us">Georg Hartmann</h1>
+                    <div class="description svelte-1byd7us"><!-- HTML_TAG_START -->
+                        <p>Passionate svelte enthusiast with a knack for making web apps and mobile game apps.</p><!-- HTML_TAG_END -->
+                    </div>
+                    <ul class="social svelte-1byd7us">
+                        <li class="svelte-1byd7us"><a href="https://twitter.com" class="svelte-1byd7us"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                                    <path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69c.88-.53 1.56-1.37 1.88-2.38c-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29c0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15c0 1.49.75 2.81 1.91 3.56c-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07a4.28 4.28 0 0 0 4 2.98a8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21C16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56c.84-.6 1.56-1.36 2.14-2.23Z" /><!-- HTML_TAG_END -->
+                                </svg>
+                                <span class="svelte-1byd7us">Twitter</span></a>
+                        </li>
+                        <li class="svelte-1byd7us"><a href="https://github.com" class="svelte-1byd7us"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                                    <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z" /><!-- HTML_TAG_END -->
+                                </svg>
+                                <span class="svelte-1byd7us">Github</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+    </div>
+    <div class="section" id="section-f6fccdc0">
+        <div class="section">
+            <div class="section-container content"><!-- HTML_TAG_START -->
+                <h2>Welcome to my portfolio</h2>
+                <p>This is some copy to help you get to know about my interests, experience, and top projects. I may share a few personal things here too.</p><!-- HTML_TAG_END -->
+            </div>
+        </div>
+    </div>
+    <div class="section" id="section-21248363">
+        <section>
+            <div class="section-container">
+                <h2 class="heading svelte-hf1yy6">Featured Projects</h2>
+                <ul class="items svelte-hf1yy6">
+                    <li class="svelte-hf1yy6">
+                        <div class="post-info"><span class="date svelte-hf1yy6">01.01.22</span>
+                            <h3 class="title svelte-hf1yy6">First project</h3>
+                            <div class="description svelte-hf1yy6"><!-- HTML_TAG_START -->
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Viverra senectus ipsum a non. Malesuada magna etiam great dignissim curabitur aliquam.</p><!-- HTML_TAG_END -->
+                            </div>
+                            <div class="links svelte-hf1yy6"><a class="link" href="/">Visit Site</a>
+                            </div>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1653972677660-71217674c326?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&amp;auto=format&amp;fit=crop&amp;w=400&amp;q=80" alt="Mountain" class="svelte-hf1yy6">
+                    </li>
+                    <li class="svelte-hf1yy6">
+                        <div class="post-info"><span class="date svelte-hf1yy6">01.01.22</span>
+                            <h3 class="title svelte-hf1yy6">Second project</h3>
+                            <div class="description svelte-hf1yy6"><!-- HTML_TAG_START -->
+                                <p>Magna reprehenderit occaecat proident. Magna est quis sunt nisi ullamco amet commodo.</p><!-- HTML_TAG_END -->
+                            </div>
+                            <div class="links svelte-hf1yy6"><a class="link" href="/second-project">Visit Site</a>
+                            </div>
+                        </div>
+                        <img src="https://images.unsplash.com/photo-1649087921869-4ea8cf7364bd?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&amp;auto=format&amp;fit=crop&amp;w=400&amp;q=80" alt="Mountains by the sea" class="svelte-hf1yy6">
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
+    <div class="section" id="section-72adce69">
+        <section class="section-container">
+            <h2 class="heading">Skills</h2>
+            <div class="description svelte-1n9fm19"><!-- HTML_TAG_START -->
+                <p>Some technologies i’ve been using lately:</p><!-- HTML_TAG_END -->
+            </div>
+            <ul class="svelte-1n9fm19">
+                <li class="svelte-1n9fm19"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--akar-icons"><!-- HTML_TAG_START -->
+                        <g fill="none">
+                            <g clip-path="url(#iconifySvelte0)">
+                                <path fill="currentColor" fill-rule="evenodd" d="M0 0h24v24H0V0Zm18.347 20.12c-1.113 0-1.742-.58-2.225-1.37l-1.833 1.065c.662 1.308 2.015 2.306 4.11 2.306c2.142 0 3.737-1.112 3.737-3.143c0-1.883-1.082-2.72-2.998-3.543l-.564-.241c-.968-.42-1.387-.693-1.387-1.37c0-.547.42-.966 1.08-.966c.647 0 1.064.273 1.451.966l1.756-1.127c-.743-1.307-1.773-1.806-3.207-1.806c-2.014 0-3.303 1.288-3.303 2.98c0 1.835 1.08 2.704 2.708 3.397l.564.242c1.029.45 1.642.724 1.642 1.497c0 .646-.597 1.113-1.531 1.113Zm-8.74-.015c-.775 0-1.098-.53-1.452-1.16l-1.836 1.112c.532 1.126 1.578 2.06 3.383 2.06c1.999 0 3.368-1.063 3.368-3.398v-7.7h-2.255v7.67c0 1.127-.468 1.416-1.209 1.416Z" clip-rule="evenodd" />
+                            </g>
+                            <defs>
+                                <clipPath id="iconifySvelte0">
+                                    <path fill="#fff" d="M0 0h24v24H0z" />
+                                </clipPath>
+                            </defs>
+                        </g><!-- HTML_TAG_END -->
+                    </svg>
+                    <span>JavaScript</span>
+                </li>
+                <li class="svelte-1n9fm19"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 32 32" class="iconify iconify--cib"><!-- HTML_TAG_START -->
+                        <path fill="currentColor" d="M27.573 4.229a9.733 9.733 0 0 0-13.068-2.802L7.041 6.172a8.483 8.483 0 0 0-3.854 5.734a8.886 8.886 0 0 0 .891 5.776a8.246 8.246 0 0 0-1.266 3.198a9.128 9.128 0 0 0 1.547 6.88a9.78 9.78 0 0 0 13.068 2.828l7.469-4.75a8.503 8.503 0 0 0 3.839-5.734a8.859 8.859 0 0 0-.896-5.755a9.043 9.043 0 0 0-.266-10.12zM13.76 28.172a5.91 5.91 0 0 1-6.349-2.359c-.865-1.198-1.182-2.677-.932-4.146l.146-.708l.135-.438l.401.266a9.317 9.317 0 0 0 2.917 1.469l.271.094l-.031.266c-.026.37.083.786.297 1.104c.438.63 1.198.932 1.932.734c.161-.052.318-.104.453-.188l7.438-4.745c.375-.24.615-.599.708-1.026a1.708 1.708 0 0 0-.266-1.255a1.82 1.82 0 0 0-1.932-.708c-.161.057-.333.12-.469.203l-2.813 1.786a5.902 5.902 0 0 1-7.865-1.708a5.463 5.463 0 0 1-.938-4.146a5.162 5.162 0 0 1 2.365-3.469l7.422-4.745a6.142 6.142 0 0 1 1.521-.667a5.924 5.924 0 0 1 6.349 2.349a5.504 5.504 0 0 1 .76 4.849l-.135.443l-.385-.266a9.88 9.88 0 0 0-2.932-1.469l-.266-.078l.026-.266a1.832 1.832 0 0 0-.297-1.12a1.785 1.785 0 0 0-1.932-.708a2.036 2.036 0 0 0-.453.188l-7.453 4.786c-.375.25-.615.599-.693 1.036c-.078.427.026.896.266 1.24c.427.63 1.203.896 1.922.708a1.86 1.86 0 0 0 .464-.188l2.844-1.813a5.291 5.291 0 0 1 1.516-.677a5.893 5.893 0 0 1 6.349 2.359a5.496 5.496 0 0 1 .958 4.13a5.124 5.124 0 0 1-2.333 3.469l-7.438 4.734a6.457 6.457 0 0 1-1.547.677z" /><!-- HTML_TAG_END -->
+                    </svg>
+                    <span>Svelte</span>
+                </li>
+                <li class="svelte-1n9fm19"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="0.88em" height="1em" viewBox="0 0 21 24" class="iconify iconify--fontisto"><!-- HTML_TAG_START -->
+                        <path fill="currentColor" d="m16.95 7.035l.24-2.625H3.929l.705 8.01h9.18l-.33 3.42l-2.955.795l-2.94-.795l-.195-2.1H4.769l.33 4.17l5.43 1.5h.06v-.015l5.385-1.485l.75-8.16h-9.66l-.225-2.715zM0 0h21.12L19.2 21.57L10.53 24l-8.61-2.43z" /><!-- HTML_TAG_END -->
+                    </svg>
+                    <span>HTML</span>
+                </li>
+                <li class="svelte-1n9fm19"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                        <path fill="currentColor" d="m5 3l-.65 3.34h13.59L17.5 8.5H3.92l-.66 3.33h13.59l-.76 3.81l-5.48 1.81l-4.75-1.81l.33-1.64H2.85l-.79 4l7.85 3l9.05-3l1.2-6.03l.24-1.21L21.94 3H5Z" /><!-- HTML_TAG_END -->
+                    </svg>
+                    <span>CSS</span>
+                </li>
+            </ul>
+        </section>
+    </div>
+    <div class="section" id="section-66bba149">
+        <footer>
+            <div class="section-container svelte-i8f0ga">
+                <div class="primary svelte-i8f0ga">
+                    <h2 class="heading">Get in touch</h2>
+                    <a class="email svelte-i8f0ga" href="mailto:someone@somewhere.com"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                            <path fill="currentColor" d="m20 8l-8 5l-8-5V6l8 5l8-5m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" /><!-- HTML_TAG_END -->
+                        </svg>
+                        <span class="svelte-i8f0ga">someone@somewhere.com</span></a>
+                </div>
+                <hr>
+                <div class="secondary svelte-i8f0ga"><span class="copyright svelte-i8f0ga">Copyright 2023</span>
+                    <span class="primo svelte-i8f0ga"><a href="https://primo.so" class="svelte-i8f0ga">Primo</a> Powered </span>
+                    <ul class="svelte-i8f0ga">
+                        <li><a href="https://twitter.com" aria-label="mdi:twitter" class="svelte-i8f0ga"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                                    <path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69c.88-.53 1.56-1.37 1.88-2.38c-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29c0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15c0 1.49.75 2.81 1.91 3.56c-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07a4.28 4.28 0 0 0 4 2.98a8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21C16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56c.84-.6 1.56-1.36 2.14-2.23Z" /><!-- HTML_TAG_END -->
+                                </svg></a>
+                        </li>
+                        <li><a href="https://github.com" aria-label="mdi:github" class="svelte-i8f0ga"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden role="img" width="1em" height="1em" viewBox="0 0 24 24" class="iconify iconify--mdi"><!-- HTML_TAG_START -->
+                                    <path fill="currentColor" d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.46-1.16-1.11-1.47-1.11-1.47c-.91-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z" /><!-- HTML_TAG_END -->
+                                </svg></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        const path = window.location.pathname === '/' ? '' : window.location.pathname
+        const [{
+            default: App
+        }] = await Promise.all([
+            import(path + '/_module.js')
+        ]).catch(e => console.error(e))
+        new App({
+            target: document.querySelector('body'),
+            hydrate: true,
+        })
+    </script>
+</body>
+
+</html>
