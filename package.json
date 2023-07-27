@@ -40,6 +40,7 @@
     "postcss-nested": "^5.0.6",
     "prettier-plugin-svelte": "^2.8.1",
     "randomstring": "^1.2.3",
+    "showdown-highlight": "^3.1.0",
     "svelte": "^4.0.0",
     "svelte-check": "^2.9.2",
     "svelte-json-tree": "^1.0.0",
