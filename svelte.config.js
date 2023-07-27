@@ -12,7 +12,7 @@ const config = {
 		adapter: adapter()
 	},
 	vitePlugin: {
-		inspector: true,
+		inspector: false
 	},
 };
 
