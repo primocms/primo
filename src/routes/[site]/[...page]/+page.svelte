@@ -1,7 +1,12 @@
 <script>
-	import { PrimoPage } from '@primocms/builder'
+  import { PrimoPage } from '@primocms/builder'
 
-	export let data
+  export let data
 </script>
 
-<PrimoPage {data} />
+<PrimoPage
+  page={{
+    ...data.page,
+    sections: data.sections,
+  }}
+/>

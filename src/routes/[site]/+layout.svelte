@@ -28,6 +28,9 @@
         res = await supabase.from(table).select(data).match(match)
       }
     }
+    if (res.error) {
+      console.log('Error: ', { res })
+    }
     return res.data
   })
 

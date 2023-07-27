@@ -1,6 +1,6 @@
 import { rollup } from "../lib/rollup-browser";
 import registerPromiseWorker from 'promise-worker/register'
-import * as svelte from 'svelte/compiler'
+import {compile as svelte_compile} from '../lib/svelte-compiler.min.js'
 
 // Based on https://github.com/pngwn/REPLicant
 
@@ -172,12 +172,12 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                         //@ts-ignore
                         if (/.*\.svelte/.test(id)) {
                             try {
-                                const res = svelte.compile(code, svelteOptions)
+                                const res = svelte_compile(code, svelteOptions)
                                 // temporary workaround for handling when LocaleSelector.svelte breaks because of race condition
                                 // TODO: find cause & remove workaround
                                 if (res.vars?.[0]?.['name'] === 'undefined') {
                                     console.warn('Used temporary workaround to hide component')
-                                    let newRes = svelte.compile('<div></div>', svelteOptions)
+                                    let newRes = svelte_compile('<div></div>', svelteOptions)
                                     return newRes.js.code
                                 }
                                 const warnings = res.warnings

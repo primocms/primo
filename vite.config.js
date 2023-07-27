@@ -1,5 +1,4 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import ClassMangler from './class-mangler';
 
 /** @type {import('vite').UserConfig} */
 const config = {
