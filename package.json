@@ -33,12 +33,11 @@
     "autoprefixer": "^10.3.6",
     "eslint": "^8.28.0",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-svelte3": "^4.0.0",
+    "eslint-plugin-svelte": "^2.32.4",
     "file-saver": "^2.0.5",
     "js-beautify": "^1.14.9",
     "jszip": "^3.10.1",
     "postcss-nested": "^5.0.6",
-    "prettier-plugin-svelte": "^2.8.1",
     "randomstring": "^1.2.3",
     "showdown-highlight": "^3.1.0",
     "svelte": "^3.59.2",
@@ -51,5 +50,8 @@
     "vite": "^4.2.1",
     "vitest": "^0.25.8"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": "18.x"
+  }
 }
