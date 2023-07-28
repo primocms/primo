@@ -30,7 +30,7 @@ export async function load(event) {
   const [{ data: pages }, { data: symbols }, { data: sections }] = await Promise.all([
     supabaseClient.from('pages').select().match({ site: site.id }).order('created_at', { ascending: true }),
     supabaseClient.from('symbols').select().match({ site: site.id }).order('created_at', { ascending: false }),
-    supabaseClient.from('sections').select('id, page, index, content, symbol (*)').match({ page: page['id'] }).order('index', { ascending: false }),
+    supabaseClient.from('sections').select('id, page, index, content, symbol').match({ page: page['id'] }).order('index', { ascending: false }),
   ])
 
   return {
