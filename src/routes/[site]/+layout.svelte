@@ -47,6 +47,13 @@
   export let data
 </script>
 
-<Primo {data}>
+<Primo
+  role={data.user.role}
+  data={{
+    site: data.site,
+    pages: data.pages,
+    symbols: data.symbols,
+  }}
+>
   <slot />
 </Primo>
