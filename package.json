@@ -15,7 +15,7 @@
   "dependencies": {
     "@fontsource/fira-code": "^5.0.5",
     "@iconify/svelte": "^2.2.1",
-    "@primocms/builder": "^0.0.24",
+    "@primocms/builder": "^0.0.26",
     "@supabase/auth-helpers-sveltekit": "^0.8.7",
     "@supabase/supabase-js": "^2.0.0-rc.3",
     "axios": "^0.26.0",
@@ -37,6 +37,7 @@
     "file-saver": "^2.0.5",
     "js-beautify": "^1.14.9",
     "jszip": "^3.10.1",
+    "mousetrap": "^1.6.5",
     "postcss-nested": "^5.0.6",
     "randomstring": "^1.2.3",
     "showdown-highlight": "^3.1.0",

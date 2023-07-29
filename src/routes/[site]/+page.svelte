@@ -37,6 +37,9 @@
     channel.track({
       ...res,
       presence_key,
+      user: {
+        email: data.user.email,
+      },
     })
   })
 
