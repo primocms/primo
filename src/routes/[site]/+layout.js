@@ -32,9 +32,9 @@ export async function load(event) {
     supabaseClient.from('symbols').select().match({ site: site.id }).order('index', { ascending: true }),
     supabaseClient.from('sections').select('id, page, index, content, symbol').match({ page: page['id'] }).order('index', { ascending: true }),
   ])
-
+  
   // Check to ensure symbols have an index column (v2.0.0--beta.12)
-  if (Array.isArray(symbols) && symbols.length > 0 && !symbols[0].hasOwnProperty('index')) {
+  if (!symbols) {
     return {
       alert: `Your database is misconfigured and needs a quick change to support the latest version of Primo. Please run the following query from your Supabase SQL Editor, then refresh this page.
       <pre>alter table symbols\nadd column index integer;</pre><br>
