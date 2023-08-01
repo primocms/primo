@@ -47,13 +47,43 @@
   export let data
 </script>
 
-<Primo
-  role={data.user.role}
-  data={{
-    site: data.site,
-    pages: data.pages,
-    symbols: data.symbols,
-  }}
->
-  <slot />
-</Primo>
+{#if data.alert}
+  <div class="alert">
+    <div class="container">{@html data.alert}</div>
+  </div>
+{:else}
+  <Primo
+    role={data.user.role}
+    data={{
+      site: data.site,
+      pages: data.pages,
+      symbols: data.symbols,
+    }}
+  >
+    <slot />
+  </Primo>
+{/if}
+
+<style lang="postcss">
+  .alert {
+    position: fixed;
+    inset: 0;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-gray-9);
+    color: var(--color-gray-1);
+    font-family: system-ui, sans-serif;
+
+    .container {
+      background: var(--color-gray-8);
+      padding: 2rem;
+      border-radius: 0.25rem;
+
+      :global(a) {
+        color: var(--primo-color-brand);
+      }
+    }
+  }
+</style>
