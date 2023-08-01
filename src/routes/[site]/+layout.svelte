@@ -72,17 +72,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-gray-9);
-    color: var(--color-gray-1);
+    background: #111;
+    color: white;
     font-family: system-ui, sans-serif;
 
     .container {
-      background: var(--color-gray-8);
+      background: #222;
       padding: 2rem;
       border-radius: 0.25rem;
 
       :global(a) {
-        color: var(--primo-color-brand);
+        color: #35d994;
       }
     }
   }
