@@ -3,11 +3,11 @@ import PromiseWorker from 'promise-worker';
 import {get} from 'svelte/store'
 import {site} from '@primocms/builder'
 import {locale} from '@primocms/builder'
-import svelteWorker from './workers/worker?worker'
-import postCSSWorker from './workers/postcss.worker?worker'
+import rollupWorker from './workers/rollup.worker.js?worker'
+import postCSSWorker from './workers/postcss.worker.js?worker'
 
 const cssPromiseWorker = new PromiseWorker(new postCSSWorker());
-const htmlPromiseWorker = new PromiseWorker(new svelteWorker());
+const htmlPromiseWorker = new PromiseWorker(new rollupWorker());
 
 const componentsMap = new Map();
 

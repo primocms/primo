@@ -1,6 +1,10 @@
 import { rollup } from "../lib/rollup-browser";
+import svelteWorker from './svelte.worker?worker'
+import PromiseWorker from 'promise-worker';
 import registerPromiseWorker from 'promise-worker/register'
 import {compile as svelte_compile} from '../lib/svelte-compiler.min.js'
+
+const sveltePromiseWorker = new PromiseWorker(new svelteWorker());
 
 // Based on https://github.com/pngwn/REPLicant
 
@@ -172,14 +176,8 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                         //@ts-ignore
                         if (/.*\.svelte/.test(id)) {
                             try {
-                                const res = svelte_compile(code, svelteOptions)
-                                // temporary workaround for handling when LocaleSelector.svelte breaks because of race condition
-                                // TODO: find cause & remove workaround
-                                if (res.vars?.[0]?.['name'] === 'undefined') {
-                                    console.warn('Used temporary workaround to hide component')
-                                    let newRes = svelte_compile('<div></div>', svelteOptions)
-                                    return newRes.js.code
-                                }
+                                const json_res = await sveltePromiseWorker.postMessage({code, svelteOptions})
+                                const res = JSON.parse(json_res)
                                 const warnings = res.warnings
                                     .filter(w => !w.message.startsWith(`Component has unused export`))
                                     .filter(w => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
@@ -189,10 +187,10 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                                     final.error = warnings[0].toString()
                                     return ''
                                 } else {
-                                    return res.js.code;
+                                    return res.code;
                                 }
                             } catch (e) {
-                                console.log({ e })
+                                console.log({ e, code })
                                 final.error = e.toString()
                                 return ''
                             }
