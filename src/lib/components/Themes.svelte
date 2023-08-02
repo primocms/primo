@@ -10,14 +10,12 @@
 
   let themes = []
   axios
-    .get(
-      'https://raw.githubusercontent.com/mateomorris/primocms.org/main/primo.json'
-    )
+    .get('https://primosites.vercel.app/api/primo-landing-page/themes')
     .then(({ data }) => {
       const themes_section = data.sections.find(
-        (section) => section.id === 'ff5c3e56-690b-4220-abe9-9f02a74e1599'
+        (section) => section._meta.id === 'ff5c3e56-690b-4220-abe9-9f02a74e1599'
       )
-      themes = themes_section.content.en.templates.filter(
+      themes = themes_section.templates.filter(
         (template) => template.price === '0' && template.available
       )
     })
