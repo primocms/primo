@@ -157,9 +157,9 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                             const url = pkg_url.replace(/\/package\.json$/, "");
                             return new URL(pkg.svelte || pkg.module || pkg.main, `${url}/`)
                                 .href;
-                        } else return `https://cdn.skypack.dev/${importee}`; // use skypack as a fallback
+                            } else return `https://cdn.skypack.dev/${importee}`; // use skypack as a fallback
 
-                        return importee; // everything else
+                            return importee; // everything else
 
                     },
                     async load(id) {
@@ -184,7 +184,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                                     .filter(w => w.code !== `a11y-missing-content`)
                                     .filter(w => !w.message.startsWith(`Unused CSS selector`)) // TODO: reinstate
                                 if (warnings[0]) {
-                                    final.error = warnings[0].toString()
+                                    final.error = warnings[0].message
                                     return ''
                                 } else {
                                     return res.code;
