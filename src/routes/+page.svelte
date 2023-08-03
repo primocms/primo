@@ -1,4 +1,5 @@
 <script>
+  import { tick } from 'svelte'
   import Icon from '@iconify/svelte'
   import { page } from '$app/stores'
   import axios from 'axios'
@@ -79,7 +80,11 @@
     })
   }
 
-  let siteBeingEdited
+  async function rename_site(id, name) {
+    await actions.sites.update(id, { name })
+  }
+
+  let siteBeingEdited = { id: null, element: null }
 </script>
 
 <main class="primo-reset">
@@ -94,12 +99,14 @@
             </a>
             <div class="site-info">
               <div class="site-name">
-                {#if siteBeingEdited === site.id}
+                {#if siteBeingEdited.id === site.id}
                   <form
-                    on:submit|preventDefault={() => (siteBeingEdited = null)}
+                    on:submit|preventDefault={() =>
+                      (siteBeingEdited = { id: null, element: null })}
                   >
                     <input
-                      on:blur={() => (siteBeingEdited = null)}
+                      bind:this={siteBeingEdited.element}
+                      on:blur={() => rename_site(site.id, site.name)}
                       class="reset-input"
                       type="text"
                       bind:value={site.name}
@@ -124,7 +131,11 @@
                   </button>
                   <button
                     class="site-button"
-                    on:click={() => (siteBeingEdited = site.id)}
+                    on:click={async () => {
+                      siteBeingEdited = { id: site.id, element: null }
+                      await tick()
+                      siteBeingEdited.element.focus()
+                    }}
                   >
                     <Icon icon="material-symbols:edit-square-outline-rounded" />
                     <span>Rename</span>
@@ -232,6 +243,9 @@
             padding: 1.5rem;
 
             .site-name {
+              form {
+                line-height: 0;
+              }
               a {
                 display: flex;
                 justify-content: space-between;

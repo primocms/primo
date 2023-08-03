@@ -1,9 +1,11 @@
 <script>
-  import Primo, { subscribe, storage_subscribe } from '@primocms/builder'
+  import Primo, {
+    database_subscribe,
+    storage_subscribe,
+  } from '@primocms/builder'
   import { supabase } from '$lib/supabase'
 
-  // NEXT: finish hooking this up
-  subscribe(async ({ table, action, data, id, match, order }) => {
+  database_subscribe(async ({ table, action, data, id, match, order }) => {
     let res
     if (action === 'insert') {
       res = await supabase.from(table).insert(data)
@@ -29,7 +31,10 @@
       }
     }
     if (res.error) {
-      console.log('Error: ', { res })
+      console.log('Database error: ', {
+        res,
+        query: { table, action, data, id, match, order },
+      })
     }
     return res.data
   })

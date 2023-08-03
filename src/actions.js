@@ -32,6 +32,9 @@ export const sites = {
     await supabase.from('sections').insert(sections)
 
   },
+  update: async (id, props) => {
+    await supabase.from('sites').update(props).eq('id', id)
+  },
   delete: async (id, files = false) => {
     const { data: sections_to_delete } = await supabase.from('sections').select('id, page!inner(*)').filter('page.site', 'eq', id)
     await Promise.all(
@@ -54,5 +57,5 @@ export const sites = {
 
     }
     await supabase.from('sites').delete().eq('id', id)
-  }
+  },
 }
