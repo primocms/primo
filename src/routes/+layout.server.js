@@ -6,7 +6,7 @@ export const load = async ({ url, locals: { supabase, getSession } }) => {
   const {data:symbol} = await supabase.from('symbols').select('index').limit(1) 
 
   // Check for database misconfigurations
-  if (url.pathname !== '/update-notice') {
+  if (url.pathname !== '/update-notice' && url.pathname !== '/auth') {
 
     // Ensure symbols have an index column (v2.0.0--beta.15)
     if (!symbol) {
