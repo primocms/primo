@@ -6,7 +6,7 @@
   const { supabase } = $page.data
 
   let image_url = logo
-  if (browser) {
+  if (browser && supabase) {
     supabase.storage
       .from('images')
       .download(`server-logo.svg`)

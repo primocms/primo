@@ -1,4 +1,4 @@
-import { redirect, error } from '@sveltejs/kit'
+import { redirect } from '@sveltejs/kit'
 
 /** @type {import('@sveltejs/kit').Load} */
 export async function load({ depends, params, parent }) {
@@ -8,7 +8,7 @@ export async function load({ depends, params, parent }) {
 
   if (!session) {
     // the user is not signed in
-    throw error(401, { message: 'Unauthorized' })
+    throw redirect(303, '/auth')
   }
 
   // Get site and page
@@ -33,15 +33,6 @@ export async function load({ depends, params, parent }) {
     supabase.from('symbols').select().match({ site: site.id }).order('index', { ascending: true }),
     supabase.from('sections').select('id, page, index, content, symbol').match({ page: page['id'] }).order('index', { ascending: true }),
   ])
-  
-  // Check to ensure symbols have an index column (v2.0.0--beta.12)
-  if (!symbols) {
-    return {
-      alert: `Your database is misconfigured and needs a quick change to support the latest version of Primo. Please run the following query from your Supabase SQL Editor, then refresh this page.
-      <pre>alter table symbols\nadd column index integer;</pre><br>
-      See the <a target="blank" href="https://primocms.org/changelog">release notes</a> for more info or ask for help in our <a target="blank" href="https://discord.gg/RmjYqDq">Discord</a>.`
-    }
-  }
 
   return {
     site,

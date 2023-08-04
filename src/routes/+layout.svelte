@@ -6,13 +6,21 @@
   import { registerProcessors } from '@primocms/builder'
   import Modal from '$lib/components/Modal.svelte'
   import { invalidate } from '$app/navigation'
+  import supabase_client from '$lib/supabase'
 
   export let data
 
   let { supabase, session } = data
   $: ({ supabase, session } = data)
 
+  $: session &&
+    supabase_client.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    })
+
   onMount(() => {
+    if (!supabase) return
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, _session) => {
@@ -20,7 +28,6 @@
         invalidate('supabase:auth')
       }
     })
-
     return () => subscription.unsubscribe()
   })
 

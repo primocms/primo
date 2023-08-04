@@ -2,19 +2,20 @@
   import Spinner from '$lib/ui/Spinner.svelte'
   import Switch from '$lib/ui/Switch.svelte'
   import PrimaryButton from '$lib/ui/PrimaryButton.svelte'
+  import { sites } from '$lib/actions'
+  import { hide } from '$lib/components/Modal.svelte'
 
-  export let onSuccess = (files, repo) => {}
   export let site
 
   let loading = false
   let finishing = false
-  let files = false
-  let repo = false
-  let canDeleteSite = false
+  let delete_files = false
+  let delete_repo = false
 
   async function deleteSite() {
     finishing = true
-    onSuccess(files, repo)
+    await sites.delete(site, { delete_repo, delete_files })
+    hide()
   }
 </script>
 
@@ -30,10 +31,10 @@
         <Switch
           field={{
             key: 'files',
-            label: 'Also delete files in bucket',
+            label: 'Delete site files',
             value: false,
           }}
-          on:input={() => (files = !files)}
+          on:input={() => (delete_files = !delete_files)}
         />
       </div>
       {#if site.active_deployment}
@@ -41,29 +42,18 @@
           <Switch
             field={{
               key: 'repo',
-              label: 'Also delete Github repo',
+              label: 'Delete Github repo',
               value: false,
             }}
-            on:input={() => (repo = !repo)}
+            on:input={() => (delete_repo = !delete_repo)}
           />
         </div>
       {/if}
-      <div class="options">
-        <Switch
-          field={{
-            key: 'canDeleteSite',
-            label: 'I am sure about this',
-            value: false,
-          }}
-          on:input={() => (canDeleteSite = !canDeleteSite)}
-        />
-      </div>
       <div class="submit">
         <PrimaryButton
           type="submit"
           label="Delete Site"
           icon="pepicons-pop:trash"
-          disabled={!canDeleteSite}
           {loading}
         />
       </div>

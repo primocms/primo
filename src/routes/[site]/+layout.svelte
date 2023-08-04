@@ -2,10 +2,32 @@
   import Primo, {
     database_subscribe,
     storage_subscribe,
+    deploy_subscribe,
   } from '@primocms/builder'
-  import { supabase } from '$lib/supabase'
+  import axios from 'axios'
+
+  export let data
+
+  const { supabase } = data
+
+  deploy_subscribe(async (payload) => {
+    const {
+      data: { error, deployment },
+    } = await axios.post('/api/deploy', payload, {
+      headers: {
+        Authorization: `Bearer ${data.session.access_token}`,
+      },
+    })
+    if (error) {
+      console.log('Deployment error: ', error)
+      return null
+    } else {
+      return deployment
+    }
+  })
 
   database_subscribe(async ({ table, action, data, id, match, order }) => {
+    console.log('Saving to database', { table, action, data, id, match, order })
     let res
     if (action === 'insert') {
       res = await supabase.from(table).insert(data)
@@ -48,47 +70,15 @@
       return res.publicUrl
     }
   })
-
-  export let data
 </script>
 
-{#if data.alert}
-  <div class="alert">
-    <div class="container">{@html data.alert}</div>
-  </div>
-{:else}
-  <Primo
-    role={data.user.role}
-    data={{
-      site: data.site,
-      pages: data.pages,
-      symbols: data.symbols,
-    }}
-  >
-    <slot />
-  </Primo>
-{/if}
-
-<style lang="postcss">
-  .alert {
-    position: fixed;
-    inset: 0;
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #111;
-    color: white;
-    font-family: system-ui, sans-serif;
-
-    .container {
-      background: #222;
-      padding: 2rem;
-      border-radius: 0.25rem;
-
-      :global(a) {
-        color: #35d994;
-      }
-    }
-  }
-</style>
+<Primo
+  role={data.user.role}
+  data={{
+    site: data.site,
+    pages: data.pages,
+    symbols: data.symbols,
+  }}
+>
+  <slot />
+</Primo>
