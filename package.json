@@ -15,7 +15,7 @@
   "dependencies": {
     "@fontsource/fira-code": "^5.0.5",
     "@iconify/svelte": "^2.2.1",
-    "@primocms/builder": "^0.1.1",
+    "@primocms/builder": "^0.1.2",
     "@supabase/auth-helpers-sveltekit": "^0.10.2",
     "@supabase/supabase-js": "^2.31.0",
     "axios": "^0.26.0",
@@ -48,7 +48,7 @@
     "tailwindcss": "^2.2.16",
     "tslib": "^2.4.1",
     "typescript": "^4.9.3",
-    "vite": "^4.2.1",
+    "vite": "^4.4.8",
     "vitest": "^0.25.8"
   },
   "type": "module",

@@ -2,7 +2,6 @@ import { rollup } from "../lib/rollup-browser";
 import svelteWorker from './svelte.worker?worker'
 import PromiseWorker from 'promise-worker';
 import registerPromiseWorker from 'promise-worker/register'
-import {compile as svelte_compile} from '../lib/svelte-compiler.min.js'
 
 const sveltePromiseWorker = new PromiseWorker(new svelteWorker());
 
@@ -176,8 +175,7 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
                         //@ts-ignore
                         if (/.*\.svelte/.test(id)) {
                             try {
-                                const json_res = await sveltePromiseWorker.postMessage({code, svelteOptions})
-                                const res = JSON.parse(json_res)
+                                const res = await sveltePromiseWorker.postMessage({code, svelteOptions})
                                 const warnings = res.warnings
                                     .filter(w => !w.message.startsWith(`Component has unused export`))
                                     .filter(w => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
