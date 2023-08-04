@@ -1,14 +1,14 @@
 import { json } from '@sveltejs/kit';
-import {supabaseAdmin} from '$lib/supabaseAdmin'
+import supabase_admin from '$lib/supabase/admin'
 
 export async function POST({ request }) {
   const {url, site = null, server_invitation, role, email} = await request.json();
 
-  const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, { redirectTo: `${url}/auth/set-password?email=${email}` })
+  const { data, error } = await supabase_admin.auth.admin.inviteUserByEmail(email, { redirectTo: `${url}/auth/set-password?email=${email}` })
 
   if (!error) {
 
-    await supabaseAdmin
+    await supabase_admin
       .from('users')
       .insert({ 
         id: data.user.id, 
@@ -17,8 +17,8 @@ export async function POST({ request }) {
     
     // Add to 'server_members' or 'collaborators'
     const {error} = server_invitation ? 
-      await supabaseAdmin.from('server_members').insert({ user: data.user.id, role }) :
-      await supabaseAdmin.from('collaborators').insert({ site, user: data.user.id, role })
+      await supabase_admin.from('server_members').insert({ user: data.user.id, role }) :
+      await supabase_admin.from('collaborators').insert({ site, user: data.user.id, role })
 
     console.error(error)
     return json({success: !error, error: error?.message});

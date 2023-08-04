@@ -1,8 +1,6 @@
-import { getServerSession } from '@supabase/auth-helpers-sveltekit'
-
 /** @type {import('@sveltejs/kit').ServerLoad} */
-export async function load(event) {
+export const load = async ({ locals: { getSession } }) => {
   return {
-    session: await getServerSession(event),
+    session: await getSession(),
   }
 }

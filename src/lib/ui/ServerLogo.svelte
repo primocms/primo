@@ -1,7 +1,9 @@
 <script>
   import logo from '$lib/assets/server-logo.svg'
   import { browser } from '$app/environment'
-  import { supabase } from '$lib/supabase'
+  import { page } from '$app/stores'
+
+  const { supabase } = $page.data
 
   let image_url = logo
   if (browser) {

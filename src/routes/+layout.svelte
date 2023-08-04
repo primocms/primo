@@ -2,21 +2,26 @@
   import { setContext } from 'svelte'
   import '$lib/assets/reset.css'
   import { browser } from '$app/environment'
-  import { mouse_position } from '$lib/stores'
   import { onMount } from 'svelte'
   import { registerProcessors } from '@primocms/builder'
-  import { supabase as supabaseClient } from '$lib/supabase'
   import Modal from '$lib/components/Modal.svelte'
   import { invalidate } from '$app/navigation'
 
+  export let data
+
+  let { supabase, session } = data
+  $: ({ supabase, session } = data)
+
   onMount(() => {
-    const { data } = supabaseClient.auth.onAuthStateChange(() => {
-      invalidate('supabase:auth')
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, _session) => {
+      if (_session?.expires_at !== session?.expires_at) {
+        invalidate('supabase:auth')
+      }
     })
 
-    return () => {
-      if (data) data.subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   })
 
   if (browser) {
@@ -26,12 +31,6 @@
     setContext('track', () => {})
   }
 </script>
-
-<svelte:window
-  on:mousemove={(event) => {
-    $mouse_position = { x: event.x, y: event.y }
-  }}
-/>
 
 <Modal />
 <slot />

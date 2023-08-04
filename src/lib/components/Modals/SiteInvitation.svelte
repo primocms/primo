@@ -2,11 +2,12 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { supabase, create_row } from '$lib/supabase'
 
   export let site
 
-  const owner = $page.data.session.user
+  const { supabase, session } = $page.data
+
+  const owner = session?.user
 
   let loading = false
   let email = ''
@@ -14,7 +15,7 @@
 
   async function invite_editor() {
     loading = true
-    await create_row('invitations', {
+    await supabase.from('invitations').insert({
       email,
       inviter_email: owner.email,
       site: site.id,

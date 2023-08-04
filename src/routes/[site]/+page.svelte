@@ -4,12 +4,13 @@
     realtime_subscribe,
     locked_blocks,
   } from '@primocms/builder'
-  import { supabase } from '$lib/supabase'
   import { browser } from '$app/environment'
   import { invalidate } from '$app/navigation'
   import { createUniqueID } from '$lib/utils'
 
   export let data
+
+  const { supabase } = data
 
   const presence_key = createUniqueID()
   const channel = supabase.channel(`locked-blocks`, {

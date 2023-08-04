@@ -1,5 +1,5 @@
-import supabase from './supabase/core'
-import { getFiles } from './supabase/storage'
+import supabase from '$lib/supabase'
+import { getFiles } from './lib/supabase/storage'
 
 export const sites = {
   create: async (data, preview = null) => {

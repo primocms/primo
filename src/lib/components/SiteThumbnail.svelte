@@ -1,7 +1,9 @@
 <script>
   import { browser } from '$app/environment'
   import { find as _find } from 'lodash-es'
-  import { supabase } from '$lib/supabase'
+  import { page } from '$app/stores'
+
+  const { supabase } = $page.data
 
   /** @type {import('$lib').Site} */
   export let site

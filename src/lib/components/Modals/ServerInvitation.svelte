@@ -3,7 +3,8 @@
   import Icon from '@iconify/svelte'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
-  import { supabase, create_row } from '$lib/supabase'
+
+  const { supabase } = $page.data
 
   let loading = false
   let email = ''
@@ -11,7 +12,7 @@
 
   async function invite_editor() {
     loading = true
-    await create_row('invitations', {
+    await supabase.from('invitations').insert({
       email,
       inviter_email: $page.data.user.email,
       role,
@@ -34,11 +35,11 @@
   }
 
   let editors = []
+  let invitations = []
+
   get_collaborators().then((res) => {
     editors = res
   })
-
-  let invitations = []
   get_invitations().then((res) => {
     invitations = res
   })

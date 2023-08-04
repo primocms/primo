@@ -1,4 +1,6 @@
-import supabase from './core';
+import {get} from 'svelte/store'
+import { page } from '$app/stores'
+import supabase from './index'
 
 export async function getFiles(bucket, path, files = []) {
     let dirs = []
