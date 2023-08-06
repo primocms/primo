@@ -9,7 +9,7 @@
   href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
 />
 
-<div class="alert">
+<div class="alert" data-theme="dark">
   <div class="container">
     {#if alert === 'missing-symbol-index'}
       <div class="headings">

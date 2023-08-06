@@ -26,18 +26,19 @@ export async function POST({ request, locals }) {
       return json({deployment: null, error: 'No token found' });
     }
 
+    let new_repo_name
     if (create_new) {
-      await create_repo({ repo_name, token: token.value })
+      const res = await create_repo({ repo_name, token: token.value })
+      new_repo_name = res.full_name
     }
 
     // TODO: ensure existing repo matches newer repo, or create repo if none exists and user is repo owner
-    const new_deployment = await push_site_to_github({ files, token: token.value, repo_name })
+    const new_deployment = await push_site_to_github({ files, token: token.value, repo_name: new_repo_name || repo_name })
 
     await supabase_admin.from('sites').update({ active_deployment: new_deployment}).eq('id', site_id)
 
     return json({ deployment: new_deployment, error: null });
   } else {
-    console.log({collaborator, server_member})
     return json({ deployment: null, error: 'Unauthorized' });
   }
 

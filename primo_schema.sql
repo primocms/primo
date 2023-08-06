@@ -149,7 +149,8 @@ CREATE TABLE "public"."symbols" (
     "content" "jsonb" DEFAULT '{}' :: "jsonb",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "site" "uuid" NOT NULL
+    "site" "uuid" NOT NULL,
+    "index" smallint DEFAULT '1' :: smallint NOT NULL
 );
 
 ALTER TABLE
