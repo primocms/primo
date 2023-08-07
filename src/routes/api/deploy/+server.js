@@ -10,7 +10,7 @@ export async function POST({ request, locals }) {
     throw server_error(401, { message: 'Unauthorized' })
   }
 
-  const {files, site_id, repo_name, create_new} = await request.json();
+  const {files, site_id, repo_name, create_new, message} = await request.json();
   const user_id = session.user.id
 
   // verify user is collaborator on site or server member
@@ -33,7 +33,7 @@ export async function POST({ request, locals }) {
     }
 
     // TODO: ensure existing repo matches newer repo, or create repo if none exists and user is repo owner
-    const new_deployment = await push_site_to_github({ files, token: token.value, repo_name: new_repo_name || repo_name })
+    const new_deployment = await push_site_to_github({ files, token: token.value, repo_name: new_repo_name || repo_name, message })
 
     await supabase_admin.from('sites').update({ active_deployment: new_deployment}).eq('id', site_id)
 
@@ -56,7 +56,7 @@ async function create_repo({ repo_name, token }) {
   return data
 }
 
-async function push_site_to_github({ files, token, repo_name }) {
+async function push_site_to_github({ files, token, repo_name, message }) {
 
   const headers = {
     Authorization: `Bearer ${token}`,
@@ -100,7 +100,7 @@ async function push_site_to_github({ files, token, repo_name }) {
     const { data } = await axios.post(
       `https://api.github.com/repos/${repo_name}/git/commits`,
       {
-        message: 'Update site',
+        message,
         tree,
         ...(activeSha ? { parents: [activeSha] } : {}),
       },

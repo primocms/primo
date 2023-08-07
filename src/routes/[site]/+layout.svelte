@@ -11,23 +11,79 @@
   const { supabase } = data
 
   deploy_subscribe(async (payload) => {
-    const {
-      data: { error, deployment },
-    } = await axios.post('/api/deploy', payload, {
-      headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-      },
-    })
-    if (error) {
-      console.log('Deployment error: ', error)
-      return null
+    // if payload is above 4.5mb, break up into chunks
+    const chunks = chunk_payload(payload, 4500)
+    if (chunks.length === 1) {
+      return await deploy_to_server({
+        ...chunks[0],
+        message: 'Deploy site',
+      })
+    } else if (chunks[0]['create_new']) {
+      await deploy_to_server({
+        ...chunks[0],
+        message: `Initial site deployment (chunk 1 of ${chunks.length})`,
+      })
+      let res
+      for (const [i, chunk] of Object.entries(chunks)) {
+        res = await deploy_to_server({
+          ...chunk,
+          message: `Site deploy (chunk ${parseInt(i) + 2} of ${chunks.length})`,
+        })
+      }
+      return res
     } else {
-      return deployment
+      let res
+      for (const [i, chunk] of Object.entries(chunks)) {
+        res = await deploy_to_server({
+          ...chunk,
+          message: `Site deploy (chunk ${parseInt(i) + 1} of ${chunks.length})`,
+        })
+      }
+      return res
+    }
+
+    async function deploy_to_server(chunk, i) {
+      const {
+        data: { error, deployment },
+      } = await axios.post('/api/deploy', chunk).catch((e) => {
+        return { data: { error: e.message, deployment: null } }
+      })
+      if (error) {
+        console.log('Deployment error: ', error)
+        return null
+      } else {
+        return deployment
+      }
+    }
+
+    function chunk_payload(payload, max_size) {
+      const chunks = []
+      payload.files.forEach((file) => {
+        const current_chunk = chunks[chunks.length - 1]
+        const current_chunk_size = current_chunk
+          ? current_chunk.files.reduce((acc, payload) => acc + file.size, 0)
+          : 0
+        if (current_chunk && current_chunk_size + file.size < max_size) {
+          current_chunk.files.push(file)
+        } else if (chunks.length === 0) {
+          chunks.push({
+            ...payload,
+            files: [file],
+          })
+        } else {
+          chunks.push({
+            ...payload,
+            create_new: false,
+            files: [file],
+          })
+        }
+      })
+      return chunks
     }
   })
 
   database_subscribe(async ({ table, action, data, id, match, order }) => {
-    console.log('Saving to database', { table, action, data, id, match, order })
+    console.log('Accessing database', { table, action, data, id, match, order })
     let res
     if (action === 'insert') {
       res = await supabase.from(table).insert(data)
