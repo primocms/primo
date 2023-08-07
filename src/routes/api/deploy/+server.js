@@ -67,54 +67,63 @@ async function push_site_to_github({ files, token, repo_name, message }) {
     axios.get(`https://api.github.com/repos/${repo_name}`, { headers }),
     axios.get(`https://api.github.com/repos/${repo_name}/commits?sha=main`, { headers })
   ])
-  const activeSha = latest_commit?.sha
+  const active_sha = latest_commit?.sha
 
-  const tree = await createTree()
-  const commit = await createCommit(tree.sha)
-  const final = await pushCommit(commit.sha)
+  const tree = await create_tree(active_sha)
+  const commit = await create_commit(tree.sha, active_sha)
+  const final = await push_commit(commit.sha)
 
   return {
     deploy_id: final.object.sha,
     repo: existing_repo,
     created: Date.now(),
+    tree
   }
 
-  async function createTree() {
+  async function create_tree(active_sha) {
     const bundle = files.map((file) => ({
       path: file.file,
       content: file.data,
       type: 'blob',
       mode: '100644',
     }))
+
+    const {data: { tree:active_tree }} = await axios.get(`https://api.github.com/repos/${repo_name}/git/trees/${active_sha}?recursive=1`, { headers })
+
+    const merged_tree = [
+      ...active_tree.filter(existing_file => !bundle.some(new_file => new_file.path === existing_file.path)), // include existing files not in new bundle
+      ...bundle
+    ]
+    
     const { data } = await axios.post(
       `https://api.github.com/repos/${repo_name}/git/trees`,
       {
-        tree: bundle,
+        tree: merged_tree,
       },
       { headers }
     )
     return data
   }
 
-  async function createCommit(tree) {
+  async function create_commit(tree, active_sha) {
     const { data } = await axios.post(
       `https://api.github.com/repos/${repo_name}/git/commits`,
       {
         message,
         tree,
-        ...(activeSha ? { parents: [activeSha] } : {}),
+        ...(active_sha ? { parents: [active_sha] } : {}),
       },
       { headers }
     )
     return data
   }
 
-  async function pushCommit(commitSha) {
+  async function push_commit(commitSha) {
     const { data } = await axios.patch(
       `https://api.github.com/repos/${repo_name}/git/refs/heads/main`,
       {
         sha: commitSha,
-        force: true,
+        // force: true,
       },
       { headers }
     )
