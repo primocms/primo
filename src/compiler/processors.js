@@ -1,4 +1,4 @@
-import {clone as _cloneDeep} from 'lodash-es'
+import _ from 'lodash-es'
 import PromiseWorker from 'promise-worker';
 import {get} from 'svelte/store'
 import {site} from '@primocms/builder'
@@ -71,7 +71,21 @@ export async function html({ component, buildStatic = true, format = 'esm'}) {
     const blob = new Blob([res.ssr], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
     const {default:App} = await import(url/* @vite-ignore */)
-    const rendered = App.render(component.data)
+
+    let component_data
+    if (Array.isArray(component)) {
+      component_data = component.reduce((accumulator, item, i) => {
+        if (!_.isEmpty(item.data)) {
+          accumulator[`component_${i}_props`] = item.data
+        }
+        return accumulator;
+      }, {});
+    } else {
+      component_data = component.data
+    }
+
+    const rendered = App.render(component_data)
+
     final = {
       head: rendered.head,
       html: rendered.html,

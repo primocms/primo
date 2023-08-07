@@ -31,12 +31,17 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
 
     const component_lookup = new Map();
 
-    const Component_Code = (component) => {
+    const Component_Code = (component, is_single = true) => {
         let { html, css, js, data } = component
-        const dataAsVariables = `\
+        const dataAsVariables = is_single ? `\
+        ${Object.entries(data)
+            .filter(field => field[0])
+            .map(field => `export let ${field[0]};`)
+            .join(`\n`)
+        }` : `\
           ${Object.entries(data)
                 .filter(field => field[0])
-                .map(field => `export let ${field[0]};`)
+                .map(field => `let ${field[0]} = props['${field[0]}'];`)
                 .join(`\n`)
             }`
 
@@ -49,8 +54,9 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
 
         return `
           <script>
-              ${dataAsVariables}
-              ${js}
+            export let props;
+            ${dataAsVariables}
+            ${js}
           </script>
           ${css ? `<style>${css}</style>` : ``}
           ${html}`
@@ -59,20 +65,17 @@ registerPromiseWorker(async function ({ component, hydrated, buildStatic = true,
     function generate_lookup(component) {
         if (Array.isArray(component)) { // build page (sections as components)
             component.forEach((section, i) => {
-                const code = Component_Code(section)
+                const code = Component_Code(section, false)
                 component_lookup.set(`./Component_${i}.svelte`, code);
             })
             component_lookup.set(`./App.svelte`, `
               <script>
-              ${component.map((_, i) => `import Component_${i} from './Component_${i}.svelte';`).join('')}
+                ${component.map((_, i) => `import Component_${i} from './Component_${i}.svelte';`).join('')}
+
+                ${component.map((_, i) => `export let component_${i}_props`).join(`\n`)}
               </script>
               ${component.map((section, i) => {
-                const props = `\
-                      ${Object.entries(section.data)
-                        .filter(field => field[0])
-                        .map(field => `${field[0]}={${JSON.stringify(field[1])}}`)
-                        .join(` \n`)}`
-                return `<Component_${i} ${props} /> \n`
+                return `<Component_${i} props={component_${i}_props} /> \n`
             }).join('')}
           `);
         } else { // build individual component

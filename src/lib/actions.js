@@ -60,10 +60,9 @@ export const sites = {
     await supabase.storage.from('sites').upload(`backups/${site.url}-${site.id}.json`, backup_json)
     console.log({ site, pages, sections, symbols, backup_json })
 
-    if (sections) await Promise.all(sections.map(async section => {
-      supabase.from('sections').delete().eq('id', section.id)
-    }))
-    
+    if (sections) {
+      await Promise.all(sections.map(section => supabase.from('sections').delete().eq('id', section.id)))
+    }
 
     await Promise.all([
       supabase.from('pages').delete().eq('site', site.id),
@@ -71,6 +70,7 @@ export const sites = {
       supabase.from('invitations').delete().eq('site', site.id),
       supabase.from('collaborators').delete().eq('site', site.id),
     ])
+
     if (delete_files) {
       let siteFiles = await getFiles('sites', site.id)
       if (siteFiles.length) await supabase.storage.from('sites').remove(siteFiles)

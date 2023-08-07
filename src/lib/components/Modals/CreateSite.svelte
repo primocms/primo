@@ -50,6 +50,7 @@
           (section) => section.page === home_page.id
         ),
         page_symbols: selected_theme.symbols,
+        no_js: true,
       })
       onSuccess(
         {
@@ -60,7 +61,7 @@
             name: site_name,
           },
         },
-        preview
+        preview.html
       )
     }
   }
@@ -89,14 +90,16 @@
             (page) => page.url === 'index'
           )
 
-          preview = await buildStaticPage({
+          const page = await buildStaticPage({
             page: home_page,
             site: duplicated_site.site,
             page_sections: duplicated_site.sections.filter(
               (section) => section.page === home_page.id
             ),
             page_symbols: duplicated_site.symbols,
+            no_js: true,
           })
+          preview = page.html
         } else {
           primo_json_valid = false
         }
