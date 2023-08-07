@@ -16,6 +16,7 @@
   const channel = supabase.channel(`locked-blocks`, {
     config: { presence: { key: presence_key } },
   })
+
   channel.subscribe(async (status) => {
     if (status === 'SUBSCRIBED') {
       channel.track({
@@ -23,6 +24,7 @@
       })
     }
   })
+
   channel.on('presence', { event: 'sync' }, () => {
     const state = channel.presenceState()
     $locked_blocks = Object.entries(state)
