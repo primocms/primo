@@ -1,4 +1,5 @@
 <script>
+  import _ from 'lodash'
   import Primo, {
     database_subscribe,
     storage_subscribe,
@@ -11,35 +12,22 @@
   const { supabase } = data
 
   deploy_subscribe(async (payload) => {
-    // if payload is above 4.5mb, break up into chunks
-    const chunks = chunk_payload(payload, 4500)
-    if (chunks.length === 1) {
-      return await deploy_to_server({
-        ...chunks[0],
-        message: 'Deploy site',
-      })
-    } else if (chunks[0]['create_new']) {
-      await deploy_to_server({
-        ...chunks[0],
-        message: `Initial site deployment (chunk 1 of ${chunks.length})`,
-      })
-      let res
-      for (const [i, chunk] of Object.entries(chunks)) {
-        res = await deploy_to_server({
-          ...chunk,
-          message: `Site deploy (chunk ${parseInt(i) + 2} of ${chunks.length})`,
+    const chunks = chunk_payload(payload, 4500) // break payload up into chunks to avoid cloud function body limits
+    const blob_list = (await Promise.all(chunks.map(create_blob_list))).flat()
+    return await deploy_to_server({
+      ...payload,
+      files: blob_list,
+      message: `Deploy site`,
+    })
+
+    async function create_blob_list(chunk) {
+      const { data } = await axios
+        .post('/api/deploy/blobs', chunk)
+        .catch((e) => {
+          console.error({ e })
+          return { data: null }
         })
-      }
-      return res
-    } else {
-      let res
-      for (const [i, chunk] of Object.entries(chunks)) {
-        res = await deploy_to_server({
-          ...chunk,
-          message: `Site deploy (chunk ${parseInt(i) + 1} of ${chunks.length})`,
-        })
-      }
-      return res
+      return data
     }
 
     async function deploy_to_server(chunk, i) {

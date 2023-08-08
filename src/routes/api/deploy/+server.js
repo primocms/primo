@@ -69,7 +69,7 @@ async function push_site_to_github({ files, token, repo_name, message }) {
   ])
   const active_sha = latest_commit?.sha
 
-  const tree = await create_tree(active_sha)
+  const tree = await create_tree()
   const commit = await create_commit(tree.sha, active_sha)
   const final = await push_commit(commit.sha)
 
@@ -80,28 +80,14 @@ async function push_site_to_github({ files, token, repo_name, message }) {
     tree
   }
 
-  async function create_tree(active_sha) {
-    const bundle = files.map((file) => ({
-      path: file.file,
-      content: file.data,
+  async function create_tree() {
+    const tree = files.map((file) => ({
+      path: file.path,
+      sha: file.sha,
       type: 'blob',
       mode: '100644',
     }))
-
-    const {data: { tree:active_tree }} = await axios.get(`https://api.github.com/repos/${repo_name}/git/trees/${active_sha}?recursive=1`, { headers })
-
-    const merged_tree = [
-      ...active_tree.filter(existing_file => !bundle.some(new_file => new_file.path === existing_file.path)), // include existing files not in new bundle
-      ...bundle
-    ]
-    
-    const { data } = await axios.post(
-      `https://api.github.com/repos/${repo_name}/git/trees`,
-      {
-        tree: merged_tree,
-      },
-      { headers }
-    )
+    const { data } = await axios.post(`https://api.github.com/repos/${repo_name}/git/trees`, { tree, }, { headers })
     return data
   }
 
