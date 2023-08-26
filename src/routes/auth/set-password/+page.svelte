@@ -33,22 +33,17 @@
       <div class="fields">
         <label>
           <span>Email</span>
-          <input bind:value={email} type="text" name="email" disabled />
+          <input bind:value={email} type="email" disabled />
+          <input value={email} type="hidden" name="email" />
         </label>
         <label>
           <span>Password</span>
-          <input bind:value={password} type="password" name="email" />
+          <input bind:value={password} type="password" />
         </label>
         <label>
           <span>Confirm Password</span>
           <input bind:value={password_again} type="password" name="password" />
         </label>
-        <input
-          name="invitation_id"
-          type="text"
-          class="hidden"
-          value={$page.url.searchParams.get('join')}
-        />
       </div>
       <button
         class="button"
@@ -137,10 +132,6 @@
       padding: 0.75rem;
       background-color: #1c1c1c;
       font-size: 1rem;
-
-      &.hidden {
-        display: none;
-      }
     }
 
     .button {
