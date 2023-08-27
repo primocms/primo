@@ -26,12 +26,6 @@
       <span>Confirm Password</span>
       <input bind:value={password_confirmation} type="password" />
     </label>
-    <input
-      name="invitation_id"
-      type="text"
-      class="hidden"
-      value={$page.url.searchParams.get('join')}
-    />
   </div>
   <button class="button" type="submit" {disabled}>
     {#if !$navigating}
