@@ -11,7 +11,22 @@
 
   const { supabase } = data
 
-  deploy_subscribe(async (payload) => {
+  deploy_subscribe(async (untyped_payload, create_new) => {
+    // workaround because adding the type next to the argument throws a parsing error (?)
+    const payload =
+      /** @type {import('@primocms/builder/src/lib/deploy.js').DeploymentPayload} */ (
+        untyped_payload
+      )
+
+    if (create_new) {
+      await deploy_to_server({
+        site_id: payload.site_id,
+        repo_name: payload.repo_name,
+        create_new: true,
+        message: 'Create site',
+      })
+    }
+
     const chunks = chunk_payload(payload, 4500) // break payload up into chunks to avoid cloud function body limits
     const blob_list = (await Promise.all(chunks.map(create_blob_list))).flat()
     return await deploy_to_server({
@@ -52,16 +67,12 @@
           ? current_chunk.files.reduce((acc, payload) => acc + file.size, 0)
           : 0
         if (current_chunk && current_chunk_size + file.size < max_size) {
+          // current chunk below limit
           current_chunk.files.push(file)
-        } else if (chunks.length === 0) {
-          chunks.push({
-            ...payload,
-            files: [file],
-          })
         } else {
+          // create new chunk
           chunks.push({
             ...payload,
-            create_new: false,
             files: [file],
           })
         }
