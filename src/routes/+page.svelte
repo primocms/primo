@@ -1,5 +1,5 @@
 <script>
-  import { tick } from 'svelte'
+  import { tick, getContext } from 'svelte'
   import Icon from '@iconify/svelte'
   import { page } from '$app/stores'
   import axios from 'axios'
@@ -89,6 +89,12 @@
                 {/if}
               </div>
               <span class="site-url">{site.url}</span>
+              {#if getContext('DEBUGGING')}
+                <button style="font-size:0.75rem;cursor:pointer;text-align:left" on:click={(e) => {
+                  navigator.clipboard.writeText(e.target.innerText);
+                  e.target.style.opacity = '0.5'
+                }}>{site.id}</button>
+              {/if}
               {#if $page.data.user.admin}
                 <div class="buttons">
                   <button

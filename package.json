@@ -15,7 +15,7 @@
   "dependencies": {
     "@fontsource/fira-code": "^5.0.5",
     "@iconify/svelte": "^2.2.1",
-    "@primocms/builder": "^0.1.18",
+    "@primocms/builder": "^0.1.20",
     "@rollup/browser": "^3.28.0",
     "@supabase/auth-helpers-sveltekit": "^0.10.2",
     "@supabase/supabase-js": "^2.31.0",

@@ -36,6 +36,7 @@
       registerProcessors({ html, css })
     })
     setContext('track', () => {})
+    setContext('DEBUGGING', new URLSearchParams(window.location.search).has('debug'))
   }
 </script>
 
