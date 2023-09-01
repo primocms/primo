@@ -55,6 +55,14 @@ export const actions = {
       }
     }
 
+    const {data:n_users} = await supabase_admin.from('users').select('count') 
+    if (n_users?.length > 0) {
+      return {
+        success: false,
+        error: 'Server already initialized. Sign in as the server owner to invite users.'
+      }
+    }
+
     const data = await request.formData();
     const email = data.get('email');
     const password = data.get('password');
