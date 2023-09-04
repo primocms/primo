@@ -9,10 +9,12 @@
 
 	let email = $page.url.searchParams.get('email') || ''
 	let password = ''
+	let password_confirm = ''
 
 	$: error = form?.error
 
 	$: signing_in = $page.url.searchParams.has('signup') ? false : true
+	$: signup_disabled = !password || password !== password_confirm
 </script>
 
 {#key signing_in}
@@ -52,10 +54,20 @@
 							<span>Password</span>
 							<input bind:value={password} type="password" name="password" />
 						</label>
+						{#if !signing_in}
+							<label>
+								<span>Confirm password</span>
+								<input bind:value={password_confirm} type="password" name="password" />
+							</label>
+						{/if}
 					</div>
-					<button class="button" type="submit">
+					<button class="button" type="submit" disabled={signing_in ? false : signup_disabled}>
 						{#if !$navigating}
-							<span>Sign in</span>
+							{#if signing_in}
+								<span>Sign in</span>
+							{:else}
+								<span>Sign up</span>
+							{/if}
 						{:else}
 							<div class="icon"><Icon icon="gg:spinner" /></div>
 						{/if}
@@ -155,8 +167,9 @@
 			padding: 0.65rem;
 			border: 1.5px solid #35d994;
 			border-radius: 0.25rem;
+			transition: 0.1s;
 
-			&:hover {
+			&:not([disabled]):hover {
 				background-color: #35d994;
 				transition: 0.2s;
 				color: #121212;
@@ -168,6 +181,11 @@
 
 			.icon {
 				animation: icon-spin 1s linear infinite;
+			}
+
+			&[disabled] {
+				opacity: 0.5;
+				cursor: not-allowed;
 			}
 
 			@keyframes icon-spin {

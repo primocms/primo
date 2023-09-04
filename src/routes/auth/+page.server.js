@@ -55,8 +55,8 @@ export const actions = {
       }
     }
 
-    const {data:n_users} = await supabase_admin.from('users').select('count') 
-    if (n_users?.length > 0) {
+    const count = await (supabase_admin.from('users').select('count')).then(({data}) => data?.[0]['count'])
+    if (count > 0) {
       return {
         success: false,
         error: 'Server already initialized. Sign in as the server owner to invite users.'
