@@ -13,13 +13,33 @@ export async function load({ depends, params, parent }) {
 
   // Get site and page
   const site_url = params['site']
-  const client_params = params['page']?.split('/') || null
-  const page_url = (client_params === null) ? 'index' : client_params.pop()
+  const client_params = params['page']?.split('/') || []
+  const page_url = client_params.pop() || 'index'
+  const parent_url = client_params.pop() || null
 
-  const [{ data: site }, { data: page }] = await Promise.all([
-    supabase.from('sites').select().filter('url', 'eq', site_url).single(),
-    supabase.from('pages').select('*, site!inner(id, url)').match({ 'site.url': site_url, url: page_url }).single()
-  ])
+  let site, page
+  if (parent_url) {
+    const res = await Promise.all([
+      supabase.from('sites').select().filter('url', 'eq', site_url).single(),
+      supabase.from('pages').select(`*, site!inner(id, url), parent!inner(id, url)`).match({
+        url: page_url, 
+        'site.url': site_url, 
+        'parent.url': parent_url 
+      }).single()
+    ])
+    site = res[0]['data']
+    page = res[1]['data']
+  } else {
+    const res = await Promise.all([
+      supabase.from('sites').select().filter('url', 'eq', site_url).single(),
+      supabase.from('pages').select(`*, site!inner(id, url)`).match({
+        url: page_url, 
+        'site.url': site_url
+      }).is('parent', null).single()
+    ])
+    site = res[0]['data']
+    page = res[1]['data']
+  }
 
   if (!site) {
     throw redirect(303, '/')
