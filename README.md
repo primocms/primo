@@ -1,3 +1,4 @@
+
 <p align="center">
   <a href="https://primocms.org#gh-dark-mode-only" target="_blank">
     <img src="https://raw.githubusercontent.com/primocms/primo/master/static/logo.svg" alt="Primo" width="200px">
@@ -84,3 +85,8 @@ For more details see this step-by-step installation [video guide](<https://www.y
 
 ## Updating
 You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.
+
+# Primo Docs
+
+This repo contains content in Markdown files for the some of the main pages on the [Primo Docs](https://docs.primocms.org) site.
+

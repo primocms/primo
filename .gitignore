@@ -1,3 +1,4 @@
+
 .env 
 .DS_Store
 .vercel_build_output
@@ -15,3 +16,5 @@ scratchpad.md
 /playwright-report/
 /playwright/.cache/
 pnpm-lock.yaml
+
+.DS_Store
