@@ -21,6 +21,9 @@ const config = {
       apply: 'build', // or 'serve'
     }
   ],
+  build: {
+    sourcemap: true
+  },
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	},
