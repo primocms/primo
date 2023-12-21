@@ -15,7 +15,7 @@
   "dependencies": {
     "@fontsource/fira-code": "^5.0.5",
     "@iconify/svelte": "^2.2.1",
-    "@primocms/builder": "^0.1.54",
+    "@primocms/builder": "^0.1.55",
     "@rollup/browser": "^3.28.0",
     "@supabase/auth-helpers-sveltekit": "^0.10.2",
     "@supabase/supabase-js": "^2.31.0",
@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.33.0",
-    "@sveltejs/adapter-auto": "next",
+    "@sveltejs/adapter-auto": "2.1.1",
     "@sveltejs/kit": "^1.22.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
