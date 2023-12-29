@@ -12,7 +12,7 @@
 
 <p align="center">
     <a href="https://primocms.org/">Primocms.org</a> •
-    <a href="https://forum.primo.so">Forum</a> •
+    <a href="https://discord.com/invite/DMQshmek8m">Discord</a> •
     <a href="https://docs.primocms.org/">Docs</a> •
     <a href="https://primocms.org#section-b18b744b-92ba-4bf9-96fd-4d86c0a842b8">Newsletter</a> •
     <a href="https://www.youtube.com/@primocms">YouTube</a>
