@@ -1,20 +1,21 @@
 import { json } from '@sveltejs/kit';
 import supabase_admin from '$lib/supabase/admin'
+import {languages} from '@primocms/builder'
 
 export async function GET({ params }) {
 
   const pages = params.page?.split('/') || []
-  const lang = params.page[0].length === 2 ? pages.pop() : 'en' // I tried checking with '@primocms/builder/dist/const' but it didn't work on vercel
+  const lang = languages.some(lang => lang.key === pages[0]) ? pages.pop() : 'en' 
   const page_url = pages.pop() || 'index'
-  //const parent_url = pages.pop() || null
+  const parent_url = pages.pop() || null
 
   const [{ data: site_data }, { data: page_data }, { data: subpages_data, error: subpages_error }, { data: sections_data }] = await Promise.all([
     supabase_admin.from('sites').select().filter('url', 'eq', params.site).single(),
     supabase_admin.from('pages').select('*, site!inner(url)').match({ url: page_url, 'site.url': params.site }).single(),
     supabase_admin.from('pages').select('*, parent!inner(*), site!inner(url)').match({ 'site.url': params.site, 'parent.url': page_url }),
-    supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url) )').match({
+    supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url), parent!inner(url) )').match({
       'page.site.url': params.site,
-      // 'page.parent.url': parent_url, // we should also filter by parent but page!inner( parent!inner(url) ) is not working for some reason
+      'page.parent.url': parent_url, 
       'page.url': page_url
     })
   ])
