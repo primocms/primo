@@ -25,7 +25,7 @@ export async function GET({ url, params }) {
     supabase_admin.from('sites').select().filter('url', 'eq', params.site).single(),
     supabase_admin.from('pages').select('*, site!inner(url)').match({ url: page_url, 'site.url': params.site }).single(),
     supabase_admin.from('pages').select('*, parent!inner(*), site!inner(url)').match({ 'site.url': params.site, 'parent.url': page_url })
-      .order(options.sort.split(',')[0], { ascending: options.sort.split(',')[0] === 'asc' })
+      .order(options.sort.split(',')[0], { ascending: options.sort.split(',')[1] === 'asc' })
       .range(parseInt(options.range.split(',')[0]), parseInt(options.range.split(',')[1])),
     supabase_admin.from('pages').select('*, parent!inner(url), site!inner(url)', { count: 'exact', head: true }).match({ 'site.url': params.site, 'parent.url': page_url }),
     supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url), parent!inner(url) )').match({
