@@ -14,13 +14,10 @@ export async function GET({ url, params }) {
   }
 
   const [{ data: pages_data }, { count: pages_total }] = await Promise.all([
-    supabase_admin.rpc('page_search', { search_terms: params.terms, site_url: params.site })
+    supabase_admin.rpc('page_search', { search_terms: decodeURI(params.terms), site_url: params.site })
       .select('id, name, url, created_at')
       .range(parseInt(options.range.split(',')[0]), parseInt(options.range.split(',')[1])),
-    supabase_admin.from('sections')
-      .select('page!inner( id, site!inner(url) )', { count: 'exact', head: true })
-      .eq('page.site.url', params.site)
-      .textSearch('sections.content', params.terms)
+    supabase_admin.rpc('page_search', { search_terms: decodeURI(params.terms), site_url: params.site }, { count: 'exact', head: true })
   ])
 
   const pages = pages_data?.map(page => ({
