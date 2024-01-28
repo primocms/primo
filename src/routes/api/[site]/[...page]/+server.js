@@ -12,7 +12,8 @@ export async function GET({ url, params }) {
   let options = {
     format: 'html', // html | markdown
     range: '0,9', // from,to # https://supabase.com/docs/reference/javascript/range
-    sort: 'created_at,desc' // created_at | name, asc | desc  # default returns latest
+    sort: 'created_at,desc', // created_at | name, asc | desc  # default returns latest
+    sections: '*' // limit the results to specific comma separated section ids
   }
 
   for (const p of url.searchParams) {
@@ -28,11 +29,17 @@ export async function GET({ url, params }) {
       .order(options.sort.split(',')[0], { ascending: options.sort.split(',')[1] === 'asc' })
       .range(parseInt(options.range.split(',')[0]), parseInt(options.range.split(',')[1])),
     supabase_admin.from('pages').select('*, parent!inner(url), site!inner(url)', { count: 'exact', head: true }).match({ 'site.url': params.site, 'parent.url': page_url }),
-    supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url), parent!inner(url) )').match({
-      'page.site.url': params.site,
-      'page.parent.url': parent_url,
-      'page.url': page_url
-    }).order('index')
+    options.sections === '*'
+      ? supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url), parent!inner(url) )').match({
+        'page.site.url': params.site,
+        'page.parent.url': parent_url,
+        'page.url': page_url
+      }).order('index')
+      : supabase_admin.from('sections').select('*, symbol!inner(name, content), page!inner( site!inner(url), parent!inner(url) )').match({
+        'page.site.url': params.site,
+        'page.parent.url': parent_url,
+        'page.url': page_url
+      }).in('id', options.sections.split(',')).order('index')
   ])
 
   const site = {

@@ -449,3 +449,39 @@ CREATE POLICY "Give Authenticated users access to delete images" ON storage.obje
         AND (auth.role() = 'authenticated' :: text)
     )
 );
+
+-- helper functions
+CREATE OR REPLACE FUNCTION page_search(search_terms text, site_url text)
+RETURNS TABLE(id uuid, name text, url text, created_at timestamp with time zone) AS $$
+BEGIN
+    RETURN QUERY
+    WITH RECURSIVE parent_urls AS (
+        SELECT
+            p.id,
+            ARRAY[p.url] AS urls
+        FROM pages p
+        INNER JOIN sites s ON p.site = s.id 
+        WHERE p.parent IS NULL AND s.url = site_url
+
+        UNION ALL
+
+        SELECT
+            p.id,
+            pu.urls || p.url
+        FROM pages p
+        INNER JOIN sites s ON p.site = s.id 
+        INNER JOIN parent_urls pu ON p.parent = pu.id
+        WHERE s.url = site_url
+    )
+    SELECT DISTINCT
+        p.id,
+        p.name,
+        ARRAY_TO_STRING(parent_urls.urls, '/', '/') AS url,
+        p.created_at
+    FROM pages p
+    INNER JOIN sites s ON p.site = s.id
+    INNER JOIN sections se ON p.id = se.page
+    INNER JOIN parent_urls ON p.id = parent_urls.id
+    WHERE s.url = site_url AND to_tsvector(se.content) @@ to_tsquery(search_terms);
+END;
+$$ LANGUAGE plpgsql;
