@@ -10,20 +10,18 @@
 
   let themes = []
   axios
-    .get('https://primosites.vercel.app/api/primo-landing-page/themes')
+    .get(
+      'https://primosites.vercel.app/api/primo-landing-page/themes?sections=ff5c3e56-690b-4220-abe9-9f02a74e1599',
+    )
     .then(({ data }) => {
-      const themes_section = data.sections.find(
-        (section) => section._meta.id === 'ff5c3e56-690b-4220-abe9-9f02a74e1599'
-      )
-      themes = themes_section.templates.filter(
-        (template) => template.price === '0' && template.available
-      )
+      const [section] = data.sections
+      themes = section.templates.filter((template) => template.price === '0' && template.available)
     })
 
   let selectedTheme = null
   async function selectTheme(theme) {
     const { data } = await axios.get(
-      `https://raw.githubusercontent.com/${theme.repo}/main/primo.json`
+      `https://raw.githubusercontent.com/${theme.repo}/main/primo.json`,
     )
     const validated = validate_site_structure_v2(data)
     selectedTheme = theme.name
@@ -32,20 +30,14 @@
 
   let active_theme_page = 0
   $: active_themes =
-    themes.length > 0
-      ? themes.slice(active_theme_page * 4, active_theme_page * 4 + 4)
-      : []
+    themes.length > 0 ? themes.slice(active_theme_page * 4, active_theme_page * 4 + 4) : []
 </script>
 
 <header>
   <h2 class="heading">Themes</h2>
   {#if themes.length > 0}
     <div class="buttons">
-      <button
-        on:click={() => active_theme_page--}
-        type="button"
-        disabled={active_theme_page === 0}
-      >
+      <button on:click={() => active_theme_page--} type="button" disabled={active_theme_page === 0}>
         <Icon icon="ic:round-chevron-left" />
       </button>
       <button

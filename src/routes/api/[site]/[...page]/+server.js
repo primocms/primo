@@ -18,6 +18,8 @@ export async function GET({ url, params }) {
   for (const p of url.searchParams) {
     if (options.hasOwnProperty(p[0])) {
       options[p[0]] = p[1]
+    } else {
+      return json({ error: `${p[0]} isn't a valid query parameter` })
     }
   }
 
@@ -89,8 +91,6 @@ export async function GET({ url, params }) {
       created_at: site_data.created_at,
     },
   }
-
-  console.log({ sections_data })
 
   const page = {
     // @ts-ignore
