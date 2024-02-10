@@ -17,6 +17,10 @@ export async function GET({ locals, url }) {
     .eq('id', `${provider}_token`)
     .single()
 
+  if (error) {
+    return json(null)
+  }
+
   let data = null
   if (provider === 'github' && token) {
     const res = await axios.get(`https://api.github.com/user`, {
