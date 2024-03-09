@@ -1,8 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import vm from 'vm'
 import { Volume } from 'memfs'
-import { Module } from 'module'
-import { createRequire } from 'module'
 import _ from 'lodash-es'
 import rollup from './server-rollup'
 import { Blob } from 'fetch-blob'
@@ -72,7 +69,7 @@ export async function html_server({ component, buildStatic = true, format = 'esm
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;')
     }
-  } else if (buildStatic) {
+  } else if (buildStatic && res.ssr) {
     let component_data
     if (compile_page) {
       // get the component data for the page
@@ -86,35 +83,32 @@ export async function html_server({ component, buildStatic = true, format = 'esm
       component_data = component.data
     }
 
-    const modulePath = `/${component.id}.js`
-    const vol = new Volume()
-    const moduleCode = res.ssr?.replace(
-      'export { Component as default }',
-      'module.exports = Component'
-    )
+    // Create a new in-memory volume
+    const code_path = `/${component.id}.js`
+    const vol = Volume.fromJSON({
+      [code_path]: res.ssr.replace('export { Component as default }', 'module.exports = Component'),
+    })
 
-    vol.writeFileSync(modulePath, moduleCode)
-    try {
-      // Override the readFileSync function temporarily
-      fs.readFileSync = (path, options) => {
-        if (path === modulePath) {
-          return vol.readFileSync(path, options)
-        }
-        return originalFsReadFileSync(path, options)
-      }
-
-      const myModule = new Module(modulePath)
-      const App = myModule.exports
-      const rendered = App.render(component_data)
-
-      payload = {
-        head: rendered.head,
-        html: rendered.html,
-        css: rendered.css.code,
-        js: res.dom,
-      } 
+    // Initialize a common sandbox structure
+    const sandbox = {
+      console,
+      module: {},
+      exports: {},
     }
 
+    // Execute the script
+    executeInVm(vol.readFileSync(code_path, 'utf8'), sandbox)
+    const App = sandbox.module.exports // Access the exported content
+
+    // Render using the exported component
+    const rendered = App.render(component_data)
+
+    payload = {
+      head: rendered.head,
+      html: rendered.html,
+      css: rendered.css.code,
+      js: res.dom,
+    }
   } else {
     payload = {
       js: res.dom,
@@ -122,4 +116,11 @@ export async function html_server({ component, buildStatic = true, format = 'esm
   }
 
   return payload
+}
+
+// Utility function for executing scripts in a VM context
+function executeInVm(scriptContent, sandbox) {
+  const script = new vm.Script(scriptContent)
+  vm.createContext(sandbox) // Setup the context for the sandbox
+  script.runInContext(sandbox)
 }
