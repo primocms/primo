@@ -2,8 +2,6 @@ import vm from 'vm'
 import { Volume } from 'memfs'
 import _ from 'lodash-es'
 import rollup from './server-rollup'
-import { Blob } from 'fetch-blob'
-globalThis.Blob = Blob // use Node.js Blob instead of Jsdom's Blob
 
 const COMPILED_COMPONENTS_CACHE = new Map()
 
