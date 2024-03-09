@@ -2,7 +2,6 @@
   import { tick, getContext } from 'svelte'
   import Icon from '@iconify/svelte'
   import { page } from '$app/stores'
-  import axios from 'axios'
   import DashboardToolbar from '$lib/components/DashboardToolbar.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import { show, hide } from '$lib/components/Modal.svelte'
@@ -70,8 +69,7 @@
               <div class="site-name">
                 {#if siteBeingEdited.id === site.id}
                   <form
-                    on:submit|preventDefault={() =>
-                      (siteBeingEdited = { id: null, element: null })}
+                    on:submit|preventDefault={() => (siteBeingEdited = { id: null, element: null })}
                   >
                     <input
                       bind:this={siteBeingEdited.element}
@@ -90,17 +88,19 @@
               </div>
               <span class="site-url">{site.url}</span>
               {#if getContext('DEBUGGING')}
-                <button style="font-size:0.75rem;cursor:pointer;text-align:left" on:click={(e) => {
-                  navigator.clipboard.writeText(e.target.innerText);
-                  e.target.style.opacity = '0.5'
-                }}>{site.id}</button>
+                <button
+                  style="font-size:0.75rem;cursor:pointer;text-align:left"
+                  on:click={(e) => {
+                    navigator.clipboard.writeText(e.target.innerText)
+                    e.target.style.opacity = '0.5'
+                  }}
+                >
+                  {site.id}
+                </button>
               {/if}
               {#if $page.data.user.admin}
                 <div class="buttons">
-                  <button
-                    on:click={() => beginInvitation(site)}
-                    class="site-button"
-                  >
+                  <button on:click={() => beginInvitation(site)} class="site-button">
                     <Icon icon="clarity:users-solid" />
                     <span>Collaborators</span>
                   </button>
@@ -115,10 +115,7 @@
                     <Icon icon="material-symbols:edit-square-outline-rounded" />
                     <span>Rename</span>
                   </button>
-                  <button
-                    class="site-button"
-                    on:click={() => delete_site(site)}
-                  >
+                  <button class="site-button" on:click={() => delete_site(site)}>
                     <Icon icon="pepicons-pop:trash" />
                     <span>Delete</span>
                   </button>
@@ -309,7 +306,9 @@
   }
 
   button {
-    transition: color 0.1s, background-color 0.1s;
+    transition:
+      color 0.1s,
+      background-color 0.1s;
     &:focus {
       outline: 2px solid var(--primo-color-brand);
     }

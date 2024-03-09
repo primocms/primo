@@ -21,21 +21,30 @@ export async function load({ depends, params, parent }) {
   if (parent_url) {
     const res = await Promise.all([
       supabase.from('sites').select().filter('url', 'eq', site_url).single(),
-      supabase.from('pages').select(`*, site!inner(id, url), parent!inner(id, url)`).match({
-        url: page_url, 
-        'site.url': site_url, 
-        'parent.url': parent_url 
-      }).single()
+      supabase
+        .from('pages')
+        .select(`*, site!inner(id, url), parent!inner(id, url)`)
+        .match({
+          url: page_url,
+          'site.url': site_url,
+          'parent.url': parent_url,
+        })
+        .single(),
     ])
     site = res[0]['data']
     page = res[1]['data']
   } else {
     const res = await Promise.all([
       supabase.from('sites').select().filter('url', 'eq', site_url).single(),
-      supabase.from('pages').select(`*, site!inner(id, url)`).match({
-        url: page_url, 
-        'site.url': site_url
-      }).is('parent', null).single()
+      supabase
+        .from('pages')
+        .select(`*, site!inner(id, url)`)
+        .match({
+          url: page_url,
+          'site.url': site_url,
+        })
+        .is('parent', null)
+        .single(),
     ])
     site = res[0]['data']
     page = res[1]['data']
@@ -49,9 +58,17 @@ export async function load({ depends, params, parent }) {
 
   // Get sorted pages, symbols, and sections
   const [{ data: pages }, { data: symbols }, { data: sections }] = await Promise.all([
-    supabase.from('pages').select().match({ site: site.id }).order('created_at', { ascending: true }),
+    supabase
+      .from('pages')
+      .select()
+      .match({ site: site.id })
+      .order('created_at', { ascending: true }),
     supabase.from('symbols').select().match({ site: site.id }).order('index', { ascending: true }),
-    supabase.from('sections').select('id, page, index, content, symbol').match({ page: page['id'] }).order('index', { ascending: true }),
+    supabase
+      .from('sections')
+      .select('id, page, index, content, symbol')
+      .match({ page: page['id'] })
+      .order('index', { ascending: true }),
   ])
 
   return {
@@ -59,6 +76,6 @@ export async function load({ depends, params, parent }) {
     page,
     pages,
     sections,
-    symbols
+    symbols,
   }
 }
