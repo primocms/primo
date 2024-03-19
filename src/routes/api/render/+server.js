@@ -3,26 +3,20 @@ import supabase_admin from '$lib/supabase/admin'
 import { html_server } from '../../../compiler/cloud-workers/server-compiler.js'
 import postcss from '../../../compiler/cloud-workers/server-postcss.js'
 
-export const GET = async (event) => {
-  const symbol = event.url.searchParams.get('symbol')
-  const { data } = await supabase_admin
-    .from('symbols')
-    .select('*')
-    .eq('id', symbol)
-    .order('created_at', { ascending: false })
-    .single()
+export const POST = async (event) => {
+  const { id, code, content } = await event.request.json()
 
-  const css = await postcss(data.code.css || '')
+  const css = await postcss(code.css || '')
 
   let res = {}
   try {
     res = await html_server({
       component: {
-        id: symbol,
-        data: data.content.en,
-        html: data.code.html,
+        id,
+        data: content.en,
+        html: code.html,
         css: css,
-        js: data.code.js,
+        js: code.js,
       },
     })
   } catch (e) {
