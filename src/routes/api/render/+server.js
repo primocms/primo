@@ -1,5 +1,4 @@
 import { json } from '@sveltejs/kit'
-import supabase_admin from '$lib/supabase/admin'
 import { html_server } from '../../../compiler/cloud-workers/server-compiler.js'
 import postcss from '../../../compiler/cloud-workers/server-postcss.js'
 
