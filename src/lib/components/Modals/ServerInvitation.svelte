@@ -4,7 +4,9 @@
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
 
-  const { supabase } = $page.data
+  const { supabase, session } = $page.data
+
+  const owner = session?.user
 
   let loading = false
   let email = ''
@@ -61,6 +63,35 @@
     } else return data
   }
 
+  async function remove_editor(user_id) {
+    loading = true
+    const { data: success } = await axios.delete('/api/invitations', {
+      params: {
+        user: user_id,
+        server_invitation: true,
+      },
+    })
+    if (success) {
+      get_collaborators().then((res) => {
+        editors = res
+      })
+    }
+    loading = false
+  }
+
+  async function cancel_invitation(email) {
+    loading = true
+    const { data: success } = await axios.put('/api/invitations', {
+      email,
+    })
+    if (success) {
+      get_invitations().then((res) => {
+        invitations = res
+      })
+    }
+    loading = false
+  }
+
   const Role = (role) =>
     ({
       DEV: 'Developer',
@@ -112,6 +143,13 @@
               <span class="letter">{email[0]}</span>
               <span class="email">{email}</span>
               <span>Sent {timeago.format(created_at)}</span>
+              <button
+                class="site-button"
+                on:click={() => cancel_invitation(email)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Cancel</span>
+              </button>
             </li>
           {/each}
         </ul>
@@ -125,6 +163,15 @@
             <span class="letter">{user.email[0]}</span>
             <span class="email">{user.email}</span>
             <span class="role">{Role(role)}</span>
+            {#if user.id !== owner.id}
+              <button
+                class="site-button"
+                on:click={() => remove_editor(user.id)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Remove</span>
+              </button>
+            {/if}
           </li>
         {/each}
       </ul>

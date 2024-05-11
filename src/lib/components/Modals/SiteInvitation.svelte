@@ -2,6 +2,7 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
+  import Icon from '@iconify/svelte'
 
   export let site
 
@@ -74,6 +75,37 @@
         return { role: item.role, ...item.user }
       })
   }
+
+  async function remove_editor(user_id) {
+    loading = true
+    const { data: success } = await axios.delete('/api/invitations', {
+      params: {
+        site: site.id,
+        user: user_id,
+        server_invitation: false,
+      },
+    })
+    if (success) {
+      get_collaborators(site.id).then((res) => {
+        editors = res
+      })
+    }
+    loading = false
+  }
+
+  async function cancel_invitation(email) {
+    loading = true
+    const { data: success } = await axios.put('/api/invitations', {
+      site: site.id,
+      email,
+    })
+    if (success) {
+      get_invitations(site.id).then((res) => {
+        invitations = res
+      })
+    }
+    loading = false
+  }
 </script>
 
 <div class="Invitation">
@@ -107,6 +139,13 @@
               <span class="letter">{email[0]}</span>
               <span class="email">{email}</span>
               <span>Sent {timeago.format(created_at)}</span>
+              <button
+                class="site-button"
+                on:click={() => cancel_invitation(email)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Cancel</span>
+              </button>
             </li>
           {/each}
         </ul>
@@ -120,11 +159,15 @@
           <span class="email">{owner.email}</span>
           <span class="role">Owner</span>
         </li>
-        {#each editors as { role, email }}
+        {#each editors as { id, role, email }}
           <li>
             <span class="letter">{email[0]}</span>
             <span class="email">{email}</span>
             <span class="role">{role}</span>
+            <button class="site-button" on:click={() => remove_editor(id)}>
+              <Icon icon="pepicons-pop:trash" />
+              <span>Remove</span>
+            </button>
           </li>
         {/each}
       </ul>

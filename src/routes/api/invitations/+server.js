@@ -59,3 +59,39 @@ export async function POST({ request }) {
   console.error(error)
   return json({ success: !error, error: error?.message })
 }
+
+export async function DELETE({ url }) {
+  const user = url.searchParams.get('user')
+  const site = url.searchParams.get('site')
+  const server_invitation = url.searchParams.get('server_invitation') === 'true'
+
+  // Remove from 'server_members' or 'collaborators'
+  const { error } = server_invitation ?
+    await supabase_admin
+      .from('server_members')
+      .delete()
+      .eq('user', user)
+    : await supabase_admin
+      .from('collaborators')
+      .delete()
+      .match({ user, site })
+
+  console.error(error)
+  return json({ success: !error, error: error?.message })
+}
+
+export async function PUT({ request }) {
+  const {
+    email,
+    site = null
+  } = await request.json()
+
+  // Remove from 'invitations'
+  const { error } = await supabase_admin
+    .from('collaborators')
+    .delete()
+    .match({ email, site })
+
+  console.error(error)
+  return json({ success: !error, error: error?.message })
+}
