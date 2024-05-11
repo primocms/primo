@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit'
 import supabase_admin from '$lib/supabase/admin'
 
 export async function POST({ request }) {
+  let user = null
   const {
     url,
     site = null,
@@ -10,30 +11,51 @@ export async function POST({ request }) {
     email,
   } = await request.json()
 
-  const { data, error } = await supabase_admin.auth.admin.inviteUserByEmail(
-    email,
-    { redirectTo: `${url}/auth/set-password?email=${email}` }
-  )
+  const { data: existing_user, error: err } = await supabase_admin
+    .from('users')
+    .select('*, server_members (admin, role), collaborators (role)')
+    .eq('email', email)
+    .single()
 
-  if (!error) {
-    await supabase_admin.from('users').insert({
-      id: data.user.id,
-      email: data.user.email,
-    })
+  if (!err && existing_user) {
+    const [server_member] = existing_user.server_members
+    const [collaborator] = existing_user.collaborators
 
-    // Add to 'server_members' or 'collaborators'
-    const { error } = server_invitation
-      ? await supabase_admin
-          .from('server_members')
-          .insert({ user: data.user.id, role })
-      : await supabase_admin
-          .from('collaborators')
-          .insert({ site, user: data.user.id, role })
+    if (server_member || (!server_invitation && collaborator.site === site)) {
+      return json({ success: false, error: 'User already has access' })
+    }
 
-    console.error(error)
-    return json({ success: !error, error: error?.message })
+    user = existing_user
   } else {
-    console.error(error)
-    return json({ success: false, error: error.message })
+    const { data, error } = await supabase_admin.auth.admin.inviteUserByEmail(
+      email,
+      { redirectTo: `${url}/auth/set-password?email=${email}` }
+    )
+
+    if (!error) {
+      await supabase_admin.from('users').insert({
+        id: data.user.id,
+        email: data.user.email,
+      })
+    } else {
+      console.error(error)
+      return json({ success: false, error: error.message })
+    }
+    user = data.user
   }
+  // Add to 'server_members' or 'collaborators'
+  const { error } = server_invitation
+    ? role === 'ADMIN' ?
+      await supabase_admin
+        .from('server_members')
+        .insert({ user: user.id, role: 'DEV', admin: true })
+      : await supabase_admin
+        .from('server_members')
+        .insert({ user: user.id, role })
+    : await supabase_admin
+      .from('collaborators')
+      .insert({ site, user: user.id, role })
+
+  console.error(error)
+  return json({ success: !error, error: error?.message })
 }

@@ -11,16 +11,10 @@
 
   let loading = false
   let email = ''
-  let role = 'DEV'
+  let role = 'EDITOR'
 
   async function invite_editor() {
     loading = true
-    await supabase.from('invitations').insert({
-      email,
-      inviter_email: owner.email,
-      site: site.id,
-      role,
-    })
     const { data: success } = await axios.post('/api/invitations', {
       site: site.id,
       email,
@@ -29,6 +23,12 @@
       url: $page.url.origin,
     })
     if (success) {
+      await supabase.from('invitations').insert({
+        email,
+        inviter_email: owner.email,
+        site: site.id,
+        role,
+      })
       const { data, error } = await supabase
         .from('invitations')
         .select('*')
@@ -64,12 +64,15 @@
   export async function get_collaborators(site_id) {
     const { data, error } = await supabase
       .from('collaborators')
-      .select(`user (*)`)
+      .select(`role, user (*)`)
       .filter('site', 'eq', site_id)
     if (error) {
       console.error(error)
       return []
-    } else return data.map((item) => item.user)
+    } else
+      return data.map((item) => {
+        return { role: item.role, ...item.user }
+      })
   }
 </script>
 
@@ -89,6 +92,7 @@
           <select bind:value={role}>
             <option value="DEV">Developer</option>
             <option value="EDITOR">Content Editor</option>
+            <option value="OWNER">Owner</option>
           </select>
         </div>
         <button type="submit">Send invite</button>
@@ -116,11 +120,11 @@
           <span class="email">{owner.email}</span>
           <span class="role">Owner</span>
         </li>
-        {#each editors as { email }}
+        {#each editors as { role, email }}
           <li>
             <span class="letter">{email[0]}</span>
             <span class="email">{email}</span>
-            <span class="role">Editor</span>
+            <span class="role">{role}</span>
           </li>
         {/each}
       </ul>

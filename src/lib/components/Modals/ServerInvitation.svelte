@@ -12,20 +12,19 @@
 
   async function invite_editor() {
     loading = true
-    await supabase.from('invitations').insert({
-      email,
-      inviter_email: $page.data.user.email,
-      role,
-      server_invitation: true,
-    })
     const { data } = await axios.post('/api/invitations', {
       url: $page.url.origin,
       email,
       role,
       server_invitation: true,
     })
-
     if (data.success) {
+      await supabase.from('invitations').insert({
+        email,
+        inviter_email: $page.data.user.email,
+        role,
+        server_invitation: true,
+      })
       invitations = await get_invitations()
     } else {
       alert(data.error)
@@ -66,7 +65,8 @@
     ({
       DEV: 'Developer',
       EDITOR: 'Content Editor',
-    }[role])
+      ADMIN: 'Admin',
+    })[role]
 </script>
 
 <div class="Invitation">
@@ -91,6 +91,7 @@
           <select bind:value={role}>
             <option value="DEV">{Role('DEV')}</option>
             <option value="EDITOR">{Role('EDITOR')}</option>
+            <option value="ADMIN">{Role('ADMIN')}</option>
           </select>
         </div>
         <button type="submit" disabled={!email}>
