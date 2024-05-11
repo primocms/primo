@@ -86,9 +86,43 @@ export async function PUT({ request }) {
     site = null
   } = await request.json()
 
+  const { data: user, error: err } = await supabase_admin
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .single()
+
+  if (err) return json({ success: !err, error: err?.message })
+
+  if (site) {
+    const { error } = await supabase_admin
+      .from('collaborators')
+      .delete()
+      .match({ user: user.id, site })
+
+    if (error) return json({ success: !error, error: error?.message })
+  } else {
+    const { error } = await supabase_admin
+      .from('server_members')
+      .delete()
+      .match({ user: user.id })
+
+    if (error) return json({ success: !error, error: error?.message })
+  }
+
+  // Remove from 'users'
+  const { data, error: err2 } = await supabase_admin.auth.admin.deleteUser(user.id)
+  if (err2) return json({ success: !err2, error: err2?.message })
+  const { error: err3 } = await supabase_admin
+    .from('users')
+    .delete()
+    .match({ id: user.id })
+
+  if (err3) return json({ success: !err3, error: err3?.message })
+
   // Remove from 'invitations'
   const { error } = await supabase_admin
-    .from('collaborators')
+    .from('invitations')
     .delete()
     .match({ email, site })
 
