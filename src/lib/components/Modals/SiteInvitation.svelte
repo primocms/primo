@@ -16,27 +16,24 @@
 
   async function invite_editor() {
     loading = true
-    const { data: success } = await axios.post('/api/invitations', {
+    const { data: res } = await axios.post('/api/invitations', {
       site: site.id,
       email,
       role,
       server_invitation: false,
       url: $page.url.origin,
     })
-    if (success) {
-      await supabase.from('invitations').insert({
-        email,
-        inviter_email: owner.email,
-        site: site.id,
-        role,
-      })
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('site', site.id)
-      if (data) {
-        invitations = data
+    if (res.success) {
+      if (res.isNew) {
+        await supabase.from('invitations').insert({
+          email,
+          inviter_email: owner.email,
+          site: site.id,
+          role,
+        })
       }
+      invitations = await get_invitations(site.id)
+      editors = await get_collaborators(site.id)
     } else {
       alert('Could not send invitation. Please try again.')
     }

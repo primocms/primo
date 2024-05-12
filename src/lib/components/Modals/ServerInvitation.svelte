@@ -21,13 +21,16 @@
       server_invitation: true,
     })
     if (data.success) {
-      await supabase.from('invitations').insert({
-        email,
-        inviter_email: $page.data.user.email,
-        role,
-        server_invitation: true,
-      })
+      if (data.isNew) {
+        await supabase.from('invitations').insert({
+          email,
+          inviter_email: $page.data.user.email,
+          role,
+          server_invitation: true,
+        })
+      }
       invitations = await get_invitations()
+      editors = await get_collaborators()
     } else {
       alert(data.error)
     }

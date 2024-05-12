@@ -57,7 +57,7 @@ export async function POST({ request }) {
       .insert({ site, user: user.id, role })
 
   console.error(error)
-  return json({ success: !error, error: error?.message })
+  return json({ success: !error, error: error?.message, isNew: existing_user === null })
 }
 
 export async function DELETE({ url }) {
@@ -80,11 +80,35 @@ export async function DELETE({ url }) {
   return json({ success: !error, error: error?.message })
 }
 
-export async function PUT({ request }) {
+export async function PUT({ request }) { // cancel an invitation
   const {
     email,
     site = null
   } = await request.json()
+
+  const { data: user, error: err } = await supabase_admin
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .single()
+
+  if (err) return json({ success: !err, error: err?.message })
+
+  if (site) {
+    const { error } = await supabase_admin
+      .from('collaborators')
+      .delete()
+      .match({ user: user.id, site })
+
+    if (error) return json({ success: !error, error: error?.message })
+  } else {
+    const { error } = await supabase_admin
+      .from('server_members')
+      .delete()
+      .match({ user: user.id })
+
+    if (error) return json({ success: !error, error: error?.message })
+  }
 
   const { data: user, error: err } = await supabase_admin
     .from('users')
