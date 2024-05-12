@@ -4,7 +4,9 @@
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
 
-  const { supabase } = $page.data
+  const { supabase, session } = $page.data
+
+  const owner = session?.user
 
   let loading = false
   let email = ''
@@ -12,21 +14,23 @@
 
   async function invite_editor() {
     loading = true
-    await supabase.from('invitations').insert({
-      email,
-      inviter_email: $page.data.user.email,
-      role,
-      server_invitation: true,
-    })
     const { data } = await axios.post('/api/invitations', {
       url: $page.url.origin,
       email,
       role,
       server_invitation: true,
     })
-
     if (data.success) {
+      if (data.isNew) {
+        await supabase.from('invitations').insert({
+          email,
+          inviter_email: $page.data.user.email,
+          role,
+          server_invitation: true,
+        })
+      }
       invitations = await get_invitations()
+      editors = await get_collaborators()
     } else {
       alert(data.error)
     }
@@ -62,11 +66,41 @@
     } else return data
   }
 
+  async function remove_editor(user_id) {
+    loading = true
+    const { data: success } = await axios.delete('/api/invitations', {
+      params: {
+        user: user_id,
+        server_invitation: true,
+      },
+    })
+    if (success) {
+      get_collaborators().then((res) => {
+        editors = res
+      })
+    }
+    loading = false
+  }
+
+  async function cancel_invitation(email) {
+    loading = true
+    const { data: success } = await axios.put('/api/invitations', {
+      email,
+    })
+    if (success) {
+      get_invitations().then((res) => {
+        invitations = res
+      })
+    }
+    loading = false
+  }
+
   const Role = (role) =>
     ({
       DEV: 'Developer',
       EDITOR: 'Content Editor',
-    }[role])
+      ADMIN: 'Admin',
+    })[role]
 </script>
 
 <div class="Invitation">
@@ -91,6 +125,7 @@
           <select bind:value={role}>
             <option value="DEV">{Role('DEV')}</option>
             <option value="EDITOR">{Role('EDITOR')}</option>
+            <option value="ADMIN">{Role('ADMIN')}</option>
           </select>
         </div>
         <button type="submit" disabled={!email}>
@@ -111,6 +146,13 @@
               <span class="letter">{email[0]}</span>
               <span class="email">{email}</span>
               <span>Sent {timeago.format(created_at)}</span>
+              <button
+                class="site-button"
+                on:click={() => cancel_invitation(email)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Cancel</span>
+              </button>
             </li>
           {/each}
         </ul>
@@ -124,6 +166,15 @@
             <span class="letter">{user.email[0]}</span>
             <span class="email">{user.email}</span>
             <span class="role">{Role(role)}</span>
+            {#if user.id !== owner.id}
+              <button
+                class="site-button"
+                on:click={() => remove_editor(user.id)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Remove</span>
+              </button>
+            {/if}
           </li>
         {/each}
       </ul>

@@ -2,6 +2,7 @@
   import axios from 'axios'
   import * as timeago from 'timeago.js'
   import { page } from '$app/stores'
+  import Icon from '@iconify/svelte'
 
   export let site
 
@@ -11,31 +12,28 @@
 
   let loading = false
   let email = ''
-  let role = 'DEV'
+  let role = 'EDITOR'
 
   async function invite_editor() {
     loading = true
-    await supabase.from('invitations').insert({
-      email,
-      inviter_email: owner.email,
-      site: site.id,
-      role,
-    })
-    const { data: success } = await axios.post('/api/invitations', {
+    const { data: res } = await axios.post('/api/invitations', {
       site: site.id,
       email,
       role,
       server_invitation: false,
       url: $page.url.origin,
     })
-    if (success) {
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('site', site.id)
-      if (data) {
-        invitations = data
+    if (res.success) {
+      if (res.isNew) {
+        await supabase.from('invitations').insert({
+          email,
+          inviter_email: owner.email,
+          site: site.id,
+          role,
+        })
       }
+      invitations = await get_invitations(site.id)
+      editors = await get_collaborators(site.id)
     } else {
       alert('Could not send invitation. Please try again.')
     }
@@ -64,12 +62,46 @@
   export async function get_collaborators(site_id) {
     const { data, error } = await supabase
       .from('collaborators')
-      .select(`user (*)`)
+      .select(`role, user (*)`)
       .filter('site', 'eq', site_id)
     if (error) {
       console.error(error)
       return []
-    } else return data.map((item) => item.user)
+    } else
+      return data.map((item) => {
+        return { role: item.role, ...item.user }
+      })
+  }
+
+  async function remove_editor(user_id) {
+    loading = true
+    const { data: success } = await axios.delete('/api/invitations', {
+      params: {
+        site: site.id,
+        user: user_id,
+        server_invitation: false,
+      },
+    })
+    if (success) {
+      get_collaborators(site.id).then((res) => {
+        editors = res
+      })
+    }
+    loading = false
+  }
+
+  async function cancel_invitation(email) {
+    loading = true
+    const { data: success } = await axios.put('/api/invitations', {
+      site: site.id,
+      email,
+    })
+    if (success) {
+      get_invitations(site.id).then((res) => {
+        invitations = res
+      })
+    }
+    loading = false
   }
 </script>
 
@@ -89,6 +121,7 @@
           <select bind:value={role}>
             <option value="DEV">Developer</option>
             <option value="EDITOR">Content Editor</option>
+            <option value="OWNER">Owner</option>
           </select>
         </div>
         <button type="submit">Send invite</button>
@@ -103,6 +136,13 @@
               <span class="letter">{email[0]}</span>
               <span class="email">{email}</span>
               <span>Sent {timeago.format(created_at)}</span>
+              <button
+                class="site-button"
+                on:click={() => cancel_invitation(email)}
+              >
+                <Icon icon="pepicons-pop:trash" />
+                <span>Cancel</span>
+              </button>
             </li>
           {/each}
         </ul>
@@ -116,11 +156,15 @@
           <span class="email">{owner.email}</span>
           <span class="role">Owner</span>
         </li>
-        {#each editors as { email }}
+        {#each editors as { id, role, email }}
           <li>
             <span class="letter">{email[0]}</span>
             <span class="email">{email}</span>
-            <span class="role">Editor</span>
+            <span class="role">{role}</span>
+            <button class="site-button" on:click={() => remove_editor(id)}>
+              <Icon icon="pepicons-pop:trash" />
+              <span>Remove</span>
+            </button>
           </li>
         {/each}
       </ul>

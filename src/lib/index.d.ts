@@ -78,7 +78,7 @@ export type User = {
 	email: string;
 	server_member: boolean;
 	admin: boolean;
-	role: 'DEV' | 'EDITOR';
+	role: 'DEV' | 'EDITOR' | 'OWNER';
 	created_at: string;
 }
 

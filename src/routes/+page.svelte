@@ -69,7 +69,8 @@
               <div class="site-name">
                 {#if siteBeingEdited.id === site.id}
                   <form
-                    on:submit|preventDefault={() => (siteBeingEdited = { id: null, element: null })}
+                    on:submit|preventDefault={() =>
+                      (siteBeingEdited = { id: null, element: null })}
                   >
                     <input
                       bind:this={siteBeingEdited.element}
@@ -98,9 +99,12 @@
                   {site.id}
                 </button>
               {/if}
-              {#if $page.data.user.admin}
+              {#if $page.data.user.admin || site.collaborators.some((c) => c.site === $page.data.user.id && c.role === 'OWNER')}
                 <div class="buttons">
-                  <button on:click={() => beginInvitation(site)} class="site-button">
+                  <button
+                    on:click={() => beginInvitation(site)}
+                    class="site-button"
+                  >
                     <Icon icon="clarity:users-solid" />
                     <span>Collaborators</span>
                   </button>
@@ -115,7 +119,10 @@
                     <Icon icon="material-symbols:edit-square-outline-rounded" />
                     <span>Rename</span>
                   </button>
-                  <button class="site-button" on:click={() => delete_site(site)}>
+                  <button
+                    class="site-button"
+                    on:click={() => delete_site(site)}
+                  >
                     <Icon icon="pepicons-pop:trash" />
                     <span>Delete</span>
                   </button>
