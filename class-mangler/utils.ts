@@ -32,7 +32,7 @@ export const cssPseudo = [
   'root',
   'target',
   'valid',
-  'visited'
+  'visited',
 ];
 
 export const cssPseudoRegex = cssPseudo.join('|');
@@ -48,13 +48,11 @@ export const removeCssPsuedoSelector = (code: string) => {
 export const getRandomClassName = (config: { length?: number; min?: number; max?: number }) => {
   let length = 5;
 
-  config.length
-    ? (length = config.length)
-    : config.min && config.max && (length = getRandomInt(config.min, config.max));
+  config.length ? (length = config.length) : config.min && config.max && (length = getRandomInt(config.min, config.max));
 
   return random.generate({
     length,
-    charset: 'alphabetic'
+    charset: 'alphabetic',
   });
 };
 

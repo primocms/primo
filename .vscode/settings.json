@@ -8,7 +8,7 @@
   "editor.formatOnSave": true,
   "[svelte]": { "editor.defaultFormatter": "svelte.svelte-vscode" },
   "[js]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "i18n-ally.localesPaths": ["src/lib/editor/languages"],
   "files.associations": {

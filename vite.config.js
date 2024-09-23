@@ -2,7 +2,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').UserConfig} */
 const config = {
-	plugins: [
+  plugins: [
     sveltekit(),
     // ClassMangler({
     //   // dev: true
@@ -13,24 +13,22 @@ const config = {
       configResolved(c) {
         const manifestPlugin = c.worker.plugins.findIndex((p) => p.name === 'vite:manifest');
         c.worker.plugins.splice(manifestPlugin, 1);
-        const ssrManifestPlugin = c.worker.plugins.findIndex(
-          (p) => p.name === 'vite:ssr-manifest'
-        );
+        const ssrManifestPlugin = c.worker.plugins.findIndex((p) => p.name === 'vite:ssr-manifest');
         c.plugins.splice(ssrManifestPlugin, 1);
       },
       apply: 'build', // or 'serve'
-    }
+    },
   ],
   build: {
-    sourcemap: true
+    sourcemap: true,
   },
-	test: {
-		include: ['src/**/*.{test,spec}.{js,ts}']
-	},
-	server: {
+  test: {
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+  },
+  server: {
     fs: {
       // throws an error without this when importing Fira font
-      allow: ['..', 'node_modules/@fontsource/fira-code']
+      allow: ['..', 'node_modules/@fontsource/fira-code'],
     },
     // port: 5174,
     // headers: {
@@ -40,8 +38,8 @@ const config = {
     // }
   },
   define: {
-    '__SERVER_VERSION__': JSON.stringify(process.env.npm_package_version),
-  }
+    __SERVER_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
 };
 
 export default config;

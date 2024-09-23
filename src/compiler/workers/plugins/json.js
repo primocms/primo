@@ -1,12 +1,12 @@
 /** @type {import('@rollup/browser').Plugin} */
 export default {
-	name: 'json',
-	transform: (code, id) => {
-		if (!id.endsWith('.json')) return;
+  name: 'json',
+  transform: (code, id) => {
+    if (!id.endsWith('.json')) return;
 
-		return {
-			code: `export default ${code};`,
-			map: null
-		};
-	}
+    return {
+      code: `export default ${code};`,
+      map: null,
+    };
+  },
 };

@@ -4,28 +4,36 @@ Contributions to Primo are very welcome. You can start by submitting a PR to add
 
 ## Running locally
 
-1. Clone the main Primo repo 
+1. Clone the main Primo repo
+
 ```
 git clone https://github.com/primocms/primo.git
 ```
+
 2. Clone the builder repo
+
 ```
 git clone https://github.com/primocms/builder
 ```
-3. Link the builder to Primo 
+
+3. Link the builder to Primo
+
 ```
 cd builder
 npm link
 npm install
 npm run package-watch
 ```
+
 4. Run Primo
+
 ```
 cd ../primo
-npm install 
+npm install
 npm link @primocms/builder
 npm run dev
 ```
+
 5. Open your browser to http://localhost:5173
 
-If you have any issues setting this up, it's probably *not* just you, so feel free to pop into any of the discussion spaces linked above for some help. 
+If you have any issues setting this up, it's probably _not_ just you, so feel free to pop into any of the discussion spaces linked above for some help.

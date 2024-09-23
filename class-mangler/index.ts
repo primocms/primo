@@ -19,7 +19,7 @@ export default function ClassMangler(config: PluginConfig = {}): Plugin[] {
         if (endsWith(id, config.suffixes)) {
           return transformTemplates(id, code, classMapping, config);
         }
-      }
+      },
     },
     {
       name: 'class-mangler-styles',
@@ -39,10 +39,10 @@ export default function ClassMangler(config: PluginConfig = {}): Plugin[] {
         this.emitFile({
           type: 'asset',
           name: 'class-mapping.json',
-          source: JSON.stringify(classMappingObject)
+          source: JSON.stringify(classMappingObject),
         });
-      }
-    }
+      },
+    },
   ];
 
   if (config.dev) {

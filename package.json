@@ -44,6 +44,7 @@
     "jszip": "^3.10.1",
     "mousetrap": "^1.6.5",
     "postcss-nested": "^5.0.6",
+    "prettier": "^3.3.3",
     "randomstring": "^1.2.3",
     "showdown-highlight": "^3.1.0",
     "svelte": "^3.59.2",

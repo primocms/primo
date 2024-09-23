@@ -20,7 +20,7 @@
 
 ![screenshot](https://github.com/primocms/primo/raw/master/screenshot-v2.png)
 
-## ⭐ Why Primo? 
+## ⭐ Why Primo?
 
 Traditional monolithic CMSs like WordPress, Drupal, and Joomla enable quick setup and easy content editing, but rely on antiquated and heavy development practices (often relying on plugins and third-party services to customize the site and add new components). Headless CMSs have popped up to modernize the view layer with modern development practices and frameworks, but have a poorer content editing experience due to their decoupling from the content layer.
 
@@ -40,16 +40,16 @@ Primo is a modern approach to the monolithic CMS that builds on the traditional 
 [Read more in the Docs](https://docs.primocms.org)
 
 # How to self-host Primo
-Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking the [**Primo repo**](<https://github.com/primocms/primo>) and deploying it on a static host like Vercel or Netlify, which should only take a few minutes.
+
+Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking the [**Primo repo**](https://github.com/primocms/primo) and deploying it on a static host like Vercel or Netlify, which should only take a few minutes.
 
 Third-party services (all can be signed into with Github):
 
-- A modern web host like [**Vercel**](<https://vercel.com/>) or [**Netlify**](<https://netlify.com>) to host the Primo application & published sites (note that Cloudflare Pages is currently [unsupported](https://github.com/primocms/primo/issues/365) for hosting Primo, but you can still use it for your sites).
+- A modern web host like [**Vercel**](https://vercel.com/) or [**Netlify**](https://netlify.com) to host the Primo application & published sites (note that Cloudflare Pages is currently [unsupported](https://github.com/primocms/primo/issues/365) for hosting Primo, but you can still use it for your sites).
 
-- A [**Supabase**](<https://supabase.com>) account to manage your server's authentication, database, and file storage.
+- A [**Supabase**](https://supabase.com) account to manage your server's authentication, database, and file storage.
 
-- A [**Github**](<https://github.com>) account to deploy your sites to (unless you plan on manually downloading/uploading your site files to a host).
-
+- A [**Github**](https://github.com) account to deploy your sites to (unless you plan on manually downloading/uploading your site files to a host).
 
 <!-- -->
 
@@ -57,30 +57,29 @@ Third-party services (all can be signed into with Github):
 
 1. Ensure you have an account with all the services listed above.
 
-2. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the [**schema**](<https://raw.githubusercontent.com/mateomorris/primo/master/primo_schema.sql>) and pasting it into the editor.
+2. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the [**schema**](https://raw.githubusercontent.com/mateomorris/primo/master/primo_schema.sql) and pasting it into the editor.
 
-3. Fork the [**Primo repository**](<https://github.com/primocms/primo>).
+3. Fork the [**Primo repository**](https://github.com/primocms/primo).
 
 4. Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
 
-    - PUBLIC\_SUPABASE\_URL
+   - PUBLIC_SUPABASE_URL
 
-    - PUBLIC\_SUPABASE\_PUBLIC\_KEY
+   - PUBLIC_SUPABASE_PUBLIC_KEY
 
-    - PRIVATE\_SUPABASE\_PRIVATE\_KEY
+   - PRIVATE_SUPABASE_PRIVATE_KEY
 
 ![Environment Variables](https://dbfnrqvkgwkjkzqgnfrd.supabase.co/storage/v1/object/public/images/Screenshot%202023-05-06%20at%206.45.43%20PM.png)
-
 
 5. Publish the project and navigate to the Primo authentication screen.
 
 6. The user account you create will be the server owner. You can manage all your server's data from the Supabase project dashboard.
 
 7. Finally, go back to your Supabase project & set the Site URL to the URL of your Primo site (under Authentication > URL Configuration > Site URL).
-<img width="750" alt="Screenshot 2023-07-11 at 12 44 26 PM" src="https://github.com/primocms/primo/assets/39444813/aff51c73-3935-4523-bf89-71f86f3f8f09">
+   <img width="750" alt="Screenshot 2023-07-11 at 12 44 26 PM" src="https://github.com/primocms/primo/assets/39444813/aff51c73-3935-4523-bf89-71f86f3f8f09">
 
-
-For more details see this step-by-step installation [video guide](<https://www.youtube.com/watch?v=LEcKmhJsUzo>)
+For more details see this step-by-step installation [video guide](https://www.youtube.com/watch?v=LEcKmhJsUzo)
 
 ## Updating
+
 You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.

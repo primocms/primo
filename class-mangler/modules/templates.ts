@@ -1,11 +1,6 @@
 import { escapeClassName, getRandomClassName, getRegexps } from '../utils';
 
-export default function transformTemplates(
-  id: string,
-  code: string,
-  classMapping: Map<string, string>,
-  config: GeneratorConfig
-) {
+export default function transformTemplates(id: string, code: string, classMapping: Map<string, string>, config: GeneratorConfig) {
   const rawClasses = getRawClasses(id, code);
 
   const unqiueClasses = new Set(
@@ -13,7 +8,7 @@ export default function transformTemplates(
       .map((c) => c.split(' '))
       .flat()
       .filter((c) => c.length > 0)
-      .sort((a, b) => b.length - a.length)
+      .sort((a, b) => b.length - a.length),
   );
 
   unqiueClasses.forEach((className) => {
@@ -60,7 +55,7 @@ export default function transformTemplates(
 
   return {
     code,
-    map: null
+    map: null,
   };
 }
 
