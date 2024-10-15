@@ -452,7 +452,9 @@ CREATE POLICY "Give Authenticated users access to delete images" ON storage.obje
 
 -- helper functions
 CREATE OR REPLACE FUNCTION page_search(search_terms text, site_url text)
-RETURNS TABLE(id uuid, name text, url text, created_at timestamp with time zone) AS $$
+RETURNS TABLE(id uuid, name text, url text, created_at timestamp with time zone) 
+SET search_path = ''
+AS $$
 BEGIN
     RETURN QUERY
     WITH RECURSIVE parent_urls AS (
