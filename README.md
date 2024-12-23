@@ -32,12 +32,6 @@
 ![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Stitch_Group_for.png)
 
 # Running Primo locally
-
-- You'll need a Supabase, Resend, Cloudflare account, even to run Primo locally (for now).
-
-<!-- -->
-
-## Installation
 Primo isn't *really* self-hostable, yet, since it depends on a handful of [freemium] services, but the goal is that in the future it'll be fully self-hosted by default (probably a Docker image). You run it by cloning it, setting environment variables to connect it to the various services, then hosting the application (i.e. pushing it to a repo and connecting the repo to a host). You can also strip out the service-dependent bits yourself. 
 
 Ensure you have accounts for all these services: 
