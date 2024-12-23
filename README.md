@@ -40,6 +40,8 @@ Ensure you have accounts for all these services:
 * Cloudflare
 * Vercel, Netlify, Cloudflare, or another modern host. 
 
+Note: you'll need to set up your Supabase account first. Run the schema found in `primo_schema.sql` to set up your tables before continuing.
+
 
 ```bash
 git clone https://github.com/primocms/primo.git
