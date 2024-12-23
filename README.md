@@ -14,6 +14,7 @@
 - Custom Page Types (i.e. Content Types)
 - Dynamic content fields (i.e. 'Site Field', 'Page Field', 'Page' to update entity page content referenced on other pages)
 - Design system editor
+- 10x faster build times bc every page gets generated on update, instead of all at once. 
 - Conditional fields (to show/hide fields based on preceding field values)
 - CSS-library compatibility (bootstrap, tailwind, bulma, etc. all work reliably using a standard cdn link). 
 - UI/UX improvements
