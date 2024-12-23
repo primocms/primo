@@ -7,7 +7,7 @@
   </a>
 </p>
 
-<h3 align="center">Primo v3 alpha</h3>
+# Primo V3 Alpha
 
 ## ✨ V3 Features & Improvements
 
@@ -21,6 +21,15 @@
   - Drag repeater items to reorder them
   - Drag-and-drop functionality improved for adding blocks to page & now works on mobile.
   - Block editor organized into code & content (i.e. fields & entries), UI improved.
+  - On-page editing significantly improved.
+
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Accessible_Wardrobe_That_Women.png)
+
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Open_Sans.png)
+
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Pasted_Graphic_2.png)
+
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Stitch_Group_for.png)
 
 # Running Primo locally
 
