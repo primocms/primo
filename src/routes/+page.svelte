@@ -1,58 +1,47 @@
 <script>
-  import { tick, getContext } from 'svelte'
-  import Icon from '@iconify/svelte'
-  import { page } from '$app/stores'
+  import Icon from '@iconify/svelte/dist/Icon.svelte'
   import DashboardToolbar from '$lib/components/DashboardToolbar.svelte'
   import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
   import { show, hide } from '$lib/components/Modal.svelte'
-  import * as actions from '$lib/actions'
+  import * as actions from '../actions'
   import { invalidate } from '$app/navigation'
 
-  /** @type {{
-   sites: Array<import('$lib').Site>
-   session: any
-   user: import('$lib').User
-   config: any
-  }} */
-  export let data
+  /**
+   * @typedef {Object} Props
+   * @property {any} data
+   */
 
-  function beginInvitation(site) {
-    show({
-      id: 'INVITE_SITE_COLLABORATOR',
-      props: {
-        site,
-      },
-    })
-  }
+  /** @type {Props} */
+  let { data } = $props()
+  console.log({ data })
 
   let loading
   function createSite() {
     show({
       id: 'CREATE_SITE',
+      options: {
+        disable_bg_close: true,
+      },
       props: {
         onSuccess: async (site, preview) => {
+          console.log({ site })
           await actions.sites.create(site, preview)
           invalidate('app:data')
           hide()
         },
+        onCancel: hide,
       },
     })
   }
 
-  async function delete_site(site) {
-    show({
-      id: 'DELETE_SITE',
-      props: {
-        site,
-      },
-    })
-  }
+  // async function delete_site(siteID) {
+  // 	const confirm = window.confirm(`Are you sure you want to delete this site? You won't be able to get it back.`)
+  // 	if (!confirm) return
+  // 	await actions.sites.delete(siteID)
+  // 	invalidate('app:data')
+  // }
 
-  async function rename_site(id, name) {
-    await actions.sites.update(id, { name })
-  }
-
-  let siteBeingEdited = { id: null, element: null }
+  let siteBeingEdited = $state()
 </script>
 
 <main class="primo-reset">
@@ -60,73 +49,55 @@
     <DashboardToolbar />
     <div class="sites-container">
       <ul class="sites">
-        {#each data.sites as site, i (site.id)}
+        {#each data.sites as site (site.id)}
           <li>
-            <a class="site-link" href={site.url}>
+            <a class="site-link" href={site.id}>
               <SiteThumbnail {site} />
             </a>
             <div class="site-info">
               <div class="site-name">
-                {#if siteBeingEdited.id === site.id}
+                {#if siteBeingEdited === site.id}
                   <form
-                    on:submit|preventDefault={() => (siteBeingEdited = { id: null, element: null })}
+                    onsubmit={(e) => {
+                      e.preventDefault()
+                      siteBeingEdited = null
+                    }}
                   >
                     <input
-                      bind:this={siteBeingEdited.element}
-                      on:blur={() => rename_site(site.id, site.name)}
+                      onblur={() => (siteBeingEdited = null)}
                       class="reset-input"
                       type="text"
                       bind:value={site.name}
                     />
                   </form>
                 {:else}
-                  <a data-sveltekit-prefetch href={site.url}>
+                  <a data-sveltekit-prefetch href={site.id}>
                     <span>{site.name}</span>
                     <Icon icon="ic:round-chevron-right" />
                   </a>
                 {/if}
               </div>
-              <span class="site-url">{site.url}</span>
-              {#if getContext('DEBUGGING')}
-                <button
-                  style="font-size:0.75rem;cursor:pointer;text-align:left"
-                  on:click={(e) => {
-                    navigator.clipboard.writeText(e.target.innerText)
-                    e.target.style.opacity = '0.5'
-                  }}
-                >
-                  {site.id}
-                </button>
-              {/if}
-              {#if $page.data.user.admin}
+              {#if !data.user.collaborator}
                 <div class="buttons">
-                  <button on:click={() => beginInvitation(site)} class="site-button">
-                    <Icon icon="clarity:users-solid" />
-                    <span>Collaborators</span>
-                  </button>
                   <button
                     class="site-button"
-                    on:click={async () => {
-                      siteBeingEdited = { id: site.id, element: null }
-                      await tick()
-                      siteBeingEdited.element.focus()
-                    }}
+                    onclick={() => (siteBeingEdited = site.id)}
                   >
                     <Icon icon="material-symbols:edit-square-outline-rounded" />
                     <span>Rename</span>
                   </button>
-                  <button class="site-button" on:click={() => delete_site(site)}>
-                    <Icon icon="pepicons-pop:trash" />
-                    <span>Delete</span>
-                  </button>
+                  <!-- <button class="site-button" on:click={() => delete_site(site.id)}>
+										<Icon icon="pepicons-pop:trash" />
+										<span>Delete</span>
+									</button> -->
                 </div>
               {/if}
             </div>
           </li>
         {/each}
-        {#if data.user.server_member}
+        {#if !data.user.collaborator}
           <li>
-            <button class="create-site" on:click={createSite}>
+            <button class="create-site" onclick={createSite}>
               {#if loading}
                 <div class="icon">
                   <Icon icon="eos-icons:loading" />
@@ -188,20 +159,18 @@
           transition: 0.1s box-shadow;
 
           &:has(a:hover) {
-            box-shadow: var(--primo-ring-brand-thick);
+            box-shadow: var(--primo-ring-thick);
 
             & ~ li:last-child {
-              box-shadow: var(--primo-ring-brand-thin);
+              box-shadow: var(--primo-ring-thin);
             }
           }
 
           &:last-child {
-            box-shadow: var(--primo-ring-brand);
+            box-shadow: var(--primo-ring);
           }
 
           .site-link {
-            overflow: hidden;
-            max-height: 16vw;
             flex: 1;
             background: var(--color-gray-8);
             transition: opacity 0.1s;
@@ -215,9 +184,6 @@
             padding: 1.5rem;
 
             .site-name {
-              form {
-                line-height: 0;
-              }
               a {
                 display: flex;
                 justify-content: space-between;
@@ -242,13 +208,6 @@
                   color: var(--primo-color-brand);
                 }
               }
-            }
-
-            .site-url {
-              grid-column: 1;
-              margin-bottom: 0.5rem;
-              font-size: var(--font-size-1);
-              color: var(--color-gray-4);
             }
 
             .buttons {
@@ -290,6 +249,15 @@
           }
         }
       }
+    }
+
+    footer {
+      color: var(--color-gray-3);
+      font-size: 0.875rem;
+      display: flex;
+      gap: 1rem;
+      align-self: flex-end;
+      margin-top: auto;
     }
   }
 

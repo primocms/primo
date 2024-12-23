@@ -1,0 +1,1 @@
+import{a as o,t}from"./disclose-version.DwtFBC9D.js";import{c as a,r as v}from"./runtime.B-tQERhy.js";import{s as i}from"./index.CapXeD3F.js";const m=""+new URL("../assets/server-logo.oHsrTcqK.svg",import.meta.url).href;var l=t('<div class="logo svelte-1vr81ez"><img class="svelte-1vr81ez"></div>');function d(s){var r=l(),e=a(r);i(e,"src",m),v(r),o(s,r)}export{d as S};

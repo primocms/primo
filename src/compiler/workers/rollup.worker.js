@@ -1,4 +1,4 @@
-import { rollup } from '@rollup/browser'
+import { rollup } from '../lib/rollup-browser.min.js'
 import svelteWorker from './svelte.worker?worker'
 import PromiseWorker from 'promise-worker'
 import registerPromiseWorker from 'promise-worker/register'
@@ -14,7 +14,7 @@ const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 const CDN_URL = 'https://cdn.jsdelivr.net/npm' // or 'https://unpkg.com'
 
 registerPromiseWorker(rollup_worker)
-async function rollup_worker({ component, hydrated, buildStatic = true, format = 'esm' }) {
+async function rollup_worker({ component, hydrated, buildStatic = true, format = 'esm', dev_mode = false }) {
 	const final = {
 		ssr: '',
 		dom: '',
@@ -42,14 +42,15 @@ async function rollup_worker({ component, hydrated, buildStatic = true, format =
 			html = html + svelteWindowTag
 		}
 
+		// html must come first for loc (inspector) to work
 		return `\
+					${html} 
           <script>
             export let props;
             ${data_as_variables /* let some_key = props['some_key'] */}
             ${js}
           </script>
-          ${css ? `<style>${css}</style>` : ``}
-          ${html}`
+          ${css ? `<style>${css}</style>` : ``}`
 	}
 
 	function generate_lookup(component) {
@@ -92,7 +93,8 @@ async function rollup_worker({ component, hydrated, buildStatic = true, format =
 		const output = (await bundle.generate({ format })).output[0].code
 		final.ssr = output
 	} else {
-		const bundle = await compile()
+		const bundle = await compile({ dev: dev_mode })
+
 		const output = (await bundle.generate({ format })).output[0].code
 		final.dom = output
 	}

@@ -1,24 +1,29 @@
 <script>
 	import { setContext } from 'svelte'
-	import { loadIcons, enableCache } from '@iconify/svelte'
 	import '$lib/assets/reset.css'
+	import '@fontsource/fira-code/index.css'
 	import { browser } from '$app/environment'
+	import { compilers_registered } from '$lib/stores'
 	import { onMount } from 'svelte'
-	import { registerProcessors } from '@primocms/builder'
+	import { registerProcessors } from '$lib/builder/component'
 	import Modal from '$lib/components/Modal.svelte'
 	import { invalidate } from '$app/navigation'
-	import supabase_client from '$lib/supabase'
+	import supabase_client from '$lib/supabase/core'
 
-	export let data
+	let { data, children } = $props()
 
-	let { supabase, session } = data
-	$: ({ supabase, session } = data)
+	let { supabase, session } = $state(data)
+	$effect.pre(() => {
+		;({ supabase, session } = data)
+	})
 
-	$: session &&
-		supabase_client.auth.setSession({
-			access_token: session.access_token,
-			refresh_token: session.refresh_token
-		})
+	$effect.pre(() => {
+		session &&
+			supabase_client.auth.setSession({
+				access_token: session.access_token,
+				refresh_token: session.refresh_token
+			})
+	})
 
 	onMount(() => {
 		if (!supabase) return
@@ -33,24 +38,16 @@
 	})
 
 	if (browser) {
-		import('../compiler/processors.js').then(({ html, css }) => {
+		import('../compiler/processors').then(({ html, css }) => {
 			registerProcessors({ html, css })
+			$compilers_registered = true
 		})
 		setContext('track', () => {})
-		setContext('DEBUGGING', new URLSearchParams(window.location.search).has('debug'))
 	}
-
-	loadIcons([
-		'gg:spinner',
-		'material-symbols:edit-square-outline-rounded',
-		'pepicons-pop:trash',
-		'gridicons:external'
-	])
-	enableCache('local')
 </script>
 
 <Modal />
-<slot />
+{@render children?.()}
 
 <style global lang="postcss">
 	@import url(https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800);
@@ -60,15 +57,30 @@
 		font-family: 'Inter', serif !important;
 		direction: ltr;
 
-		/* height: 100vh; */
-		/* overflow: hidden; */
+		--transition-colors: background-color 0.1s, border-color 0.1s, color 0.1s, fill 0.1s, stroke 0.1s;
 
+		--padding-container: 15px;
+		--max-width-container: 1900px;
+
+		--ring: 0px 0px 0px 2px var(--primo-color-brand);
+
+		--primo-max-width-1: 30rem;
+		--primo-max-width-2: 1200px;
+		--primo-max-width-max: 1200px;
+
+		--primo-border-radius: 5px;
+	}
+
+	html {
 		--primo-color-brand: #35d994;
 		--primo-color-brand-dark: #097548;
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
 
+		--primo-border-radius: 4px;
+
+		--primo-color-danger: #ef4444;
 		--primo-color-black: rgb(17, 17, 17);
 		--primo-color-black-opaque: rgba(17, 17, 17, 0.95);
 
@@ -87,25 +99,57 @@
 		--font-size-3: 1.125rem;
 		--font-size-4: 1.25rem;
 
-		--box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-			0 10px 10px -5px rgba(0, 0, 0, 0.04);
+		--input-background: #2a2b2d;
+		--input-border: 1px solid #222;
+		--input-border-radius: 4px;
 
-		--transition-colors: background-color 0.1s, border-color 0.1s, color 0.1s, fill 0.1s,
-			stroke 0.1s;
+		--label-font-size: 1rem;
+		--label-font-weight: 700;
+
+		--title-font-size: 0.875rem;
+		--title-font-weight: 700;
+
+		--button-color: #fafafa;
+		--primo-button-background: #37383a;
+		--button-hover-color: #7d8082;
+
+		box-shadow:
+			0 0 #0000 0 0 #0000,
+			0 1px 2px 0 rgba(0, 0, 0, 0.05);
+		--box-shadow-xl: 0 0 #0000, 0 0 #0000, 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+		--transition-colors: background-color 0.1s, border-color 0.1s, color 0.1s, fill 0.1s, stroke 0.1s;
 
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
 		--ring: 0px 0px 0px 2px var(--primo-color-brand);
+		--primo-ring: 0px 0px 0px 2px var(--primo-color-brand, #35d994);
+		--primo-ring-thin: 0px 0px 0px 1px var(--primo-color-brand, #35d994);
+		--primo-ring-thick: 0px 0px 0px 3px var(--primo-color-brand, #35d994);
+	}
 
-		--primo-max-width-1: 30rem;
-		--primo-max-width-2: 1200px;
-		--primo-max-width-max: 1200px;
+	.primo-reset .primo--field-label {
+		display: inline-flex;
+		align-items: center;
+		font-size: var(--font-size-1);
+		line-height: var(--font-size-1);
+		color: #9d9d9d;
+		margin-bottom: 0.25rem;
+		gap: 0.25rem;
+	}
 
-		--primo-border-radius: 5px;
-		--primo-ring-brand: 0px 0px 0px 1px var(--primo-color-brand);
-		--primo-ring-brand-thin: 0px 0px 0px 1px var(--primo-color-brand);
-		--primo-ring-brand-thick: 0px 0px 0px 3px var(--primo-color-brand);
+	.primo-reset .primo--link {
+		display: inline-block;
+		text-decoration: underline;
+		font-size: var(--font-size-1);
+		line-height: var(--font-size-1);
+		color: #9d9d9d;
+		margin-bottom: 0.25rem;
+		/* contains icon */
+		display: flex;
+		align-items: center;
+		gap: 2px;
 	}
 
 	button,
@@ -139,7 +183,9 @@
 	.primo-modal {
 		color: var(--color-gray-1);
 		/* background: var(--color-gray-9); */
-		padding: 1.5rem;
+		/* padding: 1.5rem; */
+
+		/* padding: 0.5rem; */
 		border-radius: var(--primo-border-radius);
 		margin: 0 auto;
 		/* width: 100vw; */

@@ -1,9 +1,9 @@
 <script>
+	import Icon from '@iconify/svelte'
 	import UserPopup from './UserPopup.svelte'
 	import { show } from '$lib/components/Modal.svelte'
 	import { page } from '$app/stores'
 	import ServerLogo from '$lib/ui/ServerLogo.svelte'
-	import Icon from '@iconify/svelte'
 </script>
 
 <header role="navigation" aria-label="main navigation">
@@ -11,15 +11,18 @@
 		<ServerLogo />
 	</div>
 	<nav class="nav">
-		{#if $page.data.user.admin}
-			<button class="link" on:click={() => show('INVITE_COLLABORATORS')}>Members</button>
-		{/if}
-		{#if $page.data.user.role === 'DEV'}
+		<!-- {#if !$page.data.user.collaborator}
+			<button class="link" on:click={() => show('USAGE')}>Usage</button>
+		{/if} -->
+		<!-- <a href="https://forum.primo.so/" target="blank">
+			<Icon icon="ic:baseline-discord" width="20" height="20" />
+		</a> -->
+		<!-- {#if $page.data.user.role === 'DEV'}
 			<a class="link with-icon" href="https://docs.primocms.org/" target="blank">
 				<span class="docs">Docs</span>
-				<Icon icon="gridicons:external" />
+				<Icon icon="tabler:external-link" />
 			</a>
-		{/if}
+		{/if} -->
 		<UserPopup />
 	</nav>
 </header>

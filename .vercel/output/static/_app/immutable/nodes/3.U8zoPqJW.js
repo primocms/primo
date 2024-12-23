@@ -1,0 +1,1 @@
+import{component as r}from"./4.By-oFnql.js";async function o(e){e.depends("app:data")}const t=Object.freeze(Object.defineProperty({__proto__:null,load:o},Symbol.toStringTag,{value:"Module"}));export{r as component,t as universal};

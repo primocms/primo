@@ -1,12 +1,15 @@
 <script>
-  import { PrimoPage } from '@primocms/builder'
+	import { compilers_registered } from '$lib/stores'
+	import PrimoPage from '$lib/builder/views/editor/Page.svelte'
 
-  export let data
+	let { data } = $props()
 </script>
 
-<PrimoPage
-  page={{
-    ...data.page,
-    sections: data.sections,
-  }}
-/>
+{#if $compilers_registered}
+	<PrimoPage
+		page={{
+			...data.page,
+			sections: data.sections
+		}}
+	/>
+{/if}

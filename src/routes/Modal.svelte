@@ -1,4 +1,4 @@
-<script context="module">
+<script module>
 	import { writable } from 'svelte/store';
 
 	export const modal = writable(null);
@@ -7,13 +7,20 @@
 <script>
 	import { fade } from 'svelte/transition';
 	import { createEventDispatcher } from 'svelte';
+	/**
+	 * @typedef {Object} Props
+	 * @property {import('svelte').Snippet} [children]
+	 */
+
+	/** @type {Props} */
+	let { children } = $props();
 	const dispatch = createEventDispatcher();
 </script>
 
 <div id="modal" class="primo-reset" role="dialog" transition:fade={{ duration: 100 }}>
-	<button class="background" aria-label="close dialog" on:click={() => dispatch('close')} />
+	<button class="background" aria-label="close dialog" onclick={() => dispatch('close')}></button>
 	<div class="container">
-		<slot />
+		{@render children?.()}
 	</div>
 </div>
 
