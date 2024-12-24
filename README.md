@@ -45,7 +45,7 @@ Note: you'll need to set up your Supabase account first. Run the schema found in
 
 
 ```bash
-git clone https://github.com/primocms/primo.git
+git clone -b v3 https://github.com/primocms/primo.git
 cd primo
 npm install
 
