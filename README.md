@@ -92,3 +92,4 @@ PRIVATE_SUPABASE_PRIVATE_KEY=
 - Hosting destination
 - Authentication methods
 - Extensions (soon)
+
