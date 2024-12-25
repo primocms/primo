@@ -12,12 +12,6 @@ export async function load(event) {
 	const url_segments = page_url?.split('/') ?? []
 	const page_slug = url_segments.at(-1) ?? ''
 
-	if (site_id === 'playground') {
-		return event.data
-	} else if (!supabase) {
-		throw redirect(303, '/auth')
-	}
-
 	const fetch_site = async () => {
 		const res = await supabase.from('sites').select('*, fields(*), entries(*)').filter('id', 'eq', site_id).single()
 		return res.data

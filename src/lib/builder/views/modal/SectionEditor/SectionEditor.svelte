@@ -4,8 +4,6 @@
 </script>
 
 <script>
-	import axios from 'axios'
-	import Icon from '@iconify/svelte'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import LargeSwitch from '../../../ui/LargeSwitch.svelte'
 	import _, { chain as _chain } from 'lodash-es'

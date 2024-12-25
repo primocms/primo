@@ -1,7 +1,7 @@
 <script>
 	import { browser } from '$app/environment'
 	import { find as _find } from 'lodash-es'
-	
+
 	/**
 	 * @typedef {Object} Props
 	 * @property {import('$lib').Site} site
@@ -12,13 +12,7 @@
 	 */
 
 	/** @type {Props} */
-	let {
-		site,
-		preview = $bindable(null),
-		append = '',
-		style = '',
-		src = null
-	} = $props();
+	let { site, preview = $bindable(null), append = '', style = '', src = null } = $props()
 
 	if (!preview && site) {
 		get_preview()
@@ -62,7 +56,7 @@
 	}, 500)
 	$effect(() => {
 		iframe && append_to_iframe(append)
-	});
+	})
 </script>
 
 <svelte:window onresize={resizePreview} />
@@ -73,6 +67,7 @@
 			<iframe
 				tabindex="-1"
 				bind:this={iframe}
+				sandbox=""
 				style="transform: scale({scale})"
 				style:height={iframeHeight}
 				class:fadein={iframeLoaded}
