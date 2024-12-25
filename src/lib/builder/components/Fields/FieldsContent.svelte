@@ -14,69 +14,7 @@
 	import { userRole, mod_key_held } from '../../stores/app/misc'
 	import { dynamic_field_types } from '../../field-types'
 
-	let { id, fields, fields_changes = [], entries, content_changes = $bindable([]), onkeydown = () => {}, onprompt = $bindable() } = $props()
-
-	// $effect(() => {
-	// 	console.log('entries', JSON.stringify(entries))
-	// 	console.log('fields', JSON.stringify(fields))
-	// })
-
-	onprompt = (actions) => {
-		const id_map = new Map()
-
-		// if (actions.length === 0) return
-
-		const updated_fields = cloneDeep(fields)
-		const updated_entries = cloneDeep(entries)
-
-		const field_changes = []
-		const content_changs = []
-
-		for (let { entries, fields } of actions) {
-			if (!entries) entries = []
-			if (!fields) fields = []
-			for (const { action, data } of fields) {
-				if (action === 'create') {
-					const new_field = Field_Row({ ...data, parent: id_map.get(data.parent) || data.parent })
-					id_map.set(data.id, new_field.id)
-
-					updated_fields.push(new_field)
-					field_changes.push({ action: 'insert', id: new_field.id, data: new_field })
-					add_tab(new_field.id)
-				} else if (action === 'update') {
-					debugger
-					// _.find(updated_fields, ['id', data.id]).value = data.value
-					// field_changes.push({ action: 'update', id: data.id, data: { value: data.value } })
-				}
-			}
-			for (const { action, data } of entries) {
-				if (action === 'create') {
-					const new_entry = Content_Row({ ...data, parent: id_map.get(data.parent) || data.parent, field: id_map.get(data.field) || data.field })
-					id_map.set(data.id, new_entry.id)
-					updated_entries.push(new_entry)
-					content_changs.push({ action: 'insert', id: new_entry.id, data: new_entry })
-				} else if (action === 'update') {
-					_.find(updated_entries, ['id', data.id]).value = data.value
-					content_changs.push({ action: 'update', id: data.id, data: { value: data.value } })
-				}
-			}
-		}
-
-		dispatch_update({
-			entries: updated_entries,
-			content_changes,
-			fields: updated_fields,
-			fields_changes
-		})
-	}
-
-	// TODO:
-	// - pass prompt site css & design variables, instruct to use them where applicable
-	// - disable code & content while processing prompt
-	// - add UI for ai: button, text input, and explanation response
-	// - validate that all changes were valid (i.e. all entries belong to a field, etc.)
-	// - same the original state in order to undo changes
-	// - allow user to paste in an image
+	let { id, fields, fields_changes = [], entries, content_changes = $bindable([]), onkeydown = () => {} } = $props()
 
 	let parent_fields = $derived(fields.filter((f) => !f.parent))
 

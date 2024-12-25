@@ -122,42 +122,6 @@
 			)
 		}
 	}
-
-	let run_prompt
-	$inspect({ run_prompt })
-	let full_prompt = $state('')
-	async function prompt() {
-		const user_prompt = window.prompt('What do you want?')
-
-		if (!user_prompt) return
-
-		full_prompt = `${full_prompt}
-${user_prompt}`
-
-		console.log({ full_prompt })
-
-		const { data } = await axios.post('/api/ai', {
-			prompt: full_prompt,
-			data: {
-				code: local_code,
-				entries: local_content,
-				fields: local_fields
-			}
-		})
-
-		const updated_data = JSON.parse(data[0]['text'])
-		const { code, actions } = updated_data.component
-
-		if (actions) {
-			run_prompt(actions)
-		}
-
-		if (code.html) raw_html = code.html
-		if (code.css) raw_css = code.css
-		if (code.js) raw_js = code.js
-
-		window.alert(updated_data.explanation)
-	}
 </script>
 
 <ModalHeader
@@ -197,9 +161,6 @@ ${user_prompt}`
 				/>
 			{/if}
 		</div>
-		<button class="prompt" onclick={prompt}>
-			<Icon icon="mingcute:ai-fill" />
-		</button>
 	{/snippet}
 </ModalHeader>
 
@@ -210,7 +171,6 @@ ${user_prompt}`
 				<FullCodeEditor bind:html={raw_html} bind:css={raw_css} bind:js={raw_js} data={_.cloneDeep(component_data)} on:save={save_component} on:mod-e={() => {}} />
 			{:else if tab === 'content'}
 				<Fields
-					bind:onprompt={run_prompt}
 					id="section-{component.id}"
 					fields={local_fields}
 					entries={local_content}
@@ -255,16 +215,6 @@ ${user_prompt}`
 
 		--Button-bg: var(--color-gray-8);
 		--Button-bg-hover: var(--color-gray-9);
-	}
-
-	button.prompt {
-		padding: 0.5rem;
-		background: var(--color-gray-9);
-		border-radius: var(--primo-border-radius);
-		margin-left: 0.5rem;
-		&:hover {
-			box-shadow: var(--primo-ring);
-		}
 	}
 
 	:global(.PaneResizer) {
