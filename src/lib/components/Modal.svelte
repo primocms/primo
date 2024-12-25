@@ -37,19 +37,13 @@
 	import { fade } from 'svelte/transition'
 	import Deploy from './Modals/Deploy/Deploy.svelte'
 	import CreateSite from './Modals/CreateSite.svelte'
-	import Usage from './Modals/Usage.svelte'
 	import DesignPanel from './Modals/DesignPanel.svelte'
-	import Metadata from './Modals/Metadata.svelte'
-	import UserForms from './Modals/UserForms.svelte'
 	import Collaboration from './Modals/Collaboration.svelte'
 
 	const modals = {
 		DEPLOY: Deploy,
-		USAGE: Usage,
 		CREATE_SITE: CreateSite,
 		DESIGN: DesignPanel,
-		METADATA: Metadata,
-		USER_FORMS: UserForms,
 		COLLABORATION: Collaboration
 	}
 
@@ -63,7 +57,7 @@
 	}
 	$effect(() => {
 		showModal($type.id)
-	});
+	})
 </script>
 
 {#if $visible}

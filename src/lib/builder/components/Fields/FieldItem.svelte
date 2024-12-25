@@ -133,7 +133,11 @@
 			<UI.Select
 				label="Type"
 				value={selected_field_type_id}
-				options={visible_field_types.map((ft) => ({ icon: ft.icon, value: ft.id, label: ft.label }))}
+				options={visible_field_types.map((ft) => ({
+					icon: ft.icon,
+					value: ft.id,
+					label: ft.label
+				}))}
 				dividers={[1, 8, 10, 12]}
 				on:input={({ detail: field_type_id }) => {
 					console.log({ field_type_id })
@@ -379,7 +383,7 @@
 			<PageFieldField {field} on:input={({ detail }) => dispatch_update({ source: detail })} />
 		{/if}
 		{#if field.type === 'site-field'}
-			<SiteFieldField {field} oninput={({ detail }) => dispatch_update({ source: detail })} />
+			<SiteFieldField {field} oninput={(detail) => dispatch_update({ source: detail })} />
 		{/if}
 		{#if field.type === 'page'}
 			<PageField {field} on:input={({ detail }) => dispatch_update({ options: detail })} />
