@@ -1,6 +1,6 @@
 .env 
 .DS_Store
-.vercel
+.vercel/output
 .vscode
 .vercel_build_output
 .svelte-kit
