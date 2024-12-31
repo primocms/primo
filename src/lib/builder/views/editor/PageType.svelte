@@ -443,9 +443,9 @@
 		transition: 0.2s opacity;
 		opacity: 0;
 		border-top: 0;
-		margin-top: 44px;
-		/* height: calc(100vh - 59px); */
-		height: 100%;
+		padding-top: 44px;
+		overflow: auto;
+		box-sizing: border-box;
 		overflow: auto;
 	}
 	main.fadein {
