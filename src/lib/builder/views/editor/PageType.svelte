@@ -9,7 +9,6 @@
 	import DropIndicator from './Layout/DropIndicator.svelte'
 	import SymbolPalette from './Layout/SymbolPalette.svelte'
 	import LockedOverlay from './Layout/LockedOverlay.svelte'
-	import { isEqual, cloneDeep } from 'lodash-es'
 	import symbols from '$lib/builder/stores/data/symbols'
 	import { hydrate_page_type } from '$lib/builder/stores/hydration'
 	import { code as siteCode, design as siteDesign } from '../../stores/data/site.js'
@@ -17,11 +16,8 @@
 	import { add_page_type_section, delete_page_type_section } from '$lib/builder/actions/page_types.js'
 	import { move_section, update_section } from '$lib/builder/actions/sections.js'
 	import modal from '../../stores/app/modal.js'
-	import page_type from '../../stores/data/page_type.js'
 	import sections from '../../stores/data/sections.js'
-	import { processCode } from '../../utils.js'
-	import { get_page_data, get_section } from '../../stores/helpers.js'
-	import { site_design_css } from '../../code_generators.js'
+	import { get_section } from '../../stores/helpers.js'
 	import { dropTargetForElements } from '../../libraries/pragmatic-drag-and-drop/entry-point/element/adapter.js'
 	import { attachClosestEdge, extractClosestEdge } from '../../libraries/pragmatic-drag-and-drop-hitbox/closest-edge.js'
 
@@ -363,7 +359,7 @@
 {/if}
 
 <!-- Page Blocks -->
-<main id="Page" bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
+<main bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
 	{#each $sections.sort((a, b) => a.index - b.index) as section (section.id)}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_mouse_events_have_key_events -->
@@ -443,6 +439,7 @@
 		transition: 0.2s opacity;
 		opacity: 0;
 		border-top: 0;
+		height: 100%;
 		padding-top: 44px;
 		overflow: auto;
 		box-sizing: border-box;

@@ -606,10 +606,10 @@
 		--Spinner-color-opaque: rgba(248, 68, 73, 0.2);
 	}
 	main#Page {
-		padding-top: 42px;
 		transition: 0.2s opacity;
 		opacity: 0;
 		border-top: 0;
+		height: 100%;
 		padding-top: 44px;
 		overflow: auto;
 		box-sizing: border-box;
