@@ -359,7 +359,7 @@
 {/if}
 
 <!-- Page Blocks -->
-<main bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
+<main data-test bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
 	{#each $sections.sort((a, b) => a.index - b.index) as section (section.id)}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_mouse_events_have_key_events -->
