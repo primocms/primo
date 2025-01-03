@@ -8,7 +8,7 @@ import { get_symbol, get_section } from '$lib/builder/stores/helpers'
 import * as helpers from '$lib/builder/actions/_helpers'
 import * as db_helpers from '$lib/builder/actions/_db_helpers'
 import * as db_utils from '$lib/builder/actions/_db_utils'
-import { update_page_file } from './_storage_helpers'
+import { update_page_file, update_symbol_file } from './_storage_helpers'
 import { Section } from '$lib/builder/factories'
 import active_page_store from '$lib/builder/stores/data/page'
 
@@ -223,6 +223,7 @@ export async function update_section(section_id, { updated_data, changes }) {
 			// DB: save Symbol code if changed
 			if (!_.isEqual(original_symbol.code, updated_symbol_code)) {
 				db_actions.update_symbol(symbol_id, { code: updated_symbol_code })
+				update_symbol_file(get(stores.symbols).find(s => s.id === section_id))
 			}
 
 			// DB: save Symbol fields
@@ -313,6 +314,7 @@ export async function update_section(section_id, { updated_data, changes }) {
 
 			// DB: restore symbol code if changed
 			if (!_.isEqual(original_symbol.code, updated_data.code)) {
+				update_symbol_file(get(stores.symbols).find(s => s.id === section_id))
 				db_actions.update_symbol(original_symbol.id, { code: original_symbol.code })
 			}
 
