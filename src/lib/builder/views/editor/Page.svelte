@@ -473,7 +473,7 @@
 		{@const is_palette = !section.symbol && !section.master?.symbol}
 		{@const show_block_toolbar_on_hover = !moving && !(is_palette && palette_sections.length === 0)}
 		{@const has_page_type_symbols = $symbols.some((s) => s.page_types.includes($active_page.page_type.id))}
-		{#if is_palette && has_page_type_symbols}
+		{#if is_palette && (has_page_type_symbols || palette_sections.length > 0)}
 			<div data-section={section.id} data-type="palette" class:empty={palette_sections.length === 0}>
 				{#if palette_sections.length > 0}
 					{#each palette_sections.sort((a, b) => a.index - b.index) as section (section.id)}
@@ -610,7 +610,7 @@
 		opacity: 0;
 		border-top: 0;
 		height: 100%;
-		padding-top: 44px;
+		padding-top: 42px;
 		overflow: auto;
 		box-sizing: border-box;
 	}
