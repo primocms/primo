@@ -534,14 +534,7 @@
 	$effect(() => {
 		hydrate_component(component_data)
 	})
-	$effect(() => {
-		if (node) {
-			mutation_observer.observe(node.contentDocument, {
-				childList: true
-			})
-			resize_observer.observe(node)
-		}
-	})
+
 	$effect(() => {
 		if (browser && node) {
 			node.closest('#Page').addEventListener('scroll', on_page_scroll)
@@ -622,8 +615,8 @@
 			resize_observer.observe(doc.body)
 
 			// Add mutation observer for DOM changes
-			const observer = new MutationObserver(update_height)
-			observer.observe(doc.body, {
+			// const observer = new MutationObserver(update_height)
+			mutation_observer.observe(doc.body, {
 				childList: true,
 				subtree: true,
 				attributes: true,
@@ -653,7 +646,7 @@
 		try {
 			const { default: App } = await import(/* @vite-ignore */ url)
 			if (component) component.$destroy()
-
+			if (!App) return // idk why App sometimes doesn't exist
 			component = new App({
 				target: component_el,
 				props: component_data
@@ -661,7 +654,7 @@
 			setTimeout(make_content_editable, 200)
 		} catch (e) {
 			error = e
-			dispatch_mount()
+			// dispatch_mount()
 		}
 		URL.revokeObjectURL(url)
 	}

@@ -22,5 +22,6 @@
 		align-items: center;
 		background: var(--color-gray-1);
 		border: 3px dashed var(--color-gray-3);
+		font-family: sans-serif;
 	}
 </style>
