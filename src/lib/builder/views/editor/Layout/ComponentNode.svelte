@@ -543,9 +543,9 @@
 
 	// resize component iframe wrapper on resize to match content height
 	$effect(() => {
-		if (browser && node) {
+		if (browser) {
 			window.addEventListener('message', (event) => {
-				if (event.data?.type === 'resize') {
+				if (node && event.data?.type === 'resize') {
 					if (event.data.id === block.id) {
 						node.style.height = event.data.height + 'px'
 					}
