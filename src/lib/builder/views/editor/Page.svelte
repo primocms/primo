@@ -390,6 +390,7 @@
 					})
 				}
 				reset_drag()
+				$dragging_symbol = false
 			}
 		})
 	}
@@ -494,7 +495,6 @@
 								if (show_block_toolbar_on_hover) show_block_toolbar()
 							}}
 							onmouseleave={hide_block_toolbar}
-							in:fade={{ duration: 100 }}
 							animate:flip={{ duration: 100 }}
 							use:drag_item={section}
 						>

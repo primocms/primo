@@ -19,8 +19,6 @@
 	import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 	import Link from '@tiptap/extension-link'
 	import { all, createLowlight } from 'lowlight'
-	import BubbleMenu from '@tiptap/extension-bubble-menu'
-	import FloatingMenu from '@tiptap/extension-floating-menu'
 	import { tick, createEventDispatcher } from 'svelte'
 	import { browser } from '$app/environment'
 	import { createUniqueID } from '$lib/builder/utils'
@@ -34,10 +32,9 @@
 	import modal from '$lib/builder/stores/app/modal'
 	import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 	import { broadcastChanged } from '$lib/builder/database'
-	import { static_iframe_srcdoc, component_iframe_srcdoc } from '$lib/builder/components/misc'
+	import { component_iframe_srcdoc } from '$lib/builder/components/misc'
 	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
 	import { site_design_css } from '$lib/builder/code_generators.js'
-	import { get_site_data } from '$lib/builder/stores/helpers.js'
 
 	const lowlight = createLowlight(all)
 
@@ -159,9 +156,7 @@
 			dispatch_mount()
 		} else {
 			error = ''
-
 			generated_js = res.js
-			setTimeout(make_content_editable, 200)
 		}
 	}
 
@@ -651,7 +646,8 @@
 				target: component_el,
 				props: component_data
 			})
-			setTimeout(make_content_editable, 200)
+			await tick()
+			make_content_editable()
 		} catch (e) {
 			error = e
 			// dispatch_mount()
