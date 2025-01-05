@@ -13,6 +13,7 @@ import { design_tokens } from './constants.js'
 
 export async function block_html({ code, data }) {
 	const { html, css: postcss, js } = code
+	// @ts-ignore
 	const { css, error } = await processors.css(postcss || '')
 	const res = await processors.html({
 		component: { html, css, js, data }
@@ -42,7 +43,9 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 				html: `
          <svelte:head>
            ${site.code.head}
-           ${page?.page_type.code.head}
+           ${page?.page_type.
+// @ts-ignore
+           code.head}
            ${site_design_css(site.design)}
          </svelte:head>`,
 				css: ``,
@@ -51,13 +54,39 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 			}
 		})(),
 		...page_sections
-			.filter((s) => s.symbol || s.master?.symbol) // exclude palette sections
+			.filter((s) => s.symbol || s.master?.symbol)
+			.sort((a, b) => {
+				const a_palette_index = a.palette ? page_sections.find(s => s.id === a.palette)?.index : null
+				const b_palette_index = b.palette ? page_sections.find(s => s.id === b.palette)?.index : null
+
+				const a_master_index = a.master?.index || null
+				const b_master_index = b.master?.index || null
+
+				if (a_palette_index !== null && b_palette_index !== null) {
+					// @ts-ignore
+					return a.index - b.index
+				} else if (a_palette_index !== null && b_master_index !== null) {
+					// @ts-ignore
+					return a_palette_index - b_master_index
+				} else if (a_master_index !== null && b_palette_index !== null) {
+					// @ts-ignore
+					return a_master_index - b_palette_index
+				} else if (a_master_index !== null && b_master_index !== null) {
+					return a_master_index - b_master_index
+				}
+
+				// Otherwise compare regular indices
+				return a.index - b.index;
+			})
 			.map(async (section) => {
+				// @ts-ignore
 				const symbol = page_symbols.find((symbol) => symbol.id === (section.symbol || section.master.symbol))
+				// @ts-ignore
 				const { html, css: postcss, js } = symbol.code
 
 				const data = get_content_with_synced_values({
 					entries: section.entries,
+					// @ts-ignore
 					fields: symbol.fields,
 					page,
 					site,
@@ -65,10 +94,13 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 					page_types
 				})[locale]
 
+				// @ts-ignore
 				const { css, error } = await processors.css(postcss || '')
 				return {
 					html: `
-         <div data-section="${section.id}" id="section-${section.id}" data-symbol="${symbol.id}">
+         <div data-section="${section.id}" id="section-${section.id}" data-symbol="${
+// @ts-ignore
+         symbol.id}">
            ${html}
          </div>`,
 					js,
