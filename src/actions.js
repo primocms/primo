@@ -127,8 +127,6 @@ export const sites = {
 			sections: data.page_types.flatMap(pt => pt.pages.flatMap(p => p.sections))
 		}
 
-		console.log({site_data})
-
 		// const scrambled = scramble_ids(site_data)
 		const files = await build_site_bundle(site_data)
 		const prepared_data = prepare_data(site_data)
@@ -325,8 +323,7 @@ async function build_site_bundle({ pages, symbols, site, page_types, sections })
 		})
 	)
 
-	// const symbol_files = await Promise.all(symbols.filter((s) => s.code.js).map((symbol) => build_symbol_tree(symbol)))
-	const symbol_files = []
+	const symbol_files = await Promise.all(symbols.filter((s) => s.code.js).map((symbol) => build_symbol_tree(symbol)))
 
 	return _.flattenDeep([...symbol_files, ...page_files.flat()])
 

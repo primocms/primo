@@ -38,7 +38,7 @@ export type Section = {
 	palette: Section_ID
 	page: Page_ID | null
 	page_type: Page_Type_ID | null
-	master: { symbol: Symbol_ID } | null
+	master: { symbol: Symbol_ID, index: number } | null
 	entries: Array<Entry>
 }
 
