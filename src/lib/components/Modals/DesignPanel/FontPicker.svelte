@@ -9,7 +9,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	let { label, value = $bindable() } = $props();
+	let { label, value = $bindable() } = $props()
 
 	let search_query = $state('')
 	let searched = $state(false)
@@ -19,7 +19,7 @@
 		if (search_query === '') {
 			searched = false
 		}
-	});
+	})
 
 	let all_fonts = []
 	let results = $state([])
@@ -74,6 +74,7 @@
 	{#each results as font}
 		<link href="https://fonts.googleapis.com/css2?family={font.family.replace(/ /g, '+')}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700" rel="stylesheet" />
 	{/each}
+	<link href="https://fonts.googleapis.com/css2?family={value.replace(/ /g, '+')}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700" rel="stylesheet" />
 </svelte:head>
 
 <div class="FontPicker">
@@ -84,10 +85,12 @@
 				{value}
 			</div>
 		{/if}
-		<form onsubmit={(e) => {
-			e.preventDefault()
-			search()
-		}}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault()
+				search()
+			}}
+		>
 			<UI.TextInput
 				options={[
 					{
