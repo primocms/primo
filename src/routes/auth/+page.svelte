@@ -1,8 +1,6 @@
 <script>
 	import { page } from '$app/stores'
 	import { fade } from 'svelte/transition'
-	import SignIn from './SignIn.svelte'
-	import SignUp from './SignUp.svelte'
 	import AuthForm from './AuthForm.svelte'
 	import ServerLogo from '$lib/ui/ServerLogo.svelte'
 
