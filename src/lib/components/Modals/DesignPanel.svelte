@@ -90,6 +90,7 @@
 		<Pane defaultSize={50} minSize={20}>
 			<div
 				style="
+	height: calc(100% - 3rem);
 	overflow: auto;
 	--label-font-size: 0.875rem;
 	--label-font-weight: 400;
