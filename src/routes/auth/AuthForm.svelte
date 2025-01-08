@@ -1,37 +1,72 @@
 <script>
 	import { enhance } from '$app/forms'
-	import { page, navigating } from '$app/stores'
 	import Icon from '@iconify/svelte'
 
-	let { email = $bindable(), password = $bindable() } = $props();
+	let { title, email = $bindable(), password = $bindable(null), action, footer = null, error, disable_email = false } = $props()
+
+	let loading = $state(false)
+
+	function handle_submit() {
+		loading = true
+		return async ({ result, update }) => {
+			loading = false
+			if (result.type === 'success') {
+				await update()
+			}
+		}
+	}
 </script>
 
-<form class="form" method="POST" action="?/sign_in" use:enhance>
+<header>
+	<h1>{title}</h1>
+</header>
+{#if error}
+	<div class="error">{error}</div>
+{/if}
+<form class="form" method="POST" action="?/{action}" use:enhance={handle_submit}>
 	<div class="fields">
 		<label>
 			<span>Email</span>
-			<input data-test-id="email" bind:value={email} type="text" name="email" />
+			<input data-test-id="email" bind:value={email} type="text" name="email" disabled={disable_email} />
 		</label>
-		<label>
-			<span>Password</span>
-			<input data-test-id="password" bind:value={password} type="password" name="password" />
-		</label>
-		<input name="invitation_id" type="text" class="hidden" value={$page.url.searchParams.get('join')} />
+		{#if password !== null}
+			<label>
+				<span>Password</span>
+				<input data-test-id="password" bind:value={password} type="password" name="password" />
+			</label>
+		{/if}
+		<!-- <input name="invitation_id" type="text" class="hidden" value={$page.url.searchParams.get('join')} /> -->
 	</div>
 	<button class="button" type="submit" data-test-id="submit">
-		{#if !$navigating}
-			<span>Sign in</span>
-		{:else}
+		{#if loading}
 			<div class="icon"><Icon icon="gg:spinner" /></div>
+		{:else}
+			<span>{title}</span>
 		{/if}
 	</button>
 </form>
+{#if footer}
+	<span class="footer-text">{@render footer()}</span>
+{/if}
 
 <!-- <span class="footer-text"
 	>Don't have an account? <button on:click={() => dispatch('switch')}>Sign Up</button></span
 > -->
 
 <style lang="postcss">
+	header {
+		h1 {
+			text-align: left;
+			font-weight: 500;
+			font-size: 24px;
+			line-height: 24px;
+			padding-bottom: 1rem;
+		}
+	}
+	.error {
+		color: #f72228;
+		margin-bottom: 1rem;
+	}
 	.form {
 		display: grid;
 		gap: 2rem;

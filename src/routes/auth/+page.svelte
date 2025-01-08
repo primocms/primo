@@ -3,19 +3,26 @@
 	import { fade } from 'svelte/transition'
 	import SignIn from './SignIn.svelte'
 	import SignUp from './SignUp.svelte'
+	import AuthForm from './AuthForm.svelte'
 	import ServerLogo from '$lib/ui/ServerLogo.svelte'
 
-	let { form } = $props();
+	let { form } = $props()
 
 	let email = $state($page.url.searchParams.get('email') || '')
 	let password = $state('')
 
 	let error = $derived(form?.error)
 
-	let signing_in;
+	let signing_in = $state(false)
+
+	let stage = $state('signin')
 	$effect.pre(() => {
-		signing_in = $page.url.searchParams.has('signup') ? false : true
-	});
+		if ($page.url.searchParams.has('signup')) {
+			stage = 'signup'
+		} else if ($page.url.searchParams.has('reset')) {
+			stage = 'confirm_reset'
+		}
+	})
 </script>
 
 {#key signing_in}
@@ -27,27 +34,30 @@
 				</div>
 			</div>
 			<div class="box">
-				<header>
-					<h1>{signing_in ? 'Sign in' : 'Sign Up'}</h1>
-				</header>
-				{#if error}
-					<div class="error">{error}</div>
-				{/if}
-				{#if signing_in}
-					<SignIn bind:email bind:password on:switch={() => (signing_in = false)} />
-				{:else}
-					<SignUp bind:email bind:password on:switch={() => (signing_in = true)} />
+				{#if stage === 'signin'}
+					{#snippet footer()}
+						<button onclick={() => (stage = 'reset_password')}>Forgot your password?</button>
+					{/snippet}
+					<AuthForm action="sign_in" title="Sign In" bind:email bind:password {footer} {error} />
+				{:else if stage === 'signup'}
+					<AuthForm action="sign_up" title="Sign Up" bind:email bind:password {error} />
+				{:else if stage === 'reset_password'}
+					{#if form?.success}
+						<span>A link to reset your password has been emailed to you.</span>
+					{:else}
+						<AuthForm action="reset_password" title="Reset Password" bind:email {error} />
+					{/if}
+				{:else if stage === 'confirm_reset'}
+					<AuthForm action="confirm_password_reset" title="Reset Password" bind:email bind:password disable_email={true} {error} />
 				{/if}
 			</div>
 		</div>
-		<!-- <div class="right" /> -->
 	</main>
 {/key}
 
 <style lang="postcss">
 	main {
 		display: grid;
-		/* grid-template-columns: 1fr 1fr; */
 		min-height: 100vh;
 		background: var(--color-gray-9);
 		color: white;
@@ -62,26 +72,12 @@
 			width: 7rem;
 		}
 	}
-	header {
-		/* img {
-      padding-bottom: 40px;
-    } */
-		h1 {
-			text-align: left;
-			font-weight: 500;
-			font-size: 24px;
-			line-height: 24px;
-			padding-bottom: 1rem;
-			/* --typography-spacing-vertical: 1rem; */
-		}
-		p {
-			color: var(--color-gray-3);
-			padding-bottom: 1.5rem;
-		}
-	}
-	.error {
-		color: #f72228;
-		margin-bottom: 1rem;
+	.box {
+		width: 100%;
+		max-width: 450px;
+		padding: 2.5rem;
+		border-radius: 6px;
+		background-color: #1a1a1a;
 	}
 	.left {
 		padding: 3rem clamp(3rem, 10vw, 160px);
@@ -89,12 +85,5 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-	}
-	.box {
-		width: 100%;
-		max-width: 450px;
-		padding: 2.5rem;
-		border-radius: 6px;
-		background-color: #1a1a1a;
 	}
 </style>

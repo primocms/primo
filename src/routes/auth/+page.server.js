@@ -54,5 +54,37 @@ export const actions = {
 			success: true,
 			error: null
 		}
+	},
+	reset_password: async (event) => {
+		const { request, locals } = event
+		const { supabase } = locals
+
+		const data = await request.formData()
+		const email = data.get('email')
+
+		const res = await supabase.auth.resetPasswordForEmail(email, {
+			redirectTo: `${event.url.origin}/auth?reset&email=${email}`
+		})
+		return {
+			success: !res.error,
+			error: res.error
+		}
+	},
+	confirm_password_reset: async (event) => {
+		const data = await event.request.formData()
+		const password = data.get('password')
+		if (!password) {
+			return {
+				success: false,
+				error: 'Password cannot be blank'
+			}
+		}
+		const res = await event.locals.supabase.auth.updateUser({
+			password
+		})
+		return {
+			success: !res.error,
+			error: res.error
+		}
 	}
 }
