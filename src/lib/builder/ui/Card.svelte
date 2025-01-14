@@ -100,7 +100,7 @@
 	header {
 		width: 100%;
 		font-size: var(--label-font-size);
-		padding: 1rem;
+		/* padding: 1rem; */
 		/* font-weight: var(--label-font-weight); */
 		font-weight: 400;
 		display: flex;

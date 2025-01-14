@@ -4,6 +4,7 @@ import { get } from 'svelte/store'
 import { page } from '$app/stores'
 import stores, { update_timeline } from '$lib/builder/stores/data'
 import { handle_content_changes, handle_field_changes } from './_helpers'
+import {update_page_file} from '$lib/builder/actions/_storage_helpers'
 
 export async function update_site_code_and_content({ code, entries, fields, content_changes, fields_changes }) {
 
@@ -41,6 +42,10 @@ export async function update_site_code_and_content({ code, entries, fields, cont
 
 	// STORE: update sections to trigger on-page update for any data fields in use
 	stores.sections.update((s) => s)
+
+	if (content_changes.length > 0) {
+		update_page_file(true)
+	}
 
 	// TODO: handle undo
 	// await update_timeline({

@@ -76,8 +76,6 @@
 		update_component_data()
 	})
 
-	$inspect({ component_data })
-
 	hotkey_events.on('e', toggle_tab)
 
 	// detect hotkeys from within inputs

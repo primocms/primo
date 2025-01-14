@@ -16,6 +16,7 @@
 	import { add_section_to_palette, delete_section_from_palette, move_section } from '$lib/builder/actions/sections'
 	import { update_section } from '$lib/builder/actions/sections'
 	import modal from '$lib/builder/stores/app/modal'
+	import active_site from '$lib/builder/stores/data/site'
 	import active_page from '$lib/builder/stores/data/page'
 	import sections from '$lib/builder/stores/data/sections'
 	import symbols from '$lib/builder/stores/data/symbols'
@@ -77,37 +78,36 @@
 	let showing_block_toolbar = $state(false)
 
 	async function show_block_toolbar() {
-		// if (show_block_toolbar_on_hover && !showing_block_toolbar) {
 		if (!showing_block_toolbar) {
 			showing_block_toolbar = true
 			await tick()
 			position_block_toolbar()
-			page_el.addEventListener('scroll', () => {
-				hide_block_toolbar()
-			})
+			page_el.addEventListener('scroll', position_block_toolbar)
 		}
 	}
 
 	async function position_block_toolbar() {
 		await tick()
 		if (!hovered_block_el || !block_toolbar_element) return
-		hovered_block_el.appendChild(block_toolbar_element) // so hovering detected as within block
+		hovered_block_el.appendChild(block_toolbar_element)
 		const { top, left, bottom, right } = hovered_block_el.getBoundingClientRect()
-		const toolbar_height = 41
-		const block_positions = {
-			top: (top <= toolbar_height ? toolbar_height : top) + window.scrollY,
-			bottom: bottom >= window.innerHeight ? 0 : window.innerHeight - bottom,
-			left,
-			right: window.innerWidth - right - window.scrollX
-		}
-		block_toolbar_element.style.top = `${block_positions.top}px`
-		block_toolbar_element.style.bottom = `${block_positions.bottom}px`
-		block_toolbar_element.style.left = `${block_positions.left}px`
-		block_toolbar_element.style.right = `${block_positions.right}px`
+		const toolbar_height = 45
+
+		// Keep toolbar within viewport bounds
+		const toolbar_top = Math.max(toolbar_height, Math.min(top, window.innerHeight - toolbar_height))
+		const toolbar_bottom = Math.max(0, window.innerHeight - bottom)
+
+		block_toolbar_element.style.position = 'fixed'
+		block_toolbar_element.style.top = `${toolbar_top}px`
+
+		block_toolbar_element.style.bottom = `${toolbar_bottom}px`
+		block_toolbar_element.style.left = `${left}px`
+		block_toolbar_element.style.right = `${window.innerWidth - right}px`
 	}
 
 	async function hide_block_toolbar() {
 		showing_block_toolbar = false
+		window.removeEventListener('scroll', position_block_toolbar)
 		await tick()
 	}
 
@@ -199,66 +199,6 @@
 	}
 
 	let moving = $state(false) // workaround to prevent block toolbar from showing when moving blocks
-
-	// Store for added elements
-	let added_elements = []
-
-	function append_to_head(code) {
-		const temp_container = document.createElement('div')
-		temp_container.innerHTML = code
-
-		const elements = Array.from(temp_container.childNodes)
-		const scripts = []
-
-		elements.forEach((child) => {
-			if (child instanceof HTMLScriptElement) {
-				scripts.push(child)
-			} else {
-				const added_element = document.head.appendChild(child)
-				added_elements.push(added_element)
-			}
-		})
-
-		function load_script(script_element) {
-			return new Promise((resolve) => {
-				const new_script = document.createElement('script')
-				Array.from(script_element.attributes).forEach((attr) => {
-					new_script.setAttribute(attr.name, attr.value)
-				})
-
-				if (script_element.src) {
-					new_script.onload = resolve
-					new_script.onerror = resolve // Proceed even if a script fails to load
-				} else {
-					new_script.textContent = script_element.textContent
-				}
-
-				const added_script = document.head.appendChild(new_script)
-				added_elements.push(added_script)
-
-				if (!script_element.src) {
-					resolve()
-				}
-			})
-		}
-
-		return scripts.reduce((promise, script_element) => {
-			return promise.then(() => load_script(script_element))
-		}, Promise.resolve())
-	}
-
-	function remove_from_head() {
-		added_elements.forEach((element) => {
-			if (element && element.parentNode) {
-				element.parentNode.removeChild(element)
-			}
-		})
-		added_elements = []
-	}
-
-	onDestroy(() => {
-		remove_from_head()
-	})
 
 	let dragging = {
 		id: null,
@@ -400,7 +340,7 @@
 	})
 
 	let page_is_empty = $derived($sections.length === 1) // just has palette
-	let non_palette_sections = $derived($sections.filter((s) => s.palette || s.master.symbol))
+	let non_palette_sections = $derived($sections.filter((s) => s.palette || s.master?.symbol))
 	$effect(() => {
 		if (sections_mounted === non_palette_sections.length && sections_mounted !== 0) {
 			page_mounted = true
@@ -474,7 +414,8 @@
 		{@const is_palette = !section.symbol && !section.master?.symbol}
 		{@const show_block_toolbar_on_hover = !moving && !(is_palette && palette_sections.length === 0)}
 		{@const has_page_type_symbols = $symbols.some((s) => s.page_types.includes($active_page.page_type.id))}
-		{#if is_palette && (has_page_type_symbols || palette_sections.length > 0)}
+		{@const should_show_palette = has_page_type_symbols || palette_sections.length > 0}
+		{#if is_palette && should_show_palette}
 			<div data-section={section.id} data-type="palette" class:empty={palette_sections.length === 0}>
 				{#if palette_sections.length > 0}
 					{#each palette_sections.sort((a, b) => a.index - b.index) as section (section.id)}
@@ -567,6 +508,12 @@
 					}}
 				/>
 			</div>
+		{:else if is_palette && !should_show_palette}
+			<div class="empty-state" style="height: 100%">
+				<span>Add Blocks to the Page Type to make them available on this page.</span>
+				<br />
+				<a class="button" href="{$active_site.id}/page-type--{$active_page.page_type.id}">Edit Page Type</a>
+			</div>
 		{/if}
 	{/each}
 </main>
@@ -610,7 +557,7 @@
 		opacity: 0;
 		border-top: 0;
 		height: 100%;
-		padding-top: 42px;
+		/* padding-top: 42px; */
 		overflow: auto;
 		box-sizing: border-box;
 	}
@@ -621,17 +568,23 @@
 		opacity: 1;
 	}
 	.empty-state {
-		/* position: absolute;
-		inset: 0; */
 		display: flex;
+		flex-direction: column;
 		justify-content: center;
 		align-items: center;
 		color: var(--color-gray-4);
-		/* pointer-events: none; */
 		z-index: -2;
 		font-family: Inter, sans-serif;
-		color: #999;
+		color: var(--color-gray-7);
 		z-index: 1;
 		text-align: center;
+	}
+	.button {
+		background: var(--color-gray-1);
+		padding: 0.5rem 1rem;
+		border-radius: var(--primo-border-radius);
+		font-size: 0.875rem;
+		text-decoration: none;
+		color: var(--color-gray-7);
 	}
 </style>

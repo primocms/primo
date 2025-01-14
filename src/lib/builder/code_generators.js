@@ -35,6 +35,7 @@ export async function block_html({ code, data }) {
  * @returns {Promise<{ html: string, js: string}>}
  * */
 export async function page_html({ page = get(active_page), site = get(activeSite), page_sections = get(sections), page_symbols = get(symbols), page_list = get(pages), page_types = get(stores.page_types), locale = 'en', no_js = false }) {
+	const page_type = _.isObject(page.page_type) ? page.page_type : page_types.find(pt => pt.id === page.page_type)
 	const hydratable_symbols_on_page = page_symbols.filter((s) => s.code.js && page_sections.some((section) => section.symbol === s.id || section.master?.symbol === s.id))
 	const component = await Promise.all([
 		(async () => {
@@ -43,9 +44,7 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 				html: `
          <svelte:head>
            ${site.code.head}
-           ${page?.page_type.
-// @ts-ignore
-           code.head}
+           ${page_type?.code.head}
            ${site_design_css(site.design)}
          </svelte:head>`,
 				css: ``,

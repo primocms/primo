@@ -140,7 +140,7 @@
 	{/snippet}
 </ModalHeader>
 
-<main class:showing-fields={tab === 'fields'} lang={$locale}>
+<main lang={$locale}>
 	<PaneGroup direction={$orientation} style="display: flex;">
 		<Pane defaultSize={50}>
 			{#if tab === 'code'}

@@ -440,7 +440,7 @@
 		opacity: 0;
 		border-top: 0;
 		height: 100%;
-		padding-top: 42px;
+		/* padding-top: 42px; */
 		overflow: auto;
 		box-sizing: border-box;
 		overflow: auto;

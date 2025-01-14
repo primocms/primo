@@ -15,6 +15,7 @@ export const Content_Row = (row = {}) => ({
 	section: row.section || null,
 	symbol: row.symbol || null,
 	page: row.page || null,
+	site: row.site || null,
 	page_type: row.page_type || null
 })
 

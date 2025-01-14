@@ -1,8 +1,8 @@
 <script>
+	import { onDestroy } from 'svelte'
 	import '@fontsource/fira-code/index.css'
 	import _ from 'lodash-es'
-	import Icon from '@iconify/svelte'
-	import { loadIcons, enableCache } from '@iconify/svelte'
+	import Icon, { loadIcons, enableCache } from '@iconify/svelte'
 	import { browser } from '$app/environment'
 	import IconButton from './ui/IconButton.svelte'
 	import Toolbar from './views/editor/Toolbar.svelte'
@@ -11,13 +11,21 @@
 	import * as modals from './views/modal'
 	import * as Mousetrap from 'mousetrap'
 	import hotkey_events from './stores/app/hotkey_events'
-	import { onMobile, mod_key_held, page_loaded } from './stores/app/misc'
+	import { onMobile, mod_key_held } from './stores/app/misc'
 	import built_in_symbols from './stores/data/primo_symbols'
 	import Page_Sidebar from './components/Sidebar/Page_Sidebar.svelte'
 	import PageType_Sidebar from './components/Sidebar/PageType_Sidebar.svelte'
 	import { userRole } from './stores/app/index.js'
 	import { hydrate_active_data } from './stores/hydration.js'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
+	import { site_design_css } from '$lib/builder/code_generators.js'
+	import { site_html, page_html } from '$lib/builder/stores/app/page'
+	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
+	import { processCode } from '$lib/builder/utils.js'
+	import { get_page_data, get_site_data } from '$lib/builder/stores/helpers.js'
+	import active_page from '$lib/builder/stores/data/page.js'
+	import page_type from '$lib/builder/stores/data/page_type.js'
+	import { afterNavigate } from '$app/navigation'
 
 	/**
 	 * @typedef {Object} Props
@@ -84,7 +92,10 @@
 		'ic:round-code',
 		'eos-icons:loading',
 		'material-symbols:code',
-		'fluent:form-multiple-24-regular'
+		'fluent:form-multiple-24-regular',
+		'gg:website',
+		'fluent:library-28-filled',
+		'lsicon:marketplace-filled'
 	])
 	enableCache('local')
 
@@ -141,59 +152,84 @@
 		hydrate_active_data(data)
 	})
 	let activeModal = $derived(getActiveModal($modal.type))
+
+	// Generate <head> tag code
+	let previous
+	$effect.pre(() => {
+		if (previous === $siteCode.head + $siteDesign) return
+		compile_component_head(`<svelte:head>${$siteCode.head + site_design_css($siteDesign)}</svelte:head>`).then((generated_code) => {
+			$site_html = generated_code
+			previous = $siteCode.head + $siteDesign
+		})
+	})
+
+	// reset site html to avoid issues when navigating to new site
+	onDestroy(() => {
+		$site_html = null
+	})
+
+	async function compile_component_head(site) {
+		const compiled = await processCode({
+			component: {
+				html: site,
+				css: '',
+				js: '',
+				data: get_site_data({})
+			}
+		})
+		if (!compiled.error) {
+			return compiled.head
+		} else return ''
+	}
 </script>
 
-<Toolbar {primary_buttons} {dropdown} {secondary_buttons} on:publish>
-	{@render toolbar?.()}
-</Toolbar>
-<PaneGroup
-	direction="horizontal"
-	style="display: flex;     
-		height: 100vh"
-	autoSaveId="page-view"
->
-	<Pane
-		style="padding-top: 42px;"
-		bind:pane={sidebar_pane}
-		defaultSize={20}
-		minSize={2}
-		onResize={(size) => {
-			if (size < 10) {
-				showing_sidebar = false
-				sidebar_pane.resize(2)
-			} else {
-				showing_sidebar = true
-			}
-		}}
-	>
-		{#if showing_sidebar}
-			{#if data.page_type}
-				<PageType_Sidebar />
-			{:else}
-				<Page_Sidebar />
+<div class="h-screen flex flex-col">
+	<Toolbar {primary_buttons} {dropdown} {secondary_buttons} on:publish>
+		{@render toolbar?.()}
+	</Toolbar>
+	<PaneGroup direction="horizontal" autoSaveId="page-view" style="height:initial;flex:1;">
+		<Pane
+			bind:pane={sidebar_pane}
+			defaultSize={20}
+			minSize={2}
+			onResize={(size) => {
+				if (size < 10) {
+					showing_sidebar = false
+					sidebar_pane.resize(2)
+				} else {
+					showing_sidebar = true
+				}
+			}}
+		>
+			{#if showing_sidebar}
+				{#if data.page_type}
+					<PageType_Sidebar />
+				{:else}
+					<Page_Sidebar />
+				{/if}
+			{:else if !$onMobile}
+				<div class="expand primo-reset">
+					<IconButton onclick={reset} icon="tabler:layout-sidebar-left-expand" />
+				</div>
 			{/if}
-		{:else if !$onMobile}
-			<div class="expand primo-reset">
-				<IconButton onclick={reset} icon="tabler:layout-sidebar-left-expand" />
-			</div>
-		{/if}
-	</Pane>
-	<PaneResizer
-		class="PaneResizer"
-		style="display: flex;
-		align-items: center;
-		justify-content: center;"
-	>
-		{#if showing_sidebar}
-			<span class="grab-handle">
-				<Icon icon="octicon:grabber-16" />
-			</span>
-		{/if}
-	</PaneResizer>
-	<Pane style="position: relative;" defaultSize={80}>
-		{@render children?.()}
-	</Pane>
-</PaneGroup>
+		</Pane>
+		<PaneResizer
+			class="PaneResizer"
+			style="display: flex;
+			align-items: center;
+			justify-content: center;"
+		>
+			{#if showing_sidebar}
+				<span class="grab-handle">
+					<Icon icon="octicon:grabber-16" />
+				</span>
+			{/if}
+		</PaneResizer>
+		<Pane class="relative bg-white" defaultSize={80}>
+			{@render children?.()}
+		</Pane>
+	</PaneGroup>
+</div>
 
 <Modal visible={!!activeModal}>
 	{@const SvelteComponent = activeModal}

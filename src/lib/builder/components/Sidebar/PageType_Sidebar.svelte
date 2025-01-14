@@ -23,6 +23,7 @@
 	import { flip } from 'svelte/animate'
 	import { dropTargetForElements } from '../../libraries/pragmatic-drag-and-drop/entry-point/element/adapter.js'
 	import { attachClosestEdge, extractClosestEdge } from '../../libraries/pragmatic-drag-and-drop-hitbox/closest-edge.js'
+	import { site_html } from '$lib/builder/stores/app/page'
 
 	// get the query param to set the tab when navigating from page (i.e. 'Edit Fields')
 	let active_tab = $state($page.url.searchParams.get('t') === 'p' ? 'PROPERTIES' : 'BLOCKS')
@@ -239,35 +240,41 @@
 				</div>
 				<!-- svelte-ignore missing_declaration -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div class="block-list">
-					{#each $symbols.sort((a, b) => a.index - b.index) as symbol, i (symbol.id)}
-						{@const toggled = symbol.page_types?.includes($page_type.id)}
-						<div class="block" animate:flip={{ duration: 200 }} use:drag_target={symbol}>
-							<Sidebar_Symbol
-								{symbol}
-								head={$site.code.head + $page_type.code.head}
-								append={site_design_css($site.design)}
-								show_toggle={true}
-								{toggled}
-								on:toggle={({ detail }) => {
-									if (detail === toggled) return // dispatches on creation for some reason
-									toggle_symbol({
-										symbol_id: symbol.id,
-										page_type_id: $page_type.id,
-										toggled: detail
-									})
-								}}
-								onmousedown={() => (dragging = symbol._drag_id)}
-								onmouseup={() => (dragging = null)}
-								on:edit={() => edit_block(symbol)}
-								on:rename={({ detail: name }) => rename_block({ block: symbol, name })}
-								on:download={() => download_block(symbol.id)}
-								on:delete={() => delete_block(symbol)}
-								on:duplicate={() => duplicate_block(symbol.id, i + 1)}
-							/>
-						</div>
-					{/each}
-				</div>
+				{#if $site_html !== null}
+					<div class="block-list">
+						{#each $symbols.sort((a, b) => a.index - b.index) as symbol, i (symbol.id)}
+							{@const toggled = symbol.page_types?.includes($page_type.id)}
+							<div class="block" animate:flip={{ duration: 200 }} use:drag_target={symbol}>
+								<Sidebar_Symbol
+									{symbol}
+									head={$site_html}
+									append={site_design_css($site.design)}
+									show_toggle={true}
+									{toggled}
+									on:toggle={({ detail }) => {
+										if (detail === toggled) return // dispatches on creation for some reason
+										toggle_symbol({
+											symbol_id: symbol.id,
+											page_type_id: $page_type.id,
+											toggled: detail
+										})
+									}}
+									onmousedown={() => (dragging = symbol._drag_id)}
+									onmouseup={() => (dragging = null)}
+									on:edit={() => edit_block(symbol)}
+									on:rename={({ detail: name }) => rename_block({ block: symbol, name })}
+									on:download={() => download_block(symbol.id)}
+									on:delete={() => delete_block(symbol)}
+									on:duplicate={() => duplicate_block(symbol.id, i + 1)}
+								/>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div style="display: flex;justify-content: center;font-size: 2rem;color:var(--color-gray-6)">
+						<UI.Spinner variant="loop" />
+					</div>
+				{/if}
 			{:else}
 				<div class="empty">Add a Block to your site to use it on your pages.</div>
 				<div class="primo-buttons">

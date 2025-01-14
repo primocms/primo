@@ -187,11 +187,11 @@
 
 <style lang="postcss">
 	#primo-toolbar {
-		position: fixed;
+		/* position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		z-index: 999;
+		z-index: 999; */
 		border-bottom: 1px solid var(--color-gray-8);
 	}
 
@@ -316,11 +316,11 @@
 		/* background: #121212; */
 		/* background: var(--color-gray-9); */
 		padding: 6px 0.5rem;
-		position: fixed;
+		/* position: fixed;
 		left: 0;
 		right: 0;
 		top: 0;
-		z-index: 9999;
+		z-index: 9999; */
 		backdrop-filter: blur(4px);
 		background: rgba(10, 10, 10, 0.95);
 		border: 1px solid rgba(255, 255, 255, 0.1);

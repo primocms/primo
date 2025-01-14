@@ -7,7 +7,7 @@
 </script>
 
 <script>
-	import { onDestroy } from 'svelte'
+	import { onMount } from 'svelte'
 	import _ from 'lodash-es'
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
@@ -25,6 +25,7 @@
 	import { processCode, convert_html_to_markdown, compare_urls } from '$lib/builder/utils'
 	import { hovering_outside } from '$lib/builder/utilities'
 	import { locale } from '$lib/builder/stores/app/misc'
+	import { site_html } from '$lib/builder/stores/app/page'
 	import { update_section_entries } from '$lib/builder/actions/sections'
 	import active_page from '$lib/builder/stores/data/page'
 	import site from '$lib/builder/stores/data/site'
@@ -33,8 +34,6 @@
 	import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 	import { broadcastChanged } from '$lib/builder/database'
 	import { component_iframe_srcdoc } from '$lib/builder/components/misc'
-	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
-	import { site_design_css } from '$lib/builder/code_generators.js'
 
 	const lowlight = createLowlight(all)
 
@@ -44,17 +43,21 @@
 
 	let node = $state()
 
-	let component_data = $state()
+	let component_data = $derived(
+		get_content_with_synced_values({
+			entries: section.entries,
+			fields: block.fields,
+			page: $active_page,
+			site: $site
+		})[$locale]
+	)
 
-	let html = $state('')
-	let css = $state('')
-	let js = $state('')
-
+	// let local_component_data
 	async function save_edited_value({ id, key = null, value }) {
 		// set local_component_data to avoid hydrating data when already changed on page
-		if (key) {
-			_.set(local_component_data, key, value)
-		}
+		// if (key) {
+		// 	_.set(local_component_data, key, value)
+		// }
 		await update_section_entries({ id, value })
 		broadcastChanged({ block_id: section.id })
 	}
@@ -68,84 +71,17 @@
 	let link_editor_is_visible = $state(false)
 
 	let active_editor = $state()
-	const markdown_classes = {}
-	async function set_editable_markdown({ id, key, element }) {
-		const html = element.innerHTML.trim()
-		element.innerHTML = ''
-
-		// move element classes to tiptap div
-		const markdown_id = element.getAttribute('data-markdown-id') || createUniqueID()
-		let saved_markdown_classes = markdown_classes[markdown_id]
-		if (!saved_markdown_classes) {
-			markdown_classes[markdown_id] = element.className
-			saved_markdown_classes = markdown_classes[markdown_id]
-			element.classList.remove(...element.classList)
-			element.setAttribute('data-markdown-id', markdown_id) // necessary since data-markdown-id gets cleared when hydrating (i.e. editing from fields)
-		}
-
-		const editor = new Editor({
-			content: html,
-			element,
-			extensions: [
-				StarterKit,
-				Image,
-				Youtube.configure({
-					modestBranding: true
-				}),
-				Typography,
-				CodeBlockLowlight.configure({
-					lowlight
-				}),
-				Link.configure({
-					HTMLAttributes: {
-						class: 'link'
-					},
-					openOnClick: false
-				}),
-				// TipTapImage.configure({}),
-				Highlight.configure({ multicolor: false }),
-				Extension.create({
-					onFocus() {
-						active_editor = editor
-						dispatch('lock')
-					},
-					async onBlur() {
-						dispatch('unlock')
-						const updated_html = editor.getHTML()
-						save_edited_value({
-							id,
-							key,
-							value: {
-								html: updated_html,
-								markdown: await convert_html_to_markdown(updated_html)
-							}
-						})
-					}
-				})
-			],
-			editorProps: {
-				attributes: {
-					class: saved_markdown_classes,
-					'data-markdown-id': markdown_id
-				}
-			}
-		})
-	}
 
 	let error = $state('')
 
 	let generated_js = $state('')
-	async function generate_component_code(raw_code) {
-		html = raw_code.html
-		css = raw_code.css
-		js = raw_code.js
-
+	async function generate_component_code(code) {
 		const res = await processCode({
 			component: {
 				head: '',
-				html,
-				css,
-				js,
+				html: code.html,
+				css: code.css,
+				js: code.js,
 				data: _.cloneDeep(component_data)
 			},
 			buildStatic: false,
@@ -160,12 +96,12 @@
 		}
 	}
 
-	let isScrolling = false
+	let scrolling = false
 
+	const markdown_classes = {}
 	async function make_content_editable() {
 		if (!node?.contentDocument) return
 
-		// Use the iframe's document instead of the node directly
 		const doc = node.contentDocument
 		const valid_elements = Array.from(doc.querySelectorAll(`img, a, p, span, h1, h2, h3, h4, h5, h6, div`)).filter((element) => {
 			const [child_node] = Array.from(element.childNodes).filter((node) => {
@@ -276,6 +212,69 @@
 					return true
 				} else return false
 			}
+		}
+
+		async function set_editable_markdown({ id, key, element }) {
+			const html = element.innerHTML.trim()
+			element.innerHTML = ''
+
+			// move element classes to tiptap div
+			const markdown_id = element.getAttribute('data-markdown-id') || createUniqueID()
+			let saved_markdown_classes = markdown_classes[markdown_id]
+			if (!saved_markdown_classes) {
+				markdown_classes[markdown_id] = element.className
+				saved_markdown_classes = markdown_classes[markdown_id]
+				element.classList.remove(...element.classList)
+				element.setAttribute('data-markdown-id', markdown_id) // necessary since data-markdown-id gets cleared when hydrating (i.e. editing from fields)
+			}
+
+			const editor = new Editor({
+				content: html,
+				element,
+				extensions: [
+					StarterKit,
+					Image,
+					Youtube.configure({
+						modestBranding: true
+					}),
+					Typography,
+					CodeBlockLowlight.configure({
+						lowlight
+					}),
+					Link.configure({
+						HTMLAttributes: {
+							class: 'link'
+						},
+						openOnClick: false
+					}),
+					// TipTapImage.configure({}),
+					Highlight.configure({ multicolor: false }),
+					Extension.create({
+						onFocus() {
+							active_editor = editor
+							dispatch('lock')
+						},
+						async onBlur() {
+							dispatch('unlock')
+							const updated_html = editor.getHTML()
+							save_edited_value({
+								id,
+								key,
+								value: {
+									html: updated_html,
+									markdown: await convert_html_to_markdown(updated_html)
+								}
+							})
+						}
+					})
+				],
+				editorProps: {
+					attributes: {
+						class: saved_markdown_classes,
+						'data-markdown-id': markdown_id
+					}
+				}
+			})
 		}
 
 		async function set_editable_image({ element, id }) {
@@ -405,43 +404,6 @@
 		}
 	}
 
-	let local_component_data
-	async function hydrate_component(data) {
-		if (error) {
-			error = null
-			generate_component_code(block.code) // try re-generating
-		} else if (component && !_.isEqual(local_component_data, data)) {
-			// TODO: re-render the component if `data` doesn't match its fields (e.g. when removing a component field to add to the page)
-			// component.$set(data)
-			// generate_component_code(block.code)
-
-			// sometimes data hydration doesn't work on some fields,
-			// maybe workaround is to check the node for the correct value and set them manually
-			// or check if values exist and if not just re-compile component
-
-			// trying just remounting w/ existing js instead of hydrating, less problematic
-			mount_component(generated_js)
-			// component.$set(data)
-			local_component_data = _.cloneDeep(data)
-		}
-	}
-
-	let component = $state()
-
-	// Fade in component on mount
-	let mutation_observer = $state()
-	let resize_observer = $state()
-	if (browser) {
-		mutation_observer = new MutationObserver(() => {
-			dispatch_mount()
-			reroute_links()
-		})
-
-		resize_observer = new ResizeObserver((entries) => {
-			dispatch('resize')
-		})
-	}
-
 	let mounted = false
 	function dispatch_mount() {
 		if (!mounted) {
@@ -449,11 +411,6 @@
 			mounted = true
 		}
 	}
-
-	onDestroy(() => {
-		mutation_observer?.disconnect()
-		resize_observer?.disconnect()
-	})
 
 	// Reroute links to correctly open externally and internally
 	async function reroute_links() {
@@ -510,51 +467,55 @@
 		floating_menu.style.display = 'none'
 	}
 
-	$effect(() => {
-		component_data = get_content_with_synced_values({
-			entries: section.entries,
-			fields: block.fields,
-			page: $active_page,
-			site: $site
-		})[$locale]
-	})
+	function on_hover_outside_image_editor(e) {
+		if (hovering_outside(e, image_editor)) {
+			image_editor_is_visible = false
+		}
+	}
 
-	let compiled_code = $state({})
+	let compiled_code = $state(null)
 	$effect(() => {
 		if (!_.isEqual(compiled_code, block.code)) {
 			generate_component_code(block.code)
 			compiled_code = _.cloneDeep(block.code)
 		}
 	})
-	$effect(() => {
-		hydrate_component(component_data)
-	})
 
-	$effect(() => {
-		if (browser && node) {
-			node.closest('#Page').addEventListener('scroll', on_page_scroll)
-			node.closest('body').addEventListener('mouseover', (e) => {
-				if (hovering_outside(e, image_editor)) {
-					image_editor_is_visible = false
+	let mutation_observer
+	let resize_observer
+	onMount(() => {
+		mutation_observer = new MutationObserver(() => {
+			dispatch_mount()
+			reroute_links()
+		})
+
+		resize_observer = new ResizeObserver(() => {
+			dispatch('resize')
+		})
+
+		// Resize component iframe wrapper on resize to match content height (message set from `setup_component_iframe`)
+		window.addEventListener('message', (event) => {
+			if (node && event.data?.type === 'resize') {
+				if (event.data.id === section.id) {
+					node.style.height = event.data.height + 'px'
 				}
-			})
+			}
+		})
+
+		// Hide Editor UI on scroll and hover outside
+		window.addEventListener('scroll', on_page_scroll)
+		window.addEventListener('mouseover', on_hover_outside_image_editor)
+
+		return () => {
+			mutation_observer?.disconnect()
+			resize_observer?.disconnect()
+
+			window.removeEventListener('scroll', on_page_scroll)
+			window.removeEventListener('mouseover', on_hover_outside_image_editor)
 		}
 	})
 
-	// resize component iframe wrapper on resize to match content height
-	$effect(() => {
-		if (browser) {
-			window.addEventListener('message', (event) => {
-				if (node && event.data?.type === 'resize') {
-					if (event.data.id === block.id) {
-						node.style.height = event.data.height + 'px'
-					}
-				}
-			})
-		}
-	})
-
-	function updateMenuPositions() {
+	function update_menu_positions() {
 		if (!node?.contentDocument || !floating_menu || !bubble_menu) return
 		const iframe_rect = node.getBoundingClientRect()
 		const selection = node.contentDocument.getSelection()
@@ -593,16 +554,24 @@
 		}
 	}
 
-	let component_el
-	let style_el
-	function initialize_component_iframe() {
-		node.onload = async () => {
+	let setup_complete = $state(false)
+	function setup_component_iframe() {
+		// Wait for iframe to be ready
+		node.removeEventListener('load', setup)
+
+		if (node.contentDocument.readyState === 'complete') {
+			setup()
+		} else {
+			node.addEventListener('load', setup)
+		}
+
+		function setup() {
 			const doc = node.contentDocument
 
 			// Add resize handling
 			const update_height = () => {
-				const height = doc.body.scrollHeight
-				window.postMessage({ type: 'resize', height, id: block.id }, '*')
+				const height = doc.body.clientHeight
+				window.postMessage({ type: 'resize', height, id: section.id }, '*')
 			}
 
 			// Add resize observer
@@ -610,7 +579,6 @@
 			resize_observer.observe(doc.body)
 
 			// Add mutation observer for DOM changes
-			// const observer = new MutationObserver(update_height)
 			mutation_observer.observe(doc.body, {
 				childList: true,
 				subtree: true,
@@ -618,67 +586,38 @@
 				characterData: true
 			})
 
-			doc.addEventListener('mouseup', updateMenuPositions)
-			doc.addEventListener('keyup', updateMenuPositions)
+			doc.addEventListener('mouseup', update_menu_positions)
+			doc.addEventListener('keyup', update_menu_positions)
 
-			// Create and append styles
-			style_el = doc.createElement('style')
-			style_el.textContent = css
-			doc.head.appendChild(style_el)
-
-			component_el = doc.createElement('div')
-			doc.body.appendChild(component_el)
-
-			await mount_component(generated_js)
+			setup_complete = true
 		}
-
-		node.src = 'about:blank'
 	}
 
-	async function mount_component(js) {
-		const blob = new Blob([js], { type: 'text/javascript' })
-		const url = URL.createObjectURL(blob)
+	// mount or hydrate component
+	$effect(() => {
+		if (setup_complete) {
+			send_component_to_iframe(generated_js, component_data)
+		}
+	})
+
+	async function send_component_to_iframe(js, data) {
 		try {
-			const { default: App } = await import(/* @vite-ignore */ url)
-			if (component) component.$destroy()
-			if (!App) return // idk why App sometimes doesn't exist
-			component = new App({
-				target: component_el,
-				props: component_data
-			})
-			await tick()
-			make_content_editable()
+			node.contentWindow.postMessage({ type: 'component', payload: { js, data: _.cloneDeep(data) } }, '*')
+			setTimeout(make_content_editable, 200) // wait for component to mount within iframe
 		} catch (e) {
+			console.error(e)
 			error = e
-			// dispatch_mount()
+			dispatch_mount()
 		}
-		URL.revokeObjectURL(url)
 	}
-	$effect(() => {
-		if (node && generated_js) {
-			initialize_component_iframe()
-		}
-	})
-
-	$effect(() => {
-		mount_component(generated_js)
-	})
-
-	// Initial state - hide menus
-	$effect.pre(() => {
-		if (bubble_menu && floating_menu) {
-			bubble_menu.style.display = 'none'
-			floating_menu.style.display = 'none'
-		}
-	})
 
 	// Handle bubble and float menu positioning
 	$effect(() => {
-		if (node?.contentDocument) {
-			const doc = node.contentDocument
+		const doc = node?.contentDocument
+		if (doc) {
 			const events = ['selectionchange', 'keyup', 'mouseup', 'touchend']
 
-			const update = _.debounce(updateMenuPositions, 50)
+			const update = _.debounce(update_menu_positions, 50)
 			events.forEach((event) => doc.addEventListener(event, update))
 
 			return () => {
@@ -689,7 +628,7 @@
 </script>
 
 {#if image_editor_is_visible}
-	<button style:pointer-events={isScrolling ? 'none' : 'all'} in:fade={{ duration: 100 }} class="primo-reset image-editor" bind:this={image_editor}>
+	<button style:pointer-events={scrolling ? 'none' : 'all'} in:fade={{ duration: 100 }} class="primo-reset image-editor" bind:this={image_editor}>
 		<Icon icon="uil:image-upload" />
 	</button>
 {/if}
@@ -708,21 +647,15 @@
 	</div>
 {/if}
 
-<!-- <div class="node" bind:this={node}></div> -->
-
-{#if generated_js}
+{#if $site_html && generated_js}
 	<iframe
 		frameborder="0"
 		bind:this={node}
 		title="block"
 		srcdoc={component_iframe_srcdoc({
-			id: block.id,
-			head: $siteCode.head + site_design_css($siteDesign),
-			html: '',
-			css: '',
-			foot: ''
-			// foot: append
+			head: $site_html
 		})}
+		onload={setup_component_iframe}
 	></iframe>
 {/if}
 
@@ -732,7 +665,7 @@
   </pre>
 {/if}
 
-<div class="menu floating-menu primo-reset" bind:this={floating_menu}>
+<div class="menu floating-menu primo-reset" bind:this={floating_menu} style="display:none">
 	{#if active_editor}
 		<MarkdownButton icon="fa-solid:heading" onclick={() => active_editor.chain().focus().toggleHeading({ level: 1 }).run()} />
 		<MarkdownButton icon="fa-solid:code" onclick={() => active_editor.chain().focus().toggleCodeBlock().run()} />
@@ -776,7 +709,7 @@
 		/>
 	{/if}
 </div>
-<div class="menu bubble-menu primo-reset" bind:this={bubble_menu}>
+<div class="menu bubble-menu primo-reset" bind:this={bubble_menu} style="display:none">
 	{#if active_editor}
 		<MarkdownButton
 			icon="fa-solid:link"
@@ -799,9 +732,6 @@
 <style lang="postcss">
 	iframe {
 		width: 100%;
-	}
-	:global(.ProseMirror) {
-		outline: 0 !important;
 	}
 	pre {
 		margin: 0;

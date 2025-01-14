@@ -9,65 +9,85 @@ import * as code_generators from '$lib/builder/code_generators'
 import { processCode } from '$lib/builder/utils'
 import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 import _ from 'lodash-es'
-import {transform_content} from '$lib/builder/transform_data'
+import {supabase} from '$lib/supabase'
 
-export async function update_page_file(page = get(active_page)) {
+export async function update_page_file(update_all = false) {
 	const all_pages = get(pages)
-	const page_sections = get(sections)
-
-	// order sections
-	let ordered_sections = []
-
-	// get mastered sections
-	const mastered_sections = page_sections.filter((s) => s.master)
-
-	for (const section of mastered_sections.sort((a, b) => a.master.index - b.master.index)) {
-		// if has symbol, add like normal
-		if (section.master?.symbol) {
-			ordered_sections.push({
-				...section,
-				index: section.master.index
+	if (update_all) {
+		await Promise.all(
+			all_pages.map(async (page) => {
+				const { data = [] } = await supabase.from('sections').select('*, page, entries(*), master(id, symbol, index)').match({ page: page.id }).order('index', { ascending: true })
+				await generate_and_upload_page(page, data)
 			})
+		)
+	} else {
+		const page = get(active_page)
+		await generate_and_upload_page(page, get(sections))
+	}
+
+
+	async function generate_and_upload_page(page, page_sections) {
+		// order sections
+		let ordered_sections = []
+
+		// get mastered sections
+		const mastered_sections = page_sections.filter((s) => s.master)
+
+		// @ts-ignore
+		for (const section of mastered_sections.sort((a, b) => a.master.index - b.master.index)) {
+			// if has symbol, add like normal
+			if (section.master?.symbol) {
+				ordered_sections.push({
+					...section,
+					index: section.master.index
+				})
+			}
+
+			// if is master palette, insert palette sections, ordered by index
+			if (!section.master?.symbol) {
+				const palette_sections = page_sections.filter((s) => s.palette).sort((a, b) => a.index - b.index)
+				// palette_sections.index = page_sections.master.index
+				ordered_sections.push(...palette_sections)
+			}
 		}
 
-		// if is master palette, insert palette sections, ordered by index
-		if (!section.master?.symbol) {
-			const palette_sections = page_sections.filter((s) => s.palette).sort((a, b) => a.index - b.index)
-			// palette_sections.index = page_sections.master.index
-			ordered_sections.push(...palette_sections)
+
+		// then sort by index and flatten
+
+		const { html } = await code_generators.page_html({
+			page,
+			page_sections: ordered_sections
+		})
+
+
+		let path
+		if (page.slug === '') {
+			path = `index.html`
+		} else {
+			path = `${get_full_path(page, all_pages)}/index.html`
 		}
+
+		const file = new File([html], 'index.html', { type: 'text/html; charset=utf-8' });
+
+		await storageChanged({
+			action: 'upload',
+			key: path,
+			file
+		})
+
+		// save site preview
+		if (page.slug === '') {
+			const { data, error } = await supabase.storage.from('sites').upload(`${get(site).id}/preview.html`, file, { upsert: true })
+		}
+
 	}
 
-
-	// then sort by index and flatten
-
-	const { html } = await code_generators.page_html({
-		page,
-		page_sections: ordered_sections
-	})
-
-
-	let path
-	if (page.slug === '') {
-		path = `index.html`
-	} else {
-		path = `${get_full_path(page, all_pages)}/index.html`
-	}
-
-  const file = new File([html], 'index.html', { type: 'text/html; charset=utf-8' });
-
-	await storageChanged({
-		action: 'upload',
-		key: path,
-		file
-	})
-
-	let json_path
-	if (page.slug === '') {
-		json_path = `page.json`
-	} else {
-		json_path = `${get_full_path(page, all_pages)}/page.json`
-	}
+	// let json_path
+	// if (page.slug === '') {
+	// 	json_path = `page.json`
+	// } else {
+	// 	json_path = `${get_full_path(page, all_pages)}/page.json`
+	// }
 
 	// const page_data = {
 	// 	id: page.id,

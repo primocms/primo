@@ -1,7 +1,7 @@
-export const dynamic_iframe_srcdoc = (locale = 'en', head = '') => {
+export const dynamic_iframe_srcdoc = (head = '') => {
   return `
   <!DOCTYPE html>
-  <html lang="${locale}">
+  <html lang="en">
     <head>
       ${head}
       <meta charset="utf-8">
@@ -86,7 +86,7 @@ export const dynamic_iframe_srcdoc = (locale = 'en', head = '') => {
   </html>
 `}
 
-export const static_iframe_srcdoc = ({ head, html, css, foot }) => {
+export const static_iframe_srcdoc = ({ head = '', html, css, foot }) => {
 	return `
     <!DOCTYPE html>
     <html lang="en">
@@ -100,15 +100,63 @@ export const static_iframe_srcdoc = ({ head, html, css, foot }) => {
   `
 }
 
-export const component_iframe_srcdoc = ({ id, head, html, css, foot }) => {
+export const component_iframe_srcdoc = ({ head = '', css = '', foot = '' }) => {
 	return `
     <!DOCTYPE html>
     <html lang="en">
       <head>
+        <script type="module">
+          let c;
+
+          window.addEventListener('message', ({data}) => {
+            // handle the message here
+            const { payload } = data
+            if (payload.js || payload.data) {
+              update(payload.js, payload.data)
+            }
+          })
+
+          function update(source = null, props) {
+            if (c && !source && props) {
+              // TODO: re-render component when passing only a subset of existing props (i.e. when a prop has been deleted)
+              c.$set(props);
+            } else if (source) {
+              const blob = new Blob([source], { type: 'text/javascript' });
+              const url = URL.createObjectURL(blob);
+              import(url).then(({ default: App }) => {
+                if (c) {
+                  c.$destroy();
+                }
+                try {
+                  c = new App({ 
+                    target: document.querySelector('#component'),
+                    props
+                  })
+                  // setTimeout(setListeners, 1000)
+                } catch(e) {
+                  document.querySelector('#page').innerHTML = ''
+                  console.error(e.toString())
+                  // channel.postMessage({
+                  //   event: 'SET_ERROR',
+                  //   payload: {
+                  //     error: e.toString()
+                  //   }
+                  // });
+                }
+                // channel.postMessage({
+                //   event: 'SET_HEIGHT',
+                //   payload: {
+                //     height: window.document.body.scrollHeight
+                //   }
+                // });
+              })
+            }
+          }
+        </script>
         ${head}
       </head>
       <body id="page" style="margin:0;overflow:hidden;">
-        ${html}
+        <div id="component"></div>
         <style>${css}</style>
         ${foot}
         <style>

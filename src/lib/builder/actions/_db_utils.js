@@ -593,18 +593,3 @@ export function remap_entries_and_fields({changes, items}) {
     entry.parent = new_parent_id
   } 
 }
-
-export function new_remap_ids(changes, items) {
-  // loop through changes
-  // for inserted items, remap ID and remap ID on matching entry
-
-  const entries_to_remap = _.cloneDeep(changes.filter(c => c.action === 'insert').map(c => c.data))
-  const map = remap_entry_ids(_.cloneDeep(entries_to_remap), true)[1]
-
-  for (const item of entries_to_remap) {
-    const new_id = map[item.id]
-    _.find(changes, ['id', item.id]).id = new_id 
-    _.find(changes, ['data.id', item.id]).data.id = new_id
-    _.find(items, ['id', item.id]).id = new_id
-  } 
-}

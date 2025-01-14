@@ -11,18 +11,19 @@
 	import Sidebar_Symbol from './Sidebar_Symbol.svelte'
 	import Content from '../Content.svelte'
 	import { debounce } from '$lib/builder/utils'
-	import { get_page_data, get_site_data } from '$lib/builder/stores/helpers'
 	import { update_page_entries } from '$lib/builder/actions/pages.js'
 	import { move_block } from '$lib/builder/actions/symbols'
 	import { browser } from '$app/environment'
 	import { goto } from '$app/navigation'
 	import { dropTargetForElements } from '$lib/builder/libraries/pragmatic-drag-and-drop/entry-point/element/adapter.js'
 	import { attachClosestEdge, extractClosestEdge } from '$lib/builder/libraries/pragmatic-drag-and-drop-hitbox/closest-edge.js'
+	import { site_html } from '$lib/builder/stores/app/page'
 
 	let active_tab = $state((browser && localStorage.getItem('page-tab')) || 'BLOCKS')
 
 	let page_type_symbols = $derived($symbols.filter((s) => s.page_types.includes($active_page.page_type.id)))
 	let has_symbols = $derived(page_type_symbols.length > 0)
+
 	$effect(() => {
 		if (!has_symbols) active_tab = 'PROPERTIES'
 		else active_tab = 'BLOCKS'
@@ -60,48 +61,6 @@
 			}
 		})
 	}
-
-	// build page/site html to pass to symbols
-	let page_html = $state('')
-	async function build_page_html(html) {
-		if (html.length === 0) return ''
-		const page_data = await get_page_data({})
-		const { data } = await axios.post(`/api/render`, {
-			// id: symbol.id,
-			code: {
-				html: `<svelte:head>${html}</svelte:head>`,
-				css: '',
-				js: ''
-			},
-			data: page_data,
-			dev_mode: false
-		})
-		page_html = data.head
-	}
-	$effect(() => {
-		browser && build_page_html($active_page.page_type.code.head)
-	})
-
-	let site_html = $state(null)
-	async function build_site_html(html) {
-		if (html.length === 0) return ''
-		const site_data = await get_site_data({})
-		const { data } = await axios.post(`/api/render`, {
-			// id: symbol.id,
-			code: {
-				html: `<svelte:head>${html}</svelte:head>`,
-				css: '',
-				js: ''
-			},
-			data: site_data,
-			dev_mode: false
-		})
-
-		site_html = data.head
-	}
-	$effect(() => {
-		browser && build_site_html($site.code.head)
-	})
 </script>
 
 <div class="sidebar primo-reset">
@@ -130,14 +89,14 @@
 	<div class="container">
 		{#if active_tab === 'BLOCKS'}
 			<div class="symbols">
-				{#if site_html !== null}
+				{#if $site_html !== null}
 					{#each page_type_symbols as symbol, i (symbol.id)}
 						<div animate:flip={{ duration: 200 }} use:drag_target={symbol}>
-							<Sidebar_Symbol {symbol} controls_enabled={false} head={site_html + page_html} append={site_design_css($site.design)} />
+							<Sidebar_Symbol {symbol} controls_enabled={false} head={$site_html} append={site_design_css($site.design)} />
 						</div>
 					{/each}
 				{:else}
-					<div style="display: flex;justify-content: center;font-size: 2rem;">
+					<div style="display: flex;justify-content: center;font-size: 2rem;color:var(--color-gray-6)">
 						<UI.Spinner variant="loop" />
 					</div>
 				{/if}
