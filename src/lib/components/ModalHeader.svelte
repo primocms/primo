@@ -118,7 +118,7 @@
 			justify-content: center;
 			padding: 0.5rem 1rem;
 			font-size: var(--font-size-2);
-			font-weight: 600;
+			font-weight: 400;
 			gap: 0.25rem;
 
 			.svg {

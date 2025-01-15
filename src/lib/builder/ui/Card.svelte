@@ -81,6 +81,7 @@
 		position: relative; /* for absolutelty positioned button in top right corner */
 	}
 	button.header-button {
+		padding: 1rem;
 		&:not(:only-child) {
 			border-bottom: 1px solid var(--color-gray-9);
 		}

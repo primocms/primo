@@ -30,7 +30,6 @@
 			}
 			return null
 		} else if (action === 'CONNECT_DOMAIN_NAME') {
-			console.log('connecting domain name', payload)
 			const { data } = await axios
 				.post('/api/deploy/connect-domain-name', {
 					site_id: payload.site_id,

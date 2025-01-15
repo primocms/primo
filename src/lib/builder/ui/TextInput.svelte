@@ -88,8 +88,6 @@
 					{onfocus}
 					oninput={({ target }) => {
 						value = target.value
-						// dispatch('input', value)
-						console.log({ oninput })
 						oninput(value)
 					}}
 					{onblur}

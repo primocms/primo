@@ -8,7 +8,7 @@ export const fields = writable([])
 export const code = writable(Site().code)
 export const entries = writable(Site().entries)
 
-export const design = writable([])
+export const design = writable(Site().design)
 export const subscriptions = writable([])
 export const distribution_domain_name = writable('')
 export const validation_record = writable(null)
