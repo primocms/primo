@@ -1,6 +1,6 @@
 <script>
+	import '../app.css'
 	import { setContext } from 'svelte'
-	import '$lib/assets/reset.css'
 	import '@fontsource/fira-code/index.css'
 	import { browser } from '$app/environment'
 	import { compilers_registered } from '$lib/stores'
@@ -49,10 +49,8 @@
 <Modal />
 {@render children?.()}
 
-<style global lang="postcss">
-	@import url(https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800);
-
-	.primo-reset {
+<style lang="postcss">
+	:global(.primo-reset) {
 		@tailwind base;
 		font-family: 'Inter', serif !important;
 		direction: ltr;
@@ -71,7 +69,7 @@
 		--primo-border-radius: 5px;
 	}
 
-	html {
+	:global(html) {
 		--primo-color-brand: #35d994;
 		--primo-color-brand-dark: #097548;
 		--primo-color-white: white;
@@ -129,7 +127,7 @@
 		--primo-ring-thick: 0px 0px 0px 3px var(--primo-color-brand, #35d994);
 	}
 
-	.primo-reset .primo--field-label {
+	:global(.primo--field-label) {
 		display: inline-flex;
 		align-items: center;
 		font-size: var(--font-size-1);
@@ -139,7 +137,7 @@
 		gap: 0.25rem;
 	}
 
-	.primo-reset .primo--link {
+	:global(.primo--link) {
 		display: inline-block;
 		text-decoration: underline;
 		font-size: var(--font-size-1);
@@ -152,16 +150,15 @@
 		gap: 2px;
 	}
 
-	button,
-	a {
+	:global(button, a) {
 		cursor: pointer;
 	}
 
-	body {
+	:global(body) {
 		margin: 0;
 	}
 
-	.primo-input {
+	:global(.primo-input) {
 		appearance: none;
 		border: 0;
 		background-color: transparent;
@@ -169,18 +166,9 @@
 		background: var(--color-white);
 		padding: 0.5rem 0.75rem;
 		width: 100%;
-
-		/* &:focus {
-  box-shadow: 0 0 0 1px var(--color-primored);
-  border: 0;
-}
-
-&:placeholder {
-  color: var(--color-gray-5);
-} */
 	}
 
-	.primo-modal {
+	:global(.primo-modal) {
 		color: var(--color-gray-1);
 		/* background: var(--color-gray-9); */
 		/* padding: 1.5rem; */
@@ -191,21 +179,21 @@
 		/* width: 100vw; */
 	}
 
-	.primo-heading-xl {
+	:global(.primo-heading-xl) {
 		margin-bottom: 0.5rem;
 		font-size: 1.25rem;
 		line-height: 1.75rem;
 		font-weight: 700;
 	}
 
-	.primo-heading-lg {
+	:global(.primo-heading-lg) {
 		margin-bottom: 0.25rem;
 		font-size: 1.1rem;
 		line-height: 1.5rem;
 		font-weight: 700;
 	}
 
-	.sr-only {
+	:global(.sr-only) {
 		position: absolute;
 		width: 1px;
 		height: 1px;
