@@ -82,6 +82,7 @@
 		"axios": "^0.26.0",
 		"bind-event-listener": "^3.0.0",
 		"browser-image-compression": "^1.0.17",
+		"cloudflare": "^4.0.0",
 		"codemirror": "^6.0.1",
 		"fetch-blob": "^4.0.0",
 		"file-saver": "^2.0.5",

@@ -14,7 +14,6 @@ const cf_api = axios.create({
   baseURL: 'https://api.cloudflare.com/client/v4',
   headers: {
     'Authorization': `Bearer ${PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN}`,
-    // 'Authorization': `Bearer 2SJkDuDvqCILVuPXdWB3u_zrwX5ohbuoikI2MByG`,
     'Content-Type': 'application/json'
   }
 });
