@@ -37,21 +37,11 @@ export async function block_html({ code, data }) {
 export async function page_html({ page = get(active_page), site = get(activeSite), page_sections = get(sections), page_symbols = get(symbols), page_list = get(pages), page_types = get(stores.page_types), locale = 'en', no_js = false }) {
 	const page_type = _.isObject(page.page_type) ? page.page_type : page_types.find(pt => pt.id === page.page_type)
 	const hydratable_symbols_on_page = page_symbols.filter((s) => s.code.js && page_sections.some((section) => section.symbol === s.id || section.master?.symbol === s.id))
+	const head = {
+		code: site_design_css(site.design) + site.code.head + page_type?.code.head,
+		data: get_page_data({ page, site, loc: locale })
+	}
 	const component = await Promise.all([
-		(async () => {
-			const data = get_page_data({ page, site, loc: locale })
-			return {
-				html: `
-         <svelte:head>
-           ${site.code.head}
-           ${page_type?.code.head}
-           ${site_design_css(site.design)}
-         </svelte:head>`,
-				css: ``,
-				js: ``,
-				data
-			}
-		})(),
 		...page_sections
 			.filter((s) => s.symbol || s.master?.symbol)
 			.sort((a, b) => {
@@ -118,8 +108,10 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 		})()
 	])
 
+
 	const res = await processors.html({
 		component,
+		head,
 		locale
 	})
 

@@ -18,13 +18,14 @@ const COMPILED_COMPONENTS_CACHE = new Map()
  * @async
  * @param {Object} options - The options for rendering.
  * @param {Object|Object[]} options.component - The component(s) to be rendered. Can be a single component or an array of components for a page.
+ * @param {{ code: string, data: Object }} options.head 
  * @param {boolean} [options.buildStatic=true] - Indicates whether to build the component statically or not.
  * @param {string} [options.format='esm'] - The module format to use, such as 'esm' for ES Modules.
  * @param {boolean} [options.dev_mode=false] - Whether Svelte should be compiled in dev mode (i.e. attaches LOC for inspecting) or not
  * @returns {Promise<Object>} Returns a payload containing the rendered HTML, CSS, JS, and other relevant data.
  * @throws {Error} Throws an error if the compilation or rendering fails.
  */
-export async function html({ component, buildStatic = true, format = 'esm', dev_mode = false }) {
+export async function html({ component, head, buildStatic = true, format = 'esm', dev_mode = false }) {
 	let cache_key
 	if (!buildStatic) {
 		cache_key = JSON.stringify({
@@ -43,6 +44,7 @@ export async function html({ component, buildStatic = true, format = 'esm', dev_
 		const has_js = compile_page ? component.some((s) => s.js) : !!component.js
 		res = await rollup_worker.postMessage({
 			component,
+			head,
 			hydrated: buildStatic && has_js,
 			buildStatic,
 			format,
@@ -84,6 +86,7 @@ export async function html({ component, buildStatic = true, format = 'esm', dev_
 				}
 				return accumulator
 			}, {})
+			component_data.head_props = head.data
 		} else {
 			component_data = component.data
 		}

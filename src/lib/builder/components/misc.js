@@ -86,7 +86,7 @@ export const dynamic_iframe_srcdoc = (head = '') => {
   </html>
 `}
 
-export const static_iframe_srcdoc = ({ head = '', html, css, foot }) => {
+export const static_iframe_srcdoc = ({ head = '', html, css, foot = '' }) => {
 	return `
     <!DOCTYPE html>
     <html lang="en">

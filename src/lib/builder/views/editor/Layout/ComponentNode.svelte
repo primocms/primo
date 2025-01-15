@@ -20,7 +20,6 @@
 	import Link from '@tiptap/extension-link'
 	import { all, createLowlight } from 'lowlight'
 	import { tick, createEventDispatcher } from 'svelte'
-	import { browser } from '$app/environment'
 	import { createUniqueID } from '$lib/builder/utils'
 	import { processCode, convert_html_to_markdown, compare_urls } from '$lib/builder/utils'
 	import { hovering_outside } from '$lib/builder/utilities'

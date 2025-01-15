@@ -4,28 +4,18 @@ import { customAlphabet } from 'nanoid/non-secure'
 import { processors } from './component.js'
 
 const componentsCache = new Map()
-export async function processCode({ component, buildStatic = true, format = 'esm', locale = 'en', hydrated = true, ignoreCachedData = false }) {
+export async function processCode({ component, head = { code: '', data: {}}, buildStatic = true, format = 'esm', locale = 'en', hydrated = true }) {
 	let css = ''
 	if (component.css) {
 		css = await processCSS(component.css || '')
 	}
 
-	const cacheKey = ignoreCachedData
-		? JSON.stringify({
-				component: Array.isArray(component)
-					? component.map((c) => ({ html: c.html, css: c.css, head: c.head }))
-					: {
-							head: component.head,
-							html: component.html,
-							css: component.css
-					  }
-		  })
-		: JSON.stringify({
-				component,
-				format,
-				buildStatic,
-				hydrated
-		  })
+	const cacheKey = JSON.stringify({
+		component,
+		format,
+		buildStatic,
+		hydrated
+	})
 
 	if (componentsCache.has(cacheKey)) {
 		return componentsCache.get(cacheKey)
@@ -36,6 +26,7 @@ export async function processCode({ component, buildStatic = true, format = 'esm
 			...component,
 			css
 		},
+		head,
 		buildStatic,
 		format,
 		locale,

@@ -14,7 +14,7 @@ const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 const CDN_URL = 'https://cdn.jsdelivr.net/npm' // or 'https://unpkg.com'
 
 registerPromiseWorker(rollup_worker)
-async function rollup_worker({ component, hydrated, buildStatic = true, format = 'esm', dev_mode = false }) {
+async function rollup_worker({ component, head, hydrated, buildStatic = true, format = 'esm', dev_mode = false }) {
 	const final = {
 		ssr: '',
 		dom: '',
@@ -23,17 +23,27 @@ async function rollup_worker({ component, hydrated, buildStatic = true, format =
 
 	const component_lookup = new Map()
 
-	const Svelte_Component_Code = (component, is_single = true) => {
+	const App_Wrapper = (components, head) => {
+		const field_keys = Object.entries(head.data).filter((field) => field[0])
+		return `
+			<svelte:head>
+				${head.code}
+			</svelte:head>
+			<script>
+				${components.map((_, i) => `import Component_${i} from './Component_${i}.svelte';`).join('\n')}
+				${components.map((_, i) => `export let component_${i}_props`).join(`\n`)}
+
+				export let head_props 
+				${field_keys.map((field) => `let ${field[0]} = head_props['${field[0]}'];`).join(`\n`)}
+			</script>
+			${components
+				.map((component, i) =>  `<Component_${i} {...component_${i}_props} /> \n`)
+				.join('')}
+		`
+	}
+
+	const Component = (component) => {
 		let { html, css, js, data } = component
-		const data_as_variables = is_single
-			? Object.entries(data)
-					.filter((field) => field[0])
-					.map((field) => `export let ${field[0]};`)
-					.join(`\n`)
-			: Object.entries(data)
-					.filter((field) => field[0])
-					.map((field) => `let ${field[0]} = props['${field[0]}'];`)
-					.join(`\n`)
 
 		// Move <svelte:window> outside the encompassing <div> to prevent 'can't nest' error
 		if (html.includes('<svelte:window')) {
@@ -42,47 +52,37 @@ async function rollup_worker({ component, hydrated, buildStatic = true, format =
 			html = html + svelteWindowTag
 		}
 
-		// html must come first for loc (inspector) to work
+		const field_keys = Object.entries(data).filter((field) => field[0])
+
+		// html must come first for LoC (inspector) to work
 		return `\
 					${html} 
           <script>
-            export let props;
-            ${data_as_variables /* let some_key = props['some_key'] */}
+            ${field_keys.map((field) => `let ${field[0]} = $$props['${field[0]}'];`).join(`\n`) /* e.g. let heading = props['heading'] */}
             ${js}
           </script>
           ${css ? `<style>${css}</style>` : ``}`
 	}
 
-	function generate_lookup(component) {
+	function generate_lookup(component, head) {
 		if (Array.isArray(component)) {
 			// build page (sections as components)
 			component.forEach((section, i) => {
-				const code = Svelte_Component_Code(section, false)
+				const code = Component(section)
 				component_lookup.set(`./Component_${i}.svelte`, code)
 			})
 			component_lookup.set(
 				`./App.svelte`,
-				`
-              <script>
-                ${component.map((_, i) => `import Component_${i} from './Component_${i}.svelte';`).join('\n')}
-
-                ${component.map((_, i) => `export let component_${i}_props`).join(`\n`)}
-              </script>
-              ${component
-								.map((section, i) => {
-									return `<Component_${i} props={component_${i}_props} /> \n`
-								})
-								.join('')}
-          `
+				App_Wrapper(component, head)
 			)
 		} else {
 			// build individual component
-			const code = Svelte_Component_Code(component)
-			component_lookup.set(`./App.svelte`, code)
+			const app_code = Component(component)
+			component_lookup.set(`./App.svelte`, app_code)
 		}
 	}
 
-	generate_lookup(component)
+	generate_lookup(component, head)
 
 	if (buildStatic) {
 		const bundle = await compile({

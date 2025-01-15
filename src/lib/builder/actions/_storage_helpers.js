@@ -51,7 +51,6 @@ export async function update_page_file(update_all = false) {
 			}
 		}
 
-
 		// then sort by index and flatten
 
 		const { html } = await code_generators.page_html({
