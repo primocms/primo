@@ -59,18 +59,18 @@
 		})
 	}
 
+	let setup_complete = $state(false)
 	let srcdoc = $state('')
 	let active_code = {}
-	function set_srcdoc(componentCode) {
-		if (componentCode.html !== active_code.html || componentCode.css !== active_code.css || componentCode.js !== active_code.js) {
-			active_code = _.cloneDeep(componentCode)
-			srcdoc = static_iframe_srcdoc({
-				head: componentCode.head,
-				html: componentCode.html,
-				css: componentCode.css,
-				foot: append
-			})
-		}
+	async function set_srcdoc(componentCode) {
+		active_code = _.cloneDeep(componentCode)
+		srcdoc = static_iframe_srcdoc({
+			head: componentCode.head,
+			html: componentCode.html,
+			css: componentCode.css,
+			foot: append
+		})
+		setup_complete = true
 	}
 	$effect(() => {
 		iframeLoaded && setIframeContent()
@@ -96,9 +96,7 @@
 		iframe && append_to_iframe(append)
 	})
 	$effect(() => {
-		if (componentCode) {
-			set_srcdoc(componentCode)
-		}
+		!setup_complete && set_srcdoc(componentCode)
 	})
 </script>
 
@@ -165,6 +163,7 @@
 
 			&.fadein {
 				opacity: 1;
+				background: white;
 			}
 		}
 	}

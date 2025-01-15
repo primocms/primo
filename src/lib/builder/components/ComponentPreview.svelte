@@ -223,7 +223,7 @@
 			return
 		}
 		iframeLoaded = false
-		iframe.srcdoc = dynamic_iframe_srcdoc($locale, component_head_html)
+		iframe.srcdoc = dynamic_iframe_srcdoc(component_head_html)
 	}
 
 	let previewWidth = $state()
@@ -314,7 +314,7 @@
 				style:width={view === 'large' ? `${active_static_width}px` : '100%'}
 				onload={setLoading}
 				title="Preview HTML"
-				srcdoc={dynamic_iframe_srcdoc($locale, component_head_html)}
+				srcdoc={dynamic_iframe_srcdoc(component_head_html)}
 				bind:this={iframe}
 			></iframe>
 		{:else}
