@@ -555,6 +555,7 @@
 
 	let setup_complete = $state(false)
 	function setup_component_iframe() {
+		setup_complete = false
 		// Wait for iframe to be ready
 		node.removeEventListener('load', setup)
 

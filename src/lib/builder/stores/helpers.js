@@ -426,16 +426,16 @@ export function get_page_data({ page = get(active_page), site = get(activeSite),
 	})
 	const site_content = transform_content({ fields: site.fields, entries: site.entries })
 
-	return {
+	return _.cloneDeep({
 		...site_content[loc],
 		...page_content[loc]
-	}
+	})
 }
 
 export function get_site_data({ site = get(activeSite), loc = get(locale) }) {
 	const site_content = transform_content({ fields: site.fields, entries: site.entries })
 
-	return site_content[loc]
+	return _.cloneDeep(site_content[loc])
 }
 
 export function get_page_fields() {

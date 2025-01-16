@@ -168,10 +168,10 @@
 		$site_html = null
 	})
 
-	async function compile_component_head(site) {
+	async function compile_component_head(html) {
 		const compiled = await processCode({
 			component: {
-				html: site,
+				html,
 				css: '',
 				js: '',
 				data: get_site_data({})
