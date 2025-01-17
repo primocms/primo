@@ -1,18 +1,226 @@
-import supabase from './lib/supabase/core'
+import supabase from './supabase/core'
 import { page } from '$app/stores'
 import { get } from 'svelte/store'
 import * as actions from '$lib/builder/actions/active_site'
 import _ from 'lodash-es'
 import axios from 'axios'
-import scramble_ids from './scramble_ids'
+import scramble_ids from '../scramble_ids'
+import * as helpers from '$lib/builder/actions/_helpers'
+import * as db_utils from '$lib/builder/actions/_db_utils'
 import * as code_generators from '$lib/builder/code_generators'
 import { processCode } from '$lib/builder/utils'
 import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
+import { v4 as uuidv4 } from 'uuid'
+
+export async function rename_library_symbol(id, new_name) {
+	await supabase.from('library_symbols').update({ name: new_name }).eq('id', id)
+}
+
+export async function create_library_symbol({ code, changes, preview }) {
+	const symbol_id = uuidv4()
+	const res = await Promise.all([
+		(async() => {
+			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: 'New Block', index: 0, owner: get(page).data.user.id }).select().single()
+			if (library_symbols_res.error) {
+				console.log('Failed to insert sections', library_symbols_res)
+				throw new Error('Failed to insert sections')
+			}
+		
+			// DB: save Symbol fields
+			await helpers.handle_field_changes_new(changes.fields, {
+				library_symbol: symbol_id
+			})
+
+			// DB: save Symbol entries
+			await helpers.handle_content_changes_new(changes.entries, {
+				library_symbol: symbol_id
+			})
+		})(),
+		supabase.storage.from('symbols').upload(`${symbol_id}/preview.html`, preview)
+	])
+}
+
+export async function save_library_symbol(id, { code, changes, preview }) {
+
+	let content_changes = _.cloneDeep(changes.entries)
+	let field_changes = _.cloneDeep(changes.fields)
+
+	// DB: save block code if changed
+	await supabase.from('library_symbols').update({ code }).eq('id', id)
+
+	// DB: save Symbol fields
+	await helpers.handle_field_changes_new(field_changes, {
+		library_symbol: id
+	})
+
+	// DB: save Symbol entries
+	await helpers.handle_content_changes_new(content_changes, {
+		library_symbol: id
+	})
+
+	await supabase.storage.from('symbols').upload(`${id}/preview.html`, preview, { upsert: true })
+}
+
+export async function delete_library_symbol(symbol_id) {
+	const res = await supabase.from('library_symbols').delete().eq('id', symbol_id)
+	if (res.error) {
+		console.log('Failed to delete library symbol', res)
+		throw new Error('Failed to delete library symbol')
+	}
+}
+
+export async function create_starter({ details, preview = null, site_data = null }) {
+
+	let starter_data
+	if (site_data) {
+		site_data.name = details.name
+		site_data.description = details.description
+		const scrambled = scramble_ids(site_data)
+		starter_data = prepare_data(scrambled)
+	} else {
+		const site_id = uuidv4()
+		const page_type_id = uuidv4()
+		const home_page_id = uuidv4()
+		const master_palette_id = uuidv4()
+		const empty_starter = {
+			site: {
+				id: site_id,
+				name: details.name,
+				code: {
+					head: '',
+					foot: ''
+				},
+				design: {
+						heading_font: 'Open Sans',
+						body_font: 'Open Sans',
+						brand_color: '#864040',
+						accent_color: '#9b92c8',
+						roundness: '0px',
+						depth: "0.3px 0.5px 0.7px hsl(0deg 36% 56% / 0.34),0.4px 0.8px 1px -1.2px hsl(0deg 36% 56% / 0.34), 1px 2px 2.5px -2.5px hsl(0deg 36% 56% / 0.34)",
+				},
+				entries: [],
+				fields: []
+			},
+			pages: [{
+					id: home_page_id,
+					index: 0,
+					name: "Home Page",
+					page_type: page_type_id,
+					parent: null,
+					slug: "",
+					entries: []
+			}],
+			page_types: [{
+				id: page_type_id,
+				name: "Default",
+				code: {
+					foot: '',
+					head: ''
+				},
+				color: "#222",
+				icon: "iconoir:page",
+				site: site_id,
+				index: 0,
+				fields: [],  
+				entries: [],
+			}],
+			sections: [
+				{
+					id: master_palette_id,
+					index: 0,
+					symbol: null,
+					palette: null,
+					page: null,
+					page_type: page_type_id,
+					master: null,
+					entries: []
+				},
+				{
+					id: uuidv4(),
+					index: 0,
+					symbol: null,
+					palette: null,
+					page: home_page_id,
+					page_type: null,
+					master: master_palette_id,
+					entries: []
+				}
+			],
+			symbols: []
+		}
+		starter_data = prepare_data(empty_starter)
+	}
+
+	const { site, page_types, pages, symbols, sections, entries, fields } = starter_data
+
+	site.is_starter = true
+
+	try {
+		// Step 1: Insert starter
+		let res = await supabase.from('sites').insert({ ...site, owner: get(page).data.user.id })
+		if (res.error) {
+			console.log('Failed to insert site', { res, site })
+			throw new Error('Failed to insert site')
+		}
+
+		// Step 2: Insert page_types and symbols
+		res = await Promise.all([
+			supabase.from('page_types').insert(page_types),
+			supabase.from('symbols').insert(symbols)
+		])
+		if (res.some(r => r.error)) {
+			console.log('Failed to insert page_types or symbols', { res, page_types, symbols })
+			throw new Error('Failed to insert page_types or symbols')
+		}
+
+		// Step 3: Insert pages
+		res = await supabase.from('pages').insert(pages)
+		if (res.error) {
+			console.log('Failed to insert pages', { res, pages })
+			throw new Error('Failed to insert pages')
+		}
+
+		// Step 4: Insert sections
+		res = await supabase.from('sections').insert(sections)
+		if (res.error) {
+			console.log('Failed to insert sections', { res, sections })
+			throw new Error('Failed to insert sections')
+		}
+
+		// Step 5: Insert fields
+		res = await supabase.from('fields').insert(fields)
+		if (res.error) {
+			console.log('Failed to insert fields', { res, fields })
+			throw new Error('Failed to insert fields')
+		}
+
+		// Step 6: Insert entries
+		res = await supabase.from('entries').insert(entries)
+		if (res.error) {
+			console.log('Failed to insert entries', { res, entries })
+			throw new Error('Failed to insert entries')
+		}
+
+		// Handle preview upload
+		if (preview) {
+			await supabase.storage.from('sites').upload(`${site.id}/preview.html`, preview)
+		}
+
+		console.log('Site created successfully')
+	} catch (e) {
+		console.error('SOMETHING WENT WRONG', e)
+			// TODO: Implement rollback logic to delete inserted items if an error occurs
+	}
+}
 
 export const sites = {
-	create: async (data, preview = null) => {
+	create: async ({ starter_id, starter_data, details, preview }) => {
 
-		const scrambled = scramble_ids(data)
+		const uploaded_data = starter_id ? await fetch_site_data(starter_id) : starter_data
+		uploaded_data.site.name = details.name
+		uploaded_data.site.design = _.cloneDeep(details.design)
+
+		const scrambled = scramble_ids(uploaded_data)
 		const files = await build_site_bundle(scrambled)
 		const prepared_data = prepare_data(scrambled)
 
@@ -82,50 +290,15 @@ export const sites = {
 	update: async (props) => {
 		actions.active_site.update(props)
 	},
-	delete: async (site_id) => {
+	delete: async (site_id, delete_deployment = false) => {
 		await supabase.from('sites').delete().eq('id', site_id)
-		await axios.delete(`/api/deploy/delete-deployment?site_id=${site_id}`)
+		if (delete_deployment) {
+			await axios.delete(`/api/deploy/delete-deployment?site_id=${site_id}`)
+		}
 	},
 	deploy: async (site_id, custom_domain = null) => {
 
-		const { data, error } = await supabase
-			.from('sites')
-			.select(`
-				*,
-				fields(*),
-				entries(*),
-				page_types(
-					*,
-					fields(*),
-					entries(*),
-					pages(
-						*,
-						entries(*),
-						sections(*, entries(*))
-					)
-				),
-				symbols(
-					*,
-					fields(*),
-					entries(*)
-				)
-			`)
-			.eq('id', site_id)
-			.single()
-
-			console.log({error, data})
-
-			if (!data) {
-				throw new Error('Could not find site')
-			}
-
-		const site_data = {
-			site: _.omit(data, ['pages', 'page_types', 'symbols', 'sections']),
-			pages: data.page_types.flatMap(pt => pt.pages.map(p => _.omit(p, ['sections']))), 
-			page_types: data.page_types.map(pt => _.omit(pt, ['pages'])),
-			symbols: data.symbols,
-			sections: data.page_types.flatMap(pt => pt.pages.flatMap(p => p.sections))
-		}
+		const site_data = await fetch_site_data(site_id)
 
 		// const scrambled = scramble_ids(site_data)
 		const files = await build_site_bundle(site_data)
@@ -144,6 +317,52 @@ export const sites = {
 				// TODO: Implement rollback logic to delete inserted items if an error occurs
 		}
 	}
+}
+
+export async function fetch_site_data(site_id) {
+	const { data, error } = await supabase
+	.from('sites')
+	.select(`
+		id,
+		name,
+		code,
+		design,
+		fields(*),
+		entries(*),
+		page_types(
+			*,
+			fields(*),
+			entries(*),
+			pages(
+				*,
+				entries(*),
+				sections(*, entries(*))
+			)
+		),
+		symbols(
+			*,
+			fields(*),
+			entries(*)
+		)
+	`)
+	.eq('id', site_id)
+	.single()
+
+	console.log({error, data})
+
+	if (!data) {
+		throw new Error('Could not find site')
+	}
+
+	const site_data = {
+		site: _.omit(data, ['pages', 'page_types', 'symbols', 'sections']),
+		pages: data.page_types.flatMap(pt => pt.pages.map(p => _.omit(p, ['sections']))), 
+		page_types: data.page_types.map(pt => _.omit(pt, ['pages'])),
+		symbols: data.symbols,
+		sections: data.page_types.flatMap(pt => pt.pages.flatMap(p => p.sections))
+	}
+
+	return site_data
 }
 
 function prepare_data(data) {
@@ -313,7 +532,6 @@ function prepare_data(data) {
 	}
 
 }
-
 
 async function build_site_bundle({ pages, symbols, site, page_types, sections }) {
 

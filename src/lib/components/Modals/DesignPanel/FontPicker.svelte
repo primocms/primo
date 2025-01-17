@@ -79,7 +79,7 @@
 
 <div class="FontPicker">
 	<p class="label">{label}</p>
-	<div class="container">
+	<div class="grid gap-4">
 		{#if value}
 			<div class="font-preview" style:font-family={value}>
 				{value}
@@ -163,11 +163,6 @@
 		font-size: var(--label-font-size, 1rem);
 		font-weight: var(--label-font-weight, 700);
 		margin-bottom: 0.25rem;
-	}
-
-	.container {
-		display: grid;
-		gap: 1rem;
 	}
 
 	.font-preview {

@@ -36,13 +36,11 @@
 <script>
 	import { fade } from 'svelte/transition'
 	import Deploy from './Modals/Deploy/Deploy.svelte'
-	import CreateSite from './Modals/CreateSite.svelte'
 	import DesignPanel from './Modals/DesignPanel.svelte'
 	import Collaboration from './Modals/Collaboration.svelte'
 
 	const modals = {
 		DEPLOY: Deploy,
-		CREATE_SITE: CreateSite,
 		DESIGN: DesignPanel,
 		COLLABORATION: Collaboration
 	}

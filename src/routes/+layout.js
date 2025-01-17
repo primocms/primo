@@ -22,8 +22,9 @@ export async function load(event) {
 	}
 
 	// const site = event.params['site']
-	const [{ data: sites }, { data: profile }] = await Promise.all([
-		supabase.from('sites').select('*').order('created_at', { ascending: true }),
+	const [{ data: sites }, {data: starters}, { data: profile }] = await Promise.all([
+		supabase.from('sites').select('*').order('created_at', { ascending: true }).match({ is_starter: false }),
+		supabase.from('sites').select('*').order('created_at', { ascending: true }).match({ is_starter: true }),
 		supabase.from('profiles').select('*').eq('id', session.user.id).single()
 	])
 
@@ -35,7 +36,8 @@ export async function load(event) {
 			...session.user,
 			collaborator: false
 		},
-		sites
+		sites,
+		starters
 		// subscriptions
 	}
 }

@@ -116,7 +116,7 @@
 	let showing_local_key_hint = $state(false)
 </script>
 
-<PaneGroup direction="horizontal" style="display: flex; height: 100vh; max-height: calc(100vh - 42px)" autoSaveId="page-view">
+<PaneGroup direction="horizontal" class="flex h-full" autoSaveId="page-view">
 	<Pane
 		bind:pane={html_pane}
 		minSize={4}
@@ -249,7 +249,7 @@
 	</Pane>
 </PaneGroup>
 
-<footer>
+<!-- <footer>
 	{#if showing_format_button}
 		<button onclick={() => format_all_code()} transition:fade|local={{ duration: 100 }}>
 			<Icon icon="carbon:clean" />
@@ -260,7 +260,7 @@
 		<span>Docs</span>
 		<Icon icon="mdi:external-link" />
 	</a>
-</footer>
+</footer> -->
 
 <style lang="postcss">
 	[slot] {

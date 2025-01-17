@@ -96,7 +96,7 @@
 		iframe && append_to_iframe(append)
 	})
 	$effect(() => {
-		!setup_complete && set_srcdoc(componentCode)
+		!setup_complete && componentCode && set_srcdoc(componentCode)
 	})
 </script>
 

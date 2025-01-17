@@ -14,6 +14,7 @@ export const Content_Row = (row = {}) => ({
 	metadata: row.metadata || null,
 	section: row.section || null,
 	symbol: row.symbol || null,
+	library_symbol: row.library_symbol || null,
 	page: row.page || null,
 	site: row.site || null,
 	page_type: row.page_type || null
@@ -136,11 +137,11 @@ export const Site = (site = {}) => ({
 	fields: site.fields || [],
 	entries: site.entreies || [],
 	design: site.design || {
-		heading_font: 'open-sans',
-		body_font: 'open-sans',
-		brand_color: 'red',
-		accent_color: 'blue',
-		roundness: '8px',
+		heading_font: 'Open Sans',
+		body_font: 'Open Sans',
+		brand_color: '#1E3D59',
+		accent_color: '#FF6E40',
+		roundness: '4px',
 		depth: '0px 4px 30px rgba(0, 0, 0, 0.2)'
 	},
 	custom_domain: site.custom_domain || '',

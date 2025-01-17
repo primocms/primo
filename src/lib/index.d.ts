@@ -9,6 +9,7 @@ export type Entry = {
 	metadata: object | null
 	section?: Section_ID | null
 	symbol?: Symbol_ID | null
+	library_symbol: Symbol_ID | null
 	page?: Page_ID | null
 	page_type?: Page_Type_ID | null
 	site?: Site_ID | null
@@ -25,6 +26,7 @@ export type Field = {
 	index: number
 	parent: Field_ID | null
 	symbol?: Symbol_ID | null
+	library_symbol: Symbol_ID | null
 	page_type?: Page_Type_ID | null
 	site?: Site_ID | null,
 	source?: Field_ID | null

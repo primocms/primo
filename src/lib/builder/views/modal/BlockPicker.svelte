@@ -9,6 +9,7 @@
 	import { site as site_store } from '$lib/builder/stores/data'
 	import { supabase } from '$lib/builder/supabase'
 	import { get_site_data } from '$lib/builder/stores/helpers.js'
+	import { page } from '$app/stores'
 	import { browser } from '$app/environment'
 	import axios from 'axios'
 
@@ -19,7 +20,7 @@
 
 	fetch_symbols()
 	async function fetch_symbols(page_id) {
-		const { data } = await supabase.from('symbols').select('*, entries(*), fields(*)').match({ site: '60a1f157-26fb-4a86-bf56-a3103bbcf46f' })
+		const { data, error } = await supabase.from('library_symbols').select('*, entries(*), fields(*)').eq('owner', $page.data.user.id)
 		symbols = data
 	}
 
@@ -68,7 +69,7 @@
 
 <ModalHeader
 	icon="lucide:blocks"
-	title="Add Blocks to Site"
+	title="Add Library Blocks to Site"
 	button={{
 		label: `Add ${selected.length} Blocks`,
 		onclick: () => onsave(selected),
@@ -131,7 +132,7 @@
 
 <style lang="postcss">
 	.BlockPicker {
-		background: #222;
+		background: #111;
 		padding: 1rem;
 		height: calc(100vh - 70px);
 		overflow: auto;

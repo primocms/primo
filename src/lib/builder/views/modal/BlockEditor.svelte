@@ -1,10 +1,5 @@
 <script module>
 	import { writable, get } from 'svelte/store'
-
-	const leftPaneSize = writable(get(onMobile) ? '100%' : '50%')
-	const rightPaneSize = writable('50%')
-	const topPaneSize = writable(get(onMobile) ? '100%' : '50%')
-	const bottomPaneSize = writable('50%')
 	const orientation = writable('horizontal')
 </script>
 
@@ -21,7 +16,6 @@
 	import { get_content_with_synced_values } from '$lib/builder/stores/helpers.js'
 	import hotkey_events from '$lib/builder/stores/app/hotkey_events.js'
 	import site from '$lib/builder/stores/data/site.js'
-	import page_type from '$lib/builder/stores/data/page_type.js'
 
 	/**
 	 * @typedef {Object} Props
@@ -68,8 +62,6 @@
 			site: { ...$site, entries: local_entries.filter((e) => e.site) }
 		})[$locale]
 	)
-
-	// let disable_save = false
 
 	hotkey_events.on('e', toggle_tab)
 

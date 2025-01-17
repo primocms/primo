@@ -29,6 +29,7 @@
 	 * @property {boolean} [hideControls]?
 	 * @property {any} [preview]?
 	 * @property {any} [data]
+	 * @property {string | null} [head]?
 	 * @property {string} [append]?
 	 */
 
@@ -45,6 +46,7 @@
 		hideControls = false,
 		preview = null,
 		data = {},
+		head = null,
 		append = ''
 	} = $props()
 
@@ -52,9 +54,12 @@
 
 	let compilation_error = $state(null)
 
-	let component_head_html = $state('')
+	let component_head_html = $state(head || '')
+	$inspect({ component_head_html })
 	$effect.pre(() => {
-		compile_component_head()
+		if (head === null) {
+			compile_component_head()
+		}
 	})
 	async function compile_component_head() {
 		loading = true

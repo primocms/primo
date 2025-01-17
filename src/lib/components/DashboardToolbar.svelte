@@ -3,13 +3,36 @@
 	import UserPopup from './UserPopup.svelte'
 	import { show } from '$lib/components/Modal.svelte'
 	import { page } from '$app/stores'
-	import ServerLogo from '$lib/ui/ServerLogo.svelte'
+	import UI from '$lib/builder/ui'
+	import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
+
+	let { onswitch } = $props()
 </script>
 
 <header role="navigation" aria-label="main navigation">
 	<div class="logo">
 		<ServerLogo />
 	</div>
+	<UI.Tabs
+		{onswitch}
+		tabs={[
+			{
+				id: 'dashboard',
+				icon: 'gg:website',
+				label: 'Sites'
+			},
+			{
+				id: 'dashboard/library',
+				icon: 'fluent:library-28-filled',
+				label: 'Library'
+			},
+			{
+				id: 'dashboard/marketplace',
+				icon: 'lsicon:marketplace-filled',
+				label: 'Marketplace'
+			}
+		]}
+	/>
 	<nav class="nav">
 		<!-- {#if !$page.data.user.collaborator}
 			<button class="link" on:click={() => show('USAGE')}>Usage</button>

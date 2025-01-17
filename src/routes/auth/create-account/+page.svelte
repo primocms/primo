@@ -1,7 +1,7 @@
 <script>
   import { page } from '$app/stores'
   import { fade } from 'svelte/transition'
-  import ServerLogo from '$lib/ui/ServerLogo.svelte'
+  import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
 
   let { form } = $props()
 

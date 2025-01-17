@@ -38,7 +38,7 @@
 	let componentCode = $state()
 	let cachedSymbol = {}
 	let component_error = $state()
-	async function compile_component_code(symbol, language) {
+	async function compile_component_code(symbol) {
 		// console.log({ symbol })
 
 		// if (_.isEqual(cachedSymbol.code, symbol.code) && _.isEqual(cachedSymbol.entries, symbol.entries)) {
@@ -79,7 +79,7 @@
 		}
 	})
 	$effect.pre(() => {
-		compile_component_code(symbol, $locale)
+		compile_component_code(symbol)
 	})
 </script>
 

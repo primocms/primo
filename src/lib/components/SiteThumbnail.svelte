@@ -1,6 +1,16 @@
 <script>
-	import { browser } from '$app/environment'
+	import fileSaver from 'file-saver'
+	import SitePreview from '$lib/components/SitePreview.svelte'
+	import { EllipsisVertical, SquarePen, Trash2, Download, Loader } from 'lucide-svelte'
 	import { find as _find } from 'lodash-es'
+	import { supabase } from '$lib/supabase'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import { Button, buttonVariants } from '$lib/components/ui/button'
+	import * as Dialog from '$lib/components/ui/dialog'
+	import { Input } from '$lib/components/ui/input'
+	import { fetch_site_data, sites } from '$lib/actions'
+	import * as AlertDialog from '$lib/components/ui/alert-dialog'
+	import { invalidate } from '$app/navigation'
 
 	/**
 	 * @typedef {Object} Props
@@ -19,16 +29,22 @@
 	}
 
 	async function get_preview() {
-		const response = await fetch(`https://cdn.primo.page/${site.custom_domain || site.id}/staging/index.html`)
-		const html = await response.text()
+		const { data } = await supabase.storage.from('sites').download(`${site.id}/preview.html`)
+		const html = await data?.text()
 		preview = html
+	}
+
+	async function download_site_file() {
+		const site_data = await fetch_site_data(site.id)
+		const json = JSON.stringify(site_data)
+		var blob = new Blob([json], { type: 'application/json' })
+		fileSaver.saveAs(blob, `${site.name || site.id}.json`)
 	}
 
 	let container = $state()
 	let scale = $state()
 	let iframeHeight = $state()
 	let iframe = $state()
-	let iframeLoaded = $state()
 
 	function resizePreview() {
 		const { clientWidth: parentWidth } = container
@@ -57,64 +73,89 @@
 	$effect(() => {
 		iframe && append_to_iframe(append)
 	})
+
+	let is_rename_open = $state(false)
+	let is_delete_open = $state(false)
+	let new_name = $state(site.name)
+
+	function handle_rename() {
+		is_rename_open = false
+	}
+
+	let deleting = $state(false)
+	async function delete_site() {
+		is_delete_open = false
+		await sites.delete(site.id)
+		invalidate('app:data')
+	}
 </script>
 
 <svelte:window onresize={resizePreview} />
 
-<div class="iframe-root" {style}>
-	<div bind:this={container} class="iframe-container">
-		{#if browser}
-			<iframe
-				tabindex="-1"
-				bind:this={iframe}
-				sandbox=""
-				style="transform: scale({scale})"
-				style:height={iframeHeight}
-				class:fadein={iframeLoaded}
-				title="page preview"
-				{src}
-				srcdoc={preview + append}
-				onload={() => {
-					resizePreview()
-					iframeLoaded = true
-				}}
-			></iframe>
-		{/if}
+<div class="space-y-3 relative w-full bg-gray-900">
+	<div class="rounded-tl rounded-tr overflow-hidden">
+		<a data-sveltekit-prefetch href="/{site.id}" aria-hidden="true">
+			<SitePreview {preview} {append} />
+		</a>
+	</div>
+	<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-gray-900 truncate flex items-center justify-between">
+		<a data-sveltekit-prefetch href="/{site.id}" class="text-sm font-medium leading-none hover:underline">{site.name}</a>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				<EllipsisVertical size={14} />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content>
+				<DropdownMenu.Item onclick={() => (is_rename_open = true)}>
+					<SquarePen class="h-4 w-4" />
+					<span>Rename</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={download_site_file}>
+					<Download class="h-4 w-4" />
+					<span>Download</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => (is_delete_open = true)} class="text-red-500 hover:text-red-600 focus:text-red-600">
+					<Trash2 class="h-4 w-4" />
+					<span>Delete</span>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 	</div>
 </div>
 
-<style lang="postcss">
-	.iframe-root {
-		pointer-events: none;
-		overflow: hidden;
-		position: relative;
-		padding-top: var(--thumbnail-height, 75%);
-	}
-	.iframe-container {
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		background: transparent;
-		opacity: 1;
-		transition: opacity 0.1s;
-		width: 100%;
-		height: 100%;
-		font-size: 0.75rem;
-		line-height: 1rem;
-		overflow: hidden;
-		overflow-wrap: break-word;
-	}
-	iframe {
-		pointer-events: none;
-		opacity: 0;
-		transition: opacity 0.1s;
-		background: var(--color-white);
-		width: 100vw;
-		will-change: opacity;
-		transform-origin: top left;
-		/* height: 1000vh; */
-	}
-	.fadein {
-		opacity: 1;
-	}
-</style>
+<Dialog.Root bind:open={is_rename_open}>
+	<Dialog.Content class="sm:max-w-[425px]">
+		<Dialog.Header>
+			<Dialog.Title>Rename Site</Dialog.Title>
+			<Dialog.Description>Enter a new name for your site</Dialog.Description>
+		</Dialog.Header>
+		<Input bind:value={new_name} placeholder="Enter new site name" class="my-4" />
+		<Dialog.Footer>
+			<Button variant="outline" onclick={() => (is_rename_open = false)}>Cancel</Button>
+			<Button onclick={handle_rename}>Rename</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
+<AlertDialog.Root bind:open={is_delete_open}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Are you sure?</AlertDialog.Title>
+			<AlertDialog.Description>
+				This action cannot be undone. This will permanently delete <strong>{site.name}</strong>
+				and remove all associated data.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={delete_site} class="bg-red-600 hover:bg-red-700">
+				{#if deleting}
+					<div class="animate-spin absolute">
+						<Loader />
+					</div>
+				{:else}
+					Delete {site.name}
+				{/if}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

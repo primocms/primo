@@ -13,33 +13,24 @@
 	 * @property {string} [variant]
 	 * @property {boolean} [disable_hotkeys]
 	 * @property {string} [style]
+	 * @property {function} [onswitch]
 	 */
 
 	/** @type {Props} */
-	let {
-		tabs,
-		active_tab_id = $bindable(tabs[0]?.id),
-		variant = 'primary',
-		disable_hotkeys = false,
-		style = ''
-	} = $props();
+	let { tabs, active_tab_id = $bindable(tabs[0]?.id), variant = 'primary', disable_hotkeys = false, style = '', onswitch = () => {} } = $props()
 
 	// hotkey_events.on('tab-switch', (tab) => (active_tab_id = tabs[tab - 1]?.id))
 
 	$effect(() => {
 		dispatch('switch', active_tab_id)
-	});
+		onswitch(active_tab_id)
+	})
 </script>
 
 {#if tabs.length > 1}
 	<div class="tabs {variant}" in:fade={{ duration: 200 }} {style}>
 		{#each tabs as tab, i}
-			<button
-				class:active={active_tab_id === tab.id}
-				class:showing_key_hint={$mod_key_held && !disable_hotkeys}
-				onclick={() => (active_tab_id = tab.id)}
-				id={tab.id ? `tab-${tab.id}` : null}
-			>
+			<button class:active={active_tab_id === tab.id} class:showing_key_hint={$mod_key_held && !disable_hotkeys} onclick={() => (active_tab_id = tab.id)} id={tab.id ? `tab-${tab.id}` : null}>
 				{#if $mod_key_held && !disable_hotkeys}
 					<span class="key-hint">&#8984; {i + 1}</span>
 				{/if}

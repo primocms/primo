@@ -4,9 +4,8 @@
 	import Icon from '@iconify/svelte'
 	import { clickOutside } from '$lib/utils'
 	// import { toast } from '@zerodevx/svelte-toast';
-	import Letter from '$lib/ui/Letter.svelte'
+	import Letter from '$lib/components/ui/Letter.svelte'
 	import { page } from '$app/stores'
-	import { show } from '$lib/components/Modal.svelte'
 
 	let showing_popup = $state(false)
 </script>
