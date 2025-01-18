@@ -93,3 +93,4 @@ PRIVATE_SUPABASE_PRIVATE_KEY=
 - Authentication methods
 - Extensions (soon)
 
+# weave-marketplace
