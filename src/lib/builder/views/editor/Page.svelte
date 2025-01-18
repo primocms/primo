@@ -82,7 +82,7 @@
 			showing_block_toolbar = true
 			await tick()
 			position_block_toolbar()
-			page_el.addEventListener('scroll', position_block_toolbar)
+			page_el.addEventListener('scroll', hide_block_toolbar)
 		}
 	}
 
@@ -107,7 +107,7 @@
 
 	async function hide_block_toolbar() {
 		showing_block_toolbar = false
-		window.removeEventListener('scroll', position_block_toolbar)
+		window.removeEventListener('scroll', hide_block_toolbar)
 		await tick()
 	}
 

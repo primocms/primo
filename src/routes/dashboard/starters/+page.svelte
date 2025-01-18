@@ -33,19 +33,17 @@
 		<Separator orientation="vertical" class="mr-2 h-4" />
 		<div class="text-sm">Starters</div>
 	</div>
-	{#if !data.user.collaborator}
-		<div class="ml-auto mr-4">
-			<Button size="sm" variant="outline" onclick={() => (creating_starter = true)}>
-				<CirclePlus class="h-4 w-4" />
-				Create Starter
-			</Button>
-			<Dialog.Root bind:open={creating_starter}>
-				<Dialog.Content class="flex flex-col p-4">
-					<CreateStarter onclose={() => (creating_starter = false)} onsubmit={create_starter} />
-				</Dialog.Content>
-			</Dialog.Root>
-		</div>
-	{/if}
+	<div class="ml-auto mr-4">
+		<Button size="sm" variant="outline" onclick={() => (creating_starter = true)}>
+			<CirclePlus class="h-4 w-4" />
+			Create Starter
+		</Button>
+		<Dialog.Root bind:open={creating_starter}>
+			<Dialog.Content class="flex flex-col p-4">
+				<CreateStarter onclose={() => (creating_starter = false)} onsubmit={create_starter} />
+			</Dialog.Content>
+		</Dialog.Root>
+	</div>
 </header>
 <div class="flex flex-1 flex-col gap-4 px-4 pb-4">
 	{#if data.starters.length > 0}

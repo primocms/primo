@@ -25,7 +25,7 @@ export async function handle({ resolve, event }) {
 	}
 
 	const session = await event.locals.getSession()
-	if (!session && !event.url.pathname.endsWith('/auth')) {
+	if (!session && !event.url.pathname.endsWith('/auth') && !event.url.pathname.startsWith('/api/')) {
 		redirect(303, '/auth')
 	} else if (session && event.url.pathname === '/') {
 		redirect(303, '/dashboard')
@@ -37,12 +37,18 @@ export async function handle({ resolve, event }) {
 		}
 	})
 
+	if (event.url.pathname.startsWith('/api/')) {
+			response.headers.set('Access-Control-Allow-Origin', '*')
+			response.headers.set('Access-Control-Allow-Methods', 'GET')
+			response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+	}
+
 	// console.log(event.request.method)
 	if (event.request.method === 'OPTIONS') {
 		return new Response(null, {
 			headers: {
-				'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE',
 				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE',
 				'Access-Control-Allow-Headers': 'Content-Type, Accept' // Specify allowed headers
 			}
 		})
