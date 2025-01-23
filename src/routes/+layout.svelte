@@ -9,6 +9,7 @@
 	import Modal from '$lib/components/Modal.svelte'
 	import { invalidate } from '$app/navigation'
 	import supabase_client from '$lib/supabase/core'
+	import { Toaster } from '$lib/components/ui/sonner'
 
 	let { data, children } = $props()
 
@@ -47,6 +48,7 @@
 </script>
 
 <Modal />
+<Toaster />
 {@render children?.()}
 
 <style lang="postcss">

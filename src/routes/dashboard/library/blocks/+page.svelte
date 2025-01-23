@@ -3,17 +3,22 @@
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import CodeEditor from '$lib/builder/components/CodeEditor/CodeMirror.svelte'
-	import DesignFields from '$lib/components/Modals/DesignFields.svelte'
+	import DesignFields from '$lib/components/modals/DesignFields.svelte'
 	import * as code_generators from '$lib/builder/code_generators'
 	import { processCode } from '$lib/builder/utils.js'
 	import { get_site_data } from '$lib/builder/stores/helpers.js'
+	import { static_iframe_srcdoc } from '$lib/builder/components/misc'
+	import { transform_content } from '$lib/builder/transform_data'
+	import { block_html } from '$lib/builder/code_generators.js'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
 	import EmptyState from '$lib/components/EmptyState.svelte'
-	import { CirclePlus, Cuboid, Palette, Code } from 'lucide-svelte'
+	import { CirclePlus, Cuboid, Palette, Code, Upload } from 'lucide-svelte'
 	import LibrarySymbolButton from '$lib/components/LibrarySymbolButton.svelte'
 	import * as actions from '$lib/actions'
 	import { invalidate, goto } from '$app/navigation'
+	import { validate_symbol } from '$lib/builder/converter.js'
+	import { remap_entry_and_field_items } from '$lib/builder/actions/_db_utils'
 
 	/**
 	 * @typedef {Object} Props
@@ -22,25 +27,51 @@
 
 	/** @type {Props} */
 	let { data } = $props()
-
 	$inspect({ data })
 
 	let editing_head = $state(false)
 	let editing_design = $state(false)
 	let creating_block = $state(false)
 
+	async function upload_block_file(event) {
+		const file = event.target.files[0]
+		if (!file) return
+		try {
+			const text = await file.text()
+			const uploaded = JSON.parse(text)
+			const validated = validate_symbol(uploaded)
+			remap_entry_and_field_items({
+				entries: validated.entries,
+				fields: validated.fields
+			})
+			const component_data = transform_content({
+				entries: validated.entries,
+				fields: validated.fields
+			})['en']
+			const generate_code = await block_html({ code: validated.code, data: component_data })
+			const preview = static_iframe_srcdoc(generate_code)
+			await actions.create_library_symbol({
+				code: validated.code,
+				changes: {
+					entries: validated.entries.map((e) => ({ action: 'insert', data: e, id: e.id })),
+					fields: validated.fields.map((f) => ({ action: 'insert', data: f, id: f.id }))
+				},
+				preview
+			})
+			invalidate('app:data')
+		} catch (error) {
+			console.error('Error processing site file:', error)
+			// primo_json_valid = false
+		} finally {
+			// loading = false
+		}
+	}
+
 	async function create_symbol({ code, changes, preview }) {
 		await actions.create_library_symbol({ code, changes, preview })
 		invalidate('app:data')
 		creating_block = false
 	}
-
-	// async function delete_site(siteID) {
-	// 	const confirm = window.confirm(`Are you sure you want to delete this site? You won't be able to get it back.`)
-	// 	if (!confirm) return
-	// 	await actions.sites.delete(siteID)
-	// 	invalidate('app:data')
-	// }
 
 	let design = $state(data.settings.value.design)
 	let design_variables_css = $state(code_generators.site_design_css(design))
@@ -139,6 +170,13 @@
 					</div>
 				</Dialog.Content>
 			</Dialog.Root>
+			<Button variant="outline" size="sm">
+				<label class="flex items-center gap-2 cursor-pointer">
+					<input onchange={upload_block_file} type="file" class="sr-only" />
+					<Upload class="h-4 w-4" />
+					Upload
+				</label>
+			</Button>
 			<Button size="sm" variant="outline" onclick={() => (creating_block = true)}>
 				<CirclePlus class="h-4 w-4" />
 				Create Block
@@ -170,23 +208,6 @@
 	ul.blocks {
 		display: grid;
 		gap: 1rem;
-	}
-
-	@media (min-width: 600px) {
-		ul.blocks {
-			grid-template-columns: 1fr 1fr;
-		}
-	}
-
-	@media (min-width: 900px) {
-		ul.blocks {
-			grid-template-columns: 1fr 1fr 1fr;
-		}
-	}
-
-	@media (min-width: 1200px) {
-		ul.blocks {
-			grid-template-columns: 1fr 1fr 1fr 1fr;
-		}
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	}
 </style>

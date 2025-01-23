@@ -419,9 +419,9 @@ function get_ancestors(entry, entities) {
 	return parent ? [parent.id, ...get_ancestors(parent, entities)] : []
 }
 
-export function get_page_data({ page = get(active_page), site = get(activeSite), loc = get(locale) }) {
+export function get_page_data({ page = get(active_page), page_type = get(stores.page_type), site = get(activeSite), loc = get(locale) }) {
 	const page_content = transform_content({
-		fields: page.fields || page.page_type.fields,
+		fields: page_type.fields,
 		entries: page.entries
 	})
 	const site_content = transform_content({ fields: site.fields, entries: site.entries })

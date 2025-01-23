@@ -39,7 +39,7 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 	const hydratable_symbols_on_page = page_symbols.filter((s) => s.code.js && page_sections.some((section) => section.symbol === s.id || section.master?.symbol === s.id))
 	const head = {
 		code: site_design_css(site.design) + site.code.head + page_type?.code.head,
-		data: get_page_data({ page, site, loc: locale })
+		data: get_page_data({ page, page_type, site, loc: locale })
 	}
 	const component = await Promise.all([
 		...page_sections

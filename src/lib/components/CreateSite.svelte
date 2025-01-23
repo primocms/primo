@@ -8,7 +8,7 @@
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
 	import { convert_site_v3 } from '$lib/builder/new_converter'
-	import DesignFields from './Modals/DesignFields.svelte'
+	import DesignFields from './modals/DesignFields.svelte'
 	import Themes from './Themes.svelte'
 	import * as code_generators from '$lib/builder/code_generators'
 	import { page } from '$app/stores'

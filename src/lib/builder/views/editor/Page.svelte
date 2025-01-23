@@ -360,8 +360,6 @@
 	let top_level_sections = $derived($sections.filter((s) => !s.palette))
 	let palette_sections = $derived($sections.filter((s) => s.palette))
 	let static_sections = $derived($sections.filter((s) => s.master?.symbol))
-
-	$inspect({ top_level_sections, palette_sections, static_sections })
 </script>
 
 <!-- Loading Spinner -->
