@@ -7,6 +7,7 @@
 </script>
 
 <script>
+	import _ from 'lodash-es'
 	import { onMount, tick } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import { dynamic_iframe_srcdoc } from './misc.js'
@@ -55,7 +56,6 @@
 	let compilation_error = $state(null)
 
 	let component_head_html = $state(head || '')
-	$inspect({ component_head_html })
 	$effect.pre(() => {
 		if (head === null) {
 			compile_component_head()
@@ -104,7 +104,7 @@
 					html: code.html,
 					css: code.css,
 					js: code.js,
-					data
+					data: _.cloneDeep(data)
 				},
 				buildStatic: false
 			})
@@ -197,7 +197,7 @@
 		if (iframeLoaded) {
 			channel.postMessage({
 				event: 'SET_APP',
-				payload: { componentApp, data }
+				payload: { componentApp, data: _.cloneDeep(data) }
 			})
 		}
 	}
@@ -217,7 +217,7 @@
 		} else if (iframeLoaded) {
 			channel.postMessage({
 				event: 'SET_APP_DATA',
-				payload: { data }
+				payload: { data: _.cloneDeep(data) }
 			})
 		}
 	}

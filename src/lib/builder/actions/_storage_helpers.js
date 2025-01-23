@@ -155,7 +155,6 @@ export async function update_sitemap() {
   const sitemap_entries = all_pages.map(page => {
     let url = base_url
     const page_path = get_full_path(page, all_pages)
-    console.log({page_path})
     if (page.slug !== '') {
       url += `/${page_path}`
     }

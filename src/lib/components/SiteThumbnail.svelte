@@ -94,7 +94,7 @@
 
 <div class="space-y-3 relative w-full bg-gray-900">
 	<div class="rounded-tl rounded-tr overflow-hidden">
-		<a data-sveltekit-prefetch href="/{site.id}" aria-hidden="true">
+		<a data-sveltekit-prefetch href="/{site.id}">
 			<SitePreview {preview} {append} />
 		</a>
 	</div>

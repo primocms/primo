@@ -16,14 +16,16 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {import('$lib').Symbol} symbol
+	 * @property {string | null} [preview]
 	 * @property {string} [head]
 	 */
 
 	/** @type {Props} */
-	let { symbol, head = '' } = $props()
+	let { symbol, preview = null, head = '' } = $props()
 
-	let preview = $state('')
-	get_preview()
+	if (!preview) {
+		get_preview()
+	}
 	async function get_preview() {
 		const { data } = await supabase.storage.from('symbols').download(`${symbol.id}/preview.html`)
 		if (!data) {
@@ -60,7 +62,7 @@
 </script>
 
 <div class="space-y-3 relative w-full bg-gray-900">
-	<button onclick={() => (is_editor_open = true)} class="w-full rounded-tl rounded-tr overflow-hidden h-[10rem] aspect-[1.5]">
+	<button onclick={() => (is_editor_open = true)} class="w-full rounded-tl rounded-tr overflow-hidden aspect-[1.5]">
 		<SitePreview {preview} {head} />
 	</button>
 	<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-gray-900 truncate flex items-center justify-between">

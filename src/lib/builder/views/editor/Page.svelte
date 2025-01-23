@@ -82,7 +82,7 @@
 			showing_block_toolbar = true
 			await tick()
 			position_block_toolbar()
-			page_el.addEventListener('scroll', position_block_toolbar)
+			page_el.addEventListener('scroll', hide_block_toolbar)
 		}
 	}
 
@@ -107,7 +107,7 @@
 
 	async function hide_block_toolbar() {
 		showing_block_toolbar = false
-		window.removeEventListener('scroll', position_block_toolbar)
+		window.removeEventListener('scroll', hide_block_toolbar)
 		await tick()
 	}
 
@@ -359,6 +359,9 @@
 
 	let top_level_sections = $derived($sections.filter((s) => !s.palette))
 	let palette_sections = $derived($sections.filter((s) => s.palette))
+	let static_sections = $derived($sections.filter((s) => s.master?.symbol))
+
+	$inspect({ top_level_sections, palette_sections, static_sections })
 </script>
 
 <!-- Loading Spinner -->
@@ -412,7 +415,7 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_mouse_events_have_key_events -->
 		{@const is_palette = !section.symbol && !section.master?.symbol}
-		{@const show_block_toolbar_on_hover = !moving && !(is_palette && palette_sections.length === 0)}
+		{@const show_block_toolbar_on_hover = $page_loaded && page_mounted && !moving && !(is_palette && palette_sections.length === 0)}
 		{@const has_page_type_symbols = $symbols.some((s) => s.page_types.includes($active_page.page_type.id))}
 		{@const should_show_palette = has_page_type_symbols || palette_sections.length > 0}
 		{#if is_palette && should_show_palette}
@@ -508,7 +511,7 @@
 					}}
 				/>
 			</div>
-		{:else if is_palette && !should_show_palette}
+		{:else if is_palette && !should_show_palette && static_sections.length === 0}
 			<div class="empty-state" style="height: 100%">
 				<span>Add Blocks to the Page Type to make them available on this page.</span>
 				<br />
@@ -522,7 +525,7 @@
 	[data-section] {
 		overflow: hidden;
 		position: relative;
-		min-height: 4rem;
+		min-height: 3rem;
 		line-height: 0;
 	}
 	[data-type='palette'] {

@@ -30,7 +30,6 @@
 			fields: local_fields
 		})['en']
 	)
-	$inspect({ component_data })
 
 	let tab = $state('code')
 	function toggle_tab() {

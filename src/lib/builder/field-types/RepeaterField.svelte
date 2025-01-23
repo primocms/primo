@@ -65,7 +65,7 @@
 			{@const subfield_id = `${field.key}-${index}`}
 			{@const autofocus = index === repeater_item_just_created}
 			{@const hovering = hover_index === index}
-			<li animate:flip={{ duration: 200 }}>
+			<li>
 				<RepeaterFieldItem
 					{repeater_item}
 					{field}

@@ -128,7 +128,6 @@
 				const item_dragged_over = self.data.item
 				const item_being_dragged = source.data.item
 				const closestEdgeOfTarget = extractClosestEdge(self.data)
-				console.log({ item_being_dragged, item_dragged_over, self, source })
 				// if (item_dragged_over.index === 0) return // can't place above home
 
 				if (closestEdgeOfTarget === 'top') {
@@ -201,7 +200,6 @@
 								on:remove
 								on:move
 								oninput={(detail) => {
-									console.log({ detail })
 									if (detail.id) {
 										oninput(detail)
 									} else {

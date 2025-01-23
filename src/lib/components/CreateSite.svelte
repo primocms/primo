@@ -151,7 +151,9 @@
 				</div>
 				{#if $page.data.starters.length > 0}
 					<div class="split-container flex-1">
-						<Themes on:select={({ detail }) => select_theme(detail)} append={design_variables_css} />
+						<div class="h-full overflow-auto">
+							<Themes on:select={({ detail }) => select_theme(detail)} append={design_variables_css} />
+						</div>
 						<div style="background: #222;" class="rounded">
 							{#if preview}
 								<SitePreview style="height: 100%" site_id={selected_theme_id} {preview} append={design_variables_css} />
@@ -209,5 +211,6 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1.5rem;
+		overflow: hidden;
 	}
 </style>

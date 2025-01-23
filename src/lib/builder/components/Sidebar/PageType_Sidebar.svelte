@@ -8,6 +8,8 @@
 	import { page } from '$app/stores'
 	import { goto } from '$app/navigation'
 	import { browser } from '$app/environment'
+	import { dynamic_field_types } from '$lib/builder/field-types'
+	import { remap_entry_and_field_items } from '$lib/builder/actions/_db_utils'
 	import page_type from '../../stores/data/page_type.js'
 	import symbols from '../../stores/data/symbols.js'
 	import UI from '../../ui/index.js'
@@ -20,6 +22,7 @@
 	import { move_block, rename_block, update_block, add_block_to_site, delete_block_from_site, add_multiple_symbols } from '$lib/builder/actions/symbols.js'
 	import { v4 as uuidv4 } from 'uuid'
 	import { validate_symbol } from '../../converter.js'
+	import { get_ancestors } from '$lib/builder/actions/_helpers.js'
 	import { flip } from 'svelte/animate'
 	import { dropTargetForElements } from '../../libraries/pragmatic-drag-and-drop/entry-point/element/adapter.js'
 	import { attachClosestEdge, extractClosestEdge } from '../../libraries/pragmatic-drag-and-drop-hitbox/closest-edge.js'
@@ -149,14 +152,77 @@
 
 	async function download_block(block_id) {
 		const block = $symbols.find((s) => s.id === block_id)
-		const json = JSON.stringify(block)
+		const isolated_block = _.cloneDeep(isolate_block(block))
+		remap_entry_and_field_items({
+			fields: isolated_block.fields,
+			entries: isolated_block.entries
+		})
+		const json = JSON.stringify(isolated_block)
 		var blob = new Blob([json], { type: 'application/json' })
 		fileSaver.saveAs(blob, `${block.name || block.id}.json`)
 	}
 
-	async function get_primo_blocks() {
-		const { data } = await axios.get('https://raw.githubusercontent.com/mateomorris/primo-library/main/primo.json')
-		return data.symbols.map((s) => ({ ...s, _drag_id: uuidv4() }))
+	function isolate_block(block) {
+		const has_dynamic_field = block.fields.some((f) => dynamic_field_types.includes(f.type))
+		if (!has_dynamic_field) return block
+
+		const isolated_fields = []
+		const isolated_entries = []
+
+		for (const field of block.fields) {
+			const is_dynamic = dynamic_field_types.includes(field.type)
+			if (!is_dynamic) {
+				isolated_fields.push(field)
+				for (const entry of block.entries) {
+					const parent_entry = block.entries.find((e) => e.id === entry.parent)
+					if (entry.field === field.id || parent_entry?.field === field.id) {
+						isolated_entries.push(entry)
+					}
+				}
+			}
+
+			if (field.type === 'site-field') {
+				const source_field = $site.fields.find((f) => f.id === field.source)
+				const dependent_source_fields = $site.fields.filter((site_field) => {
+					const ancestors = get_ancestors(site_field, $site.fields)
+					const is_descendent = ancestors.some((a) => a.id === source_field.id)
+					return is_descendent
+				})
+				const site_fields = [{ ...source_field, key: field.key }, ...dependent_source_fields]
+				isolated_fields.push(...site_fields)
+
+				for (const entry of $site.entries) {
+					const parent_entry = $site.entries.find((e) => e.id === entry.parent)
+					if (site_fields.some((f) => f.id === entry.field || f.id === parent_entry?.field)) {
+						isolated_entries.push(entry)
+					}
+				}
+			}
+
+			if (field.type === 'page-field') {
+				const source_field = $page_type.fields.find((f) => f.id === field.source)
+				const dependent_source_fields = $page_type.fields.filter((pt_field) => {
+					const ancestors = get_ancestors(pt_field, $page_type.fields)
+					const is_descendent = ancestors.some((a) => a.id === source_field.id)
+					return is_descendent
+				})
+				const page_fields = [{ ...source_field, key: field.key }, ...dependent_source_fields]
+				isolated_fields.push(...page_fields)
+
+				for (const entry of $page_type.entries) {
+					const parent_entry = $page_type.entries.find((e) => e.id === entry.parent)
+					if (entry.field === source_field.id || parent_entry?.field === source_field.id) {
+						isolated_entries.push(entry)
+					}
+				}
+			}
+		}
+
+		return {
+			...block,
+			fields: isolated_fields.map((f) => ({ ...f, symbol: null, page_type: null, site: null })),
+			entries: isolated_entries.map((e) => ({ ...e, symbol: null, page_type: null, site: null }))
+		}
 	}
 
 	let dragging = $state(null)

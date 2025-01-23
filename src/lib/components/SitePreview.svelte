@@ -107,6 +107,7 @@
 				onload={async () => {
 					await init_preview()
 					iframeLoaded = !!preview
+					append_to_head(head)
 				}}
 			></iframe>
 		{/if}

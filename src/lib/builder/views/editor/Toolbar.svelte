@@ -325,6 +325,10 @@
 		background: rgba(10, 10, 10, 0.95);
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+		@media (max-width: 670px) {
+			grid-template-columns: 1fr 1fr;
+		}
 	}
 
 	/* .menu-container:after {
