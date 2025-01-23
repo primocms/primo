@@ -198,11 +198,6 @@ export function remap_ids({ pages, sections }) {
   }
 }
 
-
-
-
-
-
 export function generate_inverted_content([ field_changes, original_fields ], entry_list) {
 	const restored_fields = _.cloneDeep(original_fields)
 
@@ -333,7 +328,6 @@ export function generate_inverted_content([ field_changes, original_fields ], en
 	// return [ inverted_changes, restored_fields ]
 }
 
-
 export function generate_inverted_field_changes(changes, original_fields) {
 	const restored_fields = _.cloneDeep(original_fields)
 
@@ -390,7 +384,6 @@ export function generate_inverted_field_changes(changes, original_fields) {
     map: id_map
   }
 }
-
 
 export function generate_inverted_entry_changes(changes, original_entries, field_map) {
 	const restored_entries = _.cloneDeep(original_entries)
@@ -449,10 +442,6 @@ export function generate_inverted_entry_changes(changes, original_entries, field
     entries: helpers.update_entries_with_new_field_ids(restored_entries, field_map) 
   }
 }
-
-
-
-
 
 export function generate_inverted_changes(changes, original_items) {
 	const restored_fields = _.cloneDeep(original_items)
@@ -589,6 +578,39 @@ export function remap_entries_and_fields({changes, items}) {
     change.data.parent = new_parent_id
 
     const entry = _.find(items.entries, ['id', unmapped_entry.id])
+    entry.id = new_id
+    entry.parent = new_parent_id
+  } 
+}
+
+
+export function remap_entry_and_field_items({ fields, entries }) {
+  // loop through changes
+  // for inserted items, remap ID and remap ID on matching entry
+
+  const fields_to_remap = _.cloneDeep(fields)
+  const field_map = remap_entry_ids(fields, true)[1]
+
+  for (const unmapped_field of fields_to_remap) {
+    const new_id = field_map[unmapped_field.id]
+    const new_parent_id = field_map[unmapped_field.parent] || unmapped_field.parent
+
+    const field = _.find(fields, ['id', unmapped_field.id])
+    field.id = new_id
+    field.parent = new_parent_id
+    entries
+      .filter(entry => entry.field === unmapped_field.id)
+      .forEach(entry => entry.field = new_id)
+  } 
+
+  const entries_to_remap = _.cloneDeep(entries)
+  const entry_map = remap_entry_ids(entries_to_remap, true)[1]
+
+  for (const unmapped_entry of entries_to_remap) {
+    const new_id = entry_map[unmapped_entry.id]
+    const new_parent_id = entry_map[unmapped_entry.parent] || unmapped_entry.parent
+
+    const entry = _.find(entries, ['id', unmapped_entry.id])
     entry.id = new_id
     entry.parent = new_parent_id
   } 
