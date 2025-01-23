@@ -1,9 +1,11 @@
 import { dataChanged } from '$lib/builder/database'
+import {get} from 'svelte/store'
 import _ from 'lodash-es'
 import { createUniqueID, get_empty_value } from '$lib/builder/utils'
 import { sort_by_hierarchy, remap_entry_ids } from './_db_utils'
 import { Content_Row } from '$lib/builder/factories'
 import {get_on_page_symbol_sections} from '$lib/builder/stores/helpers'
+import {page} from '$app/stores'
 
 // TODO: put DB HELPERS in a separate file
 
@@ -147,23 +149,23 @@ export async function handle_field_changes_new(changes, args = {}) {
 	const updates_and_deletions = changes.filter((c) => c.action === 'update' || c.action === 'delete')
 
 	if (insertions.length > 0) {
-		await dataChanged({
-			table: 'fields',
-			action: 'insert',
-			data: sort_by_hierarchy(insertions)
-		})
+		await get(page).data.supabase.from('fields').insert(sort_by_hierarchy(insertions))
 	}
 
 	await Promise.all(
-		updates_and_deletions.map(change => dataChanged({
-			table: 'fields',
-			action: change.action,
-			id: change.id,
-			data: {
-				...change.data,
-				...args
+		updates_and_deletions.map(async change => {
+			if (change.action === 'update') {
+				const res = await get(page).data.supabase.from('fields').update({
+					...change.data,
+					...args
+				}).eq('id', change.id)
+			} else if (change.action === 'delete') {
+				const res = await get(page).data.supabase.from('fields').delete({
+					...change.data,
+					...args
+				}).eq('id', change.id)
 			}
-		}))
+		})
 	)
 }
 
@@ -174,24 +176,24 @@ export async function handle_content_changes_new(changes, args = {}) {
 
 	if (insertions.length > 0) {
 		// first, insert new entries
-		await dataChanged({
-			table: 'entries',
-			action: 'insert',
-			data: sort_by_hierarchy(insertions)
-		})
+		await get(page).data.supabase.from('entries').insert(sort_by_hierarchy(insertions))
 	}
 
 	// then do everything else, referencing new ids and existing ids
 	await Promise.all(
-		updates_and_deletions.map(change => dataChanged({
-			table: 'entries',
-			action: change.action,
-			id: change.id,
-			data: {
-				...change.data,
-				...args
+		updates_and_deletions.map(async change => {
+			if (change.action === 'update') {
+				const res = await get(page).data.supabase.from('entries').update({
+					...change.data,
+					...args
+				}).eq('id', change.id)
+			} else if (change.action === 'delete') {
+				const res = await get(page).data.supabase.from('entries').delete({
+					...change.data,
+					...args
+				}).eq('id', change.id)
 			}
-		}))
+		})
 	)
 }
 
