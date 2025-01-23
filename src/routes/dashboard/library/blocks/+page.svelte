@@ -1,9 +1,9 @@
 <script>
-	import CreateBlock from '$lib/components/modals/CreateBlock.svelte'
+	import CreateBlock from '$lib/components/Modals/CreateBlock.svelte'
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import CodeEditor from '$lib/builder/components/CodeEditor/CodeMirror.svelte'
-	import DesignFields from '$lib/components/modals/DesignFields.svelte'
+	import DesignFields from '$lib/components/Modals/DesignFields.svelte'
 	import * as code_generators from '$lib/builder/code_generators'
 	import { processCode } from '$lib/builder/utils.js'
 	import { get_site_data } from '$lib/builder/stores/helpers.js'
