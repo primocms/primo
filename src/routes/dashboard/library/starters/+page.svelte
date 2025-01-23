@@ -3,7 +3,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import CreateStarter from '$lib/components/modals/CreateStarter.svelte'
+	import CreateStarter from '$lib/components/Modals/CreateStarter.svelte'
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { CirclePlus, LayoutTemplate } from 'lucide-svelte'
 	import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
