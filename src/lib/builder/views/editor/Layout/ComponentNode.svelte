@@ -52,13 +52,13 @@
 	)
 
 	// let local_component_data
-	async function save_edited_value({ id, key = null, value }) {
+	async function save_edited_value({ id, value }) {
 		// set local_component_data to avoid hydrating data when already changed on page
 		// if (key) {
 		// 	_.set(local_component_data, key, value)
 		// }
 		await update_section_entries({ id, value })
-		broadcastChanged({ block_id: section.id })
+		broadcastChanged({ page_id: $active_page.id })
 	}
 
 	let floating_menu = $state()
@@ -173,7 +173,7 @@
 				} else if (type === 'link') {
 					set_editable_link({ element, id, url: value.url })
 				} else {
-					set_editable_text({ element, key, id })
+					set_editable_text({ element, id })
 				}
 				return true
 			}
@@ -207,7 +207,7 @@
 
 				// All other field types are text
 				if (text_matches && text.length > 0) {
-					set_editable_text({ id, key, element })
+					set_editable_text({ id, element })
 					return true
 				} else return false
 			}
@@ -383,7 +383,7 @@
 			})
 		}
 
-		async function set_editable_text({ id, key, element }) {
+		async function set_editable_text({ id, element }) {
 			element.style.outline = '0'
 			element.setAttribute(`data-entry`, id)
 			element.onkeydown = (e) => {
@@ -394,7 +394,7 @@
 			}
 			element.onblur = (e) => {
 				dispatch('unlock')
-				save_edited_value({ id, key, value: e.target.innerText })
+				save_edited_value({ id, value: e.target.innerText })
 			}
 			element.onfocus = () => {
 				dispatch('lock')
