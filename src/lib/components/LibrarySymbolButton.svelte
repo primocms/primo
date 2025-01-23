@@ -1,5 +1,5 @@
 <script>
-	import CreateBlock from '$lib/components/modals/CreateBlock.svelte'
+	import CreateBlock from '$lib/components/Modals/CreateBlock.svelte'
 	import fileSaver from 'file-saver'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import { EllipsisVertical, SquarePen, Trash2, Download, Code, Loader } from 'lucide-svelte'
