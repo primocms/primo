@@ -58,6 +58,7 @@
 		// 	_.set(local_component_data, key, value)
 		// }
 		await update_section_entries({ id, value })
+		console.log('saving', { $active_page })
 		broadcastChanged({ page_id: $active_page.id })
 	}
 
