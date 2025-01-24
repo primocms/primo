@@ -139,6 +139,7 @@
 					.filter((item) => item.block_id)
 			})
 			.on('broadcast', { event: 'save' }, (payload) => {
+				console.log('broadcast', { payload })
 				if (payload.payload.page_id === data.page?.id) {
 					invalidate('app:data')
 				}
