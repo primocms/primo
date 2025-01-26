@@ -1,7 +1,6 @@
 <script>
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as Sidebar from '$lib/components/ui/sidebar'
-	import Icon from '@iconify/svelte/dist/Icon.svelte'
 	import SiteThumbnail from '$lib/components/SiteThumbnail.svelte'
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import * as actions from '$lib/actions'

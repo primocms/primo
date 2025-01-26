@@ -9,7 +9,6 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
     if (!id_map.has(old_id)) {
       id_map.set(old_id, uuidv4())
     }
-    return id_map.get(old_id)
   }
 
   function get_id(old_id) {

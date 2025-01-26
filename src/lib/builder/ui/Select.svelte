@@ -84,12 +84,14 @@
 	let highlighted = $state(false)
 	let disable_highlight = true // prevent highlighting on initial value set
 	let manually_selected = $state(false) // or manual set
-	function highlight_button() {
+	let last_value = $state(value)
+	function highlight_button(val) {
 		if (disable_highlight) {
 			disable_highlight = false
 			return
-		} else if (!manually_selected) {
+		} else if (!manually_selected && val !== last_value) {
 			highlighted = true
+			last_value = val
 			setTimeout(() => {
 				highlighted = false
 			}, 400)
@@ -97,7 +99,7 @@
 	}
 	let selected = $derived(find_with_object(options, value))
 	$effect(() => {
-		value, highlight_button()
+		highlight_button(value)
 	})
 </script>
 

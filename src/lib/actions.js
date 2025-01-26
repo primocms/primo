@@ -11,6 +11,59 @@ import * as code_generators from '$lib/builder/code_generators'
 import { processCode } from '$lib/builder/utils'
 import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 import { v4 as uuidv4 } from 'uuid'
+import {remap_entry_and_field_items} from '$lib/builder/actions/_db_utils'
+
+export async function add_marketplace_starter_to_library(starter, preview) {
+	const new_starter_id = uuidv4()
+	remap_entry_and_field_items({ entries: starter.entries, fields: starter.fields })
+
+	const symbol_res = await supabase.from('library_symbols').insert({ id: new_starter_id, name: starter.name, code: starter.code, index: 0, owner: get(page).data.user.id })
+	if (symbol_res.error) {
+		console.log('Failed to insert site', { symbol_res, starter })
+		throw new Error('Failed to insert site')
+	}
+
+	const fields_res = await supabase.from('fields').insert(starter.fields.map(f => ({ ...f, library_symbol: new_starter_id })))
+	if (fields_res.error) {
+		console.log('Failed to insert fields', { fields_res, fields: starter.fields })
+		throw new Error('Failed to insert fields')
+	}
+
+	const entries_res = await supabase.from('entries').insert(starter.entries.map(f => ({ ...f, library_symbol: new_starter_id })))
+	if (entries_res.error) {
+		console.log('Failed to insert entries', { entries_res, entries: starter.entries })
+		throw new Error('Failed to insert entries')
+	}
+
+	const storage_res = await supabase.storage.from('sites').upload(`${new_starter_id}/preview.html`, preview)
+	console.log({storage_res})
+}
+
+export async function add_marketplace_symbol_to_library(symbol, preview) {
+	const new_symbol_id = uuidv4()
+	remap_entry_and_field_items({ entries: symbol.entries, fields: symbol.fields })
+
+	const symbol_res = await supabase.from('library_symbols').insert({ id: new_symbol_id, name: symbol.name, code: symbol.code, index: 0, owner: get(page).data.user.id })
+	if (symbol_res.error) {
+		console.log('Failed to insert site', { symbol_res, symbol })
+		throw new Error('Failed to insert site')
+	}
+
+	const fields_res = await supabase.from('fields').insert(symbol.fields.map(f => ({ ...f, library_symbol: new_symbol_id })))
+	if (fields_res.error) {
+		console.log('Failed to insert fields', { fields_res, fields: symbol.fields })
+		throw new Error('Failed to insert fields')
+	}
+
+	const entries_res = await supabase.from('entries').insert(symbol.entries.map(f => ({ ...f, library_symbol: new_symbol_id })))
+	if (entries_res.error) {
+		console.log('Failed to insert entries', { entries_res, entries: symbol.entries })
+		throw new Error('Failed to insert entries')
+	}
+
+	const storage_res = await supabase.storage.from('symbols').upload(`${new_symbol_id}/preview.html`, preview)
+	console.log({storage_res})
+}
 
 export async function rename_library_symbol(id, new_name) {
 	await supabase.from('library_symbols').update({ name: new_name }).eq('id', id)
@@ -22,8 +75,8 @@ export async function create_library_symbol({ code, changes, preview }) {
 		(async() => {
 			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: 'New Block', index: 0, owner: get(page).data.user.id }).select().single()
 			if (library_symbols_res.error) {
-				console.log('Failed to insert sections', library_symbols_res)
-				throw new Error('Failed to insert sections')
+				console.log('Failed to insert symbols', library_symbols_res)
+				throw new Error('Failed to insert symbols')
 			}
 		
 			// DB: save Symbol fields
@@ -73,8 +126,8 @@ export async function create_starter({ details, preview = null, site_data = null
 
 	let starter_data
 	if (site_data) {
-		site_data.name = details.name
-		site_data.description = details.description
+		site_data.site.name = details.name
+		site_data.site.description = details.description
 		const scrambled = scramble_ids(site_data)
 		starter_data = prepare_data(scrambled)
 	} else {
@@ -333,6 +386,7 @@ export async function fetch_site_data(site_id) {
 			*,
 			fields(*),
 			entries(*),
+			sections(*, entries(*)),
 			pages(
 				*,
 				entries(*),
@@ -357,9 +411,9 @@ export async function fetch_site_data(site_id) {
 	const site_data = {
 		site: _.omit(data, ['pages', 'page_types', 'symbols', 'sections']),
 		pages: data.page_types.flatMap(pt => pt.pages.map(p => _.omit(p, ['sections']))), 
-		page_types: data.page_types.map(pt => _.omit(pt, ['pages'])),
+		page_types: data.page_types.map(pt => _.omit(pt, ['pages', 'sections'])),
 		symbols: data.symbols,
-		sections: data.page_types.flatMap(pt => pt.pages.flatMap(p => p.sections))
+		sections: data.page_types.flatMap(pt => [ ...pt.sections, ...pt.pages.flatMap(p => p.sections)])
 	}
 
 	return site_data

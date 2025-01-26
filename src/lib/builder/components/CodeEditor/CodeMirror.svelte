@@ -42,10 +42,11 @@
 	 * @property {string} [style]
 	 * @property {boolean} [debounce]
 	 * @property {number} [selection]
+	 * @property {boolean} [disabled]
 	 */
 
 	/** @type {Props} */
-	let { data = {}, prefix = '', value = $bindable(''), mode = 'html', style = '', debounce = false, selection = $bindable(0) } = $props()
+	let { data = {}, prefix = '', value = $bindable(''), mode = 'html', style = '', debounce = false, selection = $bindable(0), disabled = false } = $props()
 
 	const dispatch = createEventDispatcher()
 
@@ -99,6 +100,7 @@
 		},
 		doc: value,
 		extensions: [
+			EditorState.readOnly.of(disabled),
 			abbreviationTracker(),
 			language,
 			oneDarkTheme,

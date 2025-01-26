@@ -163,7 +163,7 @@
 						</button>
 					{:else}
 						<UI.Dropdown
-							variant="large-button"
+							size="lg"
 							options={[
 								{
 									label: 'Move up',
@@ -236,7 +236,7 @@
 							</button>
 						{:else}
 							<UI.Dropdown
-								variant="large-button"
+								size="lg"
 								options={[
 									{
 										label: 'Move up',
@@ -325,7 +325,7 @@
 							</button>
 						{:else}
 							<UI.Dropdown
-								variant="large-button"
+								size="lg"
 								options={[
 									{
 										label: 'Move up',
