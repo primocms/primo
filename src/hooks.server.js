@@ -25,7 +25,7 @@ export async function handle({ resolve, event }) {
 	}
 
 	const session = await event.locals.getSession()
-	if (!session && !event.url.pathname.endsWith('/auth')) {
+	if (!session && !event.url.pathname.includes('/auth')) {
 		redirect(303, '/auth')
 	} else if (session && event.url.pathname === '/') {
 		redirect(303, '/dashboard')
