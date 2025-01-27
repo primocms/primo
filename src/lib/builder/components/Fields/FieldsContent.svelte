@@ -556,7 +556,14 @@
 
 		dispatch_update({
 			entries: updated_entries,
-			content_changes: [{ action: 'delete', id: item.id, dynamic }]
+			content_changes: [
+				{ action: 'delete', id: item.id, dynamic },
+				...siblings.map((child) => ({
+					action: 'update',
+					id: child.id,
+					data: { index: child.index }
+				}))
+			]
 		})
 	}
 
