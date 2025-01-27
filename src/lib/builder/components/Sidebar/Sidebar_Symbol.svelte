@@ -4,6 +4,8 @@
 	import axios from 'axios'
 	import Icon from '@iconify/svelte'
 	import Toggle from 'svelte-toggle'
+	import TextInput from '$lib/builder/ui/TextInput.svelte'
+	import * as Dialog from '$lib/components/ui/dialog'
 	import { userRole } from '../../stores/app/misc'
 	import MenuPopup from '../../ui/Dropdown.svelte'
 	import { get_symbol_usage_info, get_content_with_synced_values } from '../../stores/helpers'
@@ -32,12 +34,18 @@
 	let name_el = $state()
 
 	let renaming = $state(false)
+	let new_name = $state(symbol.name)
 	async function toggle_name_input() {
 		renaming = !renaming
 		// workaround for inability to see cursor when div empty
 		if (symbol.name === '') {
 			symbol.name = 'Block'
 		}
+	}
+
+	function save_rename() {
+		dispatch('rename', new_name)
+		renaming = false
 	}
 
 	let height = $state(0)
@@ -116,45 +124,43 @@
 	})
 </script>
 
+<Dialog.Root bind:open={renaming}>
+	<Dialog.Content class="sm:max-w-[425px] p-4">
+		<Dialog.Header
+			title="Edit Block Name"
+			button={{
+				label: 'Save',
+				onclick: save_rename
+			}}
+		/>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault()
+				save_rename()
+			}}
+		>
+			<TextInput autofocus={true} label="Block Name" bind:value={new_name} />
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
 <div class="sidebar-symbol">
 	<header>
-		{#if renaming}
-			<!-- svelte-ignore a11y_autofocus -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				bind:this={name_el}
-				contenteditable
-				autofocus
-				class="name"
-				onblur={toggle_name_input}
-				onkeydown={(e) => {
-					if (e.code === 'Enter') {
-						e.preventDefault()
-						e.target.blur()
-						dispatch('rename', e.target.textContent)
-						renaming = false
-					}
-				}}
-			>
-				{symbol.name}
-			</div>
-		{:else}
-			<div class="name">
-				<h3>{symbol.name}</h3>
-				{#if controls_enabled}
-					<!-- TODO: add popover w/ symbol info -->
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<!-- <div
-						class="info"
-						title={active_symbol_label}
-						on:mouseover={get_label}
-						on:focus={get_label}
-					>
-						<Icon icon="mdi:info" />
-					</div> -->
-				{/if}
-			</div>
-		{/if}
+		<div class="name">
+			<h3>{symbol.name}</h3>
+			{#if controls_enabled}
+				<!-- TODO: add popover w/ symbol info -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- <div
+					class="info"
+					title={active_symbol_label}
+					on:mouseover={get_label}
+					on:focus={get_label}
+				>
+					<Icon icon="mdi:info" />
+				</div> -->
+			{/if}
+		</div>
 		{#if controls_enabled}
 			<div class="symbol-options">
 				{#if show_toggle}

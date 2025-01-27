@@ -151,7 +151,7 @@
 				</div>
 				{#if $page.data.starters.length > 0}
 					<div class="split-container flex-1">
-						<div class="h-full overflow-auto">
+						<div class="h-[77vh] overflow-auto">
 							<Themes on:select={({ detail }) => select_theme(detail)} append={design_variables_css} />
 						</div>
 						<div style="background: #222;" class="rounded">

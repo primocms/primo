@@ -187,6 +187,7 @@
 
 <style lang="postcss">
 	#primo-toolbar {
+		z-index: 999;
 		/* position: fixed;
 		top: 0;
 		left: 0;

@@ -73,13 +73,13 @@
 		creating_block = false
 	}
 
-	let design = $state(data.settings.value.design)
+	let design = $state(data.settings.design)
 	let design_variables_css = $state(code_generators.site_design_css(design))
 	function update_design_variables_css() {
 		design_variables_css = code_generators.site_design_css(design)
 	}
 
-	let head_code = $state(data.settings.value.head)
+	let head_code = $state(data.settings.head)
 	let generated_head_code = $state('')
 
 	// Generate <head> tag code

@@ -17,7 +17,7 @@
 	}: WithElementRef<
 		HTMLAttributes<HTMLDivElement> & {
 			title: string
-			button: {
+			button?: {
 				label: string
 				onclick: () => void
 				disabled?: boolean
@@ -32,12 +32,14 @@
 		{@render children?.()}
 	</div>
 	<DialogTitle class="text-center">{title}</DialogTitle>
-	<Button variant="default" onclick={button.onclick} disabled={button.disabled} class="justify-self-end inline-flex justify-center items-center">
-		<span class:invisible={button.loading}>{button.label}</span>
-		{#if button.loading}
-			<div class="animate-spin absolute">
-				<Loader />
-			</div>
-		{/if}
-	</Button>
+	{#if button?.label}
+		<Button variant="default" onclick={button.onclick} disabled={button.disabled} class="justify-self-end inline-flex justify-center items-center">
+			<span class:invisible={button.loading}>{button.label}</span>
+			{#if button.loading}
+				<div class="animate-spin absolute">
+					<Loader />
+				</div>
+			{/if}
+		</Button>
+	{/if}
 </div>

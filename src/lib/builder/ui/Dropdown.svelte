@@ -40,11 +40,9 @@
 		<DropdownMenu.Group>
 			<div class="options">
 				{#each options as option, i}
-					{@const has_submenu_items = option.suboptions?.length > 0}
 					<DropdownMenu.Item
 						class="p-1 cursor-pointer rounded"
 						onSelect={(e) => {
-							console.log({ e })
 							if (option.on_click) {
 								option.on_click(e)
 							} else {
@@ -56,15 +54,6 @@
 							<Icon icon={option.icon} />
 							<span>{option.label}</span>
 						</div>
-						{#if has_submenu_items}
-							<button
-								onclick={() => {
-									active_submenu = { title: option.label, options: option.suboptions }
-								}}
-							>
-								<Icon icon="material-symbols:chevron-right" />
-							</button>
-						{/if}
 					</DropdownMenu.Item>
 					{#if dividers.includes(i)}
 						<DropdownMenu.Separator />

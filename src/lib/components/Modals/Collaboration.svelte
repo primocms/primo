@@ -72,10 +72,12 @@
 <div class="Invitation">
 	<main>
 		<h2>Invite site collaborator</h2>
-		<form onsubmit={(e) => {
-			e.preventDefault()
-			invite_editor()
-		}}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault()
+				invite_editor()
+			}}
+		>
 			<label class="subheading" for="email">Enter collaborator email</label>
 			<div>
 				<div class="input-group">
