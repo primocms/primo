@@ -11,6 +11,7 @@
 	import { fetch_site_data, sites } from '$lib/actions'
 	import * as AlertDialog from '$lib/components/ui/alert-dialog'
 	import { invalidate } from '$app/navigation'
+	import * as actions from '$lib/actions'
 
 	/**
 	 * @typedef {Object} Props
@@ -78,8 +79,10 @@
 	let is_delete_open = $state(false)
 	let new_name = $state(site.name)
 
-	function handle_rename() {
+	async function handle_rename() {
 		is_rename_open = false
+		await actions.sites.update(site.id, { name: new_name })
+		invalidate('app:data')
 	}
 
 	let deleting = $state(false)
@@ -123,7 +126,7 @@
 </div>
 
 <Dialog.Root bind:open={is_rename_open}>
-	<Dialog.Content class="sm:max-w-[425px]">
+	<!-- <Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
 			<Dialog.Title>Rename Site</Dialog.Title>
 			<Dialog.Description>Enter a new name for your site</Dialog.Description>
@@ -133,6 +136,17 @@
 			<Button variant="outline" onclick={() => (is_rename_open = false)}>Cancel</Button>
 			<Button onclick={handle_rename}>Rename</Button>
 		</Dialog.Footer>
+	</Dialog.Content> -->
+	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
+		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Site</h2>
+		<p class="text-muted-foreground text-sm">Enter a new name for your site</p>
+		<form onsubmit={handle_rename}>
+			<Input bind:value={new_name} placeholder="Enter new site name" class="my-4" />
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (is_rename_open = false)}>Cancel</Button>
+				<Button type="submit">Rename</Button>
+			</Dialog.Footer>
+		</form>
 	</Dialog.Content>
 </Dialog.Root>
 

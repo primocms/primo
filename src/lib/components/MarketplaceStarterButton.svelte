@@ -65,6 +65,7 @@
 			site_data: data,
 			preview
 		})
+		invalidate('app:data')
 		loading = false
 		added_to_library.push(site.id)
 		toast.success('Block added to Library')

@@ -12,6 +12,7 @@ const s3_client = new S3Client({
     accessKeyId: ENV_VARS.PRIVATE_R2_ACCESS_KEY_ID,
     secretAccessKey: ENV_VARS.PRIVATE_R2_SECRET_ACCESS_KEY,
   },
+  forcePathStyle: true
 });
 
 export const POST: RequestHandler = async (event) => {

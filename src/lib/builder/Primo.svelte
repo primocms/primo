@@ -156,10 +156,10 @@
 	// Generate <head> tag code
 	let previous
 	$effect.pre(() => {
-		if (previous === $siteCode.head + $siteDesign) return
+		if (_.isEqual(previous, { head: $siteCode.head, design: $siteDesign })) return
 		compile_component_head(`<svelte:head>${$siteCode.head + site_design_css($siteDesign)}</svelte:head>`).then((generated_code) => {
 			$site_html = generated_code
-			previous = $siteCode.head + $siteDesign
+			previous = _.cloneDeep({ head: $siteCode.head, design: $siteDesign })
 		})
 	})
 

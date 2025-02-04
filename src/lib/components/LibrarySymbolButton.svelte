@@ -1,6 +1,5 @@
 <script>
 	import CreateBlock from '$lib/components/Modals/CreateBlock.svelte'
-	import fileSaver from 'file-saver'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import { EllipsisVertical, SquarePen, Trash2, Download, Code, Loader } from 'lucide-svelte'
 	import { find as _find } from 'lodash-es'
@@ -66,7 +65,7 @@
 		<SitePreview {preview} {head} />
 	</button>
 	<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-gray-900 truncate flex items-center justify-between">
-		<div class="text-sm font-medium leading-none">{symbol.name}</div>
+		<div class="text-sm font-medium leading-none max-w-40 truncate">{symbol.name}</div>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>
 				<EllipsisVertical size={14} />
@@ -94,7 +93,7 @@
 </div>
 
 <Dialog.Root bind:open={is_editor_open}>
-	<Dialog.Content class="max-w-[1600px] h-full max-h-[100vh] flex flex-col p-4 gap-0">
+	<Dialog.Content escapeKeydownBehavior="ignore" class="max-w-[1600px] h-full max-h-[100vh] flex flex-col p-4 gap-0">
 		<CreateBlock {symbol} {head} onsubmit={save_symbol} />
 	</Dialog.Content>
 </Dialog.Root>

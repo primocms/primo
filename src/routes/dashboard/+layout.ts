@@ -1,18 +1,20 @@
 import _ from 'lodash-es'
-import { design_tokens } from '$lib/builder/constants'
 
 /** @type {import('@sveltejs/kit').Load} */
 export async function load(event) {
   const { session, supabase } = await event.parent()
   if (!supabase) return
 
-  // const site = event.params['site']
-  let [{ data: settings }, { data: symbols }] = await Promise.all([
+  const [{ data: starters }, { data: sites }, { data: settings }, { data: symbols }] = await Promise.all([
+    supabase.from('sites').select('*').order('created_at', { ascending: false }).match({ is_starter: true, owner: session.user.id }),
+    supabase.from('sites').select('*').order('created_at', { ascending: false }).match({ is_starter: false, owner: session.user.id }),
     supabase.from('library_settings').select('key, value').match({ key: 'blocks', owner: session.user.id }).single(),
-    supabase.from('library_symbols').select('*, entries(*), fields(*)').eq('owner', session.user.id).order('created_at', { ascending: false })
+    supabase.from('library_symbols').select('*, group(*), entries(*), fields(*)').eq('owner', session.user.id).order('created_at', { ascending: false })
   ])
 
   return {
+    starters,
+    sites,
     settings: settings?.value || {
       head: '',
       design: {

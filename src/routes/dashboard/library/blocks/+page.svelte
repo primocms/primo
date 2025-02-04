@@ -51,6 +51,7 @@
 			const generate_code = await block_html({ code: validated.code, data: component_data })
 			const preview = static_iframe_srcdoc(generate_code)
 			await actions.create_library_symbol({
+				name: validated.name,
 				code: validated.code,
 				changes: {
 					entries: validated.entries.map((e) => ({ action: 'insert', data: e, id: e.id })),
@@ -109,7 +110,7 @@
 		await data.supabase
 			.from('library_settings')
 			.update({ value: { head: head_code, design } })
-			.eq('key', 'blocks')
+			.match({ key: 'blocks', owner: data.user.id })
 		editing_head = false
 		editing_design = false
 		loading = false

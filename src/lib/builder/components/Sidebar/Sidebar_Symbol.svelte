@@ -5,7 +5,9 @@
 	import Icon from '@iconify/svelte'
 	import Toggle from 'svelte-toggle'
 	import TextInput from '$lib/builder/ui/TextInput.svelte'
+	import { Button } from '$lib/components/ui/button'
 	import * as Dialog from '$lib/components/ui/dialog'
+	import { Input } from '$lib/components/ui/input'
 	import { userRole } from '../../stores/app/misc'
 	import MenuPopup from '../../ui/Dropdown.svelte'
 	import { get_symbol_usage_info, get_content_with_synced_values } from '../../stores/helpers'
@@ -125,21 +127,20 @@
 </script>
 
 <Dialog.Root bind:open={renaming}>
-	<Dialog.Content class="sm:max-w-[425px] p-4">
-		<Dialog.Header
-			title="Edit Block Name"
-			button={{
-				label: 'Save',
-				onclick: save_rename
-			}}
-		/>
+	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
+		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Block</h2>
+		<p class="text-muted-foreground text-sm">Enter a new name for your Block</p>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault()
 				save_rename()
 			}}
 		>
-			<TextInput autofocus={true} label="Block Name" bind:value={new_name} />
+			<Input bind:value={new_name} placeholder="Enter new Block name" class="my-4" />
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (renaming = false)}>Cancel</Button>
+				<Button type="submit">Rename</Button>
+			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>

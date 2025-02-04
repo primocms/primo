@@ -69,11 +69,11 @@ export async function rename_library_symbol(id, new_name) {
 	await supabase.from('library_symbols').update({ name: new_name }).eq('id', id)
 }
 
-export async function create_library_symbol({ code, changes, preview }) {
+export async function create_library_symbol({ name = 'New Block', code, changes, preview }) {
 	const symbol_id = uuidv4()
 	const res = await Promise.all([
 		(async() => {
-			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: 'New Block', index: 0, owner: get(page).data.user.id }).select().single()
+			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: name, index: 0, owner: get(page).data.user.id }).select().single()
 			if (library_symbols_res.error) {
 				console.log('Failed to insert symbols', library_symbols_res)
 				throw new Error('Failed to insert symbols')
@@ -340,8 +340,8 @@ export const sites = {
 				// TODO: Implement rollback logic to delete inserted items if an error occurs
 		}
 	},
-	update: async (props) => {
-		actions.active_site.update(props)
+	update: async (site_id, props) => {
+		await supabase.from('sites').update(props).eq('id', site_id)
 	},
 	delete: async (site_id, delete_deployment = false) => {
 		await supabase.from('sites').delete().eq('id', site_id)

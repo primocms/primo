@@ -53,7 +53,7 @@
 		}
 	}
 
-	function dispatch_update({ label = value.label, url = value.url }, page_id = selected_page.id) {
+	function dispatch_update({ label = value.label, url = value.url }, page_id = selected_page?.id) {
 		oninput({ value: { label, url }, metadata: { page_id } })
 	}
 

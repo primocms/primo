@@ -31,15 +31,13 @@
 
 	function check_condition(field) {
 		if (!field.options.condition) return true // has no condition
-
 		const { field: field_id, value, comparison } = field.options.condition
 		const field_to_compare = fields.find((f) => f.id === field_id)
 		if (!field_to_compare) {
 			// field has been deleted, reset condition
-			field.options.condition = null
-			return false
+			// field.options.condition = null
+			return true
 		}
-
 		const { value: comparable_value } = entries.find((e) => e.field === field_id)
 		if (is_regex(value)) {
 			const regex = new RegExp(value.slice(1, -1))
