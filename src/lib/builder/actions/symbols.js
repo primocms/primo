@@ -18,13 +18,10 @@ import { remap_entries_and_fields } from './_db_utils'
  *
  * @param {Object} options
  * @param {Object} options.symbol - The symbol object representing the block to be added.
- * @param {Object} options.changes - The changes to be applied to the block.
- * @param {Array} options.changes.fields - The fields to be added
- * @param {Array} options.changes.entries - The entries to be added
  * @param {number} options.index - The index at which to insert the block.
  * @returns {Promise<void>}
  */
-export async function add_block_to_site({ symbol, changes, index }) {
+export async function add_block_to_site({ symbol, index }) {
 	let created_symbol_db_id
 
 	await update_timeline({
@@ -34,8 +31,7 @@ export async function add_block_to_site({ symbol, changes, index }) {
 				code: symbol.code,
 				entries: symbol.entries.filter(e => !e.page && !e.site),
 				fields: symbol.fields,
-				index,
-				insertions: changes
+				index
 			})
 			created_symbol_db_id = new_block.id
 
@@ -60,11 +56,7 @@ export async function delete_block_from_site(block) {
 				code: block.code,
 				index: block.index,
 				entries: block.entries,
-				fields: block.fields,
-				insertions: {
-					entries: block.entries.map((e) => ({ action: 'insert', id: e.id, data: e })),
-					fields: block.fields.map((e) => ({ action: 'insert', id: e.id, data: e }))
-				}
+				fields: block.fields
 			})
 			active_block_id = new_block.id
 
@@ -83,14 +75,18 @@ export async function add_multiple_symbols(symbols) {
 
 			const remapped_symbols = symbols.map(symbol => {
 				const new_id = uuid()
-				const remapped = db_utils.remap_content(symbol.entries, symbol.fields)
-				console.log({remapped})
-				return {
+				const remapped_symbol = _.cloneDeep({
 					...symbol,
+					id: new_id
+				})
+				db_utils.remap_entry_and_field_items({
+					fields: remapped_symbol.fields,
+					entries: remapped_symbol.entries
+				})
+				return {
+					...remapped_symbol,
 					index: 0,
 					id: new_id,
-					entries: remapped.entries.map(e => ({ ...e, symbol: new_id })),
-					fields:remapped.fields.map(e => ({ ...e, symbol: new_id }))
 				}
 			})
 
@@ -103,8 +99,8 @@ export async function add_multiple_symbols(symbols) {
 			})
 
 
-			const fields = remapped_symbols.flatMap(s => s.fields.map(f => ({ ...f, symbol: s.id })))
-			const entries = remapped_symbols.flatMap(s => s.entries.map(e => ({ ...e, symbol: s.id })))
+			const fields = remapped_symbols.flatMap(s => s.fields.map(f => ({ ...f, symbol: s.id, library_symbol: null })))
+			const entries = remapped_symbols.flatMap(s => s.entries.map(e => ({ ...e, symbol: s.id, library_symbol: null })))
 
 			await dataChanged({
 				table: 'fields',
@@ -137,9 +133,6 @@ export async function add_multiple_symbols(symbols) {
  * @param {string} params.updated_data.code - The updated code for the block.
  * @param {Array} params.updated_data.fields - The updated fields for the block.
  * @param {Array} params.updated_data.entries - The updated entries for the block.
- * @param {Object} params.changes - The changes to be applied to the block.
- * @param {Array} params.changes.entries - The changes to be applied to the block's entries.
- * @param {Array} params.changes.fields - The changes to be applied to the block's fields.
  * @returns {Promise<void>}
  *
  * @description
@@ -157,17 +150,18 @@ export async function add_multiple_symbols(symbols) {
  * This ensures that all data is consistent with the database state in both forward and backward operations.
  * Especially when deleting entries/fields, since they're recreated in undoing() and need to be refereced correctly in doing()
  */
-export async function update_block({ block, updated_data, changes }) {
+export async function update_block({ block, updated_data }) {
+
 	const original_code = block.code
 	let original_fields = _.cloneDeep(block.fields)
 	let original_entries = _.cloneDeep(block.entries)
 
 	const updated_code = updated_data.code
 	let updated_fields = _.cloneDeep(updated_data.fields)
-	let updated_entries = _.cloneDeep(updated_data.entries.filter(e => !e.site))
+	let updated_entries = _.cloneDeep(updated_data.entries.filter(e => !e.site && !e.page && !e.page_type))
 
-	let content_changes = _.cloneDeep(changes.entries.filter(c => !c.dynamic))
-	let field_changes = _.cloneDeep(changes.fields)
+	let content_changes = db_utils.generate_entry_changes(original_entries, updated_entries)
+	let field_changes = db_utils.generate_field_changes(original_fields, updated_fields)
 
 	const local_sections = helpers.generate_sibling_section_changes({ symbol_id: block.id, field_changes, original_fields, updated_fields })
 	let foreign_sections = [] // fetch and assign below to avoid delay
@@ -341,7 +335,12 @@ export async function move_block(block_being_moved, new_position) {
 }
 
 // HELPERS
-async function create_block({ name = 'New Block', code, entries, fields, index, insertions }) {
+async function create_block({ name = '', code, entries, fields, index }) {
+	const insertions = {
+		entries: entries.map((e) => ({ action: 'insert', id: e.id, data: e })),
+		fields: fields.map((e) => ({ action: 'insert', id: e.id, data: e }))
+	}
+
 	// DB: insert symbol with entries & fields
 	const created_symbol_db_id = await dataChanged({
 		table: 'symbols',

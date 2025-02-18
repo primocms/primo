@@ -1,3 +1,4 @@
+import _ from 'lodash-es'
 import { dataChanged } from '$lib/builder/database'
 import { site, update as update_site } from '$lib/builder/stores/data/site'
 import { get } from 'svelte/store'
@@ -5,8 +6,14 @@ import { page } from '$app/stores'
 import stores, { update_timeline } from '$lib/builder/stores/data'
 import { handle_content_changes, handle_field_changes } from './_helpers'
 import {update_page_file} from '$lib/builder/actions/_storage_helpers'
+import * as db_utils from './_db_utils'
 
-export async function update_site_code_and_content({ code, entries, fields, content_changes, fields_changes }) {
+export async function update_site_code_and_content({ code, entries, fields }) {
+	const original_site = _.cloneDeep(get(stores.site))
+
+	const code_changed = !_.isEqual(original_site.code, code)
+	let content_changes = db_utils.generate_entry_changes(original_site.entries, entries)
+	let fields_changes = db_utils.generate_field_changes(original_site.fields, fields)
 
 	// ensure each entry has site property to prevent bugs in SectionEditor when working w/ site entries
 	const updated_entries = entries.map(e => ({ ...e, site: get(site).id }))
@@ -33,17 +40,19 @@ export async function update_site_code_and_content({ code, entries, fields, cont
 		}))
 	})
 
-	await dataChanged({
-		table: 'sites',
-		action: 'update',
-		id: get(site).id,
-		data: { code }
-	})
+	if (code_changed) {
+		await dataChanged({
+			table: 'sites',
+			action: 'update',
+			id: get(site).id,
+			data: { code }
+		})
+	}
 
 	// STORE: update sections to trigger on-page update for any data fields in use
 	stores.sections.update((s) => s)
 
-	if (content_changes.length > 0) {
+	if (content_changes.length > 0 || code_changed) {
 		update_page_file(true)
 	}
 

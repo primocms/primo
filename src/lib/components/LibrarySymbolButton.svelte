@@ -1,8 +1,11 @@
 <script>
 	import CreateBlock from '$lib/components/Modals/CreateBlock.svelte'
-	import SitePreview from '$lib/components/SitePreview.svelte'
-	import { EllipsisVertical, SquarePen, Trash2, Download, Code, Loader } from 'lucide-svelte'
+	import { EllipsisVertical, SquarePen, Trash2, ArrowLeftRight, Code, Loader } from 'lucide-svelte'
 	import { find as _find } from 'lodash-es'
+	import IFrame from '$lib/builder/components/IFrame.svelte'
+	import * as RadioGroup from '$lib/components/ui/radio-group'
+	import { Label } from '$lib/components/ui/label'
+	import { page } from '$app/stores'
 	import { supabase } from '$lib/supabase'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { Button, buttonVariants } from '$lib/components/ui/button'
@@ -40,16 +43,26 @@
 	let is_delete_open = $state(false)
 	let new_name = $state(symbol.name)
 
-	async function handle_rename() {
+	async function handle_rename(e) {
+		e.preventDefault()
 		await actions.rename_library_symbol(symbol.id, new_name)
 		invalidate('app:data')
 		is_rename_open = false
 	}
 
-	async function save_symbol(updated) {
-		await actions.save_library_symbol(symbol.id, updated)
-		get_preview()
+	async function save_symbol(data) {
+		preview = data.preview
+		await actions.save_library_symbol(symbol.id, data)
 		is_editor_open = false
+		invalidate('app:data')
+	}
+
+	let is_move_open = $state(false)
+	let selected_group_id = $state(symbol.group)
+	async function move_symbol() {
+		is_move_open = false
+		await actions.move_library_symbol(symbol.id, selected_group_id)
+		invalidate('app:data')
 	}
 
 	let deleting = $state(false)
@@ -60,12 +73,12 @@
 	}
 </script>
 
-<div class="space-y-3 relative w-full bg-gray-900">
-	<button onclick={() => (is_editor_open = true)} class="w-full rounded-tl rounded-tr overflow-hidden aspect-[1.5]">
-		<SitePreview {preview} {head} />
+<div class="relative w-full bg-gray-900 rounded-bl rounded-br">
+	<button onclick={() => (is_editor_open = true)} class="w-full rounded-tl rounded-tr overflow-hidden">
+		<IFrame srcdoc={preview} {head} />
 	</button>
-	<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-gray-900 truncate flex items-center justify-between">
-		<div class="text-sm font-medium leading-none max-w-40 truncate">{symbol.name}</div>
+	<div class="w-full p-3 pt-2 bg-gray-900 truncate flex items-center justify-between">
+		<div class="text-sm font-medium leading-none truncate" style="width: calc(100% - 2rem)">{symbol.name}</div>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>
 				<EllipsisVertical size={14} />
@@ -74,6 +87,10 @@
 				<DropdownMenu.Item onclick={() => (is_editor_open = true)}>
 					<Code class="h-4 w-4" />
 					<span>Edit</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => (is_move_open = true)}>
+					<ArrowLeftRight class="h-4 w-4" />
+					<span>Move</span>
 				</DropdownMenu.Item>
 				<DropdownMenu.Item onclick={() => (is_rename_open = true)}>
 					<SquarePen class="h-4 w-4" />
@@ -91,6 +108,28 @@
 		</DropdownMenu.Root>
 	</div>
 </div>
+
+<Dialog.Root bind:open={is_move_open}>
+	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
+		<div class="grid gap-4">
+			<div class="space-y-2">
+				<h4 class="font-medium leading-none">Move to group</h4>
+				<p class="text-muted-foreground text-sm">Select a group for this block</p>
+			</div>
+			<RadioGroup.Root bind:value={selected_group_id}>
+				{#each $page.data.symbol_groups as group}
+					<div class="flex items-center space-x-2">
+						<RadioGroup.Item value={group.id} id={group.id} />
+						<Label for={group.id}>{group.name}</Label>
+					</div>
+				{/each}
+			</RadioGroup.Root>
+			<div class="flex justify-end">
+				<Button onclick={move_symbol}>Move</Button>
+			</div>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
 
 <Dialog.Root bind:open={is_editor_open}>
 	<Dialog.Content escapeKeydownBehavior="ignore" class="max-w-[1600px] h-full max-h-[100vh] flex flex-col p-4 gap-0">

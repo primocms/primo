@@ -8,6 +8,7 @@ import { site } from '$lib/builder/stores/data/site'
 import { dataChanged } from '$lib/builder/database'
 import { Section, Page_Type } from '$lib/builder/factories'
 import { handle_field_changes, handle_content_changes } from './_helpers'
+import * as db_utils from './_db_utils'
 
 export default {
 	/** @param {{ details: { id: string, name: string, url: string, parent: string | null}, source: string | null }} new_page */
@@ -107,13 +108,14 @@ export default {
 
 
 export const update_page_type_entries = {
-	store: async function ({entries}) {
-		stores.page_type.update((store) => ({ ...store, entries }))
+	store: async function (updated_entries) {
+		stores.page_type.update((store) => ({ ...store, entries: updated_entries }))
 
 		// refresh sections on page to fetch updated page entries from source
 		stores.sections.update((store) => store)
 	},
-	db: async function ({ changes }) {
+	db: async function (original_entries, updated_entries) {
+		const changes = db_utils.generate_entry_changes(original_entries, updated_entries)
 		const page_type_id = get(stores.page_type).id
 
 		await handle_content_changes(changes, [], {
@@ -122,9 +124,16 @@ export const update_page_type_entries = {
 	}
 }
 
-export async function update_page_type({ changes, entries, fields }) {
+export async function update_page_type({ entries, fields }) {
+	const original_page_type = _.cloneDeep(get(stores.page_type))
+
 	const page_type_id = get(stores.page_type).id
 	stores.page_type.update((store) => ({ ...store, entries, fields }))
+
+	const changes = {
+		entries: db_utils.generate_entry_changes(original_page_type.entries, entries),
+		fields: db_utils.generate_field_changes(original_page_type.fields, fields),
+	}
 
 	const field_db_ids = await handle_field_changes(changes.fields, { page_type: page_type_id })
 	const content_db_ids = await handle_content_changes(changes.entries, field_db_ids, {

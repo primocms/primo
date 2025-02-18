@@ -25,62 +25,6 @@ export async function update_page_file(update_all = false) {
 		await generate_and_upload_page(page, get(sections))
 	}
 
-
-	async function generate_and_upload_page(page, page_sections) {
-		// order sections
-		let ordered_sections = []
-
-		// get mastered sections
-		const mastered_sections = page_sections.filter((s) => s.master)
-
-		// @ts-ignore
-		for (const section of mastered_sections.sort((a, b) => a.master.index - b.master.index)) {
-			// if has symbol, add like normal
-			if (section.master?.symbol) {
-				ordered_sections.push({
-					...section,
-					index: section.master.index
-				})
-			}
-
-			// if is master palette, insert palette sections, ordered by index
-			if (!section.master?.symbol) {
-				const palette_sections = page_sections.filter((s) => s.palette).sort((a, b) => a.index - b.index)
-				// palette_sections.index = page_sections.master.index
-				ordered_sections.push(...palette_sections)
-			}
-		}
-
-		// then sort by index and flatten
-
-		const { html } = await code_generators.page_html({
-			page,
-			page_sections: ordered_sections
-		})
-
-
-		let path
-		if (page.slug === '') {
-			path = `index.html`
-		} else {
-			path = `${get_full_path(page, all_pages)}/index.html`
-		}
-
-		const file = new File([html], 'index.html', { type: 'text/html; charset=utf-8' });
-
-		await storageChanged({
-			action: 'upload',
-			key: path,
-			file
-		})
-
-		// save site preview
-		if (page.slug === '') {
-			const { data, error } = await supabase.storage.from('sites').upload(`${get(site).id}/preview.html`, file, { upsert: true })
-		}
-
-	}
-
 	// let json_path
 	// if (page.slug === '') {
 	// 	json_path = `page.json`
@@ -110,39 +54,69 @@ export async function update_page_file(update_all = false) {
 }
 
 export async function update_symbol_file(symbol) {
-	const data = get_content_with_synced_values({
-		entries: symbol.entries,
-		fields: symbol.fields
-	})
-	const res = await processCode({
-		component: {
-			html: symbol.code.html,
-			css: symbol.code.css,
-			js: symbol.code.js,
-			data: data['en']
-		}
-	})
-
-	if (res.error) {
-		console.warn('Error processing symbol', symbol.name)
-	}
-	const date = new Intl.DateTimeFormat('en-US', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	}).format(new Date())
-
-  const path = '_symbols/' + symbol.id + '.js'
-  const content = `// ${symbol.name} - Updated ${date}\n\n` + res.js
-
-  const blob = new Blob([content], { type: 'application/javascript' });
-  const file = new File([blob], 'index.html', { type: 'application/javascript' });
-
-	await storageChanged({
-		action: 'upload',
-		key: path,
-		file
-	})
+	await Promise.all([
+		(async () => {
+			const data = get_content_with_synced_values({
+				entries: symbol.entries,
+				fields: symbol.fields
+			})
+			const res = await processCode({
+				component: {
+					html: symbol.code.html,
+					css: symbol.code.css,
+					js: symbol.code.js,
+					data: data['en']
+				}
+			})
+		
+			if (res.error) {
+				console.warn('Error processing symbol', symbol.name)
+			}
+			const date = new Intl.DateTimeFormat('en-US', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric'
+			}).format(new Date())
+		
+			const path = '_symbols/' + symbol.id + '.js'
+			const content = `// ${symbol.name} - Updated ${date}\n\n` + res.js
+		
+			const blob = new Blob([content], { type: 'application/javascript' });
+			const file = new File([blob], 'index.html', { type: 'application/javascript' });
+		
+			await storageChanged({
+				action: 'upload',
+				key: path,
+				file
+			})
+		})(),
+		(async () => {
+			const { data: direct_sections } = await supabase
+				.from('sections')
+				.select('page(id)')
+				.eq('symbol', symbol.id)
+				.not('page', 'is', null)
+	
+			// Get sections that use the symbol via master
+			const { data: master_sections } = await supabase
+				.from('sections')
+				.select('page(id), master!inner(symbol)')
+				.eq('master.symbol', symbol.id)
+				.not('page', 'is', null)
+		
+			const sections_using_symbol = [...(direct_sections || []), ...(master_sections || [])]
+			const pages_to_rebuild = _.uniqBy(sections_using_symbol.map(s => s.page), 'id').filter(p => p.id !== get(active_page).id).map(page => {
+				const page_data = get(pages).find(p => p.id === page.id)
+				return page_data
+			})
+			await Promise.all(
+				pages_to_rebuild.map(async (page) => {
+					const { data = [] } = await supabase.from('sections').select('*, page, entries(*), master(id, symbol, index)').match({ page: page.id }).order('index', { ascending: true })
+					await generate_and_upload_page(page, data)
+				})
+			)
+		})()
+	])
 }
 
 export async function update_sitemap() {
@@ -184,4 +158,63 @@ function get_full_path(page, pages, path = page?.slug || '') {
   if (!parent) return path
   
   return get_full_path(parent, pages, parent.slug + '/' + path)
+}
+
+
+
+
+async function generate_and_upload_page(page, page_sections) {
+	const all_pages = get(pages)
+
+	// order sections
+	let ordered_sections = []
+
+	// get mastered sections
+	const mastered_sections = page_sections.filter((s) => s.master)
+
+	// @ts-ignore
+	for (const section of mastered_sections.sort((a, b) => a.master.index - b.master.index)) {
+		// if has symbol, add like normal
+		if (section.master?.symbol) {
+			ordered_sections.push({
+				...section,
+				index: section.master.index
+			})
+		}
+
+		// if is master palette, insert palette sections, ordered by index
+		if (!section.master?.symbol) {
+			const palette_sections = page_sections.filter((s) => s.palette).sort((a, b) => a.index - b.index)
+			// palette_sections.index = page_sections.master.index
+			ordered_sections.push(...palette_sections)
+		}
+	}
+
+	// then sort by index and flatten
+
+	const { html } = await code_generators.page_html({
+		page,
+		page_sections: ordered_sections
+	})
+
+	let path
+	if (page.slug === '') {
+		path = `index.html`
+	} else {
+		path = `${get_full_path(page, all_pages)}/index.html`
+	}
+
+	const file = new File([html], 'index.html', { type: 'text/html; charset=utf-8' });
+
+	await storageChanged({
+		action: 'upload',
+		key: path,
+		file
+	})
+
+	// save site preview
+	if (page.slug === '') {
+		const { data, error } = await supabase.storage.from('sites').upload(`${get(site).id}/preview.html`, file, { upsert: true })
+	}
+
 }

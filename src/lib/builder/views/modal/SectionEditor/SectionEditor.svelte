@@ -47,14 +47,11 @@
 
 	let local_code = _.cloneDeep(symbol.code)
 	let local_fields = $state(_.cloneDeep(symbol.fields))
-	let local_content = $state(_.cloneDeep([...component.entries, ...$site.entries, ...$active_page.entries, ...$page_type.entries]))
+	let local_entries = $state(_.cloneDeep([...component.entries, ...$site.entries, ...$active_page.entries, ...$page_type.entries]))
 
-	let section_entries = $derived(local_content.filter((e) => !e.site && !e.page && !e.page_type))
-	let page_entries = $derived(local_content.filter((e) => e.page))
-	let site_entries = $derived(local_content.filter((e) => e.site))
-
-	let fields_changes = $state([])
-	let content_changes = $state([])
+	let section_entries = $derived(local_entries.filter((e) => !e.site && !e.page && !e.page_type))
+	let page_entries = $derived(local_entries.filter((e) => e.page))
+	let site_entries = $derived(local_entries.filter((e) => e.site))
 
 	let loading = false
 
@@ -101,21 +98,15 @@
 		// }
 
 		if (!$has_error) {
-			header.button.onclick(
-				{
-					code: {
-						html: raw_html,
-						css: raw_css,
-						js: raw_js
-					},
-					entries: local_content,
-					fields: local_fields
+			header.button.onclick({
+				code: {
+					html: raw_html,
+					css: raw_css,
+					js: raw_js
 				},
-				{
-					entries: content_changes,
-					fields: fields_changes
-				}
-			)
+				entries: local_entries,
+				fields: local_fields
+			})
 		}
 	}
 </script>
@@ -123,8 +114,9 @@
 <ModalHeader
 	{...header}
 	warn={() => {
-		const code_changed = _.isEqual(component.code, { html: raw_html, css: raw_css, js: raw_js })
-		const data_changed = fields_changes.length > 0 || content_changes.length > 0
+		const original_entries = [...component.entries, ...$site.entries, ...$active_page.entries, ...$page_type.entries]
+		const code_changed = !_.isEqual(symbol.code, { html: raw_html, css: raw_css, js: raw_js })
+		const data_changed = !_.isEqual(original_entries, local_entries) || !_.isEqual(symbol.fields, local_fields)
 		if (code_changed || data_changed) {
 			const proceed = window.confirm('Unsaved changes will be lost. Continue?')
 			return proceed
@@ -161,22 +153,18 @@
 </ModalHeader>
 
 <main class:showing-fields={tab === 'fields'} lang={$locale}>
-	<PaneGroup direction={$orientation} style="display: flex; gap: 0.25rem;">
-		<Pane defaultSize={50} style="display: flex; flex-direction: column;">
+	<PaneGroup direction={$orientation} class="flex gap-1">
+		<Pane defaultSize={50} class="flex flex-col">
 			{#if tab === 'code'}
 				<FullCodeEditor bind:html={raw_html} bind:css={raw_css} bind:js={raw_js} data={_.cloneDeep(component_data)} on:save={save_component} on:mod-e={() => {}} />
 			{:else if tab === 'content'}
 				<Fields
 					id="section-{component.id}"
 					fields={local_fields}
-					entries={local_content}
-					{fields_changes}
-					{content_changes}
+					entries={local_entries}
 					on:input={({ detail }) => {
 						local_fields = detail.fields
-						local_content = detail.entries
-						fields_changes = detail.changes.fields
-						content_changes = detail.changes.entries
+						local_entries = detail.entries
 						update_component_data()
 					}}
 					onkeydown={handle_hotkey}

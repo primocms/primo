@@ -3,7 +3,7 @@
 	import autosize from 'autosize'
 	import { convert_markdown_to_html } from '../utils'
 
-	let { field, value = $bindable(), onmousedown, oninput = /** @type {(val: {value: {html: string, markdown: string}}) => void} */ () => {} } = $props()
+	let { field, value = $bindable(), oninput = /** @type {(val: {value: {html: string, markdown: string}}) => void} */ () => {} } = $props()
 
 	// ensure value is correct shape
 	if (typeof value === 'string') {
@@ -34,7 +34,7 @@
 
 <label for={field.id}>
 	<span class="primo--field-label">{field.label}</span>
-	<textarea rows="1" bind:this={element} id={field.id} onfocus={selectAll} {onkeydown} oninput={({ target }) => parseContent(target.value)} value={value.markdown}></textarea>
+	<textarea rows="1" bind:this={element} id={field.id} onfocus={selectAll} oninput={({ target }) => parseContent(target.value)} value={value.markdown}></textarea>
 </label>
 
 <style lang="postcss">

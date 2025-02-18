@@ -35,7 +35,7 @@ export async function load(event) {
 
 	const get = {
 		collaborator: async () => {
-			const { data, error } = await supabase.from('collaborators').select('*').match({ user: session.user.id, site: site_id }).single()
+			const { data, error } = await supabase.from('collaborators').select('*').match({ user: session.user.id, site: site_id }).maybeSingle()
 			return data
 		},
 		pages: async () => {

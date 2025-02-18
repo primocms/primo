@@ -5,19 +5,19 @@
 	import BorderRadiusPicker from './DesignPanel/BorderRadiusPicker.svelte'
 	import ShadowPicker from './DesignPanel/ShadowPicker.svelte'
 
-	let { values = $bindable() } = $props();
+	let { values, oninput } = $props()
 </script>
 
 <div class="DesignFields">
-	{#each Object.entries(constants.design_tokens) as [token, { label, type, group }], i}
+	{#each Object.entries(constants.design_tokens) as [token, { label, type }], i}
 		{#if type === 'font-family'}
-			<FontPicker {label} bind:value={values[token]} on:input />
+			<FontPicker {label} value={values[token]} oninput={(val) => oninput(token, val)} />
 		{:else if type === 'color'}
-			<ColorPicker {label} bind:value={values[token]} on:input />
+			<ColorPicker {label} value={values[token]} oninput={(val) => oninput(token, val)} />
 		{:else if type === 'border-radius'}
-			<BorderRadiusPicker {label} bind:value={values[token]} on:input />
+			<BorderRadiusPicker {label} value={values[token]} oninput={(val) => oninput(token, val)} />
 		{:else if type === 'box-shadow'}
-			<ShadowPicker {label} bind:value={values[token]} on:input />
+			<ShadowPicker {label} value={values[token]} oninput={(val) => oninput(token, val)} />
 		{/if}
 		{#if i !== Object.entries(constants.design_tokens).length - 1}
 			<hr style="border-color: #222; margin: 1rem 0;" />

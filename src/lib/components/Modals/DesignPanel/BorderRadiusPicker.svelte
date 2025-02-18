@@ -3,7 +3,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	let { label, value = $bindable() } = $props();
+	let { label, value, oninput } = $props()
 </script>
 
 <label>
@@ -19,6 +19,7 @@
 			console.log({ target })
 			value = `${target.value}px`
 			dispatch('input')
+			oninput(value)
 		}}
 	/>
 	<span>{value}</span>

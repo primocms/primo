@@ -44,7 +44,7 @@ export function validate_site_data(data) {
 		}
 
 		// Validate design object
-		const required_design_keys = ['heading_font', 'body_font', 'brand_color', 'accent_color', 'roundness', 'depth']
+		const required_design_keys = ['heading_font', 'body_font', 'primary_color', 'radius', 'shadow']
 		const missing_design_keys = required_design_keys.filter(key => !(key in data.site.design))
 		
 		if (missing_design_keys.length > 0) {

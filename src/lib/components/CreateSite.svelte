@@ -39,12 +39,14 @@
 	let design_values = $state({
 		heading_font: 'Merriweather',
 		body_font: 'Open Sans',
-		brand_color: '#bc2020',
-		accent_color: '#9b92c8',
-		roundness: '8px',
-		depth: '0px 4px 30px rgba(0, 0, 0, 0.2)'
+		primary_color: '#bc2020',
+		radius: '8px',
+		shadow: '0px 4px 30px rgba(0, 0, 0, 0.2)'
 	})
 	let design_variables_css = $derived(code_generators.site_design_css(design_values))
+	function update_design_value(token, value) {
+		design_values[token] = value
+	}
 
 	let selected_theme_id = $state(``)
 	function select_theme(theme) {
@@ -126,7 +128,7 @@
 		<Tabs.Content value="design" class="h-full">
 			<div class="grid grid-cols-2 h-full gal-4">
 				<div class="space-y-2 overflow-y-auto">
-					<DesignFields bind:values={design_values} />
+					<DesignFields values={design_values} oninput={(token, val) => update_design_value(token, val)} />
 				</div>
 				<div class="design-preview border">
 					{@html design_variables_css}
@@ -190,21 +192,21 @@
 		background: white;
 		color: #222;
 		padding: 2rem;
-		border-radius: var(--border-radius);
+		border-radius: var(--theme-radius);
 		h1 {
 			font-size: 2rem;
-			font-family: var(--font-heading);
+			font-family: var(--theme-heading-font);
 		}
 		h2 {
 			font-size: 1.125rem;
-			font-family: var(--font-body);
+			font-family: var(--theme-body-font);
 			margin-bottom: 1rem;
 		}
 		button {
 			padding: 0.25rem 0.75rem;
-			background: var(--color-brand);
+			background: var(--theme-primary-color);
 			color: white;
-			border-radius: var(--border-radius);
+			border-radius: var(--theme-radius);
 		}
 	}
 	.split-container {

@@ -35,7 +35,12 @@
 	</header>
 	<div>
 		{#if component === 'IMAGE'}
-			<Image onsubmit={(detail) => onSubmit(detail)} {...props} />
+			<Image
+				onsubmit={(detail) => {
+					onSubmit(detail)
+				}}
+				{...props}
+			/>
 		{:else if component === 'VIDEO'}
 			<Video onsubmit={(detail) => onSubmit(detail)} {...props} />
 		{:else if component === 'LINK'}

@@ -25,7 +25,7 @@
 	let has_symbols = $derived(page_type_symbols.length > 0)
 
 	$effect(() => {
-		if (!has_symbols) active_tab = 'PROPERTIES'
+		if (!has_symbols) active_tab = 'CONTENT'
 		else active_tab = 'BLOCKS'
 	})
 
@@ -74,9 +74,9 @@
 					label: `Blocks`
 				},
 				{
-					id: 'PROPERTIES',
+					id: 'CONTENT',
 					icon: 'material-symbols:article-outline',
-					label: `Properties`
+					label: `Content`
 				}
 			]}
 			bind:active_tab_id={active_tab}
@@ -108,8 +108,8 @@
 					fields={$active_page.page_type.fields}
 					entries={$active_page.entries}
 					on:input={debounce({
-						instant: ({ detail }) => update_page_entries.store(detail.entries),
-						delay: ({ detail }) => update_page_entries.db(detail)
+						instant: ({ detail }) => update_page_entries.store(detail.updated),
+						delay: ({ detail }) => update_page_entries.db(detail.original, detail.updated)
 					})}
 					minimal={true}
 				/>

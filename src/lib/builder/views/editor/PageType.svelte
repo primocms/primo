@@ -95,7 +95,8 @@
 						onclick: (updated_data, changes) => {
 							update_section(section_id, {
 								updated_data,
-								changes
+								changes,
+								build_page: false
 							})
 							modal.hide()
 						}
@@ -359,7 +360,7 @@
 {/if}
 
 <!-- Page Blocks -->
-<main data-test bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
+<main class="#Page" data-test bind:this={page_el} class:fadein={page_mounted} lang={$locale} use:drag_fallback>
 	{#each $sections.sort((a, b) => a.index - b.index) as section (section.id)}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_mouse_events_have_key_events -->

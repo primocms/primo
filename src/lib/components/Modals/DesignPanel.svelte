@@ -23,12 +23,13 @@
 	import DesignFields from './DesignFields.svelte'
 	import ModalHeader from '$lib/components/ModalHeader.svelte'
 
-	const local_design_values = cloneDeep($site.design)
+	const local_design_values = $state(cloneDeep($site.design))
 	let design_variables_css = $state(code_generators.site_design_css(local_design_values))
 
 	let loading = $state(false)
 
-	function update_design_variables_css() {
+	function update_design_value(token, value) {
+		local_design_values[token] = value
 		design_variables_css = code_generators.site_design_css(local_design_values)
 	}
 
@@ -94,12 +95,12 @@
 	overflow: auto;
 	--label-font-size: 0.875rem;
 	--label-font-weight: 400;
-	--DesignPanel-brand-color: {local_design_values['brand_color']};;
+	--DesignPanel-brand-color: {local_design_values['primary_color']};;
 	--DesignPanel-font-heading: {local_design_values['heading_font']};;
-	--DesignPanel-border-radius: {local_design_values['roundness']};
+	--DesignPanel-border-radius: {local_design_values['radius']};
 	"
 			>
-				<DesignFields values={local_design_values} on:input={update_design_variables_css} />
+				<DesignFields values={local_design_values} oninput={(token, val) => update_design_value(token, val)} />
 			</div>
 		</Pane>
 		<PaneResizer

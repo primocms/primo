@@ -67,7 +67,7 @@
 		margin-bottom: 2rem;
 
 		.logo-container {
-			width: 7rem;
+			width: 8rem;
 		}
 	}
 	.box {

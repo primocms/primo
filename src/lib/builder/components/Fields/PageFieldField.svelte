@@ -30,7 +30,7 @@
 				on:input={({ detail }) => {
 					dispatch('input', detail)
 				}}
-				label="Page Field"
+				label="Page Content"
 				value={field.source}
 				options={field_list.map((f) => ({
 					label: f.label,

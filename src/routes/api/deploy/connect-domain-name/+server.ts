@@ -107,76 +107,22 @@ async function rename_r2_folder(old_folder_name, new_folder_name) {
 
       const copy_command = new CopyObjectCommand({
         Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
-        CopySource: `${ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET}/${old_key}`,
+        CopySource: encodeURIComponent(`${ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET}/${old_key}`),
         Key: new_key,
       });
 
       await s3_client.send(copy_command);
 
-      const delete_command = new DeleteObjectCommand({
-        Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
-        Key: old_key,
-      });
+      // TODO: 
+      // Temporarily don't delete old folder so image references still work. 
+      // In the future, change image urls to match new site, or have them match '/_assets/image.jpg' instead of 'cdn.weavecms.siteß'
 
-      await s3_client.send(delete_command);
+      // const delete_command = new DeleteObjectCommand({
+      //   Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      //   Key: old_key,
+      // });
+
+      // await s3_client.send(delete_command);
     }));
   }));
-}
-
-async function get_domain_zone_id(domain_name) {
-  const zones_response = await axios.get(
-    `https://api.cloudflare.com/client/v4/zones?name=${domain_name}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_ZONE_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!zones_response.data.success || zones_response.data.result.length === 0) {
-    return json({ success: false, message: 'Domain not found in Cloudflare' });
-  }
-
-  const zone_id = zones_response.data.result[0].id;
-  return zone_id
-}
-
-async function get_zone_status(zone_id) {
-  const status_response = await axios.get(
-    `https://api.cloudflare.com/client/v4/zones/${zone_id}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_ZONE_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!status_response.data.success) {
-    return json({ success: false, message: 'Failed to check zone status' });
-  }
-
-  const status = status_response.data.result.status;
-  return status
-}
-
-async function connect_domain_to_worker(domain_name, zone_id) {
-  const { data } = await axios.put(
-    `https://api.cloudflare.com/client/v4/accounts/${ENV_VARS.PRIVATE_CLOUDFLARE_ACCOUNT_ID}/workers/domains`,
-    {
-      zone_id,
-      hostname: domain_name,
-      service: ENV_VARS.PRIVATE_CLOUDFLARE_WORKER_NAME,
-      environment: 'production'
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  return data.success;
 }

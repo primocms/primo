@@ -2,37 +2,31 @@ export const design_tokens = {
 	heading_font: {
 		label: 'Heading Font',
 		type: 'font-family',
-		variable: 'font-heading',
+		variable: 'heading-font',
 		group: ''
 	},
 	body_font: {
 		label: 'Body Font',
 		type: 'font-family',
-		variable: 'font-body',
+		variable: 'body-font',
 		group: ''
 	},
-	brand_color: {
-		label: 'Brand Color',
+	primary_color: {
+		label: 'Primary Color',
 		type: 'color',
-		variable: 'color-brand',
+		variable: 'primary-color',
 		group: ''
 	},
-	accent_color: {
-		label: 'Accent Color',
-		type: 'color',
-		variable: 'color-accent',
-		group: ''
-	},
-	roundness: {
-		label: 'Roundness (Border Radius)',
+	radius: {
+		label: 'Border Radius',
 		type: 'border-radius',
-		variable: 'border-radius',
+		variable: 'radius',
 		group: ''
 	},
-	depth: {
-		label: 'Depth (Shadows)',
+	shadow: {
+		label: 'Shadow',
 		type: 'box-shadow',
-		variable: 'box-shadow',
+		variable: 'shadow',
 		group: ''
 	}
 }

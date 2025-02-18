@@ -34,18 +34,6 @@
 		]}
 	/>
 	<nav class="nav">
-		<!-- {#if !$page.data.user.collaborator}
-			<button class="link" on:click={() => show('USAGE')}>Usage</button>
-		{/if} -->
-		<!-- <a href="https://forum.primo.so/" target="blank">
-			<Icon icon="ic:baseline-discord" width="20" height="20" />
-		</a> -->
-		<!-- {#if $page.data.user.role === 'DEV'}
-			<a class="link with-icon" href="https://docs.primocms.org/" target="blank">
-				<span class="docs">Docs</span>
-				<Icon icon="tabler:external-link" />
-			</a>
-		{/if} -->
 		<UserPopup />
 	</nav>
 </header>

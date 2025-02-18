@@ -3,7 +3,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	let { label, value = $bindable() } = $props();
+	let { label, value, oninput } = $props()
 
 	const Option = (label, value) => ({
 		label,
@@ -33,6 +33,7 @@
 	function set_value(option) {
 		value = option.value
 		dispatch('input')
+		oninput(value)
 	}
 </script>
 

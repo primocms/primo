@@ -53,7 +53,6 @@
 
 <style lang="postcss">
 	:global(.primo-reset) {
-		@tailwind base;
 		font-family: 'Inter', serif !important;
 		direction: ltr;
 
@@ -134,7 +133,7 @@
 		align-items: center;
 		font-size: var(--font-size-1);
 		line-height: var(--font-size-1);
-		color: #9d9d9d;
+		color: var(--color-gray-3);
 		margin-bottom: 0.25rem;
 		gap: 0.25rem;
 	}

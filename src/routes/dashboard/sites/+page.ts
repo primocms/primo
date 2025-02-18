@@ -1,12 +1,10 @@
-import _ from 'lodash-es'
+import { redirect } from '@sveltejs/kit'
 
-/** @type {import('@sveltejs/kit').Load} */
 export async function load(event) {
-  const { supabase } = await event.parent()
-  if (!supabase) return
-
-  const { data } = await supabase.from('sites').select('*').order('created_at', { ascending: false }).match({ is_starter: false })
-  return {
-    sites: data
+  const { site_groups } = await event.parent()
+  const group_id = event.url.searchParams.get('group')
+  const group_exists = site_groups.find(g => String(g.id) === group_id)
+  if (!group_exists) {
+    throw redirect(307, `/dashboard/sites?group=${site_groups[0].id}`)
   }
-}
+} 

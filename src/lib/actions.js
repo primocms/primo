@@ -13,6 +13,34 @@ import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 import { v4 as uuidv4 } from 'uuid'
 import {remap_entry_and_field_items} from '$lib/builder/actions/_db_utils'
 
+export async function delete_site_group(group_id) {
+	await supabase.from('site_groups').delete().eq('id', group_id)
+}
+
+export async function rename_site_group(group_id, new_name) {
+	await supabase.from('site_groups').update({ name: new_name }).eq('id', group_id)
+}
+
+export async function create_site_group(name) {
+	await supabase.from('site_groups').insert({ name, owner: get(page).data.user.id })
+}
+
+export async function move_library_symbol(symbol_id, new_group_id) {
+	await supabase.from('library_symbols').update({ group: new_group_id }).eq('id', symbol_id)
+}
+
+export async function delete_library_symbol_group(group_id) {
+	await supabase.from('library_symbol_groups').delete().eq('id', group_id)
+}
+
+export async function rename_library_symbol_group(group_id, new_name) {
+	await supabase.from('library_symbol_groups').update({ name: new_name }).eq('id', group_id)
+}
+
+export async function create_library_symbol_group(name) {
+	await supabase.from('library_symbol_groups').insert({ name, owner: get(page).data.user.id })
+}
+
 export async function add_marketplace_starter_to_library(starter, preview) {
 	const new_starter_id = uuidv4()
 	remap_entry_and_field_items({ entries: starter.entries, fields: starter.fields })
@@ -39,11 +67,11 @@ export async function add_marketplace_starter_to_library(starter, preview) {
 	console.log({storage_res})
 }
 
-export async function add_marketplace_symbol_to_library(symbol, preview) {
+export async function add_marketplace_symbol_to_library({symbol, preview, group_id}) {
 	const new_symbol_id = uuidv4()
 	remap_entry_and_field_items({ entries: symbol.entries, fields: symbol.fields })
 
-	const symbol_res = await supabase.from('library_symbols').insert({ id: new_symbol_id, name: symbol.name, code: symbol.code, index: 0, owner: get(page).data.user.id })
+	const symbol_res = await supabase.from('library_symbols').insert({ id: new_symbol_id, name: symbol.name, code: symbol.code, index: 0, group: group_id, owner: get(page).data.user.id })
 	if (symbol_res.error) {
 		console.log('Failed to insert site', { symbol_res, symbol })
 		throw new Error('Failed to insert site')
@@ -69,11 +97,15 @@ export async function rename_library_symbol(id, new_name) {
 	await supabase.from('library_symbols').update({ name: new_name }).eq('id', id)
 }
 
-export async function create_library_symbol({ name = 'New Block', code, changes, preview }) {
+export async function create_library_symbol({ name = '', code, content, preview, group }) {
 	const symbol_id = uuidv4()
-	const res = await Promise.all([
+	const changes = { 
+		entries: db_utils.generate_entry_changes(content.original.entries, content.updated.entries), 
+		fields: db_utils.generate_field_changes(content.original.fields, content.updated.fields) 
+	}
+	await Promise.all([
 		(async() => {
-			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: name, index: 0, owner: get(page).data.user.id }).select().single()
+			let library_symbols_res = await supabase.from('library_symbols').insert({ id: symbol_id, code, name: name, index: 0, group, owner: get(page).data.user.id }).select().single()
 			if (library_symbols_res.error) {
 				console.log('Failed to insert symbols', library_symbols_res)
 				throw new Error('Failed to insert symbols')
@@ -93,10 +125,25 @@ export async function create_library_symbol({ name = 'New Block', code, changes,
 	])
 }
 
-export async function save_library_symbol(id, { code, changes, preview }) {
+/**
+ * Saves changes to an existing library symbol
+ * @param {string} id - The ID of the symbol to update
+ * @param {Object} options - The update options
+ * @param {Object} options.code - The symbol code (html, css, js)
+ * @param {Object} options.content - The symbol data with original and updated values
+ * @param {Object} options.content.original - The original symbol content
+ * @param {Array<import('$lib').Entry>} options.content.original.entries - Array of original entry objects
+ * @param {Array<import('$lib').Field>} options.content.original.fields - Array of original field objects
+ * @param {Object} options.content.updated - The updated symbol content
+ * @param {Array<import('$lib').Entry>} options.content.updated.entries - Array of updated entry objects
+ * @param {Array<import('$lib').Field>} options.content.updated.fields - Array of updated field objects
+ * @param {string} options.preview - The preview HTML
+ * @returns {Promise<void>}
+ */
+export async function save_library_symbol(id, { code, content, preview }) {
 
-	let content_changes = _.cloneDeep(changes.entries)
-	let field_changes = _.cloneDeep(changes.fields)
+	const content_changes = db_utils.generate_entry_changes(content.original.entries, content.updated.entries)
+	const field_changes = db_utils.generate_field_changes(content.original.fields, content.updated.fields)
 
 	// DB: save block code if changed
 	await supabase.from('library_symbols').update({ code }).eq('id', id)
@@ -146,10 +193,9 @@ export async function create_starter({ details, preview = null, site_data = null
 				design: {
 						heading_font: 'Open Sans',
 						body_font: 'Open Sans',
-						brand_color: '#864040',
-						accent_color: '#9b92c8',
-						roundness: '0px',
-						depth: "0.3px 0.5px 0.7px hsl(0deg 36% 56% / 0.34),0.4px 0.8px 1px -1.2px hsl(0deg 36% 56% / 0.34), 1px 2px 2.5px -2.5px hsl(0deg 36% 56% / 0.34)",
+						primary_color: '#864040',
+						radius: '0px',
+						shadow: "0.3px 0.5px 0.7px hsl(0deg 36% 56% / 0.34),0.4px 0.8px 1px -1.2px hsl(0deg 36% 56% / 0.34), 1px 2px 2.5px -2.5px hsl(0deg 36% 56% / 0.34)",
 				},
 				entries: [],
 				fields: []
@@ -267,7 +313,7 @@ export async function create_starter({ details, preview = null, site_data = null
 }
 
 export const sites = {
-	create: async ({ starter_id, starter_data, details, preview }) => {
+	create: async ({ starter_id, starter_data, details, preview, group }) => {
 
 		const uploaded_data = starter_id ? await fetch_site_data(starter_id) : starter_data
 		uploaded_data.site.name = details.name
@@ -281,7 +327,7 @@ export const sites = {
 
 		try {
 			// Step 1: Insert site
-			let res = await supabase.from('sites').insert({ ...site, owner: get(page).data.user.id })
+			let res = await supabase.from('sites').insert({ ...site, group, owner: get(page).data.user.id })
 			if (res.error) {
 				console.log('Failed to insert site', { res, site })
 				throw new Error('Failed to insert site')
@@ -342,6 +388,9 @@ export const sites = {
 	},
 	update: async (site_id, props) => {
 		await supabase.from('sites').update(props).eq('id', site_id)
+	},
+	move: async (site_id, new_group_id) => {
+		await supabase.from('sites').update({ group: new_group_id }).eq('id', site_id)
 	},
 	delete: async (site_id, delete_deployment = false) => {
 		await supabase.from('sites').delete().eq('id', site_id)

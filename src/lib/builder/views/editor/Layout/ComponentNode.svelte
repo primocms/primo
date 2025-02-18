@@ -7,7 +7,7 @@
 </script>
 
 <script>
-	import { onMount } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import _ from 'lodash-es'
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
@@ -99,6 +99,15 @@
 	let scrolling = false
 
 	const markdown_classes = {}
+	let ignore_next_blur = $state(false)
+
+	let is_local_change = $state(false)
+
+	const debounced_save = _.debounce(async ({ id, value }) => {
+		is_local_change = true
+		await save_edited_value({ id, value })
+	}, 1000)
+
 	async function make_content_editable() {
 		if (!node?.contentDocument) return
 
@@ -254,17 +263,20 @@
 							active_editor = editor
 							dispatch('lock')
 						},
-						async onBlur() {
+						onBlur() {
 							dispatch('unlock')
+						},
+						onUpdate: async ({ editor }) => {
 							const updated_html = editor.getHTML()
-							save_edited_value({
-								id,
-								key,
-								value: {
-									html: updated_html,
-									markdown: await convert_html_to_markdown(updated_html)
-								}
-							})
+							if (updated_html !== html) {
+								debounced_save({
+									id,
+									value: {
+										html: updated_html,
+										markdown: await convert_html_to_markdown(updated_html)
+									}
+								})
+							}
 						}
 					})
 				],
@@ -482,15 +494,12 @@
 	})
 
 	let mutation_observer
-	let resize_observer
+	let iframe_resize_observer = $state()
+
 	onMount(() => {
 		mutation_observer = new MutationObserver(() => {
 			dispatch_mount()
 			reroute_links()
-		})
-
-		resize_observer = new ResizeObserver(() => {
-			dispatch('resize')
 		})
 
 		// Resize component iframe wrapper on resize to match content height (message set from `setup_component_iframe`)
@@ -503,15 +512,15 @@
 		})
 
 		// Hide Editor UI on scroll and hover outside
-		window.addEventListener('scroll', on_page_scroll)
-		window.addEventListener('mouseover', on_hover_outside_image_editor)
+		document.querySelector('#Page')?.addEventListener('scroll', on_page_scroll)
+		document.querySelector('#Page')?.addEventListener('mouseover', on_hover_outside_image_editor)
 
 		return () => {
 			mutation_observer?.disconnect()
-			resize_observer?.disconnect()
+			iframe_resize_observer?.disconnect()
 
-			window.removeEventListener('scroll', on_page_scroll)
-			window.removeEventListener('mouseover', on_hover_outside_image_editor)
+			document.querySelector('#Page')?.removeEventListener('scroll', on_page_scroll)
+			document.querySelector('#Page')?.removeEventListener('mouseover', on_hover_outside_image_editor)
 		}
 	})
 
@@ -569,15 +578,17 @@
 		function setup() {
 			const doc = node.contentDocument
 
-			// Add resize handling
+			// Disconnect previous observer if it exists
+			iframe_resize_observer?.disconnect()
+
 			const update_height = () => {
 				const height = doc.body.clientHeight
 				window.postMessage({ type: 'resize', height, id: section.id }, '*')
+				dispatch('resize')
 			}
 
-			// Add resize observer
-			const resize_observer = new ResizeObserver(update_height)
-			resize_observer.observe(doc.body)
+			iframe_resize_observer = new ResizeObserver(update_height)
+			iframe_resize_observer.observe(doc.body)
 
 			// Add mutation observer for DOM changes
 			mutation_observer.observe(doc.body, {
@@ -595,11 +606,23 @@
 	}
 
 	// mount or hydrate component
-	$effect(() => {
-		if (setup_complete) {
-			send_component_to_iframe(generated_js, component_data)
-		}
-	})
+	function explicitEffect(fn, depsFn) {
+		$effect(() => {
+			depsFn()
+			untrack(fn)
+		})
+	}
+
+	// to prevent is_local_change from retriggering effect
+	explicitEffect(
+		() => {
+			if (setup_complete && !is_local_change) {
+				send_component_to_iframe(generated_js, component_data)
+			}
+			is_local_change = false
+		},
+		() => [setup_complete, generated_js, component_data]
+	)
 
 	async function send_component_to_iframe(js, data) {
 		try {
@@ -668,7 +691,14 @@
 
 <div class="menu floating-menu primo-reset" bind:this={floating_menu} style="display:none">
 	{#if active_editor}
-		<MarkdownButton icon="fa-solid:heading" onclick={() => active_editor.chain().focus().toggleHeading({ level: 1 }).run()} />
+		<MarkdownButton
+			icon="fa-solid:heading"
+			onclick={(e) => {
+				e.target.blur()
+				ignore_next_blur = true
+				active_editor.chain().focus().toggleHeading({ level: 1 }).run()
+			}}
+		/>
 		<MarkdownButton icon="fa-solid:code" onclick={() => active_editor.chain().focus().toggleCodeBlock().run()} />
 		<MarkdownButton icon="fa-solid:quote-left" onclick={() => active_editor.chain().focus().toggleBlockquote().run()} />
 		<MarkdownButton icon="fa-solid:list" onclick={() => active_editor.chain().focus().toggleBulletList().run()} />

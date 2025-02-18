@@ -13,18 +13,11 @@
 	let local_fields = $state(_.cloneDeep($page_type.fields))
 	let local_entries = $state(_.cloneDeep($page_type.entries))
 
-	let fields_changes = $state([])
-	let content_changes = $state([])
-
 	let disableSave = false
 
 	async function saveComponent() {
 		page_types.update($page_type.id, { code: local_code })
 		update_page_type({
-			changes: {
-				fields: fields_changes,
-				entries: content_changes
-			},
 			entries: local_entries,
 			fields: local_fields
 		})
@@ -53,13 +46,9 @@
 				id="page-type-{$page_type.id}"
 				fields={local_fields}
 				entries={local_entries}
-				{fields_changes}
-				{content_changes}
 				on:input={({ detail }) => {
 					local_fields = detail.fields
 					local_entries = detail.entries
-					fields_changes = detail.changes.fields
-					content_changes = detail.changes.entries
 				}}
 			/>
 		</Pane>

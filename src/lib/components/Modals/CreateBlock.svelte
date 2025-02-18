@@ -1,5 +1,4 @@
 <script lang="ts">
-	import axios from 'axios'
 	import _ from 'lodash-es'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import FullCodeEditor from '$lib/builder/views/modal/SectionEditor/FullCodeEditor.svelte'
@@ -18,11 +17,8 @@
 	let local_css = $state(symbol.code.css)
 	let local_js = $state(symbol.code.js)
 
-	let fields_changes = $state([])
-	let content_changes = $state([])
-
-	let local_fields = $state(symbol.fields)
 	let local_entries = $state(symbol.entries)
+	let local_fields = $state(symbol.fields)
 
 	let component_data = $derived(
 		transform_content({
@@ -56,14 +52,21 @@
 			css: local_css,
 			js: local_js
 		}
+
 		const generate_code = await block_html({ code, data: component_data })
 		const preview = static_iframe_srcdoc(generate_code)
 		loading = true
 		onsubmit({
 			code,
-			changes: {
-				fields: fields_changes,
-				entries: content_changes
+			content: {
+				original: {
+					entries: symbol.entries,
+					fields: symbol.fields
+				},
+				updated: {
+					entries: local_entries,
+					fields: local_fields
+				}
 			},
 			preview
 		})
@@ -72,7 +75,7 @@
 
 <Dialog.Header
 	class="mb-2"
-	title="Create Block"
+	title="Block"
 	button={{
 		label: 'Done',
 		onclick: onsave,
@@ -93,13 +96,9 @@
 					id={'placeholder'}
 					fields={local_fields}
 					entries={local_entries}
-					{fields_changes}
-					{content_changes}
 					on:input={({ detail }) => {
 						local_fields = detail.fields
 						local_entries = detail.entries
-						fields_changes = detail.changes.fields
-						content_changes = detail.changes.entries
 					}}
 					onkeydown={handle_hotkey}
 				/>

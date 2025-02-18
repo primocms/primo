@@ -2,7 +2,6 @@
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import AppSidebar from '$lib/components/app-sidebar.svelte'
 	import { Globe, LayoutTemplate, Store, Library, Cuboid } from 'lucide-svelte'
-	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 
 	let { data, children } = $props()
@@ -14,13 +13,7 @@
 			'/dashboard/sites': {
 				title: 'Sites',
 				icon: Globe,
-				items: [
-					{
-						title: 'All Sites',
-						url: '/dashboard/sites',
-						isActive: pathname === '/dashboard/sites'
-					}
-				]
+				site_groups: data.site_groups
 			},
 			'/dashboard/library': {
 				title: 'Library',
@@ -36,7 +29,8 @@
 						icon: Cuboid,
 						label: 'Blocks',
 						url: '/dashboard/library/blocks',
-						isActive: pathname === '/dashboard/library/blocks'
+						isActive: pathname === '/dashboard/library/blocks',
+						items: data.symbol_groups
 					}
 				]
 			},

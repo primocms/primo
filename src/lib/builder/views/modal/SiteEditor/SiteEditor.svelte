@@ -17,18 +17,13 @@
 	let local_fields = $state(_.cloneDeep($site.fields))
 	let local_content = $state(_.cloneDeep($site.entries))
 
-	let fields_changes = $state([])
-	let content_changes = $state([])
-
 	let disableSave = false
 
 	async function saveComponent() {
 		update_site_code_and_content({
 			entries: local_content,
 			fields: local_fields,
-			code: local_code,
-			content_changes,
-			fields_changes
+			code: local_code
 		})
 		modal.hide()
 	}
@@ -56,13 +51,9 @@
 					id="site-{site.id}"
 					fields={local_fields}
 					entries={local_content}
-					{fields_changes}
-					{content_changes}
 					on:input={({ detail }) => {
 						local_fields = detail.fields
 						local_content = detail.entries
-						fields_changes = detail.changes.fields
-						content_changes = detail.changes.entries
 					}}
 				/>
 			</Pane>
@@ -98,13 +89,9 @@
 			id="site-{site.id}"
 			fields={local_fields}
 			entries={local_content}
-			{fields_changes}
-			{content_changes}
 			on:input={({ detail }) => {
 				local_fields = detail.fields
 				local_content = detail.entries
-				fields_changes = detail.fields_changes
-				content_changes = detail.content_changes
 			}}
 		/>
 	{/if}

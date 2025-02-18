@@ -8,6 +8,7 @@ import { site } from '$lib/builder/stores/data/site'
 import { dataChanged } from '$lib/builder/database'
 import { get_ancestors } from './_helpers'
 import {update_sitemap} from './_storage_helpers'
+import * as db_utils from './_db_utils'
 import {remap_entry_ids, remap_ids, sort_by_hierarchy} from './_db_utils'
 
 export const update_page_entries = {
@@ -20,7 +21,8 @@ export const update_page_entries = {
 		// refresh sections on page to fetch updated page entries from source
 		stores.sections.update((store) => store)
 	},
-	db: async function ({ entries, changes }) {
+	db: async function (original_entries, updated_entries) {
+		const changes = db_utils.generate_entry_changes(original_entries, updated_entries)
 		// TODO: use handle_content_changes to handle repeater item creation?
 		for (const { action, id, data } of changes) {
 			await dataChanged({

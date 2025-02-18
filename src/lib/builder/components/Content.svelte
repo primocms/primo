@@ -13,12 +13,11 @@
 	 * @typedef {Object} Props
 	 * @property {any} entries
 	 * @property {any} fields
-	 * @property {any} [changes]
 	 * @property {boolean} [minimal]
 	 */
 
 	/** @type {Props} */
-	let { entries, fields, changes = [], minimal = false } = $props()
+	let { entries, fields, minimal = false } = $props()
 
 	const dispatch = createEventDispatcher()
 
@@ -79,8 +78,7 @@
 		const new_rows = [new_repeater_item, ...new_entries]
 		const updated_content = cloneDeep([...entries, ...new_rows])
 		dispatch_update({
-			entries: updated_content,
-			changes: new_rows.map((row) => ({ action: 'insert', id: row.id, data: row }))
+			entries: updated_content
 		})
 	}
 
@@ -106,8 +104,7 @@
 		})
 
 		dispatch_update({
-			entries: updated_content,
-			changes: [{ action: 'delete', id: item.id }]
+			entries: updated_content
 		})
 	}
 
@@ -129,65 +126,14 @@
 			row.index = child.index
 		}
 		dispatch_update({
-			entries: updated_content,
-			changes: updated_children.map((child) => ({
-				action: 'update',
-				id: child.id,
-				data: { index: child.index }
-			}))
+			entries: updated_content
 		})
-	}
-
-	function validate_changes(new_changes = []) {
-		let validated_changes = _.cloneDeep(changes)
-
-		if (new_changes.length === 0) {
-			return validated_changes
-		}
-
-		for (const change of new_changes) {
-			const { action, id, data } = change
-			const previous_change_on_same_item = validated_changes.find((c) => c.id === change.id)
-
-			if (!previous_change_on_same_item) {
-				validated_changes = [...validated_changes, { action, id, data }]
-				continue
-			}
-
-			const { action: previous_action, data: previous_data } = previous_change_on_same_item
-
-			if (action === 'update' && previous_action === 'insert') {
-				previous_change_on_same_item.data = { ...previous_data, ...data }
-				continue
-			}
-
-			if (action === 'update') {
-				previous_change_on_same_item.data = { ...previous_data, ...data }
-				continue
-			}
-
-			if (action === 'delete') {
-				validated_changes = validated_changes.filter((c) => {
-					// remove insert/updates on entry
-					if (c.id === change.id) return false
-
-					// remove insert/updates on entry descendents
-					const entry = entries.find((e) => e.id === c.id)
-					if (get_ancestors(entry).includes(change.id)) {
-						return false
-					}
-
-					return true
-				})
-			}
-		}
-		return validated_changes
 	}
 
 	function dispatch_update(updated) {
 		dispatch('input', {
-			entries: _.cloneDeep(updated.entries),
-			changes: validate_changes(updated.changes)
+			original: entries,
+			updated: _.cloneDeep(updated.entries)
 		})
 	}
 
@@ -245,8 +191,7 @@
 								const updated_content = entries.map((row) => (row.id === row_id ? { ...row, ...data } : row))
 
 								dispatch_update({
-									entries: updated_content,
-									changes: [{ action: 'update', id: row_id, data }]
+									entries: updated_content
 								})
 							}}
 						/>
@@ -275,8 +220,7 @@
 							const updated_content = entries.map((row) => (row.id === row_id ? { ...row, ...data } : row))
 
 							dispatch_update({
-								entries: updated_content,
-								changes: [{ action: 'update', id: row_id, data }]
+								entries: updated_content
 							})
 						}}
 					/>

@@ -119,7 +119,7 @@ export async function page_html({ page = get(active_page), site = get(activeSite
  <!DOCTYPE html>
  <html lang="${locale}">
    <head>
-     <meta name="generator" content="Primo" />
+     <meta name="generator" content="WeaveCMS" />
      ${res.head}
      <style>${res.css}</style>
    </head>
@@ -180,7 +180,7 @@ export function site_design_css(values) {
 	)}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700" rel="stylesheet">
 	<style>
 	:root {\n${Object.entries(design_tokens)
-		.map(([token, { variable }]) => `--${variable}: ${values[token]};`)
+		.map(([token, { variable }]) => `--theme-${variable}: ${values[token]};`)
 		.join('\n')}}
 	</style>
 	`

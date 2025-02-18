@@ -36,6 +36,7 @@
 	async function init_preview() {
 		await tick()
 		if (!iframe?.contentWindow?.document?.body) return
+		if (resize_observer) resize_observer?.disconnect()
 
 		resize_observer = new ResizeObserver((entries) => {
 			const { offsetWidth: parentWidth } = container

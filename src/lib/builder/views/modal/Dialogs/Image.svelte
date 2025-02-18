@@ -1,25 +1,24 @@
 <script>
+	import _ from 'lodash-es'
 	import Icon from '@iconify/svelte'
 	import Button from '$lib/builder/ui/Button.svelte'
 	import UI from '../../../ui'
 	import { storageChanged } from '../../../database'
 
-	const defaultValue = {
+	let { value = {}, children, onsubmit } = $props()
+
+	let imagePreview = $state(value?.url || '')
+	let local_value = $state({
 		alt: '',
 		url: '',
-		src: '',
-		size: null
-	}
-
-	let { value = $bindable(defaultValue), children, onsubmit } = $props()
-
-	if (typeof value === 'string' || !value) {
-		value = defaultValue
-	}
+		size: null,
+		...value
+	})
+	let loading = $state(false)
 
 	function setValue({ url, size }) {
-		value = {
-			...value,
+		local_value = {
+			...local_value,
 			url: url,
 			src: url,
 			size
@@ -57,9 +56,6 @@
 			}
 		}
 	}
-
-	let imagePreview = $state(value.url || '')
-	let loading = $state(false)
 </script>
 
 <div>
@@ -68,17 +64,17 @@
 			<UI.Spinner />
 		{:else}
 			<div class="image-preview">
-				{#if value.size}
+				{#if local_value.size}
 					<span class="field-size">
-						{value.size}KB
+						{local_value.size}KB
 					</span>
 				{/if}
-				{#if value.url}
+				{#if imagePreview}
 					<img src={imagePreview} alt="Preview" />
 				{/if}
 				<label class="image-upload">
 					<Icon height="2rem" icon="uil:image-upload" />
-					{#if !value.url}
+					{#if !local_value.url}
 						<span>Upload</span>
 					{/if}
 					<input onchange={encodeImageFileAsURL} type="file" accept="image/*" />
@@ -88,7 +84,7 @@
 		<form
 			onsubmit={(event) => {
 				event.preventDefault()
-				onsubmit(value)
+				onsubmit(local_value)
 			}}
 		>
 			<div class="inputs">
@@ -97,17 +93,21 @@
 					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						autofocus
-						oninput={(e) => {
-							const { value } = e.target
-							imagePreview = value
+						oninput={({ target }) => {
+							imagePreview = target.value
+							local_value = {
+								alt: '',
+								url: target.value,
+								size: null
+							}
 						}}
-						bind:value={value.url}
+						value={local_value.url}
 						type="url"
 					/>
 				</label>
 				<label class="image-input">
 					<span>Description</span>
-					<input type="text" bind:value={value.alt} />
+					<input type="text" value={local_value.alt} />
 				</label>
 			</div>
 			<footer>

@@ -28,9 +28,10 @@ export const actions = {
 			const { data: invitation } = await supabase_admin.from('invitations').select().eq('email', email).single()
 			await Promise.all([
 				supabase_admin.from('invitations').delete().eq('id', invitation.id),
-				supabase_admin.from('users').insert({
+				supabase_admin.from('profiles').insert({
 					id: res.user?.id,
-					email: res.user?.email
+					email: res.user?.email,
+					is_full_user: false
 				})
 			])
 

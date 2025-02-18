@@ -1,4 +1,5 @@
 <script>
+	import { onDestroy } from 'svelte'
 	import Icon from '@iconify/svelte'
 	import { tick } from 'svelte'
 	import { static_iframe_srcdoc } from './misc'
@@ -6,13 +7,15 @@
 
 	/**
 	 * @typedef {Object} Props
-	 * @property {any} componentCode
-	 * @property {any} height
+	 * @property {any} [componentCode]
+	 * @property {any} [height]
+	 * @property {string | null} [srcdoc]
+	 * @property {string | null} [head]
 	 * @property {string} [append]
 	 */
 
 	/** @type {Props} */
-	let { componentCode, height = $bindable(), append = '' } = $props()
+	let { componentCode, height = $bindable(), srcdoc = '', head = '', append = '' } = $props()
 
 	let container = $state()
 	let iframe = $state()
@@ -60,11 +63,11 @@
 	}
 
 	let setup_complete = $state(false)
-	let srcdoc = $state('')
+	let generated_srcdoc = $state('')
 	let active_code = {}
 	async function set_srcdoc(componentCode) {
 		active_code = _.cloneDeep(componentCode)
-		srcdoc = static_iframe_srcdoc({
+		generated_srcdoc = static_iframe_srcdoc({
 			head: componentCode.head,
 			html: componentCode.html,
 			css: componentCode.css,
@@ -86,7 +89,6 @@
 					// workaround for on:load not working reliably
 					if (iframe?.contentWindow.document.body?.childNodes) {
 						setScaleRatio()
-						setHeight()
 					}
 				}).observe(iframe)
 			}
@@ -97,6 +99,23 @@
 	})
 	$effect(() => {
 		!setup_complete && componentCode && set_srcdoc(componentCode)
+	})
+
+	function append_to_head(code) {
+		var container = document.createElement('div')
+		container.innerHTML = code
+		Array.from(container.childNodes).forEach((node) => {
+			iframe.contentWindow.document.head.appendChild(node)
+		})
+	}
+
+	$effect(() => {
+		iframeLoaded && head && append_to_head(head)
+	})
+
+	onDestroy(() => {
+		if (load_observer) load_observer.disconnect()
+		if (resize_observer) resize_observer.disconnect()
 	})
 </script>
 
@@ -109,15 +128,18 @@
 		</div>
 	{/if}
 	<div bind:this={container} class="iframe-container" style:height="{container_height * scaleRatio}px">
-		{#if componentCode}
+		{#if generated_srcdoc || srcdoc}
 			<iframe
 				class:fadein={finishedResizing}
 				style:transform="scale({scaleRatio})"
 				style:height={100 / scaleRatio + '%'}
 				scrolling="no"
 				title="Preview HTML"
-				onload={() => (iframeLoaded = true)}
-				{srcdoc}
+				onload={() => {
+					append_to_head(head)
+					iframeLoaded = true
+				}}
+				srcdoc={generated_srcdoc || srcdoc}
 				bind:this={iframe}
 			></iframe>
 		{/if}

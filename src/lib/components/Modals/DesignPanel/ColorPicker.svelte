@@ -4,7 +4,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	let { label, value = $bindable() } = $props();
+	let { label, value, oninput } = $props()
 
 	let color = $state()
 </script>
@@ -21,6 +21,7 @@
 				// historyHex = [...historyHex, event.detail.hex];
 				value = event.detail.hex
 				dispatch('input')
+				oninput(event.detail.hex)
 			}}
 		/>
 	{:else}
@@ -40,6 +41,7 @@
 				// historyHex = [...historyHex, event.detail.hex];
 				value = event.detail.hex
 				dispatch('input')
+				oninput(event.detail.hex)
 			}}
 		/>
 	{/if}

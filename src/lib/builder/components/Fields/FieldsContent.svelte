@@ -7,6 +7,7 @@
 	import active_page from '../../stores/data/page.js'
 	import page_type from '../../stores/data/page_type.js'
 	import site from '../../stores/data/site.js'
+	import page_types from '$lib/builder/stores/data/page_types.js'
 	import { fieldTypes, locale } from '../../stores/app/index.js'
 	import { is_regex, get_empty_value } from '../../utils.js'
 	import Card from '../../ui/Card.svelte'
@@ -14,7 +15,7 @@
 	import { userRole, mod_key_held } from '../../stores/app/misc'
 	import { dynamic_field_types } from '../../field-types'
 
-	let { id, fields, fields_changes = [], entries, content_changes = $bindable([]), onkeydown = () => {} } = $props()
+	let { id, fields, entries, onkeydown = () => {} } = $props()
 
 	let parent_fields = $derived(fields.filter((f) => !f.parent))
 
@@ -37,9 +38,7 @@
 		const updated_entries = cloneDeep([...entries, new_content_entry])
 		dispatch_update({
 			entries: updated_entries,
-			content_changes: [{ action: 'insert', id: new_content_entry.id, data: new_content_entry }],
-			fields: updated_fields,
-			fields_changes: [{ action: 'insert', id: new_field.id, data: new_field }]
+			fields: updated_fields
 		})
 		add_tab(new_field.id)
 	}
@@ -77,9 +76,7 @@
 
 		dispatch_update({
 			fields: updated_fields,
-			fields_changes: [{ action: 'insert', id: new_field.id, data: new_field }],
-			entries: updated_entries,
-			content_changes: new_entries.map((entry) => ({ action: 'insert', id: entry.id, data: entry }))
+			entries: updated_entries
 		})
 	}
 
@@ -136,16 +133,7 @@
 
 		dispatch_update({
 			fields: updated_fields,
-			fields_changes: [
-				...deleted_fields.map((field) => ({ action: 'delete', id: field.id })),
-				...updated_siblings.map((sibling) => ({
-					action: 'update',
-					id: sibling.id,
-					data: { index: sibling.index }
-				}))
-			],
-			entries: updated_entries,
-			content_changes: deleted_entries.map((entry) => ({ action: 'delete', id: entry.id }))
+			entries: updated_entries
 		})
 	}
 
@@ -197,25 +185,7 @@
 
 		dispatch_update({
 			fields: updated_fields,
-			fields_changes: [
-				{ action: 'insert', id: new_field.id, data: new_field },
-				...siblings_and_self.map((field) => ({
-					action: 'update',
-					id: field.id,
-					data: { index: field.index }
-				})),
-				...descendent_fields.map((field) => ({
-					action: 'insert',
-					id: field.id,
-					data: field
-				}))
-			],
-			entries: updated_entries,
-			content_changes: new_entries.map((entry) => ({
-				action: 'insert',
-				id: entry.id,
-				data: entry
-			}))
+			entries: updated_entries
 		})
 	}
 
@@ -238,13 +208,7 @@
 		}
 		dispatch_update({
 			fields: updated_fields,
-			fields_changes: updated_children.map((child) => ({
-				action: 'update',
-				id: child.id,
-				data: { index: child.index }
-			})),
-			entries,
-			content_changes
+			entries
 		})
 	}
 
@@ -254,14 +218,12 @@
 		let updated_fields = cloneDeep(fields)
 		const existing_field = fields.find((f) => f.id === id)
 
-		const inserted_fields = []
 		const updated_field_rows = []
 		const deleted_fields = []
 
 		let updated_entries = _.cloneDeep(entries)
 		const field_content_entries = updated_entries.filter((e) => e.field === id)
 
-		const inserted_entries = []
 		const changed_entries = []
 		const deleted_entries = []
 
@@ -274,6 +236,13 @@
 				const initial_source_field =
 					updated_field.type === 'page-field' ? page_type_fields.filter((f) => !f.parent)[0] : updated_field.type === 'site-field' ? $site.fields.filter((f) => !f.parent)[0] : null
 				updated_field.source = initial_source_field?.id
+			}
+
+			if (existing_field.type !== 'page-list' && updated_field.type === 'page-list') {
+				updated_field.options = {
+					...updated_field.options,
+					page_type: $page_types[0].id
+				}
 			}
 
 			// type has changed, reset entry values to new type & remove children
@@ -319,132 +288,14 @@
 
 		dispatch_update({
 			fields: updated_fields,
-			fields_changes: [
-				...inserted_fields.map((field) => ({ action: 'insert', id: field.id, data: field })),
-				...updated_field_rows.map(({ id, data }) => ({ action: 'update', id, data })),
-				...deleted_fields.map((field) => ({ action: 'delete', id: field.id, data: field }))
-			],
-			entries: updated_entries,
-			content_changes: [
-				...inserted_entries.map((entry) => ({ action: 'insert', id: entry.id, data: entry })),
-				...changed_entries.map(({ id, data }) => ({ action: 'update', id, data })),
-				...deleted_entries.map((entry) => ({ action: 'delete', id: entry.id, data: entry }))
-			]
+			entries: updated_entries
 		})
-	}
-
-	function validate_fields_changes(new_changes = []) {
-		let validated_changes = _.cloneDeep(fields_changes)
-
-		if (new_changes.length === 0) {
-			return validated_changes
-		}
-
-		for (const change of new_changes) {
-			const { action, id, data } = change
-			const previous_change_on_same_item = validated_changes.find((c) => c.id === change.id)
-
-			if (!previous_change_on_same_item) {
-				validated_changes = [...validated_changes, { action, id, data }]
-				continue
-			}
-
-			const { id: previous_id, action: previous_action, data: previous_data } = previous_change_on_same_item
-
-			if (action === 'update' && previous_action === 'insert') {
-				previous_change_on_same_item.data = { ...previous_data, ...data }
-				continue
-			}
-
-			if (action === 'update') {
-				previous_change_on_same_item.data = { ...previous_data, ...data }
-				continue
-			}
-
-			if (action === 'delete') {
-				// remove changes on this field
-				validated_changes = validated_changes.filter((c) => c.id !== previous_id)
-
-				// add delete change for db-existing field
-				if (previous_action === 'update') {
-					validated_changes.push({ action, id, data })
-				}
-
-				// remove insert/update changes on field entries
-				content_changes = content_changes.filter((content_change) => {
-					if (change.action === 'delete') return true
-
-					const entry = entries.find((e) => e.id === content_change.id)
-
-					// remove insert/updates on entry
-					if (entry.field === change.id) return false
-
-					// remove insert/updates on entry descendents
-					if (get_entry_ancestors(entry).some((e) => e.field === change.id)) {
-						return false
-					}
-
-					return true
-				})
-			}
-		}
-		return validated_changes
-	}
-
-	function validate_content_changes(new_changes = []) {
-		let validated_changes = _.cloneDeep(content_changes)
-
-		if (new_changes.length === 0) {
-			return validated_changes
-		}
-
-		for (const change of new_changes) {
-			const previous_change_on_same_item = validated_changes.find((c) => c.id === change.id)
-
-			if (!previous_change_on_same_item) {
-				validated_changes = [...validated_changes, change]
-				continue
-			}
-
-			const { action: previous_action, data: previous_data } = previous_change_on_same_item
-
-			if (change.action === 'update' && previous_action === 'insert') {
-				previous_change_on_same_item.data = { ...previous_data, ...change.data }
-				continue
-			}
-
-			if (change.action === 'update') {
-				previous_change_on_same_item.data = { ...previous_data, ...change.data }
-				continue
-			}
-
-			if (change.action === 'delete') {
-				validated_changes = validated_changes.filter((existing_change) => {
-					// remove insert/updates on entry
-					if (existing_change.id === change.id) return false
-
-					// remove insert/updates on entry descendents
-					const entry = entries.find((e) => e.id === existing_change.id)
-					if (!entry) return false // corrupted entry
-					if (get_entry_ancestors(entry).some((e) => e.id === change.id)) {
-						return false
-					}
-
-					return true
-				})
-			}
-		}
-		return validated_changes
 	}
 
 	function dispatch_update(update) {
 		dispatch('input', {
 			fields: update.fields || fields,
-			entries: update.entries || entries,
-			changes: {
-				fields: validate_fields_changes(update.fields_changes),
-				entries: validate_content_changes(update.content_changes)
-			}
+			entries: update.entries || entries
 		})
 	}
 
@@ -528,8 +379,7 @@
 		const new_rows = [new_repeater_item, ...new_entries]
 		const updated_entries = cloneDeep([...entries, ...new_rows])
 		dispatch_update({
-			entries: updated_entries,
-			content_changes: new_rows.map((row) => ({ action: 'insert', id: row.id, data: row, dynamic }))
+			entries: updated_entries
 		})
 	}
 
@@ -555,15 +405,7 @@
 		})
 
 		dispatch_update({
-			entries: updated_entries,
-			content_changes: [
-				{ action: 'delete', id: item.id, dynamic },
-				...siblings.map((child) => ({
-					action: 'update',
-					id: child.id,
-					data: { index: child.index }
-				}))
-			]
+			entries: updated_entries
 		})
 	}
 
@@ -582,12 +424,7 @@
 			row.index = child.index
 		}
 		dispatch_update({
-			entries: updated_entries,
-			content_changes: updated_children.map((child) => ({
-				action: 'update',
-				id: child.id,
-				data: { index: child.index }
-			}))
+			entries: updated_entries
 		})
 	}
 
@@ -713,10 +550,10 @@
 							<div class="dynamic-header">
 								{#if dynamic_field_type === 'site'}
 									<Icon icon="gg:website" />
-									<span>Site Property</span>
+									<span>Site Content</span>
 								{:else if dynamic_field_type === 'page'}
 									<Icon icon={$active_page.page_type?.icon || $page_type.icon} />
-									<span>Page Property</span>
+									<span>Page Content</span>
 								{/if}
 							</div>
 							<Card {title} {icon}>

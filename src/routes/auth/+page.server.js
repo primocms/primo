@@ -22,7 +22,7 @@ export const actions = {
 		const { data: res, error } = await supabase.auth.signUp({ email, password })
 
 		if (res) {
-			await supabase.from('users').insert({ id: res.user?.id, email })
+			await supabase.from('profiles').insert({ id: res.user?.id, email, is_full_user: true })
 		}
 
 		return {

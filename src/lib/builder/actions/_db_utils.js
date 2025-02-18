@@ -496,47 +496,6 @@ export function generate_inverted_changes(changes, original_items) {
 	return [ inverted_changes, restored_fields ]
 }
 
-
-
-export function remap_content(entries, fields) {
-  // loop through changes
-  // for inserted items, remap ID and remap ID on matching entry
-
-  const remapped_entries = _.cloneDeep(entries)
-  const remapped_fields = _.cloneDeep(fields)
-
-  const field_map = remap_entry_ids(remapped_fields, true)[1]
-
-  for (const unmapped_field of remapped_fields) {
-    const new_id = field_map[unmapped_field.id]
-    const new_parent_id = field_map[unmapped_field.parent] || unmapped_field.parent
-
-    const field = _.find(remapped_fields, ['id', unmapped_field.id])
-    field.id = new_id
-    field.parent = new_parent_id
-    entries
-      .filter(entry => entry.field === unmapped_field.id)
-      .forEach(entry => entry.field = new_id)
-  } 
-
-  const entry_map = remap_entry_ids(remapped_entries, true)[1]
-  for (const unmapped_entry of remapped_entries) {
-    const new_id = entry_map[unmapped_entry.id]
-    const new_parent_id = entry_map[unmapped_entry.parent] || unmapped_entry.parent
-    const new_field_id = field_map[unmapped_entry.field] || unmapped_entry.field
-
-    const entry = _.find(remapped_entries, ['id', unmapped_entry.id])
-    entry.id = new_id
-    entry.parent = new_parent_id
-    entry.field = new_field_id
-  } 
-  return {
-    entries: remapped_entries,
-    fields: remapped_fields
-  }
-}
-
-
 export function remap_entries_and_fields({changes, items}) {
   // loop through changes
   // for inserted items, remap ID and remap ID on matching entry
@@ -547,19 +506,32 @@ export function remap_entries_and_fields({changes, items}) {
   for (const unmapped_field of fields_to_remap) {
     const new_id = field_map[unmapped_field.id]
     const new_parent_id = field_map[unmapped_field.parent] || unmapped_field.parent
+    const new_conditional_field_id = field_map[unmapped_field.options?.condition?.field] || unmapped_field.options?.condition?.field
 
     const change = _.find(changes.fields, ['id', unmapped_field.id])
     change.id = new_id 
     change.data.id = new_id
     change.data.parent = new_parent_id
+    change.data.options = change.data.options?.condition ? { 
+      ...change.data.options, 
+      condition: {
+        ...change.data.options.condition,
+        field: new_conditional_field_id
+      }
+    } : change.data.options
 
     changes.entries
-      .filter(change => change.data.field === unmapped_field.id)
+      .filter(change => change.data?.field === unmapped_field.id)
       .forEach(change => change.data.field = new_id)
 
     const field = _.find(items.fields, ['id', unmapped_field.id])
     field.id = new_id
     field.parent = new_parent_id
+    field.options.condition = {
+      ...field.options.condition,
+      field: new_conditional_field_id
+    }
+
     items.entries
       .filter(entry => entry.field === unmapped_field.id)
       .forEach(entry => entry.field = new_id)
@@ -582,7 +554,6 @@ export function remap_entries_and_fields({changes, items}) {
     entry.parent = new_parent_id
   } 
 }
-
 
 export function remap_entry_and_field_items({ fields, entries }) {
   // loop through changes
@@ -614,4 +585,121 @@ export function remap_entry_and_field_items({ fields, entries }) {
     entry.id = new_id
     entry.parent = new_parent_id
   } 
+}
+
+
+/**
+ * Generates a list of entry changes by comparing original and updated entries
+ * 
+ * @param {import('$lib').Entry[]} original_entries - The original array of entries
+ * @param {import('$lib').Entry[]} updated_entries - The updated array of entries  
+ * @returns {{ action: string, id: string, data?: object }[]} Array of change objects
+ */
+export function generate_entry_changes(original_entries, updated_entries) {
+  
+  const inserts = []
+  const updates = []
+  const deletions = []
+  
+  // Handle deletions
+  original_entries.forEach(original => {
+    if (!updated_entries.find(updated => updated.id === original.id)) {
+      deletions.push({ action: 'delete', id: original.id })
+    }
+  })
+
+  // Handle inserts and updates
+  updated_entries.forEach(updated => {
+    const original = original_entries.find(o => o.id === updated.id)
+    if (!original) {
+      inserts.push({ action: 'insert', id: updated.id, data: _.cloneDeep(updated) })
+    } else if (!_.isEqual(original, updated)) {
+      updates.push({ 
+        action: 'update', 
+        id: updated.id,
+        data: _.cloneDeep(_.omitBy(updated, (v, k) => _.isEqual(original[k], v)))
+      })
+    }
+  })
+
+  // Sort inserts by hierarchy so parents come before children
+  const sorted_inserts = sort_by_hierarchy(
+    inserts.map(insert => insert.data)
+  ).map(data => ({
+    action: 'insert',
+    id: data.id,
+    data
+  }))
+
+  // Combine all changes in the correct order: deletions, updates, sorted inserts
+  return [
+    ...deletions, // deletions
+    ...updates,
+    ...sorted_inserts
+  ]
+}
+
+
+/**
+ * Generates a list of entry changes by comparing original and updated entries
+ * 
+ * @param {import('$lib').Field[]} original_fields - The original array of entries
+ * @param {import('$lib').Field[]} updated_fields - The updated array of entries  
+ * @returns {{ action: string, id: string, data?: object }[]} Array of change objects
+ */
+export function generate_field_changes(original_fields, updated_fields) {
+  
+  // Collect inserts and updates
+  const inserts = []
+  const updates = []
+  const deletions = []
+  
+  // Handle deletions - keep as is since we want to delete children before parents
+  original_fields.forEach(original => {
+    if (!updated_fields.find(updated => updated.id === original.id)) {
+      deletions.push({ 
+        action: 'delete', 
+        id: original.id 
+      })
+    }
+  })
+
+  updated_fields.forEach(updated => {
+    const original = original_fields.find(o => o.id === updated.id)
+    
+    if (!original) {
+      inserts.push({ 
+        action: 'insert', 
+        id: updated.id, 
+        data: _.cloneDeep(updated)
+      })
+    } else {
+      const comparable_original = _.omit(original, ['id'])
+      const comparable_updated = _.omit(updated, ['id'])
+      
+      if (!_.isEqual(comparable_original, comparable_updated)) {
+        updates.push({ 
+          action: 'update', 
+          id: updated.id,
+          data: _.cloneDeep(_.omitBy(comparable_updated, (v, k) => _.isEqual(comparable_original[k], v)))
+        })
+      }
+    }
+  })
+
+  // Sort inserts by hierarchy so parents come before children
+  const sorted_inserts = sort_by_hierarchy(
+    inserts.map(insert => insert.data)
+  ).map(data => ({
+    action: 'insert',
+    id: data.id,
+    data
+  }))
+
+  // Combine all changes in the correct order: deletions, updates, sorted inserts
+  return [
+    ...deletions, // deletions
+    ...updates,
+    ...sorted_inserts
+  ]
 }

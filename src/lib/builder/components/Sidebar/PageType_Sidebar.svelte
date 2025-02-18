@@ -29,7 +29,7 @@
 	import { site_html } from '$lib/builder/stores/app/page'
 
 	// get the query param to set the tab when navigating from page (i.e. 'Edit Fields')
-	let active_tab = $state($page.url.searchParams.get('t') === 'p' ? 'PROPERTIES' : 'BLOCKS')
+	let active_tab = $state($page.url.searchParams.get('t') === 'p' ? 'CONTENT' : 'BLOCKS')
 	if (browser) {
 		const url = new URL($page.url)
 		url.searchParams.delete('t')
@@ -49,7 +49,6 @@
 						onclick: (new_block, changes) => {
 							add_block_to_site({
 								symbol: new_block,
-								changes,
 								index: 0
 							})
 							modal.hide()
@@ -76,9 +75,9 @@
 					button: {
 						label: `Save Block`,
 						icon: 'fas fa-check',
-						onclick: (updated_data, changes) => {
+						onclick: (updated_data) => {
 							modal.hide()
-							update_block({ block, updated_data, changes })
+							update_block({ block, updated_data })
 						}
 					}
 				},
@@ -120,10 +119,6 @@
 		new_symbol.name = `${new_symbol.name} (copy)`
 		add_block_to_site({
 			symbol: new_symbol,
-			changes: {
-				fields: new_symbol.fields.map((f) => ({ action: 'insert', id: f.id, data: f })),
-				entries: new_symbol.entries.map((c) => ({ action: 'insert', id: c.id, data: c }))
-			},
 			index
 		})
 	}
@@ -137,10 +132,6 @@
 				const validated = validate_symbol(uploaded)
 				add_block_to_site({
 					symbol: validated,
-					changes: {
-						entries: validated.entries.map((e) => ({ action: 'insert', data: e, id: e.id })),
-						fields: validated.fields.map((f) => ({ action: 'insert', data: f, id: f.id }))
-					},
 					index: 0
 				})
 			} catch (error) {
@@ -276,9 +267,9 @@
 				label: `Blocks`
 			},
 			{
-				id: 'PROPERTIES',
+				id: 'CONTENT',
 				icon: 'material-symbols:article-outline',
-				label: `Properties`
+				label: `Content`
 			}
 		]}
 		bind:active_tab_id={active_tab}
@@ -371,8 +362,8 @@
 					fields={$page_type.fields}
 					entries={$page_type.entries}
 					on:input={debounce({
-						instant: ({ detail }) => update_page_type_entries.store(detail),
-						delay: ({ detail }) => update_page_type_entries.db(detail)
+						instant: ({ detail }) => update_page_type_entries.store(detail.updated),
+						delay: ({ detail }) => update_page_type_entries.db(detail.original, detail.updated)
 					})}
 					minimal={true}
 				/>

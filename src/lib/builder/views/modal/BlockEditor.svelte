@@ -41,9 +41,6 @@
 		}
 	} = $props()
 
-	let fields_changes = $state([])
-	let content_changes = $state([])
-
 	let local_code = _.cloneDeep(block.code)
 	let local_fields = $state(_.cloneDeep(block.fields))
 	let local_entries = $state(_.cloneDeep([...block.entries, ...$site.entries]))
@@ -85,21 +82,15 @@
 	async function save_component() {
 		if (!$has_error) {
 			console.log({ local_code })
-			header.button.onclick(
-				{
-					code: {
-						html: raw_html,
-						css: raw_css,
-						js: raw_js
-					},
-					entries: local_entries,
-					fields: local_fields
+			header.button.onclick({
+				code: {
+					html: raw_html,
+					css: raw_css,
+					js: raw_js
 				},
-				{
-					entries: content_changes,
-					fields: fields_changes
-				}
-			)
+				entries: local_entries,
+				fields: local_fields
+			})
 		}
 	}
 </script>
@@ -107,8 +98,9 @@
 <ModalHeader
 	{...header}
 	warn={() => {
+		const original_entries = [...block.entries, ...$site.entries]
 		const code_changed = !_.isEqual(block.code, { html: raw_html, css: raw_css, js: raw_js })
-		const data_changed = fields_changes.length > 0 || content_changes.length > 0
+		const data_changed = !_.isEqual(original_entries, local_entries) || !_.isEqual(block.fields, local_fields)
 		if (code_changed || data_changed) {
 			const proceed = window.confirm('Unsaved changes will be lost. Continue?')
 			return proceed
@@ -142,13 +134,9 @@
 					id={block.id}
 					fields={local_fields}
 					entries={local_entries}
-					{fields_changes}
-					{content_changes}
 					on:input={({ detail }) => {
 						local_fields = detail.fields
 						local_entries = detail.entries
-						fields_changes = detail.changes.fields
-						content_changes = detail.changes.entries
 					}}
 					onkeydown={handle_hotkey}
 				/>

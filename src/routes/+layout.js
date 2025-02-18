@@ -2,6 +2,8 @@
 import { PUBLIC_SUPABASE_PUBLIC_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public'
 import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit'
 import _ from 'lodash-es'
+import { redirect } from '@sveltejs/kit'
+
 
 /** @type {import('@sveltejs/kit').Load} */
 export async function load(event) {
@@ -27,6 +29,11 @@ export async function load(event) {
 		supabase.from('sites').select('*').order('created_at', { ascending: true }).match({ is_starter: true }),
 		supabase.from('profiles').select('*').eq('id', session.user.id).single()
 	])
+
+	// redirect collaborators to their respective site (no dashboard access)
+	if (!profile.is_full_user) {
+		throw redirect(307, `/${sites?.[0].id}`);
+	}
 
 	return {
 		supabase,

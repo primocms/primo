@@ -132,42 +132,56 @@ export async function move_section(block_being_moved, to) {
  * @param {Object} options.changes - The changes to apply to the section.
  * @returns {Promise<void>}
  */
-export async function update_section(section_id, { updated_data, changes }) {
-
-	// Section
+export async function update_section(section_id, { updated_data, changes: old_changes, build_page = true }) {
 	const original_section = get_section(section_id)
 	let original_section_entries = _.cloneDeep(original_section.entries)
-	let updated_section_entries = _.cloneDeep(updated_data.entries.filter(e => !e.page && !e.site && !e.page_type))
-	let section_content_changes = _.cloneDeep(changes.entries.filter(c => !c.dynamic))
 
-	// Site entries changes
-	let original_site_entries = _.cloneDeep(get(stores.site).entries)
-	let updated_site_entries = _.cloneDeep(updated_data.entries.filter(e => e.site))
-	let site_content_changes = _.cloneDeep(changes.entries.filter(c => c.dynamic === 'site'))
+	const updated_section_entries = _.cloneDeep(updated_data.entries.filter(e => !e.page && !e.site && !e.page_type))
 
-	// Page entries changes
+  const original_symbol = get_symbol(original_section.symbol || original_section.master?.symbol)
+
+	// Page entries
 	let original_page_entries = _.cloneDeep(get(active_page_store).entries)
 	let updated_page_entries = _.cloneDeep(updated_data.entries.filter(e => e.page))
-	let page_content_changes = _.cloneDeep(changes.entries.filter(c => c.dynamic === 'page'))
 
-	// TODO: Page Type entries changes
-	let original_page_type_entries = _.cloneDeep(get(active_page_store).entries)
-	let updated_page_type_entries = _.cloneDeep(updated_data.entries.filter(e => e.page))
-	let page_type_content_changes = _.cloneDeep(changes.entries.filter(c => c.dynamic === 'page-type'))
+	// Site entries
+	let original_site_entries = _.cloneDeep(get(stores.site).entries)
+	let updated_site_entries = _.cloneDeep(updated_data.entries.filter(e => e.site))
 
-	// Symbol
-	const symbol_id = original_section.symbol || original_section.master?.symbol
-	const original_symbol = get_symbol(symbol_id)
-	let symbol_field_changes = _.cloneDeep(changes.fields)
-	let { changes: symbol_content_changes, entries: updated_symbol_entries } = helpers.sync_symbol_content_with_section_changes({
+
+  const changes = _.cloneDeep({
+    section_entries: db_utils.generate_entry_changes(original_section.entries, updated_section_entries),
+		// symbol_entries: db_utils.generate_entry_changes(original_symbol.entries, updated_data.entries),
+    symbol_fields: db_utils.generate_field_changes(original_symbol.fields, updated_data.fields),
+		page_entries: db_utils.generate_entry_changes(original_page_entries, updated_page_entries),
+		site_entries: db_utils.generate_entry_changes(original_site_entries, updated_site_entries)
+  })
+
+	let { entries: updated_symbol_entries } = helpers.sync_symbol_content_with_section_changes({
 		original_symbol_entries: original_symbol.entries,
 		original_symbol_fields: original_symbol.fields,
 		updated_section_entries,
 		updated_symbol_fields: updated_data.fields,
-		section_content_changes: section_content_changes,
-		field_changes: changes.fields
+		section_content_changes: changes.section_entries,
+		field_changes: changes.symbol_fields
 	})
+
+	let symbol_content_changes = db_utils.generate_entry_changes(original_symbol.entries, updated_symbol_entries)
+
+	let section_content_changes = changes.section_entries
+	let symbol_field_changes = _.cloneDeep(changes.symbol_fields)
 	let updated_symbol_fields = _.cloneDeep(updated_data.fields)
+
+	let page_content_changes = _.cloneDeep(changes.page_entries)
+	let site_content_changes = _.cloneDeep(changes.site_entries)
+
+	// TODO: Page Type entries changes
+	let original_page_type_entries = _.cloneDeep(get(active_page_store).entries)
+	let updated_page_type_entries = _.cloneDeep(updated_data.entries.filter(e => e.page))
+	// let page_type_content_changes = _.cloneDeep(changes.entries.filter(c => c.dynamic === 'page-type'))
+
+	// Symbol
+	const symbol_id = original_section.symbol || original_section.master?.symbol
 	const updated_symbol_code = updated_data.code
 
 	let local_sibling_sections = helpers.generate_sibling_section_changes({
@@ -178,6 +192,7 @@ export async function update_section(section_id, { updated_data, changes }) {
 		updated_fields: updated_symbol_fields
 	})
 	let foreign_sibling_sections = [] // fetch and assign below to avoid delay
+
 
 	await update_timeline({
 		doing: async () => {
@@ -193,6 +208,7 @@ export async function update_section(section_id, { updated_data, changes }) {
 					entries: [...updated_section_entries, ...updated_symbol_entries, ...local_sibling_sections.flatMap(s => s.entries)]
 				}
 			})
+			
 			if (page_content_changes.length > 0) {
 				db_utils.remap_entries_and_fields({
 					changes: {
@@ -248,7 +264,7 @@ export async function update_section(section_id, { updated_data, changes }) {
 
 			// DB: save Symbol code if changed
 			if (!_.isEqual(original_symbol.code, updated_symbol_code)) {
-				db_actions.update_symbol(symbol_id, { code: updated_symbol_code })
+				await db_actions.update_symbol(symbol_id, { code: updated_symbol_code })
 				update_symbol_file(get(stores.symbols).find(s => s.id === symbol_id))
 			}
 
@@ -298,7 +314,9 @@ export async function update_section(section_id, { updated_data, changes }) {
 				)
 			}
 
-			update_page_file(site_content_changes.length > 0)
+			if (build_page) {
+				update_page_file(site_content_changes.length > 0)
+			}
 		},
 		undoing: async () => {
 			// Generate inverted changes
@@ -377,7 +395,9 @@ export async function update_section(section_id, { updated_data, changes }) {
 			original_site_entries = restored_site_entries
 			original_page_entries = restored_page_entries
 		
-			update_page_file(site_content_changes.length > 0)
+			if (build_page) {
+				update_page_file(site_content_changes.length > 0)
+			}
 		}
 	})
 }

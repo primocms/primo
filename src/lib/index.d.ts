@@ -92,10 +92,9 @@ export type Site = {
 	design: {
 		heading_font: string
 		body_font: string
-		brand_color: string
-		accent_color: string
-		roundness: string
-		depth: string
+		primary_color: string
+		radius: string
+		shadow: string
 	}
 	entries: Array<Entry>
 	fields: Array<Field>

@@ -82,71 +82,11 @@
 		--Spinner-padding: 3rem;
 		gap: 0.5rem;
 	}
-	input {
-		background: var(--color-gray-8);
-	}
 	.image-preview {
 		width: 100%;
 		padding-top: 50%;
 		position: relative;
 		margin-bottom: 0.25rem;
-
-		.image-upload {
-			flex: 1 1 0%;
-			padding: 1rem;
-			cursor: pointer;
-			position: relative;
-			width: 100%;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			color: var(--color-gray-2);
-			background: var(--color-gray-9);
-			font-weight: 600;
-			text-align: center;
-			position: absolute;
-			inset: 0;
-			opacity: 0.5;
-			transition: opacity, background;
-			transition-duration: 0.1s;
-
-			&:hover {
-				opacity: 0.95;
-			}
-
-			span {
-				margin-top: 0.25rem;
-			}
-
-			input {
-				visibility: hidden;
-				border: 0;
-				width: 0;
-				position: absolute;
-			}
-		}
-
-		.field-size {
-			background: var(--color-gray-8);
-			color: var(--color-gray-3);
-			position: absolute;
-			top: 0;
-			left: 0;
-			z-index: 1;
-			padding: 0.25rem 0.5rem;
-			font-size: var(--font-size-1);
-			font-weight: 600;
-			border-bottom-right-radius: 0.25rem;
-		}
-
-		img {
-			position: absolute;
-			inset: 0;
-			object-fit: cover;
-			height: 100%;
-			width: 100%;
-		}
 	}
 
 	.inputs {

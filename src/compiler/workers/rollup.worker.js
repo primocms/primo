@@ -202,18 +202,21 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, fo
 								code,
 								svelteOptions
 							})
+							return res.code
+
+
 							// TODO: reinstate warnings, pass along to UI instead of throwing
-							const warnings = res.warnings
-								.filter((w) => !w.message.startsWith(`Component has unused export`))
-								.filter((w) => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
-								.filter((w) => w.code !== `a11y-missing-content`)
-								.filter((w) => !w.message.startsWith(`Unused CSS selector`)) // TODO: reinstate
-							if (warnings[0]) {
-								final.error = warnings[0].message
-								return ''
-							} else {
-								return res.code
-							}
+							// const warnings = res.warnings
+							// 	.filter((w) => !w.message.startsWith(`Component has unused export`))
+							// 	.filter((w) => !w.message.startsWith(`A11y: <img> element should have an alt attribute`))
+							// 	.filter((w) => w.code !== `a11y-missing-content`)
+							// 	.filter((w) => !w.message.startsWith(`Unused CSS selector`)) // TODO: reinstate
+							// if (warnings[0]) {
+							// 	final.error = warnings[0].message
+							// 	return ''
+							// } else {
+							// 	return res.code
+							// }
 						} catch (e) {
 							final.error = e.toString()
 							return ''

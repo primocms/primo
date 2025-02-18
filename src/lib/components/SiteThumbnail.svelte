@@ -1,10 +1,13 @@
 <script>
 	import fileSaver from 'file-saver'
 	import SitePreview from '$lib/components/SitePreview.svelte'
-	import { EllipsisVertical, SquarePen, Trash2, Download, Loader } from 'lucide-svelte'
+	import { EllipsisVertical, SquarePen, Trash2, Download, Loader, ArrowLeftRight } from 'lucide-svelte'
 	import { find as _find } from 'lodash-es'
 	import { supabase } from '$lib/supabase'
+	import { page } from '$app/stores'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
+	import * as RadioGroup from '$lib/components/ui/radio-group'
+	import { Label } from '$lib/components/ui/label'
 	import { Button, buttonVariants } from '$lib/components/ui/button'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
@@ -37,7 +40,7 @@
 
 	async function download_site_file() {
 		const site_data = await fetch_site_data(site.id)
-		const json = JSON.stringify(site_data)
+		const json = JSON.stringify({ ...site_data, version: 3 })
 		var blob = new Blob([json], { type: 'application/json' })
 		fileSaver.saveAs(blob, `${site.name || site.id}.json`)
 	}
@@ -91,9 +94,39 @@
 		await sites.delete(site.id)
 		invalidate('app:data')
 	}
+
+	let is_move_open = $state(false)
+	let selected_group_id = $state(site.group)
+	async function move_site() {
+		is_move_open = false
+		await actions.sites.move(site.id, selected_group_id)
+		invalidate('app:data')
+	}
 </script>
 
 <svelte:window onresize={resizePreview} />
+
+<Dialog.Root bind:open={is_move_open}>
+	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
+		<div class="grid gap-4">
+			<div class="space-y-2">
+				<h4 class="font-medium leading-none">Move to group</h4>
+				<p class="text-muted-foreground text-sm">Select a group for this site</p>
+			</div>
+			<RadioGroup.Root bind:value={selected_group_id}>
+				{#each $page.data.site_groups as group}
+					<div class="flex items-center space-x-2">
+						<RadioGroup.Item value={group.id} id={group.id} />
+						<Label for={group.id}>{group.name}</Label>
+					</div>
+				{/each}
+			</RadioGroup.Root>
+			<div class="flex justify-end">
+				<Button onclick={move_site}>Move</Button>
+			</div>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
 
 <div class="space-y-3 relative w-full bg-gray-900">
 	<div class="rounded-tl rounded-tr overflow-hidden">
@@ -112,6 +145,10 @@
 					<SquarePen class="h-4 w-4" />
 					<span>Rename</span>
 				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => (is_move_open = true)}>
+					<ArrowLeftRight class="h-4 w-4" />
+					<span>Move</span>
+				</DropdownMenu.Item>
 				<DropdownMenu.Item onclick={download_site_file}>
 					<Download class="h-4 w-4" />
 					<span>Download</span>
@@ -126,17 +163,6 @@
 </div>
 
 <Dialog.Root bind:open={is_rename_open}>
-	<!-- <Dialog.Content class="sm:max-w-[425px]">
-		<Dialog.Header>
-			<Dialog.Title>Rename Site</Dialog.Title>
-			<Dialog.Description>Enter a new name for your site</Dialog.Description>
-		</Dialog.Header>
-		<Input bind:value={new_name} placeholder="Enter new site name" class="my-4" />
-		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (is_rename_open = false)}>Cancel</Button>
-			<Button onclick={handle_rename}>Rename</Button>
-		</Dialog.Footer>
-	</Dialog.Content> -->
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Site</h2>
 		<p class="text-muted-foreground text-sm">Enter a new name for your site</p>

@@ -22,10 +22,7 @@
 	import { site_html, page_html } from '$lib/builder/stores/app/page'
 	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
 	import { processCode } from '$lib/builder/utils.js'
-	import { get_page_data, get_site_data } from '$lib/builder/stores/helpers.js'
-	import active_page from '$lib/builder/stores/data/page.js'
-	import page_type from '$lib/builder/stores/data/page_type.js'
-	import { afterNavigate } from '$app/navigation'
+	import { get_site_data } from '$lib/builder/stores/helpers.js'
 
 	/**
 	 * @typedef {Object} Props
@@ -41,8 +38,6 @@
 
 	/** @type {Props} */
 	let { data, role = 'DEV', primary_buttons = [], dropdown = [], secondary_buttons = [], primo_symbols = [], toolbar, children } = $props()
-
-	$inspect({ data })
 
 	hydrate_active_data(data)
 
@@ -157,7 +152,7 @@
 	let previous
 	$effect.pre(() => {
 		if (_.isEqual(previous, { head: $siteCode.head, design: $siteDesign })) return
-		compile_component_head(`<svelte:head>${$siteCode.head + site_design_css($siteDesign)}</svelte:head>`).then((generated_code) => {
+		compile_component_head(`<svelte:head>${site_design_css($siteDesign) + $siteCode.head}</svelte:head>`).then((generated_code) => {
 			$site_html = generated_code
 			previous = _.cloneDeep({ head: $siteCode.head, design: $siteDesign })
 		})

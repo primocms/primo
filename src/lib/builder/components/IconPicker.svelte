@@ -18,12 +18,7 @@
 	 */
 
 	/** @type {Props} */
-	let {
-		icon,
-		search_query = $bindable(''),
-		variant = 'large',
-		svg_preview = null
-	} = $props();
+	let { icon, search_query = $bindable(''), variant = 'large', svg_preview = null } = $props()
 
 	const [popperRef, popperContent] = createPopperActions({
 		placement: 'bottom-start',
@@ -42,20 +37,14 @@
 		if (search_query === '') {
 			searched = false
 		}
-	});
+	})
 
 	let icons = $state([])
 	async function search() {
-		axios
-			.get(
-				`https://api.iconify.design/search?query=${encodeURIComponent(
-					search_query.trim()
-				)}&limit=32`
-			)
-			.then(({ data }) => {
-				icons = data.icons
-				searched = true
-			})
+		axios.get(`https://api.iconify.design/search?query=${encodeURIComponent(search_query.trim())}&limit=32`).then(({ data }) => {
+			icons = data.icons
+			searched = true
+		})
 	}
 
 	let showing_popover = $state(false)
@@ -76,23 +65,16 @@
 					{/if}
 				</div>
 			{/if}
-			<form onsubmit={(e) => {
-				e.preventDefault()
-				search()
-			}}>
-				<TextInput
-					bind:value={search_query}
-					prefix_icon="tabler:search"
-					button={{ label: 'Search', type: 'submit', disabled: !search_query }}
-				/>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault()
+					search()
+				}}
+			>
+				<TextInput bind:value={search_query} prefix_icon="tabler:search" button={{ label: 'Search', type: 'submit', disabled: !search_query }} />
 			</form>
 		{:else if variant === 'small'}
-			<button
-				class="icon-preview"
-				aria-label="select icon"
-				use:popperRef
-				onclick={() => (showing_popover = !showing_popover)}
-			>
+			<button class="icon-preview" aria-label="select icon" use:popperRef onclick={() => (showing_popover = !showing_popover)}>
 				<Icon {icon} />
 			</button>
 		{/if}
@@ -107,17 +89,13 @@
 				modifiers: [{ name: 'offset', options: { offset: [0, 3] } }]
 			}}
 		>
-			<form onsubmit={(e) => {
-				e.preventDefault()
-				search()
-			}}>
-				<TextInput
-					autofocus={true}
-					bind:value={search_query}
-					prefix_icon="tabler:search"
-					label="Search icons"
-					button={{ label: 'Search', type: 'submit', disabled: !search_query }}
-				/>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault()
+					search()
+				}}
+			>
+				<TextInput autofocus={true} bind:value={search_query} prefix_icon="tabler:search" label="Search icons" button={{ label: 'Search', type: 'submit', disabled: !search_query }} />
 			</form>
 			{#if searched}
 				<div class="icons" in:fade>
@@ -170,12 +148,7 @@
 				<Icon icon="material-symbols:close" />
 			</button>
 			{#each icons as item}
-				<button
-					class="icon"
-					class:active={item === icon}
-					onclick={() => dispatch('input', item)}
-					type="button"
-				>
+				<button class="icon" class:active={item === icon} onclick={() => dispatch('input', item)} type="button">
 					<Icon icon={item} width="50px" />
 				</button>
 			{:else}
@@ -195,7 +168,7 @@
 <style lang="postcss">
 	.IconPicker.small {
 		.icon-preview {
-			font-size: 22px;
+			font-size: 25px;
 		}
 	}
 	.container {

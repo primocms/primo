@@ -9,7 +9,7 @@
 
 	const dispatch = createEventDispatcher()
 
-	let { label, value = $bindable() } = $props()
+	let { label, value, oninput } = $props()
 
 	let search_query = $state('')
 	let searched = $state(false)
@@ -54,6 +54,7 @@
 	function select_font(font) {
 		value = font.family
 		dispatch('input')
+		oninput(font.family)
 	}
 
 	let selected_category = $state('all')

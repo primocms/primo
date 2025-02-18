@@ -71,7 +71,7 @@ export const Section = (section) => ({
  */
 export const Symbol = (symbol = {}) => ({
 	id: symbol.id || uuidv4(),
-	name: symbol.name || 'New Block',
+	name: symbol.name || '',
 	code: symbol.code || {
 		css: '',
 		html: '',
@@ -139,10 +139,9 @@ export const Site = (site = {}) => ({
 	design: site.design || {
 		heading_font: 'Open Sans',
 		body_font: 'Open Sans',
-		brand_color: '#1E3D59',
-		accent_color: '#FF6E40',
-		roundness: '4px',
-		depth: '0px 4px 30px rgba(0, 0, 0, 0.2)'
+		primary_color: '#1E3D59',
+		radius: '4px',
+		shadow: '0px 4px 30px rgba(0, 0, 0, 0.2)'
 	},
 	custom_domain: site.custom_domain || '',
 	created_at: new Date().toISOString(),
@@ -153,37 +152,31 @@ export const design_tokens = {
 	heading_font: {
 		label: 'Heading Font',
 		type: 'font-family',
-		variable: 'font-heading',
+		variable: 'heading-font',
 		group: ''
 	},
 	body_font: {
 		label: 'Body Font',
 		type: 'font-family',
-		variable: 'font-body',
+		variable: 'body-font',
 		group: ''
 	},
-	brand_color: {
-		label: 'Brand Color',
+	primary_color: {
+		label: 'Primary Color',
 		type: 'color',
-		variable: 'color-brand',
+		variable: 'primary-color',
 		group: ''
 	},
-	accent_color: {
-		label: 'Accent Color',
-		type: 'color',
-		variable: 'color-accent',
-		group: ''
-	},
-	roundness: {
-		label: 'Roundness (Border Radius)',
+	radius: {
+		label: 'Border Radius',
 		type: 'border-radius',
-		variable: 'border-radius',
+		variable: 'radius',
 		group: ''
 	},
-	depth: {
-		label: 'Depth (Shadows)',
+	shadow: {
+		label: 'Shadow',
 		type: 'box-shadow',
-		variable: 'box-shadow',
+		variable: 'shadow',
 		group: ''
 	}
 }
