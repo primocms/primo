@@ -433,7 +433,7 @@
 		justify-content: center;
 		z-index: 5;
 		--Spinner-font-size: 3rem;
-		--Spinner-color: var(--primo-color-brand);
+		--Spinner-color: var(--weave-primary-color);
 		--Spinner-color-opaque: rgba(248, 68, 73, 0.2);
 	}
 	main {

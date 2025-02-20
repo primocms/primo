@@ -31,6 +31,14 @@ export const design_tokens = {
 	}
 }
 
+export const design_values = {
+	heading_font: 'Open Sans',
+	body_font: 'Open Sans',
+	primary_color: '#1E3D59',
+	radius: '4px',
+	shadow: '0px 4px 30px rgba(0, 0, 0, 0.2)'
+}
+
 export const Site_Tokens_CSS = (values) => {
 	return `
 		<link rel="preconnect" href="https://fonts.googleapis.com">

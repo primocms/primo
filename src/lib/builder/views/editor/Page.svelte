@@ -91,7 +91,7 @@
 		if (!hovered_block_el || !block_toolbar_element) return
 		hovered_block_el.appendChild(block_toolbar_element)
 		const { top, left, bottom, right } = hovered_block_el.getBoundingClientRect()
-		const toolbar_height = 45
+		const toolbar_height = 44
 
 		// Keep toolbar within viewport bounds
 		const toolbar_top = Math.max(toolbar_height, Math.min(top, window.innerHeight - toolbar_height))
@@ -550,7 +550,7 @@
 		justify-content: center;
 		z-index: 5;
 		--Spinner-font-size: 3rem;
-		--Spinner-color: var(--primo-color-brand);
+		--Spinner-color: var(--weave-primary-color);
 		--Spinner-color-opaque: rgba(248, 68, 73, 0.2);
 	}
 	main#Page {

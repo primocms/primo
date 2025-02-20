@@ -1,5 +1,5 @@
 <script>
-	let { email } = $props();
+	let { email } = $props()
 </script>
 
 <div class="container">
@@ -42,11 +42,11 @@
 		background: transparent;
 
 		&.outlined {
-			border: 2px solid var(--primo-color-brand);
+			border: 2px solid var(--weave-primary-color);
 		}
 
 		&:hover {
-			background: var(--primo-color-brand);
+			background: var(--weave-primary-color);
 		}
 	}
 </style>

@@ -9,10 +9,11 @@ export type Entry = {
 	metadata: object | null
 	section?: Section_ID | null
 	symbol?: Symbol_ID | null
-	library_symbol: Symbol_ID | null
+	library_symbol?: Symbol_ID | null
 	page?: Page_ID | null
 	page_type?: Page_Type_ID | null
 	site?: Site_ID | null
+	owner_site?: Site_ID | null
 }
 
 type Field_ID = string
@@ -26,10 +27,11 @@ export type Field = {
 	index: number
 	parent: Field_ID | null
 	symbol?: Symbol_ID | null
-	library_symbol: Symbol_ID | null
+	library_symbol?: Symbol_ID | null
 	page_type?: Page_Type_ID | null
 	site?: Site_ID | null,
 	source?: Field_ID | null
+	owner_site?: Site_ID | null
 }
 
 type Section_ID = string
@@ -42,6 +44,7 @@ export type Section = {
 	page_type: Page_Type_ID | null
 	master: { symbol: Symbol_ID, index: number } | null
 	entries: Array<Entry>
+	owner_site?: Site_ID | null
 }
 
 type Symbol_ID = string
@@ -49,11 +52,11 @@ export type Symbol = {
 	id: Symbol_ID
 	name: string
 	code: Code
-	site: Site_ID
 	index: number,
 	entries: Array<Entry>
 	fields: Array<Field>
 	page_types: Array<Page_Type_ID>
+	owner_site?: Site_ID | null
 }
 
 type Page_ID = string
@@ -67,6 +70,7 @@ export type Page = {
 	site?: Site_ID | null
 	index?: number
 	entries: Array<Entry>
+	owner_site: Site_ID | null
 }
 
 type Page_Type_ID = string
@@ -76,11 +80,11 @@ export type Page_Type = {
 	code: Enclosing_Code
 	color: string | null
 	icon: string | null
-	site?: Site_ID
 	index?: number
 	fields: Array<Field>
 	entries: Array<Entry>
 	created_at?: string
+	owner_site: Site_ID | null
 }
 
 type Site_ID = string

@@ -13,13 +13,13 @@ export async function load(event) {
 	const page_slug = url_segments.at(-1) ?? ''
 
 	const fetch_site = async () => {
-		const res = await supabase.from('sites').select('*, fields(*), entries(*)').filter('id', 'eq', site_id).single()
+		const res = await supabase.from('sites').select('*, fields!fields_site_fkey(*), entries!entries_site_fkey(*)').filter('id', 'eq', site_id).single()
 		return res.data
 	}
 
 	const fetch_page = async () => {
 		if (!page_type_id) {
-			const res = await supabase.from('pages').select('*, entries(*), page_type!inner(*, fields(*), entries(*), sections(*))').match({ 'page_type.site': site_id, slug: page_slug }).single()
+			const res = await supabase.from('pages').select('*, entries(*), page_type!inner(*, fields(*), entries(*), sections(*))').match({ 'owner_site': site_id, slug: page_slug }).single()
 			return res.data
 		} else return null
 	}
@@ -35,20 +35,19 @@ export async function load(event) {
 
 	const get = {
 		collaborator: async () => {
-			const { data, error } = await supabase.from('collaborators').select('*').match({ user: session.user.id, site: site_id }).maybeSingle()
+			const { data } = await supabase.from('collaborators').select('*').match({ user: session.user.id, owner_site: site_id }).maybeSingle()
 			return data
 		},
 		pages: async () => {
-			// const { data, error } = await supabase.from('pages').select('*, entries(*), page_type!inner(*, fields(*))').eq('page_type.site', site_id).order('created_at', { ascending: true })
-			const { data, error } = await supabase.from('pages').select('*, entries(*), page_type!inner(id, site)').eq('page_type.site', site_id).order('created_at', { ascending: true })
-			return data.map(p => ({ ...p, page_type: p.page_type.id }))
+			const { data } = await supabase.from('pages').select('*, entries(*)').eq('owner_site', site_id).order('created_at', { ascending: true })
+			return data
 		},
 		page_types: async () => {
-			const { data } = await supabase.from('page_types').select('*, fields(*), entries(*)').match({ site: site_id }).order('created_at', { ascending: true })
+			const { data } = await supabase.from('page_types').select('*, fields(*), entries(*)').match({ owner_site: site_id }).order('created_at', { ascending: true })
 			return data
 		},
 		symbols: async () => {
-			const { data, error } = await supabase.from('symbols').select('*, entries(*), fields(*)').match({ site: site_id }).order('created_at', { ascending: false })
+			const { data } = await supabase.from('symbols').select('*, entries(*), fields(*)').match({ owner_site: site_id }).order('created_at', { ascending: false })
 			return data
 		},
 		sections: async () => {
@@ -66,7 +65,7 @@ export async function load(event) {
 
 	let page_type = null
 	if (page_type_id) {
-		const { data, error } = await supabase.from('page_types').select('*, fields(*), entries(*)').eq('id', page_type_id).single()
+		const { data } = await supabase.from('page_types').select('*, fields(*), entries(*)').eq('id', page_type_id).single()
 		page_type = data
 	}
 

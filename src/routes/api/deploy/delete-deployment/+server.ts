@@ -1,7 +1,7 @@
 import { json, error as server_error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import supabase_admin from '$lib/supabase/admin';
-import { S3Client, PutObjectCommand, ListObjectsV2Command, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import authorize from '../../authorize';
 import * as ENV_VARS from '$env/static/private';
 

@@ -172,9 +172,8 @@ export async function page_html({ page = get(active_page), site = get(activeSite
 
 export function site_design_css(values) {
 	return `
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=${values['heading_font'].replace(/ /g, '+')}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=${values['body_font'].replace(
+		<link rel="preconnect" href="https://fonts.bunny.net">
+		<link href="https://fonts.bunny.net/css2?family=${values['heading_font'].replace(/ /g, '+')}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=${values['body_font'].replace(
 		/ /g,
 		'+'
 	)}:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700" rel="stylesheet">

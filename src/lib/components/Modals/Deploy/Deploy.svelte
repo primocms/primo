@@ -292,7 +292,7 @@
 		/* height: 100%; */
 	}
 	.primo-button.primary {
-		border: 1px solid #35d994;
+		border: 1px solid #70809e;
 		background: transparent;
 	}
 	:global(form > label) {

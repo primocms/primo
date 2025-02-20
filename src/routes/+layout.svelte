@@ -1,7 +1,6 @@
 <script>
 	import '../app.css'
 	import { setContext } from 'svelte'
-	import '@fontsource/fira-code/index.css'
 	import { browser } from '$app/environment'
 	import { compilers_registered } from '$lib/stores'
 	import { onMount } from 'svelte'
@@ -51,6 +50,11 @@
 <Toaster />
 {@render children?.()}
 
+<svelte:head>
+	<link rel="preconnect" href="https://fonts.bunny.net" />
+	<link href="https://fonts.bunny.net/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
+</svelte:head>
+
 <style lang="postcss">
 	:global(.primo-reset) {
 		font-family: 'Inter', serif !important;
@@ -61,7 +65,7 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--primo-color-brand);
+		--ring: 0px 0px 0px 2px var(--weave-primary-color);
 
 		--primo-max-width-1: 30rem;
 		--primo-max-width-2: 1200px;
@@ -71,8 +75,8 @@
 	}
 
 	:global(html) {
-		--primo-color-brand: #35d994;
-		--primo-color-brand-dark: #097548;
+		--weave-primary-color: #70809e;
+		--weave-primary-color-dark: #444f64;
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -122,10 +126,10 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--primo-color-brand);
-		--primo-ring: 0px 0px 0px 2px var(--primo-color-brand, #35d994);
-		--primo-ring-thin: 0px 0px 0px 1px var(--primo-color-brand, #35d994);
-		--primo-ring-thick: 0px 0px 0px 3px var(--primo-color-brand, #35d994);
+		--ring: 0px 0px 0px 2px var(--weave-primary-color);
+		--primo-ring: 0px 0px 0px 2px var(--weave-primary-color, #70809e);
+		--primo-ring-thin: 0px 0px 0px 1px var(--weave-primary-color, #70809e);
+		--primo-ring-thick: 0px 0px 0px 3px var(--weave-primary-color, #70809e);
 	}
 
 	:global(.primo--field-label) {

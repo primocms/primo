@@ -147,7 +147,7 @@
 	.grab-handle {
 		padding-block: 3px;
 		color: #222;
-		background: var(--primo-color-brand);
+		background: var(--weave-primary-color);
 		z-index: 99;
 		border-radius: 1px;
 		font-size: 10px;

@@ -731,7 +731,7 @@
 		}
 
 		&:focus {
-			border-color: var(--primo-color-brand);
+			border-color: var(--weave-primary-color);
 		}
 		&:focus-visible {
 			outline: 0;

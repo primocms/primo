@@ -132,11 +132,11 @@
 		gap: 0.75rem;
 		overflow: hidden;
 		align-items: flex-start;
-		/* border: 1px solid var(--primo-color-brand); */
+		/* border: 1px solid var(--weave-primary-color); */
 		/* padding: 0.5rem; */
 
 		.spinner-container {
-			background: var(--primo-color-brand);
+			background: var(--weave-primary-color);
 			height: 100%;
 			width: 100%;
 			display: flex;
@@ -178,7 +178,7 @@
 
 			&:hover {
 				opacity: 0.95;
-				background: var(--primo-color-brand);
+				background: var(--weave-primary-color);
 			}
 
 			span {
@@ -235,7 +235,7 @@
 
 			&.active {
 				cursor: unset;
-				color: var(--primo-color-brand);
+				color: var(--weave-primary-color);
 			}
 
 			&:last-child {

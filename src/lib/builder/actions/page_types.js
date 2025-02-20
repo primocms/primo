@@ -17,7 +17,7 @@ export default {
 
 		const new_page_type = Page_Type({
 			...details,
-			site: get(site)['id']
+			owner_site: get(site)['id']
 		})
 
 		const db_id = await dataChanged({
@@ -26,7 +26,6 @@ export default {
 			data: _.omit(new_page_type, ['entries', 'fields'])
 		})
 
-		console.log({ new_page_type })
 		stores.page_types.update((store) => [...store, new_page_type])
 
 		// insert block-drop-zone section (i.e. section w/o symbol)

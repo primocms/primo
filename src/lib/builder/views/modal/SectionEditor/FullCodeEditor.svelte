@@ -305,7 +305,7 @@
 					color 0.1s;
 
 				&:hover {
-					background: var(--primo-color-brand);
+					background: var(--weave-primary-color);
 					color: var(--primo-color-codeblack);
 				}
 

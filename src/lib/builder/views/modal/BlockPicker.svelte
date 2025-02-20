@@ -49,7 +49,8 @@
 				...selected,
 				Create_Symbol({
 					...symbol,
-					site: site.id,
+					name: selected_symbol_group.name,
+					owner_site: site.id,
 					library_group: null,
 					fields: symbol.fields.map((f) => ({ ...f, library_symbol: null })),
 					entries: symbol.entries.map((f) => ({ ...f, library_symbol: null }))

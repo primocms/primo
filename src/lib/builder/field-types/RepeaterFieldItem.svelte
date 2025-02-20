@@ -223,11 +223,11 @@
 		padding-block: 0.5rem;
 
 		&.hovering-above {
-			border-top-color: var(--primo-color-brand);
+			border-top-color: var(--weave-primary-color);
 		}
 
 		&.hovering-below {
-			border-bottom-color: var(--primo-color-brand);
+			border-bottom-color: var(--weave-primary-color);
 		}
 	}
 
@@ -291,14 +291,14 @@
 					/* outline: 0; */
 				}
 				&:hover {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 				}
 				&:last-child {
 					margin-left: 0.5rem;
 					color: var(--color-gray-5);
 
 					&:hover {
-						color: var(--primo-color-brand);
+						color: var(--weave-primary-color);
 					}
 				}
 			}

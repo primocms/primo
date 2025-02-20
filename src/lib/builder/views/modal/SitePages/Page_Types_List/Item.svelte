@@ -120,7 +120,7 @@
 
 		&.active {
 			background: #222;
-			/* outline: 1px solid var(--primo-color-brand); */
+			/* outline: 1px solid var(--weave-primary-color); */
 		}
 
 		.options {

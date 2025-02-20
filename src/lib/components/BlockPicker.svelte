@@ -45,7 +45,7 @@
 				...selected,
 				factories.Symbol({
 					...symbol,
-					site: site.id,
+					owner_site: site.id,
 					id: uuid()
 				})
 			]

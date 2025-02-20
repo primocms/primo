@@ -46,7 +46,7 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
 
   function scramble_page_type(page_type) {
     const new_page_type = scramble_item(page_type)
-    new_page_type.site = get_id(page_type.site)
+    new_page_type.owner_site = get_id(page_type.owner_site)
     return new_page_type
   }
 
@@ -54,6 +54,7 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
     const new_page = scramble_item(page)
     new_page.page_type = get_id(page.page_type)
     new_page.parent = get_id(page.parent)
+    new_page.owner_site = get_id(page.owner_site)
     return new_page
   }
 
@@ -64,6 +65,7 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
     new_section.master = get_id(section.master)
     new_section.page = get_id(section.page)
     new_section.page_type = get_id(section.page_type)
+    new_section.owner_site = get_id(section.owner_site)
     return new_section
   }
 
@@ -88,6 +90,7 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
     new_field.symbol = get_id(field.symbol)
     new_field.page_type = get_id(field.page_type)
     new_field.site = get_id(field.site)
+    new_field.owner_site = get_id(field.owner_site)
     
     return new_field
   }
@@ -108,13 +111,14 @@ export default function scramble_ids({ site, page_types, symbols, pages, section
     new_entry.symbol = get_id(entry.symbol)
     new_entry.section = get_id(entry.section)
     new_entry.site = get_id(entry.site)
+    new_entry.owner_site = get_id(entry.owner_site)
     
     return new_entry
   }
 
   function scramble_symbol(symbol) {
     const new_symbol = scramble_item(symbol)
-    new_symbol.site = get_id(symbol.site)
+    new_symbol.owner_site = get_id(symbol.owner_site)
     new_symbol.page_types = symbol.page_types.map(get_id)
     return new_symbol
   }

@@ -18,6 +18,7 @@
 	import { dropTargetForElements } from '$lib/builder/libraries/pragmatic-drag-and-drop/entry-point/element/adapter.js'
 	import { attachClosestEdge, extractClosestEdge } from '$lib/builder/libraries/pragmatic-drag-and-drop-hitbox/closest-edge.js'
 	import { site_html } from '$lib/builder/stores/app/page'
+	import { userRole } from '$lib/builder/stores/app/misc'
 
 	let active_tab = $state((browser && localStorage.getItem('page-tab')) || 'BLOCKS')
 
@@ -101,7 +102,9 @@
 					</div>
 				{/if}
 			</div>
-			<button onclick={() => goto(`/${$site.id}/page-type--${$active_page.page_type.id}?t=b`)} class="footer-link">Manage Blocks</button>
+			{#if $userRole === 'DEV'}
+				<button onclick={() => goto(`/${$site.id}/page-type--${$active_page.page_type.id}?t=b`)} class="footer-link">Manage Blocks</button>
+			{/if}
 		{:else}
 			<div class="page-type-fields">
 				<Content
@@ -114,7 +117,9 @@
 					minimal={true}
 				/>
 			</div>
-			<button onclick={() => goto(`/${$site.id}/page-type--${$active_page.page_type.id}?t=p`)} class="footer-link">Manage Fields</button>
+			{#if $userRole === 'DEV'}
+				<button onclick={() => goto(`/${$site.id}/page-type--${$active_page.page_type.id}?t=p`)} class="footer-link">Manage Fields</button>
+			{/if}
 		{/if}
 	</div>
 </div>

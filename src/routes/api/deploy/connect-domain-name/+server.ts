@@ -115,7 +115,7 @@ async function rename_r2_folder(old_folder_name, new_folder_name) {
 
       // TODO: 
       // Temporarily don't delete old folder so image references still work. 
-      // In the future, change image urls to match new site, or have them match '/_assets/image.jpg' instead of 'cdn.weavecms.siteß'
+      // In the future, change image urls to match new site, or have them match '/_assets/image.jpg' instead of 'cdn.weavecms.site'
 
       // const delete_command = new DeleteObjectCommand({
       //   Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,

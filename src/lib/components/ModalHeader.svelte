@@ -97,11 +97,11 @@
 				transition: var(--transition-colors);
 
 				&:hover {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 				}
 
 				&:focus {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 					outline: 0;
 				}
 
@@ -148,7 +148,7 @@
 			0.1s box-shadow;
 
 		&.primary {
-			border: 2px solid var(--primo-color-brand);
+			border: 2px solid var(--weave-primary-color);
 			color: var(--primo-color-white);
 			margin-left: 0.5rem;
 
@@ -167,19 +167,19 @@
 
 			&:active {
 				color: var(--primo-color-black);
-				background: var(--primo-color-brand);
+				background: var(--weave-primary-color);
 			}
 		}
 
 		&.switch {
-			border: 2px solid var(--primo-color-brand);
-			color: var(--primo-color-brand);
-			outline-color: var(--primo-color-brand);
+			border: 2px solid var(--weave-primary-color);
+			color: var(--weave-primary-color);
+			outline-color: var(--weave-primary-color);
 
 			&:hover {
-				background: var(--primo-color-brand-dark);
+				background: var(--weave-primary-color-dark);
 				color: var(--primo-color-white);
-				border-color: var(--primo-color-brand-dark);
+				border-color: var(--weave-primary-color-dark);
 			}
 		}
 	}

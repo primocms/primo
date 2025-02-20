@@ -68,7 +68,7 @@
 		width: 30px;
 		top: 2px;
 		background: var(--color-gray-8);
-		/* border: 1px solid var(--primo-color-brand); */
+		/* border: 1px solid var(--weave-primary-color); */
 		transition: 0.1s;
 		z-index: 0;
 	}
@@ -101,12 +101,12 @@
 		}
 
 		&:focus-visible {
-			outline: 1px solid var(--primo-color-brand);
+			outline: 1px solid var(--weave-primary-color);
 		}
 
 		&.active {
 			color: white;
-			/* border-bottom-color: var(--primo-color-brand); */
+			/* border-bottom-color: var(--weave-primary-color); */
 		}
 
 		&.showing_key_hint .label {

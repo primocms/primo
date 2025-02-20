@@ -119,12 +119,12 @@
 		box-shadow: var(--primo-ring-thin);
 		color: var(--primo-color-white);
 		transition: 0.1s;
-		/* border: 1.5px solid var(--primo-color-brand); */
+		/* border: 1.5px solid var(--weave-primary-color); */
 		/* border-radius: 0.25rem; */
 
 		&:hover {
-			background: var(--primo-color-brand);
-			color: #222;
+			background: var(--weave-primary-color);
+			color: white;
 		}
 	}
 
@@ -162,7 +162,7 @@
 		&:active {
 			background: #404040;
 			/* box-shadow: var(--primo-ring); */
-			/* background: var(--primo-color-brand); */
+			/* background: var(--weave-primary-color); */
 			/* color: var(--color-gray-8); */
 		}
 	}

@@ -349,7 +349,7 @@ async function create_block({ name = '', code, entries, fields, index }) {
 			name,
 			code,
 			index,
-			site: get(site).id
+			owner_site: get(site).id
 		}
 	})
 

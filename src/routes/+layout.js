@@ -31,7 +31,7 @@ export async function load(event) {
 	])
 
 	// redirect collaborators to their respective site (no dashboard access)
-	if (!profile.is_full_user) {
+	if (!profile.is_full_user && event.url.pathname.startsWith('/dashboard')) {
 		throw redirect(307, `/${sites?.[0].id}`);
 	}
 

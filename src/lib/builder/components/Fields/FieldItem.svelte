@@ -508,7 +508,7 @@
 		}
 
 		&:focus-visible {
-			border-color: var(--primo-color-brand);
+			border-color: var(--weave-primary-color);
 			outline: 0;
 		}
 	}

@@ -4,11 +4,11 @@
 	import { createEventDispatcher } from 'svelte'
 	const dispatch = createEventDispatcher()
 
-	let { tabs, active_tab_id = $bindable(tabs[0]?.id) } = $props();
+	let { tabs, active_tab_id = $bindable(tabs[0]?.id) } = $props()
 
 	$effect(() => {
 		dispatch('switch', active_tab_id)
-	});
+	})
 </script>
 
 {#if tabs.length > 1}
@@ -40,7 +40,7 @@
 			transition: 0.1s;
 
 			&.active {
-				border-bottom-color: var(--primo-color-brand);
+				border-bottom-color: var(--weave-primary-color);
 			}
 		}
 	}

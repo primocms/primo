@@ -34,9 +34,9 @@ test('Update site design', async ({ page }) => {
 	await page.getByRole('button', { name: 'Merriweather', exact: true }).click()
 	await page.getByLabel('Close', { exact: true }).click()
 
-	await page.locator('[data-test-id="Brand Color"] .color').click()
+	await page.locator('[data-test-id="Primary Color"] .color').click()
 	await page.getByRole('textbox', { name: 'hex color' }).fill('#20bdbd')
-	await page.locator('[data-test-id="Brand Color"] .color').click()
+	await page.locator('[data-test-id="Primary Color"] .color').click()
 
 	await page.locator('[data-test-id="Accent Color"] .color').click()
 	await page.getByRole('textbox', { name: 'hex color' }).fill('#bc2020')
@@ -52,22 +52,19 @@ test('Update site design', async ({ page }) => {
 	const css_variables = await page.evaluate(() => {
 		const styles = getComputedStyle(document.documentElement)
 		return {
-			brand_color: styles.getPropertyValue('--color-brand').trim(),
-			accent_color: styles.getPropertyValue('--color-accent').trim(),
-			heading_font: styles.getPropertyValue('--font-heading').trim(),
-			body_font: styles.getPropertyValue('--font-body').trim(),
-			border_radius: styles.getPropertyValue('--border-radius').trim()
+			primary_color: styles.getPropertyValue('--theme-primary-color').trim(),
+			heading_font: styles.getPropertyValue('--theme-heading-font').trim(),
+			body_font: styles.getPropertyValue('--theme-body-font').trim(),
+			border_radius: styles.getPropertyValue('--theme-radius').trim()
 		}
 	})
 
-	expect(css_variables.brand_color).toBe('#20bdbd')
-	expect(css_variables.accent_color).toBe('#bc2020')
+	expect(css_variables.primary_color).toBe('#20bdbd')
 	expect(css_variables.heading_font).toBe('Lato')
 	expect(css_variables.body_font).toBe('Merriweather')
 	expect(css_variables.border_radius).toBe('4px')
 	await page.reload()
-	expect(css_variables.brand_color).toBe('#20bdbd')
-	expect(css_variables.accent_color).toBe('#bc2020')
+	expect(css_variables.primary_color).toBe('#20bdbd')
 	expect(css_variables.heading_font).toBe('Lato')
 	expect(css_variables.body_font).toBe('Merriweather')
 	expect(css_variables.border_radius).toBe('4px')

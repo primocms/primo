@@ -31,18 +31,18 @@ export default async function authorize({ request, locals, url }: RequestEvent, 
     const user_id = session.user.id;
 
     // Verify user is site owner
-    const { data: site_owner } = await supabase_admin
+    const { data: owner_site } = await supabase_admin
       .from('sites')
       .select('id')
       .match({ id: request_data.site_id, owner: user_id })
       .single();
 
-    if (!site_owner) {
+    if (!owner_site) {
 
       const { data: collaborator } = await supabase_admin
         .from('collaborators')
         .select('id')
-        .match({ site: request_data.site_id, user: user_id })
+        .match({ owner_site: request_data.site_id, user: user_id })
         .single();
 
       if (!collaborator) return json({ deployment: null, error: 'Unauthorized' });

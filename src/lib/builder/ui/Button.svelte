@@ -68,14 +68,14 @@
 			box-shadow: var(--primo-ring-thin);
 			/* background: var(
         --Button-bg-hover,
-        var(--primo-color-brand-dark)
+        var(--weave-primary-color-dark)
       );
       color: var(--Button-color-hover, var(--primo-color-white)); */
 		}
 
 		&[disabled] {
 			color: #cecece;
-			border: 1px solid #35d994;
+			border: 1px solid #70809e;
 			opacity: 0.2;
 			cursor: not-allowed;
 		}

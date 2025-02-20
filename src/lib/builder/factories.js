@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
+import _ from 'lodash-es'
+import {design_values} from './constants'
 
 /**
  * @param row 
@@ -53,7 +55,7 @@ export const Field = (field = {}) => ({
  * @returns {import('$lib').Section}
  */
 export const Section = (section) => ({
-	id: uuidv4(),
+	id: section.id || uuidv4(),
 	index: section.index || 0,
 	symbol: section.symbol || null,
 	page: section.page || null,
@@ -61,7 +63,8 @@ export const Section = (section) => ({
 	// created_at: section.created_at || new Date().toISOString(),
 	master: section.master || null,
 	palette: section.palette || null,
-	entries: section.entries || []
+	entries: section.entries || [],
+	owner_site: section.owner_site || null
 })
 
 /**
@@ -79,7 +82,7 @@ export const Symbol = (symbol = {}) => ({
 	},
 	fields: symbol.fields || [],
 	entries: symbol.entries || [],
-	site: symbol.site || null,
+	owner_site: symbol.site || null,
 	index: symbol.index === undefined ? null : symbol.index,
 	page_types: []
 })
@@ -98,6 +101,7 @@ export const Page = (page = {}) => ({
 	index: page.index !== undefined ? page.index : null,
 	page_type: page.page_type || Page_Type(),
 	entries: page.entries || [],
+	owner_site: page.owner_site || null,
 	...page // TODO: remove
 })
 
@@ -115,9 +119,10 @@ export const Page_Type = (page_type = {}) => ({
 	},
 	fields: [],
 	entries: [],
-	site: page_type.site,
-	color: page_type.color || '#2B407D',
+	color: page_type.color || '#222',
 	icon: page_type.icon || 'iconoir:page',
+	owner_site: page_type.site,
+	index: page_type.index || 0
 	// ...page_type
 })
 
@@ -136,13 +141,7 @@ export const Site = (site = {}) => ({
 	},
 	fields: site.fields || [],
 	entries: site.entreies || [],
-	design: site.design || {
-		heading_font: 'Open Sans',
-		body_font: 'Open Sans',
-		primary_color: '#1E3D59',
-		radius: '4px',
-		shadow: '0px 4px 30px rgba(0, 0, 0, 0.2)'
-	},
+	design: site.design || _.cloneDeep(design_values),
 	custom_domain: site.custom_domain || '',
 	created_at: new Date().toISOString(),
 	...site

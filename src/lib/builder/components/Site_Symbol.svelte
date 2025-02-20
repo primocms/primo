@@ -131,7 +131,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--primo-color-brand);
+		color: var(--weave-primary-color);
 	}
 	.error {
 		display: flex;

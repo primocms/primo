@@ -9,17 +9,24 @@ export async function load(event) {
   const is_marketplace = event.url.pathname.startsWith('/dashboard/marketplace')
 
   if (is_marketplace) {
-    const { data: marketplace_symbol_groups } = await axios.get('https://weave-marketplace.vercel.app/api/symbol_groups')
+    const [{ data: site_groups }, { data: symbol_groups }, { data: marketplace_symbol_groups }] = await Promise.all([
+      supabase.from('site_groups').select('*').match({ 'sites.is_starter': true }).order('created_at', { ascending: false }).match({ owner: session.user.id }),
+      supabase.from('library_symbol_groups').select(`*)`).eq('owner', session.user.id).order('created_at', { ascending: false }),
+      axios.get('https://weave-marketplace.vercel.app/api/symbol_groups')
+    ])
     return {
+      site_groups,
+      symbol_groups,
       marketplace_symbol_groups
     }
   } else {
-    const [{ data: starters }, { data: site_groups }, { data: settings }, { data: symbol_groups }] = await Promise.all([
+    const [{ data: starters }, { data: site_groups, error }, { data: settings }, { data: symbol_groups }] = await Promise.all([
       supabase.from('sites').select('*').order('created_at', { ascending: false }).match({ is_starter: true, owner: session.user.id }),
-      supabase.from('site_groups').select('*, sites!inner(*)').match({ 'sites.is_starter': false }).order('created_at', { ascending: false }).match({ owner: session.user.id }),
+      supabase.from('site_groups').select('*, sites!left(*)').match({ 'sites.is_starter': false }).order('created_at', { ascending: false }).match({ owner: session.user.id }),
       supabase.from('library_settings').select('key, value').match({ key: 'blocks', owner: session.user.id }).single(),
       supabase.from('library_symbol_groups').select(`*, symbols:library_symbols(*, entries(*), fields(*))`).eq('owner', session.user.id).order('created_at', { ascending: false }),
     ])
+
     return {
       starters,
       site_groups,

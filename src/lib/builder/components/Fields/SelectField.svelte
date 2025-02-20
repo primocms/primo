@@ -165,7 +165,7 @@
 	}
 	.field-button.subfield-button:focus {
 		/* background: var(--color-gray-8); */
-		border-color: var(--primo-color-brand);
+		border-color: var(--weave-primary-color);
 		outline: 0;
 	}
 	.item-options {

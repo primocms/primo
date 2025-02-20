@@ -272,7 +272,7 @@
 		transition: 0.1s;
 
 		&.highlighted {
-			color: var(--primo-color-brand);
+			color: var(--weave-primary-color);
 		}
 
 		p {

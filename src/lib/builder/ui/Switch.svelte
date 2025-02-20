@@ -44,7 +44,7 @@
 				transition: transform 0.1s;
 
 				input {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 					background: var(--primo-color-white);
 					outline: 0;
 					position: absolute;
@@ -73,7 +73,7 @@
 					}
 
 					&:focus {
-						outline: 2px solid var(--primo-color-brand);
+						outline: 2px solid var(--weave-primary-color);
 					}
 				}
 

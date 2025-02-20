@@ -6,7 +6,7 @@ const resend = new Resend(PRIVATE_RESEND_KEY)
 
 export async function GET({ url }) {
 	const site_id = url.searchParams.get('site_id')
-	const res = await Promise.all([supabase_admin.from('sites').select('owner').eq('id', site_id).single(), supabase_admin.from('collaborators').select('*').eq('site', site_id)])
+	const res = await Promise.all([supabase_admin.from('sites').select('owner').eq('id', site_id).single(), supabase_admin.from('collaborators').select('*').eq('owner_site', site_id)])
 
 	const owner_id = res[0].data?.owner
 	const owner = await supabase_admin.auth.admin.getUserById(owner_id).then(({ data }) => {
@@ -36,12 +36,12 @@ export async function POST({ request }) {
 	const full_role = { DEV: 'developer', EDITOR: 'content editor' }[role]
 
 	// existing user, log in automatically, send notification & log in link
-	const { data: existing_user } = await supabase_admin.from('profiles').select('id').eq('user_email', email).single()
+	const { data: existing_user } = await supabase_admin.from('profiles').select('id').eq('email', email).single()
 	const { data: owner } = await supabase_admin.auth.admin.getUserById(site.owner)
 
 	if (existing_user) {
 		const { data: user_data } = await supabase_admin.auth.admin.getUserById(existing_user.id)
-		await supabase_admin.from('collaborators').insert({ site: site.id, user: existing_user.id, role })
+		await supabase_admin.from('collaborators').insert({ owner_site: site.id, user: existing_user.id, profile: existing_user.id, role })
 		await resend.emails.send({
 			from: 'primo.press <noreply@cloud.primocms.org>',
 			to: [user_data.user.email],
@@ -49,7 +49,7 @@ export async function POST({ request }) {
 			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. https://primo.press/${site.id}`
 		})
 	} else {
-		await supabase_admin.from('invitations').insert({ email, site: site.id, role })
+		await supabase_admin.from('invitations').insert({ email, owner_site: site.id, role })
 
 		const invitation_url = `https://primo.press/auth/create-account?email=${email}`
 

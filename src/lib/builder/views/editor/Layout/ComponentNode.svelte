@@ -788,7 +788,7 @@
 		background-color: var(--color-gray-9);
 		color: var(--primo-color-white);
 		/* border-bottom-width: 2px; */
-		border-color: var(--primo-color-brand);
+		border-color: var(--weave-primary-color);
 	}
 	.floating-menu {
 		overflow: hidden;

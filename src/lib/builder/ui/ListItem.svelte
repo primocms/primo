@@ -27,12 +27,7 @@
 	$: new_page_url = validate_url(new_page_url)
 </script>
 
-<div
-	class="page-item-container"
-	class:active
-	class:expanded={showing_children && has_children}
-	class:is_child
->
+<div class="page-item-container" class:active class:expanded={showing_children && has_children} class:is_child>
 	<div class="left">
 		<div class="details">
 			<p class:active class="name">{title}</p>
@@ -42,12 +37,7 @@
 			<slot name="title" />
 		</div>
 		{#if has_children}
-			<button
-				class="toggle"
-				class:active={showing_children}
-				on:click={() => (showing_children = !showing_children)}
-				aria-label="Toggle child pages"
-			>
+			<button class="toggle" class:active={showing_children} on:click={() => (showing_children = !showing_children)} aria-label="Toggle child pages">
 				<Icon icon="mdi:chevron-down" />
 			</button>
 		{/if}
@@ -106,7 +96,7 @@
 		&.active {
 			background: #222;
 			border-bottom-right-radius: 0;
-			/* outline: 1px solid var(--primo-color-brand); */
+			/* outline: 1px solid var(--weave-primary-color); */
 		}
 
 		.left {
@@ -134,7 +124,7 @@
 				font-size: 1.5rem;
 
 				&:hover {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 				}
 			}
 		}

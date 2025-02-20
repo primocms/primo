@@ -64,7 +64,7 @@
 		font-size: 14px;
 
 		&:hover {
-			border-color: var(--primo-color-brand);
+			border-color: var(--weave-primary-color);
 		}
 
 		&.with-icon {

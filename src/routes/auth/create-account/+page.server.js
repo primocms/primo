@@ -17,7 +17,11 @@ export const actions = {
 		const email = form_data.get('email')
 		const password = form_data.get('password')
 
-		const { data: res, error: auth_error } = await supabase.auth.signUp({ email, password })
+		const {data:res, error:auth_error } = await supabase_admin.auth.admin.createUser({
+			email, 
+			password,
+			email_confirm: true
+		})
 
 		if (auth_error) {
 			return {
@@ -32,12 +36,11 @@ export const actions = {
 					id: res.user?.id,
 					email: res.user?.email,
 					is_full_user: false
-				})
+				}),
+				supabase_admin.from('collaborators').insert({ user: res.user.id, owner_site: invitation.site, role: invitation.role })
 			])
 
-			await supabase_admin.from('collaborators').insert({ user: res.user.id, site: invitation.site, role: invitation.role })
-
-			throw redirect(303, `/${invitation.site}`)
+			await supabase.auth.signInWithPassword({ email, password })
 		}
 	}
 }

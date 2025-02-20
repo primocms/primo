@@ -10,6 +10,7 @@
 	import DropZone from '$lib/components/DropZone.svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import * as code_generators from '$lib/builder/code_generators'
+	import { static_iframe_srcdoc } from '$lib/builder/components/misc'
 
 	let { onclose, onsubmit } = $props()
 
@@ -35,7 +36,7 @@
 	}
 
 	let generating_site_preview = $state(false)
-	let site_preview = $state(``)
+	let site_preview = $state(static_iframe_srcdoc({ head: '', html: '', css: '', foot: '' }))
 	async function set_template_preview(data) {
 		generating_site_preview = true
 		const home_page = _.cloneDeep(data.pages.find((page) => page.slug === ''))

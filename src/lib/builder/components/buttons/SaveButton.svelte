@@ -14,22 +14,10 @@
 	 */
 
 	/** @type {Props} */
-	let {
-		variants = '',
-		type = 'button',
-		disabled = false,
-		loading = false,
-		children
-	} = $props();
+	let { variants = '', type = 'button', disabled = false, loading = false, children } = $props()
 </script>
 
-<button
-	class={variants}
-	class:disabled={disabled || loading}
-	disabled={disabled || loading}
-	onclick={(e) => dispatch('click', e)}
-	{type}
->
+<button class={variants} class:disabled={disabled || loading} disabled={disabled || loading} onclick={(e) => dispatch('click', e)} {type}>
 	{#if loading}
 		<UI.Spinner />
 	{:else}
@@ -39,15 +27,17 @@
 
 <style lang="postcss">
 	button {
-		background: var(--primo-color-brand);
+		background: var(--weave-primary-color);
 		color: var(--primo-color-black);
 		padding: 0.5rem 1rem;
 		border-radius: var(--primo-border-radius);
 		font-weight: 600;
-		transition: background 0.1s, color 0.1s;
+		transition:
+			background 0.1s,
+			color 0.1s;
 
 		&:hover {
-			background: var(--primo-color-brand-dark);
+			background: var(--weave-primary-color-dark);
 			color: var(--primo-color-white);
 		}
 

@@ -25,12 +25,12 @@
 		font-size: 0.825rem;
 
 		&:hover {
-			background: var(--primo-color-brand);
+			background: var(--weave-primary-color);
 			color: var(--color-gray-1);
 		}
 
 		&.active {
-			background: var(--primo-color-brand);
+			background: var(--weave-primary-color);
 			color: var(--primo-color-white);
 		}
 	}

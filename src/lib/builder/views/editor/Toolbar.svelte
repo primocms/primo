@@ -82,8 +82,8 @@
 					align-items: center;
 					border-radius: var(--primo-border-radius);"
 					>
-						<div style:color={going_up ? 'var(--primo-color-brand)' : 'inherit'} style:opacity={previous_page ? '1' : '0.1'}>&#8984; ↑</div>
-						<div style:color={going_down ? 'var(--primo-color-brand)' : 'inherit'} style:opacity={next_page ? '1' : '0.1'}>&#8984; ↓</div>
+						<div style:color={going_up ? 'var(--weave-primary-color)' : 'inherit'} style:opacity={previous_page ? '1' : '0.1'}>&#8984; ↑</div>
+						<div style:color={going_down ? 'var(--weave-primary-color)' : 'inherit'} style:opacity={next_page ? '1' : '0.1'}>&#8984; ↓</div>
 					</div>
 				{:else}
 					<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => modal.show('SITE_PAGES', {}, { hideLocaleSelector: true, maxWidth: '1200px', showSwitch: false })} />
@@ -143,9 +143,15 @@
 				</span>
 			{:else if $page.data.page}
 				<span class="page">{$active_page.name}</span>
-				<a class="page-type-badge" style="background-color: {$active_page.page_type?.color};" href="/{$site.id}/page-type--{$active_page.page_type?.id}">
-					<Icon icon={$active_page.page_type.icon} />
-				</a>
+				{#if $userRole === 'DEV'}
+					<a class="page-type-badge" style="background-color: {$active_page.page_type?.color};" href="/{$site.id}/page-type--{$active_page.page_type?.id}">
+						<Icon icon={$active_page.page_type.icon} />
+					</a>
+				{:else}
+					<span class="page-type-badge" style="background-color: {$active_page.page_type?.color};">
+						<Icon icon={$active_page.page_type.icon} />
+					</span>
+				{/if}
 			{:else if $page.data.page_type}
 				<span class="page-type" style:background={$page.data.page_type.color}>
 					<Icon icon={$page.data.page_type.icon} />

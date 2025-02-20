@@ -59,9 +59,9 @@
 			await actions.create_library_symbol({
 				name: validated.name,
 				code: validated.code,
-				changes: {
-					entries: validated.entries.map((e) => ({ action: 'insert', data: e, id: e.id })),
-					fields: validated.fields.map((f) => ({ action: 'insert', data: f, id: f.id }))
+				content: {
+					entries: validated.entries,
+					fields: validated.fields
 				},
 				preview,
 				group: active_group

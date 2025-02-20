@@ -2,6 +2,7 @@ import supabase from './supabase/core'
 import { page } from '$app/stores'
 import { get } from 'svelte/store'
 import * as actions from '$lib/builder/actions/active_site'
+import * as factories from '$lib/builder/factories'
 import _ from 'lodash-es'
 import axios from 'axios'
 import scramble_ids from '../scramble_ids'
@@ -13,34 +14,103 @@ import { get_content_with_synced_values } from '$lib/builder/stores/helpers'
 import { v4 as uuidv4 } from 'uuid'
 import {remap_entry_and_field_items} from '$lib/builder/actions/_db_utils'
 
+/**
+ * Deletes a site group from the database
+ * @param {string} group_id - The ID of the site group to delete
+ * @returns {Promise<void>}
+ */
 export async function delete_site_group(group_id) {
 	await supabase.from('site_groups').delete().eq('id', group_id)
 }
 
+/**
+ * Adds a site to a site group
+ * @param {string} site_id - The ID of the site to add
+ * @param {string} group_id - The ID of the group to add the site to
+ * @returns {Promise<void>}
+ */
+export async function add_site_to_group(site_id, group_id) {
+	await supabase.from('sites').update({ group: group_id }).eq('id', site_id)
+}
+
+/**
+ * Removes a site from a site group
+ * @param {string} site_id - The ID of the site to remove from its group
+ * @returns {Promise<void>}
+ */
+export async function remove_site_from_group(site_id) {
+	await supabase.from('sites').update({ group: null }).eq('id', site_id)
+}
+
+/**
+ * Renames a site group
+ * @param {string} group_id - The ID of the site group to rename
+ * @param {string} new_name - The new name for the site group
+ * @returns {Promise<void>}
+ */
 export async function rename_site_group(group_id, new_name) {
 	await supabase.from('site_groups').update({ name: new_name }).eq('id', group_id)
 }
 
+/**
+ * Creates a new site group
+ * @param {string} name - The name of the site group to create
+ * @returns {Promise<void>}
+ */
 export async function create_site_group(name) {
 	await supabase.from('site_groups').insert({ name, owner: get(page).data.user.id })
 }
 
+/**
+ * Moves a library symbol to a different group
+ * @param {string} symbol_id - The ID of the library symbol to move
+ * @param {string} new_group_id - The ID of the group to move the symbol to
+ * @returns {Promise<void>}
+ */
 export async function move_library_symbol(symbol_id, new_group_id) {
 	await supabase.from('library_symbols').update({ group: new_group_id }).eq('id', symbol_id)
 }
 
+
+/**
+ * Deletes a library symbol group
+ * @param {string} group_id - The ID of the library symbol group to delete
+ * @returns {Promise<void>}
+ */
 export async function delete_library_symbol_group(group_id) {
 	await supabase.from('library_symbol_groups').delete().eq('id', group_id)
 }
 
+/**
+ * Renames a library symbol group
+ * @param {string} group_id - The ID of the library symbol group to rename
+ * @param {string} new_name - The new name for the library symbol group
+ * @returns {Promise<void>}
+ */
 export async function rename_library_symbol_group(group_id, new_name) {
 	await supabase.from('library_symbol_groups').update({ name: new_name }).eq('id', group_id)
 }
 
+
+/**
+ * Creates a new library symbol group
+ * @param {string} name - The name of the library symbol group to create
+ * @returns {Promise<void>}
+ */
 export async function create_library_symbol_group(name) {
 	await supabase.from('library_symbol_groups').insert({ name, owner: get(page).data.user.id })
 }
 
+/**
+ * Adds a marketplace starter to the user's library
+ * @param {Object} starter - The starter object containing name, code, entries, and fields
+ * @param {string} starter.name - The name of the starter
+ * @param {string} starter.code - The code for the starter
+ * @param {Array<import('$lib').Entry>} starter.entries - The entries data for the starter
+ * @param {Array<import('$lib').Field>} starter.fields - The fields data for the starter
+ * @param {string} preview - The HTML preview content for the starter
+ * @returns {Promise<void>}
+ */
 export async function add_marketplace_starter_to_library(starter, preview) {
 	const new_starter_id = uuidv4()
 	remap_entry_and_field_items({ entries: starter.entries, fields: starter.fields })
@@ -67,6 +137,18 @@ export async function add_marketplace_starter_to_library(starter, preview) {
 	console.log({storage_res})
 }
 
+/**
+ * Adds a marketplace symbol to the user's library
+ * @param {Object} options - The options object
+ * @param {Object} options.symbol - The symbol object containing name, code, entries, and fields
+ * @param {string} options.symbol.name - The name of the symbol
+ * @param {string} options.symbol.code - The code for the symbol
+ * @param {Array<import('$lib').Entry>} options.symbol.entries - The entries data for the symbol
+ * @param {Array<import('$lib').Field>} options.symbol.fields - The fields data for the symbol
+ * @param {string} options.preview - The HTML preview content for the symbol
+ * @param {string} options.group_id - The ID of the library group to add the symbol to
+ * @returns {Promise<void>}
+ */
 export async function add_marketplace_symbol_to_library({symbol, preview, group_id}) {
 	const new_symbol_id = uuidv4()
 	remap_entry_and_field_items({ entries: symbol.entries, fields: symbol.fields })
@@ -93,15 +175,33 @@ export async function add_marketplace_symbol_to_library({symbol, preview, group_
 	console.log({storage_res})
 }
 
+/**
+ * Renames a library symbol
+ * @param {string} id - The ID of the symbol to rename
+ * @param {string} new_name - The new name for the symbol
+ * @returns {Promise<void>}
+ */
 export async function rename_library_symbol(id, new_name) {
 	await supabase.from('library_symbols').update({ name: new_name }).eq('id', id)
 }
 
+/**
+ * Creates a new library symbol
+ * @param {Object} options - The symbol creation options
+ * @param {string} [options.name=''] - The name of the symbol
+ * @param {Object} options.code - The symbol code (html, css, js)
+ * @param {Object} options.content - The symbol's content
+ * @param {Array<import('$lib').Entry>} options.content.entries - Array of entry objects
+ * @param {Array<import('$lib').Field>} options.content.fields - Array of field objects
+ * @param {string} options.preview - The preview HTML
+ * @param {string} options.group - The group ID this symbol belongs to
+ * @returns {Promise<void>}
+ */
 export async function create_library_symbol({ name = '', code, content, preview, group }) {
 	const symbol_id = uuidv4()
 	const changes = { 
-		entries: db_utils.generate_entry_changes(content.original.entries, content.updated.entries), 
-		fields: db_utils.generate_field_changes(content.original.fields, content.updated.fields) 
+		entries: db_utils.generate_entry_changes([], content.entries), 
+		fields: db_utils.generate_field_changes([], content.fields) 
 	}
 	await Promise.all([
 		(async() => {
@@ -161,6 +261,12 @@ export async function save_library_symbol(id, { code, content, preview }) {
 	await supabase.storage.from('symbols').upload(`${id}/preview.html`, preview, { upsert: true })
 }
 
+/**
+ * Deletes a library symbol from the database
+ * @param {string} symbol_id - The ID of the symbol to delete
+ * @returns {Promise<void>}
+ * @throws {Error} If deletion fails
+ */
 export async function delete_library_symbol(symbol_id) {
 	const res = await supabase.from('library_symbols').delete().eq('id', symbol_id)
 	if (res.error) {
@@ -169,7 +275,17 @@ export async function delete_library_symbol(symbol_id) {
 	}
 }
 
-export async function create_starter({ details, preview = null, site_data = null }) {
+/**
+ * Creates a new starter site
+ * @param {Object} options - The starter options
+ * @param {Object} options.details - Basic site details
+ * @param {string} options.details.name - Name of the site
+ * @param {string} options.details.description - Description of the site
+ * @param {string} options.preview - Preview HTML content
+ * @param {Object} [options.site_data] - Optional existing site data to use as template
+ * @returns {Promise<void>}
+ */
+export async function create_starter({ details, preview, site_data = null }) {
 
 	let starter_data
 	if (site_data) {
@@ -200,50 +316,34 @@ export async function create_starter({ details, preview = null, site_data = null
 				entries: [],
 				fields: []
 			},
-			pages: [{
+			pages: [
+				factories.Page({
 					id: home_page_id,
 					index: 0,
 					name: "Home Page",
 					page_type: page_type_id,
-					parent: null,
-					slug: "",
-					entries: []
-			}],
-			page_types: [{
-				id: page_type_id,
-				name: "Default",
-				code: {
-					foot: '',
-					head: ''
-				},
-				color: "#222",
-				icon: "iconoir:page",
-				site: site_id,
-				index: 0,
-				fields: [],  
-				entries: [],
-			}],
+					owner_site: site_id
+				})
+			],
+			page_types: [
+				factories.Page_Type({
+					id: page_type_id,
+					name: "Default",
+					owner_site: site_id
+				})
+			],
 			sections: [
-				{
+				factories.Section({
 					id: master_palette_id,
-					index: 0,
-					symbol: null,
-					palette: null,
-					page: null,
 					page_type: page_type_id,
-					master: null,
-					entries: []
-				},
-				{
-					id: uuidv4(),
-					index: 0,
-					symbol: null,
-					palette: null,
+					owner_site: site_id
+				}),
+				factories.Section({
+					id: master_palette_id,
 					page: home_page_id,
-					page_type: null,
 					master: master_palette_id,
-					entries: []
-				}
+					owner_site: site_id
+				})
 			],
 			symbols: []
 		}
@@ -301,9 +401,7 @@ export async function create_starter({ details, preview = null, site_data = null
 		}
 
 		// Handle preview upload
-		if (preview) {
-			await supabase.storage.from('sites').upload(`${site.id}/preview.html`, preview)
-		}
+		await supabase.storage.from('sites').upload(`${site.id}/preview.html`, preview)
 
 		console.log('Site created successfully')
 	} catch (e) {
@@ -315,6 +413,7 @@ export async function create_starter({ details, preview = null, site_data = null
 export const sites = {
 	create: async ({ starter_id, starter_data, details, preview, group }) => {
 
+
 		const uploaded_data = starter_id ? await fetch_site_data(starter_id) : starter_data
 		uploaded_data.site.name = details.name
 		uploaded_data.site.design = _.cloneDeep(details.design)
@@ -322,6 +421,7 @@ export const sites = {
 		const scrambled = scramble_ids(uploaded_data)
 		const files = await build_site_bundle(scrambled)
 		const prepared_data = prepare_data(scrambled)
+
 
 		const { site, page_types, pages, symbols, sections, entries, fields } = prepared_data
 
@@ -429,8 +529,8 @@ export async function fetch_site_data(site_id) {
 		name,
 		code,
 		design,
-		fields(*),
-		entries(*),
+		fields!fields_site_fkey(*),
+		entries!entries_site_fkey(*),
 		page_types(
 			*,
 			fields(*),
@@ -472,7 +572,7 @@ function prepare_data(data) {
 
 	// Prepare data while maintaining relationships
 	const site = _.omit(data.site, ['entries', 'fields'])
-	const page_types = data.page_types.map((pt) => _.omit(pt, ['entries', 'fields']))
+	const page_types = data.page_types.map((pt) => _.omit(pt, ['sections', 'entries', 'fields']))
 	const pages = data.pages.map((page) => _.omit(page, ['entries']))
 	const sections = data.sections.map((section) => _.omit(section, ['entries']))
 	const symbols = data.symbols.map((symbol) => _.omit(symbol, ['entries', 'fields']))
@@ -487,12 +587,12 @@ function prepare_data(data) {
 
 	return {
 		site,
-		page_types,
-		pages: sort_pages_by_hierarchy(pages),
-		sections: sort_sections_by_hierarchy(sections),
-		symbols,
-		fields: sorted_fields,
-		entries: sorted_entries
+		page_types: page_types.map(pt => ({ ...pt, owner_site: site.id })),
+		pages: sort_pages_by_hierarchy(pages).map(page => ({ ...page, owner_site: site.id })),
+		sections: sort_sections_by_hierarchy(sections).map(s => ({ ...s, owner_site: site.id })),
+		symbols: symbols.map(s => ({ ...s, owner_site: site.id })),
+		fields: sorted_fields.map(f => ({ ...f, owner_site: site.id })),
+		entries: sorted_entries.map(e => ({ ...e, owner_site: site.id }))
 	}
 
 	function sort_pages_by_hierarchy(pages) {

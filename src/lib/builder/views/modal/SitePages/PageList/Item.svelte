@@ -275,7 +275,7 @@
 		border: 3px solid transparent;
 
 		&.highlight {
-			border-color: var(--primo-color-brand);
+			border-color: var(--weave-primary-color);
 		}
 	}
 	.page-item-container {
@@ -293,10 +293,10 @@
 		&.active {
 			/* background: #222; */
 			border-bottom-right-radius: 0;
-			/* outline: 1px solid var(--primo-color-brand); */
+			/* outline: 1px solid var(--weave-primary-color); */
 
 			a {
-				color: var(--primo-color-brand);
+				color: var(--weave-primary-color);
 			}
 		}
 
@@ -350,7 +350,7 @@
 					overflow: hidden;
 					text-overflow: ellipsis;
 					width: 100%;
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 
 					span {
 						color: var(--color-gray-5);
@@ -368,7 +368,7 @@
 				font-size: 1.5rem;
 
 				&:hover {
-					color: var(--primo-color-brand);
+					color: var(--weave-primary-color);
 				}
 
 				&.active {

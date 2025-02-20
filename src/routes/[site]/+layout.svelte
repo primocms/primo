@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { invalidate } from '$app/navigation'
+	import site from '$lib/builder/stores/data/site'
 
 	let { data, children } = $props()
 
@@ -47,9 +48,16 @@
 		let res
 		if (action === 'insert') {
 			if (Array.isArray(data)) {
-				res = await supabase.from(table).insert(data).select('id')
+				res = await supabase
+					.from(table)
+					.insert(data.map((r) => ({ ...r, owner_site: $site.id })))
+					.select('id')
 			} else {
-				res = await supabase.from(table).insert(data).select('id').single()
+				res = await supabase
+					.from(table)
+					.insert({ ...data, owner_site: $site.id })
+					.select('id')
+					.single()
 			}
 		} else if (action === 'update') {
 			if (id) {

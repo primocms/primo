@@ -22,7 +22,7 @@
 	import { abbreviationTracker } from '../../libraries/emmet/plugin'
 
 	import { highlightedElement } from '../../stores/app/misc'
-	import { code as site_code } from '../../stores/data/site'
+	import { code as site_code, design as site_design } from '../../stores/data/site'
 	import page_type from '../../stores/data/page_type'
 	import { basicSetup } from 'codemirror'
 	import { EditorView, keymap } from '@codemirror/view'
@@ -32,6 +32,7 @@
 	import { svelteCompletions, cssCompletions, extract_css_variables } from './extensions/autocomplete'
 	import { getLanguage } from './extensions'
 	import highlight_active_line from './extensions/inspector'
+	import { design_tokens } from '$lib/builder/constants.js'
 
 	/**
 	 * @typedef {Object} Props
@@ -92,7 +93,7 @@
 	const language = getLanguage(mode)
 
 	const css_completions_compartment = new Compartment()
-	let css_variables = $state(extract_css_variables($site_code.css + $page_type.css + value))
+	let css_variables = $state(Object.entries(design_tokens).map(([token, { variable }]) => `--theme-${variable}`))
 
 	const editor_state = EditorState.create({
 		selection: {
@@ -203,10 +204,6 @@
 		]
 	})
 
-	// re-configure css-variables autocomplete when variables change
-	$effect(() => {
-		css_variables = extract_css_variables($site_code.css + $page_type.css + value)
-	})
 	$effect(() => {
 		mode === 'css' &&
 			Editor &&
@@ -322,7 +319,7 @@
 
 	:global(.ͼo .cm-tooltip-autocomplete > ul > li .cm-completionLabel) {
 		padding: 3px 8px;
-		border-right: 1px solid var(--primo-color-brand);
+		border-right: 1px solid var(--weave-primary-color);
 		color: white;
 		font-size: 0.75rem;
 		font-family: 'Fira Code';

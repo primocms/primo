@@ -1,6 +1,5 @@
 <script>
 	import { onDestroy } from 'svelte'
-	import '@fontsource/fira-code/index.css'
 	import _ from 'lodash-es'
 	import Icon, { loadIcons, enableCache } from '@iconify/svelte'
 	import { browser } from '$app/environment'
@@ -19,7 +18,7 @@
 	import { hydrate_active_data } from './stores/hydration.js'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import { site_design_css } from '$lib/builder/code_generators.js'
-	import { site_html, page_html } from '$lib/builder/stores/app/page'
+	import { site_html } from '$lib/builder/stores/app/page'
 	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
 	import { processCode } from '$lib/builder/utils.js'
 	import { get_site_data } from '$lib/builder/stores/helpers.js'
@@ -245,7 +244,7 @@
 	.grab-handle {
 		color: #222;
 		padding-block: 3px;
-		background: var(--primo-color-brand);
+		background: var(--weave-primary-color);
 		z-index: 99;
 		border-radius: 1px;
 		font-size: 10px;

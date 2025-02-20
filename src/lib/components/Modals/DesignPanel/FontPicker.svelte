@@ -195,7 +195,7 @@
 			padding: 0.5rem;
 
 			&:hover {
-				color: var(--primo-color-brand);
+				color: var(--weave-primary-color);
 			}
 		}
 	}
@@ -204,7 +204,7 @@
 		transition: 0.1s;
 
 		&.active {
-			color: var(--primo-color-brand);
+			color: var(--weave-primary-color);
 		}
 	}
 </style>

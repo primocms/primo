@@ -166,7 +166,7 @@
 		&:hover {
 			z-index: 1; /* show full shadow */
 			/* box-shadow: var(--primo-ring); */
-			/* background: var(--primo-color-brand); */
+			/* background: var(--weave-primary-color); */
 			/* color: var(--colr-gray-9); */
 			background: #292929;
 			color: #E7E7E7l;

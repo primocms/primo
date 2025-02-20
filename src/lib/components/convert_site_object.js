@@ -140,28 +140,13 @@ function build_pages(pages, page_master_id) {
 	}))
 }
 
-/** @returns {import('$lib').Field} */
-function build_head_embed_field(page_master_id) {
-	return {
-		id: uuidv4(),
-		key: 'head-embed',
-		label: 'Head Embed',
-		type: 'text',
-		options: {},
-		is_static: false,
-		index: 10,
-		parent: null,
-		page_type: page_master_id
-	}
-}
-
 /** @returns {import('$lib').Page_Type} */
 function build_standard_page_type(site) {
 	return {
 		id: uuidv4(),
 		name: 'Default',
 		code: Enclosing_Code(),
-		site: site.id,
+		owner_site: site.id,
 		color: '#222',
 		icon: 'iconoir:page',
 		index: 0,
