@@ -100,7 +100,7 @@
 			<section>
 				<h3 class="subheading">Invitations</h3>
 				<ul>
-					{#each invitations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) as { email, created_at }}
+					{#each invitations as { email, created_at }}
 						<li>
 							<span class="letter">{email[0]}</span>
 							<span class="email">{email}</span>
