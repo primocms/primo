@@ -339,7 +339,6 @@ export async function create_starter({ details, preview, site_data = null }) {
 					owner_site: site_id
 				}),
 				factories.Section({
-					id: master_palette_id,
 					page: home_page_id,
 					master: master_palette_id,
 					owner_site: site_id

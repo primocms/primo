@@ -37,10 +37,10 @@ export const actions = {
 					email: res.user?.email,
 					is_full_user: false
 				}),
-				supabase_admin.from('collaborators').insert({ user: res.user.id, owner_site: invitation.site, role: invitation.role })
+				supabase_admin.from('collaborators').insert({ user: res.user.id, owner_site: invitation.owner_site, role: invitation.role })
 			])
-
 			await supabase.auth.signInWithPassword({ email, password })
+			throw redirect(303, `/${invitation.owner_site}`)
 		}
 	}
 }

@@ -68,7 +68,6 @@ export async function load(event) {
 		const { data } = await supabase.from('page_types').select('*, fields(*), entries(*)').eq('id', page_type_id).single()
 		page_type = data
 	}
-
 	return {
 		role: collaborator?.role || 'DEV',
 		site: site_data,

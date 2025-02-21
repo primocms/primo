@@ -163,7 +163,7 @@
 			}
 
 			&:focus {
-				background-color: #208259;
+				background-color: var(--weave-primary-color-dark);
 			}
 		}
 	}

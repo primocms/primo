@@ -10,7 +10,7 @@ export async function load(event) {
 
   if (is_marketplace) {
     const [{ data: site_groups }, { data: symbol_groups }, { data: marketplace_symbol_groups }] = await Promise.all([
-      supabase.from('site_groups').select('*').match({ 'sites.is_starter': true }).order('created_at', { ascending: false }).match({ owner: session.user.id }),
+      supabase.from('site_groups').select('*, sites!left(*)').match({ 'sites.is_starter': true }).order('created_at', { ascending: false }).match({ owner: session.user.id }),
       supabase.from('library_symbol_groups').select(`*)`).eq('owner', session.user.id).order('created_at', { ascending: false }),
       axios.get('https://weave-marketplace.vercel.app/api/symbol_groups')
     ])

@@ -111,7 +111,7 @@ export const Page = (page = {}) => ({
  * @returns {import('$lib').Page_Type}
  */
 export const Page_Type = (page_type = {}) => ({
-	id: uuidv4(),
+	id: page_type.id || uuidv4(),
 	name: page_type.name || '',
 	code: {
 		head: '',

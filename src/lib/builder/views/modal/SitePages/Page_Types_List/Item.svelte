@@ -2,7 +2,6 @@
 	import Icon from '@iconify/svelte'
 	import { createEventDispatcher, getContext } from 'svelte'
 	const dispatch = createEventDispatcher()
-	import active_page from '$lib/builder/stores/data/page'
 	import { id as siteID } from '$lib/builder/stores/data/site'
 	import { validate_url } from '$lib/builder/utilities'
 	import PageForm from './PageTypeForm.svelte'
@@ -11,11 +10,12 @@
 
 	/**
 	 * @typedef {Object} Props
+	 * @property {boolean} active
 	 * @property {import('$lib').Page_Type} page
 	 */
 
 	/** @type {Props} */
-	let { page } = $props()
+	let { active, page } = $props()
 
 	let editing_page = $state(false)
 
@@ -45,7 +45,7 @@
 		<span class="icon" style:background={page.color}>
 			<Icon icon={page.icon} />
 		</span>
-		<div class="page-item-container" class:active={page.id === $active_page.id}>
+		<div class="page-item-container" class:active>
 			<div class="left">
 				<a class="name" href={full_url} onclick={() => modal.hide()}>
 					{page.name}
@@ -118,8 +118,8 @@
 		/* border-top-left-radius: 0;
 		border-bottom-left-radius: 0; */
 
-		&.active {
-			background: #222;
+		&.active a {
+			color: var(--weave-primary-color);
 			/* outline: 1px solid var(--weave-primary-color); */
 		}
 

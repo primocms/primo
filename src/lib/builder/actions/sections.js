@@ -132,7 +132,7 @@ export async function move_section(block_being_moved, to) {
  * @param {Object} options.changes - The changes to apply to the section.
  * @returns {Promise<void>}
  */
-export async function update_section(section_id, { updated_data, changes: old_changes, build_page = true }) {
+export async function update_section(section_id, { updated_data, build_page = true }) {
 	const original_section = get_section(section_id)
 	let original_section_entries = _.cloneDeep(original_section.entries)
 
@@ -151,7 +151,6 @@ export async function update_section(section_id, { updated_data, changes: old_ch
 
   const changes = _.cloneDeep({
     section_entries: db_utils.generate_entry_changes(original_section.entries, updated_section_entries),
-		// symbol_entries: db_utils.generate_entry_changes(original_symbol.entries, updated_data.entries),
     symbol_fields: db_utils.generate_field_changes(original_symbol.fields, updated_data.fields),
 		page_entries: db_utils.generate_entry_changes(original_page_entries, updated_page_entries),
 		site_entries: db_utils.generate_entry_changes(original_site_entries, updated_site_entries)

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit'
 import supabase_admin from '$lib/supabase/admin'
 import { Resend } from 'resend'
-import { PRIVATE_RESEND_KEY } from '$env/static/private'
+import { PRIVATE_RESEND_KEY, PRIVATE_RESEND_EMAIL } from '$env/static/private'
 const resend = new Resend(PRIVATE_RESEND_KEY)
 
 export async function GET({ url }) {
@@ -29,7 +29,7 @@ export async function GET({ url }) {
 	return json([owner, ...collaborators])
 }
 
-export async function POST({ request }) {
+export async function POST({ request, url }) {
 	const { email, site, role } = await request.json()
 
 	// handle existing user or new user
@@ -43,18 +43,18 @@ export async function POST({ request }) {
 		const { data: user_data } = await supabase_admin.auth.admin.getUserById(existing_user.id)
 		await supabase_admin.from('collaborators').insert({ owner_site: site.id, user: existing_user.id, profile: existing_user.id, role })
 		await resend.emails.send({
-			from: 'primo.press <noreply@cloud.primocms.org>',
+			from: `WeaveCMS <${PRIVATE_RESEND_EMAIL}>`,
 			to: [user_data.user.email],
 			subject: 'Site Invitation',
-			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. https://primo.press/${site.id}`
+			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. ${url.origin}/${site.id}`
 		})
 	} else {
 		await supabase_admin.from('invitations').insert({ email, owner_site: site.id, role })
 
-		const invitation_url = `https://primo.press/auth/create-account?email=${email}`
+		const invitation_url = `${url.origin}/auth/create-account?email=${email}`
 
 		await resend.emails.send({
-			from: 'primo.press <noreply@cloud.primocms.org>',
+			from: `WeaveCMS <${PRIVATE_RESEND_EMAIL}>`,
 			to: [email],
 			subject: 'Site Invitation',
 			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. Click here to sign up: ${invitation_url}`

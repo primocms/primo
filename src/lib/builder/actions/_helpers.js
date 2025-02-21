@@ -149,21 +149,31 @@ export async function handle_field_changes_new(changes, args = {}) {
 	const updates_and_deletions = changes.filter((c) => c.action === 'update' || c.action === 'delete')
 
 	if (insertions.length > 0) {
-		await get(page).data.supabase.from('fields').insert(sort_by_hierarchy(insertions))
+		await dataChanged({
+			table: 'fields',
+			action: 'insert',
+			data: sort_by_hierarchy(insertions)
+		})
 	}
 
 	await Promise.all(
 		updates_and_deletions.map(async change => {
 			if (change.action === 'update') {
-				const res = await get(page).data.supabase.from('fields').update({
-					...change.data,
-					...args
-				}).eq('id', change.id)
+				await dataChanged({
+					table: 'fields',
+					action: 'update',
+					data: {
+						...change.data,
+						...args
+					},
+					id: change.id
+				})
 			} else if (change.action === 'delete') {
-				const res = await get(page).data.supabase.from('fields').delete({
-					...change.data,
-					...args
-				}).eq('id', change.id)
+				await dataChanged({
+					table: 'fields',
+					action: 'delete',
+					id: change.id
+				})
 			}
 		})
 	)
@@ -176,22 +186,31 @@ export async function handle_content_changes_new(changes, args = {}) {
 
 	if (insertions.length > 0) {
 		// first, insert new entries
-		await get(page).data.supabase.from('entries').insert(sort_by_hierarchy(insertions))
+		await dataChanged({
+			table: 'entries',
+			action: 'insert',
+			data: sort_by_hierarchy(insertions)
+		})
 	}
 
 	// then do everything else, referencing new ids and existing ids
 	await Promise.all(
 		updates_and_deletions.map(async change => {
 			if (change.action === 'update') {
-				const res = await get(page).data.supabase.from('entries').update({
-					...change.data,
-					...args
-				}).eq('id', change.id)
+				await dataChanged({
+					table: 'entries',
+					action: 'update',
+					data: {
+						...change.data,
+						...args
+					},
+				})
 			} else if (change.action === 'delete') {
-				const res = await get(page).data.supabase.from('entries').delete({
-					...change.data,
-					...args
-				}).eq('id', change.id)
+				await dataChanged({
+					table: 'entries',
+					action: 'delete',
+					id: change.id
+				})
 			}
 		})
 	)
@@ -376,6 +395,132 @@ export function get_entry_field({ entry, entries, fields }) {
 			return field.id === parent_entry?.field
 		}
 	})
+}
+
+
+/**
+ * Generates pages entry changes based on page type field changes.
+ *
+ * @param {Object} params - The parameters for generating changes.
+ * @param {Array} params.page_entries - The current entries of the page.
+ * @param {Array} params.field_changes - The changes made to the fields.
+ * @param {Array} params.original_fields - The original fields before changes.
+ * @param {Array} params.updated_fields - The updated fields after changes.
+ * @returns {Object} An object containing the generated changes and updated entries.
+ * @property {Array} changes - The generated changes to be applied to the section entries.
+ * @property {Array} entries - The updated section entries after applying the changes.
+ */
+export function sync_page_content_with_field_changes({ page_entries, field_changes, original_fields, updated_fields }) {
+	const new_fields = field_changes.filter((c) => c.action === 'insert').map((c) => c.data)
+
+	function get_entry_field({ entry, entries, fields }) {
+		return fields.find((field) => {
+			if (entry.field) {
+				return field.id === entry.field
+			} else {
+				const parent_entry = entries.find((e) => e.id === entry.parent)
+				return field.id === parent_entry?.field
+			}
+		})
+	}
+
+	const deleted_page_entries = []
+	const modified_page_entries = []
+	const unmodified_page_entries = []
+	for (const section_entry of page_entries) {
+		const entry_field = get_entry_field({ entry: section_entry, entries: page_entries, fields: updated_fields })
+
+		// if entry belongs to a field that no longer exists, delete it
+		if (!entry_field) {
+			deleted_page_entries.push(section_entry)
+			continue
+		}
+
+		// TEST: delete container entries when their field type has changed
+		// if entry field type has changed, modify and clear its value
+		const original_field = get_entry_field({ entry: section_entry, entries: page_entries, fields: original_fields })
+		if (original_field && original_field.type !== entry_field.type) {
+			const modified_entry = {
+				...section_entry,
+				value: get_empty_value(entry_field)
+			}
+			modified_page_entries.push(modified_entry)
+			continue
+		}
+
+		// keep all other entries
+		unmodified_page_entries.push(section_entry)
+	}
+
+	// create new symbol entries based on new fields
+	// we do this instead of looping through updated symbol entries because:
+	// - we don't want to add new repeater container entries, or their children (i.e. empty entries)
+	// - we don't want to add orphaned entries, in the case where we're adding a new child field to an existing repeater field and the section doesn't have any repeater container entries
+	const new_page_entries = []
+	for (const new_field of new_fields) {
+		// if new field is the descendent of a new repeater field, don't add any entries
+		const has_ancestor_repeater = get_ancestors(new_field, new_fields).some((f) => f.type === 'repeater')
+		if (has_ancestor_repeater) {
+			continue
+		}
+
+		// handle new root-level field (including groups)
+		if (!new_field.parent) {
+			const new_entry = Content_Row({ value: get_empty_value(new_field), field: new_field.id })
+			new_page_entries.push(new_entry)
+		}
+
+		// handle repeater child
+		// if new field's parent matches the field of one or more existing section repeater containers, create and add an entry for each container
+		const existing_section_entry_parent_containers = unmodified_page_entries.filter((section_entry) => {
+			const is_container = section_entry.index !== null
+			const parent_entry = unmodified_page_entries.find((e) => e.id === section_entry.parent)
+			return is_container && parent_entry.field === new_field.parent
+		})
+		if (existing_section_entry_parent_containers.length > 0) {
+			const new_entries = existing_section_entry_parent_containers.map((container) => {
+				return Content_Row({ value: get_empty_value(new_field), parent: container.id, field: new_field.id })
+			})
+			new_page_entries.push(...new_entries)
+			continue
+		}
+
+    // handle group child - check both existing and newly created group entries
+    const parent_group_entry = [...unmodified_page_entries, ...new_page_entries].find((section_entry) => {
+			return section_entry.field && section_entry.field === new_field.parent
+		})
+		if (parent_group_entry) {
+				const new_entry = Content_Row({ value: get_empty_value(new_field), parent: parent_group_entry.id, field: new_field.id })
+				new_page_entries.push(new_entry)
+				continue
+		}
+	}
+
+	const page_entry_insertions = new_page_entries.map((entry) => ({
+		action: 'insert',
+		id: entry.id,
+		data: _.cloneDeep(entry)
+	}))
+
+	const page_entry_updates = modified_page_entries.map((entry) => ({
+		action: 'update',
+		id: entry.id,
+		data: { value: entry.value }
+	}))
+
+	const page_entry_deletions = deleted_page_entries.map((entry) => ({
+		action: 'delete',
+		id: entry.id
+	}))
+
+	const all_changes = [...page_entry_deletions, ...page_entry_updates, ...page_entry_insertions]
+
+	const updated_entries = [...unmodified_page_entries, ...modified_page_entries, ...new_page_entries]
+
+	return {
+		changes: all_changes,
+		entries: updated_entries
+	}
 }
 
 /**

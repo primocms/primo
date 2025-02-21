@@ -9,18 +9,19 @@ import { dataChanged } from '$lib/builder/database'
 import { Section, Page_Type } from '$lib/builder/factories'
 import { handle_field_changes, handle_content_changes } from './_helpers'
 import * as db_utils from './_db_utils'
+import * as helpers from '$lib/builder/actions/_helpers'
 
 export default {
-	/** @param {{ details: { id: string, name: string, url: string, parent: string | null}, source: string | null }} new_page */
-	create: async ({ details }) => {
+	/** @param {{ id: string, name: string, color: string, icon: string }} pt_options */
+	create: async (pt_options) => {
 		// const original_pages = cloneDeep(get(stores.pages))
 
 		const new_page_type = Page_Type({
-			...details,
+			...pt_options,
 			owner_site: get(site)['id']
 		})
 
-		const db_id = await dataChanged({
+		await dataChanged({
 			table: 'page_types',
 			action: 'insert',
 			data: _.omit(new_page_type, ['entries', 'fields'])
@@ -33,12 +34,10 @@ export default {
 			table: 'sections',
 			action: 'insert',
 			data: {
-				page_type: db_id,
+				page_type: new_page_type.id,
 				index: 0
 			}
 		})
-
-		return db_id
 
 		// TODO: reinstate undo/redo
 
@@ -117,7 +116,7 @@ export const update_page_type_entries = {
 		const changes = db_utils.generate_entry_changes(original_entries, updated_entries)
 		const page_type_id = get(stores.page_type).id
 
-		await handle_content_changes(changes, [], {
+		await helpers.handle_content_changes_new(changes, {
 			page_type: page_type_id
 		})
 	}
@@ -125,51 +124,50 @@ export const update_page_type_entries = {
 
 export async function update_page_type({ entries, fields }) {
 	const original_page_type = _.cloneDeep(get(stores.page_type))
-
 	const page_type_id = get(stores.page_type).id
-	stores.page_type.update((store) => ({ ...store, entries, fields }))
 
 	const changes = {
 		entries: db_utils.generate_entry_changes(original_page_type.entries, entries),
 		fields: db_utils.generate_field_changes(original_page_type.fields, fields),
 	}
 
-	const field_db_ids = await handle_field_changes(changes.fields, { page_type: page_type_id })
-	const content_db_ids = await handle_content_changes(changes.entries, field_db_ids, {
-		page_type: page_type_id
+	db_utils.remap_entries_and_fields({
+		changes: {
+			fields: changes.fields,
+			entries: changes.entries
+		},
+		items: {
+			fields,
+			entries
+		}
 	})
 
-	// STORE: update local entries w/ content_db_ids because subsequent entries changes need updated IDs
-	stores.page_type.update((store) => ({
-		...store,
-		entries: store.entries.map((e) => ({
-			...e,
-			id: content_db_ids[e.id] || e.id,
-			parent: content_db_ids[e.parent] || e.parent,
-			field: field_db_ids[e.field] || e.field
-		})),
-		fields: store.fields.map((f) => ({ ...f, id: field_db_ids[f.id] || f.id }))
-	}))
+	stores.page_type.update((store) => ({ ...store, entries, fields }))
+
+	await helpers.handle_field_changes_new(changes.fields, { page_type: page_type_id })
+	await helpers.handle_content_changes_new(changes.entries, {
+		page_type: page_type_id
+	})
 
 	// DB: update page type instances
 	const pages_of_type = await dataChanged({
 		table: 'pages',
 		action: 'select',
-		data: 'id',
+		data: 'id, entries(*)',
 		match: { page_type: page_type_id }
 	})
 
-	// modify entries entries for pages instances
-	await Promise.all(pages_of_type.map(({ id: page_id }) => handle_content_changes(changes.entries, field_db_ids, { page: page_id })))
+	// modify entries for pages instances
+	await Promise.all(pages_of_type.map(async ({ id: page_id, entries }) => {
+		const synced = helpers.sync_page_content_with_field_changes({
+			page_entries: entries,
+			field_changes: changes.fields,
+			original_fields: original_page_type.fields,
+			updated_fields: fields
+		})
+		await helpers.handle_content_changes_new(synced.changes, { page: page_id })
+	}))
 
-	// const page_type_id = get(stores.page_type).id
-	// await update_timeline({
-	// 	doing: async () => {
-	// 	},
-	// 	undoing: async () => {
-	// 		// TODO: do the inverse
-	// 	}
-	// })
 }
 
 // toggle symbol in page type

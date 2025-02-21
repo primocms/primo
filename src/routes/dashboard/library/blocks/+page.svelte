@@ -77,7 +77,15 @@
 
 	async function create_symbol({ code, content, preview }) {
 		const active_group = $page.url.searchParams.get('group')
-		await actions.create_library_symbol({ code, content, preview, group: active_group })
+		await actions.create_library_symbol({
+			code,
+			content: {
+				entries: content.updated.entries,
+				fields: content.updated.fields
+			},
+			preview,
+			group: active_group
+		})
 		invalidate('app:data')
 		creating_block = false
 	}

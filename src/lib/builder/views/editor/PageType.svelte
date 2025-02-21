@@ -92,10 +92,9 @@
 					button: {
 						icon: 'fas fa-check',
 						label: 'Save',
-						onclick: (updated_data, changes) => {
+						onclick: (updated_data) => {
 							update_section(section_id, {
 								updated_data,
-								changes,
 								build_page: false
 							})
 							modal.hide()

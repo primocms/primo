@@ -179,13 +179,12 @@
 					button: {
 						icon: 'fas fa-check',
 						label: 'Save',
-						onclick: (updated_data, changes) => {
+						onclick: (updated_data) => {
 							unlock_block()
 							broadcastChanged({ page_id: page.id })
 							modal.hide()
 							update_section(section_id, {
-								updated_data,
-								changes
+								updated_data
 							})
 						}
 					}

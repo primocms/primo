@@ -177,35 +177,7 @@
 		goto(window.location.pathname, { replaceState: true }) // remove query params from url
 	})
 
-	$effect.pre(() => {
-		if (subscription_parameter === 'CUSTOM_DOMAIN') {
-			// modal.show('DEPLOY', { stage: 'CONNECTING_DOMAIN--CONNECT' }, { maxWidth: '800px' })
-		} else if (subscription_parameter === 'FORMS') {
-			// modal.show('USER_FORMS', { subscribed: true }, { maxWidth: '600px' })
-		} else if (subscription_parameter === 'COLLABORATOR') {
-			// modal.show('COLLABORATION', { subscribed: true }, { maxWidth: '600px' })
-		}
-	})
-
 	let primo_symbols = []
-	// $page.data.supabase
-	// 	.from('pages')
-	// 	.select('id, name')
-	// 	.eq('site', '1e799b01-77f2-469c-afeb-ab405eee9a4d')
-	// 	.then(async ({ data }) => {
-	// 		primo_symbols = await Promise.all(
-	// 			await data
-	// 				.filter((p) => p.name !== 'Home Page')
-	// 				.map(async (p) => {
-	// 					const { data: sections, error } = await $page.data.supabase.from('sections').select('*, symbol(*, site(content, code)), page(id)').match({ 'page.id': p.id })
-	// 					const symbols = sections.filter((section) => section.page).map((item) => item.symbol)
-	// 					return {
-	// 						name: p.name,
-	// 						symbols
-	// 					}
-	// 				})
-	// 		)
-	// 	})
 </script>
 
 <Primo
@@ -218,18 +190,6 @@
 			icon: 'solar:pallete-2-bold',
 			label: 'Design',
 			onclick: () => show({ id: 'DESIGN', options: { height: '100%' } })
-		}
-	]}
-	dropdown={[
-		// {
-		// 	icon: 'tabler:social',
-		// 	label: 'OG Images',
-		// 	onclick: () => show({ id: 'METADATA', options: { height: '100%' } })
-		// },
-		{
-			icon: 'fluent:form-multiple-48-filled',
-			label: 'Form Builder',
-			onclick: () => show({ id: 'USER_FORMS', options: { max_width: '500px' } })
 		}
 	]}
 	secondary_buttons={[

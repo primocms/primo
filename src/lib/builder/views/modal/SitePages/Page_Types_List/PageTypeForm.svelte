@@ -1,4 +1,5 @@
 <script>
+	import { v4 as uuid } from 'uuid'
 	import { createEventDispatcher } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import UI from '../../../../ui/index.js'
@@ -9,7 +10,6 @@
 
 	const dispatch = createEventDispatcher()
 
-	let new_page_color = ''
 	/**
 	 * @typedef {Object} Props
 	 * @property {string} [new_page_name]
@@ -22,6 +22,7 @@
 	let page_creation_disabled = $derived(!new_page_name)
 
 	let new_page_details = $derived({
+		id: uuid(),
 		name: new_page_name,
 		color: new_color,
 		icon: new_icon
@@ -38,10 +39,7 @@
 <form
 	onsubmit={(e) => {
 		e.preventDefault()
-		dispatch('create', {
-			details: new_page_details,
-			source: new_page_color
-		})
+		dispatch('create', new_page_details)
 	}}
 	in:fade={{ duration: 100 }}
 >

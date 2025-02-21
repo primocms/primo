@@ -3,8 +3,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import Symbol from '../../components/Site_Symbol.svelte'
 	import { Symbol as Create_Symbol } from '../../factories'
-	import { site_design_css } from '$lib/builder/code_generators.js'
-	import { design as siteDesign } from '$lib/builder/stores/data/site.js'
+	import { site_html } from '$lib/builder/stores/app/page'
 	import { site as site_store } from '$lib/builder/stores/data'
 	import { supabase } from '$lib/builder/supabase'
 	import { get_site_data } from '$lib/builder/stores/helpers.js'
@@ -61,27 +60,6 @@
 	}
 
 	let checked = $state([])
-
-	let site_html = $state(null)
-	async function build_site_html(html) {
-		if (html.length === 0) return ''
-		const site_data = await get_site_data({})
-		const { data } = await axios.post(`/api/render`, {
-			// id: symbol.id,
-			code: {
-				html: `<svelte:head>${html + site_design_css($siteDesign)}</svelte:head>`,
-				css: '',
-				js: ''
-			},
-			data: site_data,
-			dev_mode: false
-		})
-
-		site_html = data.head
-	}
-	$effect(() => {
-		if (browser) build_site_html(site.code.head)
-	})
 </script>
 
 <ModalHeader
@@ -116,21 +94,21 @@
 			<ul>
 				{#each columns[0] as symbol (symbol.id)}
 					<li>
-						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={site_html} controls_enabled={false} />
+						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={$site_html} controls_enabled={false} />
 					</li>
 				{/each}
 			</ul>
 			<ul>
 				{#each columns[1] as symbol (symbol.id)}
 					<li>
-						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={site_html} controls_enabled={false} />
+						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={$site_html} controls_enabled={false} />
 					</li>
 				{/each}
 			</ul>
 			<ul>
 				{#each columns[2] as symbol (symbol.id)}
 					<li>
-						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={site_html} controls_enabled={false} />
+						<Symbol checked={checked.includes(symbol.id)} onclick={() => include_symbol(symbol)} {symbol} site={$site_store} append={$site_html} controls_enabled={false} />
 					</li>
 				{/each}
 			</ul>
