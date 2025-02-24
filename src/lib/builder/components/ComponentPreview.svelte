@@ -11,9 +11,8 @@
 	import { onMount, tick } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import { dynamic_iframe_srcdoc } from './misc.js'
-	import { locale, highlightedElement } from '../stores/app/misc'
-	// import JSONTree from 'svelte-json-tree'
-	import { JsonView } from '@zerodevx/svelte-json-view'
+	import { highlightedElement } from '../stores/app/misc'
+	import { Inspect } from 'svelte-inspect-value'
 	import Icon from '@iconify/svelte'
 	import { design as siteDesign, code as siteCode } from '$lib/builder/stores/data/site.js'
 	import { site_design_css } from '$lib/builder/code_generators.js'
@@ -299,15 +298,7 @@
 
 	{#if consoleLog}
 		<div class="logs" transition:slide|local>
-			<div class="log">
-				{#if typeof consoleLog === 'object'}
-					<!-- <JSONTree value={consoleLog} /> -->
-					<JsonView json={consoleLog} />
-					<pre>{@html JSON}</pre>
-				{:else}
-					<pre>{@html consoleLog}</pre>
-				{/if}
-			</div>
+			<Inspect value={consoleLog} theme="dark" borderless={true} noanimate={true} showTools={false} />
 		</div>
 	{/if}
 	<div in:fade class="preview-container" class:loading bind:this={container} bind:clientWidth={previewWidth}>
@@ -402,24 +393,6 @@
 		}
 
 		.logs {
-			--json-tree-font-family: 'Fira Code', serif, monospace;
-			--json-tree-label-color: #569cd6;
-
-			display: grid;
-			gap: 0.5rem;
-			background: white;
-			border: 2px solid var(--color-gray-8);
-			padding: 0.75rem 1rem;
-			overflow: auto;
-
-			pre {
-				display: block;
-			}
-
-			.log:not(:only-child):not(:last-child) {
-				padding-bottom: 0.5rem;
-				border-bottom: 1px solid rgba(250, 250, 250, 0.2);
-			}
 		}
 	}
 	iframe {
