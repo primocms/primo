@@ -1337,3 +1337,22 @@ GRANT ALL ON TABLE "public"."symbols" TO "anon";
 GRANT ALL ON TABLE "public"."symbols" TO "authenticated";
 
 GRANT ALL ON TABLE "public"."symbols" TO "service_role";
+
+-- Create buckets
+INSERT INTO
+  storage.buckets (id, name, public)
+VALUES
+  ('sites', 'sites', true),
+  ('symbols', 'symbols', true);
+
+-- Create policies for authenticated users to access the 'sites' bucket
+CREATE POLICY "Allow authenticated access to sites bucket" ON storage.objects FOR ALL TO authenticated USING (
+  (bucket_id = 'sites' :: text)
+  AND (auth.role() = 'authenticated' :: text)
+);
+
+-- Create policies for authenticated users to access the 'symbols' bucket
+CREATE POLICY "Allow authenticated access to symbols bucket" ON storage.objects FOR ALL TO authenticated USING (
+  (bucket_id = 'symbols' :: text)
+  AND (auth.role() = 'authenticated' :: text)
+);
