@@ -43,7 +43,7 @@
 		const field_to_compare = fields.find((f) => f.id === field_id)
 		if (!field_to_compare) {
 			// field has been deleted, reset condition
-			field.options.condition = null
+			// field.options.condition = null // causes unsafe mutation svelte error
 			return false
 		}
 

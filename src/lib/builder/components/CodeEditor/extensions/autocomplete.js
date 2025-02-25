@@ -114,7 +114,7 @@ function svelteCompletions(data) {
 
 
 function cssCompletions(list = []) {
-  const variables = list.map(item => item.substring(0, item.length - 1))
+  const variables = list.map(item => item.substring(0, item.length))
   return cssLanguage.data.of({
     autocomplete: (context) => {
       const word = context.matchBefore(/\S*/)
