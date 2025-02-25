@@ -7,80 +7,89 @@
   </a>
 </p>
 
-<h3 align="center">The modern monolithic CMS</h3>
-<p align="center">Primo makes it a blast to build pages, update content, and edit code - one block at a time.</p>
+# Primo V3 Alpha
 
-<p align="center">
-    <a href="https://primocms.org/">Primocms.org</a> •
-    <a href="https://discord.com/invite/DMQshmek8m">Discord</a> •
-    <a href="https://docs.primocms.org/">Docs</a> •
-    <a href="https://primocms.org#section-b18b744b-92ba-4bf9-96fd-4d86c0a842b8">Newsletter</a> •
-    <a href="https://www.youtube.com/@primocms">YouTube</a>
-</p>
+## ✨ V3 Features & Improvements
 
-![screenshot](https://github.com/primocms/primo/raw/master/screenshot-v2.png)
+- Custom Page Types (i.e. Content Types)
+- Dynamic content fields (i.e. 'Site Field', 'Page Field', 'Page' to update entity page content referenced on other pages)
+- Design system editor
+- 10x faster build times bc every page gets generated on update, instead of all at once. 
+- Conditional fields (to show/hide fields based on preceding field values)
+- CSS-library compatibility (bootstrap, tailwind, bulma, etc. all work reliably using a standard cdn link). 
+- UI/UX improvements
+  - Drag pages to reorder them in the page list
+  - Drag repeater items to reorder them
+  - Drag-and-drop functionality improved for adding blocks to page & now works on mobile.
+  - Block editor organized into code & content (i.e. fields & entries), UI improved.
+  - On-page editing significantly improved.
 
-## ⭐ Why Primo? 
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Accessible_Wardrobe_That_Women.png)
 
-Traditional monolithic CMSs like WordPress, Drupal, and Joomla enable quick setup and easy content editing, but rely on antiquated and heavy development practices (often relying on plugins and third-party services to customize the site and add new components). Headless CMSs have popped up to modernize the view layer with modern development practices and frameworks, but have a poorer content editing experience due to their decoupling from the content layer.
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Open_Sans.png)
 
-Primo is a modern approach to the monolithic CMS that builds on the traditional monolith's benefits of a quick setup and easy content editing alongside the benefits of modern development (i.e. Svelte). These combine into a web publishing tool that is significantly easier and more fun to use for both technical and non-technical users and enables you to build faster, more secure, and more unique websites.
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Pasted_Graphic_2.png)
 
-## ✨ Features
+![](https://cdn.primo.page/557834e8-7996-46f6-9328-0b84887d3bf7/staging/Stitch_Group_for.png)
 
-- Visual, on-page content editing
-- Drag-and-drop page building with blocks
-- Integrated development environment for blocks and pages
-- Static site generation
-- Real-time page collaboration
-- Internationalization
-- Multisite (1 server = infinity sites)
-- Deploys to Github (i.e. any web host)
+# Running Primo locally
+Primo isn't *really* self-hostable, yet, since it depends on a handful of [freemium] services, but the goal is that in the future it'll be fully self-hosted by default (probably a Docker image). You run it by cloning it, setting environment variables to connect it to the various services, then hosting the application (i.e. pushing it to a repo and connecting the repo to a host). You can also strip out the service-dependent bits yourself. 
 
-[Read more in the Docs](https://docs.primocms.org)
+Ensure you have accounts for all these services: 
+* Supabase
+* Resend
+* Cloudflare
+* Vercel, Netlify, Cloudflare, or another modern host. 
 
-# How to self-host Primo
-Primo depends on several [freemium] third-party services for easy hosting, authentication, database and storage, etc. Running your own Primo server is as easy as forking the [**Primo repo**](<https://github.com/primocms/primo>) and deploying it on a static host like Vercel or Netlify, which should only take a few minutes.
-
-Third-party services (all can be signed into with Github):
-
-- A modern web host like [**Vercel**](<https://vercel.com/>) or [**Netlify**](<https://netlify.com>) to host the Primo application & published sites (note that Cloudflare Pages is currently [unsupported](https://github.com/primocms/primo/issues/365) for hosting Primo, but you can still use it for your sites).
-
-- A [**Supabase**](<https://supabase.com>) account to manage your server's authentication, database, and file storage.
-
-- A [**Github**](<https://github.com>) account to deploy your sites to (unless you plan on manually downloading/uploading your site files to a host).
+Note: you'll need to set up your Supabase account first. Run the schema found in `primo_schema.sql` to set up your tables before continuing.
 
 
-<!-- -->
+```bash
+git clone -b v3 https://github.com/primocms/primo.git
+cd primo
+npm install
 
-## Installation
+# Rename the example environment file and add your credentials for Supabase, Cloudflare, and Resend
+mv .env.example .env
 
-1. Ensure you have an account with all the services listed above.
+npm run build 
+npm run preview
+```
 
-2. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the [**schema**](<https://raw.githubusercontent.com/mateomorris/primo/master/primo_schema.sql>) and pasting it into the editor.
+### To host Primo
+If you want to run a hosted version of Primo, all you need to do is deploy your repo and set your environment variables. You can deploy it on any webhost for zero dollars.
 
-3. Fork the [**Primo repository**](<https://github.com/primocms/primo>).
+1. Create a new Supabase project, go to the SQL editor, add a new query and provision your project by copying the [**schema**](<https://raw.githubusercontent.com/mateomorris/primo/master/primo_schema.sql>) and pasting it into the editor.
 
-4. Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
+1. Go to your web host and create a new project from your new repository, inputting your Supabase details (go to the API settings) as environment variables.
 
-    - PUBLIC\_SUPABASE\_URL
+```bash
+# Resend (transactional emails)
+PRIVATE_RESEND_KEY=
 
-    - PUBLIC\_SUPABASE\_PUBLIC\_KEY
+# Cloudflare (site hosting)
+PRIVATE_CLOUDFLARE_ZONE_ID=
+PRIVATE_CLOUDFLARE_ACCOUNT_ID=
+PRIVATE_R2_TOKEN=
+PRIVATE_R2_ACCESS_KEY_ID=
+PRIVATE_R2_SECRET_ACCESS_KEY=
+PRIVATE_CLOUDFLARE_WORKER_NAME=
+PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN=
+PRIVATE_CLOUDFLARE_HOSTNAMES_TOKEN=
+PRIVATE_CLOUDFLARE_ZONE_TOKEN=
+PRIVATE_CLOUDFLARE_SITES_BUCKET=
 
-    - PRIVATE\_SUPABASE\_PRIVATE\_KEY
-
-![Environment Variables](https://dbfnrqvkgwkjkzqgnfrd.supabase.co/storage/v1/object/public/images/Screenshot%202023-05-06%20at%206.45.43%20PM.png)
-
-
-5. Publish the project and navigate to the Primo authentication screen.
-
-6. The user account you create will be the server owner. You can manage all your server's data from the Supabase project dashboard.
-
-7. Finally, go back to your Supabase project & set the Site URL to the URL of your Primo site (under Authentication > URL Configuration > Site URL).
-<img width="750" alt="Screenshot 2023-07-11 at 12 44 26 PM" src="https://github.com/primocms/primo/assets/39444813/aff51c73-3935-4523-bf89-71f86f3f8f09">
+# Supabase (database & auth)
+PUBLIC_SUPABASE_URL=
+PUBLIC_SUPABASE_PUBLIC_KEY=
+PRIVATE_SUPABASE_PRIVATE_KEY=
+```
 
 
-For more details see this step-by-step installation [video guide](<https://www.youtube.com/watch?v=LEcKmhJsUzo>)
+## Things you can change/extend
+- Design system
+- Field types
+- Hosting destination
+- Authentication methods
+- Extensions (soon)
 
-## Updating
-You can merge upstream updates by clicking 'Sync fork' on your forked repository. Your updates will automatically deploy to your web host.

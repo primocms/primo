@@ -1,4 +1,4 @@
-import { rollup } from 'rollup'
+import { rollup } from '../lib/rollup-browser.min.js'
 import svelte from './server-svelte'
 import * as resolve from 'resolve.exports'
 import commonjs from '../workers/plugins/commonjs'
@@ -10,7 +10,7 @@ globalThis.Blob = Blob // use Node.js Blob instead of Jsdom's Blob
 
 const CDN_URL = 'https://cdn.jsdelivr.net/npm' // or 'https://unpkg.com'
 
-export default async function rollup_worker({ component, hydrated, buildStatic = true, format = 'esm' }) {
+export default async function rollup_worker({ component, hydrated, buildStatic = true, format = 'esm', dev_mode = false }) {
 	const final = {
 		ssr: '',
 		dom: '',
@@ -88,7 +88,7 @@ export default async function rollup_worker({ component, hydrated, buildStatic =
 		const output = (await bundle.generate({ format })).output[0].code
 		final.ssr = output
 	} else {
-		const bundle = await compile()
+		const bundle = await compile({ dev: dev_mode })
 		const output = (await bundle.generate({ format })).output[0].code
 		final.dom = output
 	}

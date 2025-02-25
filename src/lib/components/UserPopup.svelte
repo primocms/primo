@@ -3,33 +3,37 @@
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
 	import { clickOutside } from '$lib/utils'
-	import Letter from '$lib/ui/Letter.svelte'
+	// import { toast } from '@zerodevx/svelte-toast';
+	import Letter from '$lib/components/ui/Letter.svelte'
 	import { page } from '$app/stores'
 
-	let showing_popup = false
-
-	const { user, supabase } = $page.data
-
-	async function sign_out() {
-		await supabase.auth.signOut()
-		window.location.reload()
-	}
+	let showing_popup = $state(false)
 </script>
 
-<div class="MenuPopup" use:clickOutside on:click_outside={() => (showing_popup = false)}>
-	<button class="open-popup" on:click={() => (showing_popup = !showing_popup)}>
-		<Letter letter={user.email.slice(0, 1)} />
+<div class="MenuPopup" use:clickOutside onclick_outside={() => (showing_popup = false)}>
+	<button class="open-popup" onclick={() => (showing_popup = !showing_popup)}>
+		<Letter letter={$page.data.user.email.slice(0, 1)} />
 		<Icon icon="mdi:chevron-{showing_popup ? 'up' : 'down'}" />
 	</button>
 
 	{#if showing_popup}
 		<div class="popup" in:fade={{ duration: 100 }}>
 			<div class="row">
-				<Letter letter={user.email.slice(0, 1)} />
-				<span class="email">{user.email}</span>
+				<Letter letter={$page.data.user.email.slice(0, 1)} />
+				<span class="email">{$page.data.user.email}</span>
 			</div>
 			<hr />
-			<button class="row" on:click={sign_out}>
+			<!-- <button class="row" on:click={() => show('USAGE')}>
+				<div class="icon"><Icon icon="icon-park-outline:bill" /></div>
+				<span>Billing</span>
+			</button> -->
+			<button
+				class="row"
+				onclick={async () => {
+					await $page.data.supabase.auth.signOut()
+					window.location.reload()
+				}}
+			>
 				<div class="icon"><Icon icon="mdi:sign-out" /></div>
 				<span>Sign Out</span>
 			</button>

@@ -1,20 +1,26 @@
 <script>
-	import { page, navigating } from '$app/stores'
+	import { page } from '$app/stores'
 	import { fade } from 'svelte/transition'
-	import { enhance } from '$app/forms'
-	import ServerLogo from '$lib/ui/ServerLogo.svelte'
-	import Icon from '@iconify/svelte'
+	import AuthForm from './AuthForm.svelte'
+	import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
 
-	export let form
+	let { form } = $props()
 
-	let email = $page.url.searchParams.get('email') || ''
-	let password = ''
-	let password_confirm = ''
+	let email = $state($page.url.searchParams.get('email') || '')
+	let password = $state('')
 
-	$: error = form?.error
+	let error = $derived(form?.error)
 
-	$: signing_in = $page.url.searchParams.has('signup') ? false : true
-	$: signup_disabled = !password || password !== password_confirm
+	let signing_in = $state(false)
+
+	let stage = $state('signin')
+	$effect.pre(() => {
+		if ($page.url.searchParams.has('signup')) {
+			stage = 'signup'
+		} else if ($page.url.searchParams.has('reset')) {
+			stage = 'confirm_reset'
+		}
+	})
 </script>
 
 {#key signing_in}
@@ -26,53 +32,22 @@
 				</div>
 			</div>
 			<div class="box">
-				<header>
-					<!-- <img src={logo_dark} alt="breely logo" /> -->
-					<h1>{signing_in ? 'Sign in' : 'Create your account'}</h1>
-					{#if !signing_in}
-						<p>
-							Welcome to your new Primo server! Enter an email address and password you'll use to
-							administrate this server.
-						</p>
+				{#if stage === 'signin'}
+					{#snippet footer()}
+						<button onclick={() => (stage = 'reset_password')}>Forgot your password?</button>
+					{/snippet}
+					<AuthForm action="sign_in" title="Sign In" bind:email bind:password {footer} {error} />
+				{:else if stage === 'signup'}
+					<AuthForm action="sign_up" title="Sign Up" bind:email bind:password {error} />
+				{:else if stage === 'reset_password'}
+					{#if form?.success}
+						<span>A link to reset your password has been emailed to you.</span>
+					{:else}
+						<AuthForm action="reset_password" title="Reset Password" bind:email {error} />
 					{/if}
-				</header>
-				{#if error}
-					<div class="error">{error}</div>
+				{:else if stage === 'confirm_reset'}
+					<AuthForm action="confirm_password_reset" title="Reset Password" bind:email bind:password disable_email={true} {error} />
 				{/if}
-				<form
-					class="form"
-					method="POST"
-					action="?/{signing_in ? 'sign_in' : 'sign_up'}"
-					use:enhance
-				>
-					<div class="fields">
-						<label>
-							<span>Email</span>
-							<input bind:value={email} type="text" name="email" />
-						</label>
-						<label>
-							<span>Password</span>
-							<input bind:value={password} type="password" name="password" />
-						</label>
-						{#if !signing_in}
-							<label>
-								<span>Confirm password</span>
-								<input bind:value={password_confirm} type="password" name="password" />
-							</label>
-						{/if}
-					</div>
-					<button class="button" type="submit" disabled={signing_in ? false : signup_disabled}>
-						{#if !$navigating}
-							{#if signing_in}
-								<span>Sign in</span>
-							{:else}
-								<span>Sign up</span>
-							{/if}
-						{:else}
-							<div class="icon"><Icon icon="gg:spinner" /></div>
-						{/if}
-					</button>
-				</form>
 			</div>
 		</div>
 	</main>
@@ -92,36 +67,8 @@
 		margin-bottom: 2rem;
 
 		.logo-container {
-			width: 10rem;
+			width: 8rem;
 		}
-	}
-	header {
-		/* img {
-      padding-bottom: 40px;
-    } */
-		h1 {
-			text-align: left;
-			font-weight: 500;
-			font-size: 24px;
-			line-height: 24px;
-			padding-bottom: 1rem;
-			/* --typography-spacing-vertical: 1rem; */
-		}
-		p {
-			color: var(--color-gray-3);
-			padding-bottom: 1.5rem;
-		}
-	}
-	.error {
-		color: #f72228;
-		margin-bottom: 1rem;
-	}
-	.left {
-		padding: 3rem clamp(3rem, 10vw, 160px);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
 	}
 	.box {
 		width: 100%;
@@ -130,72 +77,11 @@
 		border-radius: 6px;
 		background-color: #1a1a1a;
 	}
-	.form {
-		display: grid;
-		gap: 2rem;
-		width: 100%;
-
-		.fields {
-			display: grid;
-			gap: 1rem;
-		}
-
-		label {
-			color: #b6b6b6;
-			display: grid;
-			gap: 0.5rem;
-			font-size: 0.875rem;
-			font-weight: 400;
-		}
-
-		input {
-			color: #dadada;
-			border-radius: 0.25rem;
-			border: 1px solid #6e6e6e;
-			padding: 0.75rem;
-			background-color: #1c1c1c;
-			font-size: 1rem;
-		}
-
-		.button {
-			color: #cecece;
-			font-weight: 500;
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			padding: 0.65rem;
-			border: 1.5px solid #35d994;
-			border-radius: 0.25rem;
-			transition: 0.1s;
-
-			&:not([disabled]):hover {
-				background-color: #35d994;
-				transition: 0.2s;
-				color: #121212;
-			}
-
-			&:focus {
-				background-color: #208259;
-			}
-
-			.icon {
-				animation: icon-spin 1s linear infinite;
-			}
-
-			&[disabled] {
-				opacity: 0.5;
-				cursor: not-allowed;
-			}
-
-			@keyframes icon-spin {
-				0% {
-					transform: rotate(0deg);
-				}
-				100% {
-					transform: rotate(360deg);
-				}
-			}
-		}
+	.left {
+		padding: 3rem clamp(3rem, 10vw, 160px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 </style>
