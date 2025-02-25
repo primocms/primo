@@ -4,6 +4,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import supabase_admin from '$lib/supabase/admin';
 import authorize from '../../authorize'
+import { PUBLIC_BASE_DOMAIN_NAME } from '$env/static/public'
 import * as ENV_VARS from '$env/static/private';
 
 
@@ -28,7 +29,7 @@ export const GET: RequestHandler = async (event) => {
       const folder_name = data.custom_domain || site_id
 
       const command = new PutObjectCommand({
-        Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+        Bucket: 'weave-sites',
         Key: `${folder_name}/staging/${key}`,
         ContentType: content_type,
       });
@@ -36,7 +37,7 @@ export const GET: RequestHandler = async (event) => {
       const signed = await getSignedUrl(s3_client, command, { expiresIn: 3600 });
       return json({
         signed,
-        url: `https://cdn.primo.page/${folder_name}/staging/${key}`
+        url: `https://cdn.${PUBLIC_BASE_DOMAIN_NAME}/${folder_name}/staging/${key}`
       });
     },
     onerror: async () => {

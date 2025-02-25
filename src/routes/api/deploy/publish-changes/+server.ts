@@ -47,7 +47,7 @@ async function copy_staging_to_live(site_id: string): Promise<void> {
   try {
     console.log(`Listing objects in staging folder for site ${folder_name}`);
     const list_command = new ListObjectsV2Command({
-      Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      Bucket: 'weave-sites',
       Prefix: `${folder_name}/staging/`,
     });
 
@@ -65,8 +65,8 @@ async function copy_staging_to_live(site_id: string): Promise<void> {
       console.log({ destination_key })
 
       return new CopyObjectCommand({
-        Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
-        CopySource: encodeURIComponent(`${ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET}/${source_key}`),
+        Bucket: 'weave-sites',
+        CopySource: encodeURIComponent(`weave-sites/${source_key}`),
         Key: destination_key,
       });
     }).filter((command): command is CopyObjectCommand => command !== null);

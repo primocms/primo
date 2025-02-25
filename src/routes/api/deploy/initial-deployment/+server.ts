@@ -64,7 +64,7 @@ async function upload_files(site_id: string, files: DeploymentFile[]): Promise<v
     if (file.path.endsWith('.json')) content_type = 'application/json; charset=utf-8';
 
     return new PutObjectCommand({
-      Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      Bucket: 'weave-sites',
       Key: file_path,
       Body: file.content,
       ContentType: content_type,
@@ -94,7 +94,7 @@ async function copy_staging_to_live(site_id: string): Promise<void> {
   try {
     console.log(`Listing objects in staging folder for site ${site_id}`);
     const list_command = new ListObjectsV2Command({
-      Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      Bucket: 'weave-sites',
       Prefix: `${folder_name}/staging/`,
     });
 
@@ -110,8 +110,8 @@ async function copy_staging_to_live(site_id: string): Promise<void> {
       const destination_key = source_key.replace(`${folder_name}/staging/`, `${folder_name}/live/`);
 
       return new CopyObjectCommand({
-        Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
-        CopySource: `${ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET}/${source_key}`,
+        Bucket: 'weave-sites',
+        CopySource: `weave-sites/${source_key}`,
         Key: destination_key,
       });
     }).filter((command): command is CopyObjectCommand => command !== null);

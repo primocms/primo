@@ -5,7 +5,7 @@
 	import ModalHeader from '$lib/components/ModalHeader.svelte'
 	import { page } from '$app/stores'
 	import axios from 'axios'
-	import { sites as site_actions } from '$lib/actions'
+	import { PUBLIC_BASE_DOMAIN_NAME } from '$env/static/public'
 
 	let { stage = $bindable() } = $props()
 
@@ -80,8 +80,8 @@
 	{#if stage === 'INITIAL'}
 		<div class="container">
 			<p class="description">
-				Your website is live at <a href="https://{$page.data.site.id}.primo.page" target="blank">
-					{$page.data.site.id}.primo.page
+				Your website is live at <a href="https://{$page.data.site.id}.{PUBLIC_BASE_DOMAIN_NAME}" target="blank">
+					{$page.data.site.id}.{PUBLIC_BASE_DOMAIN_NAME}
 				</a>
 			</p>
 			<div class="buttons">
@@ -115,8 +115,8 @@
 		<div class="container">
 			<p class="description">
 				Your website is live at
-				<a href="https://{$page.data.site.id}.primo.page" target="blank">
-					{$page.data.site.id}.primo.page
+				<a href="https://{$page.data.site.id}.{PUBLIC_BASE_DOMAIN_NAME}" target="blank">
+					{$page.data.site.id}.{PUBLIC_BASE_DOMAIN_NAME}
 				</a>
 			</p>
 			<div class="buttons">
@@ -140,7 +140,7 @@
 					<div class="contents">
 						<UI.TextInput label="Type" value="CNAME" disabled />
 						<UI.TextInput label="Name" value={domain_name} disabled />
-						<UI.TextInput label="Value" value="proxy-fallback.primo.page" disabled />
+						<UI.TextInput label="Value" value="proxy.{PUBLIC_BASE_DOMAIN_NAME}" disabled />
 					</div>
 				{/if}
 			</div>
@@ -199,8 +199,8 @@
 		</div>
 	{:else if stage === 'DOMAIN_CONNECTED'}
 		<p class="description">
-			Your website is live at <a href="https://{$page.data.site.custom_domain}" target="blank">
-				{$page.data.site.custom_domain}
+			Your website is live at <a href="https://{domain_name}" target="blank">
+				{domain_name}
 			</a>
 		</p>
 		<div class="buttons">
@@ -218,7 +218,7 @@
 			</button>
 		</div>
 	{:else if stage === 'PUBLISHED'}
-		{@const url = $page.data.site.custom_domain || `${$page.data.site.id}.primo.page`}
+		{@const url = $page.data.site.custom_domain || `${$page.data.site.id}.${PUBLIC_BASE_DOMAIN_NAME}`}
 		<p class="description">
 			Your website changes have been published to <a href="https://{url}" target="blank">
 				{url}

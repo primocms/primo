@@ -1,19 +1,19 @@
 import { json, error as server_error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import supabase_admin from '$lib/supabase/admin';
-import { PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN, PRIVATE_CLOUDFLARE_ZONE_ID, PRIVATE_CLOUDFLARE_HOSTNAMES_TOKEN } from '$env/static/private';
+import { PRIVATE_CLOUDFLARE_ACCOUNT_TOKEN, PRIVATE_CLOUDFLARE_ZONE_ID } from '$env/static/private';
 import axios from 'axios';
 import authorize from '../../authorize'
 import Cloudflare from 'cloudflare';
 
 const client = new Cloudflare({
-  apiToken: PRIVATE_CLOUDFLARE_HOSTNAMES_TOKEN
+  apiToken: PRIVATE_CLOUDFLARE_ACCOUNT_TOKEN
 });
 
 const cf_api = axios.create({
   baseURL: 'https://api.cloudflare.com/client/v4',
   headers: {
-    'Authorization': `Bearer ${PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN}`,
+    'Authorization': `Bearer ${PRIVATE_CLOUDFLARE_ACCOUNT_TOKEN}`,
     'Content-Type': 'application/json'
   }
 });
@@ -58,7 +58,7 @@ async function setup_domain(domain_name: string, site_id: string) {
   // Step 3: Add route to worker
   const route_response = await cf_api.post(`/zones/${PRIVATE_CLOUDFLARE_ZONE_ID}/workers/routes`, {
     pattern: `${domain_name}/*`,
-    script: "primo-worker"
+    script: 'weave-sites-worker'
   }).catch(e => {
     console.log('Worker Route ERROR:', e.response?.data)
     console.log('Attempted pattern:', `${domain_name}/*`)

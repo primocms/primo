@@ -18,7 +18,7 @@ const s3_client = new S3Client({
 const cf_api = axios.create({
   baseURL: 'https://api.cloudflare.com/client/v4',
   headers: {
-    'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_ZONE_TOKEN}`,
+    'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_ACCOUNT_TOKEN}`,
     'Content-Type': 'application/json'
   }
 });
@@ -95,7 +95,7 @@ async function rename_r2_folder(old_folder_name, new_folder_name) {
 
   await Promise.all(environments.map(async (env) => {
     const list_command = new ListObjectsV2Command({
-      Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      Bucket: 'weave-sites',
       Prefix: `${old_folder_name}/${env}/`,
     });
 
@@ -106,8 +106,8 @@ async function rename_r2_folder(old_folder_name, new_folder_name) {
       const new_key = old_key.replace(`${old_folder_name}/${env}`, `${new_folder_name}/${env}`);
 
       const copy_command = new CopyObjectCommand({
-        Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
-        CopySource: encodeURIComponent(`${ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET}/${old_key}`),
+        Bucket: 'weave-sites',
+        CopySource: encodeURIComponent(`weave-sites/${old_key}`),
         Key: new_key,
       });
 
@@ -118,7 +118,7 @@ async function rename_r2_folder(old_folder_name, new_folder_name) {
       // In the future, change image urls to match new site, or have them match '/_assets/image.jpg' instead of 'cdn.weavecms.site'
 
       // const delete_command = new DeleteObjectCommand({
-      //   Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+      //   Bucket: 'weave-sites',
       //   Key: old_key,
       // });
 

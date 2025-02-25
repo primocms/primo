@@ -45,7 +45,7 @@ async function delete_folder(site_id: string) {
   const folder_name = data?.custom_domain || site_id
 
   const list_command = new ListObjectsV2Command({
-    Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+    Bucket: 'weave-sites',
     Prefix: `${folder_name}/`,
   });
 
@@ -60,7 +60,7 @@ async function delete_folder(site_id: string) {
       await Promise.all(list_response.Contents.map(async (object) => {
         if (object.Key) {
           const delete_command = new DeleteObjectCommand({
-            Bucket: ENV_VARS.PRIVATE_CLOUDFLARE_SITES_BUCKET,
+            Bucket: 'weave-sites',
             Key: object.Key,
           });
           await s3_client.send(delete_command);
