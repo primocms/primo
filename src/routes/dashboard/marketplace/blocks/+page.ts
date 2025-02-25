@@ -12,7 +12,7 @@ export async function load(event) {
 
   // const { data } = await axios.get('https://weave-marketplace.vercel.app/api/blocks')
   try {
-    const { data } = await axios.get(`http://weave-marketplace.vercel.app/api/symbol_groups/${group_id}`)
+    const { data } = await axios.get(`https://weave-marketplace.vercel.app/api/symbol_groups/${group_id}`)
     return {
       marketplace_symbols: data
     }
