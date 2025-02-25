@@ -421,7 +421,6 @@ export const sites = {
 		const files = await build_site_bundle(scrambled)
 		const prepared_data = prepare_data(scrambled)
 
-
 		const { site, page_types, pages, symbols, sections, entries, fields } = prepared_data
 
 		try {
@@ -738,9 +737,7 @@ function prepare_data(data) {
 async function build_site_bundle({ pages, symbols, site, page_types, sections }) {
 
 	const page_files = await Promise.all(
-		pages.map((page) => {
-			return build_page_tree(page, 'en')
-		})
+		pages.map((page) => build_page_tree(page))
 	)
 
 	const symbol_files = await Promise.all(symbols.filter((s) => s.code.js).map((symbol) => build_symbol_tree(symbol)))
@@ -779,18 +776,31 @@ async function build_site_bundle({ pages, symbols, site, page_types, sections })
 		}
 	}
 
-	async function build_page_tree(page, language) {
-		const { slug } = page
+	async function build_page_tree(page) {
+		const page_type = page_types.find((pt) => pt.id === page.page_type)
 		const page_sections = sections.filter((s) => s.page === page.id)
-		// const { data: sections } = await get(page_store).data.supabase.from('sections').select('*, entries(*), master(id, symbol, index)').match({ page: page.id })
 
+		function get_full_path(page, path = page?.slug || '') {
+			const parent = pages.find(p => p.id === page.parent)
+			if (!parent) return path
+			
+			return get_full_path(parent, parent.slug + '/' + path)
+		}
+	
 		// order sections
 		let ordered_sections = []
-
+	
 		// get mastered sections
-		const mastered_sections = page_sections.filter((s) => s.master)
-
-		for (const section of mastered_sections) {
+		const mastered_sections = page_sections.filter((s) => s.master).map(section => {
+			const section_master = sections.find(s => s.id === section.master)
+			return {
+				...section,
+				master: section_master
+			}
+		})
+	
+		// @ts-ignore
+		for (const section of mastered_sections.sort((a, b) => a.master.index - b.master.index)) {
 			// if has symbol, add like normal
 			if (section.master?.symbol) {
 				ordered_sections.push({
@@ -798,22 +808,15 @@ async function build_site_bundle({ pages, symbols, site, page_types, sections })
 					index: section.master.index
 				})
 			}
-
+	
 			// if is master palette, insert palette sections, ordered by index
 			if (!section.master?.symbol) {
 				const palette_sections = page_sections.filter((s) => s.palette).sort((a, b) => a.index - b.index)
-				palette_sections.index = section.master.index
-				ordered_sections.push(palette_sections)
+				ordered_sections.push(...palette_sections)
 			}
 		}
 
-		ordered_sections = ordered_sections.sort((a, b) => a.index - b.index)
-		ordered_sections = ordered_sections.flat()
-
 		// then sort by index and flatten
-
-		const page_type = page_types.find((pt) => pt.id === page.page_type)
-
 		const { html } = await code_generators.page_html({
 			site,
 			page: {
@@ -821,56 +824,23 @@ async function build_site_bundle({ pages, symbols, site, page_types, sections })
 				page_type
 			},
 			page_sections: ordered_sections,
-			// page_symbols: symbols.filter((symbol) => sections.find((section) => section.symbol === symbol.id)),
 			page_symbols: symbols,
 			page_list: pages,
-			page_types,
-			locale: language
+			page_types
 		})
-
-		let parent_urls = []
-		const parent = pages.find((p) => p.id === page.parent)
-
-		if (parent) {
-			let no_more_parents = false
-			let grandparent = parent
-			parent_urls.push(parent.slug)
-			while (!no_more_parents) {
-				grandparent = pages.find((p) => p.id === grandparent.parent)
-				if (!grandparent) {
-					no_more_parents = true
-				} else {
-					parent_urls.unshift(grandparent.slug)
-				}
-			}
-		}
-
+	
 		let path
-		let full_url = slug
-		if (slug === '') {
+		if (page.slug === '') {
 			path = `index.html`
-		} else if (slug === '404') {
-			path = `404.html`
-		} else if (parent) {
-			path = `${parent_urls.join('/')}/${slug}/index.html`
-			full_url = `${parent_urls.join('/')}/${slug}`
 		} else {
-			path = `${slug}/index.html`
+			path = `${get_full_path(page)}/index.html`
 		}
 
-		// add language prefix
-		if (language !== 'en') {
-			path = `${language}/${path}`
-			full_url = `${language}/${full_url}`
+		return {
+			path,
+			content: html
 		}
-
-		const page_tree = [
-			{
-				path,
-				content: html
-			}
-		]
-
-		return page_tree
 	}
+
 }
+
