@@ -211,8 +211,8 @@
 
 		return {
 			...block,
-			fields: isolated_fields.map((f) => ({ ...f, symbol: null, page_type: null, site: null })),
-			entries: isolated_entries.map((e) => ({ ...e, symbol: null, page_type: null, site: null }))
+			fields: isolated_fields.map((f) => ({ ...f, symbol: null, page_type: null, site: null, owner_site: null })),
+			entries: isolated_entries.map((e) => ({ ...e, symbol: null, page_type: null, site: null, owner_site: null }))
 		}
 	}
 
