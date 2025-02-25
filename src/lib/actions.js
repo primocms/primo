@@ -134,7 +134,6 @@ export async function add_marketplace_starter_to_library(starter, preview) {
 	}
 
 	const storage_res = await supabase.storage.from('sites').upload(`${new_starter_id}/preview.html`, preview)
-	console.log({storage_res})
 }
 
 /**
@@ -142,7 +141,7 @@ export async function add_marketplace_starter_to_library(starter, preview) {
  * @param {Object} options - The options object
  * @param {Object} options.symbol - The symbol object containing name, code, entries, and fields
  * @param {string} options.symbol.name - The name of the symbol
- * @param {string} options.symbol.code - The code for the symbol
+ * @param {import('$lib').Code} options.symbol.code - The code for the symbol
  * @param {Array<import('$lib').Entry>} options.symbol.entries - The entries data for the symbol
  * @param {Array<import('$lib').Field>} options.symbol.fields - The fields data for the symbol
  * @param {string} options.preview - The HTML preview content for the symbol
@@ -172,7 +171,6 @@ export async function add_marketplace_symbol_to_library({symbol, preview, group_
 	}
 
 	const storage_res = await supabase.storage.from('symbols').upload(`${new_symbol_id}/preview.html`, preview)
-	console.log({storage_res})
 }
 
 /**
@@ -212,12 +210,12 @@ export async function create_library_symbol({ name = '', code, content, preview,
 			}
 		
 			// DB: save Symbol fields
-			await helpers.handle_field_changes_new(changes.fields, {
+			await helpers.handle_field_changes_new(changes.fields.map(f => ({ ...f, symbol: null })), {
 				library_symbol: symbol_id
 			})
 
 			// DB: save Symbol entries
-			await helpers.handle_content_changes_new(changes.entries, {
+			await helpers.handle_content_changes_new(changes.entries.map(f => ({ ...f, symbol: null })), {
 				library_symbol: symbol_id
 			})
 		})(),
@@ -476,7 +474,6 @@ export const sites = {
 
 			// create distribution
 			const dist_res = await axios.post('/api/deploy/initial-deployment', {files, site_id: site.id, domain_name: site.domain_name})
-			console.log({dist_res})
 
 			console.log('Site created successfully')
 		} catch (e) {
@@ -509,7 +506,6 @@ export const sites = {
 		try {
 			// create distribution
 			const dist_res = await axios.post('/api/deploy/initial-deployment', {files, site_id: site.id, domain_name: site.domain_name})
-			console.log({dist_res})
 
 			console.log('Site created successfully')
 		} catch (e) {
@@ -548,8 +544,6 @@ export async function fetch_site_data(site_id) {
 	`)
 	.eq('id', site_id)
 	.single()
-
-	console.log({error, data})
 
 	if (!data) {
 		throw new Error('Could not find site')
