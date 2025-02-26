@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit'
 import supabase_admin from '$lib/supabase/admin'
 import { Resend } from 'resend'
-import { PRIVATE_RESEND_KEY, PRIVATE_RESEND_EMAIL } from '$env/static/private'
+import { PRIVATE_RESEND_KEY, PRIVATE_RESEND_EMAIL_DOMAIN } from '$env/static/private'
 const resend = new Resend(PRIVATE_RESEND_KEY)
 
 export async function GET({ url }) {
@@ -43,7 +43,7 @@ export async function POST({ request, url }) {
 		const { data: user_data } = await supabase_admin.auth.admin.getUserById(existing_user.id)
 		await supabase_admin.from('collaborators').insert({ owner_site: site.id, user: existing_user.id, profile: existing_user.id, role })
 		await resend.emails.send({
-			from: `WeaveCMS <${PRIVATE_RESEND_EMAIL}>`,
+			from: `WeaveCMS <noreply@${PRIVATE_RESEND_EMAIL_DOMAIN}>`,
 			to: [user_data.user.email],
 			subject: 'Site Invitation',
 			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. ${url.origin}/${site.id}`
@@ -54,7 +54,7 @@ export async function POST({ request, url }) {
 		const invitation_url = `${url.origin}/auth/create-account?email=${email}`
 
 		await resend.emails.send({
-			from: `WeaveCMS <${PRIVATE_RESEND_EMAIL}>`,
+			from: `WeaveCMS <noreply@${PRIVATE_RESEND_EMAIL_DOMAIN}>`,
 			to: [email],
 			subject: 'Site Invitation',
 			text: `You've been invited to collaborate on ${site.name} as a ${full_role} by ${owner.user.email}. Click here to sign up: ${invitation_url}`
