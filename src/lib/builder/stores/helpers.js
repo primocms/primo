@@ -302,8 +302,7 @@ export function get_content_with_synced_values({ entries, fields, page = get(act
 				const selected_page_type = page_types.find(pt => pt.id === field.options?.page_type)
 
 				if (!selected_page_type) {
-					alert(`Something went wrong. Please refresh.`)
-					debugger
+					continue;
 				}
 
 				const page_type_fields = selected_page_type.fields.map((f) => ({
@@ -372,33 +371,6 @@ export function get_content_with_synced_values({ entries, fields, page = get(act
 				fields_with_source.push(...page_type_fields)
 				content_with_source.push(...pages_content)
 				continue
-			}
-
-			// TODO: handle fallbacks within page field
-
-			// handle fallback fields (i.e. skip current if empty & lower sibling available)
-			const next_field_with_matching_key = ordered_data_fields.find((f) => f.key === field.key && f.parent === field.parent && f.index > field.index)
-			const field_already_added = fields_with_source.some((f) => f.key === field.key)
-			if ((next_field_with_matching_key && !source_entry) || field_already_added) {
-				continue
-			}
-
-			// add this field
-			fields_with_source.push({ ...source_field, key: field.key }) // maintain original key
-			content_with_source.push(source_entry)
-
-			// handle repeater & group source fields
-			// TODO: test with group field
-			if (source_field.type === 'repeater' || source_field.type === 'group') {
-				// push repeater item entries
-				for (const entry of site.entries) {
-					const is_descendent = get_ancestors(entry, site.entries).includes(source_entry.id)
-					if (is_descendent) content_with_source.push(entry)
-				}
-				for (const field of site.fields) {
-					const is_descendent = get_ancestors(field, site.fields).includes(source_field.id)
-					if (is_descendent) fields_with_source.push(field)
-				}
 			}
 		}
 
