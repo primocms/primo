@@ -118,10 +118,8 @@ function build_sections(pages, sections, standard_page_type_id) {
 
 /** @returns {Array<import('$lib').Symbol>} */
 function build_symbols(symbols, site_id, standard_page_type_id) {
-	return symbols.map((s, i) => ({
-		id: s.id,
-		name: s.name,
-		code: s.code,
+	return symbols.map((s, i) => factories.Symbol({
+		...s,
 		site: site_id,
 		index: s.index || i,
 		page_types: [standard_page_type_id]

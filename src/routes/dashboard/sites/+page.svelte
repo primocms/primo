@@ -24,8 +24,8 @@
 	/** @type {Props} */
 	let { data } = $props()
 
-	async function create_site({ starter_id, details, starter_data, preview }) {
-		await actions.sites.create({ starter_id, details, starter_data, preview, group: active_site_group.id })
+	async function create_site({ starter_id, details, duplication_source, preview }) {
+		await actions.sites.create({ starter_id, details, duplication_source, preview, group: active_site_group.id })
 		invalidate('app:data')
 		creating_site = false
 	}

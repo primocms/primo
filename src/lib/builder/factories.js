@@ -82,9 +82,9 @@ export const Symbol = (symbol = {}) => ({
 	},
 	fields: symbol.fields || [],
 	entries: symbol.entries || [],
-	owner_site: symbol.site || null,
+	owner_site: symbol.site || symbol.owner_site || null,
 	index: symbol.index === undefined ? null : symbol.index,
-	page_types: []
+	page_types: symbol.page_types || []
 })
 
 /**

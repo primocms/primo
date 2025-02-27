@@ -16,6 +16,8 @@ export function convert_site_v3(data) {
 		return convert_v2_to_v3(data)
 	} else if (data.version === 3) {
 		return data
+	} else {
+		window.alert('Site file is invalid')
 	}
 }
 

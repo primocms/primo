@@ -408,10 +408,9 @@ export async function create_starter({ details, preview, site_data = null }) {
 }
 
 export const sites = {
-	create: async ({ starter_id, starter_data, details, preview, group }) => {
+	create: async ({ starter_id, duplication_source, details, preview, group }) => {
 
-
-		const uploaded_data = starter_id ? await fetch_site_data(starter_id) : starter_data
+		const uploaded_data = starter_id ? await fetch_site_data(starter_id) : duplication_source
 		uploaded_data.site.name = details.name
 		uploaded_data.site.design = _.cloneDeep(details.design)
 

@@ -83,7 +83,7 @@
 		loading = true
 		onsubmit({
 			starter_id: selected_theme_id,
-			starter_data: null,
+			duplication_source: duplicated_site_data,
 			details: { name: site_name, design: design_values },
 			preview
 		})
@@ -151,7 +151,7 @@
 						</label>
 					</Button>
 				</div>
-				{#if $page.data.starters.length > 0}
+				{#if $page.data.starters.length > 0 || duplicated_site_data}
 					<div class="split-container flex-1">
 						<div class="h-[77vh] overflow-auto">
 							<Themes on:select={({ detail }) => select_theme(detail)} append={design_variables_css} />
