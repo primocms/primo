@@ -200,6 +200,7 @@ export async function handle_content_changes_new(changes, args = {}) {
 				await dataChanged({
 					table: 'entries',
 					action: 'update',
+					id: change.id,
 					data: {
 						...change.data,
 						...args

@@ -184,14 +184,16 @@ export function get_content_with_synced_values({ entries, fields, page = get(act
 	try {
 		const ordered_data_fields = fields.filter((f) => site_data_field_types.includes(f.type)).sort((a, b) => a.index - b.index)
 
+
 		for (const field of ordered_data_fields) {
 			if (field.type === 'page-field') {
-				const page_content = page?.entries
-				const page_type_content = get(page_type)?.entries
-				const source_content = page_content?.some((e) => e.field === field.source) ? page_content : page_type_content
+				const page_type_object = page_types.find(pt => pt.id === page.page_type)
 
-				const page_type_fields = get(page_type)?.fields
-				const source_fields = page_type_fields?.some((f) => f.id === field.source) ? page_type_fields : page.page_type.fields
+				const page_type_content = page_type_object?.entries
+				const source_content = _.cloneDeep(page_type_content)
+
+				const page_type_fields = page_type_object?.fields
+				const source_fields = _.cloneDeep(page_type_fields)
 
 				// get data from source
 				const source_field = source_fields.find((f) => f.id === field.source)
