@@ -73,19 +73,59 @@ type IDMap map[string]string
 func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/palacms/clone-site", func(e *core.RequestEvent) error {
-			body := struct {
-				SourceSiteId string `json:"source_site_id"`
-				SnapshotURL  string `json:"snapshot_url"`
-				Name         string `json:"name"`
-				Host         string `json:"host"`
-				GroupId      string `json:"group_id"`
-			}{}
+			// Check for multipart form (file upload)
+			contentType := e.Request.Header.Get("Content-Type")
+			isMultipart := len(contentType) >= 19 && contentType[:19] == "multipart/form-data"
 
-			if err := e.BindBody(&body); err != nil {
-				return e.BadRequestError("Invalid request body", err)
+			var name, host, groupId, sourceSiteId, snapshotURL string
+			var snapshotFile []byte
+
+			if isMultipart {
+				// Parse multipart form
+				if err := e.Request.ParseMultipartForm(maxSnapshotSize); err != nil {
+					return e.BadRequestError("Failed to parse form", err)
+				}
+
+				name = e.Request.FormValue("name")
+				host = e.Request.FormValue("host")
+				groupId = e.Request.FormValue("group_id")
+				sourceSiteId = e.Request.FormValue("source_site_id")
+				snapshotURL = e.Request.FormValue("snapshot_url")
+
+				// Check for snapshot file
+				file, _, err := e.Request.FormFile("snapshot_file")
+				if err == nil {
+					defer file.Close()
+					snapshotFile, err = io.ReadAll(io.LimitReader(file, maxSnapshotSize+1))
+					if err != nil {
+						return e.BadRequestError("Failed to read snapshot file", err)
+					}
+					if len(snapshotFile) > maxSnapshotSize {
+						return e.BadRequestError("Snapshot file exceeds maximum allowed size", nil)
+					}
+				}
+			} else {
+				// Parse JSON body
+				body := struct {
+					SourceSiteId string `json:"source_site_id"`
+					SnapshotURL  string `json:"snapshot_url"`
+					Name         string `json:"name"`
+					Host         string `json:"host"`
+					GroupId      string `json:"group_id"`
+				}{}
+
+				if err := e.BindBody(&body); err != nil {
+					return e.BadRequestError("Invalid request body", err)
+				}
+
+				name = body.Name
+				host = body.Host
+				groupId = body.GroupId
+				sourceSiteId = body.SourceSiteId
+				snapshotURL = body.SnapshotURL
 			}
 
-			if body.Name == "" || body.Host == "" || body.GroupId == "" {
+			if name == "" || host == "" || groupId == "" {
 				return e.BadRequestError("Missing required fields: name, host, group_id", nil)
 			}
 
@@ -96,12 +136,14 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 			var newSite *core.Record
 			var err error
 
-			if body.SnapshotURL != "" {
-				newSite, err = cloneFromSnapshot(pb, body.SnapshotURL, body.Name, body.Host, body.GroupId)
-			} else if body.SourceSiteId != "" {
-				newSite, err = cloneFromLocalSite(pb, e, body.SourceSiteId, body.Name, body.Host, body.GroupId)
+			if len(snapshotFile) > 0 {
+				newSite, err = cloneFromSnapshotData(pb, snapshotFile, name, host, groupId)
+			} else if snapshotURL != "" {
+				newSite, err = cloneFromSnapshot(pb, snapshotURL, name, host, groupId)
+			} else if sourceSiteId != "" {
+				newSite, err = cloneFromLocalSite(pb, e, sourceSiteId, name, host, groupId)
 			} else {
-				return e.BadRequestError("Either source_site_id or snapshot_url is required", nil)
+				return e.BadRequestError("Either source_site_id, snapshot_url, or snapshot_file is required", nil)
 			}
 
 			if err != nil {
@@ -120,6 +162,22 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 }
 
 const maxSnapshotSize = 10 * 1024 * 1024 // 10MB
+
+func cloneFromSnapshotData(pb *pocketbase.PocketBase, data []byte, name, host, groupId string) (*core.Record, error) {
+	snapshot, err := parseSnapshot(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var newSite *core.Record
+	err = pb.RunInTransaction(func(txApp core.App) error {
+		var txErr error
+		newSite, txErr = importSnapshotRecords(txApp, snapshot, name, host, groupId)
+		return txErr
+	})
+
+	return newSite, err
+}
 
 func cloneFromSnapshot(pb *pocketbase.PocketBase, snapshotURL, name, host, groupId string) (*core.Record, error) {
 	client := &http.Client{Timeout: 60 * time.Second}

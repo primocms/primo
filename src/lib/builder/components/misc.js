@@ -5,6 +5,7 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
   <!DOCTYPE html>
   <html>
     <head>
+      <script>window.__PALA_CONTEXT__ = { environment: 'editor' };</script>
       ${head}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -144,6 +145,7 @@ export const static_iframe_srcdoc = ({ head = '', html, css, foot = '' }) => {
     <!DOCTYPE html>
     <html>
       <head>
+        <script>window.__PALA_CONTEXT__ = { environment: 'editor' };</script>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         ${head}
@@ -167,6 +169,7 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
     <!DOCTYPE html>
     <html>
       <head>
+        <script>window.__PALA_CONTEXT__ = { environment: 'editor' };</script>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">

@@ -14,6 +14,8 @@
 	import type { Component } from 'svelte'
 	import { LibrarySymbolGroups, SiteGroups } from '$lib/pocketbase/collections'
 	import { current_user } from '$lib/pocketbase/user'
+	import { instance } from '$lib/instance'
+	import { CreditCard } from 'lucide-svelte'
 
 	const sidebar = useSidebar()
 
@@ -214,6 +216,13 @@
 								</div>
 							</DropdownMenu.Label>
 							<DropdownMenu.Separator />
+							{#if instance.hosted_mode && instance.billing_url}
+								<DropdownMenu.Item onclick={() => window.open(instance.billing_url, '_blank')}>
+									<CreditCard />
+									Manage Subscription
+								</DropdownMenu.Item>
+								<DropdownMenu.Separator />
+							{/if}
 							<DropdownMenu.Item
 								onclick={async () => {
 									self.instance?.authStore.clear()

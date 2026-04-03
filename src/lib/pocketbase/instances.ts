@@ -1,4 +1,4 @@
 import PocketBase from 'pocketbase'
 
-export const self = new PocketBase(import.meta.env.DEV ? 'http://127.0.0.1:8090' : location.origin)
+export const self = new PocketBase(typeof location !== 'undefined' ? location.origin : 'http://127.0.0.1:3000')
 export const marketplace = new PocketBase('https://marketplace.palacms.com')

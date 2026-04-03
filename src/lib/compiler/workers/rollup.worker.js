@@ -52,11 +52,14 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 
 		const field_keys = Object.keys(data).filter((key) => !!key)
 
+		// Check if user's JS already declares props (to avoid duplicate declarations)
+		const user_declares_props = js && (js.includes('$props()') || js.includes('$props('))
+
 		// html must come first for LoC (inspector) to work
 		return `\
 					${html}
           <script>
-            ${`let { ${field_keys.join(', ')} } = $props();` /* e.g. let { heading, body } = $props(); */}
+            ${user_declares_props ? '' : `let { ${field_keys.join(', ')} } = $props();` /* e.g. let { heading, body } = $props(); */}
             ${js}
           </script>
           ${css ? `<style>${css}</style>` : ``}`

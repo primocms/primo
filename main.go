@@ -65,5 +65,25 @@ func setup(pb *pocketbase.PocketBase) error {
 		return err
 	}
 
+	if err := internal.RegisterExportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterImportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterBootstrapEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterDevAuthEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterDevMode(pb); err != nil {
+		return err
+	}
+
 	return nil
 }

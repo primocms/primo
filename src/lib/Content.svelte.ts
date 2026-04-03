@@ -2,7 +2,7 @@ import type { Entry } from '$lib/common/models/Entry.js'
 import type { locales } from './common'
 import { SiteFields, Sites, Pages, PageTypeFields, PageTypes, SiteSymbols, LibraryUploads } from './pocketbase/collections'
 import type { Field } from './common/models/Field'
-import { get_empty_value, convert_markdown_to_html, convert_rich_text_to_html } from '$lib/builder/utils'
+import { get_empty_value, convert_markdown_to_html, convert_rich_text_to_html, normalize_entry_value } from '$lib/builder/utils'
 import { self } from './pocketbase/managers'
 import type { ObjectOf } from './pocketbase/CollectionMapping.svelte'
 import { build_live_page_url } from './pages'
@@ -313,10 +313,11 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					content.en![field.key] = get_empty_value(field)
 					continue
 				}
-				if (typeof entry.value !== 'string') continue
+				const normalized_value = normalize_entry_value(entry.value)
+				if (typeof normalized_value !== 'string') continue
 				if (!content[entry.locale]) content[entry.locale] = {}
 
-				content[entry.locale]![field.key] = convert_markdown_to_html(entry.value)
+				content[entry.locale]![field.key] = convert_markdown_to_html(normalized_value)
 			}
 
 			// Handle rich-text fields: JSON -> HTML
@@ -342,7 +343,8 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
 
-				const upload_id: string | null | undefined = entry.value.upload
+				const normalized_value = normalize_entry_value(entry.value) as Record<string, unknown>
+				const upload_id: string | null | undefined = normalized_value.upload as string | null | undefined
 				const upload = upload_id ? uploads.find((upload) => upload.id === upload_id) : null
 
 				const is_library_symbol = 'group' in entity && 'html' in entity
@@ -353,11 +355,11 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 						: typeof upload.file === 'string'
 							? `${self.instance?.baseURL}/api/files/${is_library_symbol ? 'library_uploads' : 'site_uploads'}/${upload.id}/${upload.file}`
 							: URL.createObjectURL(upload.file))
-				const input_url: string | undefined = entry.value.url
+				const input_url: string | undefined = normalized_value.url as string | undefined
 				const url = input_url || upload_url
-				const alt: string = entry.value.alt
-				const width: number | null | undefined = entry.value.width
-				const height: number | null | undefined = entry.value.height
+				const alt: string = (normalized_value.alt as string) ?? ''
+				const width: number | null | undefined = normalized_value.width as number | null | undefined
+				const height: number | null | undefined = normalized_value.height as number | null | undefined
 				content[entry.locale]![field.key] = { alt, url, width, height }
 				content[entry.locale]![field.key] = { alt, url }
 			}
@@ -372,7 +374,8 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
 
-				const page = Pages.one(entry.value)
+				const normalized_page_value = normalize_entry_value(entry.value)
+				const page = Pages.one(normalized_page_value as string)
 				if (page === null) continue
 				if (!page) return
 

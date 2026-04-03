@@ -4,6 +4,7 @@ import (
 	"embed"
 	"io/fs"
 	"path"
+	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -41,7 +42,8 @@ func RegisterAdminApp(pb *pocketbase.PocketBase) error {
 		serveEvent.Router.GET(
 			"/admin/{path...}",
 			func(requestEvent *core.RequestEvent) error {
-				if !setupCompleted {
+				// Skip setup requirement on localhost (local dev mode)
+				if !setupCompleted && !IsLocalhost(requestEvent) {
 					superuserCount, err := pb.CountRecords(
 						"_superusers",
 						dbx.Not(dbx.HashExp{
@@ -59,6 +61,21 @@ func RegisterAdminApp(pb *pocketbase.PocketBase) error {
 						return requestEvent.Redirect(302, "/admin/setup")
 					} else {
 						setupCompleted = true
+					}
+				}
+
+				// In dev mode, inject indicator into index.html
+				if DevMode {
+					reqPath := strings.TrimPrefix(requestEvent.Request.URL.Path, "/admin")
+					if reqPath == "" || reqPath == "/" || !strings.Contains(reqPath, ".") {
+						// Serve index.html with dev indicator
+						content, err := fs.ReadFile(appRoot, "index.html")
+						if err == nil {
+							modified := InjectDevIndicator(content)
+							requestEvent.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
+							requestEvent.Response.Write(modified)
+							return nil
+						}
 					}
 				}
 
