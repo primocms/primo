@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"regexp"
 	"strings"
 
@@ -761,11 +760,16 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			return "", err
 		}
 
-		// Get existing fields
+		// Get existing fields and build composite key map
 		existingFields, _ := pb.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
+		existingFieldsById := make(map[string]*core.Record)
+		for _, f := range existingFields {
+			existingFieldsById[f.Id] = f
+		}
 		existingFieldsByKey := make(map[string]*core.Record)
 		for _, f := range existingFields {
-			existingFieldsByKey[f.GetString("key")] = f
+			compositeKey := buildBlockFieldCompositeKey(f, existingFieldsById)
+			existingFieldsByKey[compositeKey] = f
 		}
 
 		fieldsColl, err := pb.FindCollectionByNameOrId("site_symbol_fields")
@@ -850,8 +854,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 				}{field, parentKey})
 			}
 
-			// Handle nested fields inside options.fields (for repeaters/groups)
-			// Use a recursive helper to handle arbitrarily deep nesting
+			// Recursive helper to process subfields at any nesting depth
 			var processNestedFields func(parentField *core.Record, parentKey string, nestedFields []interface{}) error
 			processNestedFields = func(parentField *core.Record, parentKey string, nestedFields []interface{}) error {
 				for j, nestedFieldData := range nestedFields {
@@ -864,24 +867,12 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 						continue
 					}
 
-					// Check if this nested field already exists
+					// Check if this nested field already exists using composite key
 					compositeKey := parentKey + "/" + nestedKey
 					var nestedField *core.Record
 					if existing, ok := existingFieldsByKey[compositeKey]; ok {
 						nestedField = existing
-					} else if existing, ok := existingFieldsByKey[nestedKey]; ok {
-						// Check if this existing field has the right parent
-						if existing.GetString("parent") == parentField.Id {
-							nestedField = existing
-						} else {
-							// Parent mismatch - delete old field to avoid duplicates
-							// PocketBase cascade delete will clean up associated entries
-							if err := pb.Delete(existing); err != nil {
-								log.Printf("failed to delete orphaned field %s: %v", existing.Id, err)
-							}
-						}
-					}
-					if nestedField == nil {
+					} else {
 						nestedField = core.NewRecord(fieldsColl)
 						nestedField.Set("symbol", symbol.Id)
 					}
@@ -909,17 +900,11 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 					fieldKeyToRecord[compositeKey] = nestedField
 					fieldKeyToRecord[nestedKey] = nestedField
 
-					// Recursively process nested fields if this is a repeater or group
+					// Recursively process subfields if this is a repeater or group
 					if nestedFieldType == "repeater" || nestedFieldType == "group" {
-						nestedOpts, hasNestedOpts := nestedFieldMap["config"].(map[string]interface{})
-						if !hasNestedOpts {
-							nestedOpts, _ = nestedFieldMap["options"].(map[string]interface{})
-						}
-						if nestedOpts != nil {
-							if deepNestedFields, ok := nestedOpts["fields"].([]interface{}); ok {
-								if err := processNestedFields(nestedField, compositeKey, deepNestedFields); err != nil {
-									return err
-								}
+						if subfields, ok := nestedFieldMap["subfields"].([]interface{}); ok {
+							if err := processNestedFields(nestedField, compositeKey, subfields); err != nil {
+								return err
 							}
 						}
 					}
@@ -927,23 +912,10 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 				return nil
 			}
 
-			// Check for subfields directly on the field (YAML format)
-			if subfields, ok := fieldData["subfields"].([]interface{}); ok && len(subfields) > 0 {
+			// Process subfields for repeaters/groups
+			if subfields, ok := fieldData["subfields"].([]interface{}); ok {
 				if err := processNestedFields(field, fieldKey, subfields); err != nil {
 					return "", err
-				}
-			} else {
-				// Check config (preferred) or options (backwards compatibility) for nested fields
-				fieldConfig, hasFieldConfig := fieldData["config"].(map[string]interface{})
-				if !hasFieldConfig {
-					fieldConfig, _ = fieldData["options"].(map[string]interface{})
-				}
-				if fieldConfig != nil {
-					if nestedFields, ok := fieldConfig["fields"].([]interface{}); ok {
-						if err := processNestedFields(field, fieldKey, nestedFields); err != nil {
-							return "", err
-						}
-					}
 				}
 			}
 		}
