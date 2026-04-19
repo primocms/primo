@@ -77,6 +77,15 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 		return Object.assign({}, object, links, { collection: collectionMapping, values: () => ({ ...object }) })
 	}
 
+	const tryMapObject = (record: unknown): MappedObject<T, Options> | null => {
+		try {
+			return mapObject(record)
+		} catch (error) {
+			console.error(`Invalid ${name} record`, record, error)
+			return null
+		}
+	}
+
 	const collectionMapping: CollectionMapping<T, Options> = {
 		one: (id) => {
 			const change = changes.get(id)
@@ -114,7 +123,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 				return data
 			}
 
-			return mapObject(data)
+			return tryMapObject(data)
 		},
 		list: (options) => {
 			const listId = name + JSON.stringify(options ?? {})
@@ -144,12 +153,19 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 							requestKey: listId
 						})
 						.then((fetchedRecords) => {
+							const validRecords = fetchedRecords.filter((record) => {
+								const valid = typeof record?.id === 'string' && record.id.length > 0
+								if (!valid) {
+									console.error(`Invalid ${name} list record`, record)
+								}
+								return valid
+							})
 							// Store the full records
-							fetchedRecords.forEach((record) => {
+							validRecords.forEach((record) => {
 								records.set(record.id, { data: record })
 							})
 							// Store the list of IDs
-							lists.set(listId, { invalidated: false, ids: fetchedRecords.map(({ id }) => id) })
+							lists.set(listId, { invalidated: false, ids: validRecords.map(({ id }) => id) })
 						})
 						.catch((error) => {
 							console.error(error)
@@ -271,7 +287,11 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			lists.clear()
 			records.clear()
 
-			return { ...response, record: mapObject(response.record) }
+			const mappedRecord = tryMapObject(response.record)
+			if (!mappedRecord) {
+				throw new Error(`Invalid ${name} auth record`)
+			}
+			return { ...response, record: mappedRecord }
 		},
 		requestPasswordReset: async (email) => {
 			if (!collection) {

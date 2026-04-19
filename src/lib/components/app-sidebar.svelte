@@ -68,6 +68,18 @@
 		goto(`/admin/dashboard/library?group=${newGroup.id}`)
 	}
 
+	function get_dashboard_url() {
+		if (typeof window === 'undefined') return '/admin/dashboard'
+		const { protocol, hostname, port } = window.location
+		if (hostname === 'localhost' || hostname === '127.0.0.1') {
+			return `${protocol}//${hostname}${port ? `:${port}` : ''}/`
+		}
+		if (hostname.endsWith('.localhost')) {
+			return `${protocol}//localhost${port ? `:${port}` : ''}/`
+		}
+		return '/admin/dashboard'
+	}
+
 	const path = $derived($page.url.pathname.split('/').slice(0, 4).join('/'))
 </script>
 
@@ -123,7 +135,7 @@
 									hidden: false
 								}}
 								onclick={() => {
-									goto('/admin/dashboard')
+									window.location.href = get_dashboard_url()
 									sidebar.setOpen(true)
 								}}
 								class="px-2.5 md:px-2"

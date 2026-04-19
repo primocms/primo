@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,25 +20,26 @@ type ExportedSite struct {
 	Name       string `json:"name"`
 	Host       string `json:"host"`
 	SiteID     string `json:"site_id"`
+	Group      string `json:"group,omitempty"`
 	ExportedAt string `json:"exported_at"`
 	Version    string `json:"version"`
 }
 
-// ExportedBlock represents a block's fields.json
+// ExportedBlock represents a block's fields.yaml
 type ExportedBlock struct {
-	ID     string                   `json:"id"`
-	Name   string                   `json:"name"`
-	Fields []map[string]interface{} `json:"fields"`
+	ID     string                   `json:"_id" yaml:"_id"`
+	Name   string                   `json:"name" yaml:"name"`
+	Fields []map[string]interface{} `json:"fields" yaml:"fields"`
 }
 
 // ExportedPageType represents a page type's config
 type ExportedPageType struct {
-	ID            string                   `json:"id"`
-	Name          string                   `json:"name"`
-	Icon          string                   `json:"icon,omitempty"`
-	Color         string                   `json:"color,omitempty"`
-	AllowedBlocks []string                 `json:"allowed_blocks,omitempty"`
-	Fields        []map[string]interface{} `json:"fields,omitempty"`
+	ID            string                   `json:"id" yaml:"id"`
+	Name          string                   `json:"name" yaml:"name"`
+	Icon          string                   `json:"icon,omitempty" yaml:"icon,omitempty"`
+	Color         string                   `json:"color,omitempty" yaml:"color,omitempty"`
+	AllowedBlocks []string                 `json:"allowed_blocks,omitempty" yaml:"allowed_blocks,omitempty"`
+	Fields        []map[string]interface{} `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
 // ExportedLayout represents a page type's layout (header/footer sections)
@@ -54,12 +55,25 @@ type ExportedLayoutSection struct {
 
 // ExportedPage represents a page's content
 type ExportedPage struct {
-	ID       string                   `json:"id" yaml:"id"`
+	ID       string                   `json:"_id" yaml:"_id"`
 	Name     string                   `json:"name" yaml:"name"`
-	Slug     string                   `json:"slug" yaml:"slug"`
+	Slug     string                   `json:"slug,omitempty" yaml:"slug,omitempty"`
 	PageType string                   `json:"page_type" yaml:"page_type"`
 	Fields   map[string]interface{}   `json:"fields,omitempty" yaml:"fields,omitempty"`
 	Sections []map[string]interface{} `json:"sections,omitempty" yaml:"sections,omitempty"`
+	FilePath string                   `json:"-" yaml:"-"` // Internal: source file path for error messages
+}
+
+func normalizeExportedFieldConfig(value interface{}) interface{} {
+	if value == nil {
+		return nil
+	}
+
+	if str, ok := value.(string); ok && strings.TrimSpace(str) == "" {
+		return nil
+	}
+
+	return value
 }
 
 // ExportedSiteConfig represents site-wide configuration
@@ -124,15 +138,16 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 	siteId := site.Id
 
-	// 1. Write pala.json
+	// 1. Write site.yaml
 	palaConfig := ExportedSite{
 		Name:       site.GetString("name"),
 		Host:       site.GetString("host"),
 		SiteID:     siteId,
+		Group:      site.GetString("group"),
 		ExportedAt: site.GetString("updated"),
 		Version:    "1.0",
 	}
-	if err := writeJSONToZip(zw, "pala.json", palaConfig); err != nil {
+	if err := writeYAMLToZip(zw, "site.yaml", palaConfig); err != nil {
 		return nil, err
 	}
 
@@ -190,7 +205,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			}
 		}
 
-		// Fetch and write fields.json
+		// Fetch and write fields.yaml
 		fields, err := pb.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch symbol fields: %w", err)
@@ -216,7 +231,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			Name:   symbol.GetString("name"),
 			Fields: nestSubfields(exportedFields),
 		}
-		if err := writeJSONToZip(zw, fmt.Sprintf("blocks/%s/fields.json", symbolName), blockMeta); err != nil {
+		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/fields.yaml", symbolName), blockMeta); err != nil {
 			return nil, err
 		}
 
@@ -313,16 +328,16 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			exportedPTFields = append(exportedPTFields, fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey))
 		}
 
-		// Write config.json
-		ptConfig := map[string]interface{}{
-			"id":             pt.Id,
-			"name":           pt.GetString("name"),
-			"icon":           pt.GetString("icon"),
-			"color":          pt.GetString("color"),
-			"allowed_blocks": allowedBlocks,
-			"fields":         nestSubfields(exportedPTFields),
+		// Write config.yaml in a stable field order so local dev doesn't keep reordering IDs.
+		ptConfig := ExportedPageType{
+			ID:            pt.Id,
+			Name:          pt.GetString("name"),
+			Icon:          pt.GetString("icon"),
+			Color:         pt.GetString("color"),
+			AllowedBlocks: allowedBlocks,
+			Fields:        nestSubfields(exportedPTFields),
 		}
-		if err := writeJSONToZip(zw, fmt.Sprintf("page-types/%s/config.json", ptName), ptConfig); err != nil {
+		if err := writeYAMLToZip(zw, fmt.Sprintf("page-types/%s/config.yaml", ptName), ptConfig); err != nil {
 			return nil, err
 		}
 
@@ -404,8 +419,8 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	}
 
 	// Build page hierarchy for path generation
-	pageParents := make(map[string]string)  // id -> parent_id
-	pageSlugs := make(map[string]string)    // id -> slug
+	pageParents := make(map[string]string) // id -> parent_id
+	pageSlugs := make(map[string]string)   // id -> slug
 	pageRecords := make(map[string]*core.Record)
 	pagesWithChildren := make(map[string]bool) // id -> has children
 	for _, page := range pages {
@@ -504,6 +519,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			content := buildSectionContent(entriesByParent[""], fieldById, fieldsByParent, entriesByParent)
 
 			sections = append(sections, map[string]interface{}{
+				"_id":     section.Id,
 				"block":   blockName,
 				"content": content,
 			})
@@ -519,7 +535,6 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		pageData := ExportedPage{
 			ID:       page.Id,
 			Name:     page.GetString("name"),
-			Slug:     page.GetString("slug"),
 			PageType: pageTypeName,
 			Fields:   fieldValues,
 			Sections: sections,
@@ -565,7 +580,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	}
 
 	if len(exportedSiteFields) > 0 {
-		if err := writeJSONToZip(zw, "site/fields.json", nestSubfields(exportedSiteFields)); err != nil {
+		if err := writeYAMLToZip(zw, "site/fields.yaml", nestSubfields(exportedSiteFields)); err != nil {
 			return nil, err
 		}
 	}
@@ -653,12 +668,12 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 	// 8. Export ID manifest for round-trip import
 	idManifest := map[string]interface{}{
-		"blocks":           make(map[string]string), // name -> id
+		"blocks":           make(map[string]string),            // name -> id
 		"block_fields":     make(map[string]map[string]string), // block_name -> field_name -> id
-		"page_types":       make(map[string]string), // name -> id
+		"page_types":       make(map[string]string),            // name -> id
 		"page_type_fields": make(map[string]map[string]string), // page_type_name -> field_name -> id
-		"pages":            make(map[string]string), // path -> id
-		"site_fields":      make(map[string]string), // name -> id
+		"pages":            make(map[string]string),            // path -> id
+		"site_fields":      make(map[string]string),            // name -> id
 	}
 
 	// Block IDs and their field IDs
@@ -777,7 +792,7 @@ func buildPagePath(pageId string, parents map[string]string, slugs map[string]st
 	}
 
 	if len(parts) == 0 {
-		return "index"
+		return ""
 	}
 	return strings.Join(parts, "/")
 }
@@ -785,12 +800,15 @@ func buildPagePath(pageId string, parents map[string]string, slugs map[string]st
 func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFieldIdToKey map[string]string) map[string]interface{} {
 	// Fields use "key" column for the field name
 	name := field.GetString("key")
-	if name == "" {
-		name = field.GetString("name") // fallback
-	}
 
 	fieldType := field.GetString("type")
-	config := field.Get("config")
+
+	// Get config and ensure it's properly typed (PocketBase may return types.JSONRaw for JSON fields)
+	var config interface{}
+	rawConfig := field.Get("config")
+	if rawConfig != nil {
+		config = normalizeExportedFieldConfig(normalizeValue(rawConfig))
+	}
 
 	// For site-field type, convert the field ID reference to field name
 	if fieldType == "site-field" && config != nil && siteFieldIdToKey != nil {
@@ -818,13 +836,14 @@ func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFi
 	if config != nil {
 		result["config"] = config
 	}
-	// Include field ID for page-field references
+	// Include field ID for page-field references (prefixed with _ to indicate system field)
 	if field.Id != "" {
-		result["id"] = field.Id
+		result["_id"] = field.Id
 	}
 	// Include parent field (by key/name, not ID) for repeater children
 	parentId := field.GetString("parent")
 	if parentId != "" && fieldIdToKey != nil {
+		result["__parent_id"] = parentId
 		if parentKey, ok := fieldIdToKey[parentId]; ok {
 			result["parent"] = parentKey
 		}
@@ -834,31 +853,41 @@ func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFi
 
 // nestSubfields converts a flat list of fields with "parent" references into a nested structure with "subfields"
 func nestSubfields(flatFields []map[string]interface{}) []map[string]interface{} {
-	// Build a map of field name -> children
+	// Build a map of parent field ID -> children so repeated field keys don't collapse nested trees.
 	childrenByParent := make(map[string][]map[string]interface{})
 	var topLevel []map[string]interface{}
 
 	for _, field := range flatFields {
-		parent, hasParent := field["parent"].(string)
-		if hasParent && parent != "" {
-			childrenByParent[parent] = append(childrenByParent[parent], field)
+		parentID, hasParent := field["__parent_id"].(string)
+		if hasParent && parentID != "" {
+			childrenByParent[parentID] = append(childrenByParent[parentID], field)
 		} else {
 			topLevel = append(topLevel, field)
 		}
 	}
 
-	// Attach children as subfields and remove parent key
-	for _, field := range topLevel {
-		name, _ := field["name"].(string)
-		if children, ok := childrenByParent[name]; ok && len(children) > 0 {
-			// Remove "parent" key from children
-			for _, child := range children {
-				delete(child, "parent")
+	// Recursively attach children as subfields
+	var attachChildren func(fields []map[string]interface{})
+	attachChildren = func(fields []map[string]interface{}) {
+		for _, field := range fields {
+			fieldID, _ := field["_id"].(string)
+			if children, ok := childrenByParent[fieldID]; ok && len(children) > 0 {
+				// Remove internal parent metadata from nested children before writing YAML.
+				for _, child := range children {
+					delete(child, "__parent_id")
+					delete(child, "parent")
+				}
+				// Recursively process children to attach their own subfields
+				attachChildren(children)
+				field["subfields"] = children
 			}
-			field["subfields"] = children
+
+			delete(field, "__parent_id")
+			delete(field, "parent")
 		}
 	}
 
+	attachChildren(topLevel)
 	return topLevel
 }
 
@@ -873,11 +902,11 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("blocks/           # Svelte components with content fields\n")
 	sb.WriteString("  {name}/\n")
 	sb.WriteString("    component.svelte\n")
-	sb.WriteString("    fields.json\n")
+	sb.WriteString("    fields.yaml\n")
 	sb.WriteString("    content.yaml  # Default field values (optional)\n")
 	sb.WriteString("page-types/       # Page templates\n")
 	sb.WriteString("  {name}/\n")
-	sb.WriteString("    config.json\n")
+	sb.WriteString("    config.yaml\n")
 	sb.WriteString("pages/            # Page content (YAML)\n")
 	sb.WriteString("  index.yaml      # Homepage\n")
 	sb.WriteString("  contact.yaml    # Leaf page (/contact)\n")
@@ -885,7 +914,7 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("    index.yaml    # /about\n")
 	sb.WriteString("    team.yaml     # /about/team\n")
 	sb.WriteString("site/             # Site-wide settings\n")
-	sb.WriteString("  fields.json\n")
+	sb.WriteString("  fields.yaml\n")
 	sb.WriteString("  content.yaml\n")
 	sb.WriteString(".pala/            # Internal metadata\n")
 	sb.WriteString("```\n\n")
@@ -902,17 +931,19 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("  h1 { font-size: 2rem; }\n")
 	sb.WriteString("</style>\n")
 	sb.WriteString("```\n\n")
-	sb.WriteString("**Note:** Props are auto-injected from fields.json. No need to declare `$props()` - just use the field names directly in your template.\n\n")
-	sb.WriteString("**fields.json** - Field definitions:\n")
-	sb.WriteString("```json\n")
-	sb.WriteString("{\n")
-	sb.WriteString("  \"name\": \"Hero\",\n")
-	sb.WriteString("  \"fields\": [\n")
-	sb.WriteString("    { \"name\": \"headline\", \"label\": \"Headline\", \"type\": \"text\" },\n")
-	sb.WriteString("    { \"name\": \"image\", \"label\": \"Image\", \"type\": \"image\" }\n")
-	sb.WriteString("  ]\n")
-	sb.WriteString("}\n")
+	sb.WriteString("**Note:** Props are auto-injected from fields.yaml. No need to declare `$props()` - just use the field names directly in your template.\n\n")
+	sb.WriteString("**fields.yaml** - Field definitions:\n")
+	sb.WriteString("```yaml\n")
+	sb.WriteString("name: Hero\n")
+	sb.WriteString("fields:\n")
+	sb.WriteString("  - name: headline\n")
+	sb.WriteString("    label: Headline\n")
+	sb.WriteString("    type: text\n")
+	sb.WriteString("  - name: image\n")
+	sb.WriteString("    label: Image\n")
+	sb.WriteString("    type: image\n")
 	sb.WriteString("```\n\n")
+	sb.WriteString("**Note:** Field IDs are optional. They are auto-generated on import and exported back to the file.\n\n")
 
 	sb.WriteString("## Field Types\n\n")
 
@@ -959,12 +990,12 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 
 	sb.WriteString("### repeater\n")
 	sb.WriteString("List of items with nested fields.\n")
-	sb.WriteString("```json\n{\n  \"name\": \"features\",\n  \"type\": \"repeater\",\n  \"options\": {\n    \"fields\": [\n      { \"name\": \"title\", \"type\": \"text\" },\n      { \"name\": \"description\", \"type\": \"text\" }\n    ]\n  }\n}\n```\n")
+	sb.WriteString("```yaml\n- name: features\n  type: repeater\n  subfields:\n    - name: title\n      type: text\n    - name: description\n      type: text\n```\n")
 	sb.WriteString("```svelte\n{#each features as feature}\n  <div>\n    <h3>{feature.title}</h3>\n    <p>{feature.description}</p>\n  </div>\n{/each}\n```\n\n")
 
 	sb.WriteString("### group\n")
 	sb.WriteString("Nested object of fields.\n")
-	sb.WriteString("```json\n{\n  \"name\": \"author\",\n  \"type\": \"group\",\n  \"options\": {\n    \"fields\": [\n      { \"name\": \"name\", \"type\": \"text\" },\n      { \"name\": \"avatar\", \"type\": \"image\" }\n    ]\n  }\n}\n```\n")
+	sb.WriteString("```yaml\n- name: author\n  type: group\n  subfields:\n    - name: name\n      type: text\n    - name: avatar\n      type: image\n```\n")
 	sb.WriteString("```svelte\n<div>{author.name}</div>\n{#if author.avatar?.url}<img src={author.avatar.url} />{/if}\n```\n\n")
 
 	sb.WriteString("### page\n")
@@ -1054,23 +1085,29 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 // PocketBase returns JSON field values as types.JsonRaw (a named []byte type),
 // which YAML would marshal as integer arrays if not converted
 func normalizeValue(v interface{}) interface{} {
-	switch val := v.(type) {
-	case types.JSONRaw:
-		// PocketBase JSON fields return this type
-		var result interface{}
-		if err := json.Unmarshal(val, &result); err == nil {
-			return normalizeValue(result) // Recursively normalize
+	if v == nil {
+		return nil
+	}
+
+	// Use reflection to check for byte slice types that might not match []byte directly
+	// This catches types.JSONRaw and any other named []byte types
+	rv := reflect.ValueOf(v)
+	if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		// This is a byte slice ([]byte, []uint8, types.JSONRaw, etc.)
+		bytes := make([]byte, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			bytes[i] = byte(rv.Index(i).Uint())
 		}
-		// If not valid JSON, return as string
-		return string(val)
-	case []byte:
 		// Try to unmarshal as JSON
 		var result interface{}
-		if err := json.Unmarshal(val, &result); err == nil {
+		if err := json.Unmarshal(bytes, &result); err == nil {
 			return normalizeValue(result) // Recursively normalize
 		}
 		// If not valid JSON, return as string
-		return string(val)
+		return string(bytes)
+	}
+
+	switch val := v.(type) {
 	case map[string]interface{}:
 		normalized := make(map[string]interface{})
 		for k, v := range val {

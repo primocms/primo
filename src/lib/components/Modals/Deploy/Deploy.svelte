@@ -3,6 +3,7 @@
 	import { page } from '$app/state'
 	import { onModKey } from '$lib/builder/utils/keyboard'
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
+	import { instance } from '$lib/instance'
 
 	let { stage = $bindable(), publish_fn, loading, site_host, onClose } = $props()
 
@@ -33,22 +34,22 @@
 <div class="Deploy primo-reset">
 	{#if stage === 'INITIAL'}
 		<div class="container">
-			<h3 class="title">Publish Site</h3>
+			<h3 class="title">{instance.dev_mode ? 'Preview Site' : 'Publish Site'}</h3>
 			{#if site_host}
 				<p class="description">
-					Your website will be published to
+					{instance.dev_mode ? 'Your website will be previewed at' : 'Your website will be published to'}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
 				</p>
 			{:else}
-				<p class="description">Ready to publish your website changes?</p>
+				<p class="description">{instance.dev_mode ? 'Ready to preview your website changes?' : 'Ready to publish your website changes?'}</p>
 			{/if}
 			<div class="buttons">
 				<button class="primo-button" onclick={onClose}>
 					<span>Cancel</span>
 				</button>
 				<button class="primo-button primary" onclick={handle_publish} disabled={loading}>
-					<Icon icon={loading ? 'line-md:loading-twotone-loop' : 'entypo:publish'} class={$mod_key_held && !loading ? 'invisible' : ''} />
-					<span class:invisible={$mod_key_held && !loading}>{loading ? 'Publishing...' : 'Publish Changes'}</span>
+					<Icon icon={loading ? 'line-md:loading-twotone-loop' : instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} class={$mod_key_held && !loading ? 'invisible' : ''} />
+					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : (instance.dev_mode ? 'Build Preview' : 'Publish Changes')}</span>
 					{#if $mod_key_held && !loading}
 						<span class="key-hint">⌘P</span>
 					{/if}
@@ -57,13 +58,13 @@
 		</div>
 	{:else if stage === 'PUBLISHED'}
 		<div class="container">
-			<h3 class="title">Published Successfully!</h3>
+			<h3 class="title">{instance.dev_mode ? 'Preview Ready!' : 'Published Successfully!'}</h3>
 			<p class="description">
-				Your website changes have been published to
+				{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
 				{#if site_host}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
 				{:else}
-					your live site
+					{instance.dev_mode ? 'your local server' : 'your live site'}
 				{/if}
 			</p>
 			<div class="buttons">
@@ -73,7 +74,7 @@
 				{#if site_host}
 					<a href="{page.url.protocol}//{site_host}" target="_blank" class="primo-button">
 						<Icon icon="lucide:external-link" />
-						<span>View Site</span>
+						<span>{instance.dev_mode ? 'View Preview' : 'View Site'}</span>
 					</a>
 				{/if}
 			</div>

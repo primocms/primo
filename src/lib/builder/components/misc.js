@@ -1,14 +1,85 @@
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
 
+const PREVIEW_BASELINE_CSS = `
+  :root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  figure,
+  blockquote,
+  dl,
+  dd {
+    margin: 0;
+  }
+
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
+`
+
+const preview_iframe_head = (head = '') => `
+  <style data-primo-preview-baseline>${PREVIEW_BASELINE_CSS}</style>
+  ${head}
+`
+
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `
   <!DOCTYPE html>
   <html>
     <head>
       <script>window.__PALA_CONTEXT__ = { environment: 'editor' };</script>
-      ${head}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      ${preview_iframe_head(head)}
       <script type="module">
         let mod;
         let reset;
@@ -148,9 +219,9 @@ export const static_iframe_srcdoc = ({ head = '', html, css, foot = '' }) => {
         <script>window.__PALA_CONTEXT__ = { environment: 'editor' };</script>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        ${head}
+        ${preview_iframe_head(head)}
       </head>
-      <body id="page" style="margin:0">
+      <body id="page">
         ${html}
         <style>${css}</style>
         ${foot}
@@ -228,9 +299,9 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             }
           }
         </script>
-        ${head}
+        ${preview_iframe_head(head)}
       </head>
-      <body style="margin:0;overflow:hidden;">
+      <body style="overflow:hidden;">
         ${wrapper_start}
         <div data-section="${section_id}" id="section-${section_id}" data-symbol="${symbol_id}">
           <div id="component"></div>

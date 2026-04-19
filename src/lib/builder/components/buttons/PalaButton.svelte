@@ -2,10 +2,21 @@
 	import Icon from '@iconify/svelte'
 	import { loadingSite } from '../../stores/app/misc'
 	import UI from '../../ui'
+
+	function get_dashboard_url() {
+		if (typeof window === 'undefined') return '/admin/dashboard'
+		const { protocol, hostname, port } = window.location
+		if (hostname === 'localhost' || hostname === '127.0.0.1') {
+			return `${protocol}//${hostname}${port ? `:${port}` : ''}/`
+		}
+		if (hostname.endsWith('.localhost')) {
+			return `${protocol}//localhost${port ? `:${port}` : ''}/`
+		}
+		return '/admin/dashboard'
+	}
 </script>
 
-<a class="primo-button" aria-label="See all sites" href="/admin/dashboard">
-	<!-- <a class="primo-button" aria-label="See all sites" href="/"> -->
+<a class="primo-button" aria-label="See all sites" href={get_dashboard_url()}>
 	{#if $loadingSite}
 		<UI.Spinner />
 	{:else}

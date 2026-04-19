@@ -36,3 +36,25 @@ devenv.local.nix
 # Outputs
 /internal/common
 /internal/build
+
+# Binaries
+pala
+pala_old
+palacms
+palacms_darwin_amd64
+palacms_darwin_arm64
+palacms_linux_amd64
+palacms_linux_arm64
+palacms_windows_amd64.exe
+
+# Logs and console output
+*.log
+console-*.txt
+
+# Screenshots/assets
+landing-page-full.png
+*.zip
+
+# Docs
+docs/
+bugs.md

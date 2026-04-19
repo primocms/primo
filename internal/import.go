@@ -16,6 +16,72 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Helper to get file data from the files map
+func getFileData(files map[string][]byte, path string) []byte {
+	if data, ok := files[path]; ok {
+		return data
+	}
+	return nil
+}
+
+func getExportedID(data map[string]interface{}) string {
+	if id, ok := data["_id"].(string); ok && id != "" {
+		return id
+	}
+	if id, ok := data["id"].(string); ok && id != "" {
+		return id
+	}
+	return ""
+}
+
+func normalizeImportedFieldConfig(value interface{}) (interface{}, bool) {
+	if value == nil {
+		return nil, false
+	}
+
+	if str, ok := value.(string); ok {
+		if strings.TrimSpace(str) == "" {
+			return nil, false
+		}
+	}
+
+	return value, true
+}
+
+// buildBlockFieldCompositeKey constructs a composite key by walking up the parent chain
+func buildBlockFieldCompositeKey(field *core.Record, byID map[string]*core.Record) string {
+	key := field.GetString("key")
+	if key == "" {
+		return ""
+	}
+
+	parts := []string{key}
+	current := field
+	seen := map[string]bool{field.Id: true}
+
+	for {
+		parentID := current.GetString("parent")
+		if parentID == "" || seen[parentID] {
+			break
+		}
+		parent := byID[parentID]
+		if parent == nil {
+			break
+		}
+
+		parentKey := parent.GetString("key")
+		if parentKey == "" {
+			break
+		}
+
+		parts = append([]string{parentKey}, parts...)
+		seen[parentID] = true
+		current = parent
+	}
+
+	return strings.Join(parts, "/")
+}
+
 // ImportDiff represents changes that would be made
 type ImportDiff struct {
 	Blocks    ImportDiffSection `json:"blocks"`
@@ -28,6 +94,12 @@ type ImportDiffSection struct {
 	Added    []string `json:"added"`
 	Modified []string `json:"modified"`
 	Deleted  []string `json:"deleted"`
+}
+
+// ImportResult contains the diff and created IDs for writing back to files
+type ImportResult struct {
+	Diff       *ImportDiff                       `json:"diff"`
+	CreatedIDs map[string]map[string]interface{} `json:"created_ids"`
 }
 
 func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
@@ -79,8 +151,8 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		siteCreated = true
 	}
 
-	// Only check access if site already existed (skip for newly created sites since owner just created it)
-	if !siteCreated {
+	// Only check access if site already existed (skip for newly created sites and localhost)
+	if !siteCreated && !IsLocalhost(e) {
 		info, err := e.RequestInfo()
 		if err != nil {
 			return e.InternalServerError("Failed to get request info", err)
@@ -109,7 +181,7 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 	}
 
 	// Parse and process the import
-	diff, err := processImport(pb, site, zipData, previewOnly)
+	result, err := processImport(pb, site, zipData, previewOnly)
 	if err != nil {
 		return e.InternalServerError("Import failed: "+err.Error(), err)
 	}
@@ -117,32 +189,32 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 	if previewOnly {
 		return e.JSON(200, map[string]interface{}{
 			"preview": true,
-			"diff":    diff,
+			"diff":    result.Diff,
 		})
 	}
 
 	// In dev mode, track file changes and broadcast status
 	if DevMode {
 		// Track changed files
-		for _, f := range diff.Blocks.Added {
+		for _, f := range result.Diff.Blocks.Added {
 			AddFileChange("blocks/"+f, "push")
 		}
-		for _, f := range diff.Blocks.Modified {
+		for _, f := range result.Diff.Blocks.Modified {
 			AddFileChange("blocks/"+f, "push")
 		}
-		for _, f := range diff.PageTypes.Added {
+		for _, f := range result.Diff.PageTypes.Added {
 			AddFileChange("page-types/"+f, "push")
 		}
-		for _, f := range diff.PageTypes.Modified {
+		for _, f := range result.Diff.PageTypes.Modified {
 			AddFileChange("page-types/"+f, "push")
 		}
-		for _, f := range diff.Pages.Added {
+		for _, f := range result.Diff.Pages.Added {
 			AddFileChange("pages/"+f, "push")
 		}
-		for _, f := range diff.Pages.Modified {
+		for _, f := range result.Diff.Pages.Modified {
 			AddFileChange("pages/"+f, "push")
 		}
-		for _, f := range diff.Site.Modified {
+		for _, f := range result.Diff.Site.Modified {
 			AddFileChange("site/"+f, "push")
 		}
 
@@ -151,12 +223,13 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 	}
 
 	return e.JSON(200, map[string]interface{}{
-		"success": true,
-		"diff":    diff,
+		"success":     true,
+		"diff":        result.Diff,
+		"created_ids": result.CreatedIDs,
 	})
 }
 
-func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte, previewOnly bool) (*ImportDiff, error) {
+func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, fmt.Errorf("invalid ZIP file: %w", err)
@@ -187,6 +260,9 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		Site:      ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 	}
 
+	// Track created IDs for writing back to files
+	createdIDs := make(map[string]map[string]interface{})
+
 	siteId := site.Id
 
 	// Get existing data for comparison
@@ -204,7 +280,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 
 	// Import site fields FIRST so we can resolve site-field references in blocks
 	siteFieldKeyToId := make(map[string]string)
-	if siteFieldsData, ok := files["site/fields.json"]; ok {
+	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		if !previewOnly {
 			var err error
 			siteFieldKeyToId, err = importSiteFieldsWithMap(pb, site, siteFieldsData)
@@ -219,14 +295,14 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	pageTypeNameToId := make(map[string]string)
 	pageTypeDirs := findDirectories(files, "page-types/")
 	for _, ptName := range pageTypeDirs {
-		configPath := fmt.Sprintf("page-types/%s/config.json", ptName)
+		configPath := fmt.Sprintf("page-types/%s/config.yaml", ptName)
 		configData := files[configPath]
 		if configData == nil {
 			continue
 		}
 
 		var ptData ExportedPageType
-		if err := json.Unmarshal(configData, &ptData); err != nil {
+		if err := yaml.Unmarshal(configData, &ptData); err != nil {
 			continue
 		}
 
@@ -272,7 +348,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	folderToDisplayName := make(map[string]string)
 	for _, blockName := range blockDirs {
 		componentPath := fmt.Sprintf("blocks/%s/component.svelte", blockName)
-		fieldsPath := fmt.Sprintf("blocks/%s/fields.json", blockName)
+		fieldsPath := fmt.Sprintf("blocks/%s/fields.yaml", blockName)
 		contentPathYaml := fmt.Sprintf("blocks/%s/content.yaml", blockName)
 		contentPathJson := fmt.Sprintf("blocks/%s/content.json", blockName)
 
@@ -289,10 +365,10 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			continue
 		}
 
-		// Parse fields.json to get the original name
+		// Parse fields.yaml to get the original name
 		var blockMeta ExportedBlock
 		if fieldsData != nil {
-			json.Unmarshal(fieldsData, &blockMeta)
+			yaml.Unmarshal(fieldsData, &blockMeta)
 		}
 
 		displayName := blockMeta.Name
@@ -334,8 +410,15 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 
 		if !previewOnly {
-			if err := importBlock(pb, site, blockName, displayName, componentData, fieldsData, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId); err != nil {
+			blockId, err := importBlock(pb, site, blockName, displayName, componentData, fieldsData, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId)
+			if err != nil {
 				return nil, fmt.Errorf("failed to import block %s: %w", blockName, err)
+			}
+
+			// Track created block ID
+			fieldsPath := fmt.Sprintf("blocks/%s/fields.yaml", blockName)
+			createdIDs[fieldsPath] = map[string]interface{}{
+				"_id": blockId,
 			}
 		}
 	}
@@ -343,14 +426,14 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// Process page types (for diff tracking - actual import happened earlier)
 	pageTypeDirs = findDirectories(files, "page-types/")
 	for _, ptName := range pageTypeDirs {
-		configPath := fmt.Sprintf("page-types/%s/config.json", ptName)
+		configPath := fmt.Sprintf("page-types/%s/config.yaml", ptName)
 		configData := files[configPath]
 		if configData == nil {
 			continue
 		}
 
 		var ptData ExportedPageType
-		if err := json.Unmarshal(configData, &ptData); err != nil {
+		if err := yaml.Unmarshal(configData, &ptData); err != nil {
 			continue
 		}
 
@@ -459,7 +542,8 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	var homepageInfo *pageImportInfo
 
 	for i := range allPages {
-		if allPages[i].data.Slug == "" && !strings.Contains(allPages[i].path, "/") {
+		// Homepage is specifically index.yaml (path == ""), not just any page without a slug
+		if allPages[i].path == "" {
 			homepageInfo = &allPages[i]
 		} else {
 			sortedPages = append(sortedPages, allPages[i])
@@ -481,12 +565,17 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// Import homepage first to get its ID
 	var homepageId string
 	if homepageInfo != nil && !previewOnly {
-		pageId, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "")
+		pageId, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "")
 		if err != nil {
 			return nil, fmt.Errorf("failed to import homepage %s: %w", homepageInfo.path, err)
 		}
 		homepageId = pageId
 		pathToId["index"] = pageId
+
+		// Track created page ID
+		createdIDs["pages/index.yaml"] = map[string]interface{}{
+			"_id": pageId,
+		}
 	}
 
 	// Import pages in order (parents before children)
@@ -511,18 +600,24 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 				}
 			}
 
-			pageId, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId)
+			pageId, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId, info.path)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import page %s: %w", info.path, err)
 			}
 
 			// Store the page ID for children to reference
 			pathToId[info.path] = pageId
+
+			// Track created page ID
+			pagePath := "pages/" + info.path + ".yaml"
+			createdIDs[pagePath] = map[string]interface{}{
+				"_id": pageId,
+			}
 		}
 	}
 
 	// Process site config
-	if siteFieldsData, ok := files["site/fields.json"]; ok {
+	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		diff.Site.Modified = append(diff.Site.Modified, "fields")
 		if !previewOnly {
 			if err := importSiteFields(pb, site, siteFieldsData); err != nil {
@@ -575,7 +670,10 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 	}
 
-	return diff, nil
+	return &ImportResult{
+		Diff:       diff,
+		CreatedIDs: createdIDs,
+	}, nil
 }
 
 func findDirectories(files map[string][]byte, prefix string) []string {
@@ -628,10 +726,10 @@ func flattenSubfields(fields []map[string]interface{}, parentKey string) []map[s
 	return result
 }
 
-func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData, fieldsData, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string) error {
+func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData, fieldsData, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string) (string, error) {
 	symbolsColl, err := pb.FindCollectionByNameOrId("site_symbols")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var symbol *core.Record
@@ -653,14 +751,14 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	}
 
 	if err := pb.Save(symbol); err != nil {
-		return err
+		return "", err
 	}
 
 	// Import fields if provided
 	if fieldsData != nil {
 		var blockMeta ExportedBlock
-		if err := json.Unmarshal(fieldsData, &blockMeta); err != nil {
-			return err
+		if err := yaml.Unmarshal(fieldsData, &blockMeta); err != nil {
+			return "", err
 		}
 
 		// Get existing fields
@@ -672,7 +770,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 
 		fieldsColl, err := pb.FindCollectionByNameOrId("site_symbol_fields")
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		// Track field key -> record for parent resolution, and fields with parents
@@ -739,7 +837,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			}
 
 			if err := pb.Save(field); err != nil {
-				return err
+				return "", err
 			}
 
 			fieldKeyToRecord[fieldKey] = field
@@ -829,15 +927,22 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 				return nil
 			}
 
-			// Check config (preferred) or options (backwards compatibility) for nested fields
-			fieldConfig, hasFieldConfig := fieldData["config"].(map[string]interface{})
-			if !hasFieldConfig {
-				fieldConfig, _ = fieldData["options"].(map[string]interface{})
-			}
-			if fieldConfig != nil {
-				if nestedFields, ok := fieldConfig["fields"].([]interface{}); ok {
-					if err := processNestedFields(field, fieldKey, nestedFields); err != nil {
-						return err
+			// Check for subfields directly on the field (YAML format)
+			if subfields, ok := fieldData["subfields"].([]interface{}); ok && len(subfields) > 0 {
+				if err := processNestedFields(field, fieldKey, subfields); err != nil {
+					return "", err
+				}
+			} else {
+				// Check config (preferred) or options (backwards compatibility) for nested fields
+				fieldConfig, hasFieldConfig := fieldData["config"].(map[string]interface{})
+				if !hasFieldConfig {
+					fieldConfig, _ = fieldData["options"].(map[string]interface{})
+				}
+				if fieldConfig != nil {
+					if nestedFields, ok := fieldConfig["fields"].([]interface{}); ok {
+						if err := processNestedFields(field, fieldKey, nestedFields); err != nil {
+							return "", err
+						}
 					}
 				}
 			}
@@ -848,7 +953,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			if parentRecord, ok := fieldKeyToRecord[fp.parentKey]; ok {
 				fp.field.Set("parent", parentRecord.Id)
 				if err := pb.Save(fp.field); err != nil {
-					return err
+					return "", err
 				}
 			}
 		}
@@ -864,7 +969,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			err = json.Unmarshal(contentData, &contentMap)
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		// Get the fields for this symbol
@@ -883,7 +988,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 
 		entriesColl, err := pb.FindCollectionByNameOrId("site_symbol_entries")
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		// Delete ALL existing entries for this symbol's fields (clean slate)
@@ -908,12 +1013,12 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 				}
 			}
 			if err := importSymbolContentField(pb, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
-				return err
+				return "", err
 			}
 		}
 	}
 
-	return nil
+	return symbol.Id, nil
 }
 
 // getFieldKeyById finds a field's key by its ID in a list of fields
@@ -1109,7 +1214,7 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 	return nil
 }
 
-func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string) (string, error) {
+func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string) (string, error) {
 	pagesColl, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
 		return "", err
@@ -1123,8 +1228,15 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 		page.Set("site", site.Id)
 	}
 
+	// Derive slug from file path (last segment)
+	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
+	slug := pagePath
+	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
+		slug = pagePath[lastSlash+1:]
+	}
+
 	page.Set("name", pageData.Name)
-	page.Set("slug", pageData.Slug)
+	page.Set("slug", slug)
 	page.Set("parent", parentId)
 
 	// Find page type by name or slug-style name
@@ -1300,7 +1412,7 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 
 func importSiteFields(pb *pocketbase.PocketBase, site *core.Record, data []byte) error {
 	var fields []map[string]interface{}
-	if err := json.Unmarshal(data, &fields); err != nil {
+	if err := yaml.Unmarshal(data, &fields); err != nil {
 		return err
 	}
 
@@ -1411,7 +1523,7 @@ func importSiteFieldsWithMap(pb *pocketbase.PocketBase, site *core.Record, data 
 	keyToId := make(map[string]string)
 
 	var fields []map[string]interface{}
-	if err := json.Unmarshal(data, &fields); err != nil {
+	if err := yaml.Unmarshal(data, &fields); err != nil {
 		return keyToId, err
 	}
 

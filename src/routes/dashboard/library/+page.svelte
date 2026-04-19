@@ -32,8 +32,9 @@
 		Store
 	} from 'lucide-svelte'
 	import SymbolButton from '$lib/components/SymbolButton.svelte'
+	import { browser } from '$app/environment'
 	import { page } from '$app/state'
-	import { goto } from '$app/navigation'
+	import { beforeNavigate, goto } from '$app/navigation'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { LibrarySymbolGroups, LibrarySymbols, LibrarySymbolFields, LibrarySymbolEntries, SiteSymbols } from '$lib/pocketbase/collections'
 	import type { LibrarySymbol } from '$lib/common/models/LibrarySymbol'
@@ -45,14 +46,34 @@
 	import { self } from '$lib/pocketbase/managers'
 
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
+	const active_symbol_id = $derived(page.url.searchParams.get('block'))
 	const symbol_groups = $derived(LibrarySymbolGroups.list() ?? [])
+
+	function update_library_url(search_params: Record<string, string | null | undefined>) {
+		const url = new URL(page.url)
+		for (const [key, value] of Object.entries(search_params)) {
+			if (value) {
+				url.searchParams.set(key, value)
+			} else {
+				url.searchParams.delete(key)
+			}
+		}
+		goto(url, { replaceState: true, keepFocus: true, noScroll: true })
+	}
+
+	beforeNavigate((navigation) => {
+		if (!browser || !active_symbol_id) return
+		if (!navigation.to || navigation.to.url.pathname === page.url.pathname) return
+
+		const url = new URL(page.url)
+		url.searchParams.delete('block')
+		window.history.replaceState(window.history.state, '', url)
+	})
 
 	// Auto-select first group if none selected and groups exist
 	$effect(() => {
 		if (!active_symbol_group_id && symbol_groups.length > 0) {
-			const url = new URL(page.url)
-			url.searchParams.set('group', symbol_groups[0].id)
-			goto(url, { replaceState: true })
+			update_library_url({ group: symbol_groups[0].id })
 		}
 	})
 
@@ -157,9 +178,26 @@
 	let is_symbol_editor_open = $state(false)
 
 	function begin_symbol_edit(symbol: ObjectOf<typeof LibrarySymbols>) {
+		update_library_url({ group: symbol.group, block: symbol.id })
+	}
+
+	$effect(() => {
+		if (!active_symbol_id) {
+			symbol_being_edited = undefined
+			is_symbol_editor_open = false
+			return
+		}
+
+		const symbol = LibrarySymbols.one(active_symbol_id)
+		if (!symbol) return
+
 		symbol_being_edited = symbol
 		is_symbol_editor_open = true
-	}
+
+		if (active_symbol_group_id !== symbol.group) {
+			update_library_url({ group: symbol.group })
+		}
+	})
 
 	// Symbol rename
 	let symbol_being_renamed: LibrarySymbol | null = $state(null)
@@ -460,6 +498,9 @@
 				// User confirmed, discard changes
 				self.discard()
 			}
+
+			update_library_url({ block: null })
+			symbol_being_edited = undefined
 		}
 	}}
 >
@@ -473,8 +514,7 @@
 				button: {
 					label: 'Save',
 					onclick: () => {
-						is_symbol_editor_open = false
-						symbol_being_edited = undefined
+						update_library_url({ block: null })
 					}
 				}
 			}}

@@ -26,8 +26,9 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				if idx := strings.LastIndex(host, ":"); idx != -1 {
 					host = host[:idx]
 				}
+				reqPath := requestEvent.Request.PathValue("path")
 				// Check for bare localhost (no subdomain)
-				if (host == "localhost" || host == "127.0.0.1") && requestEvent.Request.PathValue("path") == "" {
+				if (host == "localhost" || host == "127.0.0.1") && (reqPath == "" || reqPath == "/") {
 					return requestEvent.Redirect(302, "/admin/dashboard")
 				}
 			}

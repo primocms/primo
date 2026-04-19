@@ -364,7 +364,7 @@
 			</DropdownMenu.Root>
 			{@render children?.()}
 			<!-- <LocaleSelector /> -->
-			<ToolbarButton type="primo" icon="entypo:publish" label="Publish" key="p" loading={publish_in_progress} on:click={() => (publishing = true)} />
+			<ToolbarButton type="primo" icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} label={instance.dev_mode ? 'Preview' : 'Publish'} key="p" loading={publish_in_progress} on:click={() => (publishing = true)} />
 		</div>
 	</div>
 </nav>

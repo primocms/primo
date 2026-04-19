@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/palacms/palacms/internal"
@@ -8,7 +9,11 @@ import (
 	"github.com/pocketbase/pocketbase"
 )
 
+// Build info - set via ldflags
+var BuildTime = "dev"
+
 func main() {
+	fmt.Printf("[palacms build: %s]\n", BuildTime)
 	pb := pocketbase.New()
 
 	if err := setup(pb); err != nil {
@@ -69,7 +74,15 @@ func setup(pb *pocketbase.PocketBase) error {
 		return err
 	}
 
+	if err := internal.RegisterLibraryExportEndpoint(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterImportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterLibraryImportEndpoint(pb); err != nil {
 		return err
 	}
 

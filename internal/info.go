@@ -90,6 +90,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				SMTPEnabled      bool   `json:"smtp_enabled"`
 				HostedMode       bool   `json:"hosted_mode"`
 				BillingURL       string `json:"billing_url,omitempty"`
+				DevMode          bool   `json:"dev_mode"`
 			}{
 				Id:               id,
 				Version:          version,
@@ -97,6 +98,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				SMTPEnabled:      smtpEnabled,
 				HostedMode:       isHostedMode(),
 				BillingURL:       os.Getenv("PALA_BILLING_URL"),
+				DevMode:          DevMode,
 			})
 		})
 

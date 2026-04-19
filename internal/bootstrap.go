@@ -3,11 +3,20 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/rand"
+	"encoding/json"
 	"io"
+	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
+
+type bootstrapSiteGroup struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Index int    `json:"index"`
+}
 
 // RegisterBootstrapEndpoint adds the bootstrap endpoint for first-run setup
 // This endpoint only works when no sites exist yet (security measure)
@@ -39,6 +48,10 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 	siteId := e.Request.FormValue("site_id")
 	siteName := e.Request.FormValue("name")
 	siteHost := e.Request.FormValue("host")
+	siteGroupRef := e.Request.FormValue("group")
+	siteGroupName := e.Request.FormValue("group_name")
+	siteGroupIndex := e.Request.FormValue("group_index")
+	serverGroupsRaw := e.Request.FormValue("server_groups")
 
 	if siteId == "" {
 		siteId = generateId(15)
@@ -50,8 +63,19 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		siteHost = "localhost"
 	}
 
-	// Create or find default site group
-	groupId, err := ensureDefaultGroup(pb)
+	serverGroups, err := parseBootstrapGroups(serverGroupsRaw)
+	if err != nil {
+		return e.BadRequestError("Invalid server_groups payload", err)
+	}
+	if err := ensureBootstrapGroups(pb, serverGroups); err != nil {
+		return e.InternalServerError("Failed to create site groups", err)
+	}
+
+	groupId, err := ensureBootstrapGroup(pb, bootstrapSiteGroup{
+		ID:    siteGroupRef,
+		Name:  siteGroupName,
+		Index: parseGroupIndex(siteGroupIndex),
+	})
 	if err != nil {
 		return e.InternalServerError("Failed to create site group", err)
 	}
@@ -112,33 +136,144 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 }
 
 func ensureDefaultGroup(pb *pocketbase.PocketBase) (string, error) {
-	// Try to find existing default group
-	groups, err := pb.FindAllRecords("site_groups")
-	if err == nil && len(groups) > 0 {
-		return groups[0].Id, nil
+	return ensureBootstrapGroup(pb, bootstrapSiteGroup{
+		ID:    "default",
+		Name:  "Default",
+		Index: 0,
+	})
+}
+
+func parseBootstrapGroups(raw string) ([]bootstrapSiteGroup, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
 	}
 
-	// Create default group
+	var groups []bootstrapSiteGroup
+	if err := json.Unmarshal([]byte(raw), &groups); err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func parseGroupIndex(raw string) int {
+	if strings.TrimSpace(raw) == "" {
+		return 0
+	}
+
+	index := 0
+	for _, char := range raw {
+		if char < '0' || char > '9' {
+			return 0
+		}
+		index = (index * 10) + int(char-'0')
+	}
+
+	return index
+}
+
+func ensureBootstrapGroups(pb *pocketbase.PocketBase, groups []bootstrapSiteGroup) error {
+	for index, group := range groups {
+		if strings.TrimSpace(group.ID) == "" && strings.TrimSpace(group.Name) == "" {
+			continue
+		}
+		if group.Index == 0 && index != 0 {
+			group.Index = index
+		}
+		if _, err := ensureBootstrapGroup(pb, group); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ensureBootstrapGroup(pb *pocketbase.PocketBase, group bootstrapSiteGroup) (string, error) {
+	groupID := strings.TrimSpace(group.ID)
+	groupName := strings.TrimSpace(group.Name)
+	if groupName == "" {
+		groupName = humanizeGroupID(groupID)
+	}
+	if groupName == "" {
+		groupName = "Default"
+	}
+	if len(groupID) < 15 {
+		groupID = ""
+	}
+
+	var existingGroup *core.Record
+	var err error
+	if groupID != "" {
+		existingGroup, err = pb.FindRecordById("site_groups", groupID)
+	}
+	if err != nil || existingGroup == nil {
+		existingGroup, _ = pb.FindFirstRecordByData("site_groups", "name", groupName)
+	}
+
+	if existingGroup != nil {
+		existingGroup.Set("name", groupName)
+		existingGroup.Set("index", group.Index)
+		if err := pb.Save(existingGroup); err != nil {
+			return "", err
+		}
+		return existingGroup.Id, nil
+	}
+
 	groupsColl, err := pb.FindCollectionByNameOrId("site_groups")
 	if err != nil {
 		return "", err
 	}
 
-	group := core.NewRecord(groupsColl)
-	group.Set("name", "Default")
+	newGroup := core.NewRecord(groupsColl)
+	if groupID == "" {
+		groupID = generateId(15)
+	}
+	newGroup.Set("id", groupID)
+	newGroup.Set("name", groupName)
+	newGroup.Set("index", group.Index)
 
-	if err := pb.Save(group); err != nil {
+	if err := pb.Save(newGroup); err != nil {
 		return "", err
 	}
 
-	return group.Id, nil
+	return newGroup.Id, nil
+}
+
+func humanizeGroupID(groupID string) string {
+	groupID = strings.TrimSpace(groupID)
+	if groupID == "" {
+		return "Default"
+	}
+
+	parts := strings.FieldsFunc(groupID, func(char rune) bool {
+		return char == '-' || char == '_' || char == ' '
+	})
+	for i, part := range parts {
+		if part == "" {
+			continue
+		}
+		lower := strings.ToLower(part)
+		parts[i] = strings.ToUpper(lower[:1]) + lower[1:]
+	}
+
+	if len(parts) == 0 {
+		return "Default"
+	}
+
+	return strings.Join(parts, " ")
 }
 
 func generateId(length int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 	result := make([]byte, length)
-	for i := range result {
-		result[i] = chars[i%len(chars)]
+	if _, err := rand.Read(result); err != nil {
+		for i := range result {
+			result[i] = chars[i%len(chars)]
+		}
+		return string(result)
+	}
+	for i, value := range result {
+		result[i] = chars[int(value)%len(chars)]
 	}
 	return string(result)
 }

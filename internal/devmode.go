@@ -125,6 +125,42 @@ func BroadcastStatus(status string, message string) {
 	}
 }
 
+// BroadcastReload asks connected dev clients to reload the page.
+func BroadcastReload() {
+	if !DevMode {
+		return
+	}
+
+	payload := map[string]string{
+		"type": "reload",
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+
+	var deadClients []*websocket.Conn
+
+	wsClientsMu.RLock()
+	for client := range wsClients {
+		client.SetWriteDeadline(time.Now().Add(writeWait))
+		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
+			deadClients = append(deadClients, client)
+		}
+	}
+	wsClientsMu.RUnlock()
+
+	if len(deadClients) > 0 {
+		wsClientsMu.Lock()
+		for _, client := range deadClients {
+			delete(wsClients, client)
+			client.Close()
+		}
+		wsClientsMu.Unlock()
+	}
+}
+
 // RegisterDevMode sets up the dev mode WebSocket endpoint
 func RegisterDevMode(pb *pocketbase.PocketBase) error {
 	if !DevMode {
@@ -132,6 +168,15 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 	}
 
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
+		serveEvent.Router.POST("/api/palacms/dev/reload", func(e *core.RequestEvent) error {
+			if !IsLocalhost(e) {
+				return e.ForbiddenError("Localhost only", nil)
+			}
+
+			BroadcastReload()
+			return e.NoContent(http.StatusNoContent)
+		})
+
 		// WebSocket endpoint for dev indicator
 		serveEvent.Router.GET("/__pala_dev_ws__", func(e *core.RequestEvent) error {
 			conn, err := upgrader.Upgrade(e.Response, e.Request, nil)
