@@ -96,10 +96,24 @@ type ImportDiffSection struct {
 	Deleted  []string `json:"deleted"`
 }
 
+// ImportWarning describes a non-fatal problem encountered during import —
+// most commonly, content in a source file that doesn't match the current
+// block/page schema (an "orphaned" field). The CLI surfaces these to the user
+// so that silently-dropped content becomes a loud, actionable error.
+type ImportWarning struct {
+	Kind    string `json:"kind"`    // e.g. "orphaned_field"
+	File    string `json:"file"`    // source file path, e.g. "pages/index.yaml"
+	Path    string `json:"path"`    // dotted path to the offending field, e.g. "sections[2].content.categories"
+	Field   string `json:"field"`   // the unknown field key
+	Block   string `json:"block"`   // block/symbol name when relevant
+	Message string `json:"message"` // human-readable explanation
+}
+
 // ImportResult contains the diff and created IDs for writing back to files
 type ImportResult struct {
 	Diff       *ImportDiff                       `json:"diff"`
 	CreatedIDs map[string]map[string]interface{} `json:"created_ids"`
+	Warnings   []ImportWarning                   `json:"warnings,omitempty"`
 }
 
 func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
@@ -226,6 +240,7 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		"success":     true,
 		"diff":        result.Diff,
 		"created_ids": result.CreatedIDs,
+		"warnings":    result.Warnings,
 	})
 }
 
@@ -252,6 +267,10 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 		files[f.Name] = data
 	}
+
+	// Collects non-fatal import problems (orphaned fields, etc.) to surface
+	// back to the CLI so they're impossible to miss instead of silently dropped.
+	var warnings []ImportWarning
 
 	diff := &ImportDiff{
 		Blocks:    ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
@@ -337,9 +356,9 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		// Build map after import - find the page type by name
 		pt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} AND name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
 		if pt != nil {
-			pageTypeNameToId[ptName] = pt.Id                             // folder name -> ID
-			pageTypeNameToId[ptData.Name] = pt.Id                        // display name -> ID
-			pageTypeNameToId[sanitizeFilename(ptData.Name)] = pt.Id      // sanitized name -> ID
+			pageTypeNameToId[ptName] = pt.Id                        // folder name -> ID
+			pageTypeNameToId[ptData.Name] = pt.Id                   // display name -> ID
+			pageTypeNameToId[sanitizeFilename(ptData.Name)] = pt.Id // sanitized name -> ID
 		}
 	}
 
@@ -565,7 +584,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// Import homepage first to get its ID
 	var homepageId string
 	if homepageInfo != nil && !previewOnly {
-		pageId, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "")
+		pageId, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
 		if err != nil {
 			return nil, fmt.Errorf("failed to import homepage %s: %w", homepageInfo.path, err)
 		}
@@ -600,7 +619,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 				}
 			}
 
-			pageId, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId, info.path)
+			pageId, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId, info.path, &warnings)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import page %s: %w", info.path, err)
 			}
@@ -676,6 +695,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	return &ImportResult{
 		Diff:       diff,
 		CreatedIDs: createdIDs,
+		Warnings:   warnings,
 	}, nil
 }
 
@@ -1126,9 +1146,17 @@ func importSymbolContentField(pb *pocketbase.PocketBase, entriesColl *core.Colle
 }
 
 // importPageSectionContentField recursively imports a page section field's value, handling repeaters and groups
-func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string) error {
+func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string, warnings *[]ImportWarning, sourceFile string, blockName string, pathPrefix string) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
+
+	// Build a set of known child keys for this field, used to detect
+	// orphaned (unknown) keys in nested repeater items / group values.
+	childFields := fieldsByParent[fieldId]
+	knownChildKeys := make(map[string]struct{}, len(childFields))
+	for _, cf := range childFields {
+		knownChildKeys[cf.GetString("key")] = struct{}{}
+	}
 
 	switch fieldType {
 	case "repeater":
@@ -1137,9 +1165,6 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 		if !ok {
 			return nil
 		}
-
-		// Get child fields for this repeater
-		childFields := fieldsByParent[fieldId]
 
 		for i, item := range items {
 			// Create an entry for this repeater item
@@ -1161,10 +1186,31 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 				continue
 			}
 
+			// Detect orphaned keys in this repeater item before processing
+			// declared children, so unexpected content is never silently lost.
+			if warnings != nil && len(knownChildKeys) > 0 {
+				for key := range itemMap {
+					if _, known := knownChildKeys[key]; !known {
+						*warnings = append(*warnings, ImportWarning{
+							Kind:  "orphaned_field",
+							File:  sourceFile,
+							Path:  fmt.Sprintf("%s[%d].%s", pathPrefix, i, key),
+							Field: key,
+							Block: blockName,
+							Message: fmt.Sprintf(
+								"%s: repeater item %d under %q has key %q which is not defined as a subfield. Content for this key was not imported.",
+								sourceFile, i, pathPrefix, key,
+							),
+						})
+					}
+				}
+			}
+
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importPageSectionContentField(pb, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				childPath := fmt.Sprintf("%s[%d].%s", pathPrefix, i, childKey)
+				if err := importPageSectionContentField(pb, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
 					return err
 				}
 			}
@@ -1187,13 +1233,31 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 		}
 
 		// Process child fields
-		childFields := fieldsByParent[fieldId]
 		groupMap, ok := value.(map[string]interface{})
 		if ok {
+			if warnings != nil && len(knownChildKeys) > 0 {
+				for key := range groupMap {
+					if _, known := knownChildKeys[key]; !known {
+						*warnings = append(*warnings, ImportWarning{
+							Kind:  "orphaned_field",
+							File:  sourceFile,
+							Path:  fmt.Sprintf("%s.%s", pathPrefix, key),
+							Field: key,
+							Block: blockName,
+							Message: fmt.Sprintf(
+								"%s: group at %q has key %q which is not defined as a subfield. Content for this key was not imported.",
+								sourceFile, pathPrefix, key,
+							),
+						})
+					}
+				}
+			}
+
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importPageSectionContentField(pb, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				childPath := fmt.Sprintf("%s.%s", pathPrefix, childKey)
+				if err := importPageSectionContentField(pb, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
 					return err
 				}
 			}
@@ -1218,7 +1282,7 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 	return nil
 }
 
-func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string) (string, error) {
+func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, error) {
 	pagesColl, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
 		return "", err
@@ -1342,6 +1406,12 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 			}
 		}
 
+		// Build the source file path for this page for warning messages.
+		sourceFile := "pages/index.yaml"
+		if pagePath != "" {
+			sourceFile = "pages/" + pagePath + ".yaml"
+		}
+
 		for i, sectionData := range pageData.Sections {
 			blockName := getString(sectionData, "block")
 			symbolId := symbolByName[blockName]
@@ -1350,6 +1420,15 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 				symbolId = symbolByName[strings.ToLower(blockName)]
 			}
 			if symbolId == "" {
+				if warnings != nil {
+					*warnings = append(*warnings, ImportWarning{
+						Kind:    "unknown_block",
+						File:    sourceFile,
+						Path:    fmt.Sprintf("sections[%d].block", i),
+						Block:   blockName,
+						Message: fmt.Sprintf("section %d references block %q which does not exist; section skipped", i, blockName),
+					})
+				}
 				continue
 			}
 
@@ -1394,6 +1473,24 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 				for fieldKey, value := range content {
 					field, ok := fieldByKey[fieldKey]
 					if !ok {
+						// Orphaned field: the page references a field that
+						// doesn't exist in the block's current schema. Report
+						// it loudly so the user can either add the field to
+						// the block or remove it from the page — rather than
+						// silently dropping their content.
+						if warnings != nil {
+							*warnings = append(*warnings, ImportWarning{
+								Kind:  "orphaned_field",
+								File:  sourceFile,
+								Path:  fmt.Sprintf("sections[%d].content.%s", i, fieldKey),
+								Field: fieldKey,
+								Block: blockName,
+								Message: fmt.Sprintf(
+									"%s section %d (block %q) has content for field %q, but block %q has no such field. Content for this field was not imported. Add the field to blocks/%s/fields.yaml or remove it from the page.",
+									sourceFile, i, blockName, fieldKey, blockName, sanitizeFilename(blockName),
+								),
+							})
+						}
 						continue
 					}
 					// Only process top-level fields here
@@ -1403,7 +1500,8 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 							continue // This field's parent is in this symbol, will be processed recursively
 						}
 					}
-					if err := importPageSectionContentField(pb, entriesColl, section.Id, field, value, "", 0, fieldsByParent, fieldByKey, nil); err != nil {
+					itemPath := fmt.Sprintf("sections[%d].content.%s", i, fieldKey)
+					if err := importPageSectionContentField(pb, entriesColl, section.Id, field, value, "", 0, fieldsByParent, fieldByKey, nil, warnings, sourceFile, blockName, itemPath); err != nil {
 						return "", err
 					}
 				}

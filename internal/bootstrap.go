@@ -121,10 +121,18 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		}
 
 		// Process import
-		_, err = processImport(pb, site, zipData, false)
+		result, err := processImport(pb, site, zipData, false)
 		if err != nil {
 			return e.InternalServerError("Import failed: "+err.Error(), err)
 		}
+
+		return e.JSON(200, map[string]interface{}{
+			"success":  true,
+			"site_id":  siteId,
+			"name":     siteName,
+			"host":     siteHost,
+			"warnings": result.Warnings,
+		})
 	}
 
 	return e.JSON(200, map[string]interface{}{
