@@ -260,8 +260,7 @@ func humanizeGroupID(groupID string) string {
 		if part == "" {
 			continue
 		}
-		lower := strings.ToLower(part)
-		parts[i] = strings.ToUpper(lower[:1]) + lower[1:]
+		parts[i] = titleCaseFirstLetter(part)
 	}
 
 	if len(parts) == 0 {
@@ -269,6 +268,23 @@ func humanizeGroupID(groupID string) string {
 	}
 
 	return strings.Join(parts, " ")
+}
+
+// titleCaseFirstLetter lowercases the part, then uppercases the first *letter*
+// it finds, skipping leading punctuation. So "(claude)" becomes "(Claude)"
+// rather than staying lowercase (which is what happened when the old code
+// blindly title-cased the first character — ToUpper("(") is a no-op). This
+// makes folder names like "layout-(claude)" round-trip to "Layout (Claude)".
+func titleCaseFirstLetter(part string) string {
+	lower := strings.ToLower(part)
+	runes := []rune(lower)
+	for i, r := range runes {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+			runes[i] = []rune(strings.ToUpper(string(r)))[0]
+			return string(runes)
+		}
+	}
+	return lower
 }
 
 func generateId(length int) string {
