@@ -344,7 +344,7 @@
 					{/snippet}
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content side="bottom" class="z-[999]" align="end" sideOffset={4}>
-					{#if $current_user?.serverRole}
+					{#if instance.hosted_mode && $current_user?.serverRole}
 						<DropdownMenu.Item onclick={() => (editing_collaborators = true)} class="text-xs cursor-pointer">
 							<Icon icon="clarity:users-solid" style="width: .75rem" />
 							<span>Collaborators</span>
