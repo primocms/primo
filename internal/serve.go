@@ -19,8 +19,11 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 		}
 
 		serveEvent.Router.GET("/{path...}", func(requestEvent *core.RequestEvent) error {
-			// In dev mode, redirect bare localhost to dashboard
-			if DevMode {
+			// In dev mode, redirect bare localhost to dashboard — but not when
+			// the request is a site preview (dashboard iframes hit `/?_site=ID`),
+			// otherwise the iframe bounces to the dashboard instead of rendering
+			// the site.
+			if DevMode && requestEvent.Request.URL.Query().Get("_site") == "" {
 				host := requestEvent.Request.Host
 				// Strip port
 				if idx := strings.LastIndex(host, ":"); idx != -1 {
