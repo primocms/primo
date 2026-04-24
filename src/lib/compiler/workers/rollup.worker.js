@@ -26,6 +26,12 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 		error: ''
 	}
 
+	const head_validation_error = validateHeadCode(head?.code || '')
+	if (head_validation_error) {
+		final.error = head_validation_error
+		return final
+	}
+
 	const component_lookup = new Map()
 
 	const App_Wrapper = (components, head) => {
@@ -274,6 +280,7 @@ function formatRollupError(error, id) {
 	const name = error.name || error.code || 'BuildError'
 	const plugin = error.plugin ? `[${error.plugin}] ` : ''
 	const reason = error.message || error.reason || String(error)
+	const source = id ? describeBuildSource(id) : ''
 
 	const line = error.loc?.line ?? error.start?.line ?? error.line
 	const column = error.loc?.column ?? error.start?.column ?? error.column
@@ -281,6 +288,9 @@ function formatRollupError(error, id) {
 	const position = line || column ? [typeof line === 'number' ? `line ${line}` : null, typeof column === 'number' ? `column ${column}` : null].filter(Boolean).join(', ') : ''
 
 	let message = `${plugin}${name}: ${reason}`
+	if (source) {
+		message += `\nSource: ${source}`
+	}
 	if (position) {
 		message += `\n${position}`
 	}
@@ -296,6 +306,25 @@ function formatRollupError(error, id) {
 	}
 
 	return message
+}
+
+function validateHeadCode(code) {
+	if (!code) return ''
+	const head_code = code.replace(/<!--[\s\S]*?-->/g, '')
+
+	if (/<\s*svelte:head\b/i.test(head_code)) {
+		return 'Head code contains <svelte:head>. Site and page type head code is already injected into <svelte:head>; remove the wrapper. Check site/head.svelte or the page type head editor.'
+	}
+
+	return ''
+}
+
+function describeBuildSource(id) {
+	if (id === './App.svelte') {
+		return 'generated page wrapper. Head code comes from site/head.svelte and the page type head editor.'
+	}
+
+	return id
 }
 
 function collectDocLinks(error) {

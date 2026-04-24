@@ -916,8 +916,14 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("site/             # Site-wide settings\n")
 	sb.WriteString("  fields.yaml\n")
 	sb.WriteString("  content.yaml\n")
+	sb.WriteString("  head.svelte     # Optional head markup; no <svelte:head> wrapper\n")
 	sb.WriteString(".pala/            # Internal metadata\n")
 	sb.WriteString("```\n\n")
+
+	sb.WriteString("## Site Head\n\n")
+	sb.WriteString("`site/head.svelte` is injected into Primo's generated `<svelte:head>`.\n")
+	sb.WriteString("Do not wrap it in `<svelte:head>`.\n")
+	sb.WriteString("Use direct head children such as `<title>`, `<meta>`, `<link>`, `<script>`, and `<style>`.\n\n")
 
 	sb.WriteString("## Creating Blocks\n\n")
 	sb.WriteString("Each block needs two files:\n\n")

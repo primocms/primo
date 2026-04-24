@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
+	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
 
@@ -646,6 +647,9 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	}
 
 	if headHtml, ok := files["site/head.svelte"]; ok {
+		if err := validateHeadSvelte(headHtml); err != nil {
+			return nil, err
+		}
 		if string(headHtml) != site.GetString("head") {
 			diff.Site.Modified = append(diff.Site.Modified, "head.svelte")
 			if !previewOnly {
@@ -673,6 +677,34 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		Diff:       diff,
 		CreatedIDs: createdIDs,
 	}, nil
+}
+
+func validateHeadSvelte(data []byte) error {
+	tokenizer := html.NewTokenizer(bytes.NewReader(data))
+
+	for {
+		tokenType := tokenizer.Next()
+
+		switch tokenType {
+		case html.ErrorToken:
+			if tokenizer.Err() == io.EOF {
+				return nil
+			}
+			return fmt.Errorf("site/head.svelte has invalid head markup: %w", tokenizer.Err())
+		case html.StartTagToken, html.SelfClosingTagToken:
+			nameBytes, hasAttr := tokenizer.TagName()
+			tagName := strings.ToLower(string(nameBytes))
+
+			for hasAttr {
+				_, _, moreAttr := tokenizer.TagAttr()
+				hasAttr = moreAttr
+			}
+
+			if tagName == "svelte:head" {
+				return fmt.Errorf("site/head.svelte contains <svelte:head>. This file is injected into <svelte:head>; remove the wrapper. Keep only head children such as <title>, <meta>, <link>, <script>, and <style>.")
+			}
+		}
+	}
 }
 
 func findDirectories(files map[string][]byte, prefix string) []string {
