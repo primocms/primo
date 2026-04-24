@@ -925,6 +925,13 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("Do not wrap it in `<svelte:head>`.\n")
 	sb.WriteString("Use direct head children such as `<title>`, `<meta>`, `<link>`, `<script>`, and `<style>`.\n\n")
 
+	sb.WriteString("## System IDs\n\n")
+	sb.WriteString("Blocks, fields, pages, page types, and sections all have system-owned IDs (`_id` for most, `id` for page types).\n\n")
+	sb.WriteString("- When creating a new entity, **omit the ID**. The dev server generates and writes it back on first sync.\n")
+	sb.WriteString("- Do not invent or hand-author new IDs.\n")
+	sb.WriteString("- Keep existing IDs stable when editing an entity.\n")
+	sb.WriteString("- Duplicate IDs are treated as conflicts and may cause affected files to be skipped.\n\n")
+
 	sb.WriteString("## Where Content Lives\n\n")
 	sb.WriteString("Rendered page content comes from the section's `content:` in `pages/*.yaml` — not from the block's `content.yaml`.\n\n")
 	sb.WriteString("- `blocks/{name}/content.yaml`: block-level defaults. Used for (1) values shown in the block's editor sidebar and (2) the initial `content:` seeded when the block is first added to a page in the editor.\n")
