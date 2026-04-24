@@ -3,8 +3,10 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"sort"
 	"strings"
 
@@ -17,6 +19,16 @@ import (
 type LibraryImportSummary struct {
 	Groups int `json:"groups"`
 	Blocks int `json:"blocks"`
+}
+
+// DeletesManifest is the explicit list of DB record IDs the caller has
+// authorized to be deleted during an import. When non-empty, the import's
+// stale-cleanup logic only deletes records in this manifest; other stale
+// records (in the DB but missing from the zip) are preserved with a
+// warning. This protects users from destructive sync races.
+type DeletesManifest struct {
+	GroupIDs  []string `json:"group_ids"`
+	SymbolIDs []string `json:"symbol_ids"`
 }
 
 type libraryBlockLocation struct {
@@ -47,7 +59,19 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.InternalServerError("Failed to read file", err)
 			}
 
-			summary, err := processLibraryImport(pb, zipData)
+			// Optional "deletes" form field: a JSON manifest of IDs the
+			// caller has *explicitly* chosen to delete. Any stale record
+			// not listed in this manifest is left alone with a warning, to
+			// protect users from destructive races where a watcher/zip
+			// transiently omits paths the user didn't actually delete.
+			var deletes DeletesManifest
+			if raw := e.Request.FormValue("deletes"); raw != "" {
+				if err := json.Unmarshal([]byte(raw), &deletes); err != nil {
+					return e.BadRequestError("Invalid deletes manifest: "+err.Error(), err)
+				}
+			}
+
+			summary, err := processLibraryImport(pb, zipData, deletes)
 			if err != nil {
 				return e.InternalServerError("Library import failed: "+err.Error(), err)
 			}
@@ -62,7 +86,7 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
-func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte) (*LibraryImportSummary, error) {
+func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte, deletes DeletesManifest) (*LibraryImportSummary, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, fmt.Errorf("invalid ZIP file: %w", err)
@@ -99,7 +123,10 @@ func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte) (*LibraryIm
 	for _, block := range blocks {
 		group := groupsByFolder[block.groupFolder]
 		if group == nil {
-			return nil, fmt.Errorf("no library group found for folder %q", block.groupFolder)
+			// Group isn't declared in groups.yaml — skip this block rather
+			// than failing the whole import. A warning was already logged
+			// for the orphan folder by importLibraryGroups.
+			continue
 		}
 
 		basePath := fmt.Sprintf("library/%s/%s", block.groupFolder, block.blockFolder)
@@ -144,12 +171,34 @@ func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte) (*LibraryIm
 		}
 	}
 
+	// Stale-record cleanup is manifest-scoped. For each stale record (in DB,
+	// not in this import's imported set), we only delete it if its ID is
+	// in the DeletesManifest. Other stale records are preserved and a
+	// warning is logged — this is the safety net against destructive
+	// sync races where a watcher briefly omits paths the user didn't
+	// actually delete.
+	deleteSymbolSet := make(map[string]bool, len(deletes.SymbolIDs))
+	for _, id := range deletes.SymbolIDs {
+		deleteSymbolSet[id] = true
+	}
+	deleteGroupSet := make(map[string]bool, len(deletes.GroupIDs))
+	for _, id := range deletes.GroupIDs {
+		deleteGroupSet[id] = true
+	}
+
 	existingSymbols, err := pb.FindAllRecords("library_symbols")
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch existing library symbols: %w", err)
 	}
 	for _, symbol := range existingSymbols {
 		if importedSymbolIDs[symbol.Id] {
+			continue
+		}
+		// Also delete symbols whose group was explicitly deleted — a group
+		// delete is an implicit cascade.
+		groupID := symbol.GetString("group")
+		if !deleteSymbolSet[symbol.Id] && !deleteGroupSet[groupID] {
+			log.Printf("library import: preserving stale symbol %q (id=%s) — not in deletes manifest; will be kept until explicitly removed", symbol.GetString("name"), symbol.Id)
 			continue
 		}
 		if err := deleteLibrarySymbol(pb, symbol); err != nil {
@@ -163,6 +212,10 @@ func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte) (*LibraryIm
 	}
 	for _, group := range existingGroups {
 		if importedGroupIDs[group.Id] {
+			continue
+		}
+		if !deleteGroupSet[group.Id] {
+			log.Printf("library import: preserving stale group %q (id=%s) — not in deletes manifest; will be kept until explicitly removed", group.GetString("name"), group.Id)
 			continue
 		}
 		if err := pb.Delete(group); err != nil {
@@ -214,13 +267,15 @@ func importLibraryGroups(pb *pocketbase.PocketBase, files map[string][]byte) (ma
 		exportedByFolder[folder] = group
 	}
 
+	// Folders present on disk but missing from groups.yaml are orphans. We
+	// used to silently synthesize a group record for them, but that made it
+	// impossible to delete a group by removing its groups.yaml entry (the
+	// group would just get re-created on the next import, often with a new
+	// ID). Instead, log a warning and skip — the user either declares the
+	// group in groups.yaml or removes the folder.
 	for _, folder := range groupFolders {
 		if _, ok := exportedByFolder[folder]; !ok {
-			exportedByFolder[folder] = ExportedLibraryGroup{
-				Name:   humanizeGroupID(folder),
-				Folder: folder,
-				Index:  len(exportedByFolder),
-			}
+			log.Printf("library import: skipping folder %q — not declared in library/groups.yaml", folder)
 		}
 	}
 
