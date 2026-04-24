@@ -2,6 +2,7 @@ import type { Page } from '$lib/common/models/Page'
 import type { PageSection } from '$lib/common/models/PageSection'
 import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 import type { SiteSymbol } from '$lib/common/models/SiteSymbol'
+import { PALA_BASELINE_CSS } from '$lib/common/baseline-css'
 import { useContent } from '$lib/Content.svelte'
 import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 import { processors } from '../builder/component'
@@ -196,7 +197,7 @@ export const usePublishSite = (site_id?: string) => {
 			}
 
 			const head = {
-				code: (site?.head ?? '') + (page_type?.head ?? ''),
+				code: `<style data-pala-baseline>${PALA_BASELINE_CSS}</style>` + (site?.head ?? '') + (page_type?.head ?? ''),
 				data: site_data
 			}
 
