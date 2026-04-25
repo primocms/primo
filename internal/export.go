@@ -25,21 +25,25 @@ type ExportedSite struct {
 	Version    string `json:"version"`
 }
 
-// ExportedBlock represents a block's fields.yaml
+// ExportedBlock represents a block's fields.yaml.
+// Fields is []interface{} (not []map[string]interface{}) so the export side
+// can emit each field as an *orderedMap with canonical key order. On import,
+// each entry is asserted to map[string]interface{}.
 type ExportedBlock struct {
-	ID     string                   `json:"_id" yaml:"_id"`
-	Name   string                   `json:"name" yaml:"name"`
-	Fields []map[string]interface{} `json:"fields" yaml:"fields"`
+	ID     string        `json:"_id" yaml:"_id"`
+	Name   string        `json:"name" yaml:"name"`
+	Fields []interface{} `json:"fields" yaml:"fields"`
 }
 
-// ExportedPageType represents a page type's config
+// ExportedPageType represents a page type's config.
+// See ExportedBlock for the rationale on Fields being []interface{}.
 type ExportedPageType struct {
-	ID            string                   `json:"id" yaml:"id"`
-	Name          string                   `json:"name" yaml:"name"`
-	Icon          string                   `json:"icon,omitempty" yaml:"icon,omitempty"`
-	Color         string                   `json:"color,omitempty" yaml:"color,omitempty"`
-	AllowedBlocks []string                 `json:"allowed_blocks,omitempty" yaml:"allowed_blocks,omitempty"`
-	Fields        []map[string]interface{} `json:"fields,omitempty" yaml:"fields,omitempty"`
+	ID            string        `json:"id" yaml:"id"`
+	Name          string        `json:"name" yaml:"name"`
+	Icon          string        `json:"icon,omitempty" yaml:"icon,omitempty"`
+	Color         string        `json:"color,omitempty" yaml:"color,omitempty"`
+	AllowedBlocks []string      `json:"allowed_blocks,omitempty" yaml:"allowed_blocks,omitempty"`
+	Fields        []interface{} `json:"fields,omitempty" yaml:"fields,omitempty"`
 }
 
 // ExportedLayout represents a page type's layout (header/footer sections)
@@ -76,10 +80,11 @@ func normalizeExportedFieldConfig(value interface{}) interface{} {
 	return value
 }
 
-// ExportedSiteConfig represents site-wide configuration
+// ExportedSiteConfig represents site-wide configuration.
+// See ExportedBlock for the rationale on Fields being []interface{}.
 type ExportedSiteConfig struct {
-	Fields  []map[string]interface{} `json:"fields,omitempty"`
-	Content map[string]interface{}   `json:"content,omitempty"`
+	Fields  []interface{}          `json:"fields,omitempty"`
+	Content map[string]interface{} `json:"content,omitempty"`
 }
 
 func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
@@ -229,7 +234,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		blockMeta := ExportedBlock{
 			ID:     symbol.Id,
 			Name:   symbol.GetString("name"),
-			Fields: nestSubfields(exportedFields),
+			Fields: orderedFields(nestSubfields(exportedFields)),
 		}
 		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/fields.yaml", symbolName), blockMeta); err != nil {
 			return nil, err
@@ -272,7 +277,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		symbolContent := buildSectionContent(symbolEntriesByParent[""], symbolFieldById, symbolFieldsByParent, symbolEntriesByParent)
 
 		// Only write content.yaml if there are default values
-		if len(symbolContent) > 0 {
+		if len(symbolContent.values) > 0 {
 			if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/content.yaml", symbolName), symbolContent); err != nil {
 				return nil, err
 			}
@@ -335,7 +340,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			Icon:          pt.GetString("icon"),
 			Color:         pt.GetString("color"),
 			AllowedBlocks: allowedBlocks,
-			Fields:        nestSubfields(exportedPTFields),
+			Fields:        orderedFields(nestSubfields(exportedPTFields)),
 		}
 		if err := writeYAMLToZip(zw, fmt.Sprintf("page-types/%s/config.yaml", ptName), ptConfig); err != nil {
 			return nil, err
@@ -385,7 +390,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 				// Use buildSectionContent to properly handle repeaters
 				content := buildSectionContent(topLevelEntries, fieldById, fieldsByParent, entriesByParent)
-				if len(content) > 0 {
+				if len(content.values) > 0 {
 					sectionData["content"] = content
 				}
 			}
@@ -580,13 +585,13 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	}
 
 	if len(exportedSiteFields) > 0 {
-		if err := writeYAMLToZip(zw, "site/fields.yaml", nestSubfields(exportedSiteFields)); err != nil {
+		if err := writeYAMLToZip(zw, "site/fields.yaml", orderedFields(nestSubfields(exportedSiteFields))); err != nil {
 			return nil, err
 		}
 	}
 
 	// Site entries (content values) - use same approach as buildSectionContent
-	siteContent := make(map[string]interface{})
+	var siteContent *orderedMap
 	if len(siteFieldIds) > 0 {
 		// Build field maps for nested structure reconstruction
 		fieldById := make(map[string]*core.Record)
@@ -617,7 +622,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 	}
 
-	if len(siteContent) > 0 {
+	if siteContent != nil && len(siteContent.values) > 0 {
 		if err := writeYAMLToZip(zw, "site/content.yaml", siteContent); err != nil {
 			return nil, err
 		}
@@ -938,6 +943,27 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("- Defaults do NOT cascade. Once a section exists on a page, it reads from that section's `content:` in `pages/*.yaml`. Editing the block's `content.yaml` afterward does not change what an existing section renders.\n")
 	sb.WriteString("- To add or change content on an existing page, edit the section's `content:` in `pages/*.yaml`, not the block's `content.yaml`.\n\n")
 
+	sb.WriteString("## Page Types\n\n")
+	sb.WriteString("`page-types/{name}/config.yaml` defines a page template. Key fields:\n\n")
+	sb.WriteString("- `id`, `name`, `icon`\n")
+	sb.WriteString("- `allowed_blocks`: list of block folder names the editor's \"add block\" picker offers for pages of this type.\n")
+	sb.WriteString("    - Omit or leave empty and the page type is treated as a **static page type** — the editor offers no blocks for new sections. Use this only for pages whose layout is fully defined by `layout.yaml`.\n")
+	sb.WriteString("    - Otherwise, list every block authors should be able to add to this page type.\n")
+	sb.WriteString("- `fields`: page-level fields (see \"Page Fields\" below).\n\n")
+	sb.WriteString("`page-types/{name}/layout.yaml` can define shared `header` and `footer` sections that render on every page of the type. Do not duplicate those sections in individual `pages/*.yaml` files.\n\n")
+
+	sb.WriteString("## Page Fields\n\n")
+	sb.WriteString("Page fields are content that belongs to the **page**, not a block — typical uses are SEO title/description, hero image, post date, author, featured flag.\n\n")
+	sb.WriteString("- Defined once per page type in `page-types/{name}/config.yaml` under `fields:` (same schema as block `fields.yaml`).\n")
+	sb.WriteString("- Populated per page via a top-level `fields:` key in `pages/*.yaml`.\n")
+	sb.WriteString("- Read inside a block by adding a `page-field` field to the block's `fields.yaml`, with `config.field` pointing at the page-type field name. The block receives the resolved value as a normal prop.\n\n")
+	sb.WriteString("Example — page type defining fields:\n")
+	sb.WriteString("```yaml\n# page-types/blog-post/config.yaml\nid: pt_blog_post\nname: Blog Post\nallowed_blocks:\n  - hero\n  - body\nfields:\n  - name: title\n    label: Title\n    type: text\n  - name: hero_image\n    label: Hero Image\n    type: image\n  - name: published_at\n    label: Published\n    type: date\n```\n\n")
+	sb.WriteString("Page populating those fields:\n")
+	sb.WriteString("```yaml\n# pages/blog/first-post.yaml\n_id: ...\nname: First Post\npage_type: blog-post\nfields:\n  title: A Quiet Cut\n  hero_image:\n    url: https://example.com/hero.jpg\n    alt: Barber at work\n  published_at: 2026-01-15\nsections: []\n```\n\n")
+	sb.WriteString("Block reading a page field:\n")
+	sb.WriteString("```yaml\n# blocks/hero/fields.yaml\nfields:\n  - name: hero_image\n    label: Hero Image (from page)\n    type: page-field\n    config:\n      field: hero_image\n```\n\n")
+
 	sb.WriteString("## Creating Blocks\n\n")
 	sb.WriteString("Each block needs two files:\n\n")
 	sb.WriteString("**component.svelte** - Svelte 5 component:\n")
@@ -1026,7 +1052,8 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("```json\n{ \"name\": \"posts\", \"type\": \"page-list\", \"options\": { \"page_type\": \"blog-post\" } }\n```\n\n")
 
 	sb.WriteString("### page-field\n")
-	sb.WriteString("Reference a field from the current page type.\n\n")
+	sb.WriteString("Reference a page-level field defined on the current page type. Set `config.field` to the page-type field name. See \"Page Fields\" above.\n")
+	sb.WriteString("```json\n{ \"name\": \"hero_image\", \"type\": \"page-field\", \"config\": { \"field\": \"hero_image\" } }\n```\n\n")
 
 	sb.WriteString("### site-field\n")
 	sb.WriteString("Reference a site-wide field.\n\n")
@@ -1174,13 +1201,18 @@ func normalizeValue(v interface{}) interface{} {
 // buildSectionContent recursively builds hierarchical content from flat page_section_entries.
 // It groups entries by their field, handles repeaters (arrays of items with children),
 // groups (nested objects), and simple fields.
+//
+// Returns a *orderedMap so the YAML emit preserves field-declaration order
+// instead of alphabetizing keys (which is yaml.v3's default for plain maps).
+// Without this, every CMS->files round-trip would reorder content keys.
 func buildSectionContent(
 	entries []*core.Record,
 	fieldById map[string]*core.Record,
 	fieldsByParent map[string][]*core.Record,
 	entriesByParent map[string][]*core.Record,
-) map[string]interface{} {
-	content := make(map[string]interface{})
+) *orderedMap {
+	values := make(map[string]interface{})
+	keys := make([]string, 0)
 
 	// Group entries by field ID to handle repeaters (multiple entries for same field)
 	entriesByField := make(map[string][]*core.Record)
@@ -1199,6 +1231,13 @@ func buildSectionContent(
 	sort.Slice(fieldsInContent, func(i, j int) bool {
 		return fieldsInContent[i].GetInt("index") < fieldsInContent[j].GetInt("index")
 	})
+
+	addKV := func(k string, v interface{}) {
+		if _, exists := values[k]; !exists {
+			keys = append(keys, k)
+		}
+		values[k] = v
+	}
 
 	// Process each field in index order
 	for _, field := range fieldsInContent {
@@ -1228,7 +1267,7 @@ func buildSectionContent(
 				}
 			}
 			if len(items) > 0 {
-				content[fieldKey] = items
+				addKV(fieldKey, items)
 			}
 
 		case "group":
@@ -1238,12 +1277,12 @@ func buildSectionContent(
 				// First try to use stored value if it's a complete object
 				storedValue := normalizeValue(entry.Get("value"))
 				if storedMap, ok := storedValue.(map[string]interface{}); ok && len(storedMap) > 0 {
-					content[fieldKey] = storedMap
+					addKV(fieldKey, storedMap)
 				} else {
 					// Build from child entries
 					childEntries := entriesByParent[entry.Id]
 					if len(childEntries) > 0 {
-						content[fieldKey] = buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
+						addKV(fieldKey, buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent))
 					}
 				}
 			}
@@ -1251,17 +1290,17 @@ func buildSectionContent(
 		default:
 			// Simple field: text, link, image, select, etc.
 			if len(fieldEntries) == 1 {
-				content[fieldKey] = normalizeValue(fieldEntries[0].Get("value"))
+				addKV(fieldKey, normalizeValue(fieldEntries[0].Get("value")))
 			} else if len(fieldEntries) > 1 {
 				// Multiple entries for same simple field (list type)
-				values := make([]interface{}, 0, len(fieldEntries))
+				vals := make([]interface{}, 0, len(fieldEntries))
 				for _, entry := range fieldEntries {
-					values = append(values, normalizeValue(entry.Get("value")))
+					vals = append(vals, normalizeValue(entry.Get("value")))
 				}
-				content[fieldKey] = values
+				addKV(fieldKey, vals)
 			}
 		}
 	}
 
-	return content
+	return &orderedMap{keys: keys, values: values}
 }

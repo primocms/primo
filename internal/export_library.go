@@ -149,7 +149,7 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 			blockMeta := ExportedBlock{
 				ID:     symbol.Id,
 				Name:   symbol.GetString("name"),
-				Fields: nestSubfields(exportedFields),
+				Fields: orderedFields(nestSubfields(exportedFields)),
 			}
 			if err := writeYAMLToZip(zw, basePath+"/fields.yaml", blockMeta); err != nil {
 				return nil, err
@@ -183,7 +183,7 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 			}
 
 			symbolContent := buildSectionContent(entriesByParent[""], fieldByID, fieldsByParent, entriesByParent)
-			if len(symbolContent) > 0 {
+			if len(symbolContent.values) > 0 {
 				if err := writeYAMLToZip(zw, basePath+"/content.yaml", symbolContent); err != nil {
 					return nil, err
 				}

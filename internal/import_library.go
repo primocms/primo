@@ -482,8 +482,16 @@ func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderNam
 	return nil
 }
 
-func importLibraryBlockFields(pb *pocketbase.PocketBase, symbol *core.Record, nestedFields []map[string]interface{}) error {
-	fields := flattenSubfields(nestedFields, "")
+func importLibraryBlockFields(pb *pocketbase.PocketBase, symbol *core.Record, nestedFields []interface{}) error {
+	// Convert to the concrete shape flattenSubfields expects. Entries that
+	// aren't maps (shouldn't happen in valid input) are dropped.
+	concrete := make([]map[string]interface{}, 0, len(nestedFields))
+	for _, entry := range nestedFields {
+		if m, ok := entry.(map[string]interface{}); ok {
+			concrete = append(concrete, m)
+		}
+	}
+	fields := flattenSubfields(concrete, "")
 
 	fieldsColl, err := pb.FindCollectionByNameOrId("library_symbol_fields")
 	if err != nil {

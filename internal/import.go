@@ -837,7 +837,11 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 		}, 0)
 
 		// First pass: Create/update all fields without parent relationships
-		for i, fieldData := range blockMeta.Fields {
+		for i, fieldEntry := range blockMeta.Fields {
+			fieldData, ok := fieldEntry.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			fieldKey := getString(fieldData, "name")
 			if fieldKey == "" {
 				continue
@@ -1951,7 +1955,11 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		}, 0)
 
 		// First pass: Create/update all fields without parent relationships
-		for i, fieldData := range ptData.Fields {
+		for i, fieldEntry := range ptData.Fields {
+			fieldData, ok := fieldEntry.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			fieldKey := getString(fieldData, "name")
 			if fieldKey == "" {
 				continue
