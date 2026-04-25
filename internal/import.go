@@ -2013,54 +2013,75 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		}
 	}
 
-	// Import page_type_symbols (allowed blocks on this page type)
-	if len(ptData.AllowedBlocks) > 0 {
-		ptSymbolsColl, err := pb.FindCollectionByNameOrId("page_type_symbols")
-		if err != nil {
+	// Import page_type_symbols (allowed blocks on this page type).
+	//
+	// allowed_blocks is the source of truth — the YAML's list determines
+	// which page_type_symbols rows should exist. Rows for blocks not in
+	// the list are deleted, so:
+	//   - shrinking the list actually removes blocks from the page type
+	//   - removing the key entirely makes the page type "static" in the
+	//     editor (UI gates add/remove on row count)
+	// Previously, only inserts ran, so stale rows lingered.
+	ptSymbolsColl, err := pb.FindCollectionByNameOrId("page_type_symbols")
+	if err != nil {
+		return err
+	}
+
+	// Get all symbols for this site
+	symbols, _ := pb.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
+	symbolByName := make(map[string]string)
+	for _, s := range symbols {
+		symbolByName[s.GetString("name")] = s.Id
+		symbolByName[sanitizeFilename(s.GetString("name"))] = s.Id
+	}
+	// Also map folder names to symbol IDs
+	for folderName, displayName := range folderToDisplayName {
+		if symbolId := symbolByName[displayName]; symbolId != "" {
+			symbolByName[folderName] = symbolId
+		}
+	}
+
+	// Get existing page_type_symbols
+	existingPtSymbols, _ := pb.FindRecordsByFilter("page_type_symbols", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
+	existingBySymbol := make(map[string]*core.Record)
+	for _, pts := range existingPtSymbols {
+		existingBySymbol[pts.GetString("symbol")] = pts
+	}
+
+	// Resolve YAML names to symbol IDs and remember which rows we kept,
+	// so we can delete the rest at the end.
+	wantedSymbolIds := make(map[string]bool)
+	for i, blockName := range ptData.AllowedBlocks {
+		symbolId := symbolByName[blockName]
+		if symbolId == "" {
+			continue
+		}
+		wantedSymbolIds[symbolId] = true
+
+		var ptSymbol *core.Record
+		if existing, ok := existingBySymbol[symbolId]; ok {
+			ptSymbol = existing
+		} else {
+			ptSymbol = core.NewRecord(ptSymbolsColl)
+			ptSymbol.Set("page_type", pageType.Id)
+			ptSymbol.Set("symbol", symbolId)
+		}
+
+		ptSymbol.Set("index", i)
+
+		if err := pb.Save(ptSymbol); err != nil {
 			return err
 		}
+	}
 
-		// Get all symbols for this site
-		symbols, _ := pb.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-		symbolByName := make(map[string]string)
-		for _, s := range symbols {
-			symbolByName[s.GetString("name")] = s.Id
-			symbolByName[sanitizeFilename(s.GetString("name"))] = s.Id
+	// Delete rows that are no longer wanted (stale entries from a previous
+	// import where allowed_blocks was longer or referenced different blocks).
+	for symbolId, pts := range existingBySymbol {
+		if wantedSymbolIds[symbolId] {
+			continue
 		}
-		// Also map folder names to symbol IDs
-		for folderName, displayName := range folderToDisplayName {
-			if symbolId := symbolByName[displayName]; symbolId != "" {
-				symbolByName[folderName] = symbolId
-			}
-		}
-
-		// Get existing page_type_symbols
-		existingPtSymbols, _ := pb.FindRecordsByFilter("page_type_symbols", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
-		existingBySymbol := make(map[string]*core.Record)
-		for _, pts := range existingPtSymbols {
-			existingBySymbol[pts.GetString("symbol")] = pts
-		}
-
-		for i, blockName := range ptData.AllowedBlocks {
-			symbolId := symbolByName[blockName]
-			if symbolId == "" {
-				continue
-			}
-
-			var ptSymbol *core.Record
-			if existing, ok := existingBySymbol[symbolId]; ok {
-				ptSymbol = existing
-			} else {
-				ptSymbol = core.NewRecord(ptSymbolsColl)
-				ptSymbol.Set("page_type", pageType.Id)
-				ptSymbol.Set("symbol", symbolId)
-			}
-
-			ptSymbol.Set("index", i)
-
-			if err := pb.Save(ptSymbol); err != nil {
-				return err
-			}
+		if err := pb.Delete(pts); err != nil {
+			return err
 		}
 	}
 
