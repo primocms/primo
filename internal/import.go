@@ -1387,8 +1387,17 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 
 	// Import sections (blocks on the page)
 	if len(pageData.Sections) > 0 {
-		// Get existing sections
+		// Get existing sections, indexed by record ID for stable matching.
+		// Matching by array position would corrupt rows whenever the user
+		// reorders or inserts sections — the inserted section would inherit
+		// the previously-occupying row's ID, and the displaced section would
+		// be created fresh. Use the YAML's _id as the source of truth.
 		existingSections, _ := pb.FindRecordsByFilter("page_sections", "page = {:page}", "+index", 0, 0, dbx.Params{"page": page.Id})
+		existingById := make(map[string]*core.Record, len(existingSections))
+		for _, s := range existingSections {
+			existingById[s.Id] = s
+		}
+		matchedIds := make(map[string]bool, len(existingSections))
 
 		sectionsColl, _ := pb.FindCollectionByNameOrId("page_sections")
 		entriesColl, _ := pb.FindCollectionByNameOrId("page_section_entries")
@@ -1436,10 +1445,31 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 				continue
 			}
 
+			// Match by _id when present, else treat as a new section.
+			// The user-authored YAML _id is authoritative; falling back to
+			// array index would mean reorders rewrite the wrong rows.
+			sectionIdInYaml := getString(sectionData, "_id")
+
 			var section *core.Record
-			if i < len(existingSections) {
-				section = existingSections[i]
-			} else {
+			if sectionIdInYaml != "" {
+				if matchedIds[sectionIdInYaml] {
+					// Two YAML sections share the same _id — only the first
+					// can map to the existing record. Treat the rest as new.
+					if warnings != nil {
+						*warnings = append(*warnings, ImportWarning{
+							Kind:    "duplicate_section_id",
+							File:    sourceFile,
+							Path:    fmt.Sprintf("sections[%d]._id", i),
+							Block:   blockName,
+							Message: fmt.Sprintf("section %d has _id %q which is also used by an earlier section; treated as a new section. Remove the duplicate _id to silence this warning.", i, sectionIdInYaml),
+						})
+					}
+				} else if existing, ok := existingById[sectionIdInYaml]; ok {
+					section = existing
+					matchedIds[sectionIdInYaml] = true
+				}
+			}
+			if section == nil {
 				section = core.NewRecord(sectionsColl)
 				section.Set("page", page.Id)
 			}
@@ -1509,6 +1539,17 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 						return "", err
 					}
 				}
+			}
+		}
+
+		// Delete sections the user removed from YAML. Anything in the DB
+		// not matched by an _id in this import is stale.
+		for id, existing := range existingById {
+			if matchedIds[id] {
+				continue
+			}
+			if err := pb.Delete(existing); err != nil {
+				return "", err
 			}
 		}
 	}
