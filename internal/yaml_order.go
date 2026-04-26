@@ -65,7 +65,7 @@ func appendKV(node *yaml.Node, key string, value interface{}) error {
 
 // FIELD_KEY_ORDER is the canonical key order for a single field map inside
 // fields.yaml / page-type config.yaml. Mirrors what most users naturally
-// write and matches the agent guidance in the generated AGENT.md.
+// write and matches the agent guidance in the generated AGENTS.md.
 var fieldKeyOrder = []string{"_id", "label", "name", "type", "subfields", "config"}
 
 // orderedField wraps a field map with the canonical field key order.

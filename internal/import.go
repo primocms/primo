@@ -309,10 +309,22 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 	}
 
-	// Build page type name -> ID map for resolving page-list references
-	// First, import page types so they exist, then build the map
+	// Build page type name -> ID map for resolving page-list / page references.
+	// Two passes: (1) ensure each page-type record exists so we can build the
+	// complete name->ID map up front; (2) import page-type fields & sections,
+	// using the map to translate page/page-list config.page_type values.
 	pageTypeNameToId := make(map[string]string)
 	pageTypeDirs := findDirectories(files, "page-types/")
+
+	// Pass 1: ensure page-type records exist and populate the name -> ID map.
+	type ptImportPlan struct {
+		ptName     string
+		ptData     ExportedPageType
+		layoutData *ExportedLayout
+		existing   *core.Record
+	}
+	plans := make([]ptImportPlan, 0, len(pageTypeDirs))
+
 	for _, ptName := range pageTypeDirs {
 		configPath := fmt.Sprintf("page-types/%s/config.yaml", ptName)
 		configData := files[configPath]
@@ -336,7 +348,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 
 		// Find existing page type by name or folder
-		existingPt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} AND name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
+		existingPt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
 		if existingPt == nil {
 			allPts, _ := pb.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 			for _, candidate := range allPts {
@@ -347,18 +359,41 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			}
 		}
 
-		if !previewOnly {
-			if err := importPageType(pb, site, ptData, existingPt, nil, layoutData); err != nil {
-				return nil, fmt.Errorf("failed to import page type %s: %w", ptData.Name, err)
+		// Ensure the record exists so the name->ID map covers every page type
+		// before we translate sibling references in fields below.
+		if !previewOnly && existingPt == nil {
+			ptColl, err := pb.FindCollectionByNameOrId("page_types")
+			if err != nil {
+				return nil, fmt.Errorf("failed to find page_types collection: %w", err)
+			}
+			existingPt = core.NewRecord(ptColl)
+			existingPt.Set("site", site.Id)
+			existingPt.Set("name", ptData.Name)
+			if err := pb.Save(existingPt); err != nil {
+				return nil, fmt.Errorf("failed to pre-create page type %s: %w", ptData.Name, err)
 			}
 		}
 
-		// Build map after import - find the page type by name
-		pt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} AND name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
-		if pt != nil {
-			pageTypeNameToId[ptName] = pt.Id                        // folder name -> ID
-			pageTypeNameToId[ptData.Name] = pt.Id                   // display name -> ID
-			pageTypeNameToId[sanitizeFilename(ptData.Name)] = pt.Id // sanitized name -> ID
+		if existingPt != nil {
+			pageTypeNameToId[ptName] = existingPt.Id                        // folder name -> ID
+			pageTypeNameToId[ptData.Name] = existingPt.Id                   // display name -> ID
+			pageTypeNameToId[sanitizeFilename(ptData.Name)] = existingPt.Id // sanitized name -> ID
+		}
+
+		plans = append(plans, ptImportPlan{
+			ptName:     ptName,
+			ptData:     ptData,
+			layoutData: layoutData,
+			existing:   existingPt,
+		})
+	}
+
+	// Pass 2: import full page-type contents now that the map is complete.
+	for _, plan := range plans {
+		if !previewOnly {
+			if err := importPageType(pb, site, plan.ptData, plan.existing, nil, plan.layoutData, pageTypeNameToId); err != nil {
+				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
+			}
 		}
 	}
 
@@ -457,7 +492,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 
 		// Find existing page type by name or id
-		existingPt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} AND name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
+		existingPt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
 		if existingPt == nil {
 			// Try by sanitized name
 			allPts, _ := pb.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
@@ -824,6 +859,12 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			existingFieldsByKey[compositeKey] = f
 		}
 
+		// Track which existing field records this import re-used. Anything
+		// not matched by the end is a field the user removed from
+		// fields.yaml — delete it so stale rows don't keep showing up in the
+		// editor or accept content for fields that no longer exist.
+		matchedFieldIds := make(map[string]bool)
+
 		fieldsColl, err := pb.FindCollectionByNameOrId("site_symbol_fields")
 		if err != nil {
 			return "", err
@@ -877,8 +918,8 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 						}
 					}
 				}
-				// For page-list type, convert page_type name to page_type ID
-				if fieldType == "page-list" {
+				// For page-list and page types, convert page_type name to page_type ID
+				if fieldType == "page-list" || fieldType == "page" {
 					if configMap, ok := config.(map[string]interface{}); ok {
 						if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
 							if ptId, found := pageTypeNameToId[ptName]; found {
@@ -899,6 +940,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 			if err := pb.Save(field); err != nil {
 				return "", err
 			}
+			matchedFieldIds[field.Id] = true
 
 			fieldKeyToRecord[fieldKey] = field
 
@@ -952,6 +994,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 					if err := pb.Save(nestedField); err != nil {
 						return err
 					}
+					matchedFieldIds[nestedField.Id] = true
 
 					fieldKeyToRecord[compositeKey] = nestedField
 					fieldKeyToRecord[nestedKey] = nestedField
@@ -983,6 +1026,23 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 				if err := pb.Save(fp.field); err != nil {
 					return "", err
 				}
+			}
+		}
+
+		// Delete fields the user removed from fields.yaml. Cascade rules
+		// on site_symbol_fields.parent and *_entries.field handle subfield
+		// and content cleanup, so deleting a parent field auto-removes its
+		// subfields — swallow not-found errors when we hit a record that
+		// was already cascaded away earlier in this loop.
+		for _, existing := range existingFields {
+			if matchedFieldIds[existing.Id] {
+				continue
+			}
+			if err := pb.Delete(existing); err != nil {
+				if _, notFound := pb.FindRecordById("site_symbol_fields", existing.Id); notFound != nil {
+					continue
+				}
+				return "", err
 			}
 		}
 	}
@@ -1314,7 +1374,7 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 	// Find page type by name or slug-style name
 	if pageData.PageType != "" {
 		// Try exact name match first
-		pt, err := pb.FindFirstRecordByFilter("page_types", "site = {:site} AND name = {:name}", dbx.Params{"site": site.Id, "name": pageData.PageType})
+		pt, err := pb.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": site.Id, "name": pageData.PageType})
 		if err != nil {
 			// Try matching by sanitized name (folder name style)
 			allPts, _ := pb.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
@@ -1949,7 +2009,7 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
-func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout) error {
+func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, pageTypeNameToId map[string]string) error {
 	ptColl, err := pb.FindCollectionByNameOrId("page_types")
 	if err != nil {
 		return err
@@ -1975,8 +2035,9 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		return err
 	}
 
-	// Import page type fields
-	if len(ptData.Fields) > 0 {
+	// Import page type fields. Always run, even when ptData.Fields is empty,
+	// so removing all fields from the YAML actually clears the DB.
+	{
 		fieldsColl, err := pb.FindCollectionByNameOrId("page_type_fields")
 		if err != nil {
 			return err
@@ -1987,6 +2048,10 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		for _, f := range existingFields {
 			existingByKey[f.GetString("key")] = f
 		}
+
+		// Track which existing field records this import re-used. Anything
+		// not matched by the end is a field the user removed from the YAML.
+		matchedFieldIds := make(map[string]bool)
 
 		// Track field key -> record for parent resolution, and fields with parents
 		fieldKeyToRecord := make(map[string]*core.Record)
@@ -2016,7 +2081,8 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 
 			field.Set("key", fieldKey)
 			field.Set("label", getString(fieldData, "label"))
-			field.Set("type", getString(fieldData, "type"))
+			ptFieldType := getString(fieldData, "type")
+			field.Set("type", ptFieldType)
 			field.Set("index", i)
 
 			// Read config (preferred) or options (backwards compatibility)
@@ -2025,12 +2091,23 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				ptFieldConfig, hasPtFieldConfig = fieldData["options"]
 			}
 			if hasPtFieldConfig && ptFieldConfig != nil {
+				// For page-list and page types, convert page_type name to page_type ID
+				if ptFieldType == "page-list" || ptFieldType == "page" {
+					if configMap, ok := ptFieldConfig.(map[string]interface{}); ok {
+						if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
+							if ptId, found := pageTypeNameToId[ptName]; found {
+								configMap["page_type"] = ptId
+							}
+						}
+					}
+				}
 				field.Set("config", ptFieldConfig)
 			}
 
 			if err := pb.Save(field); err != nil {
 				return err
 			}
+			matchedFieldIds[field.Id] = true
 
 			fieldKeyToRecord[fieldKey] = field
 
@@ -2050,6 +2127,22 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				if err := pb.Save(fp.field); err != nil {
 					return err
 				}
+			}
+		}
+
+		// Delete fields the user removed from page-type config.yaml.
+		// Cascade rules on page_type_fields.parent and the entry tables
+		// handle subfield + content cleanup; tolerate already-cascaded
+		// records.
+		for _, existing := range existingFields {
+			if matchedFieldIds[existing.Id] {
+				continue
+			}
+			if err := pb.Delete(existing); err != nil {
+				if _, notFound := pb.FindRecordById("page_type_fields", existing.Id); notFound != nil {
+					continue
+				}
+				return err
 			}
 		}
 	}

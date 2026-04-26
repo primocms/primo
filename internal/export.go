@@ -17,12 +17,12 @@ import (
 
 // ExportedSite represents the top-level export metadata
 type ExportedSite struct {
-	Name       string `json:"name"`
-	Host       string `json:"host"`
-	SiteID     string `json:"site_id"`
-	Group      string `json:"group,omitempty"`
-	ExportedAt string `json:"exported_at"`
-	Version    string `json:"version"`
+	Name       string `json:"name" yaml:"name"`
+	Host       string `json:"host" yaml:"host"`
+	SiteID     string `json:"site_id" yaml:"site_id"`
+	Group      string `json:"group,omitempty" yaml:"group,omitempty"`
+	ExportedAt string `json:"exported_at" yaml:"exported_at"`
+	Version    string `json:"version" yaml:"version"`
 }
 
 // ExportedBlock represents a block's fields.yaml.
@@ -643,9 +643,9 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 	}
 
-	// 6. Generate AGENT.md
+	// 6. Generate AGENTS.md
 	readme := generateReadme(site, symbols, pageTypes, symbolNames, pageTypeNames)
-	if err := writeFileToZip(zw, "AGENT.md", []byte(readme)); err != nil {
+	if err := writeFileToZip(zw, "AGENTS.md", []byte(readme)); err != nil {
 		return nil, err
 	}
 
@@ -900,256 +900,45 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("# %s\n\n", site.GetString("name")))
-	sb.WriteString("Pala site exported for local development.\n\n")
+	sb.WriteString("Primo site export. The Primo MCP server (`primo`) is the source of truth, when present, for schema, validation, field types, and inline editing. Call `list_docs` first to see what's documented.\n")
+	sb.WriteString("Without the MCP server, read `blocks/*/fields.yaml` and `page-types/*/config.yaml` to infer schemas, and treat `pages/*.yaml` section `content:` as the source of truth for rendered content (block `content.yaml` files are defaults only).\n\n")
 
-	sb.WriteString("## Structure\n\n")
-	sb.WriteString("```\n")
-	sb.WriteString("blocks/           # Svelte components with content fields\n")
-	sb.WriteString("  {name}/\n")
-	sb.WriteString("    component.svelte\n")
-	sb.WriteString("    fields.yaml\n")
-	sb.WriteString("    content.yaml  # Block-level defaults: sidebar + seed on insert. Does NOT cascade to existing page sections.\n")
-	sb.WriteString("page-types/       # Page templates\n")
-	sb.WriteString("  {name}/\n")
-	sb.WriteString("    config.yaml\n")
-	sb.WriteString("pages/            # Page content (YAML)\n")
-	sb.WriteString("  index.yaml      # Homepage\n")
-	sb.WriteString("  contact.yaml    # Leaf page (/contact)\n")
-	sb.WriteString("  about/          # Section with children\n")
-	sb.WriteString("    index.yaml    # /about\n")
-	sb.WriteString("    team.yaml     # /about/team\n")
-	sb.WriteString("site/             # Site-wide settings\n")
-	sb.WriteString("  fields.yaml\n")
-	sb.WriteString("  content.yaml\n")
-	sb.WriteString("  head.svelte     # Optional head markup; no <svelte:head> wrapper\n")
-	sb.WriteString(".pala/            # Internal metadata\n")
-	sb.WriteString("```\n\n")
+	sb.WriteString("## Layout\n")
+	sb.WriteString("- `site.yaml`, `site/`, `blocks/`, `page-types/`, `pages/`, `.primo/`\n")
+	sb.WriteString("- Blocks live in `blocks/`; pages live in `pages/`; page types live in `page-types/`.\n\n")
 
-	sb.WriteString("## Site Head\n\n")
-	sb.WriteString("`site/head.svelte` is injected into Primo's generated `<svelte:head>`.\n")
-	sb.WriteString("Do not wrap it in `<svelte:head>`.\n")
-	sb.WriteString("Use direct head children such as `<title>`, `<meta>`, `<link>`, `<script>`, and `<style>`.\n\n")
-
-	sb.WriteString("## System IDs\n\n")
-	sb.WriteString("Blocks, fields, pages, page types, and sections all have system-owned IDs (`_id` for most, `id` for page types).\n\n")
-	sb.WriteString("- When creating a new entity, **omit the ID**. The dev server generates and writes it back on first sync.\n")
-	sb.WriteString("- Do not invent or hand-author new IDs.\n")
-	sb.WriteString("- Keep existing IDs stable when editing an entity.\n")
-	sb.WriteString("- Duplicate IDs are treated as conflicts and may cause affected files to be skipped.\n\n")
-
-	sb.WriteString("## Where Content Lives\n\n")
-	sb.WriteString("Rendered page content comes from the section's `content:` in `pages/*.yaml` — not from the block's `content.yaml`.\n\n")
-	sb.WriteString("- `blocks/{name}/content.yaml`: block-level defaults. Used for (1) values shown in the block's editor sidebar and (2) the initial `content:` seeded when the block is first added to a page in the editor.\n")
-	sb.WriteString("- Defaults do NOT cascade. Once a section exists on a page, it reads from that section's `content:` in `pages/*.yaml`. Editing the block's `content.yaml` afterward does not change what an existing section renders.\n")
-	sb.WriteString("- To add or change content on an existing page, edit the section's `content:` in `pages/*.yaml`, not the block's `content.yaml`.\n\n")
-
-	sb.WriteString("## Page Types\n\n")
-	sb.WriteString("`page-types/{name}/config.yaml` defines a page template. Key fields:\n\n")
-	sb.WriteString("- `id`, `name`, `icon`\n")
-	sb.WriteString("- `allowed_blocks`: list of block folder names the editor's \"add block\" picker offers for pages of this type.\n")
-	sb.WriteString("    - Omit or leave empty and the page type is treated as a **static page type** — the editor offers no blocks for new sections. Use this only for pages whose layout is fully defined by `layout.yaml`.\n")
-	sb.WriteString("    - Otherwise, list every block authors should be able to add to this page type.\n")
-	sb.WriteString("- `fields`: page-level fields (see \"Page Fields\" below).\n\n")
-	sb.WriteString("`page-types/{name}/layout.yaml` can define shared `header` and `footer` sections that render on every page of the type. Do not duplicate those sections in individual `pages/*.yaml` files.\n\n")
-
-	sb.WriteString("## Page Fields\n\n")
-	sb.WriteString("Page fields are content that belongs to the **page**, not a block — typical uses are SEO title/description, hero image, post date, author, featured flag.\n\n")
-	sb.WriteString("- Defined once per page type in `page-types/{name}/config.yaml` under `fields:` (same schema as block `fields.yaml`).\n")
-	sb.WriteString("- Populated per page via a top-level `fields:` key in `pages/*.yaml`.\n")
-	sb.WriteString("- Read inside a block by adding a `page-field` field to the block's `fields.yaml`, with `config.field` pointing at the page-type field name. The block receives the resolved value as a normal prop.\n\n")
-	sb.WriteString("Example — page type defining fields:\n")
-	sb.WriteString("```yaml\n# page-types/blog-post/config.yaml\nid: pt_blog_post\nname: Blog Post\nallowed_blocks:\n  - hero\n  - body\nfields:\n  - name: title\n    label: Title\n    type: text\n  - name: hero_image\n    label: Hero Image\n    type: image\n  - name: published_at\n    label: Published\n    type: date\n```\n\n")
-	sb.WriteString("Page populating those fields:\n")
-	sb.WriteString("```yaml\n# pages/blog/first-post.yaml\n_id: ...\nname: First Post\npage_type: blog-post\nfields:\n  title: A Quiet Cut\n  hero_image:\n    url: https://example.com/hero.jpg\n    alt: Barber at work\n  published_at: 2026-01-15\nsections: []\n```\n\n")
-	sb.WriteString("Block reading a page field:\n")
-	sb.WriteString("```yaml\n# blocks/hero/fields.yaml\nfields:\n  - name: hero_image\n    label: Hero Image (from page)\n    type: page-field\n    config:\n      field: hero_image\n```\n\n")
-
-	sb.WriteString("## Creating Blocks\n\n")
-	sb.WriteString("Each block needs two files:\n\n")
-	sb.WriteString("**component.svelte** - Svelte 5 component:\n")
-	sb.WriteString("```svelte\n")
-	sb.WriteString("<h1>{headline}</h1>\n")
-	sb.WriteString("{#if image?.url}\n")
-	sb.WriteString("  <img src={image.url} alt={image.alt} />\n")
-	sb.WriteString("{/if}\n\n")
-	sb.WriteString("<style>\n")
-	sb.WriteString("  h1 { font-size: 2rem; }\n")
-	sb.WriteString("</style>\n")
-	sb.WriteString("```\n\n")
-	sb.WriteString("**Note:** Props are auto-injected from fields.yaml. No need to declare `$props()` - just use the field names directly in your template.\n\n")
-	sb.WriteString("**fields.yaml** - Field definitions:\n")
-	sb.WriteString("```yaml\n")
-	sb.WriteString("name: Hero\n")
-	sb.WriteString("fields:\n")
-	sb.WriteString("  - name: headline\n")
-	sb.WriteString("    label: Headline\n")
-	sb.WriteString("    type: text\n")
-	sb.WriteString("  - name: image\n")
-	sb.WriteString("    label: Image\n")
-	sb.WriteString("    type: image\n")
-	sb.WriteString("```\n\n")
-	sb.WriteString("**Note:** Field IDs are optional. They are auto-generated on import and exported back to the file.\n\n")
-
-	sb.WriteString("## Field Types\n\n")
-
-	sb.WriteString("### text\n")
-	sb.WriteString("Single-line text input.\n")
-	sb.WriteString("```svelte\n<h1>{headline}</h1>\n```\n\n")
-
-	sb.WriteString("### rich-text\n")
-	sb.WriteString("WYSIWYG editor. Outputs HTML.\n")
-	sb.WriteString("```svelte\n{@html content}\n```\n\n")
-
-	sb.WriteString("### markdown\n")
-	sb.WriteString("Markdown editor. Outputs HTML.\n")
-	sb.WriteString("```svelte\n{@html body}\n```\n\n")
-
-	sb.WriteString("### image\n")
-	sb.WriteString("Image upload. Returns `{ url, alt, width, height }`.\n")
-	sb.WriteString("```svelte\n{#if image?.url}\n  <img src={image.url} alt={image.alt} />\n{/if}\n```\n\n")
-
-	sb.WriteString("### link\n")
-	sb.WriteString("URL with label. Returns `{ url, label }`.\n")
-	sb.WriteString("```svelte\n{#if cta?.url}\n  <a href={cta.url}>{cta.label}</a>\n{/if}\n```\n\n")
-
-	sb.WriteString("### url\n")
-	sb.WriteString("Plain URL string.\n")
-	sb.WriteString("```svelte\n<a href={website_url}>Visit</a>\n```\n\n")
-
-	sb.WriteString("### icon\n")
-	sb.WriteString("Icon picker. Returns SVG string.\n")
-	sb.WriteString("```svelte\n{@html icon}\n```\n\n")
-
-	sb.WriteString("### number\n")
-	sb.WriteString("Numeric input.\n")
-	sb.WriteString("```json\n{ \"name\": \"columns\", \"type\": \"number\", \"options\": { \"min\": 1, \"max\": 6 } }\n```\n\n")
-
-	sb.WriteString("### switch\n")
-	sb.WriteString("Boolean toggle.\n")
-	sb.WriteString("```svelte\n{#if show_title}<h1>{title}</h1>{/if}\n```\n\n")
-
-	sb.WriteString("### select\n")
-	sb.WriteString("Dropdown selection.\n")
-	sb.WriteString("```json\n{ \"name\": \"align\", \"type\": \"select\", \"options\": { \"choices\": [\"left\", \"center\", \"right\"] } }\n```\n")
-	sb.WriteString("```svelte\n<div class=\"text-{align}\">{content}</div>\n```\n\n")
-
-	sb.WriteString("### repeater\n")
-	sb.WriteString("List of items with nested fields.\n")
-	sb.WriteString("```yaml\n- name: features\n  type: repeater\n  subfields:\n    - name: title\n      type: text\n    - name: description\n      type: text\n```\n")
-	sb.WriteString("```svelte\n{#each features as feature}\n  <div>\n    <h3>{feature.title}</h3>\n    <p>{feature.description}</p>\n  </div>\n{/each}\n```\n\n")
-
-	sb.WriteString("### group\n")
-	sb.WriteString("Nested object of fields.\n")
-	sb.WriteString("```yaml\n- name: author\n  type: group\n  subfields:\n    - name: name\n      type: text\n    - name: avatar\n      type: image\n```\n")
-	sb.WriteString("```svelte\n<div>{author.name}</div>\n{#if author.avatar?.url}<img src={author.avatar.url} />{/if}\n```\n\n")
-
-	sb.WriteString("### page\n")
-	sb.WriteString("Reference to another page. Returns page data with `_meta.url`.\n")
-	sb.WriteString("```json\n{ \"name\": \"featured_post\", \"type\": \"page\", \"options\": { \"page_type\": \"blog-post\" } }\n```\n\n")
-
-	sb.WriteString("### page-list\n")
-	sb.WriteString("All pages of a type.\n")
-	sb.WriteString("```json\n{ \"name\": \"posts\", \"type\": \"page-list\", \"options\": { \"page_type\": \"blog-post\" } }\n```\n\n")
-
-	sb.WriteString("### page-field\n")
-	sb.WriteString("Reference a page-level field defined on the current page type. Set `config.field` to the page-type field name. See \"Page Fields\" above.\n")
-	sb.WriteString("```json\n{ \"name\": \"hero_image\", \"type\": \"page-field\", \"config\": { \"field\": \"hero_image\" } }\n```\n\n")
-
-	sb.WriteString("### site-field\n")
-	sb.WriteString("Reference a site-wide field.\n\n")
-
-	sb.WriteString("### slider\n")
-	sb.WriteString("Range slider for numeric values.\n")
-	sb.WriteString("```json\n{ \"name\": \"opacity\", \"type\": \"slider\", \"options\": { \"min\": 0, \"max\": 100, \"step\": 10 } }\n```\n\n")
-
-	sb.WriteString("### date\n")
-	sb.WriteString("Date picker.\n\n")
-
-	sb.WriteString("### info\n")
-	sb.WriteString("Display-only text for editors (not rendered in component).\n\n")
-
-	sb.WriteString("## Svelte 5 Syntax\n\n")
-	sb.WriteString("Components use Svelte 5:\n")
-	sb.WriteString("- `$state()` for reactive variables\n")
-	sb.WriteString("- `$derived()` for computed values\n")
-	sb.WriteString("- `$effect()` for side effects\n")
-	sb.WriteString("- `onclick={handler}` not `on:click={handler}`\n\n")
-
-	sb.WriteString("## Editor Context\n\n")
-	sb.WriteString("Check if component is running in the CMS editor:\n")
-	sb.WriteString("```svelte\n")
-	sb.WriteString("let is_editor = $state(false)\n\n")
-	sb.WriteString("if (typeof window !== 'undefined') {\n")
-	sb.WriteString("\tis_editor = window.__PRIMO_CONTEXT__?.environment === 'editor'\n")
-	sb.WriteString("}\n")
-	sb.WriteString("```\n\n")
-	sb.WriteString("Use this for:\n")
-	sb.WriteString("- Disabling fixed/sticky positioning\n")
-	sb.WriteString("- Skipping scroll/resize listeners\n")
-	sb.WriteString("- Showing placeholder content\n\n")
-
-	sb.WriteString("## Inline Editing (`data-key`)\n\n")
-	sb.WriteString("The editor enables on-page editing (click a heading to change its text, click a link to change its URL/label) by matching rendered DOM elements back to their fields. Automatic matching is fragile — it fails when text has fallbacks, anchors wrap icons, or multiple elements share the same value.\n\n")
-	sb.WriteString("**Always add `data-key=\"<field_name>\"` on the element bound to a field.** This makes the binding explicit and always editable in the CMS.\n\n")
-	sb.WriteString("```svelte\n")
-	sb.WriteString("<h1 data-key=\"headline\">{headline}</h1>\n")
-	sb.WriteString("<p data-key=\"subheadline\">{subheadline}</p>\n\n")
-	sb.WriteString("<!-- link fields: put data-key on the <a> -->\n")
-	sb.WriteString("<a href={cta.url} data-key=\"cta\">\n")
-	sb.WriteString("\t{cta.label || 'Get Started'}\n")
-	sb.WriteString("\t<svg>...</svg>\n")
-	sb.WriteString("</a>\n\n")
-	sb.WriteString("<!-- image fields: put data-key on the <img> -->\n")
-	sb.WriteString("<img src={hero_image.url} alt={hero_image.alt} data-key=\"hero_image\" />\n\n")
-	sb.WriteString("<!-- repeater items: use the subfield name scoped to each item -->\n")
-	sb.WriteString("{#each features as feature}\n")
-	sb.WriteString("\t<div>\n")
-	sb.WriteString("\t\t<h3 data-key=\"title\">{feature.title}</h3>\n")
-	sb.WriteString("\t\t<p data-key=\"description\">{feature.description}</p>\n")
-	sb.WriteString("\t</div>\n")
-	sb.WriteString("{/each}\n")
-	sb.WriteString("```\n\n")
-	sb.WriteString("Rules:\n")
-	sb.WriteString("- Add `data-key` to **every** element bound to a text, rich-text, markdown, link, image, icon, url, or number field.\n")
-	sb.WriteString("- For links and images, put `data-key` on the `<a>` / `<img>` itself, not a wrapping div.\n")
-	sb.WriteString("- For group/repeater subfields, `data-key` uses the subfield name (e.g. `data-key=\"title\"`), not a dotted path.\n")
-	sb.WriteString("- An element without `data-key` may still be editable if its rendered text exactly matches the field value with no child content — don't rely on that.\n\n")
-
-	sb.WriteString("## This Site\n\n")
-	sb.WriteString("### Blocks\n\n")
+	sb.WriteString("## This site\n")
+	sb.WriteString("### Blocks\n")
+	if len(symbols) == 0 {
+		sb.WriteString("- (none)\n")
+	}
 	for _, symbol := range symbols {
 		name := symbolNames[symbol.Id]
 		sb.WriteString(fmt.Sprintf("- `%s` - %s\n", name, symbol.GetString("name")))
 	}
 	sb.WriteString("\n")
 
-	sb.WriteString("### Page Types\n\n")
+	sb.WriteString("### Page types\n")
+	if len(pageTypes) == 0 {
+		sb.WriteString("- (none)\n")
+	}
 	for _, pt := range pageTypes {
 		name := pageTypeNames[pt.Id]
 		sb.WriteString(fmt.Sprintf("- `%s` - %s\n", name, pt.GetString("name")))
 	}
 	sb.WriteString("\n")
 
-	sb.WriteString("## Best Practices\n\n")
-	sb.WriteString("### Safe Field Access\n\n")
-	sb.WriteString("Always handle potentially undefined fields:\n")
-	sb.WriteString("```svelte\n")
-	sb.WriteString("<!-- Images -->\n")
-	sb.WriteString("{#if hero_image?.url}\n")
-	sb.WriteString("  <img src={hero_image.url} alt={hero_image.alt} />\n")
-	sb.WriteString("{/if}\n\n")
-	sb.WriteString("<!-- Links -->\n")
-	sb.WriteString("<a href={cta?.url || '#'}>{cta?.label || 'Learn More'}</a>\n\n")
-	sb.WriteString("<!-- Repeaters -->\n")
-	sb.WriteString("{#each features || [] as feature}\n")
-	sb.WriteString("  <div>{feature.title}</div>\n")
-	sb.WriteString("{/each}\n")
-	sb.WriteString("```\n\n")
+	sb.WriteString("## Workflow\n")
+	sb.WriteString("- When building out a new site, call `get_docs('recommended-defaults')` first for baseline fields and the wiring checklist.\n")
+	sb.WriteString("- After editing a block file, call `validate_block`.\n")
+	sb.WriteString("- After editing a page or page-type file, call `validate_page`.\n")
+	sb.WriteString("- When creating a new block or page type, prefer `scaffold_block` / `scaffold_page_type`.\n")
+	sb.WriteString("- When you create a reusable block, add its folder name to the relevant page type's `allowed_blocks` — otherwise it won't appear in the editor sidebar.\n")
+	sb.WriteString("- For everything else, call `get_docs` with the relevant section.\n")
+	sb.WriteString("- Block components are Svelte 5. If the Svelte MCP server is available, use `mcp__svelte__svelte-autofixer` after editing `.svelte` files.\n\n")
 
-	sb.WriteString("## Workflow\n\n")
-	sb.WriteString("1. Run `pala dev` to start the local preview server\n")
-	sb.WriteString("2. Edit blocks, pages, or site settings - changes auto-sync to dev server\n")
-	sb.WriteString("3. Run `pala push` to deploy changes to a live server (if connected)\n")
+	sb.WriteString("## Permission prompts\n")
+	sb.WriteString("Your MCP client may prompt before each Primo tool call. All Primo MCP tools are read-only or return scaffolds — they don't modify your files. To skip the prompts, allowlist the `primo` server in your client's MCP settings (mechanism varies by client).\n")
 
 	return sb.String()
 }
