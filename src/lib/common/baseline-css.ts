@@ -1,4 +1,4 @@
-export const PALA_BASELINE_CSS = `
+export const PRIMO_BASELINE_CSS = `
   :root {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     line-height: 1.5;

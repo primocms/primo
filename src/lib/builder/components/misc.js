@@ -1,8 +1,8 @@
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
-import { PALA_BASELINE_CSS } from '$lib/common/baseline-css'
+import { PRIMO_BASELINE_CSS } from '$lib/common/baseline-css'
 
 const preview_iframe_head = (head = '') => `
-  <style data-pala-baseline>${PALA_BASELINE_CSS}</style>
+  <style data-primo-baseline>${PRIMO_BASELINE_CSS}</style>
   ${head}
 `
 
