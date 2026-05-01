@@ -25,32 +25,56 @@ type ExportedSite struct {
 	Version    string `json:"version" yaml:"version"`
 }
 
-// ExportedBlock represents a block's fields.yaml.
-// Fields is []interface{} (not []map[string]interface{}) so the export side
-// can emit each field as an *orderedMap with canonical key order. On import,
-// each entry is asserted to map[string]interface{}.
-type ExportedBlock struct {
-	ID     string        `json:"_id" yaml:"_id"`
-	Name   string        `json:"name" yaml:"name"`
-	Fields []interface{} `json:"fields" yaml:"fields"`
+// ExportedBlockConfig represents a block's config.yaml — the small file
+// holding system-stamped _id plus the block's display name. Reserved for
+// future block-level metadata (description, icon, category, etc.).
+type ExportedBlockConfig struct {
+	ID   string `json:"_id" yaml:"_id"`
+	Name string `json:"name" yaml:"name"`
 }
 
-// ExportedPageType represents a page type's config.
-// See ExportedBlock for the rationale on Fields being []interface{}.
+// ExportedBlockFields is a bare top-level list of field definitions written
+// to blocks/{name}/fields.yaml. Fields is []interface{} (not
+// []map[string]interface{}) so the export side can emit each field as an
+// *orderedMap with canonical key order; on import, each entry is asserted
+// to map[string]interface{}.
+type ExportedBlockFields []interface{}
+
+// ExportedPageType represents a page type's config.yaml. Page-level field
+// definitions live in a sibling fields.yaml (ExportedPageTypeFields), not
+// here — this file is just the page type's stable identity and editor
+// metadata (icon, color, allowed_blocks).
 type ExportedPageType struct {
-	ID            string        `json:"id" yaml:"id"`
-	Name          string        `json:"name" yaml:"name"`
-	Icon          string        `json:"icon,omitempty" yaml:"icon,omitempty"`
-	Color         string        `json:"color,omitempty" yaml:"color,omitempty"`
-	AllowedBlocks []string      `json:"allowed_blocks,omitempty" yaml:"allowed_blocks,omitempty"`
-	Fields        []interface{} `json:"fields,omitempty" yaml:"fields,omitempty"`
+	ID            string   `json:"_id" yaml:"_id"`
+	Name          string   `json:"name" yaml:"name"`
+	Icon          string   `json:"icon,omitempty" yaml:"icon,omitempty"`
+	Color         string   `json:"color,omitempty" yaml:"color,omitempty"`
+	AllowedBlocks []string `json:"allowed_blocks,omitempty" yaml:"allowed_blocks,omitempty"`
 }
+
+// ExportedPageTypeFields is the bare-list page-type fields.yaml — same shape
+// as block fields.yaml and site/fields.yaml.
+type ExportedPageTypeFields []interface{}
 
 // ExportedLayout represents a page type's layout (header/footer sections)
 type ExportedLayout struct {
-	Header []ExportedLayoutSection `yaml:"header,omitempty"`
-	Footer []ExportedLayoutSection `yaml:"footer,omitempty"`
+	Header        []ExportedLayoutSection `yaml:"header,omitempty"`
+	Footer        []ExportedLayoutSection `yaml:"footer,omitempty"`
+	AllowedBlocks []string                `yaml:"allowed_blocks,omitempty"`
 }
+
+// emptyLayoutTemplate is what we write to page-types/<key>/layout.yaml when
+// the page type has no header/footer sections defined. The whole thing is
+// commented so it doubles as inline documentation showing what's possible
+// without becoming live config.
+const emptyLayoutTemplate = `# Sections shared by every page of this type. Add blocks here to render
+# the same header/footer across all pages of this type.
+#
+# header:
+#   - block: site-header
+# footer:
+#   - block: site-footer
+`
 
 type ExportedLayoutSection struct {
 	Block   string                 `yaml:"block"`
@@ -63,6 +87,7 @@ type ExportedPage struct {
 	Name     string                   `json:"name" yaml:"name"`
 	Slug     string                   `json:"slug,omitempty" yaml:"slug,omitempty"`
 	PageType string                   `json:"page_type" yaml:"page_type"`
+	Content  map[string]interface{}   `json:"content,omitempty" yaml:"content,omitempty"`
 	Fields   map[string]interface{}   `json:"fields,omitempty" yaml:"fields,omitempty"`
 	Sections []map[string]interface{} `json:"sections,omitempty" yaml:"sections,omitempty"`
 	FilePath string                   `json:"-" yaml:"-"` // Internal: source file path for error messages
@@ -231,12 +256,16 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, siteFieldIdToKey))
 		}
 
-		blockMeta := ExportedBlock{
-			ID:     symbol.Id,
-			Name:   symbol.GetString("name"),
-			Fields: orderedFields(nestSubfields(exportedFields)),
+		blockConfig := ExportedBlockConfig{
+			ID:   symbol.Id,
+			Name: symbol.GetString("name"),
 		}
-		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/fields.yaml", symbolName), blockMeta); err != nil {
+		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/config.yaml", symbolName), blockConfig); err != nil {
+			return nil, err
+		}
+
+		blockFields := ExportedBlockFields(orderedFields(nestSubfields(exportedFields)))
+		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/fields.yaml", symbolName), blockFields); err != nil {
 			return nil, err
 		}
 
@@ -252,8 +281,10 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			}
 		}
 
-		// Fetch ALL entries for this symbol
-		allSymbolEntries, err := pb.FindRecordsByFilter("site_symbol_entries", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
+		// Fetch ALL entries for this symbol. site_symbol_entries has no
+		// `symbol` column — it joins through field — so traverse the
+		// field.symbol relation to get every entry under this symbol.
+		allSymbolEntries, err := pb.FindRecordsByFilter("site_symbol_entries", "field.symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
 		if err != nil {
 			allSymbolEntries = []*core.Record{}
 		}
@@ -276,11 +307,12 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		// Build content using the same recursive logic as page sections
 		symbolContent := buildSectionContent(symbolEntriesByParent[""], symbolFieldById, symbolFieldsByParent, symbolEntriesByParent)
 
-		// Only write content.yaml if there are default values
-		if len(symbolContent.values) > 0 {
-			if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/content.yaml", symbolName), symbolContent); err != nil {
-				return nil, err
-			}
+		// blocks/{name}/content.yaml is required, not optional. Without it,
+		// the editor sidebar shows empty/broken previews when the block is
+		// dropped onto a page. Emit an empty {} when no defaults exist so
+		// scaffolders/validators can rely on the file always being present.
+		if err := writeYAMLToZip(zw, fmt.Sprintf("blocks/%s/content.yaml", symbolName), symbolContent); err != nil {
+			return nil, err
 		}
 	}
 
@@ -333,16 +365,21 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			exportedPTFields = append(exportedPTFields, fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey))
 		}
 
-		// Write config.yaml in a stable field order so local dev doesn't keep reordering IDs.
+		// config.yaml holds page-type identity and editor metadata only.
+		// Page-level field definitions live in a sibling fields.yaml.
 		ptConfig := ExportedPageType{
 			ID:            pt.Id,
 			Name:          pt.GetString("name"),
 			Icon:          pt.GetString("icon"),
 			Color:         pt.GetString("color"),
 			AllowedBlocks: allowedBlocks,
-			Fields:        orderedFields(nestSubfields(exportedPTFields)),
 		}
 		if err := writeYAMLToZip(zw, fmt.Sprintf("page-types/%s/config.yaml", ptName), ptConfig); err != nil {
+			return nil, err
+		}
+
+		ptFieldsList := ExportedPageTypeFields(orderedFields(nestSubfields(exportedPTFields)))
+		if err := writeYAMLToZip(zw, fmt.Sprintf("page-types/%s/fields.yaml", ptName), ptFieldsList); err != nil {
 			return nil, err
 		}
 
@@ -402,7 +439,11 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			}
 		}
 
-		// Write layout.yaml if there are header/footer sections
+		// layout.yaml is always emitted. When the page type has header/footer
+		// sections, we write them; otherwise we write the comment-only
+		// template so the file's purpose is self-documenting and importers /
+		// validators can rely on its presence.
+		layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptName)
 		if len(headerSections) > 0 || len(footerSections) > 0 {
 			layout := map[string]interface{}{}
 			if len(headerSections) > 0 {
@@ -411,7 +452,11 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			if len(footerSections) > 0 {
 				layout["footer"] = footerSections
 			}
-			if err := writeYAMLToZip(zw, fmt.Sprintf("page-types/%s/layout.yaml", ptName), layout); err != nil {
+			if err := writeYAMLToZip(zw, layoutPath, layout); err != nil {
+				return nil, err
+			}
+		} else {
+			if err := writeFileToZip(zw, layoutPath, []byte(emptyLayoutTemplate)); err != nil {
 				return nil, err
 			}
 		}
@@ -541,7 +586,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			ID:       page.Id,
 			Name:     page.GetString("name"),
 			PageType: pageTypeName,
-			Fields:   fieldValues,
+			Content:  fieldValues,
 			Sections: sections,
 		}
 
@@ -901,7 +946,7 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 
 	sb.WriteString(fmt.Sprintf("# %s\n\n", site.GetString("name")))
 	sb.WriteString("Primo site export. The Primo MCP server (`primo`) is the source of truth, when present, for schema, validation, field types, and inline editing. Call `list_docs` first to see what's documented.\n")
-	sb.WriteString("Without the MCP server, read `blocks/*/fields.yaml` and `page-types/*/config.yaml` to infer schemas, and treat `pages/*.yaml` section `content:` as the source of truth for rendered content (block `content.yaml` files are defaults only).\n\n")
+	sb.WriteString("Without the MCP server, read `blocks/*/fields.yaml` and `page-types/*/fields.yaml` to infer schemas, and treat page-level plus section-level `content:` in `pages/*.yaml` as the source of truth for rendered content (block `content.yaml` files are defaults only).\n\n")
 
 	sb.WriteString("## Layout\n")
 	sb.WriteString("- `site.yaml`, `site/`, `blocks/`, `page-types/`, `pages/`, `.primo/`\n")

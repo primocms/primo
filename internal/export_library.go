@@ -146,12 +146,16 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 				exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, nil))
 			}
 
-			blockMeta := ExportedBlock{
-				ID:     symbol.Id,
-				Name:   symbol.GetString("name"),
-				Fields: orderedFields(nestSubfields(exportedFields)),
+			blockConfig := ExportedBlockConfig{
+				ID:   symbol.Id,
+				Name: symbol.GetString("name"),
 			}
-			if err := writeYAMLToZip(zw, basePath+"/fields.yaml", blockMeta); err != nil {
+			if err := writeYAMLToZip(zw, basePath+"/config.yaml", blockConfig); err != nil {
+				return nil, err
+			}
+
+			blockFields := ExportedBlockFields(orderedFields(nestSubfields(exportedFields)))
+			if err := writeYAMLToZip(zw, basePath+"/fields.yaml", blockFields); err != nil {
 				return nil, err
 			}
 
@@ -182,11 +186,11 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 				})
 			}
 
+			// content.yaml is required for blocks; emit even when no defaults
+			// so importers/validators can rely on its presence.
 			symbolContent := buildSectionContent(entriesByParent[""], fieldByID, fieldsByParent, entriesByParent)
-			if len(symbolContent.values) > 0 {
-				if err := writeYAMLToZip(zw, basePath+"/content.yaml", symbolContent); err != nil {
-					return nil, err
-				}
+			if err := writeYAMLToZip(zw, basePath+"/content.yaml", symbolContent); err != nil {
+				return nil, err
 			}
 		}
 	}

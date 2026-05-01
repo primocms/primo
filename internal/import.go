@@ -34,6 +34,66 @@ func getExportedID(data map[string]interface{}) string {
 	return ""
 }
 
+// parseBareFieldList unmarshals a fields.yaml file. Block, page-type, and
+// site fields.yaml files are canonical bare top-level lists; wrapper objects
+// such as `{ fields: [...] }` are rejected so the importer and validators stay
+// consistent.
+func parseBareFieldList(data []byte, filePath string) ([]interface{}, error) {
+	if len(data) == 0 {
+		return nil, nil
+	}
+
+	var document interface{}
+	if err := yaml.Unmarshal(data, &document); err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", filePath, err)
+	}
+
+	switch value := document.(type) {
+	case nil:
+		return nil, nil
+	case []interface{}:
+		return value, nil
+	case map[string]interface{}:
+		return nil, fmt.Errorf("%s must be a bare list of field definitions, but it's a map. Remove any top-level wrapper such as `fields:` and start the file with `- name: ...`.", filePath)
+	default:
+		return nil, fmt.Errorf("%s must be a bare list of field definitions.", filePath)
+	}
+}
+
+func fieldListToMaps(fieldEntries []interface{}) []map[string]interface{} {
+	fields := make([]map[string]interface{}, 0, len(fieldEntries))
+	for _, fieldEntry := range fieldEntries {
+		if fieldData, ok := fieldEntry.(map[string]interface{}); ok {
+			fields = append(fields, fieldData)
+		}
+	}
+	return fields
+}
+
+func rejectLegacyPageTypeID(data []byte, filePath string) error {
+	var document map[string]interface{}
+	if err := yaml.Unmarshal(data, &document); err != nil {
+		return fmt.Errorf("failed to parse %s: %w", filePath, err)
+	}
+
+	if _, ok := document["id"]; ok {
+		return fmt.Errorf("%s contains unsupported property `id`; use `_id` for page type configs", filePath)
+	}
+
+	return nil
+}
+
+func parseContentMap(data []byte, isYaml bool) (map[string]interface{}, error) {
+	var content map[string]interface{}
+	var err error
+	if isYaml {
+		err = yaml.Unmarshal(data, &content)
+	} else {
+		err = json.Unmarshal(data, &content)
+	}
+	return content, err
+}
+
 func normalizeImportedFieldConfig(value interface{}) (interface{}, bool) {
 	if value == nil {
 		return nil, false
@@ -287,8 +347,10 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// Get existing data for comparison
 	existingSymbols, _ := pb.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 	existingSymbolsByName := make(map[string]*core.Record)
+	existingSymbolsById := make(map[string]*core.Record)
 	for _, s := range existingSymbols {
 		existingSymbolsByName[s.GetString("name")] = s
+		existingSymbolsById[s.Id] = s
 	}
 
 	// Build slug to page ID map for converting URLs to page references
@@ -310,9 +372,10 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	}
 
 	// Build page type name -> ID map for resolving page-list / page references.
-	// Two passes: (1) ensure each page-type record exists so we can build the
-	// complete name->ID map up front; (2) import page-type fields & sections,
-	// using the map to translate page/page-list config.page_type values.
+	// First ensure each page-type record exists so the complete map is
+	// available while importing blocks. The full page-type import runs after
+	// blocks, because allowed_blocks and layout.yaml can reference blocks that
+	// are new in the same ZIP.
 	pageTypeNameToId := make(map[string]string)
 	pageTypeDirs := findDirectories(files, "page-types/")
 
@@ -320,6 +383,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	type ptImportPlan struct {
 		ptName     string
 		ptData     ExportedPageType
+		ptFields   []interface{}
 		layoutData *ExportedLayout
 		existing   *core.Record
 	}
@@ -332,9 +396,24 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			continue
 		}
 
+		if err := rejectLegacyPageTypeID(configData, configPath); err != nil {
+			return nil, err
+		}
+
 		var ptData ExportedPageType
 		if err := yaml.Unmarshal(configData, &ptData); err != nil {
 			continue
+		}
+
+		// Read page-level field definitions from sibling fields.yaml.
+		fieldsPath := fmt.Sprintf("page-types/%s/fields.yaml", ptName)
+		var ptFields []interface{}
+		if fieldsBytes, ok := files[fieldsPath]; ok {
+			parsed, err := parseBareFieldList(fieldsBytes, fieldsPath)
+			if err != nil {
+				return nil, err
+			}
+			ptFields = parsed
 		}
 
 		// Read layout.yaml if it exists
@@ -347,8 +426,21 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			}
 		}
 
-		// Find existing page type by name or folder
-		existingPt, _ := pb.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
+		// Support the legacy layout.yaml location for allowed_blocks.
+		if len(ptData.AllowedBlocks) == 0 && layoutData != nil && len(layoutData.AllowedBlocks) > 0 {
+			ptData.AllowedBlocks = layoutData.AllowedBlocks
+		}
+
+		pageTypeId := ptData.ID
+
+		// Find existing page type by ID, name, or folder.
+		var existingPt *core.Record
+		if pageTypeId != "" {
+			existingPt, _ = pb.FindFirstRecordByFilter("page_types", "site = {:site} && id = {:id}", dbx.Params{"site": siteId, "id": pageTypeId})
+		}
+		if existingPt == nil {
+			existingPt, _ = pb.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
+		}
 		if existingPt == nil {
 			allPts, _ := pb.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 			for _, candidate := range allPts {
@@ -378,35 +470,35 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			pageTypeNameToId[ptName] = existingPt.Id                        // folder name -> ID
 			pageTypeNameToId[ptData.Name] = existingPt.Id                   // display name -> ID
 			pageTypeNameToId[sanitizeFilename(ptData.Name)] = existingPt.Id // sanitized name -> ID
+			if !previewOnly {
+				createdIDs[configPath] = map[string]interface{}{
+					"_id": existingPt.Id,
+				}
+			}
 		}
 
 		plans = append(plans, ptImportPlan{
 			ptName:     ptName,
 			ptData:     ptData,
+			ptFields:   ptFields,
 			layoutData: layoutData,
 			existing:   existingPt,
 		})
 	}
 
-	// Pass 2: import full page-type contents now that the map is complete.
-	for _, plan := range plans {
-		if !previewOnly {
-			if err := importPageType(pb, site, plan.ptData, plan.existing, nil, plan.layoutData, pageTypeNameToId); err != nil {
-				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
-			}
-		}
-	}
-
 	// Process blocks
 	blockDirs := findDirectories(files, "blocks/")
 	folderToDisplayName := make(map[string]string)
+	blockDefaultContent := make(map[string]map[string]interface{})
 	for _, blockName := range blockDirs {
 		componentPath := fmt.Sprintf("blocks/%s/component.svelte", blockName)
+		configPath := fmt.Sprintf("blocks/%s/config.yaml", blockName)
 		fieldsPath := fmt.Sprintf("blocks/%s/fields.yaml", blockName)
 		contentPathYaml := fmt.Sprintf("blocks/%s/content.yaml", blockName)
 		contentPathJson := fmt.Sprintf("blocks/%s/content.json", blockName)
 
 		componentData := files[componentPath]
+		configData := files[configPath]
 		fieldsData := files[fieldsPath]
 		// Prefer YAML, fall back to JSON for backwards compatibility
 		contentData := files[contentPathYaml]
@@ -415,23 +507,46 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 		contentIsYaml := files[contentPathYaml] != nil
 
-		if componentData == nil && fieldsData == nil {
+		if componentData == nil && fieldsData == nil && configData == nil {
 			continue
 		}
 
-		// Parse fields.yaml to get the original name
-		var blockMeta ExportedBlock
+		var blockFields []interface{}
 		if fieldsData != nil {
-			yaml.Unmarshal(fieldsData, &blockMeta)
+			parsed, err := parseBareFieldList(fieldsData, fieldsPath)
+			if err != nil {
+				return nil, err
+			}
+			blockFields = parsed
 		}
 
-		displayName := blockMeta.Name
+		// config.yaml provides the block's display name and stable _id.
+		var blockConfig ExportedBlockConfig
+		if configData != nil {
+			if err := yaml.Unmarshal(configData, &blockConfig); err != nil {
+				return nil, fmt.Errorf("failed to parse %s: %w", configPath, err)
+			}
+		}
+
+		displayName := blockConfig.Name
 		if displayName == "" {
 			displayName = blockName
 		}
 		folderToDisplayName[blockName] = displayName
 
-		existing := existingSymbolsByName[displayName]
+		if contentData != nil {
+			if contentMap, err := parseContentMap(contentData, contentIsYaml); err == nil && contentMap != nil {
+				blockDefaultContent[blockName] = contentMap
+				blockDefaultContent[strings.ToLower(blockName)] = contentMap
+				blockDefaultContent[displayName] = contentMap
+				blockDefaultContent[sanitizeFilename(displayName)] = contentMap
+			}
+		}
+
+		existing := existingSymbolsById[blockConfig.ID]
+		if existing == nil {
+			existing = existingSymbolsByName[displayName]
+		}
 		if existing == nil {
 			// Check by folder name too
 			for _, s := range existingSymbols {
@@ -464,15 +579,24 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		}
 
 		if !previewOnly {
-			blockId, err := importBlock(pb, site, blockName, displayName, componentData, fieldsData, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId)
+			blockId, err := importBlock(pb, site, blockName, displayName, componentData, blockFields, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import block %s: %w", blockName, err)
 			}
 
-			// Track created block ID
-			fieldsPath := fmt.Sprintf("blocks/%s/fields.yaml", blockName)
-			createdIDs[fieldsPath] = map[string]interface{}{
+			createdIDs[configPath] = map[string]interface{}{
 				"_id": blockId,
+			}
+		}
+	}
+
+	// Pass 2: import full page-type contents now that blocks and their fields
+	// exist. This lets newly-created blocks immediately satisfy allowed_blocks
+	// and layout.yaml, and lets layout-mounted blocks import content/defaults.
+	for _, plan := range plans {
+		if !previewOnly {
+			if err := importPageType(pb, site, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, pageTypeNameToId, blockDefaultContent); err != nil {
+				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
 			}
 		}
 	}
@@ -509,7 +633,8 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		} else {
 			diff.PageTypes.Modified = append(diff.PageTypes.Modified, ptData.Name)
 		}
-		// Note: actual import happens earlier to resolve page-list references
+		// Note: actual import happens after blocks so same-ZIP block additions
+		// are visible to allowed_blocks and layout.yaml.
 	}
 
 	// Process pages - collect and sort by depth to import parents before children
@@ -619,7 +744,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// Import homepage first to get its ID
 	var homepageId string
 	if homepageInfo != nil && !previewOnly {
-		pageId, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
+		pageId, sectionIds, err := importPage(pb, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
 		if err != nil {
 			return nil, fmt.Errorf("failed to import homepage %s: %w", homepageInfo.path, err)
 		}
@@ -628,7 +753,8 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 
 		// Track created page ID
 		createdIDs["pages/index.yaml"] = map[string]interface{}{
-			"_id": pageId,
+			"_id":      pageId,
+			"sections": sectionIds,
 		}
 	}
 
@@ -654,7 +780,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 				}
 			}
 
-			pageId, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId, info.path, &warnings)
+			pageId, sectionIds, err := importPage(pb, site, info.data, info.existing, folderToDisplayName, parentId, info.path, &warnings)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import page %s: %w", info.path, err)
 			}
@@ -665,7 +791,8 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			// Track created page ID
 			pagePath := "pages/" + info.path + ".yaml"
 			createdIDs[pagePath] = map[string]interface{}{
-				"_id": pageId,
+				"_id":      pageId,
+				"sections": sectionIds,
 			}
 		}
 	}
@@ -812,7 +939,7 @@ func flattenSubfields(fields []map[string]interface{}, parentKey string) []map[s
 	return result
 }
 
-func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData, fieldsData, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string) (string, error) {
+func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string) (string, error) {
 	symbolsColl, err := pb.FindCollectionByNameOrId("site_symbols")
 	if err != nil {
 		return "", err
@@ -824,8 +951,9 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	} else {
 		symbol = core.NewRecord(symbolsColl)
 		symbol.Set("site", site.Id)
-		symbol.Set("name", displayName)
 	}
+
+	symbol.Set("name", displayName)
 
 	if componentData != nil {
 		// Parse component.svelte to extract html, css, js
@@ -841,12 +969,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	}
 
 	// Import fields if provided
-	if fieldsData != nil {
-		var blockMeta ExportedBlock
-		if err := yaml.Unmarshal(fieldsData, &blockMeta); err != nil {
-			return "", err
-		}
-
+	if blockFields != nil {
 		// Get existing fields and build composite key map
 		existingFields, _ := pb.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
 		existingFieldsById := make(map[string]*core.Record)
@@ -878,7 +1001,7 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 		}, 0)
 
 		// First pass: Create/update all fields without parent relationships
-		for i, fieldEntry := range blockMeta.Fields {
+		for i, fieldEntry := range blockFields {
 			fieldData, ok := fieldEntry.(map[string]interface{})
 			if !ok {
 				continue
@@ -1252,7 +1375,19 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 
 			// Detect orphaned keys in this repeater item before processing
 			// declared children, so unexpected content is never silently lost.
-			if warnings != nil && len(knownChildKeys) > 0 {
+			if warnings != nil && len(childFields) == 0 && len(itemMap) > 0 {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:  "missing_subfields",
+					File:  sourceFile,
+					Path:  fmt.Sprintf("%s[%d]", pathPrefix, i),
+					Field: field.GetString("key"),
+					Block: blockName,
+					Message: fmt.Sprintf(
+						"%s: repeater %q in block %q imported item %d as an empty object because the block had no subfields for that repeater at import time. Re-import this page after fixing blocks/%s/fields.yaml.",
+						sourceFile, pathPrefix, blockName, i, sanitizeFilename(blockName),
+					),
+				})
+			} else if warnings != nil && len(knownChildKeys) > 0 {
 				for key := range itemMap {
 					if _, known := knownChildKeys[key]; !known {
 						*warnings = append(*warnings, ImportWarning{
@@ -1299,7 +1434,19 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 		// Process child fields
 		groupMap, ok := value.(map[string]interface{})
 		if ok {
-			if warnings != nil && len(knownChildKeys) > 0 {
+			if warnings != nil && len(childFields) == 0 && len(groupMap) > 0 {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:  "missing_subfields",
+					File:  sourceFile,
+					Path:  pathPrefix,
+					Field: field.GetString("key"),
+					Block: blockName,
+					Message: fmt.Sprintf(
+						"%s: group %q in block %q imported as an empty object because the block had no subfields for that group at import time. Re-import this page after fixing blocks/%s/fields.yaml.",
+						sourceFile, pathPrefix, blockName, sanitizeFilename(blockName),
+					),
+				})
+			} else if warnings != nil && len(knownChildKeys) > 0 {
 				for key := range groupMap {
 					if _, known := knownChildKeys[key]; !known {
 						*warnings = append(*warnings, ImportWarning{
@@ -1346,10 +1493,28 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 	return nil
 }
 
-func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, error) {
+func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
+	if len(pageData.Content) == 0 {
+		return pageData.Fields, "fields"
+	}
+	if len(pageData.Fields) == 0 {
+		return pageData.Content, "content"
+	}
+
+	merged := make(map[string]interface{}, len(pageData.Fields)+len(pageData.Content))
+	for key, value := range pageData.Fields {
+		merged[key] = value
+	}
+	for key, value := range pageData.Content {
+		merged[key] = value
+	}
+	return merged, "content"
+}
+
+func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
 	pagesColl, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	var page *core.Record
@@ -1365,6 +1530,12 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 	slug := pagePath
 	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
 		slug = pagePath[lastSlash+1:]
+	}
+
+	// Build the source file path for this page for warning messages.
+	sourceFile := "pages/index.yaml"
+	if pagePath != "" {
+		sourceFile = "pages/" + pagePath + ".yaml"
 	}
 
 	page.Set("name", pageData.Name)
@@ -1391,11 +1562,25 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 	}
 
 	if err := pb.Save(page); err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	// Import page-type field values (page_entries)
-	if len(pageData.Fields) > 0 && page.GetString("page_type") != "" {
+	pageContent, pageContentPathPrefix := pageContentValues(pageData)
+	if len(pageContent) > 0 && page.GetString("page_type") == "" {
+		if warnings != nil {
+			*warnings = append(*warnings, ImportWarning{
+				Kind:  "missing_page_type",
+				File:  sourceFile,
+				Path:  pageContentPathPrefix,
+				Field: pageContentPathPrefix,
+				Message: fmt.Sprintf(
+					"%s has page content, but page type %q could not be resolved. Page content was not imported. Add or fix the page_type value before saving again.",
+					sourceFile, pageData.PageType,
+				),
+			})
+		}
+	} else if len(pageContent) > 0 {
 		pageTypeId := page.GetString("page_type")
 
 		// Get page type fields - map field key/name -> field id
@@ -1418,12 +1603,28 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 
 		entriesColl, err := pb.FindCollectionByNameOrId("page_entries")
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 
-		for fieldKey, value := range pageData.Fields {
+		for fieldKey, value := range pageContent {
 			fieldId := fieldByKey[fieldKey]
 			if fieldId == "" {
+				if warnings != nil {
+					pageTypeName := pageData.PageType
+					if pageTypeName == "" {
+						pageTypeName = pageTypeId
+					}
+					*warnings = append(*warnings, ImportWarning{
+						Kind:  "orphaned_page_field",
+						File:  sourceFile,
+						Path:  fmt.Sprintf("%s.%s", pageContentPathPrefix, fieldKey),
+						Field: fieldKey,
+						Message: fmt.Sprintf(
+							"%s has page content for field %q, but page type %q has no such field. Content for this field was not imported. Add the field to page-types/%s/fields.yaml or remove it from the page.",
+							sourceFile, fieldKey, pageTypeName, sanitizeFilename(pageTypeName),
+						),
+					})
+				}
 				continue
 			}
 
@@ -1440,10 +1641,12 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 			entry.Set("value", normalizeValueForStorage(value))
 
 			if err := pb.Save(entry); err != nil {
-				return "", err
+				return "", nil, err
 			}
 		}
 	}
+
+	sectionIds := make([]string, len(pageData.Sections))
 
 	// Import sections (blocks on the page)
 	if len(pageData.Sections) > 0 {
@@ -1477,12 +1680,6 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 				symbolByName[folderName] = symbolId
 				symbolByName[strings.ToLower(folderName)] = symbolId
 			}
-		}
-
-		// Build the source file path for this page for warning messages.
-		sourceFile := "pages/index.yaml"
-		if pagePath != "" {
-			sourceFile = "pages/" + pagePath + ".yaml"
 		}
 
 		for i, sectionData := range pageData.Sections {
@@ -1538,8 +1735,9 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 			section.Set("index", i)
 
 			if err := pb.Save(section); err != nil {
-				return "", err
+				return "", nil, err
 			}
+			sectionIds[i] = section.Id
 
 			// Import section content
 			if content, ok := sectionData["content"].(map[string]interface{}); ok {
@@ -1596,7 +1794,7 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 					}
 					itemPath := fmt.Sprintf("sections[%d].content.%s", i, fieldKey)
 					if err := importPageSectionContentField(pb, entriesColl, section.Id, field, value, "", 0, fieldsByParent, fieldByKey, nil, warnings, sourceFile, blockName, itemPath); err != nil {
-						return "", err
+						return "", nil, err
 					}
 				}
 			}
@@ -1609,19 +1807,20 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 				continue
 			}
 			if err := pb.Delete(existing); err != nil {
-				return "", err
+				return "", nil, err
 			}
 		}
 	}
 
-	return page.Id, nil
+	return page.Id, sectionIds, nil
 }
 
 func importSiteFields(pb *pocketbase.PocketBase, site *core.Record, data []byte) error {
-	var fields []map[string]interface{}
-	if err := yaml.Unmarshal(data, &fields); err != nil {
+	fieldEntries, err := parseBareFieldList(data, "site/fields.yaml")
+	if err != nil {
 		return err
 	}
+	fields := fieldListToMaps(fieldEntries)
 
 	// Flatten nested subfields to flat format with parent keys
 	fields = flattenSubfields(fields, "")
@@ -1729,10 +1928,11 @@ func importSiteFields(pb *pocketbase.PocketBase, site *core.Record, data []byte)
 func importSiteFieldsWithMap(pb *pocketbase.PocketBase, site *core.Record, data []byte) (map[string]string, error) {
 	keyToId := make(map[string]string)
 
-	var fields []map[string]interface{}
-	if err := yaml.Unmarshal(data, &fields); err != nil {
+	fieldEntries, err := parseBareFieldList(data, "site/fields.yaml")
+	if err != nil {
 		return keyToId, err
 	}
+	fields := fieldListToMaps(fieldEntries)
 
 	// Flatten nested subfields to flat format with parent keys
 	fields = flattenSubfields(fields, "")
@@ -2009,7 +2209,7 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
-func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, pageTypeNameToId map[string]string) error {
+func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}) error {
 	ptColl, err := pb.FindCollectionByNameOrId("page_types")
 	if err != nil {
 		return err
@@ -2035,7 +2235,7 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		return err
 	}
 
-	// Import page type fields. Always run, even when ptData.Fields is empty,
+	// Import page type fields. Always run, even when ptFields is empty,
 	// so removing all fields from the YAML actually clears the DB.
 	{
 		fieldsColl, err := pb.FindCollectionByNameOrId("page_type_fields")
@@ -2061,7 +2261,7 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		}, 0)
 
 		// First pass: Create/update all fields without parent relationships
-		for i, fieldEntry := range ptData.Fields {
+		for i, fieldEntry := range ptFields {
 			fieldData, ok := fieldEntry.(map[string]interface{})
 			if !ok {
 				continue
@@ -2165,13 +2365,16 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 	symbols, _ := pb.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
 	symbolByName := make(map[string]string)
 	for _, s := range symbols {
-		symbolByName[s.GetString("name")] = s.Id
-		symbolByName[sanitizeFilename(s.GetString("name"))] = s.Id
+		name := s.GetString("name")
+		symbolByName[name] = s.Id
+		symbolByName[strings.ToLower(name)] = s.Id
+		symbolByName[sanitizeFilename(name)] = s.Id
 	}
 	// Also map folder names to symbol IDs
 	for folderName, displayName := range folderToDisplayName {
 		if symbolId := symbolByName[displayName]; symbolId != "" {
 			symbolByName[folderName] = symbolId
+			symbolByName[strings.ToLower(folderName)] = symbolId
 		}
 	}
 
@@ -2187,6 +2390,9 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 	wantedSymbolIds := make(map[string]bool)
 	for i, blockName := range ptData.AllowedBlocks {
 		symbolId := symbolByName[blockName]
+		if symbolId == "" {
+			symbolId = symbolByName[strings.ToLower(blockName)]
+		}
 		if symbolId == "" {
 			continue
 		}
@@ -2231,8 +2437,10 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		symbolByName := make(map[string]string)
 		symbolFields := make(map[string][]*core.Record) // symbolId -> fields
 		for _, s := range symbols {
-			symbolByName[s.GetString("name")] = s.Id
-			symbolByName[sanitizeFilename(s.GetString("name"))] = s.Id
+			name := s.GetString("name")
+			symbolByName[name] = s.Id
+			symbolByName[strings.ToLower(name)] = s.Id
+			symbolByName[sanitizeFilename(name)] = s.Id
 			// Fetch fields for this symbol
 			fields, _ := pb.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": s.Id})
 			symbolFields[s.Id] = fields
@@ -2241,7 +2449,21 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		for folderName, displayName := range folderToDisplayName {
 			if symbolId := symbolByName[displayName]; symbolId != "" {
 				symbolByName[folderName] = symbolId
+				symbolByName[strings.ToLower(folderName)] = symbolId
 			}
+		}
+
+		resolveLayoutContent := func(sectionData ExportedLayoutSection) map[string]interface{} {
+			if len(sectionData.Content) > 0 {
+				return sectionData.Content
+			}
+			if blockDefaultContent == nil {
+				return nil
+			}
+			if content := blockDefaultContent[sectionData.Block]; content != nil {
+				return content
+			}
+			return blockDefaultContent[strings.ToLower(sectionData.Block)]
 		}
 
 		// Delete all existing sections for this page type first (clean slate)
@@ -2253,6 +2475,9 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		// Import header sections
 		for i, sectionData := range layoutData.Header {
 			symbolId := symbolByName[sectionData.Block]
+			if symbolId == "" {
+				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
+			}
 			if symbolId == "" {
 				continue
 			}
@@ -2267,9 +2492,11 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				return err
 			}
 
-			// Import content entries for this section
-			if sectionData.Content != nil {
-				if err := importPageTypeSectionContent(pb, section, symbolFields[symbolId], sectionData.Content); err != nil {
+			// Import content entries for this section. If layout.yaml omits
+			// content, seed it from the block's content.yaml defaults so
+			// layout-mounted blocks behave like newly-added page sections.
+			if content := resolveLayoutContent(sectionData); content != nil {
+				if err := importPageTypeSectionContent(pb, section, symbolFields[symbolId], content); err != nil {
 					return err
 				}
 			}
@@ -2278,6 +2505,9 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		// Import footer sections
 		for i, sectionData := range layoutData.Footer {
 			symbolId := symbolByName[sectionData.Block]
+			if symbolId == "" {
+				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
+			}
 			if symbolId == "" {
 				continue
 			}
@@ -2292,9 +2522,11 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				return err
 			}
 
-			// Import content entries for this section
-			if sectionData.Content != nil {
-				if err := importPageTypeSectionContent(pb, section, symbolFields[symbolId], sectionData.Content); err != nil {
+			// Import content entries for this section. If layout.yaml omits
+			// content, seed it from the block's content.yaml defaults so
+			// layout-mounted blocks behave like newly-added page sections.
+			if content := resolveLayoutContent(sectionData); content != nil {
+				if err := importPageTypeSectionContent(pb, section, symbolFields[symbolId], content); err != nil {
 					return err
 				}
 			}

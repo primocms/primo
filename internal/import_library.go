@@ -131,38 +131,49 @@ func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte, deletes Del
 
 		basePath := fmt.Sprintf("library/%s/%s", block.groupFolder, block.blockFolder)
 		componentPath := basePath + "/component.svelte"
+		configPath := basePath + "/config.yaml"
 		fieldsPath := basePath + "/fields.yaml"
 		contentPath := basePath + "/content.yaml"
 
 		componentData := getFileData(files, componentPath)
+		configData := getFileData(files, configPath)
 		fieldsData := getFileData(files, fieldsPath)
 		contentData := getFileData(files, contentPath)
 
-		if componentData == nil && fieldsData == nil {
+		if componentData == nil && fieldsData == nil && configData == nil {
 			continue
 		}
 
-		var blockMeta ExportedBlock
-		if fieldsData != nil {
-			if err := yaml.Unmarshal(fieldsData, &blockMeta); err != nil {
-				return nil, fmt.Errorf("failed to parse library block fields for %s: %w", basePath, err)
+		var blockConfig ExportedBlockConfig
+		if configData != nil {
+			if err := yaml.Unmarshal(configData, &blockConfig); err != nil {
+				return nil, fmt.Errorf("failed to parse %s: %w", configPath, err)
 			}
 		}
 
-		displayName := blockMeta.Name
+		var blockFields []interface{}
+		if fieldsData != nil {
+			parsed, err := parseBareFieldList(fieldsData, fieldsPath)
+			if err != nil {
+				return nil, err
+			}
+			blockFields = parsed
+		}
+
+		displayName := blockConfig.Name
 		if displayName == "" {
 			displayName = block.blockFolder
 		}
 
-		existing, err := findExistingLibrarySymbol(pb, group.Id, block.blockFolder, displayName, blockMeta.ID)
+		existing, err := findExistingLibrarySymbol(pb, group.Id, block.blockFolder, displayName, blockConfig.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := importLibraryBlock(pb, group, block.blockFolder, displayName, componentData, fieldsData, contentData, existing); err != nil {
+		if err := importLibraryBlock(pb, group, block.blockFolder, displayName, componentData, blockFields, contentData, existing); err != nil {
 			return nil, fmt.Errorf("failed to import library block %s/%s: %w", block.groupFolder, block.blockFolder, err)
 		}
-		symbol, err := findExistingLibrarySymbol(pb, group.Id, block.blockFolder, displayName, blockMeta.ID)
+		symbol, err := findExistingLibrarySymbol(pb, group.Id, block.blockFolder, displayName, blockConfig.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -421,17 +432,10 @@ func findExistingLibrarySymbol(pb *pocketbase.PocketBase, groupID, folderName, d
 	return nil, nil
 }
 
-func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderName, displayName string, componentData, fieldsData, contentData []byte, existing *core.Record) error {
+func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, existing *core.Record) error {
 	symbolsColl, err := pb.FindCollectionByNameOrId("library_symbols")
 	if err != nil {
 		return err
-	}
-
-	var blockMeta ExportedBlock
-	if fieldsData != nil {
-		if err := yaml.Unmarshal(fieldsData, &blockMeta); err != nil {
-			return err
-		}
 	}
 
 	var symbol *core.Record
@@ -458,8 +462,8 @@ func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderNam
 		return err
 	}
 
-	if fieldsData != nil {
-		if err := importLibraryBlockFields(pb, symbol, blockMeta.Fields); err != nil {
+	if blockFields != nil {
+		if err := importLibraryBlockFields(pb, symbol, blockFields); err != nil {
 			return err
 		}
 	}
