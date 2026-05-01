@@ -951,6 +951,10 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	} else {
 		symbol = core.NewRecord(symbolsColl)
 		symbol.Set("site", site.Id)
+		// New symbols have no compiled_js file yet. Leave the field nil so
+		// PocketBase's file-field validator doesn't reject a stale string
+		// reference (mirrors what clone.go does on fresh inserts).
+		symbol.Set("compiled_js", nil)
 	}
 
 	symbol.Set("name", displayName)
@@ -965,6 +969,14 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	}
 
 	if err := pb.Save(symbol); err != nil {
+		pb.Logger().Debug(
+			"importBlock save failed",
+			"folder", folderName,
+			"display_name", displayName,
+			"is_new", existing == nil,
+			"compiled_js", symbol.Get("compiled_js"),
+			"err", err.Error(),
+		)
 		return "", err
 	}
 
