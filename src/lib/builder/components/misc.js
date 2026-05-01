@@ -6,12 +6,15 @@ const preview_iframe_head = (head = '') => `
   ${head}
 `
 
+const editor_context_tag =
+	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' }; window.__PALA_CONTEXT__ = window.__PRIMO_CONTEXT__;</script>"
+
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `
   <!DOCTYPE html>
   <html>
     <head>
-      <script>window.__PRIMO_CONTEXT__ = { environment: 'editor' }; window.__PALA_CONTEXT__ = window.__PRIMO_CONTEXT__;</script>
+      ${editor_context_tag}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       ${preview_iframe_head(head)}
@@ -151,7 +154,7 @@ export const static_iframe_srcdoc = ({ head = '', html, css, foot = '' }) => {
     <!DOCTYPE html>
     <html>
       <head>
-        <script>window.__PRIMO_CONTEXT__ = { environment: 'editor' }; window.__PALA_CONTEXT__ = window.__PRIMO_CONTEXT__;</script>
+        ${editor_context_tag}
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         ${preview_iframe_head(head)}
@@ -175,7 +178,7 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
     <!DOCTYPE html>
     <html>
       <head>
-        <script>window.__PRIMO_CONTEXT__ = { environment: 'editor' }; window.__PALA_CONTEXT__ = window.__PRIMO_CONTEXT__;</script>
+        ${editor_context_tag}
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">

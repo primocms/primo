@@ -9,6 +9,7 @@
 		"preview": "vite --config app.config.js preview",
 		"check": "svelte-kit sync && svelte-check",
 		"check:watch": "svelte-kit sync && svelte-check --watch",
+		"test:integration": "node --test tests/integration/*.test.mjs",
 		"lint": "prettier --check .",
 		"format": "prettier --write ."
 	},
