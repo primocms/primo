@@ -49,7 +49,7 @@
 		"lucide-svelte": "^0.577.0",
 		"markdown-it": "^14.1.1",
 		"mode-watcher": "^1.1.0",
-		"nanoid": "^5.1.7",
+		"nanoid": "^5.1.11",
 		"paneforge": "^1.0.2",
 		"pluralize": "^8.0.0",
 		"pocketbase": "^0.26.8",
