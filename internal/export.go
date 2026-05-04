@@ -195,6 +195,37 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		siteFieldIdToKey[field.Id] = key
 	}
 
+	// Pre-fetch page_type_fields for compound-key resolution
+	// (page_type_fields.id -> "<page-type-folder>--<field-key>"). Needed so
+	// page-field references in blocks export as human-friendly compound keys
+	// instead of raw record IDs.
+	pageTypesAll, err := pb.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch page types: %w", err)
+	}
+	pageTypeFolderById := make(map[string]string)
+	for _, pt := range pageTypesAll {
+		folder := sanitizeFilename(pt.GetString("name"))
+		if folder == "" {
+			folder = pt.Id
+		}
+		pageTypeFolderById[pt.Id] = folder
+	}
+	pageTypeFieldIdToCompound := make(map[string]string)
+	for _, pt := range pageTypesAll {
+		ptFields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "+index", 0, 0, dbx.Params{"pt": pt.Id})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch page type fields: %w", err)
+		}
+		for _, f := range ptFields {
+			key := f.GetString("key")
+			if key == "" {
+				continue
+			}
+			pageTypeFieldIdToCompound[f.Id] = fmt.Sprintf("%s--%s", pageTypeFolderById[pt.Id], key)
+		}
+	}
+
 	// 2. Export blocks (site_symbols)
 	symbols, err := pb.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 	if err != nil {
@@ -209,28 +240,39 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 		symbolNames[symbol.Id] = symbolName
 
-		// Build component.svelte from html, css, js columns
-		html := symbol.GetString("html")
-		css := symbol.GetString("css")
-		js := symbol.GetString("js")
+		// Prefer the raw bytes captured at import time so the file
+		// round-trips losslessly. Fall back to reconstructing from the
+		// parsed columns for symbols imported before raw_source existed.
+		raw := symbol.GetString("raw_source")
+		var output []byte
+		if raw != "" {
+			output = []byte(raw)
+		} else {
+			html := symbol.GetString("html")
+			css := symbol.GetString("css")
+			js := symbol.GetString("js")
 
-		var code strings.Builder
-		if js != "" {
-			code.WriteString("<script>\n")
-			code.WriteString(js)
-			code.WriteString("\n</script>\n\n")
-		}
-		if html != "" {
-			code.WriteString(html)
-		}
-		if css != "" {
-			code.WriteString("\n\n<style>\n")
-			code.WriteString(css)
-			code.WriteString("\n</style>")
+			var code strings.Builder
+			if js != "" {
+				code.WriteString("<script>\n")
+				code.WriteString(js)
+				code.WriteString("\n</script>\n\n")
+			}
+			if html != "" {
+				code.WriteString(html)
+			}
+			if css != "" {
+				code.WriteString("\n\n<style>\n")
+				code.WriteString(css)
+				code.WriteString("\n</style>")
+			}
+			if code.Len() > 0 {
+				output = []byte(code.String())
+			}
 		}
 
-		if code.Len() > 0 {
-			if err := writeFileToZip(zw, fmt.Sprintf("blocks/%s/component.svelte", symbolName), []byte(code.String())); err != nil {
+		if len(output) > 0 {
+			if err := writeFileToZip(zw, fmt.Sprintf("blocks/%s/component.svelte", symbolName), output); err != nil {
 				return nil, err
 			}
 		}
@@ -253,7 +295,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 		exportedFields := make([]map[string]interface{}, 0, len(fields))
 		for _, field := range fields {
-			exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, siteFieldIdToKey))
+			exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound))
 		}
 
 		blockConfig := ExportedBlockConfig{
@@ -362,7 +404,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 		exportedPTFields := make([]map[string]interface{}, 0, len(ptFields))
 		for _, field := range ptFields {
-			exportedPTFields = append(exportedPTFields, fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey))
+			exportedPTFields = append(exportedPTFields, fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound))
 		}
 
 		// config.yaml holds page-type identity and editor metadata only.
@@ -626,7 +668,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	// Export site fields with parent resolution
 	exportedSiteFields := make([]map[string]interface{}, 0, len(siteFields))
 	for _, field := range siteFields {
-		exportedSiteFields = append(exportedSiteFields, fieldRecordToMap(field, siteFieldIdToKey, nil))
+		exportedSiteFields = append(exportedSiteFields, fieldRecordToMap(field, siteFieldIdToKey, nil, pageTypeFieldIdToCompound))
 	}
 
 	if len(exportedSiteFields) > 0 {
@@ -847,7 +889,7 @@ func buildPagePath(pageId string, parents map[string]string, slugs map[string]st
 	return strings.Join(parts, "/")
 }
 
-func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFieldIdToKey map[string]string) map[string]interface{} {
+func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFieldIdToKey map[string]string, pageTypeFieldIdToCompound map[string]string) map[string]interface{} {
 	// Fields use "key" column for the field name
 	name := field.GetString("key")
 
@@ -871,6 +913,23 @@ func fieldRecordToMap(field *core.Record, fieldIdToKey map[string]string, siteFi
 						newConfig[k] = v
 					}
 					newConfig["field"] = fieldName
+					config = newConfig
+				}
+			}
+		}
+	}
+
+	// For page-field type, convert the page_type_fields ID to compound
+	// "<page-type-folder>--<field-key>" so the file is human-authorable.
+	if fieldType == "page-field" && config != nil && pageTypeFieldIdToCompound != nil {
+		if configMap, ok := config.(map[string]interface{}); ok {
+			if fieldId, ok := configMap["field"].(string); ok && fieldId != "" {
+				if compound, found := pageTypeFieldIdToCompound[fieldId]; found {
+					newConfig := make(map[string]interface{})
+					for k, v := range configMap {
+						newConfig[k] = v
+					}
+					newConfig["field"] = compound
 					config = newConfig
 				}
 			}

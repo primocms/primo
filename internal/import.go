@@ -486,6 +486,26 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		})
 	}
 
+	// Pre-import page_type_fields rows so blocks can resolve page-field
+	// references (compound "<page-type>--<field-key>") to record IDs while
+	// they import. The full importPageType still runs in pass 2; calling it
+	// here only handles the field rows and is idempotent.
+	pageTypeFieldKeyToId := make(map[string]map[string]string) // pt-key (folder/display/sanitized) -> field-key -> field-id
+	if !previewOnly {
+		for _, plan := range plans {
+			if plan.existing == nil {
+				continue
+			}
+			fieldKeyToId, err := importPageTypeFieldsOnly(pb, plan.existing, plan.ptFields, pageTypeNameToId)
+			if err != nil {
+				return nil, fmt.Errorf("failed to pre-import page type fields for %s: %w", plan.ptData.Name, err)
+			}
+			pageTypeFieldKeyToId[plan.ptName] = fieldKeyToId
+			pageTypeFieldKeyToId[plan.ptData.Name] = fieldKeyToId
+			pageTypeFieldKeyToId[sanitizeFilename(plan.ptData.Name)] = fieldKeyToId
+		}
+	}
+
 	// Process blocks
 	blockDirs := findDirectories(files, "blocks/")
 	folderToDisplayName := make(map[string]string)
@@ -569,17 +589,22 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		if existing == nil {
 			diff.Blocks.Added = append(diff.Blocks.Added, displayName)
 		} else {
-			// Check if modified - compare against combined html+css
-			existingHtml := existing.GetString("html")
-			existingCss := existing.GetString("css")
-			existingCode := existingHtml + "\n\n<style>\n" + existingCss + "\n</style>"
+			// Compare against raw_source when present so the diff matches
+			// what export would actually return; fall back to a synthetic
+			// reconstruction for symbols imported before raw_source existed.
+			var existingCode string
+			if raw := existing.GetString("raw_source"); raw != "" {
+				existingCode = raw
+			} else {
+				existingCode = existing.GetString("html") + "\n\n<style>\n" + existing.GetString("css") + "\n</style>"
+			}
 			if componentData != nil && string(componentData) != existingCode {
 				diff.Blocks.Modified = append(diff.Blocks.Modified, displayName)
 			}
 		}
 
 		if !previewOnly {
-			blockId, err := importBlock(pb, site, blockName, displayName, componentData, blockFields, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId)
+			blockId, err := importBlock(pb, site, blockName, displayName, componentData, blockFields, contentData, contentIsYaml, existing, pathToPageId, siteFieldKeyToId, pageTypeNameToId, pageTypeFieldKeyToId, &warnings, fieldsPath)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import block %s: %w", blockName, err)
 			}
@@ -769,10 +794,22 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 				lastSlash := strings.LastIndex(info.path, "/")
 				parentPath := info.path[:lastSlash]
 
-				// Look up the parent page ID
-				if pid, ok := pathToId[parentPath]; ok {
-					parentId = pid
+				// Look up the parent page ID. If the parent folder has no
+				// own yaml (e.g. pages/blog/ exists but pages/blog.yaml
+				// doesn't), skip the page rather than orphan it as a
+				// pseudo-homepage with parent="". Cascades: any child of a
+				// skipped page is also skipped because it won't find its
+				// parent in pathToId either.
+				pid, ok := pathToId[parentPath]
+				if !ok {
+					warnings = append(warnings, ImportWarning{
+						Kind:    "orphaned_page",
+						File:    "pages/" + info.path + ".yaml",
+						Message: fmt.Sprintf("Skipping page %q because its parent folder %q has no %s.yaml or %s/index.yaml", info.path, parentPath, parentPath, parentPath),
+					})
+					continue
 				}
+				parentId = pid
 			} else {
 				// Root-level pages should have homepage as parent
 				if homepageId != "" {
@@ -939,7 +976,7 @@ func flattenSubfields(fields []map[string]interface{}, parentKey string) []map[s
 	return result
 }
 
-func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string) (string, error) {
+func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, contentIsYaml bool, existing *core.Record, pathToPageId map[string]string, siteFieldKeyToId map[string]string, pageTypeNameToId map[string]string, pageTypeFieldKeyToId map[string]map[string]string, warnings *[]ImportWarning, sourceFile string) (string, error) {
 	symbolsColl, err := pb.FindCollectionByNameOrId("site_symbols")
 	if err != nil {
 		return "", err
@@ -960,12 +997,17 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 	symbol.Set("name", displayName)
 
 	if componentData != nil {
-		// Parse component.svelte to extract html, css, js
+		// Parse component.svelte to extract html, css, js for the compile
+		// path, but also stash the raw source so export can return exactly
+		// what was imported. Without raw_source, export reconstructs the
+		// file from the parsed columns with hardcoded whitespace and the
+		// next file watcher tick stomps the local edit.
 		code := string(componentData)
 		html, css, js := parseComponent(code)
 		symbol.Set("html", html)
 		symbol.Set("css", css)
 		symbol.Set("js", js)
+		symbol.Set("raw_source", code)
 	}
 
 	if err := pb.Save(symbol); err != nil {
@@ -1059,6 +1101,23 @@ func importBlock(pb *pocketbase.PocketBase, site *core.Record, folderName, displ
 						if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
 							if ptId, found := pageTypeNameToId[ptName]; found {
 								configMap["page_type"] = ptId
+							}
+						}
+					}
+				}
+				// For page-field type, convert compound "<page-type>--<field-key>"
+				// to a page_type_fields ID. Bare "<field-key>" is accepted but
+				// discouraged because reusable blocks have no implicit page-type
+				// scope, so the lookup is ambiguous.
+				if fieldType == "page-field" {
+					if configMap, ok := config.(map[string]interface{}); ok {
+						if ref, ok := configMap["field"].(string); ok && ref != "" {
+							resolved, warning := resolvePageFieldRef(ref, pageTypeFieldKeyToId, sourceFile, fmt.Sprintf("%s.config.field", fieldKey), fieldKey, displayName)
+							if resolved != "" {
+								configMap["field"] = resolved
+							}
+							if warning != nil && warnings != nil {
+								*warnings = append(*warnings, *warning)
 							}
 						}
 					}
@@ -1933,6 +1992,141 @@ func importSiteFields(pb *pocketbase.PocketBase, site *core.Record, data []byte)
 	}
 
 	return nil
+}
+
+// importPageTypeFieldsOnly creates/updates page_type_fields rows for a page
+// type ahead of block import, returning a key -> ID map for page-field
+// resolution in blocks. The full importPageType still runs in pass 2 and
+// re-processes these rows idempotently.
+func importPageTypeFieldsOnly(pb *pocketbase.PocketBase, pageType *core.Record, ptFields []interface{}, pageTypeNameToId map[string]string) (map[string]string, error) {
+	keyToId := make(map[string]string)
+
+	fieldsColl, err := pb.FindCollectionByNameOrId("page_type_fields")
+	if err != nil {
+		return keyToId, err
+	}
+
+	existingFields, _ := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
+	existingByKey := make(map[string]*core.Record)
+	for _, f := range existingFields {
+		existingByKey[f.GetString("key")] = f
+	}
+
+	for i, fieldEntry := range ptFields {
+		fieldData, ok := fieldEntry.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		fieldKey := getString(fieldData, "name")
+		if fieldKey == "" {
+			continue
+		}
+
+		var field *core.Record
+		if existing, ok := existingByKey[fieldKey]; ok {
+			field = existing
+		} else {
+			field = core.NewRecord(fieldsColl)
+			field.Set("page_type", pageType.Id)
+		}
+
+		field.Set("key", fieldKey)
+		field.Set("label", getString(fieldData, "label"))
+		ptFieldType := getString(fieldData, "type")
+		field.Set("type", ptFieldType)
+		field.Set("index", i)
+
+		ptFieldConfig, hasPtFieldConfig := fieldData["config"]
+		if !hasPtFieldConfig {
+			ptFieldConfig, hasPtFieldConfig = fieldData["options"]
+		}
+		if hasPtFieldConfig && ptFieldConfig != nil {
+			if ptFieldType == "page-list" || ptFieldType == "page" {
+				if configMap, ok := ptFieldConfig.(map[string]interface{}); ok {
+					if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
+						if ptId, found := pageTypeNameToId[ptName]; found {
+							configMap["page_type"] = ptId
+						}
+					}
+				}
+			}
+			field.Set("config", ptFieldConfig)
+		}
+
+		if err := pb.Save(field); err != nil {
+			return keyToId, err
+		}
+		keyToId[fieldKey] = field.Id
+	}
+
+	return keyToId, nil
+}
+
+// resolvePageFieldRef parses a page-field config.field value and returns the
+// page_type_fields record ID it points to, plus an optional ImportWarning.
+//
+// Compound form "<page-type>--<field-key>" is the documented shape — folder
+// names are stable references per AGENTS.md and a reusable block has no
+// implicit page-type scope. A bare "<field-key>" is accepted only when there
+// is exactly one matching field across all page types in the import (else the
+// reference is ambiguous and we leave the raw value in place so the editor
+// surfaces "Unknown field").
+func resolvePageFieldRef(ref string, pageTypeFieldKeyToId map[string]map[string]string, sourceFile, path, fieldKey, blockName string) (string, *ImportWarning) {
+	if idx := strings.Index(ref, "--"); idx >= 0 {
+		ptKey := ref[:idx]
+		fk := ref[idx+2:]
+		fields, ok := pageTypeFieldKeyToId[ptKey]
+		if !ok {
+			return "", &ImportWarning{
+				Kind:    "orphaned_page_field",
+				File:    sourceFile,
+				Path:    path,
+				Field:   fieldKey,
+				Block:   blockName,
+				Message: fmt.Sprintf("page-field %q references page type %q which does not exist. Add page-types/%s/ or fix the reference.", ref, ptKey, ptKey),
+			}
+		}
+		fieldId, ok := fields[fk]
+		if !ok {
+			return "", &ImportWarning{
+				Kind:    "orphaned_page_field",
+				File:    sourceFile,
+				Path:    path,
+				Field:   fieldKey,
+				Block:   blockName,
+				Message: fmt.Sprintf("page-field %q references field %q on page type %q, but no such field exists. Add it to page-types/%s/fields.yaml or fix the reference.", ref, fk, ptKey, ptKey),
+			}
+		}
+		return fieldId, nil
+	}
+
+	// Bare key (no compound). Try to find a unique match across all page types.
+	var hits []string
+	seenIds := make(map[string]bool)
+	for _, fields := range pageTypeFieldKeyToId {
+		if id, ok := fields[ref]; ok && !seenIds[id] {
+			seenIds[id] = true
+			hits = append(hits, id)
+		}
+	}
+	if len(hits) == 1 {
+		return hits[0], &ImportWarning{
+			Kind:    "orphaned_page_field",
+			File:    sourceFile,
+			Path:    path,
+			Field:   fieldKey,
+			Block:   blockName,
+			Message: fmt.Sprintf("page-field %q uses a bare field key. Prefer compound form \"<page-type>--%s\" so the reference is unambiguous when the block is reused.", ref, ref),
+		}
+	}
+	return "", &ImportWarning{
+		Kind:    "orphaned_page_field",
+		File:    sourceFile,
+		Path:    path,
+		Field:   fieldKey,
+		Block:   blockName,
+		Message: fmt.Sprintf("page-field %q is ambiguous or unresolved (matched %d page types). Use compound form \"<page-type>--<field-key>\".", ref, len(hits)),
+	}
 }
 
 // importSiteFieldsWithMap imports site fields and returns a map of field key -> field ID

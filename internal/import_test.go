@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	_ "github.com/palacms/palacms/migrations"
 	"github.com/pocketbase/pocketbase"
@@ -400,6 +401,171 @@ func TestImportMatchesBlockByConfigIDAndUpdatesName(t *testing.T) {
 	if got := symbols[0].GetString("name"); got != "Hero Renamed" {
 		t.Fatalf("expected block display name to update, got %q", got)
 	}
+}
+
+// TestUpdatedTimestampStableOnNoOpReimport answers a single question that
+// determines whether per-record versioning can use PocketBase's native
+// `updated` column or whether we need to add an explicit sync_version.
+//
+// If `updated` advances on records whose content is identical between two
+// imports, the native column is dirty under transactional bulk save and the
+// "use native updated" sync strategy collapses — every reimport would mark
+// every record as remotely changed, defeating conflict detection. In that
+// case we'd need explicit sync_version columns + manual bumps in every
+// write path, which is a much larger project.
+//
+// Strategy: import a small site, capture updated timestamps for every
+// syncable record, sleep one second to ensure any new write would produce
+// a strictly later timestamp, import the exact same content again, and
+// compare per-record. Any record whose updated advanced is a record that
+// PocketBase touched even though its content didn't change.
+func TestUpdatedTimestampStableOnNoOpReimport(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+
+	files := map[string]string{
+		"blocks/hero/config.yaml":      "name: hero\n",
+		"blocks/hero/component.svelte": "<section>{heading}</section>\n",
+		"blocks/hero/fields.yaml": "" +
+			"- name: heading\n" +
+			"  label: Heading\n" +
+			"  type: text\n",
+		"blocks/hero/content.yaml":       "heading: Default heading\n",
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks:\n  - hero\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "{}\n",
+		"pages/index.yaml": "" +
+			"name: Home\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Hello world\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Collections that the sync layer cares about. If any of these
+	// advance on a no-op reimport, native `updated` is unusable for
+	// conflict detection.
+	syncCollections := []string{
+		"sites",
+		"site_symbols",
+		"site_symbol_fields",
+		"site_symbol_entries",
+		"page_types",
+		"pages",
+		"page_sections",
+	}
+
+	type snapshot struct {
+		ids      map[string]bool   // record IDs present in this collection
+		updateds map[string]string // id -> updated timestamp
+	}
+	capture := func(label string) map[string]snapshot {
+		out := map[string]snapshot{}
+		for _, name := range syncCollections {
+			records, err := app.FindRecordsByFilter(name, "1=1", "", 0, 0, nil)
+			if err != nil {
+				t.Fatalf("fetch %s %s: %v", name, label, err)
+			}
+			snap := snapshot{ids: map[string]bool{}, updateds: map[string]string{}}
+			for _, r := range records {
+				snap.ids[r.Id] = true
+				snap.updateds[r.Id] = r.GetString("updated")
+			}
+			out[name] = snap
+		}
+		return out
+	}
+
+	before := capture("before")
+
+	totalBefore := 0
+	for _, snap := range before {
+		totalBefore += len(snap.ids)
+	}
+	if totalBefore == 0 {
+		t.Fatal("no records captured before reimport — test setup is wrong")
+	}
+
+	// Sleep enough that any genuine save would produce a strictly later
+	// updated timestamp. PocketBase stores updated at second granularity
+	// (or finer depending on config); 1.1s covers second-precision and
+	// gives clear separation if it's finer.
+	time.Sleep(1100 * time.Millisecond)
+
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	after := capture("after")
+
+	var (
+		recreatedCount int // record existed before, gone after; new record(s) appeared
+		bumpedCount    int // same id, different updated
+		stableCount    int // same id, same updated
+	)
+	bumpDetails := []string{}
+	recreateDetails := []string{}
+
+	for _, name := range syncCollections {
+		beforeSnap := before[name]
+		afterSnap := after[name]
+
+		for id, beforeTs := range beforeSnap.updateds {
+			if afterSnap.ids[id] {
+				afterTs := afterSnap.updateds[id]
+				if afterTs == beforeTs {
+					stableCount++
+				} else {
+					bumpedCount++
+					if len(bumpDetails) < 10 {
+						bumpDetails = append(bumpDetails, name+"/"+id+" "+beforeTs+" -> "+afterTs)
+					}
+				}
+			} else {
+				recreatedCount++
+				if len(recreateDetails) < 10 {
+					recreateDetails = append(recreateDetails, name+"/"+id+" disappeared")
+				}
+			}
+		}
+	}
+
+	t.Logf("Verification result: stable=%d bumped=%d recreated=%d (of %d total before)",
+		stableCount, bumpedCount, recreatedCount, totalBefore)
+
+	if recreatedCount > 0 {
+		t.Logf("VERIFICATION FAILED (recreated): %d records had their IDs vanish on no-op reimport.", recreatedCount)
+		t.Logf("PocketBase is delete+insert, not update-in-place, for these record types.")
+		t.Logf("This is worse than `updated` drift — IDs aren't stable across reimports,")
+		t.Logf("which means version tracking by ID is also unreliable for these collections.")
+		for _, d := range recreateDetails {
+			t.Logf("  %s", d)
+		}
+	}
+	if bumpedCount > 0 {
+		t.Logf("VERIFICATION FAILED (bumped): %d records had updated advance despite identical content.", bumpedCount)
+		t.Logf("Native `updated` is unusable for sync versioning on these collections;")
+		t.Logf("explicit sync_version columns + manual bumps would be required.")
+		for _, d := range bumpDetails {
+			t.Logf("  %s", d)
+		}
+	}
+
+	if recreatedCount > 0 || bumpedCount > 0 {
+		t.FailNow()
+	}
+
+	t.Logf("VERIFICATION PASSED: %d records, none drifted on no-op reimport.", stableCount)
+	t.Logf("Native `updated` is safe to use as the sync version primitive.")
 }
 
 func newImportTestApp(t *testing.T) *pocketbase.PocketBase {

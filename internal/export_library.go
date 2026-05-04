@@ -102,27 +102,36 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 			blockFolder := uniqueSanitizedName(symbol.GetString("name"), symbol.Id, usedBlockFolders)
 			basePath := fmt.Sprintf("library/%s/%s", groupFolder, blockFolder)
 
-			html := symbol.GetString("html")
-			css := symbol.GetString("css")
-			js := symbol.GetString("js")
+			raw := symbol.GetString("raw_source")
+			var output []byte
+			if raw != "" {
+				output = []byte(raw)
+			} else {
+				html := symbol.GetString("html")
+				css := symbol.GetString("css")
+				js := symbol.GetString("js")
 
-			var code strings.Builder
-			if js != "" {
-				code.WriteString("<script>\n")
-				code.WriteString(js)
-				code.WriteString("\n</script>\n\n")
-			}
-			if html != "" {
-				code.WriteString(html)
-			}
-			if css != "" {
-				code.WriteString("\n\n<style>\n")
-				code.WriteString(css)
-				code.WriteString("\n</style>")
+				var code strings.Builder
+				if js != "" {
+					code.WriteString("<script>\n")
+					code.WriteString(js)
+					code.WriteString("\n</script>\n\n")
+				}
+				if html != "" {
+					code.WriteString(html)
+				}
+				if css != "" {
+					code.WriteString("\n\n<style>\n")
+					code.WriteString(css)
+					code.WriteString("\n</style>")
+				}
+				if code.Len() > 0 {
+					output = []byte(code.String())
+				}
 			}
 
-			if code.Len() > 0 {
-				if err := writeFileToZip(zw, basePath+"/component.svelte", []byte(code.String())); err != nil {
+			if len(output) > 0 {
+				if err := writeFileToZip(zw, basePath+"/component.svelte", output); err != nil {
 					return nil, err
 				}
 			}
@@ -143,7 +152,7 @@ func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
 
 			exportedFields := make([]map[string]interface{}, 0, len(fields))
 			for _, field := range fields {
-				exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, nil))
+				exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, nil, nil))
 			}
 
 			blockConfig := ExportedBlockConfig{

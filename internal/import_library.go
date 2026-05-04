@@ -456,6 +456,7 @@ func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderNam
 		symbol.Set("html", html)
 		symbol.Set("css", css)
 		symbol.Set("js", js)
+		symbol.Set("raw_source", code)
 	}
 
 	if err := pb.Save(symbol); err != nil {
