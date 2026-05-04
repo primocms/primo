@@ -1,6 +1,7 @@
 <script>
 	import Pala from '$lib/builder/Pala.svelte'
 	import { check_session } from '$lib/pocketbase/user'
+	import { refresh_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
@@ -24,6 +25,10 @@
 			await goto('/admin/auth')
 			return
 		}
+
+		// Refresh author_mode on every load — needed because reloads on
+		// /admin/site skip the auth layout's dev-auth handshake.
+		refresh_author_mode()
 
 		// On localhost root, check if we need to redirect to first available site
 		if (is_localhost) {

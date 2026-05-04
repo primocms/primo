@@ -1,6 +1,7 @@
 <script>
 	import Pala from '$lib/builder/Pala.svelte'
 	import { check_session } from '$lib/pocketbase/user'
+	import { refresh_author_mode } from '$lib/pocketbase/author_mode'
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
@@ -11,7 +12,9 @@
 	onMount(async () => {
 		if (!(await check_session())) {
 			await goto('/admin/auth')
+			return
 		}
+		refresh_author_mode()
 	})
 
 	let { children } = $props()

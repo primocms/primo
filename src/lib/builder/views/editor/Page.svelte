@@ -19,6 +19,8 @@
 	import { watch } from 'runed'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
 	import { self } from '$lib/pocketbase/managers'
+	import { author_mode } from '$lib/pocketbase/author_mode'
+	import { get } from 'svelte/store'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
 
 	let { page }: { page: ObjectOf<typeof Pages> } = $props()
@@ -69,6 +71,7 @@
 	let symbol_to_add = $state<ObjectOf<typeof SiteSymbols>>()
 	const copy_symbol_entries = $derived(useCopyEntries([symbol_to_add]))
 	async function add_section_to_page({ symbol, position }) {
+		if (get(author_mode) === 'files') return
 		symbol_to_add = symbol
 		await tick()
 
@@ -100,6 +103,7 @@
 	}
 
 	async function remove_section_from_page(section_id) {
+		if (get(author_mode) === 'files') return
 		const section_to_delete = sections.find((s) => s.id === section_id)
 		if (!section_to_delete) return
 
@@ -609,6 +613,7 @@
 			on:edit-code={() => edit_section('code')}
 			on:edit-content={() => edit_section('content')}
 			on:moveUp={async () => {
+				if ($author_mode === 'files') return
 				if (!hovered_section) return
 
 				let section_to_move = hovered_section
@@ -630,6 +635,7 @@
 				}, 300)
 			}}
 			on:moveDown={async () => {
+				if ($author_mode === 'files') return
 				if (!hovered_section) return
 
 				let section_to_move = hovered_section

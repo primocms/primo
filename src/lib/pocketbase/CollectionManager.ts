@@ -1,5 +1,6 @@
 import type { ObjectWithId } from './Object'
 import { OrderedSvelteMap } from './OrderedSvelteMap'
+import { is_files_mode } from './author_mode'
 import type Client from 'pocketbase'
 
 export type Change<T extends ObjectWithId> =
@@ -73,6 +74,17 @@ export const createCollectionManager = (instance?: Client) => {
 		records,
 		lists,
 		commit: async () => {
+			// In files-author mode the CLI's sync layer overwrites the DB on
+			// the next pull, so committing here would create user-visible
+			// edits that vanish. Drop pending changes instead.
+			if (is_files_mode()) {
+				for (const [id, change] of [...changes]) {
+					if (!change.committed) {
+						changes.delete(id)
+					}
+				}
+				return
+			}
 			promise = promise.then(commitChanges, commitChanges)
 			return promise
 		},

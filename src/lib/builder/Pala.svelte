@@ -19,6 +19,7 @@
 	import { useContent } from '$lib/Content.svelte'
 	import { fromStore } from 'svelte/store'
 	import { current_user } from '$lib/pocketbase/user'
+	import { author_mode } from '$lib/pocketbase/author_mode'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
 
 	let {
@@ -138,6 +139,14 @@
 </script>
 
 <div class="h-screen flex flex-col">
+	{#if $author_mode === 'files'}
+		<div class="files-mode-banner" role="status">
+			<strong>Read-only.</strong>
+			<span>Files are authoritative this session — edits made here will be discarded on the next sync. Restart with</span>
+			<code>primo dev --author cms</code>
+			<span>to author from the CMS.</span>
+		</div>
+	{/if}
 	<Toolbar>
 		{@render toolbar?.()}
 	</Toolbar>
@@ -194,6 +203,27 @@
 <svelte:window onresize={reset} />
 
 <style lang="postcss">
+	.files-mode-banner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.5rem 0.75rem;
+		background: #3a2a08;
+		color: #fcd9a3;
+		border-bottom: 1px solid #5a3f12;
+		font-family: Inter, system-ui, sans-serif;
+		font-size: 0.8125rem;
+		line-height: 1.2;
+		z-index: 100;
+	}
+	.files-mode-banner code {
+		background: rgba(0, 0, 0, 0.3);
+		padding: 1px 6px;
+		border-radius: 3px;
+		font-family: 'Fira Code', monospace;
+		font-size: 0.75rem;
+	}
 	.expand {
 		height: 100%;
 		color: var(--color-gray-1);

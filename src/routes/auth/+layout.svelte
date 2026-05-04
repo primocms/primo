@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation'
 	import { check_session } from '$lib/pocketbase/user'
+	import { set_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
 	import { onMount } from 'svelte'
 
@@ -18,6 +19,7 @@
 				const data = await response.json()
 				if (data.token && data.record && self.instance) {
 					self.instance.authStore.save(data.token, data.record)
+					set_author_mode(data.author_mode)
 					return true
 				}
 			}

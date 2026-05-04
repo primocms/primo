@@ -1,11 +1,29 @@
 package internal
 
 import (
+	"os"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
+
+// resolveAuthorMode reads the sync mode the primo-cli set when spawning
+// palacms. The CMS UI uses this to gate editable surfaces — when the CLI
+// runs with --author files, CMS edits would be discarded on the next
+// pull cycle, so the UI shows a read-only banner instead of letting the
+// user make edits that silently vanish. Defaults to "both" when the env
+// var is missing or unrecognized so palacms running outside primo dev
+// stays fully editable.
+func resolveAuthorMode() string {
+	mode := os.Getenv("PRIMO_AUTHOR_MODE")
+	switch mode {
+	case "files", "cms", "both":
+		return mode
+	default:
+		return "both"
+	}
+}
 
 // IsLocalhost checks if the request is coming from localhost
 func IsLocalhost(e *core.RequestEvent) bool {
@@ -63,7 +81,8 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 			}
 
 			return e.JSON(200, map[string]interface{}{
-				"token": token,
+				"token":       token,
+				"author_mode": resolveAuthorMode(),
 				"record": map[string]interface{}{
 					"id":             user.Id,
 					"collectionId":   user.Collection().Id,
