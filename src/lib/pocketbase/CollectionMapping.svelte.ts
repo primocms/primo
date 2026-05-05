@@ -115,6 +115,9 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 								records.set(id, { data: record })
 							})
 							.catch((error) => {
+								// Autocancelled requests are expected when the effect re-runs;
+								// don't poison the record cache — the winning request will populate it.
+								if (error?.isAbort || error?.status === 0) return
 								console.error(error)
 								records.set(id, null)
 							})
@@ -168,6 +171,9 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 							lists.set(listId, { invalidated: false, ids: validRecords.map(({ id }) => id) })
 						})
 						.catch((error) => {
+							// Autocancelled requests are expected when the effect re-runs;
+							// the winning request will populate the list, so don't nuke the cache.
+							if (error?.isAbort || error?.status === 0) return
 							console.error(error)
 							lists.set(listId, null)
 						})
