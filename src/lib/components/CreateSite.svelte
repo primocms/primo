@@ -23,7 +23,7 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated }: { oncreated?: () => void } = $props()
+	const { oncreated }: { oncreated?: (created: { id: string; host: string }) => void } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
@@ -262,13 +262,14 @@
 
 			const result = await response.json()
 			created_site_id = result.id
+			created_site_host = result.host
 			done_creating_site = true
 
 			// If no blocks to copy, finish immediately without waiting for
 			// the reactive store to sync (avoids race condition on large templates)
 			if (selected_block_ids.length === 0) {
 				loading = false
-				oncreated?.()
+				oncreated?.({ id: result.id, host: result.host })
 				return
 			}
 		} catch (e) {
@@ -280,6 +281,7 @@
 
 	// Track the created site ID from server response
 	let created_site_id = $state('')
+	let created_site_host = $state('')
 
 	// Find the created site - first try by ID from server response, then fall back to name match
 	const created_sites = $derived(Sites.list({ filter: { host: pageState.url.host } }) ?? [])
@@ -295,11 +297,12 @@
 	$effect(() => {
 		if (!finalized && done_creating_site && created_site) {
 			finalized = true
+			const created_payload = { id: created_site_id, host: created_site_host || created_site.host }
 			// Copy optional blocks if any were selected
 			if (selected_block_ids.length > 0) {
 				copy_selected_blocks_to_site()
 					.then(() => self.commit())
-					.then(() => oncreated?.())
+					.then(() => oncreated?.(created_payload))
 					.catch((e) => console.error(e))
 					.finally(() => {
 						loading = false
@@ -307,7 +310,7 @@
 			} else {
 				// No blocks to copy, just finish
 				loading = false
-				oncreated?.()
+				oncreated?.(created_payload)
 			}
 		}
 	})

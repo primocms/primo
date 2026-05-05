@@ -79,8 +79,14 @@
 
 {#if creating_site && $current_user}
 	<CreateSite
-		oncreated={() => {
-			creating_site = false
+		oncreated={(created) => {
+			// Hard-navigate to the new site's admin. If the host differs (localhost
+			// dashboard flow), this redirects to the right vhost. If it matches, a
+			// reload sidesteps the stale Sites.list() cache that would otherwise
+			// re-trigger the create-site gate.
+			const target_host = created?.host || host
+			const protocol = page.url.protocol || 'http:'
+			window.location.href = `${protocol}//${target_host}/admin/site`
 		}}
 	/>
 {:else if site && $current_user}
