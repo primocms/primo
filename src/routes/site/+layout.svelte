@@ -62,14 +62,19 @@
 	const sites_by_host = $derived(Sites.list({ filter: { host } }))
 	const site = $derived(sites_by_host?.[0])
 
-	// For non-localhost, show create if no site matches after initial check
+	// For non-localhost, show create if no site matches after initial check.
+	// `sites_by_host === undefined` means the list is still loading — don't
+	// flip into wizard mode until the response arrives, otherwise a brief
+	// pre-load gap traps us on the wizard even when a site exists.
 	let creating_site = $state(false)
 	$effect(() => {
-		if (initial_check_done && !creating_site && !site && !is_localhost && self.instance?.authStore.isValid) {
+		const list_loaded = sites_by_host !== undefined
+		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
 			creating_site = true
+		} else if (site) {
+			creating_site = false
 		}
-		// For localhost, use the explicit flag from onMount
-		if (should_create_site && !creating_site) {
+		if (should_create_site && !creating_site && !site) {
 			creating_site = true
 		}
 	})
