@@ -385,6 +385,8 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		ptData     ExportedPageType
 		ptFields   []interface{}
 		layoutData *ExportedLayout
+		ptHead     *string
+		ptFoot     *string
 		existing   *core.Record
 	}
 	plans := make([]ptImportPlan, 0, len(pageTypeDirs))
@@ -477,11 +479,30 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 			}
 		}
 
+		// Optional per-page-type head/foot. Validate the head fragment up front
+		// so a bad ZIP fails before we mutate records.
+		var ptHead *string
+		if headBytes, ok := files[fmt.Sprintf("page-types/%s/head.svelte", ptName)]; ok {
+			headPath := fmt.Sprintf("page-types/%s/head.svelte", ptName)
+			if err := validateHeadSvelte(headBytes, headPath); err != nil {
+				return nil, err
+			}
+			s := string(headBytes)
+			ptHead = &s
+		}
+		var ptFoot *string
+		if footBytes, ok := files[fmt.Sprintf("page-types/%s/foot.html", ptName)]; ok {
+			s := string(footBytes)
+			ptFoot = &s
+		}
+
 		plans = append(plans, ptImportPlan{
 			ptName:     ptName,
 			ptData:     ptData,
 			ptFields:   ptFields,
 			layoutData: layoutData,
+			ptHead:     ptHead,
+			ptFoot:     ptFoot,
 			existing:   existingPt,
 		})
 	}
@@ -620,7 +641,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// and layout.yaml, and lets layout-mounted blocks import content/defaults.
 	for _, plan := range plans {
 		if !previewOnly {
-			if err := importPageType(pb, site, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, pageTypeNameToId, blockDefaultContent); err != nil {
+			if err := importPageType(pb, site, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, plan.ptHead, plan.ptFoot, pageTypeNameToId, blockDefaultContent); err != nil {
 				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
 			}
 		}
@@ -865,7 +886,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	}
 
 	if headHtml, ok := files["site/head.svelte"]; ok {
-		if err := validateHeadSvelte(headHtml); err != nil {
+		if err := validateHeadSvelte(headHtml, "site/head.svelte"); err != nil {
 			return nil, err
 		}
 		if string(headHtml) != site.GetString("head") {
@@ -898,7 +919,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	}, nil
 }
 
-func validateHeadSvelte(data []byte) error {
+func validateHeadSvelte(data []byte, sourcePath string) error {
 	tokenizer := html.NewTokenizer(bytes.NewReader(data))
 
 	for {
@@ -909,7 +930,7 @@ func validateHeadSvelte(data []byte) error {
 			if tokenizer.Err() == io.EOF {
 				return nil
 			}
-			return fmt.Errorf("site/head.svelte has invalid head markup: %w", tokenizer.Err())
+			return fmt.Errorf("%s has invalid head markup: %w", sourcePath, tokenizer.Err())
 		case html.StartTagToken, html.SelfClosingTagToken:
 			nameBytes, hasAttr := tokenizer.TagName()
 			tagName := strings.ToLower(string(nameBytes))
@@ -920,7 +941,7 @@ func validateHeadSvelte(data []byte) error {
 			}
 
 			if tagName == "svelte:head" {
-				return fmt.Errorf("site/head.svelte contains <svelte:head>. This file is injected into <svelte:head>; remove the wrapper. Keep only head children such as <title>, <meta>, <link>, <script>, and <style>.")
+				return fmt.Errorf("%s contains <svelte:head>. This file is injected into <svelte:head>; remove the wrapper. Keep only head children such as <title>, <meta>, <link>, <script>, and <style>.", sourcePath)
 			}
 		}
 	}
@@ -2415,7 +2436,7 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
-func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}) error {
+func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}) error {
 	ptColl, err := pb.FindCollectionByNameOrId("page_types")
 	if err != nil {
 		return err
@@ -2435,6 +2456,15 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 	}
 	if ptData.Color != "" {
 		pageType.Set("color", ptData.Color)
+	}
+	// head/foot are nil when the corresponding file is absent (preserve existing
+	// DB value); when present we write the file's contents verbatim, including
+	// empty string, so deleting the contents on disk clears the column.
+	if ptHead != nil {
+		pageType.Set("head", *ptHead)
+	}
+	if ptFoot != nil {
+		pageType.Set("foot", *ptFoot)
 	}
 
 	if err := pb.Save(pageType); err != nil {

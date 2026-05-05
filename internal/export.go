@@ -425,6 +425,20 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			return nil, err
 		}
 
+		// Page-type head/foot HTML. Mirrors the site-level head.svelte/foot.html
+		// emission below; concatenated after the site head when the page renders
+		// (see Publish.svelte.ts: site.head + page_type.head).
+		if ptHead := pt.GetString("head"); ptHead != "" {
+			if err := writeFileToZip(zw, fmt.Sprintf("page-types/%s/head.svelte", ptName), []byte(ptHead)); err != nil {
+				return nil, err
+			}
+		}
+		if ptFoot := pt.GetString("foot"); ptFoot != "" {
+			if err := writeFileToZip(zw, fmt.Sprintf("page-types/%s/foot.html", ptName), []byte(ptFoot)); err != nil {
+				return nil, err
+			}
+		}
+
 		// Fetch header/footer slots (page_type_sections) with their content
 		ptSections, err := pb.FindRecordsByFilter("page_type_sections", "page_type = {:pt}", "+index", 0, 0, dbx.Params{"pt": pt.Id})
 		if err != nil {
