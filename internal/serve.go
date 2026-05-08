@@ -90,6 +90,9 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			}
 			defer reader.Close()
 
+			requestEvent.Response.Header().Del("X-Frame-Options")
+			requestEvent.Response.Header().Set("Content-Security-Policy", "frame-ancestors *")
+
 			// In dev mode, inject the dev indicator into HTML files
 			if DevMode && strings.HasSuffix(strings.ToLower(fileName), ".html") {
 				content, err := io.ReadAll(reader)
