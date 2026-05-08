@@ -222,21 +222,24 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.InternalServerError("Failed to read file", err)
 	}
 
+	// Pull name/host/group from site.yaml in the zip. These are used to
+	// populate required fields on create, and to keep the server-side site
+	// record in sync with the canonical config on subsequent pushes.
+	siteName, siteHost, siteGroup := readSiteConfigFromZip(zipData)
+
 	// Find the site or create it if it doesn't exist
 	siteCreated := false
 	site, err := pb.FindRecordById("sites", siteId)
 	if err != nil {
-		// Site doesn't exist - create it with the provided ID. Pull
-		// name/host/group from site.yaml inside the zip so required fields
-		// are populated; fall back to safe defaults if site.yaml is missing.
-		siteName, siteHost, siteGroup := readSiteConfigFromZip(zipData)
-		if siteName == "" {
-			siteName = "Imported Site"
+		createName := siteName
+		if createName == "" {
+			createName = "Imported Site"
 		}
-		if siteHost == "" {
+		createHost := siteHost
+		if createHost == "" {
 			// Use the site id to ensure host uniqueness, since the sites
 			// collection treats host as a unique identifier.
-			siteHost = siteId
+			createHost = siteId
 		}
 
 		groupId, groupErr := ensureDefaultGroup(pb)
@@ -257,8 +260,8 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		site = core.NewRecord(sitesColl)
 		site.Set("id", siteId)
 		site.Set("owner", e.Auth.Id)
-		site.Set("name", siteName)
-		site.Set("host", siteHost)
+		site.Set("name", createName)
+		site.Set("host", createHost)
 		site.Set("group", groupId)
 
 		if saveErr := pb.Save(site); saveErr != nil {
@@ -276,6 +279,34 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		canAccess, _ := e.App.CanAccessRecord(site, info, site.Collection().UpdateRule)
 		if !canAccess {
 			return e.ForbiddenError("Access denied", nil)
+		}
+	}
+
+	// Sync name/host/group from site.yaml onto an existing site. Skipped on
+	// create (the values were just written above) and during preview (no
+	// writes). Empty fields in site.yaml leave the existing record untouched
+	// so users editing those values in the dashboard aren't reverted.
+	if !siteCreated && !previewOnly {
+		dirty := false
+		if siteName != "" && site.GetString("name") != siteName {
+			site.Set("name", siteName)
+			dirty = true
+		}
+		if siteHost != "" && site.GetString("host") != siteHost {
+			site.Set("host", siteHost)
+			dirty = true
+		}
+		if siteGroup != "" {
+			resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup})
+			if resolveErr == nil && site.GetString("group") != resolvedGroupId {
+				site.Set("group", resolvedGroupId)
+				dirty = true
+			}
+		}
+		if dirty {
+			if saveErr := pb.Save(site); saveErr != nil {
+				return e.InternalServerError("Failed to update site", saveErr)
+			}
 		}
 	}
 
