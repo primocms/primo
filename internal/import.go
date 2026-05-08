@@ -204,11 +204,51 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.UnauthorizedError("Authentication required", nil)
 	}
 
+	// Parse multipart form (must read body before any access checks so we can
+	// peek at site.yaml when creating a new site).
+	if err := e.Request.ParseMultipartForm(32 << 20); err != nil { // 32MB max
+		return e.BadRequestError("Failed to parse form", err)
+	}
+
+	file, _, err := e.Request.FormFile("file")
+	if err != nil {
+		return e.BadRequestError("No file uploaded", err)
+	}
+	defer file.Close()
+
+	// Read ZIP data
+	zipData, err := io.ReadAll(file)
+	if err != nil {
+		return e.InternalServerError("Failed to read file", err)
+	}
+
 	// Find the site or create it if it doesn't exist
 	siteCreated := false
 	site, err := pb.FindRecordById("sites", siteId)
 	if err != nil {
-		// Site doesn't exist - create it with the provided ID
+		// Site doesn't exist - create it with the provided ID. Pull
+		// name/host/group from site.yaml inside the zip so required fields
+		// are populated; fall back to safe defaults if site.yaml is missing.
+		siteName, siteHost, siteGroup := readSiteConfigFromZip(zipData)
+		if siteName == "" {
+			siteName = "Imported Site"
+		}
+		if siteHost == "" {
+			// Use the site id to ensure host uniqueness, since the sites
+			// collection treats host as a unique identifier.
+			siteHost = siteId
+		}
+
+		groupId, groupErr := ensureDefaultGroup(pb)
+		if groupErr != nil {
+			return e.InternalServerError("Failed to ensure default site group", groupErr)
+		}
+		if siteGroup != "" {
+			if resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup}); resolveErr == nil {
+				groupId = resolvedGroupId
+			}
+		}
+
 		sitesColl, collErr := pb.FindCollectionByNameOrId("sites")
 		if collErr != nil {
 			return e.InternalServerError("Failed to find sites collection", collErr)
@@ -217,7 +257,9 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		site = core.NewRecord(sitesColl)
 		site.Set("id", siteId)
 		site.Set("owner", e.Auth.Id)
-		site.Set("name", "Imported Site")
+		site.Set("name", siteName)
+		site.Set("host", siteHost)
+		site.Set("group", groupId)
 
 		if saveErr := pb.Save(site); saveErr != nil {
 			return e.InternalServerError("Failed to create site", saveErr)
@@ -235,23 +277,6 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		if !canAccess {
 			return e.ForbiddenError("Access denied", nil)
 		}
-	}
-
-	// Parse multipart form
-	if err := e.Request.ParseMultipartForm(32 << 20); err != nil { // 32MB max
-		return e.BadRequestError("Failed to parse form", err)
-	}
-
-	file, _, err := e.Request.FormFile("file")
-	if err != nil {
-		return e.BadRequestError("No file uploaded", err)
-	}
-	defer file.Close()
-
-	// Read ZIP data
-	zipData, err := io.ReadAll(file)
-	if err != nil {
-		return e.InternalServerError("Failed to read file", err)
 	}
 
 	// Parse and process the import
@@ -302,6 +327,41 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		"created_ids": result.CreatedIDs,
 		"warnings":    result.Warnings,
 	})
+}
+
+// readSiteConfigFromZip extracts site.yaml from the import zip and returns
+// (name, host, group). Missing or unparseable site.yaml yields empty strings;
+// callers fall back to safe defaults so a malformed config never blocks the
+// site auto-create path.
+func readSiteConfigFromZip(zipData []byte) (string, string, string) {
+	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		return "", "", ""
+	}
+	for _, f := range reader.File {
+		if f.Name != "site.yaml" || f.FileInfo().IsDir() {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return "", "", ""
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return "", "", ""
+		}
+		var cfg struct {
+			Name  string `yaml:"name"`
+			Host  string `yaml:"host"`
+			Group string `yaml:"group"`
+		}
+		if err := yaml.Unmarshal(data, &cfg); err != nil {
+			return "", "", ""
+		}
+		return cfg.Name, cfg.Host, cfg.Group
+	}
+	return "", "", ""
 }
 
 func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
