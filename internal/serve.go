@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -90,7 +91,6 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			}
 			defer reader.Close()
 
-			requestEvent.Response.Header().Del("X-Frame-Options")
 			requestEvent.Response.Header().Set("Content-Security-Policy", "frame-ancestors *")
 
 			// In dev mode, inject the dev indicator into HTML files
@@ -113,7 +113,7 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				reader,
 			)
 			return nil
-		})
+		}).Unbind(apis.DefaultSecurityHeadersMiddlewareId)
 
 		return serveEvent.Next()
 	})
