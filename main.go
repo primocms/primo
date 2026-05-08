@@ -26,6 +26,10 @@ func main() {
 }
 
 func setup(pb *pocketbase.PocketBase) error {
+	if err := internal.RegisterCORS(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterVersion(pb); err != nil {
 		return err
 	}
