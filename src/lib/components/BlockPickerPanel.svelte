@@ -91,7 +91,7 @@
 			</Tabs.Trigger>
 		</Tabs.List>
 
-		<Tabs.Content value="library" class="grid grid-cols-4 flex-1 overflow-hidden">
+		<Tabs.Content value="library" class="grid grid-cols-4 flex-1 min-h-0 overflow-hidden">
 			{#if library_symbol_groups.length === 0}
 				<EmptyState
 					class="col-span-4"
@@ -118,7 +118,7 @@
 						{/each}
 					</ul>
 				</div>
-				<Masonry columnCount={2} class="col-span-3 p-3 pr-0 overflow-auto" items={active_library_blocks_group_symbols} loading={active_library_blocks_group_symbols === undefined}>
+				<Masonry columnCount={2} class="col-span-3 min-h-0 p-3 pr-0 overflow-auto" items={active_library_blocks_group_symbols} loading={active_library_blocks_group_symbols === undefined}>
 					{#snippet children(symbol)}
 						<div class="relative">
 							<SymbolButton {symbol} onclick={() => toggle_block(symbol.id, 'library')} />
@@ -133,7 +133,7 @@
 			{/if}
 		</Tabs.Content>
 
-		<Tabs.Content value="marketplace" class="grid grid-cols-4 flex-1 overflow-hidden">
+		<Tabs.Content value="marketplace" class="grid grid-cols-4 flex-1 min-h-0 overflow-hidden">
 			<div class="h-full md:border-r col-span-1 overflow-scroll">
 				<div class="p-2 text-xs text-muted-foreground">Groups</div>
 				<ul class="p-2 pt-0 flex flex-col gap-1">
@@ -149,7 +149,7 @@
 					{/each}
 				</ul>
 			</div>
-			<Masonry columnCount={2} class="col-span-3 p-3 pr-0 overflow-scroll" items={active_marketplace_blocks_group_symbols} loading={active_marketplace_blocks_group_symbols === undefined}>
+			<Masonry columnCount={2} class="col-span-3 min-h-0 p-3 pr-0 overflow-auto" items={active_marketplace_blocks_group_symbols} loading={active_marketplace_blocks_group_symbols === undefined}>
 				{#snippet children(symbol)}
 					<div class="relative">
 						<SymbolButton {symbol} show_price={true} onclick={() => toggle_block(symbol.id, 'marketplace')} />
