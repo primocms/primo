@@ -382,6 +382,16 @@ export const usePublishSite = (site_id?: string) => {
 			: undefined
 	)
 
+	// In local dev, realtime subscriptions are off, so the CLI's out-of-band
+	// imports (e.g. site/content.yaml on watcher events) leave the in-memory
+	// list cache stale. Drop cached ids before each run so the worker's
+	// `loaded()` gate waits for the refetch instead of racing with stale data.
+	const original_run = worker.run.bind(worker)
+	worker.run = async (...params) => {
+		self.invalidate_lists({ block: true })
+		return original_run(...params)
+	}
+
 	return worker
 }
 
