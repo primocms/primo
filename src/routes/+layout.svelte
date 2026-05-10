@@ -33,7 +33,7 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--pala-primary-color);
+		--ring: 0px 0px 0px 2px var(--primo-primary-color);
 
 		--primo-max-width-1: 30rem;
 		--primo-max-width-2: 1200px;
@@ -43,8 +43,8 @@
 	}
 
 	:global(html) {
-		--pala-primary-color: #ff6b35;
-		--pala-primary-color-dark: #444f64;
+		--primo-primary-color: #ff6b35;
+		--primo-primary-color-dark: #444f64;
 		--primo-color-white: white;
 		--primo-color-codeblack: rgb(30, 30, 30);
 		--primo-color-codeblack-opaque: rgba(30, 30, 30, 0.9);
@@ -94,10 +94,10 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--pala-primary-color);
-		--primo-ring: 0px 0px 0px 2px var(--pala-primary-color, #ff6b35);
-		--primo-ring-thin: 0px 0px 0px 1px var(--pala-primary-color, #ff6b35);
-		--primo-ring-thick: 0px 0px 0px 3px var(--pala-primary-color, #ff6b35);
+		--ring: 0px 0px 0px 2px var(--primo-primary-color);
+		--primo-ring: 0px 0px 0px 2px var(--primo-primary-color, #ff6b35);
+		--primo-ring-thin: 0px 0px 0px 1px var(--primo-primary-color, #ff6b35);
+		--primo-ring-thick: 0px 0px 0px 3px var(--primo-primary-color, #ff6b35);
 	}
 
 	:global(.primo--field-label) {

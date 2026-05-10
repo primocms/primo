@@ -476,12 +476,12 @@
 											<span>Reading...</span>
 										{:else}
 											<Upload class="h-4 w-4" />
-											<span>Import .pala</span>
+											<span>Import .primo</span>
 										{/if}
 										<input
 											type="file"
 											class="hidden"
-											accept=".pala"
+											accept=".primo,.pala"
 											onchange={handle_file_upload}
 											disabled={parsing_file}
 										/>

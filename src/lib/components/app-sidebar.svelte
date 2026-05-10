@@ -117,7 +117,7 @@
 					<Sidebar.MenuButton size="lg" class="md:h-8 md:p-0">
 						{#snippet child({ props })}
 							<a href="/" {...props}>
-								<div class="bg-[var(--pala-primary-color)] text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">p</div>
+								<div class="bg-[var(--primo-primary-color)] text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">p</div>
 							</a>
 						{/snippet}
 					</Sidebar.MenuButton>

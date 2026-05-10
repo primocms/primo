@@ -6,7 +6,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { ChevronDown } from 'lucide-svelte'
 	import ToolbarButton from './ToolbarButton.svelte'
-	import { PalaButton } from '$lib/builder/components/buttons'
+	import { PrimoButton } from '$lib/builder/components/buttons'
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
 	import { onNavigate, goto } from '$app/navigation'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
@@ -216,7 +216,7 @@
 	<div class="menu-container">
 		<div class="left">
 			{#if $current_user?.serverRole}
-				<PalaButton />
+				<PrimoButton />
 			{/if}
 			<div class="button-group">
 				<div class="flex rounded" style="border: 1px solid #222">
@@ -227,8 +227,8 @@
 			<div class="button-group">
 				{#if $mod_key_held}
 					<div class="page-hotkeys">
-						<div style:color={going_up ? 'var(--pala-primary-color)' : 'inherit'} style:opacity={can_navigate_up ? 1 : 0.3}>&#8984; ↑</div>
-						<div style:color={going_down ? 'var(--pala-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
+						<div style:color={going_up ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_up ? 1 : 0.3}>&#8984; ↑</div>
+						<div style:color={going_down ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
 					</div>
 				{:else}
 					<div class="flex rounded" style="border: 1px solid #222" bind:this={page_dropdown_anchor}>

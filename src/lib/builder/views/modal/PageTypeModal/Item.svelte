@@ -210,8 +210,8 @@
 		border-bottom-left-radius: 0; */
 
 		&.active a {
-			color: var(--pala-primary-color);
-			/* outline: 1px solid var(--pala-primary-color); */
+			color: var(--primo-primary-color);
+			/* outline: 1px solid var(--primo-primary-color); */
 		}
 
 		.options {

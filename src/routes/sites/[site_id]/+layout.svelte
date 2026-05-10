@@ -1,5 +1,5 @@
 <script>
-	import Pala from '$lib/builder/Pala.svelte'
+	import Primo from '$lib/builder/Primo.svelte'
 	import { check_session } from '$lib/pocketbase/user'
 	import { refresh_author_mode } from '$lib/pocketbase/author_mode'
 	import { onMount } from 'svelte'
@@ -28,9 +28,9 @@
 {#if site === null}
 	<div class="placeholder">Site not found</div>
 {:else if site && $current_user}
-	<Pala {site}>
+	<Primo {site}>
 		{@render children?.()}
-	</Pala>
+	</Primo>
 {:else}
 	<div class="placeholder">
 		<Loader />

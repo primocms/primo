@@ -287,7 +287,7 @@ export const usePublishSite = (site_id?: string) => {
 			if (footer_result.body) body_content += `<footer>${footer_result.body}</footer>`
 
 			const final =
-				`<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="PalaCMS" />` +
+				`<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Primo" />` +
 				combined_head +
 				'</head><body id="page">' +
 				body_content +

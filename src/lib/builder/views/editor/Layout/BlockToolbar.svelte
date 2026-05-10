@@ -221,7 +221,7 @@
 		&:hover {
 			z-index: 1; /* show full shadow */
 			/* box-shadow: var(--primo-ring); */
-			/* background: var(--pala-primary-color); */
+			/* background: var(--primo-primary-color); */
 			/* color: var(--colr-gray-9); */
 			background: #292929;
 			color: #E7E7E7l;

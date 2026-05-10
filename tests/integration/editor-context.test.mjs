@@ -62,6 +62,5 @@ test('component editor iframe exposes documented context to loaded blocks', asyn
 	)
 
 	assert.equal(window.__PRIMO_CONTEXT__.environment, 'editor')
-	assert.equal(window.__PALA_CONTEXT__, window.__PRIMO_CONTEXT__)
 	assert.equal(window.__loadedBlock.is_editor, true)
 })

@@ -26,7 +26,7 @@
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger
-		class={buttonVariants({ variant: 'ghost', size, class: `py-1 px-${px} rounded-md focus-visible:ring-1 focus-visible:ring-[var(--pala-primary-color)] focus-visible:outline-none` })}
+		class={buttonVariants({ variant: 'ghost', size, class: `py-1 px-${px} rounded-md focus-visible:ring-1 focus-visible:ring-[var(--primo-primary-color)] focus-visible:outline-none` })}
 	>
 		{#if label}
 			<Icon {icon} />

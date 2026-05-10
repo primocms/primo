@@ -839,7 +839,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		siteFieldManifest[name] = id
 	}
 
-	if err := writeJSONToZip(zw, ".pala/manifest.json", idManifest); err != nil {
+	if err := writeJSONToZip(zw, ".primo/manifest.json", idManifest); err != nil {
 		return nil, err
 	}
 

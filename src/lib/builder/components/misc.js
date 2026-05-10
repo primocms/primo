@@ -7,7 +7,7 @@ const preview_iframe_head = (head = '') => `
 `
 
 const editor_context_tag =
-	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' }; window.__PALA_CONTEXT__ = window.__PRIMO_CONTEXT__;</script>"
+	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
 
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `

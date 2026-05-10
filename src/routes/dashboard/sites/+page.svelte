@@ -76,7 +76,7 @@
 				const url = URL.createObjectURL(file)
 				const a = document.createElement('a')
 				a.href = url
-				a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.pala`
+				a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
 				document.body.appendChild(a)
 				a.click()
 				document.body.removeChild(a)

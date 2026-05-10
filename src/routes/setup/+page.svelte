@@ -97,7 +97,7 @@
 				</div>
 			</div>
 			<header>
-				<h1>Welcome to Pala</h1>
+				<h1>Welcome to Primo</h1>
 				<p class="subtitle">Create your admin account to get started</p>
 			</header>
 

@@ -232,7 +232,7 @@
 
 			&.active div {
 				opacity: 1;
-				background: var(--pala-primary-color);
+				background: var(--primo-primary-color);
 				height: 3px;
 				animation: pulse 0.6s ease-in-out infinite;
 			}
@@ -263,8 +263,8 @@
 		color: var(--color-gray-3);
 
 		&:hover {
-			border-color: var(--pala-primary-color);
-			color: var(--pala-primary-color);
+			border-color: var(--primo-primary-color);
+			color: var(--primo-primary-color);
 		}
 	}
 

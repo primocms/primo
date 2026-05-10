@@ -124,7 +124,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: var(--pala-primary-color);
+		color: var(--primo-primary-color);
 	}
 	.error {
 		display: flex;

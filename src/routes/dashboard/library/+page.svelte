@@ -595,7 +595,7 @@
 
 <Dialog.Root bind:open={is_info_dialog_open}>
 	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">How Blocks Work in Pala</h2>
+		<h2 class="text-lg font-semibold leading-none tracking-tight">How Blocks Work in Primo</h2>
 		<p class="text-muted-foreground text-sm mb-6">Blocks are reusable components that you can add to any page on your sites.</p>
 
 		<div class="space-y-4">

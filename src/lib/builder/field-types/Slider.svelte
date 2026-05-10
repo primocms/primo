@@ -45,7 +45,7 @@
 	}
 
 	input {
-		outline-color: var(--pala-primary-color);
+		outline-color: var(--primo-primary-color);
 		background: var(--primo-color-black);
 		padding: 0.5rem;
 		border-bottom: 2px solid rgb(245, 245, 245);
