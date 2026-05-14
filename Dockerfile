@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:22-alpine AS node-builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS node-builder
 
 # Copy all the files that are not in .dockerignore
 COPY . /app
