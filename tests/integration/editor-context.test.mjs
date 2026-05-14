@@ -11,8 +11,8 @@ async function loadIframeHelpers() {
 	const testableSource = source
 		.replace("import { VERSION as SVELTE_VERSION } from 'svelte/compiler'", "const SVELTE_VERSION = 'test'")
 		.replace(
-			/import \{ (?:PALA|PRIMO)_BASELINE_CSS \} from '\$lib\/common\/baseline-css'/,
-			"const PALA_BASELINE_CSS = ''; const PRIMO_BASELINE_CSS = ''"
+			/import \{ PRIMO_BASELINE_CSS \} from '\$lib\/common\/baseline-css'/,
+			"const PRIMO_BASELINE_CSS = ''"
 		)
 		.replaceAll('export const ', 'const ')
 

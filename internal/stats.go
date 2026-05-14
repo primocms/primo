@@ -1,12 +1,14 @@
 /**
- * Pala CMS Usage Statistics
+ * Primo CMS Usage Statistics
  *
- * This module collects anonymous usage statistics to help improve Pala CMS.
- * Data collection is privacy-focused and can be disabled by setting PALA_DISABLE_USAGE_STATS=true
+ * This module collects anonymous usage statistics to help improve Primo CMS.
+ * Data collection is privacy-focused and can be disabled by setting
+ * PRIMO_DISABLE_USAGE_STATS=true (PALA_DISABLE_USAGE_STATS is accepted as a
+ * fallback for existing deployments).
  *
  * What we collect:
  * - Anonymous instance ID (random UUID, not linked to any personal data)
- * - Pala CMS version number
+ * - Primo CMS version number
  * - Count of sites, pages, and users (numbers only, no content)
  * - Basic error events (sanitized, no user data)
  * - Geographic location (city-level only)
@@ -18,7 +20,7 @@
  * - Session recordings or screenshots
  * - Any personally identifiable information
  *
- * To disable: Set PALA_DISABLE_USAGE_STATS=true in your environment variables
+ * To disable: Set PRIMO_DISABLE_USAGE_STATS=true in your environment variables
  */
 
 package internal

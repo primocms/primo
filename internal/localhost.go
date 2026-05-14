@@ -62,7 +62,7 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 			// a genuine miss; any other error (DB outage, misconfigured
 			// users collection, etc.) means we shouldn't proceed to create
 			// a duplicate or mask a real failure.
-			devEmail := "dev@pala.local"
+			devEmail := "dev@primo.local"
 			user, err := pb.FindAuthRecordByEmail("users", devEmail)
 			if err != nil && !errors.Is(err, sql.ErrNoRows) {
 				return e.InternalServerError("Failed to look up dev user", err)

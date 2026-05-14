@@ -1,10 +1,10 @@
-# Contributing to Pala
+# Contributing to Primo
 
-Thank you for your interest in contributing to Pala! In the interest of full transparency, we want to be up front in this doc to avoid hurting feelings and set clear expectations.
+Thank you for your interest in contributing to Primo! In the interest of full transparency, we want to be up front in this doc to avoid hurting feelings and set clear expectations.
 
-## About Pala
+## About Primo
 
-Pala is a business-driven open source project (think NextJS, Supabase, Tailwind CSS) rather than a community-driven one like Linux or Apache. We're building a sustainable business around a high-quality open source tool, which means:
+Primo is a business-driven open source project (think NextJS, Supabase, Tailwind CSS) rather than a community-driven one like Linux or Apache. We're building a sustainable business around a high-quality open source tool, which means:
 
 - We maintain control over project direction
 - We have limited bandwidth for reviewing external contributions
@@ -35,7 +35,7 @@ For detailed technical information including architecture, development setup, an
 
 ## 🔄 If You Want to Contribute
 
-We genuinely appreciate contributions! However, since Pala serves a broad range of users and use cases, we need to be thoughtful about changes to protect the project's general-purpose nature and long-term vision.
+We genuinely appreciate contributions! However, since Primo serves a broad range of users and use cases, we need to be thoughtful about changes to protect the project's general-purpose nature and long-term vision.
 
 ### Step 1: Discuss First
 
@@ -82,9 +82,9 @@ If you've received approval to proceed:
 - Changes that increase complexity significantly
 - Features that duplicate existing functionality
 
-## 🤝 Forking Pala
+## 🤝 Forking Primo
 
-If you want to create your own version of Pala:
+If you want to create your own version of Primo:
 
 1. **Fork freely** - The codebase is open source for a reason
 2. **No approval needed** - Make whatever changes you want in your fork
@@ -101,15 +101,15 @@ If you want to create your own version of Pala:
 
 ## 📄 License
 
-Pala is MIT licensed, which means:
+Primo is MIT licensed, which means:
 
-- **You can build proprietary products** on top of Pala without sharing your code
+- **You can build proprietary products** on top of Primo without sharing your code
 - **You can fork and modify** without contributing back
 - **You can use it commercially** without restrictions
-- **Any code you contribute** to the main Pala repository will be MIT licensed
+- **Any code you contribute** to the main Primo repository will be MIT licensed
 
-By contributing to Pala, you agree that your contributions will be licensed under the MIT License.
+By contributing to Primo, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-**Thank you for your interest in Pala!** Whether you're forking for your own use or contributing back, we appreciate you and hope the code serves you well.
+**Thank you for your interest in Primo!** Whether you're forking for your own use or contributing back, we appreciate you and hope the code serves you well.
