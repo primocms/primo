@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -68,8 +67,9 @@ const (
 )
 
 func init() {
-	// Check for dev mode via environment variable
-	if os.Getenv("PALA_DEV_MODE") == "1" {
+	// Check for dev mode via environment variable. PRIMO_DEV_MODE is the
+	// canonical name post-rebrand; PALA_DEV_MODE is accepted as a fallback.
+	if getenvCompat("PRIMO_DEV_MODE", "PALA_DEV_MODE") == "1" {
 		DevMode = true
 	}
 }
@@ -295,12 +295,12 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 const DevIndicatorScript = `
 <script>
 (function() {
-  const INDICATOR_ID = '__pala_dev_indicator__';
+  const INDICATOR_ID = '__primo_dev_indicator__';
   if (document.getElementById(INDICATOR_ID)) return;
 
   const style = document.createElement('style');
   style.textContent = ` + "`" + `
-    #__pala_dev_indicator__ {
+    #__primo_dev_indicator__ {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -313,26 +313,26 @@ const DevIndicatorScript = `
       border-radius: 4px;
       margin-left: 8px;
     }
-    #__pala_dev_indicator__ .dot {
+    #__primo_dev_indicator__ .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       transition: background 0.2s ease;
       flex-shrink: 0;
     }
-    #__pala_dev_indicator__ .dot.connected { background: #22c55e; }
-    #__pala_dev_indicator__ .dot.syncing { background: #eab308; animation: __pala_pulse 1s infinite; }
-    #__pala_dev_indicator__ .dot.pushing { background: #3b82f6; animation: __pala_pulse 0.5s infinite; }
-    #__pala_dev_indicator__ .dot.error { background: #ef4444; }
-    #__pala_dev_indicator__ .dot.disconnected { background: #6b7280; }
-    #__pala_dev_indicator__ .label {
+    #__primo_dev_indicator__ .dot.connected { background: #22c55e; }
+    #__primo_dev_indicator__ .dot.syncing { background: #eab308; animation: __primo_pulse 1s infinite; }
+    #__primo_dev_indicator__ .dot.pushing { background: #3b82f6; animation: __primo_pulse 0.5s infinite; }
+    #__primo_dev_indicator__ .dot.error { background: #ef4444; }
+    #__primo_dev_indicator__ .dot.disconnected { background: #6b7280; }
+    #__primo_dev_indicator__ .label {
       white-space: nowrap;
     }
-    @keyframes __pala_pulse {
+    @keyframes __primo_pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.6; transform: scale(0.9); }
     }
-    #__pala_dev_indicator__.floating {
+    #__primo_dev_indicator__.floating {
       position: fixed;
       bottom: 16px;
       right: 16px;
@@ -359,7 +359,7 @@ const DevIndicatorScript = `
     if (injected) return true;
 
     // Look for the dedicated slot first
-    const slot = document.getElementById('pala-dev-indicator-slot');
+    const slot = document.getElementById('primo-dev-indicator-slot');
     if (slot) {
       slot.appendChild(indicator);
       injected = true;

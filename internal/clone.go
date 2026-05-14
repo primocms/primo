@@ -19,7 +19,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-var cloneDebugEnabled = os.Getenv("PALACMS_DEBUG_CLONE") != ""
+var cloneDebugEnabled = getenvCompat("PRIMOCMS_DEBUG_CLONE", "PALACMS_DEBUG_CLONE") != ""
 
 func cloneLog(format string, args ...any) {
 	if !cloneDebugEnabled {
@@ -28,7 +28,10 @@ func cloneLog(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "[clone] "+format+"\n", args...)
 }
 
-// Snapshot file signature: "PALACMS:3.0"
+// Snapshot file signature: legacy "PALACMS:3.0" magic bytes, retained so
+// existing .pala / .primo files continue to round-trip across the rebrand.
+// A new signature can be introduced when the file format changes; for now
+// we keep this as the on-disk identifier.
 var snapshotSignature = []byte{0x50, 0x41, 0x4c, 0x41, 0x43, 0x4d, 0x53, 0x3a, 0x33, 0x2e, 0x30}
 
 type SnapshotMetadata struct {

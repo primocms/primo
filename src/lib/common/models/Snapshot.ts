@@ -23,9 +23,9 @@ type FileEntry = {
 }
 
 /**
- * File signature for snapshot file
- *
- * PALACMS:3.0
+ * File signature for snapshot file. Kept as the legacy "PALACMS:3.0" magic
+ * bytes so existing .pala / .primo files round-trip across the rebrand. The
+ * bytes are an on-disk identifier, not a user-visible brand string.
  */
 const SIGNATURE = new Uint8Array([0x50, 0x41, 0x4c, 0x41, 0x43, 0x4d, 0x53, 0x3a, 0x33, 0x2e, 0x30])
 const FILE_COLLECTIONS = ['site_uploads']

@@ -333,7 +333,7 @@
 			{#if !$timeline.last}
 				<ToolbarButton id="redo" title="Redo" icon="material-symbols:redo" style="border: 0; font-size: 1.5rem;" on:click={redo_change} />
 			{/if} -->
-			<div id="pala-dev-indicator-slot"></div>
+			<div id="primo-dev-indicator-slot"></div>
 			<span class="version-badge">{instance.version}</span>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>

@@ -1,8 +1,8 @@
 # Developer Guide
 
-This guide covers the technical aspects of working **on the Pala codebase itself** - whether you're contributing, forking, or just trying to understand how it works.
+This guide covers the technical aspects of working **on the Primo codebase itself** - whether you're contributing, forking, or just trying to understand how it works.
 
-> **Looking to build with Pala?** If you want to learn how to create blocks, templates, or sites using Pala, check out our user documentation at [palacms.com/docs](https://palacms.com/docs).
+> **Looking to build with Primo?** If you want to learn how to create blocks, templates, or sites using Primo, check out our user documentation at [palacms.com/docs](https://palacms.com/docs).
 
 ## 🏗️ Architecture Overview
 
@@ -234,11 +234,11 @@ docker build -t palacms .
 The app uses these environment variables during the initial start to optionally create up to two initial users:
 
 - For initial superuser:
-  - PALA_SUPERUSER_EMAIL
-  - PALA_SUPERUSER_PASSWORD
-- For initial Pala user:
-  - PALA_USER_EMAIL
-  - PALA_USER_PASSWORD
+  - PRIMO_SUPERUSER_EMAIL (or legacy PALA_SUPERUSER_EMAIL)
+  - PRIMO_SUPERUSER_PASSWORD (or legacy PALA_SUPERUSER_PASSWORD)
+- For initial Primo user:
+  - PRIMO_USER_EMAIL (or legacy PALA_USER_EMAIL)
+  - PRIMO_USER_PASSWORD (or legacy PALA_USER_PASSWORD)
 
 The container requires volume to be mounted on path `/app/pb_data` for storing files and a SQLite database.
 

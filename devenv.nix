@@ -14,11 +14,11 @@
     enable = true;
   };
   env = {
-    PALA_SUPERUSER_EMAIL = "admin@palacms.internal";
-    PALA_SUPERUSER_PASSWORD = "test1234";
-    PALA_USER_EMAIL = "user@palacms.internal";
-    PALA_USER_PASSWORD = "test1234";
-    PALA_DISABLE_USAGE_STATS = "true";
+    PRIMO_SUPERUSER_EMAIL = "admin@palacms.internal";
+    PRIMO_SUPERUSER_PASSWORD = "test1234";
+    PRIMO_USER_EMAIL = "user@palacms.internal";
+    PRIMO_USER_PASSWORD = "test1234";
+    PRIMO_DISABLE_USAGE_STATS = "true";
   };
   processes = {
     app-dev.exec = "vite --config app.config.js dev";

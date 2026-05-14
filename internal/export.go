@@ -121,7 +121,7 @@ func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.BadRequestError("Missing site ID", nil)
 			}
 
-			// Allow unauthenticated access from localhost (for pala dev)
+			// Allow unauthenticated access from localhost (for primo dev)
 			isLocal := IsLocalhost(e)
 
 			if e.Auth == nil && !isLocal {
@@ -179,7 +179,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	siteId := site.Id
 
 	// 1. Write site.yaml
-	palaConfig := ExportedSite{
+	siteConfig := ExportedSite{
 		Name:       site.GetString("name"),
 		Host:       site.GetString("host"),
 		SiteID:     siteId,
@@ -187,7 +187,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		ExportedAt: site.GetString("updated"),
 		Version:    "1.0",
 	}
-	if err := writeYAMLToZip(zw, "site.yaml", palaConfig); err != nil {
+	if err := writeYAMLToZip(zw, "site.yaml", siteConfig); err != nil {
 		return nil, err
 	}
 

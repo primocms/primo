@@ -143,20 +143,18 @@
 				getInitialData: () => ({ block: symbol }),
 				onDragStart: () => {
 					if (typeof window !== 'undefined') {
-						window.dispatchEvent(
-							new CustomEvent('palaDragStart', {
-								detail: { block: symbol }
-							})
-						)
+						const detail = { block: symbol }
+						window.dispatchEvent(new CustomEvent('primoDragStart', { detail }))
+						// Backwards-compatible alias for external listeners
+						window.dispatchEvent(new CustomEvent('palaDragStart', { detail }))
 					}
 				},
 				onDrop: () => {
 					if (typeof window !== 'undefined') {
-						window.dispatchEvent(
-							new CustomEvent('palaDragEnd', {
-								detail: { block: symbol }
-							})
-						)
+						const detail = { block: symbol }
+						window.dispatchEvent(new CustomEvent('primoDragEnd', { detail }))
+						// Backwards-compatible alias for external listeners
+						window.dispatchEvent(new CustomEvent('palaDragEnd', { detail }))
 					}
 				}
 			})
