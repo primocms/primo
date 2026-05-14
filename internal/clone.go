@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -73,9 +74,11 @@ type IDMap map[string]string
 func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/palacms/clone-site", func(e *core.RequestEvent) error {
-			// Check for multipart form (file upload)
-			contentType := e.Request.Header.Get("Content-Type")
-			isMultipart := len(contentType) >= 19 && contentType[:19] == "multipart/form-data"
+			// Check for multipart form (file upload). HasPrefix on the
+			// lowercased value handles "Multipart/Form-Data" casing and the
+			// "; boundary=..." parameter suffix in one check.
+			contentType := strings.ToLower(e.Request.Header.Get("Content-Type"))
+			isMultipart := strings.HasPrefix(contentType, "multipart/form-data")
 
 			var name, host, groupId, sourceSiteId, snapshotURL string
 			var snapshotFile []byte

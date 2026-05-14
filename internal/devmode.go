@@ -33,10 +33,20 @@ type DevStatus struct {
 	Files     []FileChange `json:"files"`
 }
 
+// wsClient owns its websocket.Conn and serializes all writes through send.
+// gorilla/websocket requires that only one goroutine call WriteMessage on a
+// given connection; broadcasts, pings, and the initial status push all
+// funnel through send so writePump is the sole writer.
+type wsClient struct {
+	conn   *websocket.Conn
+	send   chan []byte
+	closed chan struct{}
+}
+
 var (
 	recentChanges   []FileChange
 	recentChangesMu sync.RWMutex
-	wsClients       = make(map[*websocket.Conn]bool)
+	wsClients       = make(map[*wsClient]bool)
 	wsClientsMu     sync.RWMutex
 	upgrader        = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -52,6 +62,9 @@ const (
 	pongWait       = 30 * time.Second
 	pingPeriod     = (pongWait * 9) / 10 // Must be less than pongWait
 	maxMessageSize = 512
+	// Per-connection outbound buffer. Slow clients are dropped rather than
+	// blocking broadcasts.
+	sendBufferSize = 16
 )
 
 func init() {
@@ -102,27 +115,7 @@ func BroadcastStatus(status string, message string) {
 		return
 	}
 
-	// Collect clients to remove (can't modify map while iterating with RLock)
-	var deadClients []*websocket.Conn
-
-	wsClientsMu.RLock()
-	for client := range wsClients {
-		client.SetWriteDeadline(time.Now().Add(writeWait))
-		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
-			deadClients = append(deadClients, client)
-		}
-	}
-	wsClientsMu.RUnlock()
-
-	// Remove dead clients
-	if len(deadClients) > 0 {
-		wsClientsMu.Lock()
-		for _, client := range deadClients {
-			delete(wsClients, client)
-			client.Close()
-		}
-		wsClientsMu.Unlock()
-	}
+	broadcast(data)
 }
 
 // BroadcastReload asks connected dev clients to reload the page.
@@ -140,24 +133,90 @@ func BroadcastReload() {
 		return
 	}
 
-	var deadClients []*websocket.Conn
+	broadcast(data)
+}
+
+// broadcast fans data out to every connected client's send channel. Clients
+// whose buffers are full are marked dead and torn down by writePump; we never
+// block on a slow consumer here.
+func broadcast(data []byte) {
+	var dead []*wsClient
 
 	wsClientsMu.RLock()
 	for client := range wsClients {
-		client.SetWriteDeadline(time.Now().Add(writeWait))
-		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
-			deadClients = append(deadClients, client)
+		select {
+		case client.send <- data:
+		default:
+			dead = append(dead, client)
 		}
 	}
 	wsClientsMu.RUnlock()
 
-	if len(deadClients) > 0 {
-		wsClientsMu.Lock()
-		for _, client := range deadClients {
-			delete(wsClients, client)
-			client.Close()
+	for _, client := range dead {
+		closeClient(client)
+	}
+}
+
+// closeClient is safe to call multiple times. It closes the closed channel,
+// which signals writePump to exit and tear down the connection.
+func closeClient(client *wsClient) {
+	wsClientsMu.Lock()
+	if _, ok := wsClients[client]; ok {
+		delete(wsClients, client)
+	}
+	wsClientsMu.Unlock()
+
+	select {
+	case <-client.closed:
+		// already closed
+	default:
+		close(client.closed)
+	}
+}
+
+// writePump is the sole writer for client.conn. Following the gorilla chat
+// example it owns the ticker for ping frames and consumes the send channel
+// for text frames, so no other goroutine ever calls WriteMessage on this
+// connection.
+func writePump(client *wsClient) {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		client.conn.Close()
+	}()
+
+	for {
+		select {
+		case data, ok := <-client.send:
+			if !ok {
+				return
+			}
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				closeClient(client)
+				return
+			}
+		case <-ticker.C:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				closeClient(client)
+				return
+			}
+		case <-client.closed:
+			return
 		}
-		wsClientsMu.Unlock()
+	}
+}
+
+// readPump just drives pong handling and detects disconnection — we don't
+// process incoming messages on the dev WS.
+func readPump(client *wsClient) {
+	defer closeClient(client)
+
+	for {
+		if _, _, err := client.conn.ReadMessage(); err != nil {
+			return
+		}
 	}
 }
 
@@ -188,7 +247,6 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 				return err
 			}
 
-			// Configure connection limits
 			conn.SetReadLimit(maxMessageSize)
 			conn.SetReadDeadline(time.Now().Add(pongWait))
 			conn.SetPongHandler(func(string) error {
@@ -196,64 +254,33 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 				return nil
 			})
 
+			client := &wsClient{
+				conn:   conn,
+				send:   make(chan []byte, sendBufferSize),
+				closed: make(chan struct{}),
+			}
+
 			wsClientsMu.Lock()
-			wsClients[conn] = true
+			wsClients[client] = true
 			wsClientsMu.Unlock()
 
-			// Send initial connected status
+			// Queue the initial connected status before starting the pumps
+			// so it lands before any broadcast that might race with it.
 			recentChangesMu.RLock()
 			files := make([]FileChange, len(recentChanges))
 			copy(files, recentChanges)
 			recentChangesMu.RUnlock()
 
-			initialStatus := DevStatus{
+			initial, _ := json.Marshal(DevStatus{
 				Type:      "status",
 				Status:    "connected",
 				Timestamp: time.Now().UnixMilli(),
 				Files:     files,
-			}
-			data, _ := json.Marshal(initialStatus)
-			conn.SetWriteDeadline(time.Now().Add(writeWait))
-			conn.WriteMessage(websocket.TextMessage, data)
+			})
+			client.send <- initial
 
-			// Channel to signal connection close
-			done := make(chan struct{})
-
-			// Ping ticker goroutine - keeps connection alive
-			go func() {
-				ticker := time.NewTicker(pingPeriod)
-				defer ticker.Stop()
-
-				for {
-					select {
-					case <-ticker.C:
-						conn.SetWriteDeadline(time.Now().Add(writeWait))
-						if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-							return
-						}
-					case <-done:
-						return
-					}
-				}
-			}()
-
-			// Read loop goroutine - handles incoming messages and detects disconnection
-			go func() {
-				defer func() {
-					close(done)
-					wsClientsMu.Lock()
-					delete(wsClients, conn)
-					wsClientsMu.Unlock()
-					conn.Close()
-				}()
-
-				for {
-					_, _, err := conn.ReadMessage()
-					if err != nil {
-						break
-					}
-				}
-			}()
+			go writePump(client)
+			go readPump(client)
 
 			return nil
 		})
@@ -382,7 +409,8 @@ const DevIndicatorScript = `
   let ws = null;
 
   function connect() {
-    const wsUrl = 'ws://' + location.host + '/__pala_dev_ws__';
+    const wsScheme = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const wsUrl = wsScheme + location.host + '/__pala_dev_ws__';
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

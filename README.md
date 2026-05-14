@@ -72,8 +72,6 @@ If you're building a web app, Primo isn't it — check out [tinykit](https://git
 
 - **Stable:** visual CMS, block library, static output, multi-site, self-hosted deployment.
 - **Beta:** CLI + local-file workflow (`primo pull` / `primo push`), AI-agent compatibility.
-<!-- TODO: fill in what's next — marketplace? hosted offering? page-type templates? -->
-- **Next:** *[TODO]*
 
 ## Documentation
 

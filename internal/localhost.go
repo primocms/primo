@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"database/sql"
+	"errors"
 	"net"
 	"os"
 
@@ -39,8 +41,16 @@ func IsLocalhost(e *core.RequestEvent) bool {
 	return ip != nil && ip.IsLoopback()
 }
 
-// RegisterDevAuthEndpoint registers an endpoint for localhost dev authentication
+// RegisterDevAuthEndpoint registers an endpoint for localhost dev
+// authentication. The endpoint creates a fixed-password developer account on
+// demand, so it must never exist in production binaries; we only register
+// the route when PALA_DEV_MODE=1, matching RegisterDevMode's gating. The
+// frontend already tolerates a 404 here (auth/+layout.svelte) and falls
+// through to manual login.
 func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
+	if !DevMode {
+		return nil
+	}
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Dev auth endpoint - only works on localhost
 		serveEvent.Router.POST("/api/palacms/dev-auth", func(e *core.RequestEvent) error {
@@ -48,10 +58,16 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 				return e.ForbiddenError("Dev auth only available on localhost", nil)
 			}
 
-			// Find or create dev user
+			// Find or create dev user. PocketBase returns sql.ErrNoRows for
+			// a genuine miss; any other error (DB outage, misconfigured
+			// users collection, etc.) means we shouldn't proceed to create
+			// a duplicate or mask a real failure.
 			devEmail := "dev@pala.local"
 			user, err := pb.FindAuthRecordByEmail("users", devEmail)
-			if err != nil {
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return e.InternalServerError("Failed to look up dev user", err)
+			}
+			if errors.Is(err, sql.ErrNoRows) {
 				// Create dev user
 				collection, err := pb.FindCollectionByNameOrId("users")
 				if err != nil {
