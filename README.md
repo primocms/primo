@@ -57,8 +57,6 @@ Then open your server's URL to create your first site.
 
 Freelancers, small agencies, and small teams who code their clients' sites and need the clients to manage content afterward — without breaking anything.
 
-If you're building a web app, Primo isn't it — check out [tinykit](https://github.com/tinykit-studio/tinykit).
-
 ## How Primo compares
 
 - **vs. WordPress** — same mental model (CMS + blocks + multi-site) but built on modern tooling: Svelte instead of PHP, static output instead of server rendering, one binary instead of themes + plugins + hosting.
