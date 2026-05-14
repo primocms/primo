@@ -41,7 +41,7 @@
 		"browser-image-compression": "^2.0.2",
 		"clsx": "^2.1.1",
 		"codemirror": "^6.0.2",
-		"codemirror-lang-svelte": "^1.0.0",
+		"codemirror-lang-svelte": "^2.1.0",
 		"estree-walker": "^3.0.3",
 		"highlight.js": "^11.11.1",
 		"idb-keyval": "^6.2.2",
