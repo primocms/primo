@@ -478,7 +478,9 @@ func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderNam
 		for _, field := range fields {
 			existingEntries, _ := pb.FindRecordsByFilter("library_symbol_entries", "field = {:field}", "", 0, 0, dbx.Params{"field": field.Id})
 			for _, entry := range existingEntries {
-				pb.Delete(entry)
+				if err := pb.Delete(entry); err != nil {
+					return fmt.Errorf("delete stale library_symbol_entry %s for symbol %s field %s: %w", entry.Id, symbol.Id, field.Id, err)
+				}
 			}
 		}
 	}
@@ -646,7 +648,9 @@ func importLibraryBlockContent(pb *pocketbase.PocketBase, symbol *core.Record, d
 	for _, field := range fields {
 		existingEntries, _ := pb.FindRecordsByFilter("library_symbol_entries", "field = {:field}", "", 0, 0, dbx.Params{"field": field.Id})
 		for _, entry := range existingEntries {
-			pb.Delete(entry)
+			if err := pb.Delete(entry); err != nil {
+				return fmt.Errorf("delete stale library_symbol_entry %s for symbol %s field %s: %w", entry.Id, symbol.Id, field.Id, err)
+			}
 		}
 	}
 

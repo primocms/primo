@@ -6,8 +6,7 @@ Primo is a CMS for developers who build sites for clients who need to manage the
 
 **One-click deploy:**
 
-<!-- TODO: confirm Railway deploy template is live at primocms before shipping; falls back to palacms -->
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/primocms?referralCode=RCPU7k)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
 
 ![screenshot](https://cdn.primo.page/f52960e1-0bb0-4c64-9f70-5a9994ce95fc/staging/_images/1739675414227Screenshot%202025-02-15%20at%2010.10.10%E2%80%AFPM.png)
 
@@ -39,23 +38,20 @@ Your clients keep editing content in the browser the whole time. Code and conten
 
 The easiest way to get started is Railway:
 
-<!-- TODO: confirm Railway deploy template is live at primocms before shipping -->
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/primocms?referralCode=RCPU7k)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
 
 Or run it anywhere Docker runs:
 
-<!-- TODO: confirm ghcr.io/primocms/primo image is published before shipping; current image is ghcr.io/palacms/palacms -->
 ```bash
-docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/primocms/primo:latest
+docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/palacms/palacms:latest
 ```
 
 Then open your server's URL to create your first site.
 
 **Next steps:**
-<!-- TODO: confirm docs.primo.page domain is live before shipping; current docs are at docs.palacms.com -->
-1. **[Quickstart](https://docs.primo.page/getting-started/quickstart)** — key concepts
-2. **[Build your first site](https://docs.primo.page/building-sites/your-first-site)**
-3. **[Write your first block](https://docs.primo.page/building-sites/writing-components)**
+1. **[Quickstart](https://docs.palacms.com/getting-started/quickstart)** — key concepts
+2. **[Build your first site](https://docs.palacms.com/building-sites/your-first-site)**
+3. **[Write your first block](https://docs.palacms.com/building-sites/writing-components)**
 
 ## Who it's for
 
@@ -70,8 +66,7 @@ If you're building a web app, Primo isn't it — check out [tinykit](https://git
 - **vs. Astro / Eleventy** — Primo is a static site generator too, but bundles the CMS, block library, and multi-site hosting with it. You get the SSG workflow *and* the client handoff.
 - **vs. Sanity / Storyblok** — structured content and component blocks, but monolithic: no separate frontend to wire up, no API tokens, no deployment glue.
 
-<!-- TODO: commit to building docs.primo.page/comparison, or drop this link -->
-[Full comparison →](https://docs.primo.page/comparison)
+[Full comparison →](https://docs.palacms.com/comparison)
 
 ## Project status
 
@@ -82,19 +77,17 @@ If you're building a web app, Primo isn't it — check out [tinykit](https://git
 
 ## Documentation
 
-<!-- TODO: confirm docs.primo.page domain is live before shipping -->
-- **[Installation](https://docs.primo.page/getting-started/installation)** — self-host or run locally
-- **[Quickstart](https://docs.primo.page/getting-started/quickstart)** — key concepts
-- **[Writing Blocks](https://docs.primo.page/building-sites/writing-components)** — Svelte components
-- **[Field Types](https://docs.primo.page/reference/field-types)** — content field reference
-- **[Managing Sites](https://docs.primo.page/dashboard/managing-sites)** — site groups
-- **[Page Types](https://docs.primo.page/building-sites/defining-page-types)** — custom page structures
-- **[Collaboration](https://docs.primo.page/collaboration/inviting-collaborators)** — working with editors
-- **[Keyboard Shortcuts](https://docs.primo.page/reference/keyboard-shortcuts)**
+- **[Installation](https://docs.palacms.com/getting-started/installation)** — self-host or run locally
+- **[Quickstart](https://docs.palacms.com/getting-started/quickstart)** — key concepts
+- **[Writing Blocks](https://docs.palacms.com/building-sites/writing-components)** — Svelte components
+- **[Field Types](https://docs.palacms.com/reference/field-types)** — content field reference
+- **[Managing Sites](https://docs.palacms.com/dashboard/managing-sites)** — site groups
+- **[Page Types](https://docs.palacms.com/building-sites/defining-page-types)** — custom page structures
+- **[Collaboration](https://docs.palacms.com/collaboration/inviting-collaborators)** — working with editors
+- **[Keyboard Shortcuts](https://docs.palacms.com/reference/keyboard-shortcuts)**
 
 ## Community
 
-<!-- TODO: confirm github.com/primocms/primo org is live before shipping; current repo is github.com/palacms/palacms -->
 - **[GitHub Issues](https://github.com/primocms/primo/issues)** — bugs and feature requests
 - **[GitHub Discussions](https://github.com/primocms/primo/discussions)** — questions
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — if you want to hack on Primo itself

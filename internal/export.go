@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"reflect"
 	"sort"
 	"strings"
@@ -151,9 +152,18 @@ func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.InternalServerError("Export failed: "+err.Error(), err)
 			}
 
-			// Return as ZIP download
+			// Return as ZIP download. mime.FormatMediaType escapes the
+			// parameter value, so a site name with quotes or backslashes
+			// can't break out of the Content-Disposition header. We strip
+			// control and non-ASCII bytes too, since FormatMediaType would
+			// otherwise reject the parameter entirely.
+			filename := asciiHeaderFilename(sanitizeFilename(site.GetString("name"))) + ".zip"
+			disposition := mime.FormatMediaType("attachment", map[string]string{"filename": filename})
+			if disposition == "" {
+				disposition = "attachment"
+			}
 			e.Response.Header().Set("Content-Type", "application/zip")
-			e.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", sanitizeFilename(site.GetString("name"))))
+			e.Response.Header().Set("Content-Disposition", disposition)
 			e.Response.Write(zipData)
 			return nil
 		})
@@ -789,16 +799,14 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		name := symbolNames[symbol.Id]
 		blockIds[name] = symbol.Id
 
-		// Get block field IDs
+		// Get block field IDs. Nested fields with the same leaf key (e.g.
+		// hero.title and cta.title) would collide on bare-key map keys, so
+		// we qualify with the parent field ID (empty for top-level fields).
 		fields, err := pb.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbol.Id})
 		if err == nil {
 			fieldMap := make(map[string]string)
 			for _, field := range fields {
-				key := field.GetString("key")
-				if key == "" {
-					key = field.GetString("name")
-				}
-				fieldMap[key] = field.Id
+				fieldMap[manifestFieldKey(field)] = field.Id
 			}
 			blockFieldIds[name] = fieldMap
 		}
@@ -811,16 +819,13 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		name := pageTypeNames[pt.Id]
 		ptIds[name] = pt.Id
 
-		// Get page type field IDs
+		// Get page type field IDs. Composite key prevents nested-field
+		// collisions, mirroring the block_fields builder above.
 		fields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pt.Id})
 		if err == nil {
 			fieldMap := make(map[string]string)
 			for _, field := range fields {
-				key := field.GetString("key")
-				if key == "" {
-					key = field.GetString("name")
-				}
-				fieldMap[key] = field.Id
+				fieldMap[manifestFieldKey(field)] = field.Id
 			}
 			ptFieldIds[name] = fieldMap
 		}
@@ -883,6 +888,36 @@ func sanitizeFilename(name string) string {
 	name = strings.ReplaceAll(name, " ", "-")
 	name = strings.ToLower(name)
 	return name
+}
+
+// manifestFieldKey returns "<parent>:<key>" for use as a map key in the export
+// manifest. Bare key is not unique within a symbol/page_type — the underlying
+// uniqueness is (key, parent) — so nested fields with the same leaf key would
+// otherwise overwrite each other.
+func manifestFieldKey(field *core.Record) string {
+	key := field.GetString("key")
+	if key == "" {
+		key = field.GetString("name")
+	}
+	return field.GetString("parent") + ":" + key
+}
+
+// asciiHeaderFilename drops bytes that mime.FormatMediaType refuses to quote
+// (control chars and any byte >= 0x80), so the resulting Content-Disposition
+// always has a usable filename parameter.
+func asciiHeaderFilename(name string) string {
+	var b strings.Builder
+	b.Grow(len(name))
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		if c >= 0x20 && c < 0x7f {
+			b.WriteByte(c)
+		}
+	}
+	if b.Len() == 0 {
+		return "site"
+	}
+	return b.String()
 }
 
 func buildPagePath(pageId string, parents map[string]string, slugs map[string]string) string {

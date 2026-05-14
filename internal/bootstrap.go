@@ -32,11 +32,20 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 }
 
 func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
-	// Check if any sites exist - only allow bootstrap when none exist
-	// Exception: localhost can always bootstrap (for local dev)
-	sites, err := pb.FindAllRecords("sites")
-	if err == nil && len(sites) > 0 && !IsLocalhost(e) {
-		return e.ForbiddenError("Bootstrap not allowed - sites already exist", nil)
+	// Check if any sites exist - only allow bootstrap when none exist.
+	// Exception: localhost can always bootstrap (for local dev), and we
+	// keep that exception even when the lookup fails so a broken DB on
+	// a dev machine doesn't lock the operator out. For non-localhost
+	// callers we fail closed: a lookup error is treated as "can't prove
+	// no sites exist" → 500, rather than silently allowing bootstrap.
+	if !IsLocalhost(e) {
+		sites, err := pb.FindAllRecords("sites")
+		if err != nil {
+			return e.InternalServerError("Failed to check existing sites", err)
+		}
+		if len(sites) > 0 {
+			return e.ForbiddenError("Bootstrap not allowed - sites already exist", nil)
+		}
 	}
 
 	// Parse form data
@@ -103,6 +112,11 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 	if err := pb.Save(site); err != nil {
 		return e.InternalServerError("Failed to create site", err)
 	}
+
+	// Re-bootstrap by host may match a record with a different ID, and
+	// PocketBase may regenerate IDs it considers invalid. Return the
+	// authoritative persisted ID rather than the request's siteId.
+	siteId = site.Id
 
 	// Check for ZIP file upload
 	file, _, err := e.Request.FormFile("file")

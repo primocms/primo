@@ -7,15 +7,27 @@ import { rich_text_extensions } from '$lib/builder/rich-text/extensions'
 
 import { processors } from './component.js'
 
+const utf8_decoder = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null
+
+function is_byte_array(value: unknown): value is number[] {
+	return Array.isArray(value) && value.length > 0 && value.every(item => Number.isInteger(item) && item >= 0 && item <= 255)
+}
+
+// Spread-based String.fromCharCode throws RangeError on large arrays and only
+// handles code points, not UTF-8 bytes. TextDecoder handles both safely.
+function decode_bytes(bytes: number[]): string {
+	const buf = Uint8Array.from(bytes)
+	return utf8_decoder ? utf8_decoder.decode(buf) : String.fromCharCode.apply(null, Array.from(buf) as number[])
+}
+
 /**
  * Normalize entry values that may have been stored incorrectly as byte arrays.
  * YAML can marshal []byte as integer arrays, which need to be converted back to strings.
  */
 export function normalize_entry_value(value: unknown): unknown {
 	// Handle byte arrays (YAML sometimes marshals []byte as integer arrays)
-	if (Array.isArray(value) && value.length > 0 && value.every(item => typeof item === 'number' && item >= 0 && item <= 255)) {
-		// Convert array of character codes back to string
-		const str = String.fromCharCode(...value)
+	if (is_byte_array(value)) {
+		const str = decode_bytes(value)
 		// Try to parse as JSON first (might be serialized JSON)
 		try {
 			return JSON.parse(str)
@@ -250,9 +262,8 @@ export function convert_rich_text_to_html(tiptap_obj) {
 		let processed_obj = tiptap_obj
 
 		// Handle byte arrays (YAML sometimes marshals []byte as integer arrays)
-		if (Array.isArray(tiptap_obj) && tiptap_obj.every(item => typeof item === 'number')) {
-			// Convert array of character codes back to string
-			const str = String.fromCharCode(...tiptap_obj)
+		if (is_byte_array(tiptap_obj)) {
+			const str = decode_bytes(tiptap_obj)
 			// Try to parse as JSON first (it might be a JSON string of TipTap content)
 			try {
 				processed_obj = JSON.parse(str)

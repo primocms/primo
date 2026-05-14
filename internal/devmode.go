@@ -179,6 +179,10 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 
 		// WebSocket endpoint for dev indicator
 		serveEvent.Router.GET("/__pala_dev_ws__", func(e *core.RequestEvent) error {
+			if !IsLocalhost(e) {
+				return e.ForbiddenError("Localhost only", nil)
+			}
+
 			conn, err := upgrader.Upgrade(e.Response, e.Request, nil)
 			if err != nil {
 				return err

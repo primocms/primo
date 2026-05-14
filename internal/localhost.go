@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"net"
 	"os"
-	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
@@ -25,14 +25,18 @@ func resolveAuthorMode() string {
 	}
 }
 
-// IsLocalhost checks if the request is coming from localhost
+// IsLocalhost reports whether the request originates from the local machine.
+// It checks the underlying connection's remote address (the client-controlled
+// Host header is ignored) so the gate cannot be bypassed by spoofing
+// `Host: localhost` against a public listener.
 func IsLocalhost(e *core.RequestEvent) bool {
-	host := e.Request.Host
-	// Remove port if present
-	if idx := strings.LastIndex(host, ":"); idx != -1 {
-		host = host[:idx]
+	addr := e.Request.RemoteAddr
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
 	}
-	return host == "localhost" || host == "127.0.0.1" || strings.HasSuffix(host, ".localhost")
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 // RegisterDevAuthEndpoint registers an endpoint for localhost dev authentication
@@ -66,8 +70,10 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 				}
 			}
 
-			// Ensure dev user has developer role (in case user was created previously without it)
-			if user.GetString("serverRole") == "" {
+			// Always upgrade the dev principal to developer — a pre-existing
+			// user record (e.g. created via signup before dev-auth was used)
+			// could carry a lower role that would silently deny access.
+			if user.GetString("serverRole") != "developer" {
 				user.Set("serverRole", "developer")
 				if err := pb.Save(user); err != nil {
 					return e.InternalServerError("Failed to update dev user role", err)
