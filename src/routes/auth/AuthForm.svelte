@@ -230,11 +230,11 @@
 			justify-content: center;
 			align-items: center;
 			padding: 0.65rem;
-			border: 1.5px solid var(--pala-primary-color);
+			border: 1.5px solid var(--primo-primary-color);
 			border-radius: 0.25rem;
 
 			&:hover {
-				background-color: var(--pala-primary-color);
+				background-color: var(--primo-primary-color);
 				transition: 0.2s;
 				color: white;
 			}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/palacms/palacms/internal"
@@ -8,7 +9,11 @@ import (
 	"github.com/pocketbase/pocketbase"
 )
 
+// Build info - set via ldflags
+var BuildTime = "dev"
+
 func main() {
+	fmt.Printf("[palacms build: %s]\n", BuildTime)
 	pb := pocketbase.New()
 
 	if err := setup(pb); err != nil {
@@ -21,6 +26,10 @@ func main() {
 }
 
 func setup(pb *pocketbase.PocketBase) error {
+	if err := internal.RegisterCORS(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterVersion(pb); err != nil {
 		return err
 	}
@@ -62,6 +71,34 @@ func setup(pb *pocketbase.PocketBase) error {
 	}
 
 	if err := internal.RegisterCloneSiteEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterExportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterLibraryExportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterImportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterLibraryImportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterBootstrapEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterDevAuthEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterDevMode(pb); err != nil {
 		return err
 	}
 

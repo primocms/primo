@@ -153,7 +153,7 @@
 					}}
 					value={entry.value.url}
 					type="url"
-					placeholder="https://palacms.com"
+					placeholder="https://example.com"
 				/>
 			{/if}
 		</div>

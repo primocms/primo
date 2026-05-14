@@ -556,10 +556,10 @@
 		&.active {
 			/* background: #222; */
 			border-bottom-right-radius: 0;
-			/* outline: 1px solid var(--pala-primary-color); */
+			/* outline: 1px solid var(--primo-primary-color); */
 
 			a {
-				color: var(--pala-primary-color);
+				color: var(--primo-primary-color);
 			}
 		}
 
@@ -618,7 +618,7 @@
 					overflow: hidden;
 					text-overflow: ellipsis;
 					width: 100%;
-					color: var(--pala-primary-color);
+					color: var(--primo-primary-color);
 
 					span {
 						color: var(--color-gray-5);
@@ -636,7 +636,7 @@
 				font-size: 1.5rem;
 
 				&:hover {
-					color: var(--pala-primary-color);
+					color: var(--primo-primary-color);
 				}
 
 				&.active {
@@ -662,7 +662,7 @@
 
 				&:hover {
 					background: var(--color-gray-8);
-					color: var(--pala-primary-color);
+					color: var(--primo-primary-color);
 				}
 
 				span {
@@ -726,7 +726,7 @@
 
 		&.active div {
 			opacity: 1;
-			background: var(--pala-primary-color);
+			background: var(--primo-primary-color);
 			height: 3px;
 			animation: pulse 0.6s ease-in-out infinite;
 		}
@@ -754,10 +754,10 @@
 
 		&.active div {
 			opacity: 1;
-			background: var(--pala-primary-color);
+			background: var(--primo-primary-color);
 			height: 3px;
 			animation: pulse 0.6s ease-in-out infinite;
-			box-shadow: 0 0 8px var(--pala-primary-color);
+			box-shadow: 0 0 8px var(--primo-primary-color);
 		}
 	}
 

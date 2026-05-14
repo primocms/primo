@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink } from 'lucide-svelte'
+	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload } from 'lucide-svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -14,6 +14,7 @@
 	import { marketplace, self } from '$lib/pocketbase/managers'
 	import { watch } from 'runed'
 	import BlockPickerPanel from '$lib/components/BlockPickerPanel.svelte'
+	import { Snapshot } from '$lib/common/models/Snapshot'
 
 	/*
   Create Site Wizard
@@ -22,7 +23,7 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated }: { oncreated?: () => void } = $props()
+	const { oncreated }: { oncreated?: (created: { id: string; host: string }) => void } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
@@ -91,11 +92,50 @@
 
 	let starter_tab = $state('sites')
 	let selected_starter_id = $state(``)
-	let selected_starter_source = $state<'local' | 'marketplace'>('local')
+	let selected_starter_source = $state<'local' | 'marketplace' | 'file'>('local')
 	// Select a starter site by id and source.
 	function select_starter(site_id: string, source: 'local' | 'marketplace' = 'local') {
 		selected_starter_id = site_id
 		selected_starter_source = source
+		// Clear file selection when selecting a site
+		uploaded_snapshot_file = null
+		uploaded_snapshot = null
+	}
+
+	// File upload state
+	let uploaded_snapshot_file: File | null = $state(null)
+	let uploaded_snapshot: Snapshot | null = $state(null)
+	let file_upload_error: string | null = $state(null)
+	let parsing_file = $state(false)
+
+	async function handle_file_upload(event: Event) {
+		const input = event.target as HTMLInputElement
+		const file = input.files?.[0]
+		if (!file) return
+
+		file_upload_error = null
+		parsing_file = true
+
+		try {
+			uploaded_snapshot = await Snapshot.decodeAsync(file)
+			uploaded_snapshot_file = file
+			selected_starter_source = 'file'
+			selected_starter_id = '' // Clear site selection
+		} catch (e) {
+			console.error('Failed to parse snapshot file:', e)
+			file_upload_error = e instanceof Error ? e.message : 'Invalid snapshot file'
+			uploaded_snapshot_file = null
+			uploaded_snapshot = null
+		} finally {
+			parsing_file = false
+		}
+	}
+
+	function clear_uploaded_file() {
+		uploaded_snapshot_file = null
+		uploaded_snapshot = null
+		file_upload_error = null
+		selected_starter_source = 'local'
 	}
 
 	const selected_starter_site = $derived(
@@ -106,7 +146,7 @@
 	const step_order = ['name', 'starter', 'blocks'] as const
 	let step = $state<(typeof step_order)[number]>('name')
 	const can_go_starter = $derived(!!site_name)
-	const can_go_blocks = $derived(!!site_name && !!selected_starter_id)
+	const can_go_blocks = $derived(!!site_name && (!!selected_starter_id || !!uploaded_snapshot))
 
 	// Optional blocks selection; keep resolved symbol pointers only.
 	let selected_block_ids = $state<{ id: string; source: 'library' | 'marketplace' }[]>([])
@@ -138,14 +178,14 @@
 		starter_snapshots
 	})
 
-	let completed = $derived(Boolean(site_name && selected_starter_id))
+	let completed = $derived(Boolean(site_name && (selected_starter_id || uploaded_snapshot)))
 	let loading = $state(false)
 	let progress_message = $state('')
 	let error_message = $state('')
 
 	// Clone the selected starter via server-side endpoint
 	async function create_site() {
-		if (!selected_starter_id) return
+		if (!selected_starter_id && !uploaded_snapshot_file) return
 		loading = true
 		error_message = ''
 		progress_message = 'Creating site...'
@@ -157,44 +197,63 @@
 				await self.commit()
 			}
 
-			// Build request body for server-side clone
-			const request_body: {
-				name: string
-				host: string
-				group_id: string
-				source_site_id?: string
-				snapshot_url?: string
-			} = {
-				name: site_name,
-				host: pageState.url.host,
-				group_id: site_group?.id ?? ''
-			}
+			let response: Response
 
-			if (selected_starter_source === 'marketplace') {
-				// Get snapshot URL for marketplace clone
-				const snapshot_record = starter_snapshots?.find((snapshot) => snapshot.site === selected_starter_id)
-				if (!snapshot_record) {
-					console.error('Snapshot not found. Selected starter:', selected_starter_id, 'Available snapshots:', starter_snapshots)
-					throw new Error('Snapshot not found')
-				}
-				if (typeof snapshot_record.file !== 'string') {
-					throw new Error('Invalid snapshot file. Please try a different starter.')
-				}
-				request_body.snapshot_url = `${marketplace.instance?.baseURL}/api/files/site_snapshots/${snapshot_record.id}/${snapshot_record.file}`
+			if (selected_starter_source === 'file' && uploaded_snapshot_file) {
+				// File upload - use FormData
+				const form_data = new FormData()
+				form_data.append('name', site_name)
+				form_data.append('host', pageState.url.host)
+				form_data.append('group_id', site_group?.id ?? '')
+				form_data.append('snapshot_file', uploaded_snapshot_file)
+
+				response = await fetch(`${self.instance?.baseURL}/api/palacms/clone-site`, {
+					method: 'POST',
+					headers: {
+						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+					},
+					body: form_data
+				})
 			} else {
-				// Local clone
-				request_body.source_site_id = selected_starter_id
-			}
+				// Build request body for server-side clone
+				const request_body: {
+					name: string
+					host: string
+					group_id: string
+					source_site_id?: string
+					snapshot_url?: string
+				} = {
+					name: site_name,
+					host: pageState.url.host,
+					group_id: site_group?.id ?? ''
+				}
 
-			// Call server-side clone endpoint
-			const response = await fetch(`${self.instance?.baseURL}/api/palacms/clone-site`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
-				},
-				body: JSON.stringify(request_body)
-			})
+				if (selected_starter_source === 'marketplace') {
+					// Get snapshot URL for marketplace clone
+					const snapshot_record = starter_snapshots?.find((snapshot) => snapshot.site === selected_starter_id)
+					if (!snapshot_record) {
+						console.error('Snapshot not found. Selected starter:', selected_starter_id, 'Available snapshots:', starter_snapshots)
+						throw new Error('Snapshot not found')
+					}
+					if (typeof snapshot_record.file !== 'string') {
+						throw new Error('Invalid snapshot file. Please try a different starter.')
+					}
+					request_body.snapshot_url = `${marketplace.instance?.baseURL}/api/files/site_snapshots/${snapshot_record.id}/${snapshot_record.file}`
+				} else {
+					// Local clone
+					request_body.source_site_id = selected_starter_id
+				}
+
+				// Call server-side clone endpoint
+				response = await fetch(`${self.instance?.baseURL}/api/palacms/clone-site`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+					},
+					body: JSON.stringify(request_body)
+				})
+			}
 
 			if (!response.ok) {
 				const error_data = await response.json().catch(() => ({}))
@@ -203,13 +262,14 @@
 
 			const result = await response.json()
 			created_site_id = result.id
+			created_site_host = result.host
 			done_creating_site = true
 
 			// If no blocks to copy, finish immediately without waiting for
 			// the reactive store to sync (avoids race condition on large templates)
 			if (selected_block_ids.length === 0) {
 				loading = false
-				oncreated?.()
+				oncreated?.({ id: result.id, host: result.host })
 				return
 			}
 		} catch (e) {
@@ -221,6 +281,7 @@
 
 	// Track the created site ID from server response
 	let created_site_id = $state('')
+	let created_site_host = $state('')
 
 	// Find the created site - first try by ID from server response, then fall back to name match
 	const created_sites = $derived(Sites.list({ filter: { host: pageState.url.host } }) ?? [])
@@ -236,11 +297,12 @@
 	$effect(() => {
 		if (!finalized && done_creating_site && created_site) {
 			finalized = true
+			const created_payload = { id: created_site_id, host: created_site_host || created_site.host }
 			// Copy optional blocks if any were selected
 			if (selected_block_ids.length > 0) {
 				copy_selected_blocks_to_site()
 					.then(() => self.commit())
-					.then(() => oncreated?.())
+					.then(() => oncreated?.(created_payload))
 					.catch((e) => console.error(e))
 					.finally(() => {
 						loading = false
@@ -248,7 +310,7 @@
 			} else {
 				// No blocks to copy, just finish
 				loading = false
-				oncreated?.()
+				oncreated?.(created_payload)
 			}
 		}
 	})
@@ -379,20 +441,56 @@
 						/>
 					{:else}
 						<!-- Groups sidebar -->
-						<div class="h-full md:border-r flex-1">
-							<div class="p-2 text-xs text-muted-foreground">Groups</div>
-							<ul class="p-2 pt-0 flex flex-col gap-1">
-								{#each all_site_groups ?? [] as group (group.id)}
-									<li>
-										<button
-											class="w-full text-left px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground {active_starters_group_id === group.id ? 'bg-accent text-accent-foreground' : ''}"
-											onclick={() => (active_starters_group_id = group.id)}
-										>
-											{group.name}
-										</button>
-									</li>
-								{/each}
-							</ul>
+						<div class="h-full md:border-r flex-1 flex flex-col">
+							<div class="flex-1">
+								<div class="p-2 text-xs text-muted-foreground">Groups</div>
+								<ul class="p-2 pt-0 flex flex-col gap-1">
+									{#each all_site_groups ?? [] as group (group.id)}
+										<li>
+											<button
+												class="w-full text-left px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground {active_starters_group_id === group.id ? 'bg-accent text-accent-foreground' : ''}"
+												onclick={() => (active_starters_group_id = group.id)}
+											>
+												{group.name}
+											</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+							<!-- Import from file section -->
+							<div class="border-t p-3">
+								{#if uploaded_snapshot_file}
+									<div class="rounded-md border bg-muted/50 p-2 space-y-2">
+										<div class="flex items-center gap-2">
+											<Check class="h-4 w-4 text-primary flex-shrink-0" />
+											<span class="text-xs truncate">{uploaded_snapshot_file.name}</span>
+										</div>
+										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>
+											Remove
+										</Button>
+									</div>
+								{:else}
+									<label class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file ? 'opacity-50 pointer-events-none' : ''}">
+										{#if parsing_file}
+											<Loader class="h-4 w-4 animate-spin" />
+											<span>Reading...</span>
+										{:else}
+											<Upload class="h-4 w-4" />
+											<span>Import .primo</span>
+										{/if}
+										<input
+											type="file"
+											class="hidden"
+											accept=".primo,.pala"
+											onchange={handle_file_upload}
+											disabled={parsing_file}
+										/>
+									</label>
+								{/if}
+								{#if file_upload_error}
+									<p class="text-xs text-destructive mt-2">{file_upload_error}</p>
+								{/if}
+							</div>
 						</div>
 						<!-- Server Sites grid -->
 						<div class="flex-4 overflow-auto">
@@ -467,6 +565,16 @@
 								</a>
 							</div>
 						{/if}
+					{:else if uploaded_snapshot}
+						<div class="flex-1 flex flex-col items-center justify-center gap-4 px-6 py-8 text-center">
+							<div class="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+								<Check class="h-8 w-8 text-primary" />
+							</div>
+							<div>
+								<p class="font-medium">{uploaded_snapshot.records.sites[0]?.name ?? 'Imported Site'}</p>
+								<p class="text-sm text-muted-foreground mt-1">Ready to create</p>
+							</div>
+						</div>
 					{:else}
 						<div class="flex-1 flex flex-col items-center justify-center gap-2 px-6 py-8 text-center">
 							<p class="text-xs text-muted-foreground/80 max-w-[14rem]">Choose a starter site on the left to see a live preview here.</p>

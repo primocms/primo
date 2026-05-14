@@ -122,10 +122,19 @@
 			<span class="text-xs font-normal">Edit Content</span>
 		{/if}
 	</button>
-	{#if DEBUGGING}
-		<button class="block-id" use:click_to_copy>
-			{id}
-		</button>
+	{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
+		<Tooltip.Provider delayDuration={100} disableHoverableContent={true}>
+			<Tooltip.Root>
+				<Tooltip.Trigger>
+					<button class="block-id" use:click_to_copy aria-label="Copy block ID">
+						<Icon icon="ph:copy" />
+					</button>
+				</Tooltip.Trigger>
+				<Tooltip.Content side="bottom">
+					Copy block ID: {id}
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</Tooltip.Provider>
 	{/if}
 {/snippet}
 
@@ -212,7 +221,7 @@
 		&:hover {
 			z-index: 1; /* show full shadow */
 			/* box-shadow: var(--primo-ring); */
-			/* background: var(--pala-primary-color); */
+			/* background: var(--primo-primary-color); */
 			/* color: var(--colr-gray-9); */
 			background: #292929;
 			color: #E7E7E7l;

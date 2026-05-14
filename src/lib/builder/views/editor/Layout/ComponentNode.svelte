@@ -1467,13 +1467,13 @@
 		background-color: var(--color-gray-9);
 		color: var(--primo-color-white);
 		/* border-bottom-width: 2px; */
-		border-color: var(--pala-primary-color);
+		border-color: var(--primo-primary-color);
 	}
 	.floating-menu {
 		overflow: hidden;
 		transform: translateY(-0.5rem);
 		color: var(--primo-color-white);
 		background-color: var(--color-gray-9);
-		border-color: var(--pala-primary-color);
+		border-color: var(--primo-primary-color);
 	}
 </style>

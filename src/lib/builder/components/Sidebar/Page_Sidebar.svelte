@@ -17,6 +17,7 @@
 	import { site_context } from '$lib/builder/stores/context'
 	import { setFieldEntries } from '../Fields/FieldsContent.svelte'
 	import { current_user } from '$lib/pocketbase/user'
+	import { author_mode } from '$lib/pocketbase/author_mode'
 	import { resolve_page } from '$lib/pages'
 	import { self } from '$lib/pocketbase/managers'
 
@@ -136,6 +137,7 @@
 				fields={page_type_fields}
 				entries={page_entries}
 				oninput={(values) => {
+					if ($author_mode === 'files') return
 					setFieldEntries({
 						fields: page_type_fields,
 						entries: page_entries,
@@ -147,6 +149,7 @@
 					commit_task = setTimeout(() => self.commit(), 500)
 				}}
 				ondelete={(entry_id) => {
+					if ($author_mode === 'files') return
 					PageEntries.delete(entry_id)
 					clearTimeout(commit_task)
 					commit_task = setTimeout(() => self.commit(), 500)

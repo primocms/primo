@@ -1,5 +1,6 @@
 import type { ObjectWithId } from './Object'
 import { OrderedSvelteMap } from './OrderedSvelteMap'
+import { is_files_mode } from './author_mode'
 import type Client from 'pocketbase'
 
 export type Change<T extends ObjectWithId> =
@@ -72,7 +73,36 @@ export const createCollectionManager = (instance?: Client) => {
 		changes,
 		records,
 		lists,
+		// Mark all cached lists as invalidated so the next read re-fetches from
+		// the server. Use after out-of-band DB writes (e.g. CLI import in local
+		// dev where realtime subscriptions are off) to avoid serving stale ids.
+		// `block` drops cached ids so consumers' loaded-checks (which read the
+		// list to gate work) wait for the refetch instead of racing with stale
+		// data — pass true when correctness matters more than avoiding a flicker.
+		invalidate_lists: (options?: { collection_name?: string; block?: boolean }) => {
+			const { collection_name, block = false } = options ?? {}
+			for (const [list_id, list] of lists) {
+				if (!list) continue
+				if (collection_name && !list_id.startsWith(collection_name)) continue
+				if (block) {
+					lists.delete(list_id)
+				} else {
+					lists.set(list_id, { ...list, invalidated: true })
+				}
+			}
+		},
 		commit: async () => {
+			// In files-author mode the CLI's sync layer overwrites the DB on
+			// the next pull, so committing here would create user-visible
+			// edits that vanish. Drop pending changes instead.
+			if (is_files_mode()) {
+				for (const [id, change] of [...changes]) {
+					if (!change.committed) {
+						changes.delete(id)
+					}
+				}
+				return
+			}
 			promise = promise.then(commitChanges, commitChanges)
 			return promise
 		},

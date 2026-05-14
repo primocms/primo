@@ -20,6 +20,11 @@ func RegisterValidation(pb *pocketbase.PocketBase) error {
 	}
 
 	pb.OnRecordValidate().BindFunc(func(event *core.RecordEvent) error {
+		// Skip validation in dev mode for performance (import creates hundreds of records)
+		if DevMode {
+			return event.Next()
+		}
+
 		var err error
 
 		// Evaluate models

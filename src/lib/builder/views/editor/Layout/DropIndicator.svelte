@@ -10,7 +10,7 @@
 		position: fixed;
 		pointer-events: none;
 		height: 4px;
-		background: var(--pala-primary-color);
+		background: var(--primo-primary-color);
 		border-radius: 2px;
 		box-shadow: 0 0 8px rgba(248, 68, 73, 0.4);
 	}

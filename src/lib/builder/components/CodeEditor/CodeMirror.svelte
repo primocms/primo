@@ -744,7 +744,7 @@
 
 	:global(.ͼo .cm-tooltip-autocomplete > ul > li .cm-completionLabel) {
 		padding: 3px 8px;
-		border-right: 1px solid var(--pala-primary-color);
+		border-right: 1px solid var(--primo-primary-color);
 		color: white;
 		font-size: 0.75rem;
 		font-family: 'Fira Code';
@@ -833,7 +833,7 @@
 	}
 
 	.tooltip-rule-header:hover .tooltip-rule-selector {
-		color: var(--pala-primary-color);
+		color: var(--primo-primary-color);
 	}
 
 	.tooltip-rule-selector {

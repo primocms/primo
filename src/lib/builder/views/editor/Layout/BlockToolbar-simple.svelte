@@ -51,8 +51,8 @@
 					<span>Edit Content</span>
 				{/if}
 			</button>
-			{#if DEBUGGING}
-				<button class="block-id" use:click_to_copy>
+			{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
+				<button class="block-id" use:click_to_copy title="Copy block ID: {id}">
 					{id}
 				</button>
 			{/if}

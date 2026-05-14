@@ -42,11 +42,11 @@
 		background: transparent;
 
 		&.outlined {
-			border: 2px solid var(--pala-primary-color);
+			border: 2px solid var(--primo-primary-color);
 		}
 
 		&:hover {
-			background: var(--pala-primary-color);
+			background: var(--primo-primary-color);
 		}
 	}
 </style>

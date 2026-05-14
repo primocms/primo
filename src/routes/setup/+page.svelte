@@ -5,12 +5,10 @@
 	import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
 	import { self } from '$lib/pocketbase/managers'
 
-	let current_step = $state(1)
 	let email = $state('')
 	let password = $state('')
 	let confirm_password = $state('')
 	let loading = $state(false)
-	let navigating = $state(false)
 	let checking_setup = $state(true)
 	let error = $state('')
 	const is_form_valid = $derived(email.trim() !== '' && password.length >= 8 && confirm_password !== '' && password === confirm_password)
@@ -70,7 +68,8 @@
 				console.warn('Could not authenticate user:', authError)
 			}
 
-			current_step = 2
+			// Go straight to site
+			goto('/admin/site', { replaceState: true })
 		} catch (err: any) {
 			console.error('User creation error:', err)
 
@@ -87,11 +86,6 @@
 		loading = false
 	}
 
-	const complete_setup = () => {
-		console.log('Completing setup, navigating to /admin/site')
-		navigating = true
-		goto('/admin/site', { replaceState: true })
-	}
 </script>
 
 <main class="primo-reset">
@@ -103,8 +97,8 @@
 				</div>
 			</div>
 			<header>
-				<h1>Welcome to Pala</h1>
-				<p class="subtitle">Set up your CMS in 2 simple steps</p>
+				<h1>Welcome to Primo</h1>
+				<p class="subtitle">Create your admin account to get started</p>
 			</header>
 
 			{#if checking_setup}
@@ -119,74 +113,34 @@
 					</div>
 				{/if}
 			{:else}
-				<div class="steps-indicator">
-					<div class="step" class:active={current_step === 1} class:completed={current_step > 1}>
-						<span>1</span>
-						Create Admin User
-					</div>
-					<div class="step" class:active={current_step === 2}>
-						<span>2</span>
-						Database Access
-					</div>
-				</div>
-
 				{#if error}
 					<div class="error">{error}</div>
 				{/if}
 
-				{#if current_step === 1}
-					<form class="form" onsubmit={create_user}>
-						<div class="fields">
-							<label>
-								<span>Email</span>
-								<input data-test-id="email" bind:value={email} type="email" name="email" required />
-							</label>
-							<label>
-								<span>Password</span>
-								<input data-test-id="password" bind:value={password} type="password" name="password" required minlength="8" />
-							</label>
-							<label>
-								<span>Confirm Password</span>
-								<input data-test-id="confirm-password" bind:value={confirm_password} type="password" name="confirm-password" required />
-							</label>
-						</div>
-						<button class="button" type="submit" data-test-id="create-user" disabled={loading || !is_form_valid}>
-							<span class:invisible={loading}>Create Admin User</span>
-							{#if loading}
-								<div class="animate-spin absolute">
-									<Loader />
-								</div>
-							{/if}
-						</button>
-					</form>
-				{:else if current_step === 2}
-					<div class="step-content">
-						<h2>Database Access</h2>
-
-						<p>Database admin access has been set up with your admin credentials.</p>
-						<div class="credentials-box">
-							<div class="credential-item">
-								<strong>Email:</strong>
-								{email}
-							</div>
-							<div class="credential-item">
-								<strong>Password:</strong>
-								Same as your admin password
-							</div>
-							<div class="info">💡 You can change these credentials from the database admin interface</div>
-							<a href="/_/" target="_blank" rel="noopener noreferrer" class="database-link">Open Database Admin</a>
-						</div>
-
-						<button class="button full-width" onclick={complete_setup} data-test-id="continue" disabled={navigating}>
-							<span class:invisible={navigating}>Create First Site</span>
-							{#if navigating}
-								<div class="animate-spin absolute">
-									<Loader />
-								</div>
-							{/if}
-						</button>
+				<form class="form" onsubmit={create_user}>
+					<div class="fields">
+						<label>
+							<span>Email</span>
+							<input data-test-id="email" bind:value={email} type="email" name="email" required />
+						</label>
+						<label>
+							<span>Password</span>
+							<input data-test-id="password" bind:value={password} type="password" name="password" required minlength="8" />
+						</label>
+						<label>
+							<span>Confirm Password</span>
+							<input data-test-id="confirm-password" bind:value={confirm_password} type="password" name="confirm-password" required />
+						</label>
 					</div>
-				{/if}
+					<button class="button" type="submit" data-test-id="create-user" disabled={loading || !is_form_valid}>
+						<span class:invisible={loading}>Create Account</span>
+						{#if loading}
+							<div class="animate-spin absolute">
+								<Loader />
+							</div>
+						{/if}
+					</button>
+				</form>
 			{/if}
 		</div>
 	</div>

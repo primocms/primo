@@ -43,6 +43,36 @@ export type CollectionMapping<T extends ObjectWithId, Options extends Collection
 
 const generateId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 15)
 
+// Fields written only by the publish worker (Publish.svelte.ts), not edited
+// in the UI. PocketBase realtime echoes every write back to the writing
+// client, so without this filter clicking "Build Preview" fans out one echo
+// per page/symbol and re-derives every consumer reading those records —
+// visible as the editor "refreshing" on publish.
+const PUBLISH_ARTIFACT_FIELDS: Record<string, string[]> = {
+	pages: ['compiled_html'],
+	site_symbols: ['compiled_js'],
+	sites: ['preview']
+}
+
+const ECHO_IGNORED_KEYS = ['updated', 'id', 'collectionId', 'collectionName']
+
+const isPublishArtifactEcho = (
+	collectionName: string,
+	before: Record<string, unknown> | undefined,
+	after: Record<string, unknown>
+): boolean => {
+	const artifactFields = PUBLISH_ARTIFACT_FIELDS[collectionName]
+	if (!artifactFields || !before) return false
+
+	const keys = new Set([...Object.keys(before), ...Object.keys(after)])
+	for (const key of keys) {
+		if (ECHO_IGNORED_KEYS.includes(key)) continue
+		if (before[key] === after[key]) continue
+		if (!artifactFields.includes(key)) return false
+	}
+	return true
+}
+
 export const createCollectionMapping = <T extends ObjectWithId, Options extends CollectionMappingOptions<T>>(
 	name: string,
 	model: z.ZodType<T>,
@@ -57,15 +87,24 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			const operation = data.action as 'create' | 'update' | 'delete'
 			const values = data.record
 			const id = values.id
+
+			const cached = records.get(id)?.data as Record<string, unknown> | undefined
+			if (operation === 'update' && isPublishArtifactEcho(name, cached, values)) {
+				// Refresh cache so future reads see the new artifact, but skip
+				// `changes` so reactive consumers don't re-derive.
+				records.set(id, { data: values })
+				return
+			}
+
 			const existingChange = changes.get(id)
 			if (operation === 'update' && existingChange && existingChange.operation === 'update' && !existingChange.committed) {
 				// Ignore remote change. Local change will overwrite it.
 				return
-			} else {
-				// Reset position of the change to place it the last
-				changes.delete(id)
-				changes.set(id, { collection: name, operation, committed: true, data: values })
 			}
+
+			// Reset position of the change to place it the last
+			changes.delete(id)
+			changes.set(id, { collection: name, operation, committed: true, data: values })
 		})
 	}
 
@@ -75,6 +114,15 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			Object.entries(options?.links ?? {}).map(([property, factory]) => [property, factory.bind({ ...object, collection: collectionMapping, values: () => ({ ...object }) })])
 		)
 		return Object.assign({}, object, links, { collection: collectionMapping, values: () => ({ ...object }) })
+	}
+
+	const tryMapObject = (record: unknown): MappedObject<T, Options> | null => {
+		try {
+			return mapObject(record)
+		} catch (error) {
+			console.error(`Invalid ${name} record`, record, error)
+			return null
+		}
 	}
 
 	const collectionMapping: CollectionMapping<T, Options> = {
@@ -106,6 +154,9 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 								records.set(id, { data: record })
 							})
 							.catch((error) => {
+								// Autocancelled requests are expected when the effect re-runs;
+								// don't poison the record cache — the winning request will populate it.
+								if (error?.isAbort || error?.status === 0) return
 								console.error(error)
 								records.set(id, null)
 							})
@@ -114,7 +165,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 				return data
 			}
 
-			return mapObject(data)
+			return tryMapObject(data)
 		},
 		list: (options) => {
 			const listId = name + JSON.stringify(options ?? {})
@@ -144,14 +195,24 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 							requestKey: listId
 						})
 						.then((fetchedRecords) => {
+							const validRecords = fetchedRecords.filter((record) => {
+								const valid = typeof record?.id === 'string' && record.id.length > 0
+								if (!valid) {
+									console.error(`Invalid ${name} list record`, record)
+								}
+								return valid
+							})
 							// Store the full records
-							fetchedRecords.forEach((record) => {
+							validRecords.forEach((record) => {
 								records.set(record.id, { data: record })
 							})
 							// Store the list of IDs
-							lists.set(listId, { invalidated: false, ids: fetchedRecords.map(({ id }) => id) })
+							lists.set(listId, { invalidated: false, ids: validRecords.map(({ id }) => id) })
 						})
 						.catch((error) => {
+							// Autocancelled requests are expected when the effect re-runs;
+							// the winning request will populate the list, so don't nuke the cache.
+							if (error?.isAbort || error?.status === 0) return
 							console.error(error)
 							lists.set(listId, null)
 						})
@@ -271,7 +332,11 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			lists.clear()
 			records.clear()
 
-			return { ...response, record: mapObject(response.record) }
+			const mappedRecord = tryMapObject(response.record)
+			if (!mappedRecord) {
+				throw new Error(`Invalid ${name} auth record`)
+			}
+			return { ...response, record: mappedRecord }
 		},
 		requestPasswordReset: async (email) => {
 			if (!collection) {

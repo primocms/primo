@@ -28,13 +28,13 @@
 		font-size: 0.825rem;
 
 		&:hover:not(.disabled) {
-			background: var(--pala-primary-color);
+			background: var(--primo-primary-color);
 			color: var(--color-gray-1);
 		}
 
 		&.active:not(:hover) {
 			background: initial;
-			color: var(--pala-primary-color);
+			color: var(--primo-primary-color);
 		}
 
 		&.disabled {

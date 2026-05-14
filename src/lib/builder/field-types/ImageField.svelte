@@ -240,11 +240,11 @@
 		gap: 0.75rem;
 		overflow: hidden;
 		align-items: flex-start;
-		/* border: 1px solid var(--pala-primary-color); */
+		/* border: 1px solid var(--primo-primary-color); */
 		/* padding: 0.5rem; */
 
 		.spinner-container {
-			background: var(--pala-primary-color);
+			background: var(--primo-primary-color);
 			height: 100%;
 			width: 100%;
 			display: flex;
@@ -285,7 +285,7 @@
 
 			&:hover {
 				opacity: 0.95;
-				background: var(--pala-primary-color);
+				background: var(--primo-primary-color);
 			}
 
 			span {
@@ -354,7 +354,7 @@
 
 			&.active {
 				cursor: unset;
-				color: var(--pala-primary-color);
+				color: var(--primo-primary-color);
 			}
 
 			&:last-child {

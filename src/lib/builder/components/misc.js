@@ -1,13 +1,23 @@
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
+import { PRIMO_BASELINE_CSS } from '$lib/common/baseline-css'
+
+const preview_iframe_head = (head = '') => `
+  <style data-primo-baseline>${PRIMO_BASELINE_CSS}</style>
+  ${head}
+`
+
+const editor_context_tag =
+	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
 
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `
   <!DOCTYPE html>
   <html>
     <head>
-      ${head}
+      ${editor_context_tag}
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      ${preview_iframe_head(head)}
       <script type="module">
         let mod;
         let reset;
@@ -144,11 +154,12 @@ export const static_iframe_srcdoc = ({ head = '', html, css, foot = '' }) => {
     <!DOCTYPE html>
     <html>
       <head>
+        ${editor_context_tag}
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        ${head}
+        ${preview_iframe_head(head)}
       </head>
-      <body id="page" style="margin:0">
+      <body id="page">
         ${html}
         <style>${css}</style>
         ${foot}
@@ -167,6 +178,7 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
     <!DOCTYPE html>
     <html>
       <head>
+        ${editor_context_tag}
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
@@ -225,9 +237,9 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             }
           }
         </script>
-        ${head}
+        ${preview_iframe_head(head)}
       </head>
-      <body style="margin:0;overflow:hidden;">
+      <body style="overflow:hidden;">
         ${wrapper_start}
         <div data-section="${section_id}" id="section-${section_id}" data-symbol="${symbol_id}">
           <div id="component"></div>

@@ -256,7 +256,7 @@
 		transition: 0.1s;
 
 		&.active {
-			color: var(--pala-primary-color);
+			color: var(--primo-primary-color);
 		}
 	}
 </style>

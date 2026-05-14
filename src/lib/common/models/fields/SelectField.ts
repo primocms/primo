@@ -10,7 +10,7 @@ export const SelectField = FieldBase.extend({
 				.object({
 					value: z.string(),
 					label: z.string(),
-					icon: z.string()
+					icon: z.string().optional()
 				})
 				.array(),
 			condition: Condition.nullable().optional()

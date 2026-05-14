@@ -30,7 +30,12 @@ export const check_session = async () => {
 		return self.instance
 			.collection('users')
 			.authRefresh()
-			.then(() => true)
+			.then(() => {
+				// Clear cached data since auth was refreshed - forces refetch with valid token
+				self.lists.clear()
+				self.records.clear()
+				return true
+			})
 			.catch(() => {
 				self.instance?.authStore.clear()
 				return false

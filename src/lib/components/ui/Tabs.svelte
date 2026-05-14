@@ -40,7 +40,7 @@
 			transition: 0.1s;
 
 			&.active {
-				border-bottom-color: var(--pala-primary-color);
+				border-bottom-color: var(--primo-primary-color);
 			}
 		}
 	}

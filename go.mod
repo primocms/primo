@@ -4,8 +4,11 @@ go 1.24.5
 
 require (
 	github.com/dop251/goja v0.0.0-20251201205617-2bb4c724c0f9
+	github.com/gorilla/websocket v1.5.3
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.35.0
+	golang.org/x/net v0.48.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -33,7 +36,6 @@ require (
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/image v0.34.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect

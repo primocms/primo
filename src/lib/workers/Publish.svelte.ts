@@ -2,6 +2,7 @@ import type { Page } from '$lib/common/models/Page'
 import type { PageSection } from '$lib/common/models/PageSection'
 import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 import type { SiteSymbol } from '$lib/common/models/SiteSymbol'
+import { PRIMO_BASELINE_CSS } from '$lib/common/baseline-css'
 import { useContent } from '$lib/Content.svelte'
 import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 import { processors } from '../builder/component'
@@ -196,7 +197,7 @@ export const usePublishSite = (site_id?: string) => {
 			}
 
 			const head = {
-				code: (site?.head ?? '') + (page_type?.head ?? ''),
+				code: `<style data-primo-baseline>${PRIMO_BASELINE_CSS}</style>` + (site?.head ?? '') + (page_type?.head ?? ''),
 				data: site_data
 			}
 
@@ -286,7 +287,7 @@ export const usePublishSite = (site_id?: string) => {
 			if (footer_result.body) body_content += `<footer>${footer_result.body}</footer>`
 
 			const final =
-				`<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="PalaCMS" />` +
+				`<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Primo" />` +
 				combined_head +
 				'</head><body id="page">' +
 				body_content +
@@ -380,6 +381,18 @@ export const usePublishSite = (site_id?: string) => {
 				)
 			: undefined
 	)
+
+	// In local dev, realtime subscriptions are off, so the CLI's out-of-band
+	// imports (e.g. site/content.yaml on watcher events) leave the in-memory
+	// list cache stale. Soft-invalidate before each run so a refetch kicks
+	// off without dropping the cached ids — keeps the editor from redrawing
+	// on every Build Preview click. Reopens a small race vs. fresh CLI
+	// imports landing mid-publish; revisit if that bites in practice.
+	const original_run = worker.run.bind(worker)
+	worker.run = async (...params) => {
+		self.invalidate_lists()
+		return original_run(...params)
+	}
 
 	return worker
 }

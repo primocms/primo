@@ -44,7 +44,7 @@
 				transition: transform 0.1s;
 
 				input {
-					color: var(--pala-primary-color);
+					color: var(--primo-primary-color);
 					background: var(--primo-color-white);
 					outline: 0;
 					position: absolute;
@@ -73,7 +73,7 @@
 					}
 
 					&:focus {
-						outline: 2px solid var(--pala-primary-color);
+						outline: 2px solid var(--primo-primary-color);
 					}
 				}
 

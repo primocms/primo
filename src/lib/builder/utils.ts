@@ -7,6 +7,50 @@ import { rich_text_extensions } from '$lib/builder/rich-text/extensions'
 
 import { processors } from './component.js'
 
+const utf8_decoder = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null
+
+function is_byte_array(value: unknown): value is number[] {
+	return Array.isArray(value) && value.length > 0 && value.every(item => Number.isInteger(item) && item >= 0 && item <= 255)
+}
+
+// Spread-based String.fromCharCode throws RangeError on large arrays and only
+// handles code points, not UTF-8 bytes. TextDecoder handles both safely.
+function decode_bytes(bytes: number[]): string {
+	const buf = Uint8Array.from(bytes)
+	return utf8_decoder ? utf8_decoder.decode(buf) : String.fromCharCode.apply(null, Array.from(buf) as number[])
+}
+
+/**
+ * Normalize entry values that may have been stored incorrectly as byte arrays.
+ * YAML can marshal []byte as integer arrays, which need to be converted back to strings.
+ */
+export function normalize_entry_value(value: unknown): unknown {
+	// Handle byte arrays (YAML sometimes marshals []byte as integer arrays)
+	if (is_byte_array(value)) {
+		const str = decode_bytes(value)
+		// Try to parse as JSON first (might be serialized JSON)
+		try {
+			return JSON.parse(str)
+		} catch {
+			// Not valid JSON, return as string
+			return str
+		}
+	}
+	// Recursively normalize objects
+	if (value && typeof value === 'object' && !Array.isArray(value)) {
+		const normalized: Record<string, unknown> = {}
+		for (const [k, v] of Object.entries(value)) {
+			normalized[k] = normalize_entry_value(v)
+		}
+		return normalized
+	}
+	// Recursively normalize arrays (but not byte arrays, handled above)
+	if (Array.isArray(value)) {
+		return value.map(item => normalize_entry_value(item))
+	}
+	return value
+}
+
 export async function processCode({
 	component,
 	head = { code: '', data: {} },
@@ -216,7 +260,19 @@ export function convert_rich_text_to_html(tiptap_obj) {
 	try {
 		// Check if tiptap_obj is a string instead of a proper TipTap object
 		let processed_obj = tiptap_obj
-		if (typeof tiptap_obj === 'string') {
+
+		// Handle byte arrays (YAML sometimes marshals []byte as integer arrays)
+		if (is_byte_array(tiptap_obj)) {
+			const str = decode_bytes(tiptap_obj)
+			// Try to parse as JSON first (it might be a JSON string of TipTap content)
+			try {
+				processed_obj = JSON.parse(str)
+			} catch {
+				// Not valid JSON, treat as markdown
+				const html = convert_markdown_to_html(str)
+				processed_obj = generateJSON(html, rich_text_extensions)
+			}
+		} else if (typeof tiptap_obj === 'string') {
 			// Assume it's markdown and convert to HTML first, then to TipTap JSON
 			const html = convert_markdown_to_html(tiptap_obj)
 			processed_obj = generateJSON(html, rich_text_extensions)

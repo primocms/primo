@@ -404,7 +404,7 @@
 		}
 
 		&:focus {
-			border-color: var(--pala-primary-color);
+			border-color: var(--primo-primary-color);
 		}
 		&:focus-visible {
 			outline: 0;

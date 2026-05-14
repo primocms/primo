@@ -62,6 +62,8 @@
 	.masonry {
 		display: grid;
 		gap: 1rem;
+		overflow: auto;
+		min-height: 0;
 	}
 
 	ul {

@@ -6,7 +6,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { ChevronDown } from 'lucide-svelte'
 	import ToolbarButton from './ToolbarButton.svelte'
-	import { PalaButton } from '$lib/builder/components/buttons'
+	import { PrimoButton } from '$lib/builder/components/buttons'
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
 	import { onNavigate, goto } from '$app/navigation'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
@@ -216,7 +216,7 @@
 	<div class="menu-container">
 		<div class="left">
 			{#if $current_user?.serverRole}
-				<PalaButton />
+				<PrimoButton />
 			{/if}
 			<div class="button-group">
 				<div class="flex rounded" style="border: 1px solid #222">
@@ -227,8 +227,8 @@
 			<div class="button-group">
 				{#if $mod_key_held}
 					<div class="page-hotkeys">
-						<div style:color={going_up ? 'var(--pala-primary-color)' : 'inherit'} style:opacity={can_navigate_up ? 1 : 0.3}>&#8984; ↑</div>
-						<div style:color={going_down ? 'var(--pala-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
+						<div style:color={going_up ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_up ? 1 : 0.3}>&#8984; ↑</div>
+						<div style:color={going_down ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
 					</div>
 				{:else}
 					<div class="flex rounded" style="border: 1px solid #222" bind:this={page_dropdown_anchor}>
@@ -333,6 +333,7 @@
 			{#if !$timeline.last}
 				<ToolbarButton id="redo" title="Redo" icon="material-symbols:redo" style="border: 0; font-size: 1.5rem;" on:click={redo_change} />
 			{/if} -->
+			<div id="pala-dev-indicator-slot"></div>
 			<span class="version-badge">{instance.version}</span>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
@@ -343,7 +344,7 @@
 					{/snippet}
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content side="bottom" class="z-[999]" align="end" sideOffset={4}>
-					{#if $current_user?.serverRole}
+					{#if instance.hosted_mode && $current_user?.serverRole}
 						<DropdownMenu.Item onclick={() => (editing_collaborators = true)} class="text-xs cursor-pointer">
 							<Icon icon="clarity:users-solid" style="width: .75rem" />
 							<span>Collaborators</span>
@@ -363,7 +364,7 @@
 			</DropdownMenu.Root>
 			{@render children?.()}
 			<!-- <LocaleSelector /> -->
-			<ToolbarButton type="primo" icon="entypo:publish" label="Publish" key="p" loading={publish_in_progress} on:click={() => (publishing = true)} />
+			<ToolbarButton type="primo" icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} label={instance.dev_mode ? 'Preview' : 'Publish'} key="p" loading={publish_in_progress} on:click={() => (publishing = true)} />
 		</div>
 	</div>
 </nav>

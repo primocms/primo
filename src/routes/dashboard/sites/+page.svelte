@@ -18,6 +18,8 @@
 	import { self as pb, self } from '$lib/pocketbase/managers'
 	import { goto } from '$app/navigation'
 	import { ClientResponseError } from 'pocketbase'
+	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
+	import { Snapshot } from '$lib/common/models/Snapshot'
 
 	const sidebar = useSidebar()
 
@@ -61,9 +63,39 @@
 		is_delete_group_open = false
 	}
 
-	async function download_site_file() {
-		// TODO: Implement
-		throw new Error('Not implemented')
+	let download_site_id: string | null = $state(null)
+	let download_site_name: string | null = $state(null)
+	let downloading = $state(false)
+	const snapshot_worker = $derived(download_site_id ? useSiteSnapshot({ source_site_id: download_site_id }) : null)
+
+	$effect(() => {
+		if (download_site_id && snapshot_worker && snapshot_worker.status === 'standby' && !downloading) {
+			downloading = true
+			snapshot_worker.run().then((snapshot) => {
+				const file = Snapshot.encode(snapshot)
+				const url = URL.createObjectURL(file)
+				const a = document.createElement('a')
+				a.href = url
+				a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
+				document.body.appendChild(a)
+				a.click()
+				document.body.removeChild(a)
+				URL.revokeObjectURL(url)
+				download_site_id = null
+				download_site_name = null
+				downloading = false
+			}).catch((error) => {
+				console.error('Failed to download site:', error)
+				download_site_id = null
+				download_site_name = null
+				downloading = false
+			})
+		}
+	})
+
+	function download_site_file(site: Site) {
+		download_site_id = site.id
+		download_site_name = site.name
 	}
 
 	let is_rename_site_open = $state(false)
@@ -196,13 +228,13 @@
 {#snippet SiteButton(site: Site)}
 	<div class="space-y-3 relative w-full bg-[#111]">
 		<div class="rounded-tl rounded-tr overflow-hidden">
-			<a data-sveltekit-prefetch href={`/admin/sites/${site.id}`}>
+			<a href={`//${site.host}/admin/site`}>
 				<SitePreview {site} />
 			</a>
 		</div>
 		<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-[#111] truncate flex items-center justify-between">
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
-				<a data-sveltekit-prefetch href={`/admin/sites/${site.id}`} class="text-sm font-medium leading-none truncate">{site.name}</a>
+				<a href={`//${site.host}/admin/site`} class="text-sm font-medium leading-none truncate">{site.name}</a>
 				<p class="text-xs text-muted-foreground leading-tight truncate">{site.host}</p>
 			</div>
 			<DropdownMenu.Root>
@@ -230,9 +262,14 @@
 							<span>Move</span>
 						</DropdownMenu.Item>
 					{/if}
-					<DropdownMenu.Item onclick={download_site_file}>
-						<Download class="h-4 w-4" />
-						<span>Download</span>
+					<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={downloading && download_site_id === site.id}>
+						{#if downloading && download_site_id === site.id}
+							<Loader class="h-4 w-4 animate-spin" />
+							<span>Downloading...</span>
+						{:else}
+							<Download class="h-4 w-4" />
+							<span>Download</span>
+						{/if}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item
 						onclick={() => {

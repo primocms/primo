@@ -218,7 +218,7 @@
 		--TextInput-label-font-size: 0.75rem;
 
 		button.save {
-			border: 1px solid var(--pala-primary-color);
+			border: 1px solid var(--primo-primary-color);
 			border-radius: 0.25rem;
 			padding: 9px 0.75rem;
 			margin-top: 23px;
