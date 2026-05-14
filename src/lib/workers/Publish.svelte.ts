@@ -384,11 +384,13 @@ export const usePublishSite = (site_id?: string) => {
 
 	// In local dev, realtime subscriptions are off, so the CLI's out-of-band
 	// imports (e.g. site/content.yaml on watcher events) leave the in-memory
-	// list cache stale. Drop cached ids before each run so the worker's
-	// `loaded()` gate waits for the refetch instead of racing with stale data.
+	// list cache stale. Soft-invalidate before each run so a refetch kicks
+	// off without dropping the cached ids — keeps the editor from redrawing
+	// on every Build Preview click. Reopens a small race vs. fresh CLI
+	// imports landing mid-publish; revisit if that bites in practice.
 	const original_run = worker.run.bind(worker)
 	worker.run = async (...params) => {
-		self.invalidate_lists({ block: true })
+		self.invalidate_lists()
 		return original_run(...params)
 	}
 
