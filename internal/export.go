@@ -733,10 +733,17 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 	}
 
-	if siteContent != nil && len(siteContent.values) > 0 {
-		if err := writeYAMLToZip(zw, "site/content.yaml", siteContent); err != nil {
-			return nil, err
-		}
+	// site/content.yaml is required, not optional. The CLI's sync layer
+	// treats its absence as "this site has no site-level content yet" only
+	// when the file exists and is empty; if it's missing entirely, pull
+	// can't distinguish a freshly-scaffolded site from one whose content
+	// was dropped by the exporter. Emit an empty {} when no values exist
+	// so the on-disk layout is self-documenting.
+	if siteContent == nil {
+		siteContent = &orderedMap{values: map[string]interface{}{}, keys: []string{}}
+	}
+	if err := writeYAMLToZip(zw, "site/content.yaml", siteContent); err != nil {
+		return nil, err
 	}
 
 	// Site head/foot HTML
