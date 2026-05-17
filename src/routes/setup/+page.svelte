@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation'
 	import { Users } from '$lib/pocketbase/collections'
 	import { Loader } from 'lucide-svelte'
-	import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
 	import { self } from '$lib/pocketbase/managers'
 
 	let email = $state('')
@@ -91,11 +90,6 @@
 <main class="primo-reset">
 	<div class="left">
 		<div class="box">
-			<div class="logo">
-				<div class="logo-container">
-					<ServerLogo />
-				</div>
-			</div>
 			<header>
 				<h1>Welcome to Primo</h1>
 				<p class="subtitle">Create your admin account to get started</p>
@@ -164,16 +158,6 @@
 		p {
 			font-size: 14px;
 			margin: 0;
-		}
-	}
-	.logo {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		margin-bottom: 2rem;
-
-		.logo-container {
-			width: 8rem;
 		}
 	}
 	.box {

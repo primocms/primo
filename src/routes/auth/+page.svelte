@@ -2,7 +2,6 @@
 	import { page } from '$app/stores'
 	import { fade } from 'svelte/transition'
 	import AuthForm from './AuthForm.svelte'
-	import ServerLogo from '$lib/components/ui/ServerLogo.svelte'
 
 	let email = $state($page.url.searchParams.get('email') || '')
 	let stage = $state('signin')
@@ -18,11 +17,6 @@
 
 <main in:fade class="primo-reset">
 	<div class="left">
-		<div class="logo">
-			<div class="logo-container">
-				<ServerLogo />
-			</div>
-		</div>
 		<div class="box">
 			{#if stage === 'signin'}
 				{#snippet footer()}
@@ -46,16 +40,6 @@
 		min-height: 100vh;
 		background: var(--color-gray-9);
 		color: white;
-	}
-	.logo {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		margin-bottom: 2rem;
-
-		.logo-container {
-			width: 8rem;
-		}
 	}
 	.box {
 		width: 100%;
