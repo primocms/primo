@@ -74,7 +74,7 @@
 		"tailwind-variants": "^3.2.2",
 		"tailwindcss": "^4.3.0",
 		"tailwindcss-animate": "^1.0.7",
-		"typescript": "^5.9.2",
+		"typescript": "^6.0.3",
 		"zod": "^4.4.3"
 	}
 }
