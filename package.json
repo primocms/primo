@@ -72,7 +72,7 @@
 		"svelte-toggle": "^4.0.1",
 		"tailwind-merge": "^3.6.0",
 		"tailwind-variants": "^3.2.2",
-		"tailwindcss": "^4.2.4",
+		"tailwindcss": "^4.3.0",
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.2",
 		"zod": "^4.3.6"
