@@ -23,7 +23,7 @@
 		"@iconify/svelte": "^5.2.1",
 		"@rollup/browser": "^4.60.4",
 		"@sveltejs/adapter-static": "^3.0.9",
-		"@sveltejs/kit": "^2.59.1",
+		"@sveltejs/kit": "^2.60.1",
 		"@tailwindcss/postcss": "^4.2.4",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tiptap/core": "^3.23.4",
