@@ -10,7 +10,7 @@ RUN npx svelte-kit sync
 RUN npx vite --config common.config.js build
 RUN npx vite --config app.config.js build
 
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS go-builder
 
 # These arguments can be overridden on build
 ARG TARGETOS
