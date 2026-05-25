@@ -30,7 +30,7 @@
 		"@tiptap/extension-highlight": "^3.23.4",
 		"@tiptap/extension-image": "^3.23.4",
 		"@tiptap/extension-link": "^3.23.4",
-		"@tiptap/extension-typography": "^3.23.4",
+		"@tiptap/extension-typography": "^3.23.6",
 		"@tiptap/extension-youtube": "^3.23.4",
 		"@tiptap/pm": "^3.23.6",
 		"@tiptap/starter-kit": "^3.23.6",
