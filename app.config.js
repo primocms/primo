@@ -5,6 +5,9 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ['@rollup/browser']
 	},
+	server: {
+		host: true
+	},
 	build: {
 		rollupOptions: {
 			output: {

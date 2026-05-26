@@ -8,6 +8,11 @@
 	let { children } = $props()
 
 	if (browser) {
+		const loader = document.getElementById('app-boot-loader')
+		if (loader) {
+			loader.classList.add('hidden')
+			setTimeout(() => loader.remove(), 250)
+		}
 		import('$lib/compiler/processors').then(({ html, css }) => {
 			registerProcessors({ html, css })
 			$compilers_registered = true
