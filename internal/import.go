@@ -3,6 +3,8 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +14,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
@@ -422,15 +425,74 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// back to the CLI so they're impossible to miss instead of silently dropped.
 	var warnings []ImportWarning
 
+	// Track created IDs for writing back to files
+	createdIDs := make(map[string]map[string]interface{})
+
+	// Reconcile uploads before any content is imported, so the filename->id
+	// map is available when blocks/pages reference `upload: "uploads/foo.jpg"`.
+	// Skipped in preview mode (no writes) — symbolic refs in a preview just
+	// fall through unchanged, which is fine since previews aren't persisted.
+	var uploadMap map[string]uploadReconcileEntry
+	if !previewOnly {
+		um, err := reconcileSiteUploads(pb, site, files, &warnings)
+		if err != nil {
+			return nil, fmt.Errorf("failed to reconcile uploads: %w", err)
+		}
+		uploadMap = um
+
+		// Surface upload changes to the CLI under a non-standard key inside
+		// the manifest entry. write_created_ids on the CLI inspects this to
+		// rename local files to their canonical (PocketBase-suffixed) names
+		// and to rewrite any lingering `upload: "uploads/..."` symbolic refs
+		// to record IDs. Only entries whose canonical name differs from the
+		// symbolic name need a rename, but we surface all of them so the
+		// CLI can also reconcile yaml content rewrites.
+		if len(uploadMap) > 0 {
+			uploadsManifest := make(map[string]interface{}, len(uploadMap))
+			for symbolic, entry := range uploadMap {
+				uploadsManifest[symbolic] = map[string]interface{}{
+					"id":        entry.ID,
+					"canonical": entry.Canonical,
+				}
+			}
+			createdIDs["uploads/.manifest.json"] = map[string]interface{}{
+				"_uploads": uploadsManifest,
+			}
+		}
+
+		// Rewrite symbolic upload paths once, in the parsed yaml file bytes,
+		// so downstream importers can keep treating image values as opaque
+		// maps. Skipped for files that don't even mention `uploads/` to
+		// avoid pointlessly re-marshaling (and renormalizing whitespace in)
+		// every yaml file in the zip. Files that fail to parse here are
+		// left untouched and will produce the same error they would have
+		// anyway when the dedicated importer reaches them.
+		for path, data := range files {
+			if !strings.HasSuffix(path, ".yaml") {
+				continue
+			}
+			if !bytes.Contains(data, []byte("uploads/")) {
+				continue
+			}
+			var parsed interface{}
+			if err := yaml.Unmarshal(data, &parsed); err != nil {
+				continue
+			}
+			rewritten := rewriteUploadRefs(parsed, uploadMap)
+			out, err := yaml.Marshal(rewritten)
+			if err != nil {
+				continue
+			}
+			files[path] = out
+		}
+	}
+
 	diff := &ImportDiff{
 		Blocks:    ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		PageTypes: ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		Pages:     ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		Site:      ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 	}
-
-	// Track created IDs for writing back to files
-	createdIDs := make(map[string]map[string]interface{})
 
 	siteId := site.Id
 
@@ -3141,4 +3203,212 @@ func buildFullPagePath(pageId string, parentMap, slugMap map[string]string) stri
 	}
 
 	return strings.Join(parts, "/")
+}
+
+// uploadReconcileEntry captures everything the CLI needs to write back after
+// a successful reconcile of one uploads/ file: the record id (so symbolic
+// yaml refs can be rewritten to that id locally), and the canonical filename
+// PocketBase assigned (so the local file can be renamed to match server state).
+// Canonical may equal Symbolic when the file already existed with no suffix.
+type uploadReconcileEntry struct {
+	ID        string
+	Canonical string
+}
+
+// reconcileSiteUploads brings server-side site_uploads records in sync with
+// the uploads/ folder in an import zip. For every file under uploads/ (other
+// than the manifest), it either reuses an existing record by filename or
+// creates a new one. Returns a filename -> {id, canonical} map that
+// downstream content rewriting uses to resolve symbolic
+// `upload: "uploads/foo.jpg"` references to real PocketBase IDs and that the
+// CLI uses to rename local files to their canonical (PocketBase-suffixed)
+// names.
+//
+// Existing records whose filenames don't appear on disk are NOT deleted —
+// removing an image is a destructive operation that should be gated behind
+// an explicit flag (e.g. `primo push --prune-uploads`). Each orphan emits
+// an ImportWarning so the user can see what's happening.
+//
+// Hash comparison short-circuits re-upload of unchanged binaries, which keeps
+// the round-trip case (pull → push with no changes) a true no-op.
+func reconcileSiteUploads(pb *pocketbase.PocketBase, site *core.Record, files map[string][]byte, warnings *[]ImportWarning) (map[string]uploadReconcileEntry, error) {
+	siteId := site.Id
+	filenameToEntry := make(map[string]uploadReconcileEntry)
+
+	// Discover upload binaries shipped in the zip. The manifest itself is
+	// metadata, not an upload, and dotfiles are ignored to leave room for
+	// future control files alongside .manifest.json.
+	type zipUpload struct {
+		filename string
+		data     []byte
+	}
+	var zipUploads []zipUpload
+	for path, data := range files {
+		if !strings.HasPrefix(path, "uploads/") {
+			continue
+		}
+		name := strings.TrimPrefix(path, "uploads/")
+		if name == "" || strings.HasPrefix(name, ".") || strings.Contains(name, "/") {
+			continue
+		}
+		zipUploads = append(zipUploads, zipUpload{filename: name, data: data})
+	}
+
+	// Index existing records by filename. Filename is the stable key the
+	// dashboard already uses for display; PocketBase auto-suffixes on
+	// collision, which the file storage layer handles transparently.
+	existing, err := pb.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch existing site_uploads: %w", err)
+	}
+	existingByFilename := make(map[string]*core.Record, len(existing))
+	for _, rec := range existing {
+		if fn := rec.GetString("file"); fn != "" {
+			existingByFilename[fn] = rec
+		}
+	}
+
+	uploadsColl, err := pb.FindCollectionByNameOrId("site_uploads")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find site_uploads collection: %w", err)
+	}
+
+	fsys, err := pb.NewFilesystem()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open filesystem for upload reconcile: %w", err)
+	}
+	defer fsys.Close()
+
+	for _, up := range zipUploads {
+		incomingHash := sha256.Sum256(up.data)
+		incomingHex := hex.EncodeToString(incomingHash[:])
+
+		if rec, ok := existingByFilename[up.filename]; ok {
+			// Compare with the stored bytes so that a true no-op push doesn't
+			// rewrite the file (and bump updated timestamps, invalidate CDN
+			// caches, etc.). On read failure we conservatively skip the
+			// reupload — the record still resolves correctly downstream.
+			// Storage is keyed by collection id, not name.
+			sourceKey := uploadsColl.Id + "/" + rec.Id + "/" + up.filename
+			reader, readErr := fsys.GetFile(sourceKey)
+			if readErr == nil {
+				existingBytes, _ := io.ReadAll(reader)
+				reader.Close()
+				existingHash := sha256.Sum256(existingBytes)
+				if hex.EncodeToString(existingHash[:]) == incomingHex {
+					filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: up.filename}
+					continue
+				}
+			}
+
+			// Bytes diverged — replace the file in-place so the record id
+			// stays stable and any yaml already referencing it keeps working.
+			// The on-disk name picks up a fresh PocketBase suffix, so re-read
+			// the record after Save to capture the canonical filename for
+			// the CLI writeback.
+			file, err := filesystem.NewFileFromBytes(up.data, up.filename)
+			if err != nil {
+				return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
+			}
+			rec.Set("file", file)
+			if err := pb.Save(rec); err != nil {
+				return nil, fmt.Errorf("failed to update upload %s: %w", up.filename, err)
+			}
+			filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
+			continue
+		}
+
+		// New file on disk → create a record. PocketBase appends a random
+		// suffix to the stored filename (e.g. hero.png → hero_a8x.png) to
+		// guarantee uniqueness inside the record's storage dir. We accept
+		// that — the agent's original filename `up.filename` is the symbolic
+		// key (what yaml references), and the canonical filename we read off
+		// the record after Save is what the CLI renames the local file to.
+		rec := core.NewRecord(uploadsColl)
+		rec.Set("site", siteId)
+		file, err := filesystem.NewFileFromBytes(up.data, up.filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
+		}
+		rec.Set("file", file)
+		if err := pb.Save(rec); err != nil {
+			return nil, fmt.Errorf("failed to create upload %s: %w", up.filename, err)
+		}
+		filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
+	}
+
+	// Surface manifest entries that no longer have a file on disk. Auto-
+	// deletion is intentionally avoided — see function-level comment.
+	if manifestBytes, ok := files["uploads/.manifest.json"]; ok && warnings != nil {
+		var manifest map[string]struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(manifestBytes, &manifest) == nil {
+			for filename := range manifest {
+				if _, present := filenameToEntry[filename]; present {
+					continue
+				}
+				// Only warn for files that still exist server-side. A manifest
+				// entry with no matching record on the server is just stale
+				// pull metadata and not actionable here.
+				if _, hasRecord := existingByFilename[filename]; !hasRecord {
+					continue
+				}
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "orphan_upload",
+					File:    "uploads/.manifest.json",
+					Path:    filename,
+					Message: fmt.Sprintf("uploads/%s exists on the server but no file with that name is in the push. Re-add the file or run `primo push --prune-uploads` to delete the server-side copy.", filename),
+				})
+			}
+		}
+	}
+
+	// Existing records whose filenames weren't in the manifest either — for
+	// example, dashboard uploads since the last pull — should also stay
+	// available to symbolic references, so callers can author against them
+	// without re-pulling first. Canonical == the existing filename since
+	// the file isn't being re-uploaded.
+	for filename, rec := range existingByFilename {
+		if _, ok := filenameToEntry[filename]; !ok {
+			filenameToEntry[filename] = uploadReconcileEntry{ID: rec.Id, Canonical: filename}
+		}
+	}
+
+	return filenameToEntry, nil
+}
+
+// rewriteUploadRefs walks an arbitrary yaml-decoded value and rewrites every
+// `upload: "uploads/<filename>"` string into the corresponding PocketBase
+// record ID, in place. Strings that don't start with `uploads/` are left
+// untouched, so raw IDs already present in the file (from a prior pull) and
+// empty values continue to round-trip cleanly.
+//
+// This runs once over the parsed file contents up front, so the rest of the
+// import pipeline can keep treating image values as opaque maps without
+// any awareness of the symbolic-path convention.
+func rewriteUploadRefs(value interface{}, uploadMap map[string]uploadReconcileEntry) interface{} {
+	switch v := value.(type) {
+	case map[string]interface{}:
+		for k, val := range v {
+			if k == "upload" {
+				if s, ok := val.(string); ok && strings.HasPrefix(s, "uploads/") {
+					filename := strings.TrimPrefix(s, "uploads/")
+					if entry, found := uploadMap[filename]; found {
+						v[k] = entry.ID
+						continue
+					}
+				}
+			}
+			v[k] = rewriteUploadRefs(val, uploadMap)
+		}
+		return v
+	case []interface{}:
+		for i, item := range v {
+			v[i] = rewriteUploadRefs(item, uploadMap)
+		}
+		return v
+	default:
+		return value
+	}
 }
