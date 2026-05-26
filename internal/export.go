@@ -16,10 +16,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ExportedSite represents the top-level export metadata
+// ExportedSite represents the top-level export metadata.
+//
+// Host is deliberately absent: it's deploy-target config (per-environment,
+// not part of the portable site export). The DB column sites.host remains
+// authoritative for routing; deploy/push tooling reads it from there.
 type ExportedSite struct {
 	Name       string `json:"name" yaml:"name"`
-	Host       string `json:"host" yaml:"host"`
 	SiteID     string `json:"site_id" yaml:"site_id"`
 	Group      string `json:"group,omitempty" yaml:"group,omitempty"`
 	ExportedAt string `json:"exported_at" yaml:"exported_at"`
@@ -181,7 +184,6 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	// 1. Write site.yaml
 	siteConfig := ExportedSite{
 		Name:       site.GetString("name"),
-		Host:       site.GetString("host"),
 		SiteID:     siteId,
 		Group:      site.GetString("group"),
 		ExportedAt: site.GetString("updated"),
@@ -714,7 +716,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 
 		// Query ALL site entries at once
-		allEntries, err := pb.FindRecordsByFilter("site_entries", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
+		allEntries, err := pb.FindRecordsByFilter("site_entries", "field.site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 		if err == nil && len(allEntries) > 0 {
 			// Build entries by parent map
 			entriesByParent := make(map[string][]*core.Record)

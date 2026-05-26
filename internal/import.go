@@ -222,10 +222,13 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.InternalServerError("Failed to read file", err)
 	}
 
-	// Pull name/host/group from site.yaml in the zip. These are used to
-	// populate required fields on create, and to keep the server-side site
-	// record in sync with the canonical config on subsequent pushes.
-	siteName, siteHost, siteGroup := readSiteConfigFromZip(zipData)
+	// Pull name/group from site.yaml in the zip. These populate required
+	// fields on create and keep the server-side record's name/group in sync
+	// with the canonical config on subsequent pushes. Host is intentionally
+	// not read from site.yaml — it's deploy-target config (set in the
+	// dashboard or by bootstrap), and a file→CMS push must never overwrite
+	// the routing host out from under the user.
+	siteName, siteGroup := readSiteConfigFromZip(zipData)
 
 	// Find the site or create it if it doesn't exist
 	siteCreated := false
@@ -235,12 +238,11 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		if createName == "" {
 			createName = "Imported Site"
 		}
-		createHost := siteHost
-		if createHost == "" {
-			// Use the site id to ensure host uniqueness, since the sites
-			// collection treats host as a unique identifier.
-			createHost = siteId
-		}
+		// Auto-create needs a unique non-empty host because the sites
+		// collection has a UNIQUE constraint on `host`. Seed with siteId;
+		// real routing hosts arrive separately (bootstrap form field in
+		// dev, or dashboard config in prod).
+		createHost := siteId
 
 		groupId, groupErr := ensureDefaultGroup(pb)
 		if groupErr != nil {
@@ -282,18 +284,15 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		}
 	}
 
-	// Sync name/host/group from site.yaml onto an existing site. Skipped on
+	// Sync name/group from site.yaml onto an existing site. Skipped on
 	// create (the values were just written above) and during preview (no
 	// writes). Empty fields in site.yaml leave the existing record untouched
-	// so users editing those values in the dashboard aren't reverted.
+	// so users editing those values in the dashboard aren't reverted. Host
+	// is deliberately excluded: see the comment above readSiteConfigFromZip.
 	if !siteCreated && !previewOnly {
 		dirty := false
 		if siteName != "" && site.GetString("name") != siteName {
 			site.Set("name", siteName)
-			dirty = true
-		}
-		if siteHost != "" && site.GetString("host") != siteHost {
-			site.Set("host", siteHost)
 			dirty = true
 		}
 		if siteGroup != "" {
@@ -361,13 +360,14 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 }
 
 // readSiteConfigFromZip extracts site.yaml from the import zip and returns
-// (name, host, group). Missing or unparseable site.yaml yields empty strings;
+// (name, group). Missing or unparseable site.yaml yields empty strings;
 // callers fall back to safe defaults so a malformed config never blocks the
-// site auto-create path.
-func readSiteConfigFromZip(zipData []byte) (string, string, string) {
+// site auto-create path. Host is intentionally not read — it's deploy-target
+// config managed by the dashboard/bootstrap, not by file→CMS push.
+func readSiteConfigFromZip(zipData []byte) (string, string) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
-		return "", "", ""
+		return "", ""
 	}
 	for _, f := range reader.File {
 		if f.Name != "site.yaml" || f.FileInfo().IsDir() {
@@ -375,24 +375,23 @@ func readSiteConfigFromZip(zipData []byte) (string, string, string) {
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return "", "", ""
+			return "", ""
 		}
 		data, err := io.ReadAll(rc)
 		rc.Close()
 		if err != nil {
-			return "", "", ""
+			return "", ""
 		}
 		var cfg struct {
 			Name  string `yaml:"name"`
-			Host  string `yaml:"host"`
 			Group string `yaml:"group"`
 		}
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			return "", "", ""
+			return "", ""
 		}
-		return cfg.Name, cfg.Host, cfg.Group
+		return cfg.Name, cfg.Group
 	}
-	return "", "", ""
+	return "", ""
 }
 
 func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
@@ -732,7 +731,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// and layout.yaml, and lets layout-mounted blocks import content/defaults.
 	for _, plan := range plans {
 		if !previewOnly {
-			if err := importPageType(pb, site, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, plan.ptHead, plan.ptFoot, pageTypeNameToId, blockDefaultContent); err != nil {
+			if err := importPageType(pb, site, plan.ptName, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, plan.ptHead, plan.ptFoot, pageTypeNameToId, blockDefaultContent, &warnings); err != nil {
 				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
 			}
 		}
@@ -2527,7 +2526,9 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
-func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}) error {
+func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptFolder string, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}, warnings *[]ImportWarning) error {
+	configPath := fmt.Sprintf("page-types/%s/config.yaml", ptFolder)
+	layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptFolder)
 	ptColl, err := pb.FindCollectionByNameOrId("page_types")
 	if err != nil {
 		return err
@@ -2721,6 +2722,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 			symbolId = symbolByName[strings.ToLower(blockName)]
 		}
 		if symbolId == "" {
+			*warnings = append(*warnings, ImportWarning{
+				Kind:    "missing_symbol",
+				File:    configPath,
+				Path:    fmt.Sprintf("allowed_blocks[%d]", i),
+				Block:   blockName,
+				Message: fmt.Sprintf("allowed_blocks[%d] references block %q, which is not a registered symbol on this site. Add blocks/%s/ or fix the reference; otherwise this block will not appear in the page type.", i, blockName, blockName),
+			})
 			continue
 		}
 		wantedSymbolIds[symbolId] = true
@@ -2752,8 +2760,16 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		}
 	}
 
-	// Import header/footer sections from layout.yaml
-	if layoutData != nil && (len(layoutData.Header) > 0 || len(layoutData.Footer) > 0) {
+	// Import header/footer sections from layout.yaml.
+	//
+	// When layoutData is non-nil (layout.yaml was present in the import), the
+	// file is authoritative: we wipe existing page_type_sections and rewrite
+	// them. This must run even when both lists are empty, otherwise removing
+	// all entries from layout.yaml would leave stale sections in the DB.
+	//
+	// When layoutData is nil (no layout.yaml in the import at all), leave
+	// existing sections alone — the user simply didn't touch the layout.
+	if layoutData != nil {
 		ptSectionsColl, err := pb.FindCollectionByNameOrId("page_type_sections")
 		if err != nil {
 			return err
@@ -2806,6 +2822,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
 			}
 			if symbolId == "" {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_symbol",
+					File:    layoutPath,
+					Path:    fmt.Sprintf("header[%d].block", i),
+					Block:   sectionData.Block,
+					Message: fmt.Sprintf("header[%d] references block %q, which is not a registered symbol on this site. Pages of this type will render with no header for this slot. Add blocks/%s/ or fix the reference.", i, sectionData.Block, sectionData.Block),
+				})
 				continue
 			}
 
@@ -2836,6 +2859,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
 			}
 			if symbolId == "" {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_symbol",
+					File:    layoutPath,
+					Path:    fmt.Sprintf("footer[%d].block", i),
+					Block:   sectionData.Block,
+					Message: fmt.Sprintf("footer[%d] references block %q, which is not a registered symbol on this site. Pages of this type will render with no footer for this slot. Add blocks/%s/ or fix the reference.", i, sectionData.Block, sectionData.Block),
+				})
 				continue
 			}
 
