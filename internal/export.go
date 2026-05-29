@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime"
 	"reflect"
 	"sort"
@@ -16,10 +17,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ExportedSite represents the top-level export metadata
+// ExportedSite represents the top-level export metadata.
+//
+// Host is deliberately absent: it's deploy-target config (per-environment,
+// not part of the portable site export). The DB column sites.host remains
+// authoritative for routing; deploy/push tooling reads it from there.
 type ExportedSite struct {
 	Name       string `json:"name" yaml:"name"`
-	Host       string `json:"host" yaml:"host"`
 	SiteID     string `json:"site_id" yaml:"site_id"`
 	Group      string `json:"group,omitempty" yaml:"group,omitempty"`
 	ExportedAt string `json:"exported_at" yaml:"exported_at"`
@@ -181,7 +185,6 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 	// 1. Write site.yaml
 	siteConfig := ExportedSite{
 		Name:       site.GetString("name"),
-		Host:       site.GetString("host"),
 		SiteID:     siteId,
 		Group:      site.GetString("group"),
 		ExportedAt: site.GetString("updated"),
@@ -714,7 +717,7 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		}
 
 		// Query ALL site entries at once
-		allEntries, err := pb.FindRecordsByFilter("site_entries", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
+		allEntries, err := pb.FindRecordsByFilter("site_entries", "field.site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 		if err == nil && len(allEntries) > 0 {
 			// Build entries by parent map
 			entriesByParent := make(map[string][]*core.Record)
@@ -767,21 +770,60 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 		return nil, err
 	}
 
-	// 7. Export uploads manifest
+	// 7. Export uploads manifest + binaries
+	//
+	// The manifest is the lookup table the importer uses to map symbolic
+	// `upload: "uploads/foo.jpg"` references back to site_uploads record IDs
+	// on push. The binaries are exported alongside so that a freshly pulled
+	// site is self-contained — agents/users can edit images on disk and
+	// `primo push` will round-trip without ever touching the dashboard.
+	//
+	// Filename collisions across records are possible (PocketBase auto-
+	// suffixes on the dashboard side), so the manifest is the authoritative
+	// filename → id map; in the rare collision case the last writer wins in
+	// the manifest, but each record's binary still lives under its own id
+	// on the server.
 	uploads, err := pb.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch uploads: %w", err)
 	}
 
 	if len(uploads) > 0 {
+		fsys, err := pb.NewFilesystem()
+		if err != nil {
+			return nil, fmt.Errorf("failed to open filesystem for upload export: %w", err)
+		}
+		defer fsys.Close()
+
+		// PocketBase keys storage by collection id (e.g. pbc_1021288652),
+		// not by collection name. The public /api/files/* URLs use the name,
+		// but on-disk reads have to go through the id. uploads is the same
+		// collection for every record in this loop, so resolve once.
+		uploadsCollectionId := uploads[0].Collection().Id
+
 		manifest := make(map[string]interface{})
 		for _, upload := range uploads {
 			filename := upload.GetString("file")
-			if filename != "" {
-				manifest[filename] = map[string]interface{}{
-					"id":  upload.Id,
-					"url": fmt.Sprintf("/api/files/site_uploads/%s/%s", upload.Id, filename),
-				}
+			if filename == "" {
+				continue
+			}
+			manifest[filename] = map[string]interface{}{
+				"id":  upload.Id,
+				"url": fmt.Sprintf("/api/files/site_uploads/%s/%s", upload.Id, filename),
+			}
+
+			sourceKey := uploadsCollectionId + "/" + upload.Id + "/" + filename
+			reader, err := fsys.GetFile(sourceKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read upload %s: %w", sourceKey, err)
+			}
+			fileData, readErr := io.ReadAll(reader)
+			reader.Close()
+			if readErr != nil {
+				return nil, fmt.Errorf("failed to read upload %s: %w", sourceKey, readErr)
+			}
+			if err := writeFileToZip(zw, "uploads/"+filename, fileData); err != nil {
+				return nil, err
 			}
 		}
 		if err := writeJSONToZip(zw, "uploads/.manifest.json", manifest); err != nil {

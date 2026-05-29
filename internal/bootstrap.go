@@ -69,7 +69,13 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		siteName = "My Site"
 	}
 	if siteHost == "" {
-		siteHost = "localhost"
+		// Fall back to the request's Host so a deploy bootstrapped without
+		// an explicit host still matches the domain the user visits in the
+		// browser. Older CLIs and direct API calls hit this path.
+		siteHost = e.Request.Host
+		if siteHost == "" {
+			siteHost = "localhost"
+		}
 	}
 
 	serverGroups, err := parseBootstrapGroups(serverGroupsRaw)

@@ -3,6 +3,8 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +14,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"golang.org/x/net/html"
 	"gopkg.in/yaml.v3"
 )
@@ -222,10 +225,13 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.InternalServerError("Failed to read file", err)
 	}
 
-	// Pull name/host/group from site.yaml in the zip. These are used to
-	// populate required fields on create, and to keep the server-side site
-	// record in sync with the canonical config on subsequent pushes.
-	siteName, siteHost, siteGroup := readSiteConfigFromZip(zipData)
+	// Pull name/group from site.yaml in the zip. These populate required
+	// fields on create and keep the server-side record's name/group in sync
+	// with the canonical config on subsequent pushes. Host is intentionally
+	// not read from site.yaml — it's deploy-target config (set in the
+	// dashboard or by bootstrap), and a file→CMS push must never overwrite
+	// the routing host out from under the user.
+	siteName, siteGroup := readSiteConfigFromZip(zipData)
 
 	// Find the site or create it if it doesn't exist
 	siteCreated := false
@@ -235,12 +241,11 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		if createName == "" {
 			createName = "Imported Site"
 		}
-		createHost := siteHost
-		if createHost == "" {
-			// Use the site id to ensure host uniqueness, since the sites
-			// collection treats host as a unique identifier.
-			createHost = siteId
-		}
+		// Auto-create needs a unique non-empty host because the sites
+		// collection has a UNIQUE constraint on `host`. Seed with siteId;
+		// real routing hosts arrive separately (bootstrap form field in
+		// dev, or dashboard config in prod).
+		createHost := siteId
 
 		groupId, groupErr := ensureDefaultGroup(pb)
 		if groupErr != nil {
@@ -282,18 +287,15 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		}
 	}
 
-	// Sync name/host/group from site.yaml onto an existing site. Skipped on
+	// Sync name/group from site.yaml onto an existing site. Skipped on
 	// create (the values were just written above) and during preview (no
 	// writes). Empty fields in site.yaml leave the existing record untouched
-	// so users editing those values in the dashboard aren't reverted.
+	// so users editing those values in the dashboard aren't reverted. Host
+	// is deliberately excluded: see the comment above readSiteConfigFromZip.
 	if !siteCreated && !previewOnly {
 		dirty := false
 		if siteName != "" && site.GetString("name") != siteName {
 			site.Set("name", siteName)
-			dirty = true
-		}
-		if siteHost != "" && site.GetString("host") != siteHost {
-			site.Set("host", siteHost)
 			dirty = true
 		}
 		if siteGroup != "" {
@@ -361,13 +363,14 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 }
 
 // readSiteConfigFromZip extracts site.yaml from the import zip and returns
-// (name, host, group). Missing or unparseable site.yaml yields empty strings;
+// (name, group). Missing or unparseable site.yaml yields empty strings;
 // callers fall back to safe defaults so a malformed config never blocks the
-// site auto-create path.
-func readSiteConfigFromZip(zipData []byte) (string, string, string) {
+// site auto-create path. Host is intentionally not read — it's deploy-target
+// config managed by the dashboard/bootstrap, not by file→CMS push.
+func readSiteConfigFromZip(zipData []byte) (string, string) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
-		return "", "", ""
+		return "", ""
 	}
 	for _, f := range reader.File {
 		if f.Name != "site.yaml" || f.FileInfo().IsDir() {
@@ -375,24 +378,23 @@ func readSiteConfigFromZip(zipData []byte) (string, string, string) {
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return "", "", ""
+			return "", ""
 		}
 		data, err := io.ReadAll(rc)
 		rc.Close()
 		if err != nil {
-			return "", "", ""
+			return "", ""
 		}
 		var cfg struct {
 			Name  string `yaml:"name"`
-			Host  string `yaml:"host"`
 			Group string `yaml:"group"`
 		}
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			return "", "", ""
+			return "", ""
 		}
-		return cfg.Name, cfg.Host, cfg.Group
+		return cfg.Name, cfg.Group
 	}
-	return "", "", ""
+	return "", ""
 }
 
 func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
@@ -423,15 +425,74 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// back to the CLI so they're impossible to miss instead of silently dropped.
 	var warnings []ImportWarning
 
+	// Track created IDs for writing back to files
+	createdIDs := make(map[string]map[string]interface{})
+
+	// Reconcile uploads before any content is imported, so the filename->id
+	// map is available when blocks/pages reference `upload: "uploads/foo.jpg"`.
+	// Skipped in preview mode (no writes) — symbolic refs in a preview just
+	// fall through unchanged, which is fine since previews aren't persisted.
+	var uploadMap map[string]uploadReconcileEntry
+	if !previewOnly {
+		um, err := reconcileSiteUploads(pb, site, files, &warnings)
+		if err != nil {
+			return nil, fmt.Errorf("failed to reconcile uploads: %w", err)
+		}
+		uploadMap = um
+
+		// Surface upload changes to the CLI under a non-standard key inside
+		// the manifest entry. write_created_ids on the CLI inspects this to
+		// rename local files to their canonical (PocketBase-suffixed) names
+		// and to rewrite any lingering `upload: "uploads/..."` symbolic refs
+		// to record IDs. Only entries whose canonical name differs from the
+		// symbolic name need a rename, but we surface all of them so the
+		// CLI can also reconcile yaml content rewrites.
+		if len(uploadMap) > 0 {
+			uploadsManifest := make(map[string]interface{}, len(uploadMap))
+			for symbolic, entry := range uploadMap {
+				uploadsManifest[symbolic] = map[string]interface{}{
+					"id":        entry.ID,
+					"canonical": entry.Canonical,
+				}
+			}
+			createdIDs["uploads/.manifest.json"] = map[string]interface{}{
+				"_uploads": uploadsManifest,
+			}
+		}
+
+		// Rewrite symbolic upload paths once, in the parsed yaml file bytes,
+		// so downstream importers can keep treating image values as opaque
+		// maps. Skipped for files that don't even mention `uploads/` to
+		// avoid pointlessly re-marshaling (and renormalizing whitespace in)
+		// every yaml file in the zip. Files that fail to parse here are
+		// left untouched and will produce the same error they would have
+		// anyway when the dedicated importer reaches them.
+		for path, data := range files {
+			if !strings.HasSuffix(path, ".yaml") {
+				continue
+			}
+			if !bytes.Contains(data, []byte("uploads/")) {
+				continue
+			}
+			var parsed interface{}
+			if err := yaml.Unmarshal(data, &parsed); err != nil {
+				continue
+			}
+			rewritten := rewriteUploadRefs(parsed, uploadMap)
+			out, err := yaml.Marshal(rewritten)
+			if err != nil {
+				continue
+			}
+			files[path] = out
+		}
+	}
+
 	diff := &ImportDiff{
 		Blocks:    ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		PageTypes: ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		Pages:     ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 		Site:      ImportDiffSection{Added: []string{}, Modified: []string{}, Deleted: []string{}},
 	}
-
-	// Track created IDs for writing back to files
-	createdIDs := make(map[string]map[string]interface{})
 
 	siteId := site.Id
 
@@ -732,7 +793,7 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 	// and layout.yaml, and lets layout-mounted blocks import content/defaults.
 	for _, plan := range plans {
 		if !previewOnly {
-			if err := importPageType(pb, site, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, plan.ptHead, plan.ptFoot, pageTypeNameToId, blockDefaultContent); err != nil {
+			if err := importPageType(pb, site, plan.ptName, plan.ptData, plan.ptFields, plan.existing, folderToDisplayName, plan.layoutData, plan.ptHead, plan.ptFoot, pageTypeNameToId, blockDefaultContent, &warnings); err != nil {
 				return nil, fmt.Errorf("failed to import page type %s: %w", plan.ptData.Name, err)
 			}
 		}
@@ -2527,7 +2588,9 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
-func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}) error {
+func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptFolder string, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}, warnings *[]ImportWarning) error {
+	configPath := fmt.Sprintf("page-types/%s/config.yaml", ptFolder)
+	layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptFolder)
 	ptColl, err := pb.FindCollectionByNameOrId("page_types")
 	if err != nil {
 		return err
@@ -2721,6 +2784,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 			symbolId = symbolByName[strings.ToLower(blockName)]
 		}
 		if symbolId == "" {
+			*warnings = append(*warnings, ImportWarning{
+				Kind:    "missing_symbol",
+				File:    configPath,
+				Path:    fmt.Sprintf("allowed_blocks[%d]", i),
+				Block:   blockName,
+				Message: fmt.Sprintf("allowed_blocks[%d] references block %q, which is not a registered symbol on this site. Add blocks/%s/ or fix the reference; otherwise this block will not appear in the page type.", i, blockName, blockName),
+			})
 			continue
 		}
 		wantedSymbolIds[symbolId] = true
@@ -2752,8 +2822,16 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 		}
 	}
 
-	// Import header/footer sections from layout.yaml
-	if layoutData != nil && (len(layoutData.Header) > 0 || len(layoutData.Footer) > 0) {
+	// Import header/footer sections from layout.yaml.
+	//
+	// When layoutData is non-nil (layout.yaml was present in the import), the
+	// file is authoritative: we wipe existing page_type_sections and rewrite
+	// them. This must run even when both lists are empty, otherwise removing
+	// all entries from layout.yaml would leave stale sections in the DB.
+	//
+	// When layoutData is nil (no layout.yaml in the import at all), leave
+	// existing sections alone — the user simply didn't touch the layout.
+	if layoutData != nil {
 		ptSectionsColl, err := pb.FindCollectionByNameOrId("page_type_sections")
 		if err != nil {
 			return err
@@ -2806,6 +2884,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
 			}
 			if symbolId == "" {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_symbol",
+					File:    layoutPath,
+					Path:    fmt.Sprintf("header[%d].block", i),
+					Block:   sectionData.Block,
+					Message: fmt.Sprintf("header[%d] references block %q, which is not a registered symbol on this site. Pages of this type will render with no header for this slot. Add blocks/%s/ or fix the reference.", i, sectionData.Block, sectionData.Block),
+				})
 				continue
 			}
 
@@ -2836,6 +2921,13 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptData Exporte
 				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
 			}
 			if symbolId == "" {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_symbol",
+					File:    layoutPath,
+					Path:    fmt.Sprintf("footer[%d].block", i),
+					Block:   sectionData.Block,
+					Message: fmt.Sprintf("footer[%d] references block %q, which is not a registered symbol on this site. Pages of this type will render with no footer for this slot. Add blocks/%s/ or fix the reference.", i, sectionData.Block, sectionData.Block),
+				})
 				continue
 			}
 
@@ -3111,4 +3203,212 @@ func buildFullPagePath(pageId string, parentMap, slugMap map[string]string) stri
 	}
 
 	return strings.Join(parts, "/")
+}
+
+// uploadReconcileEntry captures everything the CLI needs to write back after
+// a successful reconcile of one uploads/ file: the record id (so symbolic
+// yaml refs can be rewritten to that id locally), and the canonical filename
+// PocketBase assigned (so the local file can be renamed to match server state).
+// Canonical may equal Symbolic when the file already existed with no suffix.
+type uploadReconcileEntry struct {
+	ID        string
+	Canonical string
+}
+
+// reconcileSiteUploads brings server-side site_uploads records in sync with
+// the uploads/ folder in an import zip. For every file under uploads/ (other
+// than the manifest), it either reuses an existing record by filename or
+// creates a new one. Returns a filename -> {id, canonical} map that
+// downstream content rewriting uses to resolve symbolic
+// `upload: "uploads/foo.jpg"` references to real PocketBase IDs and that the
+// CLI uses to rename local files to their canonical (PocketBase-suffixed)
+// names.
+//
+// Existing records whose filenames don't appear on disk are NOT deleted —
+// removing an image is a destructive operation that should be gated behind
+// an explicit flag (e.g. `primo push --prune-uploads`). Each orphan emits
+// an ImportWarning so the user can see what's happening.
+//
+// Hash comparison short-circuits re-upload of unchanged binaries, which keeps
+// the round-trip case (pull → push with no changes) a true no-op.
+func reconcileSiteUploads(pb *pocketbase.PocketBase, site *core.Record, files map[string][]byte, warnings *[]ImportWarning) (map[string]uploadReconcileEntry, error) {
+	siteId := site.Id
+	filenameToEntry := make(map[string]uploadReconcileEntry)
+
+	// Discover upload binaries shipped in the zip. The manifest itself is
+	// metadata, not an upload, and dotfiles are ignored to leave room for
+	// future control files alongside .manifest.json.
+	type zipUpload struct {
+		filename string
+		data     []byte
+	}
+	var zipUploads []zipUpload
+	for path, data := range files {
+		if !strings.HasPrefix(path, "uploads/") {
+			continue
+		}
+		name := strings.TrimPrefix(path, "uploads/")
+		if name == "" || strings.HasPrefix(name, ".") || strings.Contains(name, "/") {
+			continue
+		}
+		zipUploads = append(zipUploads, zipUpload{filename: name, data: data})
+	}
+
+	// Index existing records by filename. Filename is the stable key the
+	// dashboard already uses for display; PocketBase auto-suffixes on
+	// collision, which the file storage layer handles transparently.
+	existing, err := pb.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch existing site_uploads: %w", err)
+	}
+	existingByFilename := make(map[string]*core.Record, len(existing))
+	for _, rec := range existing {
+		if fn := rec.GetString("file"); fn != "" {
+			existingByFilename[fn] = rec
+		}
+	}
+
+	uploadsColl, err := pb.FindCollectionByNameOrId("site_uploads")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find site_uploads collection: %w", err)
+	}
+
+	fsys, err := pb.NewFilesystem()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open filesystem for upload reconcile: %w", err)
+	}
+	defer fsys.Close()
+
+	for _, up := range zipUploads {
+		incomingHash := sha256.Sum256(up.data)
+		incomingHex := hex.EncodeToString(incomingHash[:])
+
+		if rec, ok := existingByFilename[up.filename]; ok {
+			// Compare with the stored bytes so that a true no-op push doesn't
+			// rewrite the file (and bump updated timestamps, invalidate CDN
+			// caches, etc.). On read failure we conservatively skip the
+			// reupload — the record still resolves correctly downstream.
+			// Storage is keyed by collection id, not name.
+			sourceKey := uploadsColl.Id + "/" + rec.Id + "/" + up.filename
+			reader, readErr := fsys.GetFile(sourceKey)
+			if readErr == nil {
+				existingBytes, _ := io.ReadAll(reader)
+				reader.Close()
+				existingHash := sha256.Sum256(existingBytes)
+				if hex.EncodeToString(existingHash[:]) == incomingHex {
+					filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: up.filename}
+					continue
+				}
+			}
+
+			// Bytes diverged — replace the file in-place so the record id
+			// stays stable and any yaml already referencing it keeps working.
+			// The on-disk name picks up a fresh PocketBase suffix, so re-read
+			// the record after Save to capture the canonical filename for
+			// the CLI writeback.
+			file, err := filesystem.NewFileFromBytes(up.data, up.filename)
+			if err != nil {
+				return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
+			}
+			rec.Set("file", file)
+			if err := pb.Save(rec); err != nil {
+				return nil, fmt.Errorf("failed to update upload %s: %w", up.filename, err)
+			}
+			filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
+			continue
+		}
+
+		// New file on disk → create a record. PocketBase appends a random
+		// suffix to the stored filename (e.g. hero.png → hero_a8x.png) to
+		// guarantee uniqueness inside the record's storage dir. We accept
+		// that — the agent's original filename `up.filename` is the symbolic
+		// key (what yaml references), and the canonical filename we read off
+		// the record after Save is what the CLI renames the local file to.
+		rec := core.NewRecord(uploadsColl)
+		rec.Set("site", siteId)
+		file, err := filesystem.NewFileFromBytes(up.data, up.filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
+		}
+		rec.Set("file", file)
+		if err := pb.Save(rec); err != nil {
+			return nil, fmt.Errorf("failed to create upload %s: %w", up.filename, err)
+		}
+		filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
+	}
+
+	// Surface manifest entries that no longer have a file on disk. Auto-
+	// deletion is intentionally avoided — see function-level comment.
+	if manifestBytes, ok := files["uploads/.manifest.json"]; ok && warnings != nil {
+		var manifest map[string]struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(manifestBytes, &manifest) == nil {
+			for filename := range manifest {
+				if _, present := filenameToEntry[filename]; present {
+					continue
+				}
+				// Only warn for files that still exist server-side. A manifest
+				// entry with no matching record on the server is just stale
+				// pull metadata and not actionable here.
+				if _, hasRecord := existingByFilename[filename]; !hasRecord {
+					continue
+				}
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "orphan_upload",
+					File:    "uploads/.manifest.json",
+					Path:    filename,
+					Message: fmt.Sprintf("uploads/%s exists on the server but no file with that name is in the push. Re-add the file or run `primo push --prune-uploads` to delete the server-side copy.", filename),
+				})
+			}
+		}
+	}
+
+	// Existing records whose filenames weren't in the manifest either — for
+	// example, dashboard uploads since the last pull — should also stay
+	// available to symbolic references, so callers can author against them
+	// without re-pulling first. Canonical == the existing filename since
+	// the file isn't being re-uploaded.
+	for filename, rec := range existingByFilename {
+		if _, ok := filenameToEntry[filename]; !ok {
+			filenameToEntry[filename] = uploadReconcileEntry{ID: rec.Id, Canonical: filename}
+		}
+	}
+
+	return filenameToEntry, nil
+}
+
+// rewriteUploadRefs walks an arbitrary yaml-decoded value and rewrites every
+// `upload: "uploads/<filename>"` string into the corresponding PocketBase
+// record ID, in place. Strings that don't start with `uploads/` are left
+// untouched, so raw IDs already present in the file (from a prior pull) and
+// empty values continue to round-trip cleanly.
+//
+// This runs once over the parsed file contents up front, so the rest of the
+// import pipeline can keep treating image values as opaque maps without
+// any awareness of the symbolic-path convention.
+func rewriteUploadRefs(value interface{}, uploadMap map[string]uploadReconcileEntry) interface{} {
+	switch v := value.(type) {
+	case map[string]interface{}:
+		for k, val := range v {
+			if k == "upload" {
+				if s, ok := val.(string); ok && strings.HasPrefix(s, "uploads/") {
+					filename := strings.TrimPrefix(s, "uploads/")
+					if entry, found := uploadMap[filename]; found {
+						v[k] = entry.ID
+						continue
+					}
+				}
+			}
+			v[k] = rewriteUploadRefs(val, uploadMap)
+		}
+		return v
+	case []interface{}:
+		for i, item := range v {
+			v[i] = rewriteUploadRefs(item, uploadMap)
+		}
+		return v
+	default:
+		return value
+	}
 }

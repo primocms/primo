@@ -3,7 +3,9 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -703,4 +705,298 @@ func asInterfaceSlice(t *testing.T, value interface{}) []interface{} {
 		t.Fatalf("subfields must be a list, got %T", value)
 	}
 	return items
+}
+
+// zipFilesBinary is a parallel to zipFiles that accepts raw bytes per entry,
+// for tests that need to ship non-UTF-8 content (e.g. image binaries).
+func zipFilesBinary(t *testing.T, files map[string][]byte) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for name, content := range files {
+		w, err := zw.Create(name)
+		if err != nil {
+			t.Fatalf("create zip entry %s: %v", name, err)
+		}
+		if _, err := w.Write(content); err != nil {
+			t.Fatalf("write zip entry %s: %v", name, err)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("close zip: %v", err)
+	}
+	return buf.Bytes()
+}
+
+// fakePNG returns the smallest valid PNG payload that PocketBase's file
+// validation will accept (1x1 transparent pixel). Using a real PNG avoids
+// surprises where the file storage layer sniffs mime types or rejects
+// zero-byte uploads.
+func fakePNG() []byte {
+	return []byte{
+		0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+		0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+		0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+		0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+		0x89, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x44, 0x41,
+		0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+		0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+		0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+		0x42, 0x60, 0x82,
+	}
+}
+
+func TestImportUploadsResolvesSymbolicPathAndRoundTrips(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+
+	pngBytes := fakePNG()
+	firstImport := map[string][]byte{
+		"uploads/hero.png":               pngBytes,
+		"blocks/hero/config.yaml":        []byte("name: hero\n"),
+		"blocks/hero/component.svelte":   []byte("<section><img src={image.url} alt={image.alt} /></section>\n"),
+		"blocks/hero/fields.yaml":        []byte("- name: image\n  label: Image\n  type: image\n"),
+		"blocks/hero/content.yaml":       []byte("{}\n"),
+		"page-types/default/config.yaml": []byte("name: Default\nallowed_blocks:\n  - hero\n"),
+		"page-types/default/fields.yaml": []byte("[]\n"),
+		"page-types/default/layout.yaml": []byte("{}\n"),
+		"pages/index.yaml": []byte("" +
+			"name: Home\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      image:\n" +
+			"        url: \"\"\n" +
+			"        alt: A hero image\n" +
+			"        upload: uploads/hero.png\n"),
+		"site/fields.yaml":  []byte("[]\n"),
+		"site/content.yaml": []byte("{}\n"),
+	}
+
+	result, err := processImport(app, site, zipFilesBinary(t, firstImport), false)
+	if err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	if len(result.Warnings) > 0 {
+		t.Fatalf("expected no warnings on first import, got %#v", result.Warnings)
+	}
+
+	// CLI consumes created_ids["uploads/.manifest.json"]["_uploads"] to rename
+	// local files and rewrite yaml symbolic refs. Verify the shape.
+	manifestCreated, ok := result.CreatedIDs["uploads/.manifest.json"]
+	if !ok {
+		t.Fatalf("expected created_ids to include uploads/.manifest.json")
+	}
+	uploadsBlob, ok := manifestCreated["_uploads"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected _uploads map under uploads manifest, got %#v", manifestCreated)
+	}
+	heroEntry, ok := uploadsBlob["hero.png"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected hero.png entry under _uploads, got %#v", uploadsBlob)
+	}
+	if heroEntry["id"] == nil || heroEntry["id"] == "" {
+		t.Fatalf("expected hero.png entry to carry an id, got %#v", heroEntry)
+	}
+	if canonical, _ := heroEntry["canonical"].(string); !strings.HasPrefix(canonical, "hero_") {
+		t.Fatalf("expected canonical name like hero_xxx.png, got %#v", heroEntry["canonical"])
+	}
+
+	// The upload should have produced exactly one site_uploads record whose
+	// filename matches what was on disk.
+	uploads, err := app.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch uploads: %v", err)
+	}
+	if len(uploads) != 1 {
+		t.Fatalf("expected 1 site_uploads record, got %d", len(uploads))
+	}
+	uploadRec := uploads[0]
+	// PocketBase appends a random suffix to the stored filename, so the
+	// extension and base name are stable but a 10-char hash sits between
+	// them: hero.png → hero_xxxxxxxxxx.png.
+	stored := uploadRec.GetString("file")
+	if !strings.HasPrefix(stored, "hero_") || !strings.HasSuffix(stored, ".png") {
+		t.Fatalf("expected stored filename like hero_xxx.png, got %q", stored)
+	}
+	// Confirm the binary actually landed on disk under the suffixed name.
+	// The storage dir is keyed by collection id (not its name) and record id.
+	storagePath := app.DataDir() + "/storage/" + uploadRec.Collection().Id + "/" + uploadRec.Id + "/" + stored
+	if _, err := os.Stat(storagePath); err != nil {
+		t.Fatalf("upload binary missing on disk: %s err=%v", storagePath, err)
+	}
+
+	// The page section entry that backs the `image` field should now hold the
+	// upload record id, not the symbolic uploads/hero.png path.
+	entries, err := app.FindRecordsByFilter("page_section_entries", "field.symbol.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch page section entries: %v", err)
+	}
+	var imageEntry *core.Record
+	for _, e := range entries {
+		raw := e.GetString("value")
+		if strings.Contains(raw, "hero.png") || strings.Contains(raw, uploadRec.Id) {
+			imageEntry = e
+			break
+		}
+	}
+	if imageEntry == nil {
+		t.Fatalf("did not find image entry referencing the upload; entries: %d", len(entries))
+	}
+	rawValue := imageEntry.GetString("value")
+	if !strings.Contains(rawValue, uploadRec.Id) {
+		t.Fatalf("expected entry value to reference upload id %s, got %s", uploadRec.Id, rawValue)
+	}
+	if strings.Contains(rawValue, "uploads/hero.png") {
+		t.Fatalf("symbolic path leaked into stored value: %s", rawValue)
+	}
+
+	// Round-trip: export and confirm both the manifest and the binary are in
+	// the zip, then re-import that zip and confirm no new records or warnings.
+	exportedZip, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatalf("export site: %v", err)
+	}
+	// Export uses the canonical (suffixed) name, mirroring what was on disk.
+	exportedBinary := readZipFileBytes(t, exportedZip, "uploads/"+stored)
+	if !bytes.Equal(exportedBinary, pngBytes) {
+		t.Fatalf("exported upload bytes don't match: in=%d out=%d", len(pngBytes), len(exportedBinary))
+	}
+	manifestJSON := readZipFile(t, exportedZip, "uploads/.manifest.json")
+	if !strings.Contains(manifestJSON, uploadRec.Id) {
+		t.Fatalf("manifest missing upload id %s: %s", uploadRec.Id, manifestJSON)
+	}
+	if !strings.Contains(manifestJSON, stored) {
+		t.Fatalf("manifest missing filename %s: %s", stored, manifestJSON)
+	}
+
+	uploadsBeforeReimport := len(uploads)
+	reimportResult, err := processImport(app, site, exportedZip, false)
+	if err != nil {
+		t.Fatalf("re-import: %v", err)
+	}
+	for _, w := range reimportResult.Warnings {
+		if w.Kind == "orphan_upload" {
+			t.Fatalf("unexpected orphan_upload warning on no-op re-import: %#v", w)
+		}
+	}
+	uploadsAfter, err := app.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch uploads after reimport: %v", err)
+	}
+	if len(uploadsAfter) != uploadsBeforeReimport {
+		t.Fatalf("re-import created duplicate uploads: before=%d after=%d", uploadsBeforeReimport, len(uploadsAfter))
+	}
+}
+
+func TestImportUploadsEmitsOrphanWarning(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+
+	// Seed an upload via a first push.
+	pngBytes := fakePNG()
+	seed := map[string][]byte{
+		"uploads/keep-me.png":            pngBytes,
+		"blocks/hero/config.yaml":        []byte("name: hero\n"),
+		"blocks/hero/component.svelte":   []byte("<section />\n"),
+		"blocks/hero/fields.yaml":        []byte("[]\n"),
+		"blocks/hero/content.yaml":       []byte("{}\n"),
+		"page-types/default/config.yaml": []byte("name: Default\nallowed_blocks:\n  - hero\n"),
+		"page-types/default/fields.yaml": []byte("[]\n"),
+		"page-types/default/layout.yaml": []byte("{}\n"),
+		"pages/index.yaml":               []byte("name: Home\npage_type: Default\nsections: []\n"),
+		"site/fields.yaml":               []byte("[]\n"),
+		"site/content.yaml":              []byte("{}\n"),
+	}
+	if _, err := processImport(app, site, zipFilesBinary(t, seed), false); err != nil {
+		t.Fatalf("seed import: %v", err)
+	}
+
+	// After the seed push, the storage name is suffixed — pick it up from the
+	// DB record so the orphan manifest references the same canonical name.
+	seedRecs, err := app.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil || len(seedRecs) != 1 {
+		t.Fatalf("seed push didn't produce exactly one upload: %v err=%v", seedRecs, err)
+	}
+	seedFilename := seedRecs[0].GetString("file")
+
+	// Push again with the manifest still mentioning the seed file, but the
+	// binary missing from disk. Expect an orphan_upload warning and the
+	// record to be preserved (no auto-deletion).
+	manifestJSON := fmt.Sprintf(`{%q:{"id":"placeholder","url":"/api/files/site_uploads/placeholder/%s"}}`, seedFilename, seedFilename)
+	manifestOnly := map[string][]byte{
+		"uploads/.manifest.json": []byte(manifestJSON),
+		"blocks/hero/config.yaml":        []byte("name: hero\n"),
+		"blocks/hero/component.svelte":   []byte("<section />\n"),
+		"blocks/hero/fields.yaml":        []byte("[]\n"),
+		"blocks/hero/content.yaml":       []byte("{}\n"),
+		"page-types/default/config.yaml": []byte("name: Default\nallowed_blocks:\n  - hero\n"),
+		"page-types/default/fields.yaml": []byte("[]\n"),
+		"page-types/default/layout.yaml": []byte("{}\n"),
+		"pages/index.yaml":               []byte("name: Home\npage_type: Default\nsections: []\n"),
+		"site/fields.yaml":               []byte("[]\n"),
+		"site/content.yaml":              []byte("{}\n"),
+	}
+	result, err := processImport(app, site, zipFilesBinary(t, manifestOnly), false)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	var orphanFound bool
+	for _, w := range result.Warnings {
+		if w.Kind == "orphan_upload" && w.Path == seedFilename {
+			orphanFound = true
+			break
+		}
+	}
+	if !orphanFound {
+		t.Fatalf("expected orphan_upload warning for %s, got %#v", seedFilename, result.Warnings)
+	}
+
+	uploadsAfter, err := app.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch uploads after orphan push: %v", err)
+	}
+	if len(uploadsAfter) != 1 {
+		t.Fatalf("orphan push must not delete records: have %d (expected 1)", len(uploadsAfter))
+	}
+	// Also verify the disk file actually exists from the seed push — otherwise
+	// the "no-delete" guarantee is hollow because there was never a file.
+	rec := uploadsAfter[0]
+	diskPath := app.DataDir() + "/storage/" + rec.Collection().Id + "/" + rec.Id + "/" + rec.GetString("file")
+	if _, err := os.Stat(diskPath); err != nil {
+		t.Fatalf("seed upload missing on disk: %s err=%v", diskPath, err)
+	}
+}
+
+func readZipFileBytes(t *testing.T, zipData []byte, name string) []byte {
+	t.Helper()
+
+	zr, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		t.Fatalf("open zip: %v", err)
+	}
+	for _, f := range zr.File {
+		if f.Name != name {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			t.Fatalf("open zip entry %s: %v", name, err)
+		}
+		defer rc.Close()
+		data, err := io.ReadAll(rc)
+		if err != nil {
+			t.Fatalf("read zip entry %s: %v", name, err)
+		}
+		return data
+	}
+	t.Fatalf("missing zip entry %s", name)
+	return nil
 }

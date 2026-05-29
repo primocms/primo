@@ -20,14 +20,33 @@
 	const createToken = $derived(page.url.searchParams.get('create') || '')
 	const invitedEmail = $derived(page.url.searchParams.get('email') || '')
 
-	const handleAvatarChange = (event: Event) => {
+	const handleAvatarChange = async (event: Event) => {
 		const target = event.target as HTMLInputElement
-		const file = target.files?.[0]
-		if (file) {
-			avatarFile = file
-			// Create a preview URL
-			avatar = URL.createObjectURL(file)
+		const input_file = target.files?.[0]
+		if (!input_file) return
+
+		error = ''
+		let file = input_file
+
+		// iPhones save photos as HEIC by default; PocketBase rejects them. Convert to JPEG.
+		const is_heic = /\.hei[cf]$/i.test(file.name) || /image\/hei[cf]/i.test(file.type)
+		if (is_heic) {
+			try {
+				loading = true
+				const { default: heic2any } = await import('heic2any')
+				const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 })
+				const blob = Array.isArray(converted) ? converted[0] : converted
+				file = new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' })
+			} catch (err) {
+				error = 'Could not read this photo. Try a JPEG or PNG instead.'
+				return
+			} finally {
+				loading = false
+			}
 		}
+
+		avatarFile = file
+		avatar = URL.createObjectURL(file)
 	}
 
 	const submit = async (event: SubmitEvent) => {

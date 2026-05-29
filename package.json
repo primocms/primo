@@ -76,5 +76,8 @@
 		"tailwindcss-animate": "^1.0.7",
 		"typescript": "^5.9.2",
 		"zod": "^4.4.3"
+	},
+	"dependencies": {
+		"heic2any": "^0.0.4"
 	}
 }
