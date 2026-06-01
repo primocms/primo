@@ -54,7 +54,7 @@
 		"nanoid": "^5.1.11",
 		"paneforge": "^1.0.2",
 		"pluralize": "^8.0.0",
-		"pocketbase": "^0.26.8",
+		"pocketbase": "^0.27.0",
 		"postcss": "^8.5.14",
 		"postcss-nested": "^7.0.2",
 		"posthog-js": "^1.369.3",
