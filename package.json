@@ -24,7 +24,7 @@
 		"@rollup/browser": "^4.60.4",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@sveltejs/kit": "^2.61.1",
-		"@tailwindcss/postcss": "^4.2.4",
+		"@tailwindcss/postcss": "^4.3.0",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tiptap/core": "^3.23.6",
 		"@tiptap/extension-highlight": "^3.24.0",
