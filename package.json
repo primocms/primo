@@ -24,8 +24,8 @@
 		"@rollup/browser": "^4.60.4",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@sveltejs/kit": "^2.61.1",
-		"@tailwindcss/postcss": "^4.3.0",
 		"@tailwindcss/typography": "^0.5.19",
+		"@tailwindcss/vite": "^4.3.0",
 		"@tiptap/core": "^3.23.6",
 		"@tiptap/extension-highlight": "^3.24.0",
 		"@tiptap/extension-image": "^3.24.0",
@@ -79,5 +79,9 @@
 	},
 	"dependencies": {
 		"heic2any": "^0.0.4"
+	},
+	"overrides": {
+		"vite": "^7.3.3",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4"
 	}
 }
