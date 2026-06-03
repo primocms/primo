@@ -232,6 +232,10 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 	// dashboard or by bootstrap), and a file→CMS push must never overwrite
 	// the routing host out from under the user.
 	siteName, siteGroup := readSiteConfigFromZip(zipData)
+	// site.yaml only stores the group ID. The CLI sends the group's display
+	// name out-of-band (from workspace server.yaml) so first-time pushes of
+	// a new group land with the right label instead of a humanized ID.
+	siteGroupName := strings.TrimSpace(e.Request.FormValue("group_name"))
 
 	// Find the site or create it if it doesn't exist
 	siteCreated := false
@@ -252,7 +256,7 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			return e.InternalServerError("Failed to ensure default site group", groupErr)
 		}
 		if siteGroup != "" {
-			if resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup}); resolveErr == nil {
+			if resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName}); resolveErr == nil {
 				groupId = resolvedGroupId
 			}
 		}
@@ -299,7 +303,7 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			dirty = true
 		}
 		if siteGroup != "" {
-			resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup})
+			resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName})
 			if resolveErr == nil && site.GetString("group") != resolvedGroupId {
 				site.Set("group", resolvedGroupId)
 				dirty = true
