@@ -219,7 +219,12 @@ func ensureBootstrapGroups(pb *pocketbase.PocketBase, groups []bootstrapSiteGrou
 func ensureBootstrapGroup(pb *pocketbase.PocketBase, group bootstrapSiteGroup) (string, error) {
 	groupID := strings.TrimSpace(group.ID)
 	groupName := strings.TrimSpace(group.Name)
-	if groupName == "" {
+	// nameProvided distinguishes "caller passed an explicit name" from
+	// "caller only had an ID". On the push path the CLI only knows the group
+	// ID, so we must NOT synthesize a name from the ID and then overwrite a
+	// user's existing label (e.g. clobbering "Clients" with "8Y17hao5jt2xmd8").
+	nameProvided := groupName != ""
+	if !nameProvided {
 		groupName = humanizeGroupID(groupID)
 	}
 	if groupName == "" {
@@ -239,8 +244,12 @@ func ensureBootstrapGroup(pb *pocketbase.PocketBase, group bootstrapSiteGroup) (
 	}
 
 	if existingGroup != nil {
-		existingGroup.Set("name", groupName)
-		existingGroup.Set("index", group.Index)
+		if nameProvided {
+			existingGroup.Set("name", groupName)
+		}
+		if group.Index != 0 {
+			existingGroup.Set("index", group.Index)
+		}
 		if err := pb.Save(existingGroup); err != nil {
 			return "", err
 		}
