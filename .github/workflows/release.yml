@@ -87,7 +87,7 @@ jobs:
           merge-multiple: true
 
       - name: Upload assets to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: binaries/*
           draft: true
