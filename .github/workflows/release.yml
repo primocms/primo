@@ -34,21 +34,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npx svelte-kit sync
+          npx vite --config common.config.js build
+          npx vite --config app.config.js build
+        shell: bash
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          PRIMO_VERSION: ${{ github.ref_name }}
         run: |
           ext=""
           if [ "${{ matrix.goos }}" = "windows" ]; then
             ext=".exe"
           fi
-          go build -ldflags="-s -w" -o palacms_${{ matrix.goos }}_${{ matrix.goarch }}${ext} .
+          go build \
+            -ldflags="-s -w \
+              -X 'github.com/palacms/palacms/internal.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)' \
+              -X 'github.com/palacms/palacms/internal.buildVersion=${PRIMO_VERSION}'" \
+            -o palacms_${{ matrix.goos }}_${{ matrix.goarch }}${ext} .
         shell: bash
 
       - name: Upload artifact
@@ -68,8 +86,8 @@ jobs:
           path: binaries
           merge-multiple: true
 
-      - name: Create release
+      - name: Upload assets to release
         uses: softprops/action-gh-release@v1
         with:
           files: binaries/*
-          generate_release_notes: true
+          draft: true
