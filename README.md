@@ -43,15 +43,15 @@ The easiest way to get started is Railway:
 Or run it anywhere Docker runs:
 
 ```bash
-docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/palacms/palacms:latest
+docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/primocms/primo:latest
 ```
 
 Then open your server's URL to create your first site.
 
 **Next steps:**
-1. **[Quickstart](https://docs.palacms.com/getting-started/quickstart)** — key concepts
-2. **[Build your first site](https://docs.palacms.com/building-sites/your-first-site)**
-3. **[Write your first block](https://docs.palacms.com/building-sites/writing-components)**
+1. **[Quickstart](https://docs.primo.build/getting-started/quickstart)** — key concepts
+2. **[Build your first site](https://docs.primo.build/building-sites/your-first-site)**
+3. **[Write your first block](https://docs.primo.build/building-sites/writing-components)**
 
 ## Who it's for
 
@@ -64,7 +64,7 @@ Freelancers, small agencies, and small teams who code their clients' sites and n
 - **vs. Astro / Eleventy** — Primo is a static site generator too, but bundles the CMS, block library, and multi-site hosting with it. You get the SSG workflow *and* the client handoff.
 - **vs. Sanity / Storyblok** — structured content and component blocks, but monolithic: no separate frontend to wire up, no API tokens, no deployment glue.
 
-[Full comparison →](https://docs.palacms.com/comparison)
+[Full comparison →](https://docs.primo.build/comparison)
 
 ## Project status
 
@@ -73,14 +73,14 @@ Freelancers, small agencies, and small teams who code their clients' sites and n
 
 ## Documentation
 
-- **[Installation](https://docs.palacms.com/getting-started/installation)** — self-host or run locally
-- **[Quickstart](https://docs.palacms.com/getting-started/quickstart)** — key concepts
-- **[Writing Blocks](https://docs.palacms.com/building-sites/writing-components)** — Svelte components
-- **[Field Types](https://docs.palacms.com/reference/field-types)** — content field reference
-- **[Managing Sites](https://docs.palacms.com/dashboard/managing-sites)** — site groups
-- **[Page Types](https://docs.palacms.com/building-sites/defining-page-types)** — custom page structures
-- **[Collaboration](https://docs.palacms.com/collaboration/inviting-collaborators)** — working with editors
-- **[Keyboard Shortcuts](https://docs.palacms.com/reference/keyboard-shortcuts)**
+- **[Installation](https://docs.primo.build/getting-started/installation)** — self-host or run locally
+- **[Quickstart](https://docs.primo.build/getting-started/quickstart)** — key concepts
+- **[Writing Blocks](https://docs.primo.build/building-sites/writing-components)** — Svelte components
+- **[Field Types](https://docs.primo.build/reference/field-types)** — content field reference
+- **[Managing Sites](https://docs.primo.build/dashboard/managing-sites)** — site groups
+- **[Page Types](https://docs.primo.build/building-sites/defining-page-types)** — custom page structures
+- **[Collaboration](https://docs.primo.build/collaboration/inviting-collaborators)** — working with editors
+- **[Keyboard Shortcuts](https://docs.primo.build/reference/keyboard-shortcuts)**
 
 ## Community
 
