@@ -45,7 +45,7 @@
 		"css-simple-parser": "^3.0.2",
 		"estree-walker": "^3.0.3",
 		"highlight.js": "^11.11.1",
-		"idb-keyval": "^6.2.2",
+		"idb-keyval": "^6.2.5",
 		"lodash-es": "^4.18.1",
 		"lowlight": "^3.3.0",
 		"lucide-svelte": "^0.577.0",
