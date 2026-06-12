@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/palacms/palacms/migrations"
+	_ "github.com/primocms/primo/migrations"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 	"gopkg.in/yaml.v3"
@@ -171,14 +171,16 @@ func TestImportReimportsPageTypeFieldsBeforePageContent(t *testing.T) {
 	if err := yaml.Unmarshal([]byte(pageYAML), &page); err != nil {
 		t.Fatalf("parse exported page: %v\n%s", err, pageYAML)
 	}
-	if got := page.Content["seo_title"]; got != "Persist SEO" {
-		t.Fatalf("expected seo_title content to survive export, got %#v\n%s", got, pageYAML)
+	// Page-level values import from legacy `content:` (above) but must export
+	// under canonical `fields:`.
+	if got := page.Fields["seo_title"]; got != "Persist SEO" {
+		t.Fatalf("expected seo_title to survive export under fields, got %#v\n%s", got, pageYAML)
 	}
-	if got := page.Content["seo_description"]; got != "Stays here" {
-		t.Fatalf("expected seo_description content to survive export, got %#v\n%s", got, pageYAML)
+	if got := page.Fields["seo_description"]; got != "Stays here" {
+		t.Fatalf("expected seo_description to survive export under fields, got %#v\n%s", got, pageYAML)
 	}
-	if len(page.Fields) > 0 {
-		t.Fatalf("expected page type values to export as content, got legacy fields %#v\n%s", page.Fields, pageYAML)
+	if len(page.Content) > 0 {
+		t.Fatalf("expected page type values to export as fields, got legacy content %#v\n%s", page.Content, pageYAML)
 	}
 }
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/palacms/palacms/internal"
-	_ "github.com/palacms/palacms/migrations"
+	"github.com/primocms/primo/internal"
+	_ "github.com/primocms/primo/migrations"
 	"github.com/pocketbase/pocketbase"
 )
 
@@ -13,7 +13,7 @@ import (
 var BuildTime = "dev"
 
 func main() {
-	fmt.Printf("[palacms build: %s]\n", BuildTime)
+	fmt.Printf("[primo build: %s]\n", BuildTime)
 	pb := pocketbase.New()
 
 	if err := setup(pb); err != nil {

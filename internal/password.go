@@ -9,7 +9,7 @@ import (
 
 func RegisterPasswordLinkEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/password-link", func(requestEvent *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/password-link", func(requestEvent *core.RequestEvent) error {
 			body := struct {
 				SiteId string `json:"site_id"`
 				UserId string `json:"user_id"`

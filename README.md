@@ -6,7 +6,7 @@ Primo is a CMS for developers who build sites for clients who need to manage the
 
 **One-click deploy:**
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/primo?referralCode=RCPU7k)
 
 ![screenshot](https://cdn.primo.page/f52960e1-0bb0-4c64-9f70-5a9994ce95fc/staging/_images/1739675414227Screenshot%202025-02-15%20at%2010.10.10%E2%80%AFPM.png)
 
@@ -38,7 +38,7 @@ Your clients keep editing content in the browser the whole time. Code and conten
 
 The easiest way to get started is Railway:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/primo?referralCode=RCPU7k)
 
 Or run it anywhere Docker runs:
 

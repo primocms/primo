@@ -14,7 +14,7 @@
 
 	const tryDevAuth = async () => {
 		try {
-			const response = await fetch('/api/palacms/dev-auth', { method: 'POST' })
+			const response = await fetch('/api/primo/dev-auth', { method: 'POST' })
 			if (response.ok) {
 				const data = await response.json()
 				if (data.token && data.record && self.instance) {

@@ -3,8 +3,7 @@
  *
  * This module collects anonymous usage statistics to help improve Primo CMS.
  * Data collection is privacy-focused and can be disabled by setting
- * PRIMO_DISABLE_USAGE_STATS=true (PALA_DISABLE_USAGE_STATS is accepted as a
- * fallback for existing deployments).
+ * PRIMO_DISABLE_USAGE_STATS=true.
  *
  * What we collect:
  * - Anonymous instance ID (random UUID, not linked to any personal data)

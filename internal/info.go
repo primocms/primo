@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"os"
 	"time"
 
 	"github.com/pocketbase/pocketbase"
@@ -10,7 +11,7 @@ import (
 
 // Check if running in hosted mode (managed SaaS)
 func isHostedMode() bool {
-	return getenvCompat("PRIMO_HOSTED_MODE", "PALA_HOSTED_MODE") == "true"
+	return os.Getenv("PRIMO_HOSTED_MODE") == "true"
 }
 
 var buildTime string
@@ -73,7 +74,7 @@ func RegisterVersion(pb *pocketbase.PocketBase) error {
 
 func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.GET("/api/palacms/info", func(requestEvent *core.RequestEvent) error {
+		serveEvent.Router.GET("/api/primo/info", func(requestEvent *core.RequestEvent) error {
 			id, err := getInstanceId(pb)
 			if err != nil {
 				return err
@@ -96,7 +97,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled: false, // Analytics disabled
 				SMTPEnabled:      smtpEnabled,
 				HostedMode:       isHostedMode(),
-				BillingURL:       getenvCompat("PRIMO_BILLING_URL", "PALA_BILLING_URL"),
+				BillingURL:       os.Getenv("PRIMO_BILLING_URL"),
 				DevMode:          DevMode,
 			})
 		})

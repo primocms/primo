@@ -207,7 +207,7 @@
 				form_data.append('group_id', site_group?.id ?? '')
 				form_data.append('snapshot_file', uploaded_snapshot_file)
 
-				response = await fetch(`${self.instance?.baseURL}/api/palacms/clone-site`, {
+				response = await fetch(`${self.instance?.baseURL}/api/primo/clone-site`, {
 					method: 'POST',
 					headers: {
 						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
@@ -245,7 +245,7 @@
 				}
 
 				// Call server-side clone endpoint
-				response = await fetch(`${self.instance?.baseURL}/api/palacms/clone-site`, {
+				response = await fetch(`${self.instance?.baseURL}/api/primo/clone-site`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

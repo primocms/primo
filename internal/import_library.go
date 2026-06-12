@@ -38,7 +38,7 @@ type libraryBlockLocation struct {
 
 func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/import-library", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/import-library", func(e *core.RequestEvent) error {
 			isLocal := IsLocalhost(e)
 			if e.Auth == nil && !isLocal {
 				return e.UnauthorizedError("Authentication required", nil)

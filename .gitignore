@@ -41,11 +41,12 @@ devenv.local.nix
 pala
 pala_old
 palacms
-palacms_darwin_amd64
-palacms_darwin_arm64
-palacms_linux_amd64
-palacms_linux_arm64
-palacms_windows_amd64.exe
+primo
+primo_darwin_amd64
+primo_darwin_arm64
+primo_linux_amd64
+primo_linux_arm64
+primo_windows_amd64.exe
 
 # Logs and console output
 *.log
