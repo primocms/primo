@@ -19,7 +19,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-var cloneDebugEnabled = getenvCompat("PRIMOCMS_DEBUG_CLONE", "PALACMS_DEBUG_CLONE") != ""
+var cloneDebugEnabled = os.Getenv("PRIMOCMS_DEBUG_CLONE") != ""
 
 func cloneLog(format string, args ...any) {
 	if !cloneDebugEnabled {
@@ -28,11 +28,12 @@ func cloneLog(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "[clone] "+format+"\n", args...)
 }
 
-// Snapshot file signature: legacy "PALACMS:3.0" magic bytes, retained so
-// existing .pala / .primo files continue to round-trip across the rebrand.
-// A new signature can be introduced when the file format changes; for now
-// we keep this as the on-disk identifier.
-var snapshotSignature = []byte{0x50, 0x41, 0x4c, 0x41, 0x43, 0x4d, 0x53, 0x3a, 0x33, 0x2e, 0x30}
+// Snapshot file signature: legacy "PALACMS:3.0" magic bytes. This is an
+// opaque on-disk identifier, not a user-visible brand string, and it must
+// match the signature the TS Snapshot codec writes (src/lib/common/models/
+// Snapshot.ts) so browser-created .pala/.primo snapshots still import. Kept as
+// the legacy bytes across the rebrand; only change it in lockstep with the TS side.
+var snapshotSignature = []byte("PALACMS:3.0")
 
 type SnapshotMetadata struct {
 	CreatedAt             string `json:"created_at"`
@@ -76,7 +77,7 @@ type IDMap map[string]string
 
 func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/clone-site", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/clone-site", func(e *core.RequestEvent) error {
 			// Check for multipart form (file upload). HasPrefix on the
 			// lowercased value handles "Multipart/Form-Data" casing and the
 			// "; boundary=..." parameter suffix in one check.

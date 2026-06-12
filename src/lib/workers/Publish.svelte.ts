@@ -118,7 +118,7 @@ export const usePublishSite = (site_id?: string) => {
 			}
 
 			await Promise.all(promises)
-			await fetch(new URL('/api/palacms/generate', self.instance?.baseURL), {
+			await fetch(new URL('/api/primo/generate', self.instance?.baseURL), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

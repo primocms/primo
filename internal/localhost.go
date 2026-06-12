@@ -11,11 +11,11 @@ import (
 )
 
 // resolveAuthorMode reads the sync mode the primo-cli set when spawning
-// palacms. The CMS UI uses this to gate editable surfaces — when the CLI
+// primo. The CMS UI uses this to gate editable surfaces — when the CLI
 // runs with --author files, CMS edits would be discarded on the next
 // pull cycle, so the UI shows a read-only banner instead of letting the
 // user make edits that silently vanish. Defaults to "both" when the env
-// var is missing or unrecognized so palacms running outside primo dev
+// var is missing or unrecognized so primo running outside primo dev
 // stays fully editable.
 func resolveAuthorMode() string {
 	mode := os.Getenv("PRIMO_AUTHOR_MODE")
@@ -44,7 +44,7 @@ func IsLocalhost(e *core.RequestEvent) bool {
 // RegisterDevAuthEndpoint registers an endpoint for localhost dev
 // authentication. The endpoint creates a fixed-password developer account on
 // demand, so it must never exist in production binaries; we only register
-// the route when PALA_DEV_MODE=1, matching RegisterDevMode's gating. The
+// the route when PRIMO_DEV_MODE=1, matching RegisterDevMode's gating. The
 // frontend already tolerates a 404 here (auth/+layout.svelte) and falls
 // through to manual login.
 func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
@@ -53,7 +53,7 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 	}
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Dev auth endpoint - only works on localhost
-		serveEvent.Router.POST("/api/palacms/dev-auth", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/dev-auth", func(e *core.RequestEvent) error {
 			if !IsLocalhost(e) {
 				return e.ForbiddenError("Dev auth only available on localhost", nil)
 			}

@@ -115,7 +115,7 @@
 				email = ''
 				role = 'developer'
 
-				const response = await fetch(`${self.instance?.baseURL}/api/palacms/password-link`, {
+				const response = await fetch(`${self.instance?.baseURL}/api/primo/password-link`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

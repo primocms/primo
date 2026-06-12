@@ -10,4 +10,4 @@ export type InstanceInfo = {
 	dev_mode: boolean
 }
 
-export const instance: InstanceInfo = await fetch(new URL('/api/palacms/info', self.baseURL)).then((res) => res.json())
+export const instance: InstanceInfo = await fetch(new URL('/api/primo/info', self.baseURL)).then((res) => res.json())

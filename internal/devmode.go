@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -67,9 +68,7 @@ const (
 )
 
 func init() {
-	// Check for dev mode via environment variable. PRIMO_DEV_MODE is the
-	// canonical name post-rebrand; PALA_DEV_MODE is accepted as a fallback.
-	if getenvCompat("PRIMO_DEV_MODE", "PALA_DEV_MODE") == "1" {
+	if os.Getenv("PRIMO_DEV_MODE") == "1" {
 		DevMode = true
 	}
 }
@@ -227,7 +226,7 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 	}
 
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/dev/reload", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/dev/reload", func(e *core.RequestEvent) error {
 			if !IsLocalhost(e) {
 				return e.ForbiddenError("Localhost only", nil)
 			}

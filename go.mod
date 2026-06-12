@@ -1,4 +1,4 @@
-module github.com/palacms/palacms
+module github.com/primocms/primo
 
 go 1.24.5
 

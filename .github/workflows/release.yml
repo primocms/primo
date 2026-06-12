@@ -64,16 +64,16 @@ jobs:
           fi
           go build \
             -ldflags="-s -w \
-              -X 'github.com/palacms/palacms/internal.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)' \
-              -X 'github.com/palacms/palacms/internal.buildVersion=${PRIMO_VERSION}'" \
-            -o palacms_${{ matrix.goos }}_${{ matrix.goarch }}${ext} .
+              -X 'github.com/primocms/primo/internal.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)' \
+              -X 'github.com/primocms/primo/internal.buildVersion=${PRIMO_VERSION}'" \
+            -o primo_${{ matrix.goos }}_${{ matrix.goarch }}${ext} .
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: palacms_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: palacms_*
+          name: primo_${{ matrix.goos }}_${{ matrix.goarch }}
+          path: primo_*
 
   release:
     needs: build

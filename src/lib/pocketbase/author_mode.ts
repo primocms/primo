@@ -31,7 +31,7 @@ let refresh_promise: Promise<void> | null = null
 export const refresh_author_mode = () => {
 	if (!is_localhost()) return Promise.resolve()
 	if (refresh_promise) return refresh_promise
-	refresh_promise = fetch('/api/palacms/dev-auth', { method: 'POST' })
+	refresh_promise = fetch('/api/primo/dev-auth', { method: 'POST' })
 		.then(async (response) => {
 			if (!response.ok) return
 			const data = await response.json().catch(() => null)

@@ -22,7 +22,7 @@ type bootstrapSiteGroup struct {
 // This endpoint only works when no sites exist yet (security measure)
 func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/bootstrap", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/bootstrap", func(e *core.RequestEvent) error {
 			return handleBootstrap(pb, e)
 		})
 
