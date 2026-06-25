@@ -143,7 +143,7 @@ func RegisterUsageStats(pb *pocketbase.PocketBase) error {
 
 		// Set up daily heartbeat
 		if err := pb.Cron().Add(
-			"send_palacms_usage_stats",
+			"send_primo_usage_stats",
 			"@daily",
 			func() { sendUsageStats(pb) },
 		); err != nil {

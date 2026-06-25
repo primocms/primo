@@ -19,7 +19,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-var cloneDebugEnabled = os.Getenv("PRIMOCMS_DEBUG_CLONE") != ""
+var cloneDebugEnabled = os.Getenv("PRIMO_DEBUG_CLONE") != ""
 
 func cloneLog(format string, args ...any) {
 	if !cloneDebugEnabled {
