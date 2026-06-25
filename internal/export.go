@@ -61,22 +61,29 @@ type ExportedPageType struct {
 // as block fields.yaml and site/fields.yaml.
 type ExportedPageTypeFields []interface{}
 
-// ExportedLayout represents a page type's layout (header/footer sections)
+// ExportedLayout represents a page type's layout (header/body/footer sections).
+// Body sections are seed defaults for newly created pages of this type — they are
+// copied onto a page's own sections at creation, not rendered from the layout.
 type ExportedLayout struct {
 	Header        []ExportedLayoutSection `yaml:"header,omitempty"`
+	Body          []ExportedLayoutSection `yaml:"body,omitempty"`
 	Footer        []ExportedLayoutSection `yaml:"footer,omitempty"`
 	AllowedBlocks []string                `yaml:"allowed_blocks,omitempty"`
 }
 
 // emptyLayoutTemplate is what we write to page-types/<key>/layout.yaml when
-// the page type has no header/footer sections defined. The whole thing is
+// the page type has no header/body/footer sections defined. The whole thing is
 // commented so it doubles as inline documentation showing what's possible
 // without becoming live config.
 const emptyLayoutTemplate = `# Sections shared by every page of this type. Add blocks here to render
-# the same header/footer across all pages of this type.
+# the same header/footer across all pages of this type. Body sections are
+# seeded onto each newly created page of this type (and locked when the type
+# has no allowed_blocks).
 #
 # header:
 #   - block: site-header
+# body:
+#   - block: hero
 # footer:
 #   - block: site-footer
 `
@@ -452,13 +459,14 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			}
 		}
 
-		// Fetch header/footer slots (page_type_sections) with their content
+		// Fetch header/body/footer slots (page_type_sections) with their content
 		ptSections, err := pb.FindRecordsByFilter("page_type_sections", "page_type = {:pt}", "+index", 0, 0, dbx.Params{"pt": pt.Id})
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch page type sections: %w", err)
 		}
 
 		headerSections := make([]map[string]interface{}, 0)
+		bodySections := make([]map[string]interface{}, 0)
 		footerSections := make([]map[string]interface{}, 0)
 		for _, section := range ptSections {
 			slot := section.GetString("zone")
@@ -503,20 +511,25 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 
 			if slot == "header" {
 				headerSections = append(headerSections, sectionData)
+			} else if slot == "body" {
+				bodySections = append(bodySections, sectionData)
 			} else if slot == "footer" {
 				footerSections = append(footerSections, sectionData)
 			}
 		}
 
-		// layout.yaml is always emitted. When the page type has header/footer
+		// layout.yaml is always emitted. When the page type has header/body/footer
 		// sections, we write them; otherwise we write the comment-only
 		// template so the file's purpose is self-documenting and importers /
 		// validators can rely on its presence.
 		layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptName)
-		if len(headerSections) > 0 || len(footerSections) > 0 {
+		if len(headerSections) > 0 || len(bodySections) > 0 || len(footerSections) > 0 {
 			layout := map[string]interface{}{}
 			if len(headerSections) > 0 {
 				layout["header"] = headerSections
+			}
+			if len(bodySections) > 0 {
+				layout["body"] = bodySections
 			}
 			if len(footerSections) > 0 {
 				layout["footer"] = footerSections
