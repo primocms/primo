@@ -236,7 +236,7 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 		})
 
 		// WebSocket endpoint for dev indicator
-		serveEvent.Router.GET("/__pala_dev_ws__", func(e *core.RequestEvent) error {
+		serveEvent.Router.GET("/__primo_dev_ws__", func(e *core.RequestEvent) error {
 			if !IsLocalhost(e) {
 				return e.ForbiddenError("Localhost only", nil)
 			}
@@ -409,7 +409,7 @@ const DevIndicatorScript = `
 
   function connect() {
     const wsScheme = location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const wsUrl = wsScheme + location.host + '/__pala_dev_ws__';
+    const wsUrl = wsScheme + location.host + '/__primo_dev_ws__';
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

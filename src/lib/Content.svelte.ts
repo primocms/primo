@@ -343,7 +343,11 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
 
-				const normalized_value = normalize_entry_value(entry.value) as Record<string, unknown>
+				const normalized_value = normalize_entry_value(entry.value) as Record<string, unknown> | null
+				if (!normalized_value) {
+					content[entry.locale]![field.key] = get_empty_value(field)
+					continue
+				}
 				const upload_id: string | null | undefined = normalized_value.upload as string | null | undefined
 				const upload = upload_id ? uploads.find((upload) => upload.id === upload_id) : null
 
@@ -361,7 +365,6 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				const width: number | null | undefined = normalized_value.width as number | null | undefined
 				const height: number | null | undefined = normalized_value.height as number | null | undefined
 				content[entry.locale]![field.key] = { alt, url, width, height }
-				content[entry.locale]![field.key] = { alt, url }
 			}
 
 			// Handle page fields specially - get content from the page entity

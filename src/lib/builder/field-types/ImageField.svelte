@@ -95,12 +95,12 @@
 			// Extract dimensions from the compressed/final image
 			const dimensions = await get_image_dimensions(file_to_upload)
 
+			// Always create a new upload record instead of updating the existing one in place.
+			// Upload records can be shared by multiple entries (copied sections, duplicated
+			// repeater items, cloned sites), so an in-place update would change the image
+			// everywhere the record is referenced.
 			let upload_record
-			if (upload && site) {
-				upload_record = SiteUploads.update(upload.id, { file: file_to_upload })
-			} else if (upload) {
-				upload_record = LibraryUploads.update(upload.id, { file: file_to_upload })
-			} else if (site) {
+			if (site) {
 				upload_record = SiteUploads.create({ file: file_to_upload, site: site.id })
 			} else {
 				upload_record = LibraryUploads.create({ file: file_to_upload })
@@ -129,7 +129,10 @@
 
 	let width = $state<number | undefined>()
 	let collapsed = $derived(!width || width < 200)
-	let upload = $derived(entry.value.upload ? ('site' in field && site ? SiteUploads.one(entry.value.upload) : LibraryUploads.one(entry.value.upload)) : null)
+	// Uploads belong to the site when editing within a site context (symbol and page-type
+	// fields have no `site` property, so checking the field would wrongly resolve site
+	// uploads through LibraryUploads).
+	let upload = $derived(entry.value.upload ? (site ? SiteUploads.one(entry.value.upload) : LibraryUploads.one(entry.value.upload)) : null)
 	let upload_url = $derived(
 		upload && (typeof upload.file === 'string' ? `${self.instance?.baseURL}/api/files/${site ? 'site_uploads' : 'library_uploads'}/${upload.id}/${upload.file}` : URL.createObjectURL(upload.file))
 	)
