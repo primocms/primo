@@ -2921,6 +2921,50 @@ func importPageType(pb *pocketbase.PocketBase, site *core.Record, ptFolder strin
 			}
 		}
 
+		// Import body sections into the page type layout (zone "body"). These are
+		// seed defaults only: the editor copies them onto a page's own sections
+		// when a new page of this type is created. Import writes the page-type
+		// layout exclusively — it never creates or mutates pages, and the renderer
+		// sources page body from each page's own sections, not from here. A body
+		// block may reference a block outside allowed_blocks — that is allowed by
+		// design (e.g. a one-off hero), so we only warn when the block is not a
+		// registered symbol at all.
+		for i, sectionData := range layoutData.Body {
+			symbolId := symbolByName[sectionData.Block]
+			if symbolId == "" {
+				symbolId = symbolByName[strings.ToLower(sectionData.Block)]
+			}
+			if symbolId == "" {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_symbol",
+					File:    layoutPath,
+					Path:    fmt.Sprintf("body[%d].block", i),
+					Block:   sectionData.Block,
+					Message: fmt.Sprintf("body[%d] references block %q, which is not a registered symbol on this site. New pages of this type will seed with no block for this section. Add blocks/%s/ or fix the reference.", i, sectionData.Block, sectionData.Block),
+				})
+				continue
+			}
+
+			section := core.NewRecord(ptSectionsColl)
+			section.Set("page_type", pageType.Id)
+			section.Set("zone", "body")
+			section.Set("index", i)
+			section.Set("symbol", symbolId)
+
+			if err := pb.Save(section); err != nil {
+				return err
+			}
+
+			// Import content entries for this section. If layout.yaml omits
+			// content, seed it from the block's content.yaml defaults so
+			// layout-mounted blocks behave like newly-added page sections.
+			if content := resolveLayoutContent(sectionData); content != nil {
+				if err := importPageTypeSectionContent(pb, section, symbolFields[symbolId], content); err != nil {
+					return err
+				}
+			}
+		}
+
 		// Import footer sections
 		for i, sectionData := range layoutData.Footer {
 			symbolId := symbolByName[sectionData.Block]

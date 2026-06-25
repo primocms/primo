@@ -1002,3 +1002,155 @@ func readZipFileBytes(t *testing.T, zipData []byte, name string) []byte {
 	t.Fatalf("missing zip entry %s", name)
 	return nil
 }
+
+// TestImportLayoutBodySectionsRoundTrip verifies that layout.yaml header/body/footer
+// sections import into page_type_sections with the right zones, that a body block
+// outside allowed_blocks is accepted without warning (seed-only, by design), and
+// that the layout round-trips back out through export with body preserved.
+func TestImportLayoutBodySectionsRoundTrip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+
+	files := map[string]string{
+		"blocks/site-header/config.yaml":      "name: site-header\n",
+		"blocks/site-header/component.svelte": "<header>hi</header>\n",
+		"blocks/site-header/fields.yaml":      "[]\n",
+		"blocks/site-header/content.yaml":     "{}\n",
+		"blocks/site-footer/config.yaml":      "name: site-footer\n",
+		"blocks/site-footer/component.svelte": "<footer>bye</footer>\n",
+		"blocks/site-footer/fields.yaml":      "[]\n",
+		"blocks/site-footer/content.yaml":     "{}\n",
+		// hero carries a field so we can assert body content survives the round-trip
+		"blocks/hero/config.yaml":      "name: hero\n",
+		"blocks/hero/component.svelte": "<section>{heading}</section>\n",
+		"blocks/hero/fields.yaml": "" +
+			"- name: heading\n" +
+			"  label: Heading\n" +
+			"  type: text\n",
+		"blocks/hero/content.yaml": "{}\n",
+		// cta is intentionally NOT in allowed_blocks — a one-off body seed block.
+		"blocks/cta/config.yaml":      "name: cta\n",
+		"blocks/cta/component.svelte": "<div>cta</div>\n",
+		"blocks/cta/fields.yaml":      "[]\n",
+		"blocks/cta/content.yaml":     "{}\n",
+		// allowed_blocks lists only hero (dynamic type); cta is omitted on purpose.
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks:\n  - hero\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "" +
+			"header:\n" +
+			"  - block: site-header\n" +
+			"body:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Welcome\n" +
+			"  - block: cta\n" +
+			"footer:\n" +
+			"  - block: site-footer\n",
+		"pages/index.yaml":  "name: Home\npage_type: Default\nsections: []\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+
+	result, err := processImport(app, site, zipFiles(t, files), false)
+	if err != nil {
+		t.Fatalf("import: %v", err)
+	}
+	// cta is outside allowed_blocks but IS a registered symbol, so no warning.
+	if len(result.Warnings) > 0 {
+		t.Fatalf("expected no import warnings, got %#v", result.Warnings)
+	}
+
+	// Resolve the page type, then assert the imported section zones.
+	pageTypes, err := app.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil || len(pageTypes) != 1 {
+		t.Fatalf("fetch page type: %v (%d found)", err, len(pageTypes))
+	}
+	sections, err := app.FindRecordsByFilter("page_type_sections", "page_type = {:pt}", "+zone,+index", 0, 0, map[string]any{"pt": pageTypes[0].Id})
+	if err != nil {
+		t.Fatalf("fetch page type sections: %v", err)
+	}
+	zoneCounts := map[string]int{}
+	for _, s := range sections {
+		zoneCounts[s.GetString("zone")]++
+	}
+	if zoneCounts["header"] != 1 || zoneCounts["body"] != 2 || zoneCounts["footer"] != 1 {
+		t.Fatalf("unexpected zone counts: %#v", zoneCounts)
+	}
+
+	// Round-trip: export and confirm body survives with its content.
+	exportedZip, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatalf("export site: %v", err)
+	}
+	layoutYAML := readZipFile(t, exportedZip, "page-types/default/layout.yaml")
+	var layout struct {
+		Header []struct {
+			Block string `yaml:"block"`
+		} `yaml:"header"`
+		Body []struct {
+			Block   string         `yaml:"block"`
+			Content map[string]any `yaml:"content"`
+		} `yaml:"body"`
+		Footer []struct {
+			Block string `yaml:"block"`
+		} `yaml:"footer"`
+	}
+	if err := yaml.Unmarshal([]byte(layoutYAML), &layout); err != nil {
+		t.Fatalf("parse exported layout: %v\n%s", err, layoutYAML)
+	}
+	if len(layout.Header) != 1 || len(layout.Body) != 2 || len(layout.Footer) != 1 {
+		t.Fatalf("unexpected exported layout shape: %#v\n%s", layout, layoutYAML)
+	}
+	if layout.Body[0].Block != "hero" || layout.Body[1].Block != "cta" {
+		t.Fatalf("body section order/blocks wrong: %#v\n%s", layout.Body, layoutYAML)
+	}
+	if got := layout.Body[0].Content["heading"]; got != "Welcome" {
+		t.Fatalf("body content did not survive round-trip, got %#v\n%s", got, layoutYAML)
+	}
+
+	// Importing body must not have created any pages or page sections.
+	pageSections, err := app.FindRecordsByFilter("page_sections", "page.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch page sections: %v", err)
+	}
+	if len(pageSections) != 0 {
+		t.Fatalf("import seeded page sections from layout body, expected none, got %d", len(pageSections))
+	}
+}
+
+// TestImportLayoutBodyMissingSymbolWarns verifies that a body block referencing an
+// unregistered symbol (no blocks/<name>/) produces a missing_symbol warning, unlike
+// the allowed_blocks case which is silent.
+func TestImportLayoutBodyMissingSymbolWarns(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+
+	files := map[string]string{
+		"page-types/default/config.yaml": "name: Default\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "" +
+			"body:\n" +
+			"  - block: ghost\n",
+		"pages/index.yaml":  "name: Home\npage_type: Default\nsections: []\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+
+	result, err := processImport(app, site, zipFiles(t, files), false)
+	if err != nil {
+		t.Fatalf("import: %v", err)
+	}
+	found := false
+	for _, w := range result.Warnings {
+		if w.Kind == "missing_symbol" && strings.HasPrefix(w.Path, "body[") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected a missing_symbol warning for body block, got %#v", result.Warnings)
+	}
+}
