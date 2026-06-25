@@ -21,7 +21,7 @@ type ExportedLibraryGroup struct {
 
 func RegisterLibraryExportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.GET("/api/palacms/export-library", func(e *core.RequestEvent) error {
+		serveEvent.Router.GET("/api/primo/export-library", func(e *core.RequestEvent) error {
 			isLocal := IsLocalhost(e)
 			if e.Auth == nil && !isLocal {
 				return e.UnauthorizedError("Authentication required", nil)

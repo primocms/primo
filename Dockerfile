@@ -27,9 +27,9 @@ COPY --from=node-builder /app/internal/common /app/internal/common
 
 # Build executable
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH \
-  go build -o palacms -ldflags "\
-    -X 'github.com/palacms/palacms/internal.buildTime=$(date --utc -Iseconds)'\
-    -X 'github.com/palacms/palacms/internal.buildVersion=$PRIMO_VERSION'\
+  go build -o primo -ldflags "\
+    -X 'github.com/primocms/primo/internal.buildTime=$(date --utc -Iseconds)'\
+    -X 'github.com/primocms/primo/internal.buildVersion=$PRIMO_VERSION'\
   "
 
 FROM alpine:3 AS runtime
@@ -40,9 +40,9 @@ ENV PRIMO_USER_EMAIL=
 ENV PRIMO_USER_PASSWORD=
 
 # Copy build executable
-COPY --from=go-builder /app/palacms /app/palacms
+COPY --from=go-builder /app/primo /app/primo
 
 EXPOSE 8080
 WORKDIR /app
 
-CMD ["./palacms", "serve", "--http=0.0.0.0:8080"]
+CMD ["./primo", "serve", "--http=0.0.0.0:8080"]

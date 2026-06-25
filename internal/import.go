@@ -182,12 +182,12 @@ type ImportResult struct {
 func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Preview endpoint - shows what would change
-		serveEvent.Router.POST("/api/palacms/import/{siteId}/preview", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/import/{siteId}/preview", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, true)
 		})
 
 		// Apply endpoint - actually makes changes
-		serveEvent.Router.POST("/api/palacms/import/{siteId}", func(e *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/import/{siteId}", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, false)
 		})
 
@@ -1741,22 +1741,25 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 	return nil
 }
 
+// pageContentValues resolves page-level field values from a page YAML.
+// `fields:` is canonical (the page's own fields). `content:` is a tolerated
+// legacy alias from older exports; when both are present, `fields:` wins.
 func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
-	if len(pageData.Content) == 0 {
-		return pageData.Fields, "fields"
-	}
 	if len(pageData.Fields) == 0 {
 		return pageData.Content, "content"
 	}
+	if len(pageData.Content) == 0 {
+		return pageData.Fields, "fields"
+	}
 
 	merged := make(map[string]interface{}, len(pageData.Fields)+len(pageData.Content))
-	for key, value := range pageData.Fields {
-		merged[key] = value
-	}
 	for key, value := range pageData.Content {
 		merged[key] = value
 	}
-	return merged, "content"
+	for key, value := range pageData.Fields {
+		merged[key] = value
+	}
+	return merged, "fields"
 }
 
 func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {

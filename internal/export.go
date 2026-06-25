@@ -119,7 +119,7 @@ type ExportedSiteConfig struct {
 
 func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.GET("/api/palacms/export/{siteId}", func(e *core.RequestEvent) error {
+		serveEvent.Router.GET("/api/primo/export/{siteId}", func(e *core.RequestEvent) error {
 			siteId := e.Request.PathValue("siteId")
 			if siteId == "" {
 				return e.BadRequestError("Missing site ID", nil)
@@ -655,7 +655,10 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			ID:       page.Id,
 			Name:     page.GetString("name"),
 			PageType: pageTypeName,
-			Content:  fieldValues,
+			// Page-level values are the page's own fields (defined by its page_type),
+			// so they export under `fields:`. `content:` is reserved for section-level
+			// values that fill a referenced block.
+			Fields:   fieldValues,
 			Sections: sections,
 		}
 
@@ -1103,7 +1106,7 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 
 	sb.WriteString(fmt.Sprintf("# %s\n\n", site.GetString("name")))
 	sb.WriteString("Primo site export. The Primo MCP server (`primo`) is the source of truth, when present, for schema, validation, field types, and inline editing. Call `list_docs` first to see what's documented.\n")
-	sb.WriteString("Without the MCP server, read `blocks/*/fields.yaml` and `page-types/*/fields.yaml` to infer schemas, and treat page-level plus section-level `content:` in `pages/*.yaml` as the source of truth for rendered content (block `content.yaml` files are defaults only).\n\n")
+	sb.WriteString("Without the MCP server, read `blocks/*/fields.yaml` and `page-types/*/fields.yaml` to infer schemas, and treat page-level `fields:` plus section-level `content:` in `pages/*.yaml` as the source of truth for rendered content (block `content.yaml` files are defaults only).\n\n")
 
 	sb.WriteString("## Layout\n")
 	sb.WriteString("- `site.yaml`, `site/`, `blocks/`, `page-types/`, `pages/`, `.primo/`\n")

@@ -14,9 +14,9 @@
     enable = true;
   };
   env = {
-    PRIMO_SUPERUSER_EMAIL = "admin@palacms.internal";
+    PRIMO_SUPERUSER_EMAIL = "admin@primo.internal";
     PRIMO_SUPERUSER_PASSWORD = "test1234";
-    PRIMO_USER_EMAIL = "user@palacms.internal";
+    PRIMO_USER_EMAIL = "user@primo.internal";
     PRIMO_USER_PASSWORD = "test1234";
     PRIMO_DISABLE_USAGE_STATS = "true";
   };

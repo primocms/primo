@@ -2,7 +2,7 @@
 
 This guide covers the technical aspects of working **on the Primo codebase itself** - whether you're contributing, forking, or just trying to understand how it works.
 
-> **Looking to build with Primo?** If you want to learn how to create blocks, templates, or sites using Primo, check out our user documentation at [palacms.com/docs](https://palacms.com/docs).
+> **Looking to build with Primo?** If you want to learn how to create blocks, templates, or sites using Primo, check out our user documentation at [docs.primo.build](https://docs.primo.build).
 
 ## 🏗️ Architecture Overview
 
@@ -18,7 +18,7 @@ This guide covers the technical aspects of working **on the Primo codebase itsel
 ### Project Structure
 
 ```
-palacms/
+primo/
 ├── src/                    # Main SvelteKit application
 │   ├── lib/
 │   │   ├── builder/        # Core page builder components
@@ -49,8 +49,8 @@ palacms/
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/palacms/palacms.git
-   cd palacms
+   git clone https://github.com/primocms/primo.git
+   cd primo
    ```
 
 2. **Install dependencies**
@@ -211,7 +211,7 @@ npx svelte-check --watch
 Prebuilt Docker image can be found from GitHub Container Registry:
 
 ```
-ghcr.io/palacms/palacms
+ghcr.io/primocms/primo
 ```
 
 ### Manual Build
@@ -225,8 +225,8 @@ npm run dev
 
 # To preview the build locally open http://localhost:8090 while development environment is running.
 
-# Actually build Docker image tagged as "palacms"
-docker build -t palacms .
+# Actually build Docker image tagged as "primo"
+docker build -t primo .
 ```
 
 ### Environment Setup
@@ -234,11 +234,11 @@ docker build -t palacms .
 The app uses these environment variables during the initial start to optionally create up to two initial users:
 
 - For initial superuser:
-  - PRIMO_SUPERUSER_EMAIL (or legacy PALA_SUPERUSER_EMAIL)
-  - PRIMO_SUPERUSER_PASSWORD (or legacy PALA_SUPERUSER_PASSWORD)
+  - PRIMO_SUPERUSER_EMAIL
+  - PRIMO_SUPERUSER_PASSWORD
 - For initial Primo user:
-  - PRIMO_USER_EMAIL (or legacy PALA_USER_EMAIL)
-  - PRIMO_USER_PASSWORD (or legacy PALA_USER_PASSWORD)
+  - PRIMO_USER_EMAIL
+  - PRIMO_USER_PASSWORD
 
 The container requires volume to be mounted on path `/app/pb_data` for storing files and a SQLite database.
 

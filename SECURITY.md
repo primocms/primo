@@ -12,7 +12,7 @@ This document describes the security policy for Primo CMS.
 ## Reporting a Vulnerability
 
 1. When you find a vulnerability related to Primo CMS, report them via email to
-   security@palacms.com. Do not send the information anywhere else. Note that
+   security@primo.build. Do not send the information anywhere else. Note that
    issues section is not the place for vulnerabilities.
 
 2. The Primo team reviews the report in one full week and gets back to you with
@@ -21,7 +21,7 @@ This document describes the security policy for Primo CMS.
 3. You must keep vulnerability as a secret until it has been patched and you
    have received a written permission from the Primo team to publicly disclose
    the vulnerability. The permission will be sent from email address attached
-   to palacms.com domain name.
+   to primo.build domain name.
 
 4. To ensure that the Primo team keeps the software secure and its users safe,
    you may provide a deadline for the vulnerability disclosure. The deadline

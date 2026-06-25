@@ -221,7 +221,7 @@ func generateSitemap(system *filesystem.System, site *core.Record, pages []*core
 
 func RegisterGenerateEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		serveEvent.Router.POST("/api/palacms/generate", func(requestEvent *core.RequestEvent) error {
+		serveEvent.Router.POST("/api/primo/generate", func(requestEvent *core.RequestEvent) error {
 			body := struct {
 				SiteId string `json:"site_id"`
 			}{}
