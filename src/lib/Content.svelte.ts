@@ -365,7 +365,6 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				const width: number | null | undefined = normalized_value.width as number | null | undefined
 				const height: number | null | undefined = normalized_value.height as number | null | undefined
 				content[entry.locale]![field.key] = { alt, url, width, height }
-				content[entry.locale]![field.key] = { alt, url }
 			}
 
 			// Handle page fields specially - get content from the page entity
