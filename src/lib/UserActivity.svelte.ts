@@ -8,6 +8,7 @@ import { build_cms_page_url } from './pages'
 import { site_context } from './builder/stores/context'
 import { get } from 'svelte/store'
 import { current_user } from './pocketbase/user'
+import { instance } from './instance'
 import type { ObjectOf } from './pocketbase/CollectionMapping.svelte'
 
 export type UserActivityValues = Omit<UserActivity, 'id'>
@@ -29,6 +30,11 @@ export type UserActivityInfo = {
 const user_activity_context = new Context<{ value: UserActivityValues }>('user_activity')
 
 export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
+	// User activity is collaborator presence ("who else is editing this site").
+	// It's meaningless in local dev (single user, no collaborators) and would
+	// write churn records against the local DB, so don't track it there.
+	if (instance.dev_mode) return
+
 	const existing_context = user_activity_context.getOr({ value: null })
 	if (existing_context.value) {
 		// Set activity overrides through context
@@ -138,7 +144,11 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 	onDestroy(stopTracking)
 }
 
-export const getUserActivity = ({ filter }: { filter?: (activity: UserActivityInfo) => unknown } = {}) => {
+export const getUserActivity = ({ filter }: { filter?: (activity: UserActivityInfo) => unknown } = {}): UserActivityInfo[][] => {
+	// No collaborator presence in local dev — skip the list (which would also
+	// try to resolve activities pointing at since-deleted pages and throw).
+	if (instance.dev_mode) return []
+
 	const { value: site } = site_context.get()
 	return (UserActivities.list({ filter: { site: site.id } }) ?? [])
 		.filter((activity) => activity.user !== get(current_user)?.id)
