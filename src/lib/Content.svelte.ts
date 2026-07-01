@@ -112,6 +112,11 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 			.filter((field1, index, array) => array.findIndex((field2) => field2.id === field1.id) === index)
 			// Remove fields without a key
 			.filter((field) => !!field.key)
+			// Order by index so content (incl. repeater subfields) matches the editor's field order.
+			// The fields() accessor returns records in insertion (rowid) order, not index order, so
+			// without this the page renders subfields in creation order while form view (which sorts
+			// by index) looks correct — the two diverge after a reorder or a CLI re-import upsert.
+			.sort((a, b) => a.index - b.index)
 
 		for (const field of filteredFields) {
 			const fieldEntries = resolveEntries({ entity, field, entries, parentEntry })
