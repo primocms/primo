@@ -38,7 +38,13 @@
 		height: null
 	}
 
-	const entry = $derived(passedEntry || { value: default_value }) as Omit<Entry, 'value'> & { value: ImageFieldValue }
+	// Guard the value, not just the entry: legacy/empty image entries can have a null
+	// or non-object `value`, which would make every `entry.value.X` access below throw.
+	const entry = $derived.by(() => {
+		const base = passedEntry || { value: default_value }
+		const value = base.value && typeof base.value === 'object' ? { ...default_value, ...base.value } : default_value
+		return { ...base, value }
+	}) as Omit<Entry, 'value'> & { value: ImageFieldValue }
 	const { value: site } = site_context.getOr({ value: null })
 
 	// Helper function to extract image dimensions
@@ -95,12 +101,18 @@
 			// Extract dimensions from the compressed/final image
 			const dimensions = await get_image_dimensions(file_to_upload)
 
-			// Always create a new upload record instead of updating the existing one in place.
-			// Upload records can be shared by multiple entries (copied sections, duplicated
-			// repeater items, cloned sites), so an in-place update would change the image
-			// everywhere the record is referenced.
+			// Reuse the existing upload record in place when the field already has
+			// one, so re-cropping/replacing an image doesn't spawn an orphan record
+			// on every edit. Site clones copy uploads (each clone gets its own
+			// records), so this only shares within duplicated sections/repeater
+			// items in the same site — an accepted trade for not accumulating
+			// orphans that eventually bloat the publish snapshot.
 			let upload_record
-			if (site) {
+			if (upload && site) {
+				upload_record = SiteUploads.update(upload.id, { file: file_to_upload })
+			} else if (upload) {
+				upload_record = LibraryUploads.update(upload.id, { file: file_to_upload })
+			} else if (site) {
 				upload_record = SiteUploads.create({ file: file_to_upload, site: site.id })
 			} else {
 				upload_record = LibraryUploads.create({ file: file_to_upload })
