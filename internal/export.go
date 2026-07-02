@@ -1265,8 +1265,9 @@ func buildSectionContent(
 			// Repeater: each entry represents an item, children are nested under each entry.
 			// Sort items by index so exported order matches the editor — entries reach us in
 			// DB/insertion order, which diverges from index after reorders or re-imports.
+			// Stable so equal/duplicate indexes stay deterministic (no diff churn).
 			items := make([]interface{}, 0, len(fieldEntries))
-			sort.Slice(fieldEntries, func(i, j int) bool {
+			sort.SliceStable(fieldEntries, func(i, j int) bool {
 				return fieldEntries[i].GetInt("index") < fieldEntries[j].GetInt("index")
 			})
 			for _, entry := range fieldEntries {
@@ -1306,7 +1307,8 @@ func buildSectionContent(
 			} else if len(fieldEntries) > 1 {
 				// Multiple entries for same simple field (list type) — sort by index so
 				// exported order matches the editor rather than DB/insertion order.
-				sort.Slice(fieldEntries, func(i, j int) bool {
+				// Stable so equal/duplicate indexes stay deterministic (no diff churn).
+				sort.SliceStable(fieldEntries, func(i, j int) bool {
 					return fieldEntries[i].GetInt("index") < fieldEntries[j].GetInt("index")
 				})
 				vals := make([]interface{}, 0, len(fieldEntries))
