@@ -475,13 +475,13 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
 
-				// If a page is referenced, try to resolve it; otherwise fall back to the raw URL
+				// If a page is referenced, try to resolve it; otherwise fall back to the raw URL.
+				// page === undefined means the record is still loading — don't skip the field,
+				// or the link object goes missing and blocks crash on link.label. Emit a
+				// well-formed object now; reactivity refines the url once the page loads.
 				const page = entry.value.page ? Pages.one(entry.value.page) : null
-				// If the referenced page hasn't loaded yet, skip this field for now instead of aborting
-				if (page === undefined) continue
-
 				const url = page ? build_live_page_url(page)?.pathname : entry.value.url
-				// If we still don't have a URL (e.g. unresolved page and no URL), set empty string rather than aborting
+				// If we still don't have a URL (unresolved/loading page and no URL), set empty string
 				const safe_url = url ?? ''
 
 				const label = entry.value.label ?? ''
