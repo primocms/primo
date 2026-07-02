@@ -1262,8 +1262,14 @@ func buildSectionContent(
 
 		switch fieldType {
 		case "repeater":
-			// Repeater: each entry represents an item, children are nested under each entry
+			// Repeater: each entry represents an item, children are nested under each entry.
+			// Sort items by index so exported order matches the editor — entries reach us in
+			// DB/insertion order, which diverges from index after reorders or re-imports.
+			// Stable so equal/duplicate indexes stay deterministic (no diff churn).
 			items := make([]interface{}, 0, len(fieldEntries))
+			sort.SliceStable(fieldEntries, func(i, j int) bool {
+				return fieldEntries[i].GetInt("index") < fieldEntries[j].GetInt("index")
+			})
 			for _, entry := range fieldEntries {
 				// Get children of this entry (not field)
 				childEntries := entriesByParent[entry.Id]
@@ -1299,7 +1305,12 @@ func buildSectionContent(
 			if len(fieldEntries) == 1 {
 				addKV(fieldKey, normalizeValue(fieldEntries[0].Get("value")))
 			} else if len(fieldEntries) > 1 {
-				// Multiple entries for same simple field (list type)
+				// Multiple entries for same simple field (list type) — sort by index so
+				// exported order matches the editor rather than DB/insertion order.
+				// Stable so equal/duplicate indexes stay deterministic (no diff churn).
+				sort.SliceStable(fieldEntries, func(i, j int) bool {
+					return fieldEntries[i].GetInt("index") < fieldEntries[j].GetInt("index")
+				})
 				vals := make([]interface{}, 0, len(fieldEntries))
 				for _, entry := range fieldEntries {
 					vals = append(vals, normalizeValue(entry.Get("value")))

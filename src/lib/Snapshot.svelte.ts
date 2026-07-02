@@ -20,6 +20,7 @@ import {
 } from '$lib/pocketbase/collections'
 import { self } from '$lib/pocketbase/managers'
 import type { Snapshot } from './common/models/Snapshot'
+import { collect_referenced_upload_ids } from './common/upload-references'
 import { instance } from './instance'
 import { usePageData } from './PageData.svelte'
 import { useSvelteWorker } from './workers/Worker.svelte'
@@ -39,6 +40,11 @@ export const useSiteSnapshot = ({ source_manager = self, source_site_id }: { sou
 					.then((res) => res.blob())
 					.then((blob) => new File([blob], filename))
 
+			// Only pack uploads the content actually references. Orphaned and
+			// duplicate upload records (e.g. from repeated image edits) would
+			// otherwise bloat snapshot.bin past the site_snapshots file limit.
+			const referenced_upload_ids = collect_referenced_upload_ids(data)
+
 			const snapshot: Snapshot = {
 				metadata: {
 					created_at: new Date().toISOString(),
@@ -48,10 +54,12 @@ export const useSiteSnapshot = ({ source_manager = self, source_site_id }: { sou
 				records: {
 					sites: [source_site.values()],
 					site_uploads: await Promise.all(
-						data.site_uploads.map(async (upload) => ({
-							...upload.values(),
-							file: typeof upload.file === 'string' ? await download('site_uploads', upload.id, upload.file) : upload.file
-						}))
+						data.site_uploads
+							.filter((upload) => referenced_upload_ids.has(upload.id))
+							.map(async (upload) => ({
+								...upload.values(),
+								file: typeof upload.file === 'string' ? await download('site_uploads', upload.id, upload.file) : upload.file
+							}))
 					),
 					site_fields: data.site_fields.map((upload) => upload.values()),
 					site_entries: data.site_entries.map((upload) => upload.values()),

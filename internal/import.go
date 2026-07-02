@@ -1724,6 +1724,16 @@ func importPageSectionContentField(pb *pocketbase.PocketBase, entriesColl *core.
 
 	default:
 		// Simple field (text, image, link, select, etc.)
+		// A declared subfield can be absent from the YAML (e.g. a repeater item
+		// that omits an optional image). Skip it entirely rather than persisting
+		// an entry with a NULL value: the read path (useContent / get_empty_value)
+		// and the editor field components already treat a missing entry as the
+		// field's empty value, so a stored NULL only creates a landmine — e.g.
+		// ImageField dereferencing value.width on null. Skipping also keeps the
+		// YAML round-trip clean (no empty objects re-emitted on export).
+		if value == nil {
+			return nil
+		}
 		entry := core.NewRecord(entriesColl)
 		entry.Set("section", sectionId)
 		entry.Set("field", fieldId)
