@@ -59,3 +59,6 @@ landing-page-full.png
 # Docs
 docs/
 bugs.md
+
+# Local-only internal design specs (kept out of version control)
+internal/SPEC-*.md
