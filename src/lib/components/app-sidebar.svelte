@@ -244,6 +244,10 @@
 								<LogOut />
 								Log out
 							</DropdownMenu.Item>
+							{#if instance.version}
+								<DropdownMenu.Separator />
+								<div class="px-2 py-1 text-[0.625rem] text-muted-foreground select-text">Primo {instance.version}</div>
+							{/if}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				</Sidebar.MenuItem>
