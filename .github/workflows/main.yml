@@ -1,4 +1,4 @@
-name: Build Docker image and deploy testing
+name: Build and push Docker image (branches)
 
 on:
   workflow_dispatch:
@@ -64,29 +64,9 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-  deploy-testing:
-    runs-on: ubuntu-latest
-    needs:
-      - build-image
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up SSH
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id
-          echo "${{ secrets.TESTING_SSH_PRIVATE_KEY }}" > ~/.ssh/id
-          echo "${{ secrets.TESTING_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-
-      - name: Deploy to server
-        env:
-          DOCKER_HOST: ${{ secrets.TESTING_DOCKER_HOST }}
-          DOCKER_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-image.outputs.version }}
-        run: |
-          cd ./deployment/testing/
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id
-          docker compose up --pull always --detach
+  # NOTE: the former `deploy-testing` job was removed. It SSHed to
+  # TESTING_DOCKER_HOST (the retired palacms.com box) and ran `docker compose
+  # up`, so it failed on every push to main — turning otherwise-green runs red
+  # and masking real failures. build-image above still publishes the branch
+  # image to ghcr (e.g. :main), which is what Railway/testing consumers pull.
+  # Re-add a deploy job only if a new SSH-deployable host is introduced.
