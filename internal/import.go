@@ -1772,6 +1772,11 @@ func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
 	return merged, "fields"
 }
 
+// PocketBase record ids are exactly 15 lowercase-alphanumeric characters. A
+// text field with this pattern is validated on Save regardless of how the value
+// was set, so we must reject anything that doesn't match before assigning it.
+var pbRecordIdPattern = regexp.MustCompile(`^[a-z0-9]{15}$`)
+
 func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
 	pagesColl, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
@@ -1783,6 +1788,17 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 		page = existing
 	} else {
 		page = core.NewRecord(pagesColl)
+		// Preserve the exported _id as the record id so cross-file page
+		// references (site nav links, in-content links) stay valid across a
+		// fresh/bootstrap import. Without this the record gets a new random
+		// id while files still reference the old one, orphaning every link.
+		// Guard on PocketBase's full id format (15 lowercase-alphanumeric
+		// chars), not just length — a malformed 15-char value passes the
+		// length check but fails pattern validation in pb.Save below. Fall
+		// back to an auto-generated id for anything that doesn't match.
+		if pbRecordIdPattern.MatchString(pageData.ID) {
+			page.Set("id", pageData.ID)
+		}
 		page.Set("site", site.Id)
 	}
 
