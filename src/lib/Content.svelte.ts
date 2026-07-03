@@ -476,12 +476,27 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				if (!content[entry.locale]) content[entry.locale] = {}
 
 				// If a page is referenced, try to resolve it; otherwise fall back to the raw URL.
-				// page === undefined means the record is still loading — don't skip the field,
-				// or the link object goes missing and blocks crash on link.label. Emit a
-				// well-formed object now; reactivity refines the url once the page loads.
-				const page = entry.value.page ? Pages.one(entry.value.page) : null
-				const url = page ? build_live_page_url(page)?.pathname : entry.value.url
-				// If we still don't have a URL (unresolved/loading page and no URL), set empty string
+				// Pages.one() distinguishes three states we care about:
+				//   - a record  -> resolved; use its live url
+				//   - undefined -> still loading (or a pending local delete we can't tell apart);
+				//                  keep the cached url so the link object stays well-formed and
+				//                  blocks don't crash on link.label. Reactivity refines it later.
+				//   - null      -> the page is gone (404 / failed / unmappable); clear the url so
+				//                  a deleted reference stops serving a stale cached link.
+				const page = entry.value.page ? Pages.one(entry.value.page) : undefined
+				let url: string | undefined
+				if (page) {
+					url = build_live_page_url(page)?.pathname
+				} else if (page === null) {
+					url = undefined
+				} else if (entry.value.page) {
+					// referenced page still loading — hold the cached url
+					url = entry.value.url
+				} else {
+					// no page reference at all — this is a plain raw-url link
+					url = entry.value.url
+				}
+				// If we still don't have a URL (loading/missing page and no cached url), set empty string
 				const safe_url = url ?? ''
 
 				const label = entry.value.label ?? ''
