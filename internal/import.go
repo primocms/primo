@@ -1783,6 +1783,15 @@ func importPage(pb *pocketbase.PocketBase, site *core.Record, pageData ExportedP
 		page = existing
 	} else {
 		page = core.NewRecord(pagesColl)
+		// Preserve the exported _id as the record id so cross-file page
+		// references (site nav links, in-content links) stay valid across a
+		// fresh/bootstrap import. Without this the record gets a new random
+		// id while files still reference the old one, orphaning every link.
+		// Guard on PocketBase's 15-char id requirement; fall back to an
+		// auto-generated id for anything malformed rather than failing import.
+		if len(pageData.ID) == 15 {
+			page.Set("id", pageData.ID)
+		}
 		page.Set("site", site.Id)
 	}
 
