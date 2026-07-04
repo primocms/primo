@@ -3,6 +3,8 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -823,11 +825,6 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			if filename == "" {
 				continue
 			}
-			manifest[filename] = map[string]interface{}{
-				"id":  upload.Id,
-				"url": fmt.Sprintf("/api/files/site_uploads/%s/%s", upload.Id, filename),
-			}
-
 			sourceKey := uploadsCollectionId + "/" + upload.Id + "/" + filename
 			reader, err := fsys.GetFile(sourceKey)
 			if err != nil {
@@ -838,6 +835,18 @@ func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, erro
 			if readErr != nil {
 				return nil, fmt.Errorf("failed to read upload %s: %w", sourceKey, readErr)
 			}
+
+			// Record the content hash so a later `primo push` can skip
+			// re-sending unchanged bytes (it compares local hashes against
+			// this manifest before uploading). Free here since we already
+			// hold the bytes.
+			sum := sha256.Sum256(fileData)
+			manifest[filename] = map[string]interface{}{
+				"id":   upload.Id,
+				"url":  fmt.Sprintf("/api/files/site_uploads/%s/%s", upload.Id, filename),
+				"hash": hex.EncodeToString(sum[:]),
+			}
+
 			if err := writeFileToZip(zw, "uploads/"+filename, fileData); err != nil {
 				return nil, err
 			}

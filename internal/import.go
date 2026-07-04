@@ -191,9 +191,188 @@ func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
 			return handleImport(pb, e, false)
 		})
 
+		// Incremental upload endpoints. These let the CLI push binaries out of
+		// band, one small request each, instead of stuffing every upload into
+		// the import zip — which made large-media sites blow past the hosting
+		// proxy's request timeout on a single synchronous /import call.
+		//
+		// check: given a list of content hashes the client holds, return which
+		// ones the server is missing, so the client only sends new/changed bytes.
+		serveEvent.Router.POST("/api/primo/uploads/{siteId}/check", func(e *core.RequestEvent) error {
+			return handleUploadsCheck(pb, e)
+		})
+		// put: ingest a single upload (create or replace-in-place), returning
+		// its record id, canonical filename, and hash for CLI writeback.
+		serveEvent.Router.POST("/api/primo/uploads/{siteId}/put", func(e *core.RequestEvent) error {
+			return handleUploadPut(pb, e)
+		})
+
 		return serveEvent.Next()
 	})
 	return nil
+}
+
+// resolveImportSite finds the target site and enforces the same auth/access
+// rules handleImport uses: localhost is trusted (local dev), otherwise the
+// caller must be authenticated and pass PocketBase's per-record update rule.
+// Unlike import, these endpoints never create a site — an upload to a
+// nonexistent site is a 404, since the site must exist before its media can.
+func resolveImportSite(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core.Record, error) {
+	siteId := e.Request.PathValue("siteId")
+	if siteId == "" {
+		return nil, e.BadRequestError("Missing site ID", nil)
+	}
+	if e.Auth == nil && !IsLocalhost(e) {
+		return nil, e.UnauthorizedError("Authentication required", nil)
+	}
+	site, err := pb.FindRecordById("sites", siteId)
+	if err != nil {
+		return nil, e.NotFoundError("Site not found", err)
+	}
+	if !IsLocalhost(e) {
+		info, err := e.RequestInfo()
+		if err != nil {
+			return nil, e.InternalServerError("Failed to get request info", err)
+		}
+		canAccess, _ := e.App.CanAccessRecord(site, info, site.Collection().UpdateRule)
+		if !canAccess {
+			return nil, e.ForbiddenError("Access denied", nil)
+		}
+	}
+	return site, nil
+}
+
+// siteUploadHashes returns filename -> hex sha256 for every stored upload on a
+// site, reading each file's bytes once. Used by the check endpoint to decide
+// which incoming hashes are already present.
+func siteUploadHashes(pb *pocketbase.PocketBase, site *core.Record) (map[string]string, error) {
+	recs, err := pb.FindRecordsByFilter("site_uploads", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch site_uploads: %w", err)
+	}
+	uploadsColl, err := pb.FindCollectionByNameOrId("site_uploads")
+	if err != nil {
+		return nil, fmt.Errorf("failed to find site_uploads collection: %w", err)
+	}
+	fsys, err := pb.NewFilesystem()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open filesystem: %w", err)
+	}
+	defer fsys.Close()
+
+	out := make(map[string]string, len(recs))
+	for _, rec := range recs {
+		fn := rec.GetString("file")
+		if fn == "" {
+			continue
+		}
+		reader, readErr := fsys.GetFile(uploadsColl.Id + "/" + rec.Id + "/" + fn)
+		if readErr != nil {
+			continue
+		}
+		b, _ := io.ReadAll(reader)
+		reader.Close()
+		sum := sha256.Sum256(b)
+		out[fn] = hex.EncodeToString(sum[:])
+	}
+	return out, nil
+}
+
+// handleUploadsCheck reports which of the client's content hashes the server
+// does not already have stored, so the client can upload only the missing set.
+// Request body: {"hashes": ["<hex sha256>", ...]}
+// Response:     {"missing": ["<hex sha256>", ...]}  (subset of the input)
+func handleUploadsCheck(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
+	site, err := resolveImportSite(pb, e)
+	if err != nil {
+		return err
+	}
+
+	var body struct {
+		Hashes []string `json:"hashes"`
+	}
+	if err := e.BindBody(&body); err != nil {
+		return e.BadRequestError("Invalid request body", err)
+	}
+
+	have, err := siteUploadHashes(pb, site)
+	if err != nil {
+		return e.InternalServerError("Failed to read uploads", err)
+	}
+	present := make(map[string]struct{}, len(have))
+	for _, h := range have {
+		present[h] = struct{}{}
+	}
+
+	missing := make([]string, 0)
+	seen := make(map[string]struct{}, len(body.Hashes))
+	for _, h := range body.Hashes {
+		if _, dup := seen[h]; dup {
+			continue
+		}
+		seen[h] = struct{}{}
+		if _, ok := present[h]; !ok {
+			missing = append(missing, h)
+		}
+	}
+
+	return e.JSON(200, map[string]interface{}{"missing": missing})
+}
+
+// handleUploadPut ingests a single upload binary and creates or replaces the
+// matching site_uploads record. The file is sent as multipart form field
+// "file"; the client's intended filename is taken from the form field
+// "filename" (falling back to the multipart part's own name) so symbolic
+// yaml refs resolve regardless of any PocketBase suffixing.
+// Response: {"id", "canonical", "hash", "changed"}
+func handleUploadPut(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
+	site, err := resolveImportSite(pb, e)
+	if err != nil {
+		return err
+	}
+
+	if err := e.Request.ParseMultipartForm(32 << 20); err != nil { // 32MB per file
+		return e.BadRequestError("Failed to parse form", err)
+	}
+	file, header, err := e.Request.FormFile("file")
+	if err != nil {
+		return e.BadRequestError("No file uploaded", err)
+	}
+	defer file.Close()
+
+	filename := strings.TrimSpace(e.Request.FormValue("filename"))
+	if filename == "" && header != nil {
+		filename = header.Filename
+	}
+	// Guard against path traversal / nested names — uploads are a flat set
+	// keyed by bare filename, mirroring the zip-import filter.
+	if filename == "" || strings.HasPrefix(filename, ".") || strings.Contains(filename, "/") {
+		return e.BadRequestError("Invalid filename", nil)
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return e.InternalServerError("Failed to read file", err)
+	}
+
+	// Resolve any existing record by filename so we replace in place (stable id).
+	existing, _ := pb.FindFirstRecordByFilter(
+		"site_uploads",
+		"site = {:site} && file = {:file}",
+		dbx.Params{"site": site.Id, "file": filename},
+	)
+
+	entry, changed, err := upsertSiteUpload(pb, site, filename, data, existing, nil, nil)
+	if err != nil {
+		return e.InternalServerError("Failed to store upload: "+err.Error(), err)
+	}
+
+	return e.JSON(200, map[string]interface{}{
+		"id":        entry.ID,
+		"canonical": entry.Canonical,
+		"hash":      entry.Hash,
+		"changed":   changed,
+	})
 }
 
 func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly bool) error {
@@ -454,10 +633,19 @@ func processImport(pb *pocketbase.PocketBase, site *core.Record, zipData []byte,
 		if len(uploadMap) > 0 {
 			uploadsManifest := make(map[string]interface{}, len(uploadMap))
 			for symbolic, entry := range uploadMap {
-				uploadsManifest[symbolic] = map[string]interface{}{
+				m := map[string]interface{}{
 					"id":        entry.ID,
 					"canonical": entry.Canonical,
 				}
+				// hash lets a later push skip re-sending unchanged bytes
+				// entirely (the CLI compares local file hashes against this
+				// before uploading). Empty for records we didn't re-read
+				// (e.g. dashboard uploads) — the CLI treats missing as
+				// "unknown" and sends the file.
+				if entry.Hash != "" {
+					m["hash"] = entry.Hash
+				}
+				uploadsManifest[symbolic] = m
 			}
 			createdIDs["uploads/.manifest.json"] = map[string]interface{}{
 				"_uploads": uploadsManifest,
@@ -3284,12 +3472,106 @@ func buildFullPagePath(pageId string, parentMap, slugMap map[string]string) stri
 
 // uploadReconcileEntry captures everything the CLI needs to write back after
 // a successful reconcile of one uploads/ file: the record id (so symbolic
-// yaml refs can be rewritten to that id locally), and the canonical filename
-// PocketBase assigned (so the local file can be renamed to match server state).
+// yaml refs can be rewritten to that id locally), the canonical filename
+// PocketBase assigned (so the local file can be renamed to match server state),
+// and the content hash (so the CLI can skip re-uploading unchanged bytes on a
+// later push without touching the server).
 // Canonical may equal Symbolic when the file already existed with no suffix.
 type uploadReconcileEntry struct {
 	ID        string
 	Canonical string
+	Hash      string // hex-encoded sha256 of the stored bytes, empty if unknown
+}
+
+// upsertSiteUpload creates or updates a single site_uploads record from raw
+// bytes, keyed by filename. It is the shared core used by both the zip import
+// path (reconcileSiteUploads) and the incremental upload endpoint
+// (/api/primo/uploads/{siteId}/put), so the two paths can never drift in how
+// they hash, dedup, or suffix filenames.
+//
+// existingByFilename lets callers that already fetched the site's uploads pass
+// the record in so we don't re-query per file; pass nil to have the record
+// resolved on demand. uploadsColl and fsys are likewise passed in by the batch
+// caller and resolved lazily otherwise.
+//
+// Returns the reconcile entry (id, canonical name, content hash) plus whether
+// bytes actually changed on the server (false for a no-op that matched the
+// stored hash), so callers can report accurate diffs.
+func upsertSiteUpload(
+	pb *pocketbase.PocketBase,
+	site *core.Record,
+	filename string,
+	data []byte,
+	existing *core.Record,
+	uploadsColl *core.Collection,
+	fsys *filesystem.System,
+) (entry uploadReconcileEntry, changed bool, err error) {
+	incomingHash := sha256.Sum256(data)
+	incomingHex := hex.EncodeToString(incomingHash[:])
+
+	if uploadsColl == nil {
+		uploadsColl, err = pb.FindCollectionByNameOrId("site_uploads")
+		if err != nil {
+			return entry, false, fmt.Errorf("failed to find site_uploads collection: %w", err)
+		}
+	}
+
+	if existing != nil {
+		// Compare with the stored bytes so that a true no-op push doesn't
+		// rewrite the file (and bump updated timestamps, invalidate CDN
+		// caches, etc.). On read failure we conservatively skip the reupload —
+		// the record still resolves correctly downstream. Storage is keyed by
+		// collection id, not name.
+		if fsys == nil {
+			fsys, err = pb.NewFilesystem()
+			if err != nil {
+				return entry, false, fmt.Errorf("failed to open filesystem for upload upsert: %w", err)
+			}
+			defer fsys.Close()
+		}
+		sourceKey := uploadsColl.Id + "/" + existing.Id + "/" + filename
+		reader, readErr := fsys.GetFile(sourceKey)
+		if readErr == nil {
+			existingBytes, _ := io.ReadAll(reader)
+			reader.Close()
+			existingHash := sha256.Sum256(existingBytes)
+			if hex.EncodeToString(existingHash[:]) == incomingHex {
+				return uploadReconcileEntry{ID: existing.Id, Canonical: filename, Hash: incomingHex}, false, nil
+			}
+		}
+
+		// Bytes diverged — replace the file in-place so the record id stays
+		// stable and any yaml already referencing it keeps working. The
+		// on-disk name picks up a fresh PocketBase suffix, so re-read the
+		// record after Save to capture the canonical filename for writeback.
+		file, ferr := filesystem.NewFileFromBytes(data, filename)
+		if ferr != nil {
+			return entry, false, fmt.Errorf("failed to wrap upload %s: %w", filename, ferr)
+		}
+		existing.Set("file", file)
+		if serr := pb.Save(existing); serr != nil {
+			return entry, false, fmt.Errorf("failed to update upload %s: %w", filename, serr)
+		}
+		return uploadReconcileEntry{ID: existing.Id, Canonical: existing.GetString("file"), Hash: incomingHex}, true, nil
+	}
+
+	// New file → create a record. PocketBase appends a random suffix to the
+	// stored filename (e.g. hero.png → hero_a8x.png) to guarantee uniqueness
+	// inside the record's storage dir. We accept that — the caller's original
+	// filename is the symbolic key (what yaml references), and the canonical
+	// filename we read off the record after Save is what the CLI renames the
+	// local file to.
+	rec := core.NewRecord(uploadsColl)
+	rec.Set("site", site.Id)
+	file, ferr := filesystem.NewFileFromBytes(data, filename)
+	if ferr != nil {
+		return entry, false, fmt.Errorf("failed to wrap upload %s: %w", filename, ferr)
+	}
+	rec.Set("file", file)
+	if serr := pb.Save(rec); serr != nil {
+		return entry, false, fmt.Errorf("failed to create upload %s: %w", filename, serr)
+	}
+	return uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file"), Hash: incomingHex}, true, nil
 }
 
 // reconcileSiteUploads brings server-side site_uploads records in sync with
@@ -3357,61 +3639,11 @@ func reconcileSiteUploads(pb *pocketbase.PocketBase, site *core.Record, files ma
 	defer fsys.Close()
 
 	for _, up := range zipUploads {
-		incomingHash := sha256.Sum256(up.data)
-		incomingHex := hex.EncodeToString(incomingHash[:])
-
-		if rec, ok := existingByFilename[up.filename]; ok {
-			// Compare with the stored bytes so that a true no-op push doesn't
-			// rewrite the file (and bump updated timestamps, invalidate CDN
-			// caches, etc.). On read failure we conservatively skip the
-			// reupload — the record still resolves correctly downstream.
-			// Storage is keyed by collection id, not name.
-			sourceKey := uploadsColl.Id + "/" + rec.Id + "/" + up.filename
-			reader, readErr := fsys.GetFile(sourceKey)
-			if readErr == nil {
-				existingBytes, _ := io.ReadAll(reader)
-				reader.Close()
-				existingHash := sha256.Sum256(existingBytes)
-				if hex.EncodeToString(existingHash[:]) == incomingHex {
-					filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: up.filename}
-					continue
-				}
-			}
-
-			// Bytes diverged — replace the file in-place so the record id
-			// stays stable and any yaml already referencing it keeps working.
-			// The on-disk name picks up a fresh PocketBase suffix, so re-read
-			// the record after Save to capture the canonical filename for
-			// the CLI writeback.
-			file, err := filesystem.NewFileFromBytes(up.data, up.filename)
-			if err != nil {
-				return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
-			}
-			rec.Set("file", file)
-			if err := pb.Save(rec); err != nil {
-				return nil, fmt.Errorf("failed to update upload %s: %w", up.filename, err)
-			}
-			filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
-			continue
-		}
-
-		// New file on disk → create a record. PocketBase appends a random
-		// suffix to the stored filename (e.g. hero.png → hero_a8x.png) to
-		// guarantee uniqueness inside the record's storage dir. We accept
-		// that — the agent's original filename `up.filename` is the symbolic
-		// key (what yaml references), and the canonical filename we read off
-		// the record after Save is what the CLI renames the local file to.
-		rec := core.NewRecord(uploadsColl)
-		rec.Set("site", siteId)
-		file, err := filesystem.NewFileFromBytes(up.data, up.filename)
+		entry, _, err := upsertSiteUpload(pb, site, up.filename, up.data, existingByFilename[up.filename], uploadsColl, fsys)
 		if err != nil {
-			return nil, fmt.Errorf("failed to wrap upload %s: %w", up.filename, err)
+			return nil, err
 		}
-		rec.Set("file", file)
-		if err := pb.Save(rec); err != nil {
-			return nil, fmt.Errorf("failed to create upload %s: %w", up.filename, err)
-		}
-		filenameToEntry[up.filename] = uploadReconcileEntry{ID: rec.Id, Canonical: rec.GetString("file")}
+		filenameToEntry[up.filename] = entry
 	}
 
 	// Surface manifest entries that no longer have a file on disk. Auto-
