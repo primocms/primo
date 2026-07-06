@@ -1049,6 +1049,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	type pageImportInfo struct {
 		path     string
 		data     ExportedPage
+		raw      []byte // original zip bytes for this page file, for the no-op skip
 		existing *core.Record
 		depth    int
 	}
@@ -1113,6 +1114,11 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 
 		if existing == nil {
 			diff.Pages.Added = append(diff.Pages.Added, pagePath)
+		} else if rawSourceUnchanged(data, existing) {
+			// Byte-identical to what we stored last import — this page is a
+			// no-op and importPage will skip it, so it's neither Added nor
+			// Modified. Leaving it out of the diff is what makes --preview
+			// stop reporting every untouched page as "modified".
 		} else {
 			diff.Pages.Modified = append(diff.Pages.Modified, pagePath)
 		}
@@ -1120,7 +1126,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		// Calculate depth based on path separators
 		depth := strings.Count(pagePath, "/")
 
-		allPages = append(allPages, pageImportInfo{path: pagePath, data: pageData, existing: existing, depth: depth})
+		allPages = append(allPages, pageImportInfo{path: pagePath, data: pageData, raw: data, existing: existing, depth: depth})
 	}
 
 	// Sort pages by depth (parents before children)
@@ -1152,7 +1158,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	// Import homepage first to get its ID
 	var homepageId string
 	if homepageInfo != nil && !previewOnly {
-		pageId, sectionIds, err := importPage(app, site, homepageInfo.data, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
+		pageId, sectionIds, err := importPage(app, site, homepageInfo.data, homepageInfo.raw, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
 		if err != nil {
 			return nil, fmt.Errorf("failed to import homepage %s: %w", homepageInfo.path, err)
 		}
@@ -1200,7 +1206,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				}
 			}
 
-			pageId, sectionIds, err := importPage(app, site, info.data, info.existing, folderToDisplayName, parentId, info.path, &warnings)
+			pageId, sectionIds, err := importPage(app, site, info.data, info.raw, info.existing, folderToDisplayName, parentId, info.path, &warnings)
 			if err != nil {
 				return nil, fmt.Errorf("failed to import page %s: %w", info.path, err)
 			}
@@ -1983,7 +1989,57 @@ func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
 // was set, so we must reject anything that doesn't match before assigning it.
 var pbRecordIdPattern = regexp.MustCompile(`^[a-z0-9]{15}$`)
 
-func importPage(app core.App, site *core.Record, pageData ExportedPage, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
+// rawSourceUnchanged reports whether the incoming page bytes are byte-identical
+// to the raw_source stored on the existing record. Returns false when the
+// record has no stored raw_source yet (e.g. rows predating the migration, or a
+// first import) so those pages import normally and populate raw_source for next
+// time.
+func rawSourceUnchanged(incoming []byte, existing *core.Record) bool {
+	stored := existing.GetString("raw_source")
+	if stored == "" {
+		return false
+	}
+	a := sha256.Sum256(incoming)
+	b := sha256.Sum256([]byte(stored))
+	return a == b
+}
+
+// existingPageSectionIds returns the ids of a page's sections ordered by index,
+// matching the order a normal importPage returns (which is the incoming YAML
+// section order — identical here since the skip only fires when the page bytes
+// are unchanged). Used by the no-op skip path so callers still get the section
+// ids for the writeback manifest.
+func existingPageSectionIds(app core.App, pageId string) ([]string, error) {
+	sections, err := app.FindRecordsByFilter("page_sections", "page = {:page}", "+index", 0, 0, dbx.Params{"page": pageId})
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, len(sections))
+	for i, s := range sections {
+		ids[i] = s.Id
+	}
+	return ids, nil
+}
+
+func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []byte, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
+	// No-op guard: if the incoming page bytes are byte-identical to what we
+	// stored on the last import, the local file is unchanged since the dev's
+	// last pull. Skip the page entirely — no Save, no delete-and-recreate of
+	// its sections/content. This is both the performance win (a whole-site
+	// re-push of unchanged pages does ~zero work instead of thousands of
+	// delete/insert statements per page) and a safety win (a whole-site push
+	// can't clobber a concurrent server edit to a page the dev never touched).
+	// Mirrors the uploads sha256 skip in reconcileSiteUploads. We still return
+	// the existing page id + its current section ids so callers that build
+	// pathToId / createdIDs resolve children correctly.
+	if existing != nil && len(raw) > 0 && rawSourceUnchanged(raw, existing) {
+		sectionIds, err := existingPageSectionIds(app, existing.Id)
+		if err != nil {
+			return "", nil, err
+		}
+		return existing.Id, sectionIds, nil
+	}
+
 	pagesColl, err := app.FindCollectionByNameOrId("pages")
 	if err != nil {
 		return "", nil, err
@@ -2042,6 +2098,15 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, existing
 		if pt != nil {
 			page.Set("page_type", pt.Id)
 		}
+	}
+
+	// Store the exact incoming bytes so the next import can detect an unchanged
+	// page and skip it (see the no-op guard at the top of this function). Empty
+	// raw (e.g. a page assembled without file bytes) just leaves the field
+	// blank, disabling the skip for that page — safe, only forgoes the
+	// optimization.
+	if len(raw) > 0 {
+		page.Set("raw_source", string(raw))
 	}
 
 	if err := app.Save(page); err != nil {
