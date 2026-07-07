@@ -933,13 +933,25 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			existing, _ = app.FindFirstRecordByFilter("pages", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": pageData.Name})
 		}
 
+		// Slug/parent are derived from the file path, not from raw_source, so a
+		// moved or renamed page can have identical bytes. Mirror importPage's
+		// skip condition here so the diff label stays truthful: same bytes AND
+		// same file-derived location. parentId isn't known in this pass (it's
+		// resolved during the sorted import), but a re-parented page changes its
+		// path depth or slug, which the slug + depth check below catches; a pure
+		// same-slug re-parent still flows through importPage, which re-checks
+		// parent and will update it.
+		derivedSlug := pagePath
+		if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
+			derivedSlug = pagePath[lastSlash+1:]
+		}
 		if existing == nil {
 			diff.Pages.Added = append(diff.Pages.Added, pagePath)
-		} else if rawSourceUnchanged(data, existing) {
-			// Byte-identical to what we stored last import — this page is a
-			// no-op and importPage will skip it, so it's neither Added nor
-			// Modified. Leaving it out of the diff is what makes --preview
-			// stop reporting every untouched page as "modified".
+		} else if rawSourceUnchanged(data, existing) && existing.GetString("slug") == derivedSlug {
+			// Byte-identical and same location — this page is a no-op and
+			// importPage will skip it, so it's neither Added nor Modified.
+			// Leaving it out of the diff is what makes --preview stop reporting
+			// every untouched page as "modified".
 		} else {
 			diff.Pages.Modified = append(diff.Pages.Modified, pagePath)
 		}
@@ -1860,17 +1872,29 @@ func existingPageSectionIds(app core.App, pageId string) ([]string, error) {
 }
 
 func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []byte, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
+	// Derive slug from file path (last segment)
+	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
+	slug := pagePath
+	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
+		slug = pagePath[lastSlash+1:]
+	}
+
 	// No-op guard: if the incoming page bytes are byte-identical to what we
-	// stored on the last import, the local file is unchanged since the dev's
-	// last pull. Skip the page entirely — no Save, no delete-and-recreate of
-	// its sections/content. This is both the performance win (a whole-site
-	// re-push of unchanged pages does ~zero work instead of thousands of
-	// delete/insert statements per page) and a safety win (a whole-site push
-	// can't clobber a concurrent server edit to a page the dev never touched).
-	// Mirrors the uploads sha256 skip in reconcileSiteUploads. We still return
-	// the existing page id + its current section ids so callers that build
-	// pathToId / createdIDs resolve children correctly.
-	if existing != nil && len(raw) > 0 && rawSourceUnchanged(raw, existing) {
+	// stored on the last import AND the page's file-derived location is
+	// unchanged (same parent + slug), the page is untouched since the dev's
+	// last pull. Skip it entirely — no Save, no delete-and-recreate of its
+	// sections/content. This is both the performance win (a whole-site re-push
+	// of unchanged pages does ~zero work instead of thousands of delete/insert
+	// statements per page) and a safety win (a whole-site push can't clobber a
+	// concurrent server edit to a page the dev never touched).
+	//
+	// parent/slug are derived from the file PATH, which isn't in raw_source, so
+	// they must be checked separately — otherwise a moved/renamed page with
+	// identical bytes would skip and keep its stale parent/slug (and miss
+	// Pages.Modified in --preview). Mirrors the uploads sha256 skip. We return
+	// the existing page id + section ids so children still resolve.
+	if existing != nil && len(raw) > 0 && rawSourceUnchanged(raw, existing) &&
+		existing.GetString("parent") == parentId && existing.GetString("slug") == slug {
 		sectionIds, err := existingPageSectionIds(app, existing.Id)
 		if err != nil {
 			return "", nil, err
@@ -1900,13 +1924,6 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 			page.Set("id", pageData.ID)
 		}
 		page.Set("site", site.Id)
-	}
-
-	// Derive slug from file path (last segment)
-	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
-	slug := pagePath
-	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
-		slug = pagePath[lastSlash+1:]
 	}
 
 	// Build the source file path for this page for warning messages.

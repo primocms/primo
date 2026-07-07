@@ -1400,3 +1400,59 @@ func TestContentEntriesHaveIntactRelations(t *testing.T) {
 		}
 	}
 }
+
+// TestMovedPageIsNotSkipped guards the parent/slug gate on the no-op skip:
+// a page whose file is moved/renamed (so its path-derived slug changes) but
+// whose YAML bytes are otherwise identical must NOT be skipped — it has to
+// flow through the normal update so its slug/parent are corrected and it shows
+// up in Pages.Modified. Without the gate, rawSourceUnchanged() alone would skip
+// it and leave the stale slug.
+func TestMovedPageIsNotSkipped(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// A page identified by name (so a path change still matches the existing
+	// record via the name fallback), imported first at pages/about.yaml.
+	pageBody := "" +
+		"name: About\n" +
+		"page_type: Default\n" +
+		"sections:\n" +
+		"  - block: hero\n" +
+		"    content:\n" +
+		"      heading: About us\n"
+
+	first := baseSiteFiles()
+	first["pages/about.yaml"] = pageBody
+	if _, err := processImport(app, site, zipFiles(t, first), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	before := findPageByName(t, app, site, "About")
+	if before.GetString("slug") != "about" {
+		t.Fatalf("setup: expected slug 'about', got %q", before.GetString("slug"))
+	}
+
+	// "Move" the page: same bytes, new path pages/company/about.yaml would keep
+	// slug 'about' but change parent; to exercise the slug path clearly, rename
+	// to pages/company.yaml (slug becomes 'company'), bytes unchanged.
+	second := baseSiteFiles()
+	delete(second, "pages/about.yaml")
+	second["pages/company.yaml"] = pageBody // identical bytes, new path → slug 'company'
+
+	result, err := processImport(app, site, zipFiles(t, second), false)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// The moved page must be reported as Modified, not silently skipped.
+	if !contains(result.Diff.Pages.Modified, "company") {
+		t.Fatalf("moved page should be Modified, got Modified=%v Added=%v", result.Diff.Pages.Modified, result.Diff.Pages.Added)
+	}
+
+	// And its slug must be updated to the new path segment.
+	after := findPageByName(t, app, site, "About")
+	if after.GetString("slug") != "company" {
+		t.Fatalf("moved page slug not updated: got %q, want %q", after.GetString("slug"), "company")
+	}
+}
