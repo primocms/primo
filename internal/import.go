@@ -266,9 +266,12 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			return e.InternalServerError("Failed to find sites collection", collErr)
 		}
 
+		// Access to sites is governed by the collection's rules (any user with a
+		// non-empty serverRole, or a per-site role assignment) — the sites
+		// collection has no `owner` field, so we don't record a per-creator tie
+		// here; a serverRole holder who creates a site can already push to it.
 		site = core.NewRecord(sitesColl)
 		site.Set("id", siteId)
-		site.Set("owner", e.Auth.Id)
 		site.Set("name", createName)
 		site.Set("host", createHost)
 		site.Set("group", groupId)
@@ -402,7 +405,9 @@ func readSiteConfigFromZip(zipData []byte) (string, string) {
 		if err != nil {
 			return "", ""
 		}
-		data, err := io.ReadAll(rc)
+		// site.yaml is tiny; cap the read so a bomb disguised as site.yaml
+		// can't inflate here before the main size-budgeted read runs.
+		data, err := io.ReadAll(io.LimitReader(rc, 1<<20))
 		rc.Close()
 		if err != nil {
 			return "", ""
@@ -419,14 +424,25 @@ func readSiteConfigFromZip(zipData []byte) (string, string) {
 	return "", ""
 }
 
+// maxImportUncompressedBytes caps the total decompressed size of an import zip.
+// The multipart limit (32MB) only bounds the *compressed* upload; a small zip
+// can inflate to gigabytes and we buffer every entry in memory, so without a
+// decompressed budget a crafted zip bomb OOMs the server. 512MB is far above
+// any real site (the marketing site is <4MB) while still killing a bomb early.
+const maxImportUncompressedBytes = 512 << 20
+
 func processImport(app core.App, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, fmt.Errorf("invalid ZIP file: %w", err)
 	}
 
-	// Parse all files from ZIP
+	// Parse all files from ZIP, enforcing a cumulative decompressed-size budget
+	// so a zip bomb can't exhaust memory. LimitReader caps each entry read at
+	// the remaining budget + 1 so we can detect (rather than silently truncate)
+	// an entry that would blow it.
 	files := make(map[string][]byte)
+	var totalBytes int64
 	for _, f := range reader.File {
 		if f.FileInfo().IsDir() {
 			continue
@@ -435,10 +451,15 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		if err != nil {
 			return nil, err
 		}
-		data, err := io.ReadAll(rc)
+		remaining := maxImportUncompressedBytes - totalBytes
+		data, err := io.ReadAll(io.LimitReader(rc, remaining+1))
 		rc.Close()
 		if err != nil {
 			return nil, err
+		}
+		totalBytes += int64(len(data))
+		if totalBytes > maxImportUncompressedBytes {
+			return nil, fmt.Errorf("import exceeds maximum decompressed size of %d bytes", maxImportUncompressedBytes)
 		}
 		files[f.Name] = data
 	}

@@ -1456,3 +1456,27 @@ func TestMovedPageIsNotSkipped(t *testing.T) {
 		t.Fatalf("moved page slug not updated: got %q, want %q", after.GetString("slug"), "company")
 	}
 }
+
+// TestImportRejectsOversizedZip guards the decompressed-size budget: a zip whose
+// entries inflate past maxImportUncompressedBytes must be rejected, not buffered
+// into memory (zip-bomb DoS). A large run of zeros compresses to almost nothing
+// but decompresses over the cap.
+func TestImportRejectsOversizedZip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// One entry larger than the cap; highly compressible so the zip stays small.
+	huge := make([]byte, maxImportUncompressedBytes+1)
+	files := map[string][]byte{
+		"pages/huge.yaml": huge,
+	}
+
+	_, err := processImport(app, site, zipFilesBinary(t, files), false)
+	if err == nil {
+		t.Fatal("expected oversized import to be rejected, got nil error")
+	}
+	if !strings.Contains(err.Error(), "maximum decompressed size") {
+		t.Fatalf("expected decompressed-size error, got: %v", err)
+	}
+}
