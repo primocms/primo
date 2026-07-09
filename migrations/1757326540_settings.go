@@ -17,6 +17,21 @@ func init() {
 			}
 
 			settings.Meta.AppName = "Primo CMS"
+
+			// Enable automatic backups by default so a fresh deploy isn't one
+			// volume wipe away from total data loss. Stored on the pb_data
+			// volume (backups/ dir) — a floor, not off-site protection; wire up
+			// Backups.S3 for that. Env-overridable; only set when unconfigured
+			// so we never clobber a schedule set via the admin UI.
+			if settings.Backups.Cron == "" {
+				cron := os.Getenv("PRIMO_BACKUP_CRON")
+				if cron == "" {
+					cron = "0 3 * * *" // daily at 03:00
+				}
+				settings.Backups.Cron = cron
+				settings.Backups.CronMaxKeep = 7
+			}
+
 			app.Save(settings)
 
 			superuserEmail := os.Getenv("PRIMO_SUPERUSER_EMAIL")
