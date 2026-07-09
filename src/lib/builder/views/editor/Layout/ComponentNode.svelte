@@ -175,15 +175,31 @@
 			if (matched_elements.size === valid_elements.length) break
 
 			// The on-page matcher binds each entry to the next data-key element positionally,
-			// so entries must be consumed in render order. For repeater subfields the render
-			// order is the parent row-item's index (the leaf's own index is always 0), so sort
-			// by parent index first, then the entry's own index. Without this, subfields mis-bind
-			// to the wrong row after a reorder or CLI re-import (storage order != index order).
-			const entry_index = new Map(entries.map((e) => [e.id, e.index]))
-			const render_index = (e) => (e.parent ? entry_index.get(e.parent) ?? 0 : e.index)
+			// so entries must be consumed in render order. A repeater subfield's own index is
+			// always 0; its render position comes from its ancestor row-items' indices. Build the
+			// full root→leaf index path for each entry and sort lexicographically by it, so leaves
+			// under different (and nested) rows can't collide. Without this, subfields mis-bind to
+			// the wrong row after a reorder or CLI re-import (storage order != index order).
+			const entry_by_id = new Map(entries.map((e) => [e.id, e]))
+			const render_path = (e) => {
+				const path: number[] = []
+				const seen = new Set()
+				for (let cur = e; cur && !seen.has(cur.id); cur = cur.parent ? entry_by_id.get(cur.parent) : undefined) {
+					seen.add(cur.id)
+					path.unshift(cur.index)
+				}
+				return path
+			}
+			const compare_paths = (a, b) => {
+				for (let i = 0; i < Math.min(a.length, b.length); i++) {
+					if (a[i] !== b[i]) return a[i] - b[i]
+				}
+				return a.length - b.length
+			}
+			const path_by_id = new Map(entries.map((e) => [e.id, render_path(e)]))
 			const relevant_entries = entries
 				.filter((e) => e.field === field.id)
-				.sort((a, b) => render_index(a) - render_index(b) || a.index - b.index)
+				.sort((a, b) => compare_paths(path_by_id.get(a.id), path_by_id.get(b.id)))
 			for (const entry of relevant_entries) {
 				search_elements_for_value({
 					id: entry.id,
