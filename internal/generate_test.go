@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"io"
 	"testing"
 
 	_ "github.com/primocms/primo/migrations"
@@ -67,8 +68,8 @@ func TestCopyIfChangedSkipsIdenticalBytes(t *testing.T) {
 		t.Fatalf("read destination after change: %v", err)
 	}
 	defer reader.Close()
-	got := make([]byte, len("hello mars"))
-	if _, err := reader.Read(got); err != nil {
+	got, err := io.ReadAll(reader)
+	if err != nil {
 		t.Fatalf("read bytes: %v", err)
 	}
 	if string(got) != "hello mars" {
