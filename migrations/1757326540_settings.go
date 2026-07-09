@@ -32,7 +32,9 @@ func init() {
 				settings.Backups.CronMaxKeep = 7
 			}
 
-			app.Save(settings)
+			if err := app.Save(settings); err != nil {
+				return err
+			}
 
 			superuserEmail := os.Getenv("PRIMO_SUPERUSER_EMAIL")
 			superuserPassword := os.Getenv("PRIMO_SUPERUSER_PASSWORD")
