@@ -1,4 +1,4 @@
-name: Build Docker image and deploy production
+name: Build and push Docker image
 
 on:
   push:
@@ -65,28 +65,9 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-  deploy-production:
-    runs-on: ubuntu-latest
-    needs:
-      - build-image
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up SSH
-        run: |
-          install -m 600 -D /dev/null ~/.ssh/id
-          echo "${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}" > ~/.ssh/id
-          echo "${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-
-      - name: Deploy to server
-        env:
-          DOCKER_HOST: ${{ secrets.PRODUCTION_DOCKER_HOST }}
-          DOCKER_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-image.outputs.version }}
-        run: |
-          cd ./deployment/production/
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id
-          docker compose up --pull always --detach
+  # NOTE: the former `deploy-production` job was removed. It SSHed to
+  # PRODUCTION_DOCKER_HOST (palacms.com, the retired Hostinger box) and ran
+  # `docker compose up`, but that host is decommissioned — it now just 301s to
+  # primo.build — so the job failed on every v3.* tag. Infra moved to Railway,
+  # which pulls the image published above on its own trigger. Re-add a deploy
+  # job here only if a new SSH-deployable host is introduced.
