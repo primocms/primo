@@ -174,7 +174,16 @@
 			// Check if all elements are already matched
 			if (matched_elements.size === valid_elements.length) break
 
-			const relevant_entries = entries.filter((e) => e.field === field.id)
+			// The on-page matcher binds each entry to the next data-key element positionally,
+			// so entries must be consumed in render order. For repeater subfields the render
+			// order is the parent row-item's index (the leaf's own index is always 0), so sort
+			// by parent index first, then the entry's own index. Without this, subfields mis-bind
+			// to the wrong row after a reorder or CLI re-import (storage order != index order).
+			const entry_index = new Map(entries.map((e) => [e.id, e.index]))
+			const render_index = (e) => (e.parent ? entry_index.get(e.parent) ?? 0 : e.index)
+			const relevant_entries = entries
+				.filter((e) => e.field === field.id)
+				.sort((a, b) => render_index(a) - render_index(b) || a.index - b.index)
 			for (const entry of relevant_entries) {
 				search_elements_for_value({
 					id: entry.id,
