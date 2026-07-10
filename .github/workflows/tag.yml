@@ -39,6 +39,10 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            # Explicit :latest — Railway/self-host deployers follow this tag to
+            # track releases. metadata-action adds it implicitly for semver, but
+            # pin it here so it can't silently stop updating.
+            type=raw,value=latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

@@ -48,6 +48,8 @@ docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/primocms/primo:lat
 
 Then open your server's URL to create your first site.
 
+> **Auto-updates on Railway:** point your service's image at `ghcr.io/primocms/primo:latest` so "auto-update to the latest tag" tracks releases. If you deployed before this note and your source image is `:main`, switch it to `:latest` — `:main` is a rolling branch build, not a release, so it won't advance on version releases.
+
 **Next steps:**
 1. **[Quickstart](https://docs.primo.build/getting-started/quickstart)** — key concepts
 2. **[Build your first site](https://docs.primo.build/building-sites/your-first-site)**
