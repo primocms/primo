@@ -1154,3 +1154,329 @@ func TestImportLayoutBodyMissingSymbolWarns(t *testing.T) {
 		t.Fatalf("expected a missing_symbol warning for body block, got %#v", result.Warnings)
 	}
 }
+
+// baseSiteFiles returns a minimal but complete site zip map: a hero block, a
+// default page type, a home page, and a parent page "vs" with a child
+// "vs/wordpress". Used by the raw_source skip tests below.
+func baseSiteFiles() map[string]string {
+	return map[string]string{
+		"blocks/hero/config.yaml":      "name: hero\n",
+		"blocks/hero/component.svelte": "<section>{heading}</section>\n",
+		"blocks/hero/fields.yaml": "" +
+			"- name: heading\n" +
+			"  label: Heading\n" +
+			"  type: text\n",
+		"blocks/hero/content.yaml":       "heading: Default heading\n",
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks:\n  - hero\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "{}\n",
+		"pages/index.yaml": "" +
+			"name: Home\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Hello world\n",
+		"pages/vs/index.yaml": "" +
+			"name: Comparisons\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Compare\n",
+		"pages/vs/wordpress.yaml": "" +
+			"name: Vs WordPress\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Primo vs WordPress\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+}
+
+// TestNoOpRepushSkipsUnchangedPages guards the raw_source page skip: after a
+// first import stores each page's raw bytes, a byte-identical second import must
+// report zero pages as Added or Modified (the skip fires) instead of
+// delete-and-recreating them. This is the mechanism that makes a whole-site
+// re-push cheap; if it regresses, pushes silently get slow again.
+func TestNoOpRepushSkipsUnchangedPages(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	files := baseSiteFiles()
+
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Second, byte-identical import: every page should be skipped.
+	result, err := processImport(app, site, zipFiles(t, files), false)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	if len(result.Diff.Pages.Added) != 0 {
+		t.Fatalf("no-op re-push should add no pages, got Added=%v", result.Diff.Pages.Added)
+	}
+	if len(result.Diff.Pages.Modified) != 0 {
+		t.Fatalf("no-op re-push should modify no pages (raw_source skip), got Modified=%v", result.Diff.Pages.Modified)
+	}
+}
+
+// TestSkipPreservesConcurrentServerEdit is the conflict-safety guarantee: if a
+// page's content entry is edited on the server, an unchanged whole-site re-push
+// must NOT clobber it. The skip fires for the untouched page, so the server
+// edit survives. This is the scariest behavior to silently regress.
+func TestSkipPreservesConcurrentServerEdit(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	files := baseSiteFiles()
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Find the Home page's hero "heading" entry and edit it server-side.
+	// Entry values are stored JSON-encoded, so imported "Hello world" is held
+	// as the JSON string literal "\"Hello world\"".
+	home := findPageByName(t, app, site, "Home")
+	entry := findEntryWithValue(t, app, home.Id, `"Hello world"`)
+	const serverEdit = `"SERVER EDITED HEADING"`
+	entry.Set("value", serverEdit)
+	if err := app.Save(entry); err != nil {
+		t.Fatalf("server-side edit: %v", err)
+	}
+
+	// Re-push the unchanged local site.
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// The server edit must survive (page was skipped, not recreated).
+	reloaded, err := app.FindRecordById("page_section_entries", entry.Id)
+	if err != nil {
+		t.Fatalf("reload entry: %v", err)
+	}
+	if got := reloaded.GetString("value"); got != serverEdit {
+		t.Fatalf("concurrent server edit was clobbered: want %q, got %q", serverEdit, got)
+	}
+}
+
+// TestChangedChildKeepsSkippedParent guards the subtle case the SPEC flagged:
+// when a parent page is unchanged (skipped) but a child changed, the child must
+// still resolve its parent to the existing parent record — not get orphaned.
+func TestChangedChildKeepsSkippedParent(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	files := baseSiteFiles()
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	parent := findPageByName(t, app, site, "Comparisons") // pages/vs/index.yaml
+
+	// Change only the child's content (vs/wordpress); keep its name so it stays
+	// matched to the existing record (a name change would look like a new page).
+	// Leave the parent (vs/index) byte-identical so it gets skipped.
+	files["pages/vs/wordpress.yaml"] = "" +
+		"name: Vs WordPress\n" +
+		"page_type: Default\n" +
+		"sections:\n" +
+		"  - block: hero\n" +
+		"    content:\n" +
+		"      heading: Primo vs WordPress edited\n"
+
+	result, err := processImport(app, site, zipFiles(t, files), false)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// Parent unchanged → skipped, so not in the diff at all.
+	if contains(result.Diff.Pages.Modified, "vs") || contains(result.Diff.Pages.Added, "vs") {
+		t.Fatalf("unchanged parent should have been skipped, but appears in the diff (Modified=%v Added=%v)", result.Diff.Pages.Modified, result.Diff.Pages.Added)
+	}
+	// Child changed → Modified (matched by name, content differs).
+	if !contains(result.Diff.Pages.Modified, "vs/wordpress") {
+		t.Fatalf("changed child should be Modified, got Modified=%v Added=%v", result.Diff.Pages.Modified, result.Diff.Pages.Added)
+	}
+
+	// The child must still point at the existing parent record (parent was
+	// skipped, so the skip path had to return its id for children to resolve).
+	child := findPageByName(t, app, site, "Vs WordPress")
+	if child.GetString("parent") != parent.Id {
+		t.Fatalf("child orphaned: parent=%q, expected %q", child.GetString("parent"), parent.Id)
+	}
+}
+
+// --- small test helpers ---
+
+func findPageByName(t *testing.T, app core.App, site *core.Record, name string) *core.Record {
+	t.Helper()
+	rec, err := app.FindFirstRecordByFilter("pages", "site = {:site} && name = {:name}", map[string]any{"site": site.Id, "name": name})
+	if err != nil {
+		t.Fatalf("find page %q: %v", name, err)
+	}
+	return rec
+}
+
+func findEntryWithValue(t *testing.T, app core.App, pageId, value string) *core.Record {
+	t.Helper()
+	sections, err := app.FindRecordsByFilter("page_sections", "page = {:page}", "", 0, 0, map[string]any{"page": pageId})
+	if err != nil {
+		t.Fatalf("find sections: %v", err)
+	}
+	for _, s := range sections {
+		entries, err := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, map[string]any{"section": s.Id})
+		if err != nil {
+			t.Fatalf("find entries: %v", err)
+		}
+		for _, e := range entries {
+			if e.GetString("value") == value {
+				return e
+			}
+		}
+	}
+	t.Fatalf("no entry with value %q under page %s", value, pageId)
+	return nil
+}
+
+func contains(ss []string, want string) bool {
+	for _, s := range ss {
+		if s == want {
+			return true
+		}
+	}
+	return false
+}
+
+// TestContentEntriesHaveIntactRelations guards the SaveNoValidate optimization
+// on content-entry saves: we skip PocketBase's per-record relation-existence
+// validation because the relation targets are created earlier in the same
+// import. This test proves that assumption holds — every imported entry's
+// section and parent relations point at real records, so skipping validation
+// never leaves a dangling reference.
+func TestContentEntriesHaveIntactRelations(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	if _, err := processImport(app, site, zipFiles(t, baseSiteFiles()), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	entries, err := app.FindRecordsByFilter("page_section_entries", "field.symbol.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch entries: %v", err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("no content entries imported — test setup is wrong")
+	}
+
+	sectionIds := map[string]bool{}
+	entryIds := map[string]bool{}
+	for _, e := range entries {
+		entryIds[e.Id] = true
+	}
+	sections, err := app.FindRecordsByFilter("page_sections", "page.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("fetch sections: %v", err)
+	}
+	for _, s := range sections {
+		sectionIds[s.Id] = true
+	}
+
+	for _, e := range entries {
+		if sec := e.GetString("section"); sec != "" && !sectionIds[sec] {
+			t.Fatalf("entry %s has dangling section ref %q", e.Id, sec)
+		}
+		if parent := e.GetString("parent"); parent != "" && !entryIds[parent] {
+			t.Fatalf("entry %s has dangling parent ref %q", e.Id, parent)
+		}
+	}
+}
+
+// TestMovedPageIsNotSkipped guards the parent/slug gate on the no-op skip:
+// a page whose file is moved/renamed (so its path-derived slug changes) but
+// whose YAML bytes are otherwise identical must NOT be skipped — it has to
+// flow through the normal update so its slug/parent are corrected and it shows
+// up in Pages.Modified. Without the gate, rawSourceUnchanged() alone would skip
+// it and leave the stale slug.
+func TestMovedPageIsNotSkipped(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// A page identified by name (so a path change still matches the existing
+	// record via the name fallback), imported first at pages/about.yaml.
+	pageBody := "" +
+		"name: About\n" +
+		"page_type: Default\n" +
+		"sections:\n" +
+		"  - block: hero\n" +
+		"    content:\n" +
+		"      heading: About us\n"
+
+	first := baseSiteFiles()
+	first["pages/about.yaml"] = pageBody
+	if _, err := processImport(app, site, zipFiles(t, first), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	before := findPageByName(t, app, site, "About")
+	if before.GetString("slug") != "about" {
+		t.Fatalf("setup: expected slug 'about', got %q", before.GetString("slug"))
+	}
+
+	// "Move" the page: same bytes, new path pages/company/about.yaml would keep
+	// slug 'about' but change parent; to exercise the slug path clearly, rename
+	// to pages/company.yaml (slug becomes 'company'), bytes unchanged.
+	second := baseSiteFiles()
+	delete(second, "pages/about.yaml")
+	second["pages/company.yaml"] = pageBody // identical bytes, new path → slug 'company'
+
+	result, err := processImport(app, site, zipFiles(t, second), false)
+	if err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// The moved page must be reported as Modified, not silently skipped.
+	if !contains(result.Diff.Pages.Modified, "company") {
+		t.Fatalf("moved page should be Modified, got Modified=%v Added=%v", result.Diff.Pages.Modified, result.Diff.Pages.Added)
+	}
+
+	// And its slug must be updated to the new path segment.
+	after := findPageByName(t, app, site, "About")
+	if after.GetString("slug") != "company" {
+		t.Fatalf("moved page slug not updated: got %q, want %q", after.GetString("slug"), "company")
+	}
+}
+
+// TestImportRejectsOversizedZip guards the decompressed-size budget: a zip whose
+// entries inflate past maxImportUncompressedBytes must be rejected, not buffered
+// into memory (zip-bomb DoS). A large run of zeros compresses to almost nothing
+// but decompresses over the cap.
+func TestImportRejectsOversizedZip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// One entry larger than the cap; highly compressible so the zip stays small.
+	huge := make([]byte, maxImportUncompressedBytes+1)
+	files := map[string][]byte{
+		"pages/huge.yaml": huge,
+	}
+
+	_, err := processImport(app, site, zipFilesBinary(t, files), false)
+	if err == nil {
+		t.Fatal("expected oversized import to be rejected, got nil error")
+	}
+	if !strings.Contains(err.Error(), "maximum decompressed size") {
+		t.Fatalf("expected decompressed-size error, got: %v", err)
+	}
+}

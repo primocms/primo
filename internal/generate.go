@@ -2,13 +2,71 @@ package internal
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/xml"
+	"io"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
+
+// destinationMatchesSource reports whether dstKey already holds the exact bytes
+// at srcKey, so the copy can be skipped. It reads both files and compares their
+// sha256 (mirroring the upload reconcile in import.go). On any uncertainty (read
+// error, missing destination) it returns false so the caller copies — we never
+// skip on doubt. A cheap size check short-circuits before the full read.
+func destinationMatchesSource(system *filesystem.System, srcKey, dstKey string) bool {
+	srcAttr, err := system.Attributes(srcKey)
+	if err != nil {
+		return false
+	}
+	dstAttr, err := system.Attributes(dstKey)
+	if err != nil {
+		return false
+	}
+	if srcAttr.Size != dstAttr.Size {
+		return false
+	}
+	// Prefer backend-provided MD5 when both sides have it (no full read).
+	if len(srcAttr.MD5) > 0 && len(dstAttr.MD5) > 0 {
+		return bytes.Equal(srcAttr.MD5, dstAttr.MD5)
+	}
+	// Fall back to hashing the bytes (local-disk backend leaves MD5 nil).
+	srcHash, ok := hashFile(system, srcKey)
+	if !ok {
+		return false
+	}
+	dstHash, ok := hashFile(system, dstKey)
+	if !ok {
+		return false
+	}
+	return srcHash == dstHash
+}
+
+func hashFile(system *filesystem.System, key string) ([sha256.Size]byte, bool) {
+	reader, err := system.GetReader(key)
+	if err != nil {
+		return [sha256.Size]byte{}, false
+	}
+	defer reader.Close()
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return [sha256.Size]byte{}, false
+	}
+	return sha256.Sum256(data), true
+}
+
+// copyIfChanged copies srcKey to dstKey unless the destination already holds the
+// same bytes. Either way dstKey is a live artifact, so the caller records it for
+// the cleanup pass (which deletes anything not in the returned set).
+func copyIfChanged(system *filesystem.System, srcKey, dstKey string) error {
+	if destinationMatchesSource(system, srcKey, dstKey) {
+		return nil
+	}
+	return system.Copy(srcKey, dstKey)
+}
 
 func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record) ([]string, error) {
 	collection, err := pb.FindCollectionByNameOrId("site_symbols")
@@ -37,7 +95,7 @@ func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site 
 
 		sourceKey := collection.Id + "/" + symbol.Id + "/" + name
 		destinationKey := "sites/" + site.GetString("host") + "/_symbols/" + symbol.Id + ".js"
-		if err := system.Copy(sourceKey, destinationKey); err != nil {
+		if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 			return nil, err
 		}
 
@@ -70,7 +128,7 @@ func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site 
 		name := upload.GetString("file")
 		sourceKey := collection.Id + "/" + upload.Id + "/" + name
 		destinationKey := "sites/" + site.GetString("host") + "/_uploads/" + name
-		if err := system.Copy(sourceKey, destinationKey); err != nil {
+		if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 			return nil, err
 		}
 
@@ -131,7 +189,7 @@ func generatePage(
 	name := page.GetString("compiled_html")
 	sourceKey := collection.Id + "/" + page.Id + "/" + name
 	destinationKey := "sites/" + site.GetString("host") + path + "/index.html"
-	if err := system.Copy(sourceKey, destinationKey); err != nil {
+	if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 		return nil, err
 	}
 
@@ -210,10 +268,14 @@ func generateSitemap(system *filesystem.System, site *core.Record, pages []*core
 		return "", err
 	}
 
-	// Write sitemap to filesystem
+	// Write sitemap to filesystem, but only when it actually changed. The
+	// sitemap only differs when pages are added/removed/renamed/reparented, so
+	// a content-only edit skips this upload (and the CDN cache bust it implies).
 	destinationKey := "sites/" + host + "/sitemap.xml"
-	if err := system.Upload(buf.Bytes(), destinationKey); err != nil {
-		return "", err
+	if existingHash, ok := hashFile(system, destinationKey); !ok || existingHash != sha256.Sum256(buf.Bytes()) {
+		if err := system.Upload(buf.Bytes(), destinationKey); err != nil {
+			return "", err
+		}
 	}
 
 	return destinationKey, nil
