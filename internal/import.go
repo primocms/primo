@@ -3488,14 +3488,25 @@ func upsertSiteUpload(
 			}
 			defer fsys.Close()
 		}
-		sourceKey := uploadsColl.Id + "/" + existing.Id + "/" + filename
+		// Read the currently stored bytes to see whether this is a true no-op.
+		// The storage path is keyed by the record's ACTUAL stored filename
+		// (which carries PocketBase's random suffix), NOT by the caller-supplied
+		// `filename` — those differ whenever the CLI re-sends a symbolic name
+		// for an already-suffixed record, and using `filename` here would miss
+		// the file, fall through, and re-suffix on every push (the duplicate-
+		// stacking bug). Storage is keyed by collection id, not name.
+		storedName := existing.GetString("file")
+		sourceKey := uploadsColl.Id + "/" + existing.Id + "/" + storedName
 		reader, readErr := fsys.GetFile(sourceKey)
 		if readErr == nil {
 			existingBytes, _ := io.ReadAll(reader)
 			reader.Close()
 			existingHash := sha256.Sum256(existingBytes)
 			if hex.EncodeToString(existingHash[:]) == incomingHex {
-				return uploadReconcileEntry{ID: existing.Id, Canonical: filename, Hash: incomingHex}, false, nil
+				// Unchanged bytes → no-op. Return the stored (already-suffixed)
+				// name as canonical so the CLI keeps the local file on that name
+				// instead of chasing a fresh suffix each push.
+				return uploadReconcileEntry{ID: existing.Id, Canonical: storedName, Hash: incomingHex}, false, nil
 			}
 		}
 
@@ -3597,8 +3608,49 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 	}
 	defer fsys.Close()
 
+	// Index existing records by the CONTENT HASH of their stored bytes. This is
+	// the stable identity a push should match on: filenames carry a random
+	// PocketBase suffix that changes on every write, so keying only by filename
+	// meant a re-sent symbolic name (`favicon.svg`) never matched its already-
+	// suffixed record (`favicon_ab12cd34.svg`) and got recreated + re-suffixed
+	// on every push — turning one image into N byte-identical orphans. Matching
+	// by hash makes an unchanged image a no-op regardless of the name sent.
+	//
+	// Reading every stored upload once per push is the cost of not persisting a
+	// hash column; it's bounded by the site's upload count and the bytes are
+	// small relative to the zip we already decompressed. A read failure just
+	// leaves that record out of the hash index — it can still match by filename.
+	existingByHash := make(map[string]*core.Record, len(existing))
+	for _, rec := range existing {
+		fn := rec.GetString("file")
+		if fn == "" {
+			continue
+		}
+		reader, rerr := fsys.GetFile(uploadsColl.Id + "/" + rec.Id + "/" + fn)
+		if rerr != nil {
+			continue
+		}
+		b, _ := io.ReadAll(reader)
+		reader.Close()
+		sum := sha256.Sum256(b)
+		hexSum := hex.EncodeToString(sum[:])
+		// First writer wins on hash collision (byte-identical duplicates that
+		// this very bug may have already created); the loser stays reachable by
+		// filename and is a candidate for `--prune-uploads` garbage collection.
+		if _, seen := existingByHash[hexSum]; !seen {
+			existingByHash[hexSum] = rec
+		}
+	}
+
 	for _, up := range zipUploads {
-		entry, _, err := upsertSiteUpload(app, site, up.filename, up.data, existingByFilename[up.filename], uploadsColl, fsys)
+		// Prefer a content-hash match (stable across renames) over a filename
+		// match (mutated by suffixing). Only when neither hits do we create.
+		incomingSum := sha256.Sum256(up.data)
+		match := existingByHash[hex.EncodeToString(incomingSum[:])]
+		if match == nil {
+			match = existingByFilename[up.filename]
+		}
+		entry, _, err := upsertSiteUpload(app, site, up.filename, up.data, match, uploadsColl, fsys)
 		if err != nil {
 			return nil, err
 		}
