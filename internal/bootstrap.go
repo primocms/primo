@@ -146,12 +146,19 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 			return e.InternalServerError("Import failed: "+err.Error(), err)
 		}
 
+		// created_ids carries the uploads manifest (canonical suffixed
+		// filenames + record ids) the CLI needs to rename local files and
+		// rewrite symbolic `upload: uploads/...` refs. Dropping it here made
+		// the first (bootstrap) push skip writeback, so the CLI kept re-sending
+		// un-suffixed names on every later push — see the upload dedup fix in
+		// import.go's reconcileSiteUploads.
 		return e.JSON(200, map[string]interface{}{
-			"success":  true,
-			"site_id":  siteId,
-			"name":     siteName,
-			"host":     siteHost,
-			"warnings": result.Warnings,
+			"success":     true,
+			"site_id":     siteId,
+			"name":        siteName,
+			"host":        siteHost,
+			"warnings":    result.Warnings,
+			"created_ids": result.CreatedIDs,
 		})
 	}
 
