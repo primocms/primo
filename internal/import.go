@@ -3497,7 +3497,7 @@ func upsertSiteUpload(
 		// stacking bug). Storage is keyed by collection id, not name.
 		storedName := existing.GetString("file")
 		sourceKey := uploadsColl.Id + "/" + existing.Id + "/" + storedName
-		reader, readErr := fsys.GetFile(sourceKey)
+		reader, readErr := fsys.GetReader(sourceKey)
 		if readErr == nil {
 			existingBytes, _ := io.ReadAll(reader)
 			reader.Close()
@@ -3626,7 +3626,7 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 		if fn == "" {
 			continue
 		}
-		reader, rerr := fsys.GetFile(uploadsColl.Id + "/" + rec.Id + "/" + fn)
+		reader, rerr := fsys.GetReader(uploadsColl.Id + "/" + rec.Id + "/" + fn)
 		if rerr != nil {
 			continue
 		}
