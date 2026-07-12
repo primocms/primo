@@ -167,32 +167,32 @@
 				</div>
 			</li>
 		{/if}
-	</ul>
 
-	{#if creating_page}
-		<div class="p-2 bg-[var(--primo-color-black)]">
-			<PageForm
-				oncreate={async (new_page: any) => {
-					creating_page = false
-					const url_taken = all_pages.some((page) => page?.slug === new_page.slug && page.parent === homepage.id)
-					if (url_taken) {
-						alert(`That URL is already in use`)
-					} else {
-						building_page = true
-						building_page_name = new_page.name
-						await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
-					}
-				}}
-			/>
-		</div>
-	{:else}
-		<div class="p-2 bg-(--primo-color-black)">
-			<button class="create-page-btn" onclick={() => (creating_page = true)}>
-				<Icon icon="akar-icons:plus" />
-				<span>Create Page</span>
-			</button>
-		</div>
-	{/if}
+		{#if creating_page}
+			<li>
+				<PageForm
+					oncreate={async (new_page: any) => {
+						creating_page = false
+						const url_taken = all_pages.some((page) => page?.slug === new_page.slug && page.parent === homepage.id)
+						if (url_taken) {
+							alert(`That URL is already in use`)
+						} else {
+							building_page = true
+							building_page_name = new_page.name
+							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+						}
+					}}
+				/>
+			</li>
+		{:else}
+			<li>
+				<button class="create-page-btn" onclick={() => (creating_page = true)}>
+					<Icon icon="akar-icons:plus" />
+					<span>Create Page</span>
+				</button>
+			</li>
+		{/if}
+	</ul>
 {/if}
 
 <style lang="postcss">
