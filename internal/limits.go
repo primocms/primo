@@ -22,6 +22,15 @@ import (
 // bootstrap/settings migration that seeds the first user, and internal clones
 // run outside an API request — unaffected, since those don't go through the
 // request hook.
+//
+// The count-then-create in each hook is not atomic (TOCTOU): two truly
+// simultaneous creates can both pass the count and exceed the cap by one. We
+// accept this deliberately — these are rare, manual, single-operator actions
+// (create site / invite editor), the cap is a soft business limit rather than a
+// security boundary, and the worst case is off-by-one. A mutex across the hook
+// would serialize every create for a race that effectively can't occur at this
+// scale; if strict enforcement is ever needed, reconcile in an
+// OnRecordAfterCreate* hook instead.
 
 // getCap reads an integer cap by config_values key, falling back to an env var.
 // Returns 0 when unset/invalid, which callers treat as "unlimited".

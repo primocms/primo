@@ -85,7 +85,9 @@ func init() {
 				record := core.NewRecord(collection)
 				record.Set("key", cap.key)
 				record.Set("value", os.Getenv(cap.envVar))
-				app.Save(record)
+				if err := app.Save(record); err != nil {
+					return err
+				}
 			}
 
 			return nil
