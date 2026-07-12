@@ -83,6 +83,15 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 			version := getBuildVersion()
 			smtpEnabled := pb.Settings().SMTP.Enabled
 
+			// Expose plan caps so the UI can disable the create-site / add-editor
+			// affordances and show usage. A cap of 0 means unlimited (omitted).
+			// site_count is instance-wide (site cap is instance-wide); the editor
+			// cap is per-site, so the per-site count is computed client-side from
+			// that site's role assignments rather than surfaced here.
+			siteCap := getCap(pb, "site_cap", "PRIMO_SITE_CAP")
+			editorCap := getCap(pb, "editor_cap", "PRIMO_EDITOR_CAP")
+			siteCount, _ := pb.CountRecords("sites")
+
 			return requestEvent.JSON(200, struct {
 				Id               string `json:"id"`
 				Version          string `json:"version"`
@@ -91,6 +100,9 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				HostedMode       bool   `json:"hosted_mode"`
 				BillingURL       string `json:"billing_url,omitempty"`
 				DevMode          bool   `json:"dev_mode"`
+				SiteCap          int    `json:"site_cap,omitempty"`
+				SiteCount        int64  `json:"site_count"`
+				EditorCap        int    `json:"editor_cap,omitempty"`
 			}{
 				Id:               id,
 				Version:          version,
@@ -99,6 +111,9 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				HostedMode:       isHostedMode(),
 				BillingURL:       os.Getenv("PRIMO_BILLING_URL"),
 				DevMode:          DevMode,
+				SiteCap:          siteCap,
+				SiteCount:        siteCount,
+				EditorCap:        editorCap,
 			})
 		})
 
