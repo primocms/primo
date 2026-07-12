@@ -20,6 +20,7 @@
 	import { ClientResponseError } from 'pocketbase'
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
+	import { instance } from '$lib/instance'
 
 	const sidebar = useSidebar()
 
@@ -36,6 +37,10 @@
 	const active_site_group = $derived(site_group_id ? SiteGroups.one(site_group_id) : undefined)
 	const all_sites = $derived(Sites.list() ?? [])
 	const sites = $derived(site_group_id ? all_sites.filter((site) => site.group === site_group_id) : [])
+
+	// Plan site cap: 0/undefined means unlimited. Enforced server-side in
+	// internal/limits.go; this just disables the affordance + shows usage.
+	const at_site_cap = $derived(!!instance.site_cap && all_sites.length >= instance.site_cap)
 
 	let is_rename_group_open = $state(false)
 	let new_group_name = $state('')
@@ -195,10 +200,15 @@
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
-	<div class="ml-auto mr-4">
+	<div class="ml-auto mr-4 flex items-center gap-3">
+		{#if instance.site_cap}
+			<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
+		{/if}
 		<Button
 			size="sm"
 			variant="outline"
+			disabled={at_site_cap}
+			title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
 			onclick={() => {
 				if (all_sites.some((site) => site.host === page.url.host)) {
 					is_create_site_instructions_open = true

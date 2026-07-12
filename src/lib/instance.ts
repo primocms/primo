@@ -8,6 +8,9 @@ export type InstanceInfo = {
 	hosted_mode: boolean
 	billing_url?: string
 	dev_mode: boolean
+	site_cap?: number
+	site_count: number
+	editor_cap?: number
 }
 
 export const instance: InstanceInfo = await fetch(new URL('/api/primo/info', self.baseURL)).then((res) => res.json())

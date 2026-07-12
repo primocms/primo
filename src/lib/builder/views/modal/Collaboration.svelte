@@ -172,6 +172,13 @@
 			)
 	)
 	let is_remove_collaborator_open = $state(false)
+
+	// Per-site editor cap: 0/undefined means unlimited. Only "editor"-role
+	// assignments count toward it (developers are not billed editor seats).
+	// Enforced server-side in internal/limits.go; this disables the invite
+	// affordance once this site is at its plan's per-site editor limit.
+	let site_editor_count = $derived(site.role_assignments()?.filter((a) => a.role === 'editor').length ?? 0)
+	let at_editor_cap = $derived(!!instance.editor_cap && site_editor_count >= instance.editor_cap)
 	let removing_collaborator = $state(false)
 	let collaborator_to_remove = $state<{ user: User; assignment: SiteRoleAssignment }>()
 
@@ -268,7 +275,7 @@
 			</div>
 			<div>
 				{#if instance.smtp_enabled}
-					<button type="submit" value="email">
+					<button type="submit" value="email" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
 						{#if sending}
 							<Icon icon="eos-icons:three-dots-loading" />
 						{:else}
@@ -277,7 +284,7 @@
 					</button>
 					<span>or</span>
 				{/if}
-				<button type="submit" value="link">
+				<button type="submit" value="link" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
 					{#if generating}
 						<Icon icon="eos-icons:three-dots-loading" />
 					{:else}
