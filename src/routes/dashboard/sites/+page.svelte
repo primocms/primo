@@ -13,7 +13,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
+	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus, Terminal, Check, Copy } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
@@ -242,6 +242,28 @@
 		is_move_site_open
 		save.reset()
 	})
+	let is_develop_locally_open = $state(false)
+	const server_url = $derived(self.baseURL || (typeof location !== 'undefined' ? location.origin : ''))
+	const develop_steps = $derived([
+		{ label: 'Install the CLI', command: 'npm install -g primo-cli' },
+		{ label: 'Pull your workspace into the current folder', command: `primo pull -s ${server_url}`, note: "You'll be prompted to log in the first time." },
+		{ label: 'Edit the files with a local agent or by hand', note: 'Open the folder in your editor or point an AI agent at it — sites are plain files.' },
+		{ label: 'Push your changes back to the server', command: 'primo push' }
+	])
+
+	let copied_command: string | null = $state(null)
+	let copied_timeout: ReturnType<typeof setTimeout> | null = null
+	async function copy_command(command: string) {
+		try {
+			await navigator.clipboard.writeText(command)
+			copied_command = command
+			if (copied_timeout) clearTimeout(copied_timeout)
+			copied_timeout = setTimeout(() => (copied_command = null), 1500)
+		} catch (error) {
+			console.error('Failed to copy command:', error)
+		}
+	}
+	$effect(() => () => { if (copied_timeout) clearTimeout(copied_timeout) })
 </script>
 
 <header class="sites-header flex h-14 shrink-0 items-center gap-2">
@@ -281,6 +303,9 @@
 			{#if instance.site_cap}
 				<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
 			{/if}
+			<Button size="sm" variant="ghost" aria-label="Develop locally" class="develop-locally-button" onclick={() => (is_develop_locally_open = true)}>
+				<Terminal class="h-4 w-4" /><span class="develop-label">Develop locally</span>
+			</Button>
 			<Button
 				size="sm"
 				class="create-site-button"
@@ -576,6 +601,55 @@
 	</div>
 {/if}
 
+<Dialog.Root bind:open={is_develop_locally_open}>
+	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
+		<h2 class="text-lg font-semibold leading-none tracking-tight">Develop locally</h2>
+		<p class="text-muted-foreground text-sm mb-6">Pull this server's sites to your machine to edit them as files. Run these in your terminal:</p>
+
+		<div class="space-y-4">
+			{#each develop_steps as step, i}
+				<div class="flex gap-4">
+					<div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">{i + 1}</div>
+					<div class="min-w-0 flex-1">
+						<h3 class="font-medium text-sm mb-1">{step.label}</h3>
+						{#if step.command}
+							<button
+								type="button"
+								onclick={() => copy_command(step.command)}
+								class="group flex w-full items-center justify-between gap-2 rounded-md bg-[#111] px-3 py-2 text-left font-mono text-xs text-muted-foreground hover:text-foreground"
+							>
+								<span class="truncate">{step.command}</span>
+								{#if copied_command === step.command}
+									<Check class="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
+								{:else}
+									<Copy class="h-3.5 w-3.5 flex-shrink-0 opacity-50 group-hover:opacity-100" />
+								{/if}
+							</button>
+						{/if}
+						{#if step.note}
+							<p class="text-muted-foreground text-xs mt-1">{step.note}</p>
+						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<p class="text-muted-foreground text-xs mt-6">Pulling copies every site on this server into the current folder.</p>
+
+		<Dialog.Footer class="mt-6 sm:justify-between sm:items-center">
+			<a
+				href="https://docs.primo.build/getting-started/installation"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
+			>
+				View docs
+			</a>
+			<Button type="button" onclick={() => (is_develop_locally_open = false)}>Okay</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
 <style lang="postcss">
 	.sites-content {
 		display: grid;
@@ -663,6 +737,8 @@
 		}
 	}
 	@media (max-width: 700px) {
+		.develop-label { display: none; }
+		:global(.develop-locally-button) { min-height: 44px; min-width: 44px; }
 		.site-actions { gap: 6px; margin-right: 12px; }
 		:global(.create-site-button) { min-height: 44px; }
 		.group-options { width: 40px; height: 44px; flex-shrink: 0; }
