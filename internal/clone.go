@@ -132,12 +132,34 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 				snapshotURL = body.SnapshotURL
 			}
 
-			if name == "" || host == "" || groupId == "" {
-				return e.BadRequestError("Missing required fields: name, host, group_id", nil)
+			if name == "" || groupId == "" {
+				return e.BadRequestError("Missing required fields: name, group_id", nil)
 			}
 
 			if e.Auth == nil {
 				return e.UnauthorizedError("Authentication required", nil)
+			}
+
+			// Host is optional. When omitted:
+			//   - If a base domain is configured (PRIMO_BASE_DOMAIN), the site
+			//     is auto-assigned a live "<slug>.<base>" subdomain and is
+			//     publicly served immediately (the wildcard cert covers it).
+			//   - Otherwise the site is created "unassigned": its `host` is set
+			//     to its own id (the sites collection has a required, UNIQUE
+			//     `host`, so unassigned can't be empty), making it editor-only
+			//     until an operator assigns a real domain. Because the id isn't
+			//     known until after save, we use a temporary unique placeholder
+			//     and rewrite it to the id below.
+			// Callers that already own a domain (e.g. first-run setup) may still
+			// pass an explicit host, which is used verbatim.
+			unassigned := false
+			if host == "" {
+				if sub := resolveNewSiteHost(pb, name); sub != "" {
+					host = sub
+				} else {
+					unassigned = true
+					host = "unassigned-" + generateId(15)
+				}
 			}
 
 			var newSite *core.Record
@@ -155,6 +177,15 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 
 			if err != nil {
 				return e.BadRequestError("Clone failed: "+err.Error(), err)
+			}
+
+			// Reconcile the placeholder to the canonical unassigned sentinel
+			// (host == id) now that PocketBase has assigned the real id.
+			if unassigned {
+				newSite.Set("host", newSite.Id)
+				if err := pb.Save(newSite); err != nil {
+					return e.InternalServerError("Failed to finalize unassigned site", err)
+				}
 			}
 
 			return e.JSON(200, map[string]any{
