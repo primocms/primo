@@ -8,6 +8,7 @@
 	import { page } from '$app/state'
 	import { Sites } from '$lib/pocketbase/collections'
 	import CreateSite from '$lib/components/CreateSite.svelte'
+	import { is_host_assigned } from '$lib/site_host'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 	import { Loader } from 'lucide-svelte'
 
@@ -85,13 +86,16 @@
 {#if creating_site && $current_user}
 	<CreateSite
 		oncreated={(created) => {
-			// Hard-navigate to the new site's admin. If the host differs (localhost
-			// dashboard flow), this redirects to the right vhost. If it matches, a
-			// reload sidesteps the stale Sites.list() cache that would otherwise
-			// re-trigger the create-site gate.
-			const target_host = created?.host || host
-			const protocol = page.url.protocol || 'http:'
-			window.location.href = `${protocol}//${target_host}/admin/site`
+			// Hard-navigate to the new site's admin. An assigned site lives at
+			// its own vhost (redirect there); an unassigned site (host === id)
+			// has no vhost, so open it by id. Hard nav (not goto) sidesteps the
+			// stale Sites.list() cache that would otherwise re-trigger the gate.
+			if (created && is_host_assigned(created)) {
+				const protocol = page.url.protocol || 'http:'
+				window.location.href = `${protocol}//${created.host}/admin/site`
+			} else if (created) {
+				window.location.href = `/admin/sites/${created.id}`
+			}
 		}}
 	/>
 {:else if site && $current_user}

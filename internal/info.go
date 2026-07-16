@@ -103,6 +103,12 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				SiteCap          int    `json:"site_cap,omitempty"`
 				SiteCount        int64  `json:"site_count"`
 				EditorCap        int    `json:"editor_cap,omitempty"`
+				// Domain provider + base domain let the editor pick the
+				// connect-domain flow: "railway" runs the attach+poll flow,
+				// "manual" shows generic DNS guidance. base_domain (if set)
+				// means new sites get a live subdomain and is shown as a hint.
+				DomainProvider string `json:"domain_provider"`
+				BaseDomain     string `json:"base_domain,omitempty"`
 			}{
 				Id:               id,
 				Version:          version,
@@ -114,6 +120,8 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				SiteCap:          siteCap,
 				SiteCount:        siteCount,
 				EditorCap:        editorCap,
+				DomainProvider:   getDomainProvider().Name(),
+				BaseDomain:       baseDomain(),
 			})
 		})
 

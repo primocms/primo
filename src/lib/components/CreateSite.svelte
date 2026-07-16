@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload } from 'lucide-svelte'
+	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X } from 'lucide-svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -23,7 +23,7 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated }: { oncreated?: (created: { id: string; host: string }) => void } = $props()
+	const { oncreated, oncancel }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
@@ -203,7 +203,9 @@
 				// File upload - use FormData
 				const form_data = new FormData()
 				form_data.append('name', site_name)
-				form_data.append('host', pageState.url.host)
+				// Host is intentionally omitted — new sites are created
+				// unassigned (see clone-site endpoint) and get a real domain
+				// assigned separately in the dashboard.
 				form_data.append('group_id', site_group?.id ?? '')
 				form_data.append('snapshot_file', uploaded_snapshot_file)
 
@@ -218,13 +220,12 @@
 				// Build request body for server-side clone
 				const request_body: {
 					name: string
-					host: string
 					group_id: string
 					source_site_id?: string
 					snapshot_url?: string
 				} = {
 					name: site_name,
-					host: pageState.url.host,
+					// Host omitted — created unassigned (see clone-site endpoint).
 					group_id: site_group?.id ?? ''
 				}
 
@@ -318,8 +319,18 @@
 
 <div class="max-w-[1400px] h-screen px-2 flex flex-col mx-auto">
 	<!-- Header -->
-	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem]">
+	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem] relative">
 		<h1 class="text-md leading-none tracking-tight text-center">Create Site</h1>
+		{#if oncancel}
+			<button
+				type="button"
+				onclick={() => oncancel?.()}
+				class="absolute right-2 top-6 p-2 text-muted-foreground hover:text-foreground rounded-md"
+				aria-label="Cancel"
+			>
+				<X class="w-4 h-4" />
+			</button>
+		{/if}
 
 		<!-- Stepper -->
 		<div class="max-w-[900px] mx-auto mt-4 flex items-center gap-4 overflow-x-auto whitespace-nowrap w-full">

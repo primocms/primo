@@ -246,10 +246,15 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			createName = "Imported Site"
 		}
 		// Auto-create needs a unique non-empty host because the sites
-		// collection has a UNIQUE constraint on `host`. Seed with siteId;
-		// real routing hosts arrive separately (bootstrap form field in
-		// dev, or dashboard config in prod).
-		createHost := siteId
+		// collection has a UNIQUE constraint on `host`. With a base domain
+		// configured (PRIMO_BASE_DOMAIN), assign a live "<slug>.<base>"
+		// subdomain so a pushed site is reachable immediately. Otherwise seed
+		// with siteId (the unassigned sentinel); real routing hosts arrive
+		// separately (bootstrap form field in dev, or dashboard config in prod).
+		createHost := resolveNewSiteHost(pb, createName)
+		if createHost == "" {
+			createHost = siteId
+		}
 
 		groupId, groupErr := ensureDefaultGroup(pb)
 		if groupErr != nil {
