@@ -64,11 +64,13 @@
 		<div class="container">
 			<h3 class="title">{instance.dev_mode ? 'Preview Ready!' : 'Published Successfully!'}</h3>
 			<p class="description">
-				{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
 				{#if site_host}
+					{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
+				{:else if instance.dev_mode}
+					Your website preview is ready on your local server.
 				{:else}
-					{instance.dev_mode ? 'your local server' : 'your live site'}
+					Your changes are published. Connect a domain from the dashboard to make this site public.
 				{/if}
 			</p>
 			<div class="buttons">
