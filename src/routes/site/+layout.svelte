@@ -63,15 +63,19 @@
 	const sites_by_host = $derived(Sites.list({ filter: { host } }))
 	const site = $derived(sites_by_host?.[0])
 
-	// For non-localhost, show create if no site matches after initial check.
-	// `sites_by_host === undefined` means the list is still loading — don't
-	// flip into wizard mode until the response arrives, otherwise a brief
-	// pre-load gap traps us on the wizard even when a site exists.
+	// This host-based route serves a site whose `host` matches the current
+	// domain. On a multi-site instance the current host often matches no site
+	// (e.g. the bare instance URL, or an unassigned site whose host is its id
+	// sentinel) — in that case there's nothing to edit here, so send the user
+	// to the dashboard, which lists every site by id. `sites_by_host ===
+	// undefined` means the list is still loading — wait for it before deciding,
+	// so a brief pre-load gap doesn't bounce us to the dashboard when a site
+	// does match.
 	let creating_site = $state(false)
 	$effect(() => {
 		const list_loaded = sites_by_host !== undefined
 		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
-			creating_site = true
+			goto('/admin/dashboard', { replaceState: true })
 		} else if (site) {
 			creating_site = false
 		}
