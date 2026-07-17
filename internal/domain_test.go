@@ -3,9 +3,13 @@ package internal
 import "testing"
 
 func TestToDomainResultStatus(t *testing.T) {
-	mk := func(statuses ...string) railwayCustomDomain {
+	// mk builds a domain with `n` DNS records (each with the given per-record
+	// enum) and a cert status. Overall status is driven by certStatus.
+	mk := func(certStatus string, verified bool, dnsStatuses ...string) railwayCustomDomain {
 		cd := railwayCustomDomain{ID: "cd_1", Domain: "example.com"}
-		for _, s := range statuses {
+		cd.Status.CertificateStatus = certStatus
+		cd.Status.Verified = verified
+		for _, s := range dnsStatuses {
 			rec := struct {
 				Hostlabel     string `json:"hostlabel"`
 				Fqdn          string `json:"fqdn"`
@@ -26,11 +30,11 @@ func TestToDomainResultStatus(t *testing.T) {
 		wantStat string
 		wantRecs int
 	}{
-		{"no records = pending", mk(), DomainStatusPending, 0},
-		{"all valid = live", mk("VALID", "VALID"), DomainStatusLive, 2},
-		{"some valid = verifying", mk("VALID", "PENDING"), DomainStatusVerifying, 2},
-		{"none valid = pending", mk("PENDING", "PENDING"), DomainStatusPending, 2},
-		{"case-insensitive valid", mk("valid"), DomainStatusLive, 1},
+		{"no records, no cert = pending", mk("", false), DomainStatusPending, 0},
+		{"cert valid = live", mk(railwayCertValid, true, railwayDNSPropagated), DomainStatusLive, 1},
+		{"records but cert issuing = verifying", mk("CERTIFICATE_STATUS_TYPE_ISSUING", false, railwayDNSPropagated), DomainStatusVerifying, 1},
+		{"cert issue failed = error", mk(railwayCertIssueFail, false, railwayDNSPropagated), DomainStatusError, 1},
+		{"verified but no records/cert = verifying", mk("", true), DomainStatusVerifying, 0},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -46,6 +50,18 @@ func TestToDomainResultStatus(t *testing.T) {
 			}
 		})
 	}
+
+	// Per-record status normalization: propagated → valid, else pending.
+	t.Run("record status normalized", func(t *testing.T) {
+		cd := mk(railwayCertValid, true, railwayDNSPropagated, "DNS_RECORD_STATUS_REQUIRES_UPDATE")
+		got := toDomainResult(cd)
+		if got.Records[0].Status != "valid" {
+			t.Errorf("propagated record = %q, want valid", got.Records[0].Status)
+		}
+		if got.Records[1].Status != "pending" {
+			t.Errorf("requires-update record = %q, want pending", got.Records[1].Status)
+		}
+	})
 }
 
 func TestToDomainResultRecordMapping(t *testing.T) {

@@ -40,8 +40,12 @@
 					{instance.dev_mode ? 'Your website will be previewed at' : 'Your website will be published to'}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
 				</p>
+			{:else if instance.dev_mode}
+				<p class="description">Ready to preview your website changes?</p>
 			{:else}
-				<p class="description">{instance.dev_mode ? 'Ready to preview your website changes?' : 'Ready to publish your website changes?'}</p>
+				<p class="description">
+					Ready to publish? This site has no domain yet — publish now, then connect a domain from the dashboard to make it public.
+				</p>
 			{/if}
 			<div class="buttons">
 				<button class="primo-button" onclick={onClose}>

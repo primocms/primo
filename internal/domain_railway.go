@@ -20,13 +20,10 @@ const railwayGraphQLEndpoint = "https://backboard.railway.com/graphql/v2"
 // running container, plus a project-scoped token, so it manages exactly the one
 // deployment it runs in.
 //
-// Two response specifics could not be confirmed against Railway's (unversioned,
-// introspection-only) schema at build time and are isolated here so they're
-// trivially adjustable after one introspection pass against a live project:
-//   - the certificate status field name/enum (we rely on per-record dnsRecords
-//     status instead of a separate cert field, which degrades gracefully)
-//   - the exact wildcard `_acme-challenge` record shape (parsed generically via
-//     the same dnsRecords[] mapping, so an extra record just flows through)
+// The selection set and status/enum handling were verified against Railway's
+// schema via introspection (CustomDomainStatus / DNSRecords / CertificateStatus
+// / DNSRecordStatus). Wildcard `_acme-challenge` records flow through the same
+// generic dnsRecords[] mapping, so no special-casing is required.
 type railwayProvider struct {
 	token         string
 	projectID     string
@@ -115,19 +112,23 @@ func (p railwayProvider) graphql(query string, variables map[string]any, out any
 	return nil
 }
 
-// railwayCustomDomain mirrors the confirmed customDomainCreate/customDomain
-// selection set. Fields absent in a response stay zero-valued (defensive).
+// railwayCustomDomain mirrors the customDomainCreate/customDomain selection
+// set, verified against Railway's schema via introspection (CustomDomainStatus
+// / DNSRecords / CertificateStatus). Fields absent in a response stay
+// zero-valued (defensive).
 type railwayCustomDomain struct {
 	ID     string `json:"id"`
 	Domain string `json:"domain"`
 	Status struct {
-		DNSRecords []struct {
+		CertificateStatus string `json:"certificateStatus"` // CERTIFICATE_STATUS_TYPE_*
+		Verified          bool   `json:"verified"`
+		DNSRecords        []struct {
 			Hostlabel     string `json:"hostlabel"`
 			Fqdn          string `json:"fqdn"`
 			RecordType    string `json:"recordType"`
 			RequiredValue string `json:"requiredValue"`
 			CurrentValue  string `json:"currentValue"`
-			Status        string `json:"status"`
+			Status        string `json:"status"` // DNS_RECORD_STATUS_*
 			Purpose       string `json:"purpose"`
 		} `json:"dnsRecords"`
 	} `json:"status"`
@@ -137,6 +138,8 @@ const railwayDomainSelection = `
 	id
 	domain
 	status {
+		certificateStatus
+		verified
 		dnsRecords {
 			hostlabel
 			fqdn
@@ -199,40 +202,49 @@ func (p railwayProvider) DomainStatus(providerID, host string) (DomainResult, er
 	return toDomainResult(data.CustomDomain), nil
 }
 
-// toDomainResult maps a Railway custom domain into the provider-agnostic result
-// and derives an overall status from the per-record statuses. Railway issues
-// the Let's Encrypt cert automatically once records verify, so "all records
-// valid" is our proxy for "live" — this avoids depending on the unconfirmed
-// separate cert-status field.
+// Railway enum values (verified via schema introspection).
+const (
+	railwayDNSPropagated = "DNS_RECORD_STATUS_PROPAGATED"
+	railwayCertValid     = "CERTIFICATE_STATUS_TYPE_VALID"
+	railwayCertIssueFail = "CERTIFICATE_STATUS_TYPE_ISSUE_FAILED"
+)
+
+// toDomainResult maps a Railway custom domain into the provider-agnostic result.
+// Overall status is driven by the real certificateStatus field (Railway issues
+// the Let's Encrypt cert automatically once DNS verifies): a valid cert means
+// live, a failed issue means error, and anything in between is still verifying
+// once at least the records exist. Per-record status is normalized so the UI can
+// tick off records as they propagate.
 func toDomainResult(cd railwayCustomDomain) DomainResult {
 	records := make([]DNSRecord, 0, len(cd.Status.DNSRecords))
-	allValid := len(cd.Status.DNSRecords) > 0
-	anyValid := false
 	for _, r := range cd.Status.DNSRecords {
 		name := r.Fqdn
 		if name == "" {
 			name = r.Hostlabel
 		}
-		status := strings.ToLower(r.Status)
-		if status == "valid" {
-			anyValid = true
-		} else {
-			allValid = false
+		// Normalize Railway's DNS enum to the simple "valid"/"pending" the UI
+		// renders (a green check when propagated).
+		recStatus := "pending"
+		if r.Status == railwayDNSPropagated {
+			recStatus = "valid"
 		}
 		records = append(records, DNSRecord{
 			Type:    r.RecordType,
 			Host:    name,
 			Value:   r.RequiredValue,
-			Status:  status,
+			Status:  recStatus,
 			Purpose: r.Purpose,
 		})
 	}
 
 	status := DomainStatusPending
 	switch {
-	case allValid:
+	case cd.Status.CertificateStatus == railwayCertValid:
 		status = DomainStatusLive
-	case anyValid:
+	case cd.Status.CertificateStatus == railwayCertIssueFail:
+		status = DomainStatusError
+	case len(records) > 0 || cd.Status.Verified:
+		// Records exist / ownership verified but cert not yet issued.
 		status = DomainStatusVerifying
 	}
 

@@ -13,6 +13,7 @@
 	import { page, page as pageState } from '$app/state'
 	import { PageTypes, SiteSnapshots } from '$lib/pocketbase/collections'
 	import { onModKey } from '$lib/builder/utils/keyboard'
+	import { is_host_assigned } from '$lib/site_host'
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import SiteEditor from '$lib/builder/views/modal/SiteEditor/SiteEditor.svelte'
 	import SitePages from '$lib/builder/views/modal/SitePages/SitePages.svelte'
@@ -203,7 +204,7 @@
 			bind:stage={publish_stage}
 			publish_fn={handle_publish}
 			loading={publish_in_progress}
-			site_host={site?.host}
+			site_host={site && is_host_assigned(site) ? site.host : ''}
 			onClose={() => {
 				publishing = false
 				publish_stage = 'INITIAL'
