@@ -5,7 +5,7 @@
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
 	import { instance } from '$lib/instance'
 
-	let { stage = $bindable(), publish_fn, loading, site_host, onClose } = $props()
+	let { stage = $bindable(), publish_fn, loading, site_host, onConnectDomain, onClose } = $props()
 
 	let error = $state(null)
 
@@ -82,6 +82,11 @@
 						<Icon icon="lucide:external-link" />
 						<span>{instance.dev_mode ? 'View Preview' : 'View Site'}</span>
 					</a>
+				{:else if !instance.dev_mode && onConnectDomain}
+					<button class="primo-button" onclick={onConnectDomain}>
+						<Icon icon="lucide:globe" />
+						<span>Connect a domain</span>
+					</button>
 				{/if}
 			</div>
 		</div>
