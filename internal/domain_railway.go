@@ -209,6 +209,14 @@ const (
 	railwayCertIssueFail = "CERTIFICATE_STATUS_TYPE_ISSUE_FAILED"
 )
 
+// railwayEnumLabel turns a fully-qualified Railway enum into a human label:
+// strips the given prefix and replaces underscores with spaces
+// (DNS_RECORD_TYPE_CNAME → "CNAME"; DNS_RECORD_PURPOSE_TRAFFIC_ROUTE →
+// "TRAFFIC ROUTE"). Values without the prefix pass through unchanged.
+func railwayEnumLabel(value, prefix string) string {
+	return strings.ReplaceAll(strings.TrimPrefix(value, prefix), "_", " ")
+}
+
 // toDomainResult maps a Railway custom domain into the provider-agnostic result.
 // Overall status is driven by the real certificateStatus field (Railway issues
 // the Let's Encrypt cert automatically once DNS verifies): a valid cert means
@@ -229,11 +237,14 @@ func toDomainResult(cd railwayCustomDomain) DomainResult {
 			recStatus = "valid"
 		}
 		records = append(records, DNSRecord{
-			Type:    r.RecordType,
+			// Railway returns fully-qualified enums (DNS_RECORD_TYPE_CNAME,
+			// DNS_RECORD_PURPOSE_TRAFFIC_ROUTE); strip the prefix so the UI shows
+			// a plain "CNAME" / "TRAFFIC ROUTE".
+			Type:    railwayEnumLabel(r.RecordType, "DNS_RECORD_TYPE_"),
 			Host:    name,
 			Value:   r.RequiredValue,
 			Status:  recStatus,
-			Purpose: r.Purpose,
+			Purpose: railwayEnumLabel(r.Purpose, "DNS_RECORD_PURPOSE_"),
 		})
 	}
 

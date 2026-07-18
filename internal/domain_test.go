@@ -75,7 +75,7 @@ func TestToDomainResultRecordMapping(t *testing.T) {
 		CurrentValue  string `json:"currentValue"`
 		Status        string `json:"status"`
 		Purpose       string `json:"purpose"`
-	}{Hostlabel: "_acme-challenge", RecordType: "TXT", RequiredValue: "token123", Status: "PENDING", Purpose: "acme-challenge"})
+	}{Hostlabel: "_acme-challenge", RecordType: "DNS_RECORD_TYPE_TXT", RequiredValue: "token123", Status: "PENDING", Purpose: "DNS_RECORD_PURPOSE_ACME_CHALLENGE"})
 
 	got := toDomainResult(cd)
 	if len(got.Records) != 1 {
@@ -85,8 +85,23 @@ func TestToDomainResultRecordMapping(t *testing.T) {
 	if r.Host != "_acme-challenge" {
 		t.Errorf("host fell back wrong: %q", r.Host)
 	}
-	if r.Type != "TXT" || r.Value != "token123" || r.Purpose != "acme-challenge" {
+	// Railway enums are stripped to plain labels for display.
+	if r.Type != "TXT" || r.Value != "token123" || r.Purpose != "ACME CHALLENGE" {
 		t.Errorf("record mapped wrong: %+v", r)
+	}
+}
+
+func TestRailwayEnumLabel(t *testing.T) {
+	cases := []struct{ in, prefix, want string }{
+		{"DNS_RECORD_TYPE_CNAME", "DNS_RECORD_TYPE_", "CNAME"},
+		{"DNS_RECORD_PURPOSE_TRAFFIC_ROUTE", "DNS_RECORD_PURPOSE_", "TRAFFIC ROUTE"},
+		{"CNAME", "DNS_RECORD_TYPE_", "CNAME"}, // no prefix → unchanged
+		{"", "DNS_RECORD_TYPE_", ""},
+	}
+	for _, c := range cases {
+		if got := railwayEnumLabel(c.in, c.prefix); got != c.want {
+			t.Errorf("railwayEnumLabel(%q) = %q, want %q", c.in, got, c.want)
+		}
 	}
 }
 
