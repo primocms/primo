@@ -122,7 +122,11 @@ type railwayCustomDomain struct {
 	Status struct {
 		CertificateStatus string `json:"certificateStatus"` // CERTIFICATE_STATUS_TYPE_*
 		Verified          bool   `json:"verified"`
-		DNSRecords        []struct {
+		// Ownership-verification TXT record, exposed as separate fields rather
+		// than inside dnsRecords. Required for the cert to issue.
+		VerificationDNSHost string `json:"verificationDnsHost"` // TXT record name
+		VerificationToken   string `json:"verificationToken"`   // TXT record value
+		DNSRecords          []struct {
 			Hostlabel     string `json:"hostlabel"`
 			Fqdn          string `json:"fqdn"`
 			RecordType    string `json:"recordType"`
@@ -140,6 +144,8 @@ const railwayDomainSelection = `
 	status {
 		certificateStatus
 		verified
+		verificationDnsHost
+		verificationToken
 		dnsRecords {
 			hostlabel
 			fqdn
@@ -245,6 +251,23 @@ func toDomainResult(cd railwayCustomDomain) DomainResult {
 			Value:   r.RequiredValue,
 			Status:  recStatus,
 			Purpose: railwayEnumLabel(r.Purpose, "DNS_RECORD_PURPOSE_"),
+		})
+	}
+
+	// The ownership-verification TXT record lives in separate fields, not in
+	// dnsRecords. Without it the cert never issues, so surface it alongside the
+	// routing record. Its status tracks `verified`.
+	if cd.Status.VerificationDNSHost != "" && cd.Status.VerificationToken != "" {
+		txtStatus := "pending"
+		if cd.Status.Verified {
+			txtStatus = "valid"
+		}
+		records = append(records, DNSRecord{
+			Type:    "TXT",
+			Host:    cd.Status.VerificationDNSHost,
+			Value:   cd.Status.VerificationToken,
+			Status:  txtStatus,
+			Purpose: "VERIFICATION",
 		})
 	}
 

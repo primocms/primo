@@ -91,6 +91,40 @@ func TestToDomainResultRecordMapping(t *testing.T) {
 	}
 }
 
+func TestToDomainResultSynthesizesVerificationTXT(t *testing.T) {
+	cd := railwayCustomDomain{ID: "cd_3"}
+	cd.Status.CertificateStatus = "CERTIFICATE_STATUS_TYPE_VALIDATING_OWNERSHIP"
+	cd.Status.Verified = false
+	cd.Status.VerificationDNSHost = "_railway-verify.tester"
+	cd.Status.VerificationToken = "railway-verify=abc123"
+	cd.Status.DNSRecords = append(cd.Status.DNSRecords, struct {
+		Hostlabel     string `json:"hostlabel"`
+		Fqdn          string `json:"fqdn"`
+		RecordType    string `json:"recordType"`
+		RequiredValue string `json:"requiredValue"`
+		CurrentValue  string `json:"currentValue"`
+		Status        string `json:"status"`
+		Purpose       string `json:"purpose"`
+	}{Fqdn: "tester.primo.page", RecordType: "DNS_RECORD_TYPE_CNAME", RequiredValue: "x.up.railway.app", Status: "DNS_RECORD_STATUS_PROPAGATED", Purpose: "DNS_RECORD_PURPOSE_TRAFFIC_ROUTE"})
+
+	got := toDomainResult(cd)
+	if len(got.Records) != 2 {
+		t.Fatalf("expected CNAME + synthesized TXT, got %d records: %+v", len(got.Records), got.Records)
+	}
+	txt := got.Records[1]
+	if txt.Type != "TXT" || txt.Host != "_railway-verify.tester" || txt.Value != "railway-verify=abc123" {
+		t.Errorf("verification TXT wrong: %+v", txt)
+	}
+	if txt.Status != "pending" {
+		t.Errorf("unverified TXT status = %q, want pending", txt.Status)
+	}
+	// No verification fields → no synthesized TXT.
+	cd2 := railwayCustomDomain{ID: "cd_4"}
+	if len(toDomainResult(cd2).Records) != 0 {
+		t.Error("expected no records when there are none")
+	}
+}
+
 func TestRailwayEnumLabel(t *testing.T) {
 	cases := []struct{ in, prefix, want string }{
 		{"DNS_RECORD_TYPE_CNAME", "DNS_RECORD_TYPE_", "CNAME"},
