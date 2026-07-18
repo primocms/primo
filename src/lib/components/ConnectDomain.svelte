@@ -31,14 +31,26 @@
 	let domain_records: DnsRecord[] = $state([])
 	let copied_dns: string | null = $state(null)
 	let poll_timer: ReturnType<typeof setTimeout> | null = null
+	// The host the shown records/status belong to. Lets us tell "still checking
+	// the attached domain" (→ Refresh) from "typed a new domain" (→ Connect).
+	let attached_host = $state('')
 
 	$effect(() => {
 		if (site) {
-			new_site_host = is_host_assigned(site) ? site.host : ''
+			const assigned = is_host_assigned(site) ? site.host : ''
+			new_site_host = assigned
+			attached_host = assigned
 			domain_status = site.domain_status || ''
 			domain_records = parse_dns_records(site.domain_dns_records)
 		}
 	})
+
+	// True once a domain is attached and we're still waiting for it to go live,
+	// and the user hasn't changed the input to a different domain. In this state
+	// the primary action is to re-check status, not re-attach (which errors).
+	const awaiting = $derived(
+		domain_records.length > 0 && domain_status !== 'live' && new_site_host.trim().toLowerCase() === attached_host.toLowerCase()
+	)
 
 	function parse_dns_records(raw: unknown): DnsRecord[] {
 		if (!raw) return []
@@ -72,6 +84,13 @@
 			return
 		}
 
+		// Already attached this host and waiting — a submit (e.g. Enter key) here
+		// means "check status", not re-attach (which Railway rejects).
+		if (awaiting) {
+			refresh_status()
+			return
+		}
+
 		connecting = true
 		try {
 			const response = await fetch(endpoint(site.id), {
@@ -87,6 +106,7 @@
 			const result = await response.json()
 			domain_status = result.status
 			domain_records = result.records || []
+			attached_host = host
 			onconnected?.()
 			// Live immediately (e.g. base-domain subdomain or manual) — close.
 			if (domain_status === 'live') {
@@ -101,6 +121,30 @@
 		}
 	}
 
+	// One-shot status check (the "Refresh status" button). The background poll
+	// updates on its own timer; this lets the user check immediately.
+	async function refresh_status() {
+		if (!site) return
+		error = ''
+		connecting = true
+		try {
+			const response = await fetch(endpoint(site.id, '/status'), { headers: auth_headers() })
+			if (response.ok) {
+				const result = await response.json()
+				domain_status = result.status
+				domain_records = result.records || []
+				onconnected?.()
+				if (domain_status === 'live') {
+					stop_poll()
+				}
+			}
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to check status'
+		} finally {
+			connecting = false
+		}
+	}
+
 	function start_poll(site_id: string) {
 		stop_poll()
 		const tick = async () => {
@@ -110,6 +154,7 @@
 					const result = await response.json()
 					domain_status = result.status
 					domain_records = result.records || []
+					error = '' // a healthy status clears any stale attach error
 					onconnected?.()
 					if (domain_status === 'live') {
 						stop_poll()
@@ -197,7 +242,13 @@
 				<Button type="button" variant="outline" onclick={() => (open = false)}>
 					{domain_records.length > 0 ? 'Done' : 'Cancel'}
 				</Button>
-				<Button type="submit" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</Button>
+				{#if awaiting}
+					<Button type="button" disabled={connecting} onclick={refresh_status}>
+						{connecting ? 'Checking…' : 'Refresh status'}
+					</Button>
+				{:else}
+					<Button type="submit" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</Button>
+				{/if}
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
