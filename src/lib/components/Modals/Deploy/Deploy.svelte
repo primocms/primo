@@ -70,7 +70,7 @@
 				{:else if instance.dev_mode}
 					Your website preview is ready on your local server.
 				{:else}
-					Your changes are published. Connect a domain from the dashboard to make this site public.
+					Your changes are published. Connect a domain to make this site public.
 				{/if}
 			</p>
 			<div class="buttons">
