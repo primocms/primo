@@ -10,7 +10,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus, Copy, Check } from 'lucide-svelte'
+	import { Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
@@ -23,6 +23,7 @@
 	import { instance } from '$lib/instance'
 	import { is_host_assigned, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
+	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
 
 	const sidebar = useSidebar()
 
@@ -122,125 +123,9 @@
 		is_rename_site_open = false
 	}
 
-	// Assigning a domain flips a site from unassigned (host === id) to a real
-	// host, which is what makes it publicly served. The server-side domain
-	// provider (Railway in hosted mode, manual otherwise) attaches the host and
-	// returns the DNS records the user must create; we then poll until the cert
-	// is live. Uniqueness + validation are enforced server-side.
-	type DnsRecord = { type: string; host: string; value: string; status: string; purpose: string }
+	// Connect-a-domain flow lives in the reusable ConnectDomain component; the
+	// dashboard just opens it for the selected site.
 	let is_assign_domain_open = $state(false)
-	let new_site_host = $state('')
-	let assign_domain_error = $state('')
-	let assigning_domain = $state(false)
-	let domain_status = $state('')
-	let domain_records: DnsRecord[] = $state([])
-	let copied_dns: string | null = $state(null)
-	let poll_timer: ReturnType<typeof setTimeout> | null = null
-
-	$effect(() => {
-		if (current_site) {
-			new_site_host = is_host_assigned(current_site) ? current_site.host : ''
-			domain_status = current_site.domain_status || ''
-			domain_records = parse_dns_records(current_site.domain_dns_records)
-		}
-	})
-
-	function parse_dns_records(raw: unknown): DnsRecord[] {
-		if (!raw) return []
-		try {
-			const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
-			return Array.isArray(parsed) ? parsed : []
-		} catch {
-			return []
-		}
-	}
-
-	function domain_endpoint(site_id: string, path = '') {
-		return `${self.instance?.baseURL}/api/primo/sites/${site_id}/domain${path}`
-	}
-
-	function auth_headers(json = false): Record<string, string> {
-		const headers: Record<string, string> = {}
-		if (self.instance?.authStore.token) headers['Authorization'] = `Bearer ${self.instance.authStore.token}`
-		if (json) headers['Content-Type'] = 'application/json'
-		return headers
-	}
-
-	async function handle_assign_domain(event: SubmitEvent) {
-		event.preventDefault()
-		if (!current_site) return
-		const host = new_site_host.trim().toLowerCase()
-		assign_domain_error = ''
-
-		if (!host) {
-			assign_domain_error = 'Enter a domain (e.g. example.com)'
-			return
-		}
-
-		assigning_domain = true
-		try {
-			const response = await fetch(domain_endpoint(current_site.id), {
-				method: 'POST',
-				headers: auth_headers(true),
-				body: JSON.stringify({ host })
-			})
-			if (!response.ok) {
-				const data = await response.json().catch(() => ({}))
-				assign_domain_error = data.message || `Failed to assign domain (${response.status})`
-				return
-			}
-			const result = await response.json()
-			domain_status = result.status
-			domain_records = result.records || []
-			// Live immediately (e.g. base-domain subdomain or manual) — close.
-			if (domain_status === 'live') {
-				is_assign_domain_open = false
-			} else {
-				start_domain_poll(current_site.id)
-			}
-		} catch (error) {
-			assign_domain_error = error instanceof Error ? error.message : 'Failed to assign domain'
-		} finally {
-			assigning_domain = false
-		}
-	}
-
-	function start_domain_poll(site_id: string) {
-		stop_domain_poll()
-		const tick = async () => {
-			try {
-				const response = await fetch(domain_endpoint(site_id, '/status'), { headers: auth_headers() })
-				if (response.ok) {
-					const result = await response.json()
-					domain_status = result.status
-					domain_records = result.records || []
-					if (domain_status === 'live') {
-						stop_domain_poll()
-						return
-					}
-				}
-			} catch {
-				// transient — keep polling
-			}
-			poll_timer = setTimeout(tick, 30000)
-		}
-		poll_timer = setTimeout(tick, 30000)
-	}
-
-	function stop_domain_poll() {
-		if (poll_timer) clearTimeout(poll_timer)
-		poll_timer = null
-	}
-
-	async function copy_dns(value: string) {
-		try {
-			await navigator.clipboard.writeText(value)
-			copied_dns = value
-			setTimeout(() => (copied_dns = null), 1500)
-		} catch (error) {
-			console.error('Failed to copy:', error)
-		}
-	}
 
 	let is_delete_site_open = $state(false)
 	let deleting_site = $state(false)
@@ -497,68 +382,11 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<Dialog.Root
+<ConnectDomain
+	site={current_site}
 	bind:open={is_assign_domain_open}
-	onOpenChange={(open) => {
-		if (!open) stop_domain_poll()
-	}}
->
-	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Connect a domain</h2>
-		<p class="text-muted-foreground text-sm">
-			Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
-		</p>
-		<form onsubmit={handle_assign_domain}>
-			<Input bind:value={new_site_host} placeholder="example.com" class="mt-4" autocomplete="off" spellcheck={false} />
-			{#if assign_domain_error}
-				<p class="text-red-500 text-sm mt-2">{assign_domain_error}</p>
-			{/if}
-
-			{#if domain_records.length > 0}
-				<div class="mt-4 flex items-center gap-2 text-sm">
-					{#if domain_status === 'live'}
-						<span class="inline-flex items-center gap-1.5 text-green-500"><Check class="h-3.5 w-3.5" /> Live</span>
-					{:else}
-						<span class="inline-flex items-center gap-1.5 text-muted-foreground"><Loader class="h-3.5 w-3.5 animate-spin" /> Waiting for DNS &amp; certificate…</span>
-					{/if}
-				</div>
-				<p class="text-muted-foreground text-xs mt-3 mb-2">Add these records at your DNS provider:</p>
-				<div class="space-y-2">
-					{#each domain_records as record}
-						<div class="rounded-md bg-[#111] p-3 text-xs font-mono">
-							<div class="flex items-center justify-between gap-2">
-								<span class="text-muted-foreground uppercase">{record.type}</span>
-								{#if record.status === 'valid'}
-									<Check class="h-3.5 w-3.5 text-green-500" />
-								{/if}
-							</div>
-							<div class="mt-1 truncate">{record.host}</div>
-							<button
-								type="button"
-								onclick={() => copy_dns(record.value)}
-								class="group mt-1 flex w-full items-center justify-between gap-2 text-left text-muted-foreground hover:text-foreground"
-							>
-								<span class="truncate">{record.value}</span>
-								{#if copied_dns === record.value}
-									<Check class="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
-								{:else}
-									<Copy class="h-3.5 w-3.5 flex-shrink-0 opacity-50 group-hover:opacity-100" />
-								{/if}
-							</button>
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<Dialog.Footer class="mt-4">
-				<Button type="button" variant="outline" onclick={() => (is_assign_domain_open = false)}>
-					{domain_records.length > 0 ? 'Done' : 'Cancel'}
-				</Button>
-				<Button type="submit" disabled={assigning_domain}>{assigning_domain ? 'Connecting…' : 'Connect'}</Button>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
+	onconnected={() => self.invalidate_lists({ collection_name: 'sites' })}
+/>
 
 <AlertDialog.Root bind:open={is_delete_site_open}>
 	<AlertDialog.Content>
