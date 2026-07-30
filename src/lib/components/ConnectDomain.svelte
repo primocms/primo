@@ -185,6 +185,25 @@
 	}
 </script>
 
+{#snippet copy_row(label: string, value: string)}
+	<div class="flex items-center gap-2">
+		<span class="text-muted-foreground shrink-0 w-10">{label}</span>
+		<span class="min-w-0 flex-1 truncate" title={value}>{value}</span>
+		<button
+			type="button"
+			onclick={() => copy_dns(value)}
+			class="shrink-0 text-muted-foreground hover:text-foreground"
+			aria-label="Copy {label}"
+		>
+			{#if copied_dns === value}
+				<Check class="h-3.5 w-3.5 text-green-500" />
+			{:else}
+				<Copy class="h-3.5 w-3.5 opacity-50 hover:opacity-100" />
+			{/if}
+		</button>
+	</div>
+{/snippet}
+
 <Dialog.Root
 	bind:open
 	onOpenChange={(is_open) => {
@@ -213,26 +232,15 @@
 				<p class="text-muted-foreground text-xs mt-3 mb-2">Add these records at your DNS provider:</p>
 				<div class="space-y-2">
 					{#each domain_records as record}
-						<div class="rounded-md bg-[#111] p-3 text-xs font-mono">
+						<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5">
 							<div class="flex items-center justify-between gap-2">
 								<span class="text-muted-foreground uppercase">{record.type}</span>
 								{#if record.status === 'valid'}
 									<Check class="h-3.5 w-3.5 text-green-500" />
 								{/if}
 							</div>
-							<div class="mt-1 truncate">{record.host}</div>
-							<button
-								type="button"
-								onclick={() => copy_dns(record.value)}
-								class="group mt-1 flex w-full items-center justify-between gap-2 text-left text-muted-foreground hover:text-foreground"
-							>
-								<span class="truncate">{record.value}</span>
-								{#if copied_dns === record.value}
-									<Check class="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
-								{:else}
-									<Copy class="h-3.5 w-3.5 flex-shrink-0 opacity-50 group-hover:opacity-100" />
-								{/if}
-							</button>
+							{@render copy_row('Name', record.host)}
+							{@render copy_row('Value', record.value)}
 						</div>
 					{/each}
 				</div>
