@@ -54,6 +54,10 @@
 	// re-attach (which errors on an already-attached domain).
 	const awaiting = $derived(domain_records.length > 0 && domain_status !== 'live' && on_attached_host)
 
+	// Show the attached domain's records only while the input still matches it.
+	// Once the user edits the input to switch domains, the old records are stale.
+	const show_records = $derived(domain_records.length > 0 && on_attached_host)
+
 	// DNS records are shown by default while pending, collapsed once live.
 	let records_open = $state(false)
 
@@ -233,13 +237,13 @@
 						Visit site <ExternalLink class="h-3.5 w-3.5" />
 					</a>
 				</div>
-			{:else if domain_records.length > 0}
+			{:else if show_records}
 				<div class="mt-4 flex items-center gap-2 text-sm">
 					<span class="inline-flex items-center gap-1.5 text-muted-foreground"><Loader class="h-3.5 w-3.5 animate-spin" /> Waiting for DNS &amp; certificate…</span>
 				</div>
 			{/if}
 
-			{#if domain_records.length > 0}
+			{#if show_records}
 				{#if live}
 					<button
 						type="button"
@@ -272,7 +276,7 @@
 
 			<Dialog.Footer class="mt-4">
 				<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
-					{domain_records.length > 0 ? 'Done' : 'Cancel'}
+					{show_records ? 'Done' : 'Cancel'}
 				</Button>
 				{#if awaiting}
 					<Button type="button" disabled={connecting} onclick={refresh_status}>
