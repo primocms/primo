@@ -215,7 +215,7 @@
 		<p class="text-muted-foreground text-sm">
 			Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
 		</p>
-		<form onsubmit={handle_connect}>
+		<form onsubmit={handle_connect} class="min-w-0">
 			<Input bind:value={new_site_host} placeholder="example.com" class="mt-4" autocomplete="off" spellcheck={false} />
 			{#if error}
 				<p class="text-red-500 text-sm mt-2">{error}</p>
