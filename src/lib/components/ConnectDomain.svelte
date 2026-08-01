@@ -2,7 +2,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
-	import { Copy, Check, Loader } from 'lucide-svelte'
+	import { Copy, Check, Loader, ChevronRight, ExternalLink } from 'lucide-svelte'
 	import { self } from '$lib/pocketbase/managers'
 	import { is_host_assigned } from '$lib/site_host'
 	import type { Site } from '$lib/common/models/Site'
@@ -45,12 +45,17 @@
 		}
 	})
 
-	// True once a domain is attached and we're still waiting for it to go live,
-	// and the user hasn't changed the input to a different domain. In this state
-	// the primary action is to re-check status, not re-attach (which errors).
-	const awaiting = $derived(
-		domain_records.length > 0 && domain_status !== 'live' && new_site_host.trim().toLowerCase() === attached_host.toLowerCase()
-	)
+	// The entered host matches the attached one (vs. the user typing a new
+	// domain to switch to).
+	const on_attached_host = $derived(new_site_host.trim().toLowerCase() === attached_host.toLowerCase())
+	// Live: attached host is serving. Records collapse behind a toggle.
+	const live = $derived(domain_status === 'live' && on_attached_host && !!attached_host)
+	// Awaiting: attached but not yet live — primary action is re-check, not
+	// re-attach (which errors on an already-attached domain).
+	const awaiting = $derived(domain_records.length > 0 && domain_status !== 'live' && on_attached_host)
+
+	// DNS records are shown by default while pending, collapsed once live.
+	let records_open = $state(false)
 
 	function parse_dns_records(raw: unknown): DnsRecord[] {
 		if (!raw) return []
@@ -221,40 +226,59 @@
 				<p class="text-red-500 text-sm mt-2">{error}</p>
 			{/if}
 
-			{#if domain_records.length > 0}
-				<div class="mt-4 flex items-center gap-2 text-sm">
-					{#if domain_status === 'live'}
-						<span class="inline-flex items-center gap-1.5 text-green-500"><Check class="h-3.5 w-3.5" /> Live</span>
-					{:else}
-						<span class="inline-flex items-center gap-1.5 text-muted-foreground"><Loader class="h-3.5 w-3.5 animate-spin" /> Waiting for DNS &amp; certificate…</span>
-					{/if}
+			{#if live}
+				<div class="mt-4 flex items-center justify-between gap-2 text-sm">
+					<span class="inline-flex items-center gap-1.5 text-green-500"><Check class="h-3.5 w-3.5" /> Live</span>
+					<a href="https://{attached_host}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+						Visit site <ExternalLink class="h-3.5 w-3.5" />
+					</a>
 				</div>
-				<p class="text-muted-foreground text-xs mt-3 mb-2">Add these records at your DNS provider:</p>
-				<div class="space-y-2 min-w-0">
-					{#each domain_records as record}
-						<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5 min-w-0 overflow-hidden">
-							<div class="flex items-center justify-between gap-2">
-								<span class="text-muted-foreground uppercase">{record.type}</span>
-								{#if record.status === 'valid'}
-									<Check class="h-3.5 w-3.5 text-green-500" />
-								{/if}
-							</div>
-							{@render copy_row('Name', record.host)}
-							{@render copy_row('Value', record.value)}
-						</div>
-					{/each}
+			{:else if domain_records.length > 0}
+				<div class="mt-4 flex items-center gap-2 text-sm">
+					<span class="inline-flex items-center gap-1.5 text-muted-foreground"><Loader class="h-3.5 w-3.5 animate-spin" /> Waiting for DNS &amp; certificate…</span>
 				</div>
 			{/if}
 
+			{#if domain_records.length > 0}
+				{#if live}
+					<button
+						type="button"
+						onclick={() => (records_open = !records_open)}
+						class="mt-3 flex items-center gap-1 text-muted-foreground hover:text-foreground text-xs"
+					>
+						<ChevronRight class="h-3.5 w-3.5 transition-transform {records_open ? 'rotate-90' : ''}" /> DNS records
+					</button>
+				{:else}
+					<p class="text-muted-foreground text-xs mt-3 mb-2">Add these records at your DNS provider:</p>
+				{/if}
+
+				{#if !live || records_open}
+					<div class="space-y-2 min-w-0 {live ? 'mt-2' : ''}">
+						{#each domain_records as record}
+							<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5 min-w-0 overflow-hidden">
+								<div class="flex items-center justify-between gap-2">
+									<span class="text-muted-foreground uppercase">{record.type}</span>
+									{#if record.status === 'valid'}
+										<Check class="h-3.5 w-3.5 text-green-500" />
+									{/if}
+								</div>
+								{@render copy_row('Name', record.host)}
+								{@render copy_row('Value', record.value)}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/if}
+
 			<Dialog.Footer class="mt-4">
-				<Button type="button" variant="outline" onclick={() => (open = false)}>
+				<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
 					{domain_records.length > 0 ? 'Done' : 'Cancel'}
 				</Button>
 				{#if awaiting}
 					<Button type="button" disabled={connecting} onclick={refresh_status}>
 						{connecting ? 'Checking…' : 'Refresh status'}
 					</Button>
-				{:else}
+				{:else if !live}
 					<Button type="submit" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</Button>
 				{/if}
 			</Dialog.Footer>
