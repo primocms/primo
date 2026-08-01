@@ -210,7 +210,7 @@
 		if (!is_open) stop_poll()
 	}}
 >
-	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
+	<Dialog.Content class="w-full max-w-[525px] pt-12 gap-0">
 		<h2 class="text-lg font-semibold leading-none tracking-tight">Connect a domain</h2>
 		<p class="text-muted-foreground text-sm">
 			Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
@@ -230,9 +230,9 @@
 					{/if}
 				</div>
 				<p class="text-muted-foreground text-xs mt-3 mb-2">Add these records at your DNS provider:</p>
-				<div class="space-y-2">
+				<div class="space-y-2 min-w-0">
 					{#each domain_records as record}
-						<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5">
+						<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5 min-w-0 overflow-hidden">
 							<div class="flex items-center justify-between gap-2">
 								<span class="text-muted-foreground uppercase">{record.type}</span>
 								{#if record.status === 'valid'}
