@@ -210,7 +210,7 @@
 		if (!is_open) stop_poll()
 	}}
 >
-	<Dialog.Content class="w-full max-w-[525px] pt-12 gap-0">
+	<Dialog.Content class="!w-[min(525px,calc(100vw-1rem))] max-w-none pt-12 gap-0">
 		<h2 class="text-lg font-semibold leading-none tracking-tight">Connect a domain</h2>
 		<p class="text-muted-foreground text-sm">
 			Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
