@@ -47,9 +47,22 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 				return e.BadRequestError("Failed to attach domain: "+err.Error(), err)
 			}
 
+			oldHost := site.GetString("host")
 			if err := applyDomainResult(pb, site, host, result); err != nil {
 				return e.InternalServerError("Failed to save domain", err)
 			}
+
+			// Published files live under sites/{host}/..., so a host change would
+			// otherwise 404 at the new domain until the user re-publishes.
+			// Regenerate under the new host so the site is served immediately.
+			// Best-effort: a site with nothing published yet has nothing to
+			// render, so don't fail the attach if generation errors.
+			if host != oldHost {
+				if genErr := GenerateSite(pb, site); genErr != nil {
+					e.App.Logger().Warn("regenerate after domain change failed", "site", site.Id, "host", host, "error", genErr)
+				}
+			}
+
 			return e.JSON(200, domainResponse(site, result))
 		})
 
