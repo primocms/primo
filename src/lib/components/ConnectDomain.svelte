@@ -58,6 +58,13 @@
 	// Once the user edits the input to switch domains, the old records are stale.
 	const show_records = $derived(domain_records.length > 0 && on_attached_host)
 
+	// In the live state the domain shows as read-only text; the editable input is
+	// revealed only when the user opts to change it.
+	let changing = $state(false)
+	// Show the editable input unless we're settled on a live domain and the user
+	// hasn't asked to change it.
+	const show_input = $derived(!live || changing)
+
 	// DNS records are shown by default while pending, collapsed once live.
 	let records_open = $state(false)
 
@@ -116,6 +123,7 @@
 			domain_status = result.status
 			domain_records = result.records || []
 			attached_host = host
+			changing = false
 			onconnected?.()
 			// Live immediately (e.g. base-domain subdomain or manual) — close.
 			if (domain_status === 'live') {
@@ -216,26 +224,47 @@
 <Dialog.Root
 	bind:open
 	onOpenChange={(is_open) => {
-		if (!is_open) stop_poll()
+		if (!is_open) {
+			stop_poll()
+			changing = false
+		}
 	}}
 >
 	<Dialog.Content class="!w-[min(525px,calc(100vw-1rem))] max-w-none pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Connect a domain</h2>
+		<h2 class="text-lg font-semibold leading-none tracking-tight">
+			{live && !changing ? 'Domain' : 'Connect a domain'}
+		</h2>
 		<p class="text-muted-foreground text-sm">
-			Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
+			{#if live && !changing}
+				This site is live at your domain.
+			{:else}
+				Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
+			{/if}
 		</p>
 		<form onsubmit={handle_connect} class="min-w-0">
-			<Input bind:value={new_site_host} placeholder="example.com" class="mt-4" autocomplete="off" spellcheck={false} />
+			{#if show_input}
+				<Input bind:value={new_site_host} placeholder="example.com" class="mt-4" autocomplete="off" spellcheck={false} />
+			{:else}
+				<!-- Live + not changing: read-only domain display -->
+				<div class="mt-4 flex items-center justify-between gap-2 rounded-md border border-input px-3 py-2 min-w-0">
+					<span class="truncate font-medium">{attached_host}</span>
+					<a href="https://{attached_host}" target="_blank" rel="noopener" class="shrink-0 inline-flex items-center gap-1 text-muted-foreground hover:text-foreground text-sm">
+						Visit <ExternalLink class="h-3.5 w-3.5" />
+					</a>
+				</div>
+			{/if}
 			{#if error}
 				<p class="text-red-500 text-sm mt-2">{error}</p>
 			{/if}
 
 			{#if live}
-				<div class="mt-4 flex items-center justify-between gap-2 text-sm">
+				<div class="mt-3 flex items-center justify-between gap-2 text-sm">
 					<span class="inline-flex items-center gap-1.5 text-green-500"><Check class="h-3.5 w-3.5" /> Live</span>
-					<a href="https://{attached_host}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-						Visit site <ExternalLink class="h-3.5 w-3.5" />
-					</a>
+					{#if !changing}
+						<button type="button" onclick={() => (changing = true)} class="text-muted-foreground hover:text-foreground">
+							Change domain
+						</button>
+					{/if}
 				</div>
 			{:else if show_records}
 				<div class="mt-4 flex items-center gap-2 text-sm">
@@ -275,9 +304,17 @@
 			{/if}
 
 			<Dialog.Footer class="mt-4">
-				<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
-					{show_records ? 'Done' : 'Cancel'}
-				</Button>
+				{#if changing && on_attached_host}
+					<!-- Revealed the input to change the domain but haven't typed a
+					new one yet: let the user back out to the live view. -->
+					<Button type="button" variant="outline" onclick={() => { changing = false; new_site_host = attached_host }}>
+						Cancel
+					</Button>
+				{:else}
+					<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
+						{show_records || live ? 'Done' : 'Cancel'}
+					</Button>
+				{/if}
 				{#if awaiting}
 					<Button type="button" disabled={connecting} onclick={refresh_status}>
 						{connecting ? 'Checking…' : 'Refresh status'}
