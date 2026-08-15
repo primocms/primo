@@ -139,6 +139,35 @@ func TestRailwayEnumLabel(t *testing.T) {
 	}
 }
 
+func TestMatchCustomDomain(t *testing.T) {
+	domains := []railwayCustomDomain{
+		{ID: "cd_a", Domain: "one.primo.page"},
+		{ID: "cd_b", Domain: "Two.Primo.Page"},
+	}
+	t.Run("exact match", func(t *testing.T) {
+		cd, ok := matchCustomDomain(domains, "one.primo.page")
+		if !ok || cd.ID != "cd_a" {
+			t.Errorf("got %+v ok=%v, want cd_a", cd, ok)
+		}
+	})
+	t.Run("case-insensitive match", func(t *testing.T) {
+		cd, ok := matchCustomDomain(domains, "two.primo.page")
+		if !ok || cd.ID != "cd_b" {
+			t.Errorf("got %+v ok=%v, want cd_b", cd, ok)
+		}
+	})
+	t.Run("no match", func(t *testing.T) {
+		if _, ok := matchCustomDomain(domains, "nope.primo.page"); ok {
+			t.Error("expected no match")
+		}
+	})
+	t.Run("empty list", func(t *testing.T) {
+		if _, ok := matchCustomDomain(nil, "one.primo.page"); ok {
+			t.Error("expected no match on empty list")
+		}
+	})
+}
+
 func TestGetDomainProviderSelection(t *testing.T) {
 	t.Run("default is manual", func(t *testing.T) {
 		t.Setenv("PRIMO_DOMAIN_PROVIDER", "")

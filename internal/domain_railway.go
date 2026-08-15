@@ -178,9 +178,54 @@ func (p railwayProvider) AttachDomain(host string) (DomainResult, error) {
 		},
 	}, &data)
 	if err != nil {
+		// The domain may already be attached to this service (e.g. re-connecting
+		// a host, or one previously attached out of band). Railway rejects the
+		// duplicate create, so fall back to adopting the existing record and
+		// reporting its real status instead of surfacing a scary error.
+		if existing, found := p.findCustomDomain(host); found {
+			return toDomainResult(existing), nil
+		}
 		return DomainResult{}, err
 	}
 	return toDomainResult(data.CustomDomainCreate), nil
+}
+
+// findCustomDomain looks up an already-attached custom domain on this service by
+// hostname. Returns (domain, true) if one matches, so AttachDomain can adopt a
+// domain Railway refuses to re-create. Any lookup failure yields (_, false) —
+// the caller then surfaces the original create error.
+func (p railwayProvider) findCustomDomain(host string) (railwayCustomDomain, bool) {
+	query := `query domains($projectId: String!, $environmentId: String!, $serviceId: String!) {
+		domains(projectId: $projectId, environmentId: $environmentId, serviceId: $serviceId) {
+			customDomains {` + railwayDomainSelection + `
+			}
+		}
+	}`
+	var data struct {
+		Domains struct {
+			CustomDomains []railwayCustomDomain `json:"customDomains"`
+		} `json:"domains"`
+	}
+	if err := p.graphql(query, map[string]any{
+		"projectId":     p.projectID,
+		"environmentId": p.environmentID,
+		"serviceId":     p.serviceID,
+	}, &data); err != nil {
+		return railwayCustomDomain{}, false
+	}
+	return matchCustomDomain(data.Domains.CustomDomains, host)
+}
+
+// matchCustomDomain finds the custom domain whose hostname equals host
+// (case-insensitively). Split out from the HTTP call so the matching is unit
+// testable.
+func matchCustomDomain(domains []railwayCustomDomain, host string) (railwayCustomDomain, bool) {
+	for _, cd := range domains {
+		if strings.EqualFold(cd.Domain, host) {
+			return cd, true
+		}
+	}
+	return railwayCustomDomain{}, false
 }
 
 func (p railwayProvider) DomainStatus(providerID, host string) (DomainResult, error) {
