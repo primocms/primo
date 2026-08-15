@@ -212,7 +212,7 @@
 				response = await fetch(`${self.instance?.baseURL}/api/primo/clone-site`, {
 					method: 'POST',
 					headers: {
-						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+						Authorization: self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
 					},
 					body: form_data
 				})
@@ -250,7 +250,7 @@
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+						Authorization: self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
 					},
 					body: JSON.stringify(request_body)
 				})
@@ -267,8 +267,11 @@
 			done_creating_site = true
 
 			// If no blocks to copy, finish immediately without waiting for
-			// the reactive store to sync (avoids race condition on large templates)
+			// the reactive store to sync (avoids race condition on large templates).
+			// Mark finalized so the reactive finalize effect below doesn't fire
+			// oncreated a second time once the store syncs.
 			if (selected_block_ids.length === 0) {
+				finalized = true
 				loading = false
 				oncreated?.({ id: result.id, host: result.host })
 				return
@@ -286,11 +289,7 @@
 
 	// Find the created site - first try by ID from server response, then fall back to name match
 	const created_sites = $derived(Sites.list({ filter: { host: pageState.url.host } }) ?? [])
-	const created_site = $derived(
-		created_site_id
-			? (Sites.one(created_site_id) ?? created_sites.find((s) => s.id === created_site_id))
-			: created_sites.find((s) => s.name === site_name)
-	)
+	const created_site = $derived(created_site_id ? (Sites.one(created_site_id) ?? created_sites.find((s) => s.id === created_site_id)) : created_sites.find((s) => s.name === site_name))
 
 	// Finalize created site: copy optional blocks if any, then call oncreated.
 	let done_creating_site = $state(false)
@@ -322,12 +321,7 @@
 	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem] relative">
 		<h1 class="text-md leading-none tracking-tight text-center">Create Site</h1>
 		{#if oncancel}
-			<button
-				type="button"
-				onclick={() => oncancel?.()}
-				class="absolute right-2 top-6 p-2 text-muted-foreground hover:text-foreground rounded-md"
-				aria-label="Cancel"
-			>
+			<button type="button" onclick={() => oncancel?.()} class="absolute right-2 top-6 p-2 text-muted-foreground hover:text-foreground rounded-md" aria-label="Cancel">
 				<X class="w-4 h-4" />
 			</button>
 		{/if}
@@ -476,12 +470,14 @@
 											<Check class="h-4 w-4 text-primary flex-shrink-0" />
 											<span class="text-xs truncate">{uploaded_snapshot_file.name}</span>
 										</div>
-										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>
-											Remove
-										</Button>
+										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>Remove</Button>
 									</div>
 								{:else}
-									<label class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file ? 'opacity-50 pointer-events-none' : ''}">
+									<label
+										class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file
+											? 'opacity-50 pointer-events-none'
+											: ''}"
+									>
 										{#if parsing_file}
 											<Loader class="h-4 w-4 animate-spin" />
 											<span>Reading...</span>
@@ -489,13 +485,7 @@
 											<Upload class="h-4 w-4" />
 											<span>Import .primo</span>
 										{/if}
-										<input
-											type="file"
-											class="hidden"
-											accept=".primo,.pala"
-											onchange={handle_file_upload}
-											disabled={parsing_file}
-										/>
+										<input type="file" class="hidden" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
 									</label>
 								{/if}
 								{#if file_upload_error}
