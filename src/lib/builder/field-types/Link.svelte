@@ -108,7 +108,7 @@
 			oninput={(text) => {
 				onchange({ [field.key]: { 0: { value: { ...entry.value, label: text } } } })
 			}}
-			value={entry.value.label}
+			value={entry?.value?.label}
 			id="page-label"
 			placeholder="About Us"
 		/>
@@ -126,7 +126,7 @@
 			{#if selected === 'page'}
 				<UI.Select
 					fullwidth={true}
-					value={entry.value.page}
+					value={entry?.value?.page}
 					options={selectable_pages}
 					on:input={({ detail: pageId }) => {
 						const page = all_pages.find((p) => p.id === pageId)
@@ -142,7 +142,7 @@
 					}}
 					onblur={() => {
 						// auto-set https protocol only if no protocol exists and it's not a relative URL
-						const text = entry.value.url
+						const text = entry?.value?.url
 						if (!text) return
 						const has_protocol = text.includes('://')
 						const is_relative = text.startsWith('/') || text.startsWith('#')
@@ -151,7 +151,7 @@
 							onchange({ [field.key]: { 0: { value: { ...entry.value, url: url_with_protocol, page: undefined } } } })
 						}
 					}}
-					value={entry.value.url}
+					value={entry?.value?.url}
 					type="url"
 					placeholder="https://example.com"
 				/>

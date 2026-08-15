@@ -475,6 +475,9 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
 
+				// Guard the value, not just the entry: null/non-object link values would throw on .page access
+				const value = entry.value && typeof entry.value === 'object' ? entry.value : {}
+
 				// If a page is referenced, try to resolve it; otherwise fall back to the raw URL.
 				// Pages.one() distinguishes three states we care about:
 				//   - a record  -> resolved; use its live url
@@ -483,23 +486,23 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				//                  blocks don't crash on link.label. Reactivity refines it later.
 				//   - null      -> the page is gone (404 / failed / unmappable); clear the url so
 				//                  a deleted reference stops serving a stale cached link.
-				const page = entry.value.page ? Pages.one(entry.value.page) : undefined
+				const page = value.page ? Pages.one(value.page) : undefined
 				let url: string | undefined
 				if (page) {
 					url = build_live_page_url(page)?.pathname
 				} else if (page === null) {
 					url = undefined
-				} else if (entry.value.page) {
+				} else if (value.page) {
 					// referenced page still loading — hold the cached url
-					url = entry.value.url
+					url = value.url
 				} else {
 					// no page reference at all — this is a plain raw-url link
-					url = entry.value.url
+					url = value.url
 				}
 				// If we still don't have a URL (loading/missing page and no cached url), set empty string
 				const safe_url = url ?? ''
 
-				const label = entry.value.label ?? ''
+				const label = value.label ?? ''
 				content[entry.locale]![field.key] = { url: safe_url, label, text: label }
 			}
 
