@@ -45,6 +45,23 @@ func slugifyHost(name string) string {
 	return s
 }
 
+// maxSubdomainAttempts caps the collision-resolution loop so a pathological run
+// of taken slugs (or a flaky uniqueness query) can't spin unbounded, hammering
+// the DB. On exhaustion we fall back to a random-suffixed label, which the
+// UNIQUE(host) constraint still backstops on save.
+const maxSubdomainAttempts = 100
+
+// labelWithSuffix builds a "<slug><suffix>" DNS label capped at 63 chars,
+// trimming the slug (not the suffix) so the numeric/random discriminator always
+// survives — otherwise a 63-char slug would push "-2" past the label limit and
+// produce an unservable host.
+func labelWithSuffix(slug, suffix string) string {
+	if len(slug)+len(suffix) > 63 {
+		slug = strings.Trim(slug[:63-len(suffix)], "-")
+	}
+	return slug + suffix
+}
+
 // assignSubdomain picks a unique "<slug>.<base>" host for a new site. If the
 // bare slug is taken it appends "-2", "-3", … until it finds a free host. A
 // concurrent create racing on the same slug is caught by the sites collection's
@@ -53,13 +70,16 @@ func slugifyHost(name string) string {
 func assignSubdomain(pb *pocketbase.PocketBase, name, base string) string {
 	slug := slugifyHost(name)
 	candidate := slug + "." + base
-	for i := 2; ; i++ {
+	for i := 2; i < maxSubdomainAttempts; i++ {
 		existing, _ := pb.FindFirstRecordByData("sites", "host", candidate)
 		if existing == nil {
 			return candidate
 		}
-		candidate = slug + "-" + strconv.Itoa(i) + "." + base
+		candidate = labelWithSuffix(slug, "-"+strconv.Itoa(i)) + "." + base
 	}
+	// Exhausted the numbered range — fall back to a random label. Not checked
+	// for collision (astronomically unlikely); UNIQUE(host) is the real guard.
+	return labelWithSuffix(slug, "-"+generateId(6)) + "." + base
 }
 
 // resolveNewSiteHost decides the host for a freshly created site when the
