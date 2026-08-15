@@ -219,7 +219,7 @@ func readPump(client *wsClient) {
 	}
 }
 
-// RegisterDevMode sets up the dev mode WebSocket endpoint
+// RegisterDevMode sets up the dev mode WebSocket and status endpoints
 func RegisterDevMode(pb *pocketbase.PocketBase) error {
 	if !DevMode {
 		return nil
@@ -233,6 +233,28 @@ func RegisterDevMode(pb *pocketbase.PocketBase) error {
 
 			BroadcastReload()
 			return e.NoContent(http.StatusNoContent)
+		})
+
+		// Lets the CLI push a status (e.g. sync/import progress) into the dev
+		// indicator without a WebSocket client of its own.
+		serveEvent.Router.POST("/api/primo/dev/status", func(e *core.RequestEvent) error {
+			if !IsLocalhost(e) {
+				return e.ForbiddenError("Localhost only", nil)
+			}
+
+			var body struct {
+				Status  string `json:"status"`
+				Message string `json:"message"`
+			}
+			if err := e.BindBody(&body); err != nil {
+				return e.BadRequestError("Invalid JSON body", err)
+			}
+			if body.Status == "" {
+				return e.BadRequestError("Missing status", nil)
+			}
+
+			BroadcastStatus(body.Status, body.Message)
+			return e.JSON(http.StatusOK, map[string]bool{"ok": true})
 		})
 
 		// WebSocket endpoint for dev indicator
