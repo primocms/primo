@@ -54,12 +54,19 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 
 			// Published files live under sites/{host}/..., so a host change would
 			// otherwise 404 at the new domain until the user re-publishes.
-			// Regenerate under the new host so the site is served immediately.
-			// Best-effort: a site with nothing published yet has nothing to
-			// render, so don't fail the attach if generation errors.
+			// Regenerate under the new host so the site is served immediately,
+			// then tear down the old host's tree — the file server routes purely
+			// by Host header, so leaving it would keep serving the site at the
+			// old domain. Both are best-effort: a site with nothing published yet
+			// has nothing to render, so don't fail the attach if either errors.
 			if host != oldHost {
 				if genErr := GenerateSite(pb, site); genErr != nil {
 					e.App.Logger().Warn("regenerate after domain change failed", "site", site.Id, "host", host, "error", genErr)
+				}
+				if oldHost != "" && oldHost != site.Id {
+					if delErr := DeleteSiteHostFiles(pb, oldHost); delErr != nil {
+						e.App.Logger().Warn("cleanup of old host files failed", "site", site.Id, "old_host", oldHost, "error", delErr)
+					}
 				}
 			}
 
@@ -117,12 +124,35 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 	return site, nil
 }
 
+// domainErrorMax mirrors the domain_error TextField Max in the migration.
+// applyDomainResult truncates to it so a verbose provider error can never fail
+// the save (which would turn a transient error into a permanent status-refresh
+// 500).
+const domainErrorMax = 500
+
 // applyDomainResult persists the host + domain status/records onto the site.
+//
+// It is deliberately defensive against half-results from a provider poll: a
+// transient/out-of-band null from Railway yields a zero-value DomainResult
+// (empty ProviderID, "pending" status, no records). Blindly persisting that
+// would wipe the real provider id — after which every subsequent status poll
+// trips the empty-id guard and the domain is stuck forever. So we only advance
+// the provider id when the new result actually carries one.
 func applyDomainResult(pb *pocketbase.PocketBase, site *core.Record, host string, result DomainResult) error {
 	site.Set("host", host)
 	site.Set("domain_status", result.Status)
-	site.Set("domain_provider_id", result.ProviderID)
-	site.Set("domain_error", result.Error)
+	// Never overwrite a known provider id with an empty one — an empty id in a
+	// result means "couldn't resolve the domain this poll", not "the domain lost
+	// its id". Keep the last good id so polling can recover.
+	if result.ProviderID != "" {
+		site.Set("domain_provider_id", result.ProviderID)
+	}
+
+	domainErr := result.Error
+	if len(domainErr) > domainErrorMax {
+		domainErr = domainErr[:domainErrorMax]
+	}
+	site.Set("domain_error", domainErr)
 
 	// Store the records as real JSON (the column is a JSONField). Ensure a
 	// non-nil slice so it persists as [] rather than null.

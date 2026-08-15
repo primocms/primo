@@ -68,6 +68,20 @@ type manualProvider struct{}
 
 func (manualProvider) Name() string { return "manual" }
 
+// manualRoutingRecord is the single CNAME guidance a manual (self-hosted)
+// operator must create. Both AttachDomain and DomainStatus return it so the
+// records never disappear from the UI while the domain is reported live — the
+// operator still needs to see what to point at their reverse proxy.
+func manualRoutingRecord(host string) DNSRecord {
+	return DNSRecord{
+		Type:    "CNAME",
+		Host:    host,
+		Value:   "(point this at your Primo server)",
+		Status:  "pending",
+		Purpose: "routing",
+	}
+}
+
 func (manualProvider) AttachDomain(host string) (DomainResult, error) {
 	// A base-domain subdomain is already covered by the wildcard cert/routing —
 	// nothing for the user to do.
@@ -75,14 +89,8 @@ func (manualProvider) AttachDomain(host string) (DomainResult, error) {
 		return DomainResult{Status: DomainStatusLive}, nil
 	}
 	return DomainResult{
-		Status: DomainStatusVerifying,
-		Records: []DNSRecord{{
-			Type:    "CNAME",
-			Host:    host,
-			Value:   "(point this at your Primo server)",
-			Status:  "pending",
-			Purpose: "routing",
-		}},
+		Status:  DomainStatusVerifying,
+		Records: []DNSRecord{manualRoutingRecord(host)},
 	}, nil
 }
 
@@ -91,6 +99,11 @@ func (manualProvider) DomainStatus(_ string, host string) (DomainResult, error) 
 		return DomainResult{Status: DomainStatusLive}, nil
 	}
 	// Manual providers can't verify remotely; treat as live once assigned so the
-	// UI doesn't spin forever. The operator confirms reachability out of band.
-	return DomainResult{Status: DomainStatusLive}, nil
+	// UI doesn't spin forever (the operator confirms reachability out of band).
+	// Keep returning the routing record so the CNAME guidance isn't erased —
+	// applyDomainResult would otherwise overwrite the stored records with [].
+	return DomainResult{
+		Status:  DomainStatusLive,
+		Records: []DNSRecord{manualRoutingRecord(host)},
+	}, nil
 }

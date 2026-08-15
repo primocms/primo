@@ -1,6 +1,95 @@
 package internal
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
+
+// TestApplyDomainResultPreservesProviderID guards the self-poisoning bug: a
+// status poll that returns a zero-value result (empty ProviderID) must not wipe
+// the previously-stored provider id, otherwise every later poll trips the
+// empty-id guard and the domain is stuck forever.
+func TestApplyDomainResultPreservesProviderID(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// Initial attach stamps a real provider id.
+	if err := applyDomainResult(app, site, "example.com", DomainResult{ProviderID: "cd_real", Status: DomainStatusVerifying}); err != nil {
+		t.Fatalf("first apply: %v", err)
+	}
+	if got := site.GetString("domain_provider_id"); got != "cd_real" {
+		t.Fatalf("provider id = %q, want cd_real", got)
+	}
+
+	// A poll returns an empty-id result (e.g. Railway customDomain went null).
+	if err := applyDomainResult(app, site, "example.com", DomainResult{ProviderID: "", Status: DomainStatusPending}); err != nil {
+		t.Fatalf("second apply: %v", err)
+	}
+	if got := site.GetString("domain_provider_id"); got != "cd_real" {
+		t.Errorf("provider id was clobbered to %q, want preserved cd_real", got)
+	}
+
+	// A real new id still advances.
+	if err := applyDomainResult(app, site, "example.com", DomainResult{ProviderID: "cd_new", Status: DomainStatusLive}); err != nil {
+		t.Fatalf("third apply: %v", err)
+	}
+	if got := site.GetString("domain_provider_id"); got != "cd_new" {
+		t.Errorf("provider id = %q, want cd_new", got)
+	}
+}
+
+// TestApplyDomainResultTruncatesError ensures a verbose provider error can't
+// exceed the domain_error column max and fail the save.
+func TestApplyDomainResultTruncatesError(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	long := strings.Repeat("x", domainErrorMax+250)
+	if err := applyDomainResult(app, site, "example.com", DomainResult{Status: DomainStatusError, Error: long}); err != nil {
+		t.Fatalf("apply with long error should not fail the save: %v", err)
+	}
+	if got := len(site.GetString("domain_error")); got != domainErrorMax {
+		t.Errorf("stored error len = %d, want %d", got, domainErrorMax)
+	}
+}
+
+// TestManualProviderStatusKeepsRecords guards that a manual-provider status
+// check keeps the routing record (so the CNAME guidance isn't erased) even
+// though it reports the domain live.
+func TestManualProviderStatusKeepsRecords(t *testing.T) {
+	t.Setenv("PRIMO_BASE_DOMAIN", "acme.primo.page")
+	p := manualProvider{}
+
+	res, err := p.DomainStatus("", "theirbrand.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Status != DomainStatusLive {
+		t.Errorf("status = %q, want live", res.Status)
+	}
+	if len(res.Records) != 1 || res.Records[0].Type != "CNAME" {
+		t.Errorf("expected the routing CNAME to survive, got %+v", res.Records)
+	}
+}
+
+func TestLabelWithSuffix(t *testing.T) {
+	cases := []struct{ slug, suffix, want string }{
+		{"short", "-2", "short-2"},
+		{strings.Repeat("a", 63), "-2", strings.Repeat("a", 61) + "-2"}, // suffix survives, total 63
+		{strings.Repeat("a", 63), "-abc123", strings.Repeat("a", 56) + "-abc123"},
+	}
+	for _, c := range cases {
+		got := labelWithSuffix(c.slug, c.suffix)
+		if got != c.want {
+			t.Errorf("labelWithSuffix(%d-char slug, %q) = %q (len %d), want %q", len(c.slug), c.suffix, got, len(got), c.want)
+		}
+		if len(got) > 63 {
+			t.Errorf("result %q exceeds 63 chars (%d)", got, len(got))
+		}
+	}
+}
 
 func TestToDomainResultStatus(t *testing.T) {
 	// mk builds a domain with `n` DNS records (each with the given per-record

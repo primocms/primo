@@ -316,18 +316,49 @@ func RegisterGenerateEndpoint(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
+// DeleteSiteHostFiles removes every published file under sites/{host}/. Used on
+// a domain change to tear down the old host's tree — the file server routes
+// purely by the requested Host header (sites/{host}/...), so leaving the old
+// tree in place would keep serving a stale copy of the site at the previous
+// domain indefinitely.
+func DeleteSiteHostFiles(pb *pocketbase.PocketBase, host string) error {
+	if host == "" {
+		return nil
+	}
+	system, err := pb.NewFilesystem()
+	if err != nil {
+		return err
+	}
+	defer system.Close()
+
+	files, err := system.List("sites/" + host + "/")
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir {
+			continue
+		}
+		if err := system.Delete(file.Key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // GenerateSite renders a site's published files (symbols, uploads, pages,
 // sitemap) into sites/{host}/... and cleans up any stale files under that host
 // path. It's the core of the /api/primo/generate endpoint, also called after a
 // host change so the site is immediately served at its new domain without a
 // manual re-publish. Note: this writes under the site's CURRENT host, so on a
-// host change the caller must persist the new host first; files left under the
-// old host path are not migrated here.
+// host change the caller must persist the new host first; the old host's files
+// are torn down separately via DeleteSiteHostFiles.
 func GenerateSite(pb *pocketbase.PocketBase, site *core.Record) error {
 	system, err := pb.NewFilesystem()
 	if err != nil {
 		return err
 	}
+	defer system.Close()
 
 	existingFiles, err := system.List("sites/" + site.GetString("host") + "/")
 	if err != nil {
