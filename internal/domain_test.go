@@ -300,15 +300,26 @@ func TestManualProviderSubdomainShortCircuit(t *testing.T) {
 }
 
 func TestHostPattern(t *testing.T) {
-	valid := []string{"example.com", "sub.example.com", "a.b.c.example.com", "*.example.com", "my-site.example.io"}
-	invalid := []string{"", "example", "http://example.com", "example.com/path", "example .com", "-bad.com", "example.c", "*.*.com"}
+	// validHost mirrors the handler's check: pattern AND length limits.
+	validHost := func(h string) bool { return hostPattern.MatchString(h) && validHostLength(h) }
+
+	longLabel := strings.Repeat("a", 64) + ".com"          // one label > 63
+	longHost := strings.Repeat("a.", 130) + "com"          // total > 253
+	okLongLabel := strings.Repeat("a", 63) + ".com"        // label exactly 63
+
+	valid := []string{"example.com", "sub.example.com", "a.b.c.example.com", "my-site.example.io", okLongLabel}
+	invalid := []string{
+		"", "example", "http://example.com", "example.com/path", "example .com", "-bad.com", "example.c",
+		"*.example.com", "*.*.com", // wildcards no longer allowed for a per-site host
+		longLabel, longHost, // DNS size limits
+	}
 	for _, h := range valid {
-		if !hostPattern.MatchString(h) {
+		if !validHost(h) {
 			t.Errorf("expected %q valid", h)
 		}
 	}
 	for _, h := range invalid {
-		if hostPattern.MatchString(h) {
+		if validHost(h) {
 			t.Errorf("expected %q invalid", h)
 		}
 	}

@@ -43,9 +43,7 @@
 			{:else if instance.dev_mode}
 				<p class="description">Ready to preview your website changes?</p>
 			{:else}
-				<p class="description">
-					Ready to publish? This site has no domain yet — publish now, then connect a domain from the dashboard to make it public.
-				</p>
+				<p class="description">Ready to publish? This site has no domain yet — publish now, then connect a domain to make it public.</p>
 			{/if}
 			<div class="buttons">
 				<button class="primo-button" onclick={onClose}>
@@ -53,7 +51,7 @@
 				</button>
 				<button class="primo-button primary" onclick={handle_publish} disabled={loading}>
 					<Icon icon={loading ? 'line-md:loading-twotone-loop' : instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} class={$mod_key_held && !loading ? 'invisible' : ''} />
-					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : (instance.dev_mode ? 'Build Preview' : 'Publish Changes')}</span>
+					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : instance.dev_mode ? 'Build Preview' : 'Publish Changes'}</span>
 					{#if $mod_key_held && !loading}
 						<span class="key-hint">⌘P</span>
 					{/if}

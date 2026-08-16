@@ -9,10 +9,28 @@ import (
 )
 
 // hostPattern is a permissive hostname validator: dot-separated DNS labels
-// (letters/digits/hyphens, no leading/trailing hyphen), optionally a leading
-// "*." for wildcard custom domains. It rejects schemes, ports, paths, and
-// spaces so a bad value can't become a routing host.
-var hostPattern = regexp.MustCompile(`^(\*\.)?([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$`)
+// (letters/digits/hyphens, no leading/trailing hyphen). It rejects schemes,
+// ports, paths, and spaces so a bad value can't become a routing host. No
+// wildcards: a per-site attached host must be concrete — it becomes the
+// sites/{host}/ storage prefix and the editor URL, neither of which a "*."
+// value can satisfy. Length limits (which a regexp can't express) are enforced
+// separately by validHostLength.
+var hostPattern = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$`)
+
+// validHostLength enforces the DNS size limits the regexp can't express: 253
+// bytes total, 63 bytes per label. An over-long host would be stored and used
+// as a sites/{host}/ prefix but could never resolve in DNS.
+func validHostLength(host string) bool {
+	if len(host) == 0 || len(host) > 253 {
+		return false
+	}
+	for _, label := range strings.Split(host, ".") {
+		if len(label) > 63 {
+			return false
+		}
+	}
+	return true
+}
 
 // RegisterDomainEndpoints wires the custom-domain connect + status routes. The
 // heavy platform work is delegated to the configured DomainProvider; these
@@ -33,7 +51,7 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 				return e.BadRequestError("Invalid request body", err)
 			}
 			host := strings.ToLower(strings.TrimSpace(body.Host))
-			if !hostPattern.MatchString(host) {
+			if !hostPattern.MatchString(host) || !validHostLength(host) {
 				return e.BadRequestError("Enter a valid domain (e.g. example.com)", nil)
 			}
 
