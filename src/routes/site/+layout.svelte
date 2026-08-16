@@ -8,7 +8,7 @@
 	import { page } from '$app/state'
 	import { Sites } from '$lib/pocketbase/collections'
 	import CreateSite from '$lib/components/CreateSite.svelte'
-	import { is_host_assigned } from '$lib/site_host'
+	import { is_host_assigned, site_editor_url } from '$lib/site_host'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 	import { Loader } from 'lucide-svelte'
 
@@ -43,8 +43,12 @@
 						.catch(() => null)
 
 					if (!host_match && first_site.host) {
-						// Redirect to first site
-						window.location.href = `http://${first_site.host}/admin/site`
+						// Redirect to the first site's editor. Assigned sites live at
+						// their own vhost (//host/admin/site); unassigned sites
+						// (host === id) have no reachable vhost and must open by id at
+						// /admin/sites/{id} — otherwise the id gets used as a hostname
+						// and DNS fails. site_editor_url handles both cases.
+						window.location.href = site_editor_url(first_site)
 						return
 					}
 				} else {
