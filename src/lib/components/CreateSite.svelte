@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload } from 'lucide-svelte'
+	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X } from 'lucide-svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -23,7 +23,7 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated }: { oncreated?: (created: { id: string; host: string }) => void } = $props()
+	const { oncreated, oncancel }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
@@ -191,10 +191,17 @@
 		progress_message = 'Creating site...'
 
 		try {
-			// Ensure default group exists
-			if (!site_group) {
-				SiteGroups.create({ name: 'Default', index: 0 })
+			// Ensure a default group exists. Capture the id locally — `site_group`
+			// derives from the store and may not have re-synced right after the
+			// commit, which would send an empty group_id and 400 the clone.
+			let group_id = site_group?.id ?? ''
+			if (!group_id) {
+				const created_group = SiteGroups.create({ name: 'Default', index: 0 })
 				await self.commit()
+				group_id = created_group?.id ?? site_group?.id ?? ''
+			}
+			if (!group_id) {
+				throw new Error('Could not resolve a site group')
 			}
 
 			let response: Response
@@ -203,14 +210,16 @@
 				// File upload - use FormData
 				const form_data = new FormData()
 				form_data.append('name', site_name)
-				form_data.append('host', pageState.url.host)
-				form_data.append('group_id', site_group?.id ?? '')
+				// Host is intentionally omitted — new sites are created
+				// unassigned (see clone-site endpoint) and get a real domain
+				// assigned separately in the dashboard.
+				form_data.append('group_id', group_id)
 				form_data.append('snapshot_file', uploaded_snapshot_file)
 
 				response = await fetch(`${self.instance?.baseURL}/api/primo/clone-site`, {
 					method: 'POST',
 					headers: {
-						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+						Authorization: self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
 					},
 					body: form_data
 				})
@@ -218,14 +227,13 @@
 				// Build request body for server-side clone
 				const request_body: {
 					name: string
-					host: string
 					group_id: string
 					source_site_id?: string
 					snapshot_url?: string
 				} = {
 					name: site_name,
-					host: pageState.url.host,
-					group_id: site_group?.id ?? ''
+					// Host omitted — created unassigned (see clone-site endpoint).
+					group_id
 				}
 
 				if (selected_starter_source === 'marketplace') {
@@ -249,7 +257,7 @@
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
+						Authorization: self.instance?.authStore.token ? `Bearer ${self.instance.authStore.token}` : ''
 					},
 					body: JSON.stringify(request_body)
 				})
@@ -266,8 +274,11 @@
 			done_creating_site = true
 
 			// If no blocks to copy, finish immediately without waiting for
-			// the reactive store to sync (avoids race condition on large templates)
+			// the reactive store to sync (avoids race condition on large templates).
+			// Mark finalized so the reactive finalize effect below doesn't fire
+			// oncreated a second time once the store syncs.
 			if (selected_block_ids.length === 0) {
+				finalized = true
 				loading = false
 				oncreated?.({ id: result.id, host: result.host })
 				return
@@ -285,11 +296,7 @@
 
 	// Find the created site - first try by ID from server response, then fall back to name match
 	const created_sites = $derived(Sites.list({ filter: { host: pageState.url.host } }) ?? [])
-	const created_site = $derived(
-		created_site_id
-			? (Sites.one(created_site_id) ?? created_sites.find((s) => s.id === created_site_id))
-			: created_sites.find((s) => s.name === site_name)
-	)
+	const created_site = $derived(created_site_id ? (Sites.one(created_site_id) ?? created_sites.find((s) => s.id === created_site_id)) : created_sites.find((s) => s.name === site_name))
 
 	// Finalize created site: copy optional blocks if any, then call oncreated.
 	let done_creating_site = $state(false)
@@ -318,8 +325,13 @@
 
 <div class="max-w-[1400px] h-screen px-2 flex flex-col mx-auto">
 	<!-- Header -->
-	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem]">
+	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem] relative">
 		<h1 class="text-md leading-none tracking-tight text-center">Create Site</h1>
+		{#if oncancel}
+			<button type="button" onclick={() => oncancel?.()} class="absolute right-2 top-6 p-2 text-muted-foreground hover:text-foreground rounded-md" aria-label="Cancel">
+				<X class="w-4 h-4" />
+			</button>
+		{/if}
 
 		<!-- Stepper -->
 		<div class="max-w-[900px] mx-auto mt-4 flex items-center gap-4 overflow-x-auto whitespace-nowrap w-full">
@@ -465,12 +477,14 @@
 											<Check class="h-4 w-4 text-primary flex-shrink-0" />
 											<span class="text-xs truncate">{uploaded_snapshot_file.name}</span>
 										</div>
-										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>
-											Remove
-										</Button>
+										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>Remove</Button>
 									</div>
 								{:else}
-									<label class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file ? 'opacity-50 pointer-events-none' : ''}">
+									<label
+										class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file
+											? 'opacity-50 pointer-events-none'
+											: ''}"
+									>
 										{#if parsing_file}
 											<Loader class="h-4 w-4 animate-spin" />
 											<span>Reading...</span>
@@ -478,13 +492,7 @@
 											<Upload class="h-4 w-4" />
 											<span>Import .primo</span>
 										{/if}
-										<input
-											type="file"
-											class="hidden"
-											accept=".primo,.pala"
-											onchange={handle_file_upload}
-											disabled={parsing_file}
-										/>
+										<input type="file" class="hidden" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
 									</label>
 								{/if}
 								{#if file_upload_error}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -246,10 +247,15 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			createName = "Imported Site"
 		}
 		// Auto-create needs a unique non-empty host because the sites
-		// collection has a UNIQUE constraint on `host`. Seed with siteId;
-		// real routing hosts arrive separately (bootstrap form field in
-		// dev, or dashboard config in prod).
-		createHost := siteId
+		// collection has a UNIQUE constraint on `host`. With a base domain
+		// configured (PRIMO_BASE_DOMAIN), assign a live "<slug>.<base>"
+		// subdomain so a pushed site is reachable immediately. Otherwise seed
+		// with siteId (the unassigned sentinel); real routing hosts arrive
+		// separately (bootstrap form field in dev, or dashboard config in prod).
+		createHost := resolveNewSiteHost(pb, createName)
+		if createHost == "" {
+			createHost = siteId
+		}
 
 		groupId, groupErr := ensureDefaultGroup(pb)
 		if groupErr != nil {
@@ -340,6 +346,9 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		})
 	}
 	if err != nil {
+		// No-op outside dev mode; lets the dev indicator surface import
+		// failures the same way it surfaces successful pushes.
+		BroadcastStatus("error", err.Error())
 		return e.InternalServerError("Import failed: "+err.Error(), err)
 	}
 
@@ -897,10 +906,22 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	}
 	var allPages []pageImportInfo
 
-	// Track which paths we've seen to handle both flat and folder patterns
-	seenPaths := make(map[string]bool)
+	// Track which file claimed each route so a second file mapping to the
+	// same route (e.g. pages/articles.yaml and pages/articles/index.yaml)
+	// fails the import with both paths named, instead of silently dropping
+	// one at random.
+	seenPaths := make(map[string]string)
 
-	for path, data := range files {
+	// Iterate in sorted key order so duplicate-route errors (and any other
+	// per-file behavior) are deterministic across runs.
+	sortedFilePaths := make([]string, 0, len(files))
+	for path := range files {
+		sortedFilePaths = append(sortedFilePaths, path)
+	}
+	sort.Strings(sortedFilePaths)
+
+	for _, path := range sortedFilePaths {
+		data := files[path]
 		if !strings.HasPrefix(path, "pages/") {
 			continue
 		}
@@ -936,11 +957,13 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			pagePath = ""
 		}
 
-		// Skip if we've already processed this path (folder pattern takes precedence)
-		if seenPaths[pagePath] {
-			continue
+		// A second file mapping to a route we've already seen (flat vs folder
+		// pattern) is ambiguous — fail the import rather than silently picking
+		// one file.
+		if firstPath, seen := seenPaths[pagePath]; seen {
+			return nil, fmt.Errorf("duplicate page route %q: both %s and %s map to it; remove one of the files", pagePath, firstPath, path)
 		}
-		seenPaths[pagePath] = true
+		seenPaths[pagePath] = path
 
 		// Find existing page by ID first, then by slug, then by name
 		// PocketBase uses && and || operators, not SQL-style AND/OR

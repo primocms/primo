@@ -21,6 +21,9 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
+	import { is_host_assigned, site_editor_url } from '$lib/site_host'
+	import CreateSite from '$lib/components/CreateSite.svelte'
+	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
 
 	const sidebar = useSidebar()
 
@@ -120,6 +123,10 @@
 		is_rename_site_open = false
 	}
 
+	// Connect-a-domain flow lives in the reusable ConnectDomain component; the
+	// dashboard just opens it for the selected site.
+	let is_assign_domain_open = $state(false)
+
 	let is_delete_site_open = $state(false)
 	let deleting_site = $state(false)
 	async function delete_site() {
@@ -169,7 +176,7 @@
 		is_move_site_open = false
 	}
 
-	let is_create_site_instructions_open = $state(false)
+	let is_creating_site = $state(false)
 </script>
 
 <header class="flex h-14 shrink-0 items-center gap-2">
@@ -209,14 +216,7 @@
 			variant="outline"
 			disabled={at_site_cap}
 			title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
-			onclick={() => {
-				if (all_sites.some((site) => site.host === page.url.host)) {
-					is_create_site_instructions_open = true
-				} else {
-					// No site for the current host, let's create one
-					goto('/admin/site')
-				}
-			}}
+			onclick={() => (is_creating_site = true)}
 		>
 			<CirclePlus class="h-4 w-4" />
 			Create Site
@@ -238,14 +238,14 @@
 {#snippet SiteButton(site: Site)}
 	<div class="space-y-3 relative w-full bg-[#111]">
 		<div class="rounded-tl rounded-tr overflow-hidden">
-			<a href={`//${site.host}/admin/site`}>
+			<a href={site_editor_url(site)}>
 				<SitePreview {site} />
 			</a>
 		</div>
 		<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-[#111] truncate flex items-center justify-between">
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
-				<a href={`//${site.host}/admin/site`} class="text-sm font-medium leading-none truncate">{site.name}</a>
-				<p class="text-xs text-muted-foreground leading-tight truncate">{site.host}</p>
+				<a href={site_editor_url(site)} class="text-sm font-medium leading-none truncate">{site.name}</a>
+				<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'Unassigned'}</p>
 			</div>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="p-2 hover:bg-[#222] rounded-md">
@@ -260,6 +260,15 @@
 					>
 						<SquarePen class="h-4 w-4" />
 						<span>Rename</span>
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						onclick={() => {
+							current_site = site
+							is_assign_domain_open = true
+						}}
+					>
+						<Globe class="h-4 w-4" />
+						<span>{is_host_assigned(site) ? 'Change domain' : 'Assign domain'}</span>
 					</DropdownMenu.Item>
 					{#if site_groups.length > 1}
 						<DropdownMenu.Item
@@ -373,6 +382,12 @@
 	</Dialog.Content>
 </Dialog.Root>
 
+<ConnectDomain
+	site={current_site}
+	bind:open={is_assign_domain_open}
+	onconnected={() => self.invalidate_lists({ collection_name: 'sites' })}
+/>
+
 <AlertDialog.Root bind:open={is_delete_site_open}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
@@ -397,39 +412,23 @@
 	</AlertDialog.Content>
 </AlertDialog.Root>
 
-<Dialog.Root bind:open={is_create_site_instructions_open}>
-	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Create a New Site</h2>
-		<p class="text-muted-foreground text-sm mb-6">Follow these steps to create a new site:</p>
-
-		<div class="space-y-4">
-			<div class="flex gap-4">
-				<div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
-				<div>
-					<h3 class="font-medium text-sm mb-1">Connect a new domain name to the server</h3>
-					<p class="text-muted-foreground text-sm">Point your domain's DNS records to this server or configure your hosting provider to route traffic here.</p>
-				</div>
-			</div>
-
-			<div class="flex gap-4">
-				<div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
-				<div>
-					<h3 class="font-medium text-sm mb-1">Access the server from that domain name</h3>
-					<p class="text-muted-foreground text-sm">Once the domain is connected, visit your new domain in a web browser. You'll be prompted to create a new site automatically.</p>
-				</div>
-			</div>
-
-			<div class="flex gap-4">
-				<div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
-				<div>
-					<h3 class="font-medium text-sm mb-1">Create the site</h3>
-					<p class="text-muted-foreground text-sm">Complete the site creation process and it will automatically be connected to your domain name.</p>
-				</div>
-			</div>
-		</div>
-
-		<Dialog.Footer class="mt-6">
-			<Button type="button" onclick={() => (is_create_site_instructions_open = false)}>Okay</Button>
-		</Dialog.Footer>
-	</Dialog.Content>
-</Dialog.Root>
+{#if is_creating_site}
+	<!-- CreateSite is a full-screen wizard; render it as an overlay above the
+	dashboard. New sites are created unassigned (no host); on success we close
+	the wizard and stay on the dashboard, where the new card appears. -->
+	<div class="fixed inset-0 z-50 bg-background overflow-auto">
+		<CreateSite
+			oncreated={() => {
+				// The site was created server-side via the clone-site endpoint —
+				// an out-of-band write the Sites cache doesn't know about — so
+				// invalidate the cached lists to re-fetch and show the new card
+				// without a full reload.
+				self.invalidate_lists({ collection_name: 'sites' })
+				is_creating_site = false
+			}}
+			oncancel={() => {
+				is_creating_site = false
+			}}
+		/>
+	</div>
+{/if}

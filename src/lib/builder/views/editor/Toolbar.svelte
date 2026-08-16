@@ -13,12 +13,14 @@
 	import { page, page as pageState } from '$app/state'
 	import { PageTypes, SiteSnapshots } from '$lib/pocketbase/collections'
 	import { onModKey } from '$lib/builder/utils/keyboard'
+	import { is_host_assigned } from '$lib/site_host'
 	import * as Popover from '$lib/components/ui/popover/index.js'
 	import SiteEditor from '$lib/builder/views/modal/SiteEditor/SiteEditor.svelte'
 	import SitePages from '$lib/builder/views/modal/SitePages/SitePages.svelte'
 	import PageTypeModal from '$lib/builder/views/modal/PageTypeModal/PageTypeModal.svelte'
 	import Collaboration from '$lib/builder/views/modal/Collaboration.svelte'
 	import Deploy from '$lib/components/Modals/Deploy/Deploy.svelte'
+	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
 	import { usePublishSite } from '$lib/workers/Publish.svelte'
 	import { type Snippet } from 'svelte'
 	import { site_context } from '$lib/builder/stores/context'
@@ -114,6 +116,7 @@
 	let editing_collaborators = $state(false)
 	let publishing = $state(false)
 	let publish_stage = $state('INITIAL')
+	let connect_domain_open = $state(false)
 
 	// Close all dialogs on navigation
 	onNavigate(() => {
@@ -203,7 +206,12 @@
 			bind:stage={publish_stage}
 			publish_fn={handle_publish}
 			loading={publish_in_progress}
-			site_host={site?.host}
+			site_host={site && is_host_assigned(site) ? site.host : ''}
+			onConnectDomain={() => {
+				publishing = false
+				publish_stage = 'INITIAL'
+				connect_domain_open = true
+			}}
 			onClose={() => {
 				publishing = false
 				publish_stage = 'INITIAL'
@@ -211,6 +219,8 @@
 		/>
 	</Dialog.Content>
 </Dialog.Root>
+
+<ConnectDomain {site} bind:open={connect_domain_open} />
 
 <nav aria-label="toolbar" id="primo-toolbar">
 	<div class="menu-container">

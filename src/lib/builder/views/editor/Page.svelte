@@ -54,7 +54,10 @@
 	// detect when all sections are mounted to fade in page
 	let sections_mounted = $state(0)
 
-	beforeNavigate(() => {
+	beforeNavigate((nav) => {
+		// Navigating to the page we're already on doesn't remount sections,
+		// so the mount counter would never recover — leaving the spinner stuck
+		if (nav.to?.url.href === nav.from?.url.href) return
 		page_mounted = false
 		sections_mounted = 0
 	})

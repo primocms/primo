@@ -5,7 +5,7 @@
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
 	import { instance } from '$lib/instance'
 
-	let { stage = $bindable(), publish_fn, loading, site_host, onClose } = $props()
+	let { stage = $bindable(), publish_fn, loading, site_host, onConnectDomain, onClose } = $props()
 
 	let error = $state(null)
 
@@ -40,8 +40,10 @@
 					{instance.dev_mode ? 'Your website will be previewed at' : 'Your website will be published to'}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
 				</p>
+			{:else if instance.dev_mode}
+				<p class="description">Ready to preview your website changes?</p>
 			{:else}
-				<p class="description">{instance.dev_mode ? 'Ready to preview your website changes?' : 'Ready to publish your website changes?'}</p>
+				<p class="description">Ready to publish? This site has no domain yet — publish now, then connect a domain to make it public.</p>
 			{/if}
 			<div class="buttons">
 				<button class="primo-button" onclick={onClose}>
@@ -49,7 +51,7 @@
 				</button>
 				<button class="primo-button primary" onclick={handle_publish} disabled={loading}>
 					<Icon icon={loading ? 'line-md:loading-twotone-loop' : instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} class={$mod_key_held && !loading ? 'invisible' : ''} />
-					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : (instance.dev_mode ? 'Build Preview' : 'Publish Changes')}</span>
+					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : instance.dev_mode ? 'Build Preview' : 'Publish Changes'}</span>
 					{#if $mod_key_held && !loading}
 						<span class="key-hint">⌘P</span>
 					{/if}
@@ -60,11 +62,13 @@
 		<div class="container">
 			<h3 class="title">{instance.dev_mode ? 'Preview Ready!' : 'Published Successfully!'}</h3>
 			<p class="description">
-				{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
 				{#if site_host}
+					{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
 					<a href="{page.url.protocol}//{site_host}" target="_blank">{site_host}</a>
+				{:else if instance.dev_mode}
+					Your website preview is ready on your local server.
 				{:else}
-					{instance.dev_mode ? 'your local server' : 'your live site'}
+					Your changes are published. Connect a domain to make this site public.
 				{/if}
 			</p>
 			<div class="buttons">
@@ -76,6 +80,11 @@
 						<Icon icon="lucide:external-link" />
 						<span>{instance.dev_mode ? 'View Preview' : 'View Site'}</span>
 					</a>
+				{:else if !instance.dev_mode && onConnectDomain}
+					<button class="primo-button" onclick={onConnectDomain}>
+						<Icon icon="lucide:globe" />
+						<span>Connect a domain</span>
+					</button>
 				{/if}
 			</div>
 		</div>

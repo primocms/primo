@@ -8,6 +8,7 @@
 	import { page } from '$app/state'
 	import { Sites } from '$lib/pocketbase/collections'
 	import CreateSite from '$lib/components/CreateSite.svelte'
+	import { is_host_assigned } from '$lib/site_host'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 	import { Loader } from 'lucide-svelte'
 
@@ -62,15 +63,19 @@
 	const sites_by_host = $derived(Sites.list({ filter: { host } }))
 	const site = $derived(sites_by_host?.[0])
 
-	// For non-localhost, show create if no site matches after initial check.
-	// `sites_by_host === undefined` means the list is still loading — don't
-	// flip into wizard mode until the response arrives, otherwise a brief
-	// pre-load gap traps us on the wizard even when a site exists.
+	// This host-based route serves a site whose `host` matches the current
+	// domain. On a multi-site instance the current host often matches no site
+	// (e.g. the bare instance URL, or an unassigned site whose host is its id
+	// sentinel) — in that case there's nothing to edit here, so send the user
+	// to the dashboard, which lists every site by id. `sites_by_host ===
+	// undefined` means the list is still loading — wait for it before deciding,
+	// so a brief pre-load gap doesn't bounce us to the dashboard when a site
+	// does match.
 	let creating_site = $state(false)
 	$effect(() => {
 		const list_loaded = sites_by_host !== undefined
 		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
-			creating_site = true
+			goto('/admin/dashboard', { replaceState: true })
 		} else if (site) {
 			creating_site = false
 		}
@@ -85,13 +90,16 @@
 {#if creating_site && $current_user}
 	<CreateSite
 		oncreated={(created) => {
-			// Hard-navigate to the new site's admin. If the host differs (localhost
-			// dashboard flow), this redirects to the right vhost. If it matches, a
-			// reload sidesteps the stale Sites.list() cache that would otherwise
-			// re-trigger the create-site gate.
-			const target_host = created?.host || host
-			const protocol = page.url.protocol || 'http:'
-			window.location.href = `${protocol}//${target_host}/admin/site`
+			// Hard-navigate to the new site's admin. An assigned site lives at
+			// its own vhost (redirect there); an unassigned site (host === id)
+			// has no vhost, so open it by id. Hard nav (not goto) sidesteps the
+			// stale Sites.list() cache that would otherwise re-trigger the gate.
+			if (created && is_host_assigned(created)) {
+				const protocol = page.url.protocol || 'http:'
+				window.location.href = `${protocol}//${created.host}/admin/site`
+			} else if (created) {
+				window.location.href = `/admin/sites/${created.id}`
+			}
 		}}
 	/>
 {:else if site && $current_user}

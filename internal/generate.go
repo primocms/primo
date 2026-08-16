@@ -308,89 +308,131 @@ func RegisterGenerateEndpoint(pb *pocketbase.PocketBase) error {
 				return requestEvent.ForbiddenError("", err)
 			}
 
-			system, err := pb.NewFilesystem()
-			if err != nil {
-				return err
-			}
-
-			existingFiles, err := system.List("sites/" + site.GetString("host") + "/")
-			if err != nil {
-				return err
-			}
-
-			symbolFiles, err := generateSymbols(pb, system, site)
-			if err != nil {
-				return err
-			}
-
-			uploadFiles, err := generateUploads(pb, system, site)
-			if err != nil {
-				return err
-			}
-
-			pageFiles, err := generatePages(pb, system, site)
-			if err != nil {
-				return err
-			}
-
-			// Generate sitemap
-			pagesCollection, err := pb.FindCollectionByNameOrId("pages")
-			if err != nil {
-				return err
-			}
-			pages, err := pb.FindRecordsByFilter(
-				pagesCollection.Id,
-				"site = {:site}",
-				"",
-				0,
-				0,
-				dbx.Params{"site": site.Id},
-			)
-			if err != nil {
-				return err
-			}
-			sitemapFile, err := generateSitemap(system, site, pages)
-			if err != nil {
-				return err
-			}
-
-		cleanup:
-			for _, file := range existingFiles {
-				if file.IsDir {
-					continue
-				}
-
-				for _, symbolFile := range symbolFiles {
-					if file.Key == symbolFile {
-						continue cleanup
-					}
-				}
-
-				for _, uploadFile := range uploadFiles {
-					if file.Key == uploadFile {
-						continue cleanup
-					}
-				}
-
-				for _, pageFile := range pageFiles {
-					if file.Key == pageFile {
-						continue cleanup
-					}
-				}
-
-				if file.Key == sitemapFile {
-					continue cleanup
-				}
-
-				if err := system.Delete(file.Key); err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return GenerateSite(pb, site)
 		})
 		return serveEvent.Next()
 	})
+
+	return nil
+}
+
+// DeleteSiteHostFiles removes every published file under sites/{host}/. Used on
+// a domain change to tear down the old host's tree — the file server routes
+// purely by the requested Host header (sites/{host}/...), so leaving the old
+// tree in place would keep serving a stale copy of the site at the previous
+// domain indefinitely.
+func DeleteSiteHostFiles(pb *pocketbase.PocketBase, host string) error {
+	if host == "" {
+		return nil
+	}
+	system, err := pb.NewFilesystem()
+	if err != nil {
+		return err
+	}
+	defer system.Close()
+
+	files, err := system.List("sites/" + host + "/")
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir {
+			continue
+		}
+		if err := system.Delete(file.Key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GenerateSite renders a site's published files (symbols, uploads, pages,
+// sitemap) into sites/{host}/... and cleans up any stale files under that host
+// path. It's the core of the /api/primo/generate endpoint, also called after a
+// host change so the site is immediately served at its new domain without a
+// manual re-publish. Note: this writes under the site's CURRENT host, so on a
+// host change the caller must persist the new host first; the old host's files
+// are torn down separately via DeleteSiteHostFiles.
+func GenerateSite(pb *pocketbase.PocketBase, site *core.Record) error {
+	system, err := pb.NewFilesystem()
+	if err != nil {
+		return err
+	}
+	defer system.Close()
+
+	existingFiles, err := system.List("sites/" + site.GetString("host") + "/")
+	if err != nil {
+		return err
+	}
+
+	symbolFiles, err := generateSymbols(pb, system, site)
+	if err != nil {
+		return err
+	}
+
+	uploadFiles, err := generateUploads(pb, system, site)
+	if err != nil {
+		return err
+	}
+
+	pageFiles, err := generatePages(pb, system, site)
+	if err != nil {
+		return err
+	}
+
+	// Generate sitemap
+	pagesCollection, err := pb.FindCollectionByNameOrId("pages")
+	if err != nil {
+		return err
+	}
+	pages, err := pb.FindRecordsByFilter(
+		pagesCollection.Id,
+		"site = {:site}",
+		"",
+		0,
+		0,
+		dbx.Params{"site": site.Id},
+	)
+	if err != nil {
+		return err
+	}
+	sitemapFile, err := generateSitemap(system, site, pages)
+	if err != nil {
+		return err
+	}
+
+cleanup:
+	for _, file := range existingFiles {
+		if file.IsDir {
+			continue
+		}
+
+		for _, symbolFile := range symbolFiles {
+			if file.Key == symbolFile {
+				continue cleanup
+			}
+		}
+
+		for _, uploadFile := range uploadFiles {
+			if file.Key == uploadFile {
+				continue cleanup
+			}
+		}
+
+		for _, pageFile := range pageFiles {
+			if file.Key == pageFile {
+				continue cleanup
+			}
+		}
+
+		if file.Key == sitemapFile {
+			continue cleanup
+		}
+
+		if err := system.Delete(file.Key); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
