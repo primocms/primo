@@ -233,6 +233,12 @@ func (p railwayProvider) DomainStatus(providerID, host string) (DomainResult, er
 		return DomainResult{}, err
 	}
 	if providerID == "" {
+		// No stored id — e.g. the domain was attached under a different provider
+		// before the instance switched to Railway. Recover by resolving the
+		// domain by hostname instead of failing every poll forever.
+		if existing, found := p.findCustomDomain(host); found {
+			return toDomainResult(existing), nil
+		}
 		return DomainResult{}, errors.New("missing railway custom domain id")
 	}
 

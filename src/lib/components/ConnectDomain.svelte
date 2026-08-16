@@ -33,6 +33,11 @@
 	let domain_records: DnsRecord[] = $state([])
 	let copied_dns: string | null = $state(null)
 	let poll_timer: ReturnType<typeof setTimeout> | null = null
+	// polling: a poll chain is active (guards start_poll re-entry even during the
+	// window a tick holds no timer handle). poll_generation: bumped on stop so an
+	// in-flight tick knows it's been superseded and must not reschedule.
+	let polling = false
+	let poll_generation = 0
 	// The host the shown records/status belong to. Lets us tell "still checking
 	// the attached domain" (→ Refresh) from "typed a new domain" (→ Connect).
 	let attached_host = $state('')
@@ -46,6 +51,14 @@
 	// input-bound field, and the auto-poll for a domain that's already pending
 	// (e.g. reopening the dialog on a site attached in a prior session).
 	$effect(() => {
+		// Both call sites mount this component unconditionally, so only seed
+		// state and poll while the dialog is actually open — otherwise every
+		// site with a pending domain would poll (and pb.Save) in the background
+		// forever, and reactive site updates would clobber state off-screen.
+		if (!open) {
+			stop_poll()
+			return
+		}
 		if (!site) return
 		const assigned = is_host_assigned(site) ? site.host : ''
 		if (!dirty) {
@@ -114,6 +127,9 @@
 	async function handle_connect(event: SubmitEvent) {
 		event.preventDefault()
 		if (!site) return
+		// The submit Button is disabled while connecting, but Enter still fires
+		// the form — guard against a duplicate in-flight attach.
+		if (connecting) return
 		const host = new_site_host.trim().toLowerCase()
 		error = ''
 
@@ -195,10 +211,14 @@
 
 	function start_poll(site_id: string) {
 		// Idempotent: the seeding effect may re-run on reactive site changes, and
-		// we don't want to stack timers or reset the countdown each time.
-		if (poll_timer) return
+		// we don't want to stack timers or reset the countdown each time. Track a
+		// generation so an in-flight tick (which holds no timer handle during its
+		// await) can tell whether it's still the active poll before rescheduling —
+		// otherwise a re-entrant start_poll could spawn a second, untracked chain.
+		if (polling) return
+		polling = true
+		const generation = ++poll_generation
 		const tick = async () => {
-			poll_timer = null
 			try {
 				const response = await fetch(endpoint(site_id, '/status'), { headers: auth_headers() })
 				if (response.ok) {
@@ -209,6 +229,8 @@
 			} catch {
 				// transient — keep polling
 			}
+			// stop_poll() (or a newer start) may have superseded us mid-fetch.
+			if (generation !== poll_generation) return
 			poll_timer = setTimeout(tick, 30000)
 		}
 		poll_timer = setTimeout(tick, 30000)
@@ -217,6 +239,8 @@
 	function stop_poll() {
 		if (poll_timer) clearTimeout(poll_timer)
 		poll_timer = null
+		polling = false
+		poll_generation++ // invalidate any in-flight tick so it won't reschedule
 	}
 
 	// The dialog's onOpenChange only fires on interactive close, not on unmount

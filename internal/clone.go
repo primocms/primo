@@ -184,6 +184,12 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 			if unassigned {
 				newSite.Set("host", newSite.Id)
 				if err := pb.Save(newSite); err != nil {
+					// The placeholder host isn't the host==id sentinel, so leaving
+					// the record behind would strand a site that's neither assigned
+					// nor recognized as unassigned. Roll it back so the caller can retry.
+					if delErr := pb.Delete(newSite); delErr != nil {
+						e.App.Logger().Error("failed to roll back unassigned site", "site", newSite.Id, "error", delErr)
+					}
 					return e.InternalServerError("Failed to finalize unassigned site", err)
 				}
 			}

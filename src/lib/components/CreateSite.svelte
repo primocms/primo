@@ -191,10 +191,17 @@
 		progress_message = 'Creating site...'
 
 		try {
-			// Ensure default group exists
-			if (!site_group) {
-				SiteGroups.create({ name: 'Default', index: 0 })
+			// Ensure a default group exists. Capture the id locally — `site_group`
+			// derives from the store and may not have re-synced right after the
+			// commit, which would send an empty group_id and 400 the clone.
+			let group_id = site_group?.id ?? ''
+			if (!group_id) {
+				const created_group = SiteGroups.create({ name: 'Default', index: 0 })
 				await self.commit()
+				group_id = created_group?.id ?? site_group?.id ?? ''
+			}
+			if (!group_id) {
+				throw new Error('Could not resolve a site group')
 			}
 
 			let response: Response
@@ -206,7 +213,7 @@
 				// Host is intentionally omitted — new sites are created
 				// unassigned (see clone-site endpoint) and get a real domain
 				// assigned separately in the dashboard.
-				form_data.append('group_id', site_group?.id ?? '')
+				form_data.append('group_id', group_id)
 				form_data.append('snapshot_file', uploaded_snapshot_file)
 
 				response = await fetch(`${self.instance?.baseURL}/api/primo/clone-site`, {
@@ -226,7 +233,7 @@
 				} = {
 					name: site_name,
 					// Host omitted — created unassigned (see clone-site endpoint).
-					group_id: site_group?.id ?? ''
+					group_id
 				}
 
 				if (selected_starter_source === 'marketplace') {
