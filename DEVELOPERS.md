@@ -43,6 +43,7 @@ primo/
 ### Prerequisites
 
 - [devenv](https://devenv.sh/) or [Dev Container](https://containers.dev/supporting) compatible development environment (eg. Visual Studio Code)
+- **git** must be installed and the project must be a valid git clone. On entering the devenv shell, devenv activates its `git-hooks` integration and will fail if git is missing or `.git` is in a bad state — a common snag on WSL2 when the repo lives on the Windows filesystem. Clone inside the Linux filesystem (e.g. `~/`, not `/mnt/c/…`) to avoid it.
 
 ### Getting Started
 
@@ -71,9 +72,9 @@ primo/
    This starts both the SvelteKit dev server and PocketBase backend.
 
 4. **Access the application**
-   - Main app: `http://localhost:5173`
+   - Main app: `http://localhost:8090` — the Go/PocketBase server serves the built app **and** the `/api/primo/*` backend together. **Use this URL.**
    - PocketBase Admin: `http://localhost:8090/_`
-   - Built app: `http://localhost:8090`
+   - Vite frontend (`http://localhost:5173`) — frontend-only with hot reload, but it does **not** serve the backend and has no proxy to it. Opening it directly leaves the editor stuck on the loader (every `/api/primo/*` request 404s, which surfaces as a `JSON.parse: unexpected character` error in the console). Iterate on frontend code here if you like, but load the app itself from `:8090`.
 
 ### Available Scripts
 
