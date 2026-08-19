@@ -1544,3 +1544,194 @@ func TestDuplicatePageRouteFailsImport(t *testing.T) {
 			before.GetString("updated"), before.GetString("slug"), after.GetString("updated"), after.GetString("slug"))
 	}
 }
+
+// TestReimportPageWithIDAfterIDlessImport reproduces the real primo.build case:
+// a page first imported WITHOUT an _id gets a random record id; a later import
+// of the same page (same slug) WITH an _id should adopt the exported _id so
+// cross-file page: links resolve. If the importer keeps matching by slug and
+// preserves the old random id, every link referencing the exported _id dangles.
+func TestReimportPageWithIDAfterIDlessImport(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// First import: pricing page with NO _id -> random record id.
+	first := baseSiteFiles()
+	first["pages/pricing.yaml"] = "" +
+		"name: Pricing\n" +
+		"page_type: Default\n" +
+		"sections:\n  - block: hero\n    content:\n      heading: Pricing\n"
+	if _, err := processImport(app, site, zipFiles(t, first), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	randomID := findPageByName(t, app, site, "Pricing").Id
+	t.Logf("first import gave pricing random id=%q", randomID)
+
+	// Second import: same page, now WITH an explicit _id.
+	const wantID = "pricingpage0001"
+	second := baseSiteFiles()
+	second["pages/pricing.yaml"] = "" +
+		"_id: " + wantID + "\n" +
+		"name: Pricing\n" +
+		"page_type: Default\n" +
+		"sections:\n  - block: hero\n    content:\n      heading: Pricing\n"
+	if _, err := processImport(app, site, zipFiles(t, second), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	got := findPageByName(t, app, site, "Pricing").Id
+	if got != wantID {
+		t.Fatalf("re-import did not adopt exported _id: want %q, got %q (old random id=%q) -- links referencing %q would dangle",
+			wantID, got, randomID, wantID)
+	}
+}
+
+// TestSameLeafSlugDifferentFolders probes whether /team/about and /careers/about
+// (same leaf slug "about", different parents, different _ids) collide during
+// import — i.e. does the unscoped slug/name lookup match the wrong page?
+func TestSameLeafSlugDifferentFolders(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	f := baseSiteFiles()
+	// parent pages so children aren't orphaned
+	f["pages/team/index.yaml"] = "_id: teamindexpage01\nname: Team\npage_type: Default\nsections: []\n"
+	f["pages/careers/index.yaml"] = "_id: careerindexpg01\nname: Careers\npage_type: Default\nsections: []\n"
+	f["pages/team/about.yaml"] = "_id: teamaboutpage01\nname: Team About\npage_type: Default\nsections: []\n"
+	f["pages/careers/about.yaml"] = "_id: careraboutpg001\nname: Careers About\npage_type: Default\nsections: []\n"
+
+	if _, err := processImport(app, site, zipFiles(t, f), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	// Expect TWO distinct about pages with their exported ids preserved.
+	teamAbout, err1 := app.FindRecordById("pages", "teamaboutpage01")
+	careerAbout, err2 := app.FindRecordById("pages", "careraboutpg001")
+	all, _ := app.FindRecordsByFilter("pages", "site = {:site} && slug = 'about'", "", 0, 0, map[string]any{"site": site.Id})
+	t.Logf("pages with slug 'about': %d", len(all))
+	for _, p := range all {
+		t.Logf("  id=%s name=%q parent=%s", p.Id, p.GetString("name"), p.GetString("parent"))
+	}
+	if err1 != nil {
+		t.Errorf("team/about lost its _id teamaboutpage01: %v", err1)
+	}
+	if err2 != nil {
+		t.Errorf("careers/about lost its _id careraboutpg001: %v", err2)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 distinct 'about' pages, got %d (collision merged them)", len(all))
+	}
+	_ = teamAbout
+	_ = careerAbout
+}
+
+// TestNameFallbackCrossesFolders isolates the real trigger: when a page's _id
+// does NOT match any existing record (so id-lookup misses) and two pages share
+// the same NAME, the unscoped name fallback can bind the import to the wrong
+// existing page. Simulated by pre-seeding a page whose id differs from the file.
+func TestNameFallbackCrossesFolders(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// First import: a "Docs" page under /product with a known id.
+	f1 := baseSiteFiles()
+	f1["pages/product/index.yaml"] = "_id: productindex001\nname: Product\npage_type: Default\nsections: []\n"
+	f1["pages/product/docs.yaml"] = "_id: productdocs0001\nname: Docs\npage_type: Default\nsections: []\n"
+	if _, err := processImport(app, site, zipFiles(t, f1), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Second import ADDS a different "Docs" page under /support, with a NEW _id.
+	// Same name "Docs", different folder, id-lookup will miss -> name fallback.
+	f2 := baseSiteFiles()
+	f2["pages/product/index.yaml"] = "_id: productindex001\nname: Product\npage_type: Default\nsections: []\n"
+	f2["pages/product/docs.yaml"] = "_id: productdocs0001\nname: Docs\npage_type: Default\nsections: []\n"
+	f2["pages/support/index.yaml"] = "_id: supportindex001\nname: Support\npage_type: Default\nsections: []\n"
+	f2["pages/support/docs.yaml"] = "_id: supportdocs0001\nname: Docs\npage_type: Default\nsections: []\n"
+	if _, err := processImport(app, site, zipFiles(t, f2), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	all, _ := app.FindRecordsByFilter("pages", "site = {:site} && name = 'Docs'", "", 0, 0, map[string]any{"site": site.Id})
+	t.Logf("pages named 'Docs': %d", len(all))
+	for _, p := range all {
+		t.Logf("  id=%s parent=%s slug=%s", p.Id, p.GetString("parent"), p.GetString("slug"))
+	}
+	_, e1 := app.FindRecordById("pages", "productdocs0001")
+	_, e2 := app.FindRecordById("pages", "supportdocs0001")
+	if e1 != nil {
+		t.Errorf("product/docs lost its _id: %v", e1)
+	}
+	if e2 != nil {
+		t.Errorf("support/docs never got its _id supportdocs0001 (name fallback bound it to product/docs): %v", e2)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 distinct 'Docs' pages, got %d", len(all))
+	}
+}
+
+// TestMovePageKeepsIdentity guards that a legitimate move (same _id, new folder)
+// is NOT treated as a cross-folder false match by the new parent-scope guard.
+// The page should keep its _id and simply re-parent, not get deleted/recreated.
+func TestMovePageKeepsIdentity(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// Import /about with a fixed id.
+	f1 := baseSiteFiles()
+	f1["pages/about.yaml"] = "_id: aboutpage000001\nname: About\npage_type: Default\nsections: []\n"
+	if _, err := processImport(app, site, zipFiles(t, f1), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Move it to /company/about (same _id), add the parent folder.
+	f2 := baseSiteFiles()
+	f2["pages/company/index.yaml"] = "_id: companyindex001\nname: Company\npage_type: Default\nsections: []\n"
+	f2["pages/company/about.yaml"] = "_id: aboutpage000001\nname: About\npage_type: Default\nsections: []\n"
+	if _, err := processImport(app, site, zipFiles(t, f2), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	moved, err := app.FindRecordById("pages", "aboutpage000001")
+	if err != nil {
+		t.Fatalf("moved page lost its _id: %v", err)
+	}
+	if moved.GetString("parent") != "companyindex001" {
+		t.Fatalf("move did not re-parent: parent=%q want companyindex001", moved.GetString("parent"))
+	}
+	// Only one About page should exist (moved, not duplicated).
+	all, _ := app.FindRecordsByFilter("pages", "site = {:site} && name = 'About'", "", 0, 0, map[string]any{"site": site.Id})
+	if len(all) != 1 {
+		t.Fatalf("expected 1 About page after move, got %d", len(all))
+	}
+}
+
+// TestFreshImportPreservesIdWithHomepageParent mirrors the real site: a root
+// page gets the homepage as its parent (see importPages), and page_type is
+// lowercase "default". Reproduces why the marketing-site pricing page didn't
+// keep its _id on a fresh import.
+func TestFreshImportPreservesIdWithHomepageParent(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	f := baseSiteFiles()
+	// Home has an explicit _id, like a real exported site.
+	f["pages/index.yaml"] = "_id: homepage0000001\nname: Home\npage_type: Default\nsections: []\n"
+	f["pages/pricing.yaml"] = "_id: 87zp1xcvpevbkd6\nname: Pricing\npage_type: Default\nsections: []\n"
+
+	if _, err := processImport(app, site, zipFiles(t, f), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	got := findPageByName(t, app, site, "Pricing").Id
+	if got != "87zp1xcvpevbkd6" {
+		t.Fatalf("fresh import did not preserve pricing _id: got %q want 87zp1xcvpevbkd6", got)
+	}
+	if _, err := app.FindRecordById("pages", "homepage0000001"); err != nil {
+		t.Fatalf("homepage lost its _id: %v", err)
+	}
+}
