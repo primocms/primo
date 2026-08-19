@@ -912,6 +912,22 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	// one at random.
 	seenPaths := make(map[string]string)
 
+	// Parent/slug maps for every page already in the DB, so the diff pass can
+	// reject a slug/name fallback match that actually lives in a different
+	// folder. Without this, a same-name page under another parent (e.g.
+	// /product/docs vs /support/docs) is reported as "modified" when it's
+	// really an unrelated page — importPage then creates the correct page, and
+	// the preview diff disagrees with what the import does. Built once here;
+	// the DB doesn't change during this read-only diff pass.
+	existingParentMap := make(map[string]string)
+	existingSlugMap := make(map[string]string)
+	if existingPages, err := app.FindRecordsByFilter("pages", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId}); err == nil {
+		for _, p := range existingPages {
+			existingParentMap[p.Id] = p.GetString("parent")
+			existingSlugMap[p.Id] = p.GetString("slug")
+		}
+	}
+
 	// Iterate in sorted key order so duplicate-route errors (and any other
 	// per-file behavior) are deterministic across runs.
 	sortedFilePaths := make([]string, 0, len(files))
@@ -975,6 +991,23 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		if existing == nil {
 			// Try finding by name as fallback
 			existing, _ = app.FindFirstRecordByFilter("pages", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": pageData.Name})
+		}
+
+		// A slug/name fallback match may point at a page in a different folder
+		// that happens to share a leaf slug or display name. importPage rejects
+		// that as a cross-folder false positive and creates a fresh record;
+		// mirror that here so the diff reports this file as Added, not Modified.
+		//
+		// Only do this when the file asserts a specific identity via a valid
+		// exported _id that the matched record doesn't have — that's the signal
+		// these are two DISTINCT pages. A file WITHOUT an _id matched by name at
+		// a different path is a legitimate move/rename of one page (there's no
+		// competing identity), and must still be reported as Modified.
+		if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) && existing.Id != pageData.ID {
+			existingPath := buildFullPagePath(existing.Id, existingParentMap, existingSlugMap)
+			if existingPath != pagePath {
+				existing = nil
+			}
 		}
 
 		// Slug/parent are derived from the file path, not from raw_source, so a
@@ -1930,11 +1963,14 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	// as the "existing" record for THIS file. Reusing it would re-parent and
 	// overwrite the wrong page, silently merging two distinct pages into one.
 	//
-	// Only a match by exported _id is trustworthy across folders. If the match
-	// came from the slug/name fallback (its id differs from this file's _id)
-	// and it lives under a different parent, it's a false positive — drop it so
-	// the create branch below makes a fresh record under the correct _id.
-	if existing != nil && existing.Id != pageData.ID && existing.GetString("parent") != parentId {
+	// Drop the match only when this file asserts a specific identity via a valid
+	// exported _id that the matched record doesn't have, AND the record lives
+	// under a different parent — that's the signal these are two DISTINCT pages.
+	// A file WITHOUT an _id matched by name under a different parent is a
+	// legitimate move/rename of one page (no competing identity), so it must
+	// keep matching and re-parent rather than fork into a duplicate.
+	if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) &&
+		existing.Id != pageData.ID && existing.GetString("parent") != parentId {
 		existing = nil
 	}
 

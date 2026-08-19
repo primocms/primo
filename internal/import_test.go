@@ -1735,3 +1735,119 @@ func TestFreshImportPreservesIdWithHomepageParent(t *testing.T) {
 		t.Fatalf("homepage lost its _id: %v", err)
 	}
 }
+
+// TestSectionLinkResolvesAfterPageRekey addresses CodeRabbit's concern that a
+// re-key could leave a block link pointing at a deleted page id. A landing
+// page's section links to a target page by the target's exported _id. The
+// target is first imported idless (random id), then re-imported WITH its _id
+// (triggering the re-key). After import, the section link's page ref must point
+// at a live page — specifically the target's exported _id.
+func TestSectionLinkResolvesAfterPageRekey(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	const targetID = "targetpage00001"
+
+	// A block whose single field is a link, so a section can store a page ref.
+	linkBlock := map[string]string{
+		"blocks/linkcard/config.yaml":      "name: linkcard\n",
+		"blocks/linkcard/component.svelte": "<a href={cta.url}>{cta.label}</a>\n",
+		"blocks/linkcard/fields.yaml":      "- name: cta\n  label: CTA\n  type: link\n",
+		"blocks/linkcard/content.yaml":     "{}\n",
+	}
+
+	base := func(withTargetID bool) map[string]string {
+		f := baseSiteFiles()
+		for k, v := range linkBlock {
+			f[k] = v
+		}
+		f["page-types/default/config.yaml"] = "name: Default\nallowed_blocks:\n  - hero\n  - linkcard\n"
+		idLine := ""
+		if withTargetID {
+			idLine = "_id: " + targetID + "\n"
+		}
+		f["pages/target.yaml"] = idLine + "name: Target\npage_type: Default\nsections: []\n"
+		// Landing page's section links to the target by its exported _id.
+		f["pages/landing.yaml"] = "" +
+			"_id: landingpage0001\nname: Landing\npage_type: Default\n" +
+			"sections:\n" +
+			"  - block: linkcard\n" +
+			"    content:\n" +
+			"      cta:\n" +
+			"        label: See pricing\n" +
+			"        page: " + targetID + "\n"
+		return f
+	}
+
+	// First import: target has NO _id -> gets a random id; landing's link
+	// already references the future exported _id (targetID).
+	if _, err := processImport(app, site, zipFiles(t, base(false)), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Second import: target now carries its _id -> re-key to targetID.
+	if _, err := processImport(app, site, zipFiles(t, base(true)), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// The target must now exist under its exported _id.
+	if _, err := app.FindRecordById("pages", targetID); err != nil {
+		t.Fatalf("target page not present under exported _id %q: %v", targetID, err)
+	}
+
+	// The landing section's cta.page ref must point at a LIVE page (targetID).
+	landing := findPageByName(t, app, site, "Landing")
+	sections, _ := app.FindRecordsByFilter("page_sections", "page = {:page}", "", 0, 0, map[string]any{"page": landing.Id})
+	var refFound, refResolves bool
+	for _, s := range sections {
+		entries, _ := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, map[string]any{"section": s.Id})
+		for _, e := range entries {
+			val := e.GetString("value")
+			if strings.Contains(val, "\"page\"") && strings.Contains(val, targetID) {
+				refFound = true
+				if _, err := app.FindRecordById("pages", targetID); err == nil {
+					refResolves = true
+				}
+			}
+		}
+	}
+	if !refFound {
+		t.Fatalf("landing section link ref to %q not found in stored entries", targetID)
+	}
+	if !refResolves {
+		t.Fatalf("landing section link points at %q but no such page exists (dangling after re-key)", targetID)
+	}
+}
+
+// TestIdlessMoveToNewParentKeepsOnePage guards that Part 1's parent-scope guard
+// in importPage does not duplicate an idless page that moves under a new parent.
+// Without an _id the page is matched by name; a naive "different parent -> drop"
+// would create a second page. It must remain a single (moved) page.
+func TestIdlessMoveToNewParentKeepsOnePage(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	body := "name: About\npage_type: Default\nsections: []\n"
+
+	first := baseSiteFiles()
+	first["pages/about.yaml"] = body
+	if _, err := processImport(app, site, zipFiles(t, first), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+
+	// Move under a new parent folder /company (no _id; matched by name).
+	second := baseSiteFiles()
+	delete(second, "pages/about.yaml")
+	second["pages/company/index.yaml"] = "name: Company\npage_type: Default\nsections: []\n"
+	second["pages/company/about.yaml"] = body
+	if _, err := processImport(app, site, zipFiles(t, second), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	all, _ := app.FindRecordsByFilter("pages", "site = {:site} && name = 'About'", "", 0, 0, map[string]any{"site": site.Id})
+	if len(all) != 1 {
+		t.Fatalf("idless move should keep ONE About page, got %d", len(all))
+	}
+}
