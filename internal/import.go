@@ -912,6 +912,22 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	// one at random.
 	seenPaths := make(map[string]string)
 
+	// Parent/slug maps for every page already in the DB, so the diff pass can
+	// reject a slug/name fallback match that actually lives in a different
+	// folder. Without this, a same-name page under another parent (e.g.
+	// /product/docs vs /support/docs) is reported as "modified" when it's
+	// really an unrelated page — importPage then creates the correct page, and
+	// the preview diff disagrees with what the import does. Built once here;
+	// the DB doesn't change during this read-only diff pass.
+	existingParentMap := make(map[string]string)
+	existingSlugMap := make(map[string]string)
+	if existingPages, err := app.FindRecordsByFilter("pages", "site = {:site}", "", 0, 0, dbx.Params{"site": siteId}); err == nil {
+		for _, p := range existingPages {
+			existingParentMap[p.Id] = p.GetString("parent")
+			existingSlugMap[p.Id] = p.GetString("slug")
+		}
+	}
+
 	// Iterate in sorted key order so duplicate-route errors (and any other
 	// per-file behavior) are deterministic across runs.
 	sortedFilePaths := make([]string, 0, len(files))
@@ -975,6 +991,23 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		if existing == nil {
 			// Try finding by name as fallback
 			existing, _ = app.FindFirstRecordByFilter("pages", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": pageData.Name})
+		}
+
+		// A slug/name fallback match may point at a page in a different folder
+		// that happens to share a leaf slug or display name. importPage rejects
+		// that as a cross-folder false positive and creates a fresh record;
+		// mirror that here so the diff reports this file as Added, not Modified.
+		//
+		// Only do this when the file asserts a specific identity via a valid
+		// exported _id that the matched record doesn't have — that's the signal
+		// these are two DISTINCT pages. A file WITHOUT an _id matched by name at
+		// a different path is a legitimate move/rename of one page (there's no
+		// competing identity), and must still be reported as Modified.
+		if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) && existing.Id != pageData.ID {
+			existingPath := buildFullPagePath(existing.Id, existingParentMap, existingSlugMap)
+			if existingPath != pagePath {
+				existing = nil
+			}
 		}
 
 		// Slug/parent are derived from the file path, not from raw_source, so a
@@ -1921,6 +1954,37 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	slug := pagePath
 	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
 		slug = pagePath[lastSlash+1:]
+	}
+
+	// `existing` was matched in an earlier pass by id, then slug, then name —
+	// and the slug/name filters are NOT scoped by parent. So a page in a
+	// different folder that happens to share a leaf slug or a display name
+	// (e.g. /product/docs vs /support/docs, both named "Docs") can be matched
+	// as the "existing" record for THIS file. Reusing it would re-parent and
+	// overwrite the wrong page, silently merging two distinct pages into one.
+	//
+	// Drop the match only when this file asserts a specific identity via a valid
+	// exported _id that the matched record doesn't have, AND the record lives
+	// under a different parent — that's the signal these are two DISTINCT pages.
+	// A file WITHOUT an _id matched by name under a different parent is a
+	// legitimate move/rename of one page (no competing identity), so it must
+	// keep matching and re-parent rather than fork into a duplicate.
+	if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) &&
+		existing.Id != pageData.ID && existing.GetString("parent") != parentId {
+		existing = nil
+	}
+
+	// A genuine match (same parent) whose record id has drifted from a valid
+	// exported _id still orphans every cross-file `page:` link that references
+	// that _id — the link points at an id no page has. The importer already
+	// rebuilds a page's sections/entries from the file on every import, so the
+	// record carries no state worth preserving: delete it and let the create
+	// branch recreate it under the exported _id. Children rebuild as usual.
+	if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) && existing.Id != pageData.ID {
+		if err := app.Delete(existing); err != nil {
+			return "", nil, fmt.Errorf("re-key page %q to exported _id %s: %w", pagePath, pageData.ID, err)
+		}
+		existing = nil
 	}
 
 	// No-op guard: if the incoming page bytes are byte-identical to what we
