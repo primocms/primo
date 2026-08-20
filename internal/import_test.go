@@ -1836,6 +1836,7 @@ func TestIdlessMoveToNewParentKeepsOnePage(t *testing.T) {
 	if _, err := processImport(app, site, zipFiles(t, first), false); err != nil {
 		t.Fatalf("first import: %v", err)
 	}
+	before := findPageByName(t, app, site, "About")
 
 	// Move under a new parent folder /company (no _id; matched by name).
 	second := baseSiteFiles()
@@ -1849,5 +1850,80 @@ func TestIdlessMoveToNewParentKeepsOnePage(t *testing.T) {
 	all, _ := app.FindRecordsByFilter("pages", "site = {:site} && name = 'About'", "", 0, 0, map[string]any{"site": site.Id})
 	if len(all) != 1 {
 		t.Fatalf("idless move should keep ONE About page, got %d", len(all))
+	}
+	// The remaining record must be the SAME one, re-parented — not a fresh
+	// record that merely happens to net one page.
+	moved := all[0]
+	if moved.Id != before.Id {
+		t.Fatalf("moved page identity changed: before=%s after=%s (delete+recreate, not a move)", before.Id, moved.Id)
+	}
+	company := findPageByName(t, app, site, "Company")
+	if moved.GetString("parent") != company.Id {
+		t.Fatalf("moved page not re-parented: parent=%q want %q (Company)", moved.GetString("parent"), company.Id)
+	}
+}
+
+// TestSiteContentUrlLinkResolvesAfterRekey covers CodeRabbit's exact concern:
+// a site-content link authored as `url: /pricing` is converted to a page ref
+// during import. If that conversion ran against pre-rekey page ids, the stored
+// ref would dangle after the pricing page is re-keyed to its exported _id. The
+// stored site_entries value must carry the FINAL exported id and point at a
+// live page.
+func TestSiteContentUrlLinkResolvesAfterRekey(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	const pricingID = "pricingpage0001"
+
+	build := func(withPricingID bool) map[string]string {
+		f := baseSiteFiles()
+		f["site/fields.yaml"] = "- name: home_cta\n  label: Home CTA\n  type: link\n"
+		// Authored as a URL link; the importer converts it to a page ref.
+		f["site/content.yaml"] = "home_cta:\n  label: See pricing\n  url: /pricing\n"
+		idLine := ""
+		if withPricingID {
+			idLine = "_id: " + pricingID + "\n"
+		}
+		f["pages/pricing.yaml"] = idLine + "name: Pricing\npage_type: Default\nsections: []\n"
+		return f
+	}
+
+	// First import: pricing has no _id -> random id; url:/pricing converts to it.
+	if _, err := processImport(app, site, zipFiles(t, build(false)), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	// Second import: pricing now carries its _id -> re-key.
+	if _, err := processImport(app, site, zipFiles(t, build(true)), false); err != nil {
+		t.Fatalf("second import: %v", err)
+	}
+
+	// The pricing page exists under its exported _id.
+	if _, err := app.FindRecordById("pages", pricingID); err != nil {
+		t.Fatalf("pricing not present under exported _id: %v", err)
+	}
+
+	// The stored site_entries link value must reference the FINAL id (pricingID),
+	// not a stale pre-rekey id, and that id must resolve to a live page.
+	entries, err := app.FindRecordsByFilter(
+		"site_entries",
+		"field.site = {:site}",
+		"", 0, 0, map[string]any{"site": site.Id},
+	)
+	if err != nil {
+		t.Fatalf("load site entries: %v", err)
+	}
+	var found bool
+	for _, e := range entries {
+		val := e.GetString("value")
+		if strings.Contains(val, "\"page\"") {
+			found = true
+			if !strings.Contains(val, pricingID) {
+				t.Fatalf("site link ref does not point at final id %q; value=%s", pricingID, val)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("no page ref stored for the site url link (conversion did not run); entries=%d", len(entries))
 	}
 }
