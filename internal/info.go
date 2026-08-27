@@ -91,18 +91,23 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 			siteCap := getCap(pb, "site_cap", "PRIMO_SITE_CAP")
 			editorCap := getCap(pb, "editor_cap", "PRIMO_EDITOR_CAP")
 			siteCount, _ := pb.CountRecords("sites")
+			// library_block_count lets the setup screen show what a fresh
+			// `primo deploy` just seeded ("1 site · 12 library blocks loaded")
+			// before the operator creates their account.
+			libraryBlockCount, _ := pb.CountRecords("library_symbols")
 
 			return requestEvent.JSON(200, struct {
-				Id               string `json:"id"`
-				Version          string `json:"version"`
-				TelemetryEnabled bool   `json:"telemetry_enabled"`
-				SMTPEnabled      bool   `json:"smtp_enabled"`
-				HostedMode       bool   `json:"hosted_mode"`
-				BillingURL       string `json:"billing_url,omitempty"`
-				DevMode          bool   `json:"dev_mode"`
-				SiteCap          int    `json:"site_cap,omitempty"`
-				SiteCount        int64  `json:"site_count"`
-				EditorCap        int    `json:"editor_cap,omitempty"`
+				Id                string `json:"id"`
+				Version           string `json:"version"`
+				TelemetryEnabled  bool   `json:"telemetry_enabled"`
+				SMTPEnabled       bool   `json:"smtp_enabled"`
+				HostedMode        bool   `json:"hosted_mode"`
+				BillingURL        string `json:"billing_url,omitempty"`
+				DevMode           bool   `json:"dev_mode"`
+				SiteCap           int    `json:"site_cap,omitempty"`
+				SiteCount         int64  `json:"site_count"`
+				LibraryBlockCount int64  `json:"library_block_count"`
+				EditorCap         int    `json:"editor_cap,omitempty"`
 				// Domain provider + base domain let the editor pick the
 				// connect-domain flow: "railway" runs the attach+poll flow,
 				// "manual" shows generic DNS guidance. base_domain (if set)
@@ -110,18 +115,19 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				DomainProvider string `json:"domain_provider"`
 				BaseDomain     string `json:"base_domain,omitempty"`
 			}{
-				Id:               id,
-				Version:          version,
-				TelemetryEnabled: false, // Analytics disabled
-				SMTPEnabled:      smtpEnabled,
-				HostedMode:       isHostedMode(),
-				BillingURL:       os.Getenv("PRIMO_BILLING_URL"),
-				DevMode:          DevMode,
-				SiteCap:          siteCap,
-				SiteCount:        siteCount,
-				EditorCap:        editorCap,
-				DomainProvider:   getDomainProvider().Name(),
-				BaseDomain:       baseDomain(),
+				Id:                id,
+				Version:           version,
+				TelemetryEnabled:  false, // Analytics disabled
+				SMTPEnabled:       smtpEnabled,
+				HostedMode:        isHostedMode(),
+				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),
+				DevMode:           DevMode,
+				SiteCap:           siteCap,
+				SiteCount:         siteCount,
+				LibraryBlockCount: libraryBlockCount,
+				EditorCap:         editorCap,
+				DomainProvider:    getDomainProvider().Name(),
+				BaseDomain:        baseDomain(),
 			})
 		})
 

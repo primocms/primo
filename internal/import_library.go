@@ -36,13 +36,60 @@ type libraryBlockLocation struct {
 	blockFolder string
 }
 
+// libraryImportAuth is the outcome of the import-library auth gate. Exactly one
+// of {allow, reject} is meaningful per call: reject != "" means deny with that
+// reason; otherwise the request proceeds. freshServer marks an unauthenticated
+// zero-site seed, which is forced strictly additive downstream.
+type libraryImportAuth struct {
+	reject      string // "" = allowed; otherwise "unauthorized" or "internal"
+	freshServer bool
+}
+
+// libraryImportAuthDecision decides whether an import-library request may
+// proceed. Authenticated or localhost callers always pass. An unauthenticated
+// remote caller is allowed ONLY on a fresh server (zero sites), mirroring the
+// bootstrap endpoint's guard so `primo deploy` can seed the library in the same
+// pre-account window it seeds sites. We fail closed: if the site lookup errored
+// we can't prove the server is fresh, so we reject rather than allow.
+//
+// Extracted as a pure function so the security-sensitive gate is unit-testable
+// without an HTTP/PocketBase harness (the handler has no such test scaffold).
+func libraryImportAuthDecision(authed, isLocal bool, siteCount int, lookupErr error) libraryImportAuth {
+	if authed || isLocal {
+		return libraryImportAuth{}
+	}
+	if lookupErr != nil {
+		return libraryImportAuth{reject: "internal"}
+	}
+	if siteCount > 0 {
+		return libraryImportAuth{reject: "unauthorized"}
+	}
+	return libraryImportAuth{freshServer: true}
+}
+
 func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/primo/import-library", func(e *core.RequestEvent) error {
+			// Only look sites up when it can matter (unauthenticated remote
+			// caller); authed/localhost skip the query entirely.
+			authed := e.Auth != nil
 			isLocal := IsLocalhost(e)
-			if e.Auth == nil && !isLocal {
+			siteCount := 0
+			var lookupErr error
+			if !authed && !isLocal {
+				sites, err := pb.FindAllRecords("sites")
+				lookupErr = err
+				siteCount = len(sites)
+			}
+
+			decision := libraryImportAuthDecision(authed, isLocal, siteCount, lookupErr)
+			switch decision.reject {
+			case "internal":
+				return e.InternalServerError("Failed to check existing sites", lookupErr)
+			case "unauthorized":
 				return e.UnauthorizedError("Authentication required", nil)
 			}
+			freshServer := decision.freshServer
 
 			if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
 				return e.BadRequestError("Failed to parse form", err)
@@ -69,6 +116,15 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				if err := json.Unmarshal([]byte(raw), &deletes); err != nil {
 					return e.BadRequestError("Invalid deletes manifest: "+err.Error(), err)
 				}
+			}
+
+			// An unauthenticated fresh-server seed is strictly additive: never
+			// honor a deletes manifest on that path. There's nothing to delete
+			// on a zero-site server anyway, but this keeps the unauthenticated
+			// surface incapable of destroying records even if the DB isn't
+			// actually empty (e.g. library records without a site).
+			if freshServer {
+				deletes = DeletesManifest{}
 			}
 
 			summary, err := processLibraryImport(pb, zipData, deletes)
