@@ -47,21 +47,29 @@ type libraryImportAuth struct {
 
 // libraryImportAuthDecision decides whether an import-library request may
 // proceed. Authenticated or localhost callers always pass. An unauthenticated
-// remote caller is allowed ONLY on a fresh server (zero sites), mirroring the
-// bootstrap endpoint's guard so `primo deploy` can seed the library in the same
-// pre-account window it seeds sites. We fail closed: if the site lookup errored
-// we can't prove the server is fresh, so we reject rather than allow.
+// remote caller is allowed ONLY on a fresh server (zero sites) whose library is
+// also still empty, mirroring the bootstrap endpoint's guard so `primo deploy`
+// can seed the library in the same pre-account window it seeds sites.
+//
+// The library-empty requirement matters because import is upsert-by-name, not
+// create-only: processLibraryImport matches existing groups/symbols by name and
+// updates them (and re-imports clear a matched block's stale fields/entries).
+// The library is instance-wide, so a zero-site server can still hold library
+// records; without this check an unauthenticated caller could overwrite them
+// during the deploy window. Requiring an empty library makes the path genuinely
+// create-only. We fail closed: if either lookup errored we can't prove the
+// server is fresh, so we reject rather than allow.
 //
 // Extracted as a pure function so the security-sensitive gate is unit-testable
 // without an HTTP/PocketBase harness (the handler has no such test scaffold).
-func libraryImportAuthDecision(authed, isLocal bool, siteCount int, lookupErr error) libraryImportAuth {
+func libraryImportAuthDecision(authed, isLocal bool, siteCount, libraryCount int, lookupErr error) libraryImportAuth {
 	if authed || isLocal {
 		return libraryImportAuth{}
 	}
 	if lookupErr != nil {
 		return libraryImportAuth{reject: "internal"}
 	}
-	if siteCount > 0 {
+	if siteCount > 0 || libraryCount > 0 {
 		return libraryImportAuth{reject: "unauthorized"}
 	}
 	return libraryImportAuth{freshServer: true}
@@ -70,22 +78,30 @@ func libraryImportAuthDecision(authed, isLocal bool, siteCount int, lookupErr er
 func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/primo/import-library", func(e *core.RequestEvent) error {
-			// Only look sites up when it can matter (unauthenticated remote
-			// caller); authed/localhost skip the query entirely.
+			// Only count sites/library when it can matter (unauthenticated
+			// remote caller); authed/localhost skip the queries entirely. The
+			// unauthenticated path requires BOTH zero sites and an empty
+			// library — see libraryImportAuthDecision.
 			authed := e.Auth != nil
 			isLocal := IsLocalhost(e)
-			siteCount := 0
+			var siteCount, libraryCount int64
 			var lookupErr error
 			if !authed && !isLocal {
-				sites, err := pb.FindAllRecords("sites")
-				lookupErr = err
-				siteCount = len(sites)
+				siteCount, lookupErr = pb.CountRecords("sites")
+				if lookupErr == nil {
+					var symbolCount, groupCount int64
+					symbolCount, lookupErr = pb.CountRecords("library_symbols")
+					if lookupErr == nil {
+						groupCount, lookupErr = pb.CountRecords("library_symbol_groups")
+					}
+					libraryCount = symbolCount + groupCount
+				}
 			}
 
-			decision := libraryImportAuthDecision(authed, isLocal, siteCount, lookupErr)
+			decision := libraryImportAuthDecision(authed, isLocal, int(siteCount), int(libraryCount), lookupErr)
 			switch decision.reject {
 			case "internal":
-				return e.InternalServerError("Failed to check existing sites", lookupErr)
+				return e.InternalServerError("Failed to check whether the server is fresh", lookupErr)
 			case "unauthorized":
 				return e.UnauthorizedError("Authentication required", nil)
 			}
@@ -118,11 +134,11 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				}
 			}
 
-			// An unauthenticated fresh-server seed is strictly additive: never
-			// honor a deletes manifest on that path. There's nothing to delete
-			// on a zero-site server anyway, but this keeps the unauthenticated
-			// surface incapable of destroying records even if the DB isn't
-			// actually empty (e.g. library records without a site).
+			// The unauthenticated fresh-server path is gated on an empty library
+			// (see libraryImportAuthDecision), so it only ever creates records —
+			// there is nothing to update or delete. Belt-and-suspenders: drop any
+			// deletes manifest so a caller can't smuggle deletions in even if the
+			// emptiness check and this import were to race.
 			if freshServer {
 				deletes = DeletesManifest{}
 			}
