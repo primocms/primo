@@ -10,6 +10,7 @@ export type InstanceInfo = {
 	dev_mode: boolean
 	site_cap?: number
 	site_count: number
+	library_block_count: number
 	editor_cap?: number
 }
 

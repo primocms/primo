@@ -3,6 +3,16 @@
 	import { Users } from '$lib/pocketbase/collections'
 	import { Loader } from 'lucide-svelte'
 	import { self } from '$lib/pocketbase/managers'
+	import { instance } from '$lib/instance'
+
+	// A fresh `primo deploy` seeds sites + library before any account exists,
+	// so on first visit we can tell the operator what's already loaded. Falls
+	// back gracefully to 0 when the fields are absent (older server).
+	const seeded_sites = instance.site_count ?? 0
+	const seeded_blocks = instance.library_block_count ?? 0
+	const has_seeded_content = seeded_sites > 0 || seeded_blocks > 0
+
+	const count_label = (n: number, singular: string) => `${n} ${singular}${n === 1 ? '' : 's'}`
 
 	let email = $state('')
 	let password = $state('')
@@ -92,7 +102,13 @@
 		<div class="box">
 			<header>
 				<h1>Welcome to Primo</h1>
-				<p class="subtitle">Create your admin account to get started</p>
+				<p class="subtitle">
+					{#if has_seeded_content}
+						Your workspace is loaded. Create your admin account to start editing.
+					{:else}
+						Create your admin account to get started
+					{/if}
+				</p>
 			</header>
 
 			{#if checking_setup}
@@ -107,6 +123,20 @@
 					</div>
 				{/if}
 			{:else}
+				{#if has_seeded_content}
+					<div class="seeded" data-test-id="seeded-content">
+						<p class="seeded-label">Already loaded on this server</p>
+						<ul class="seeded-list">
+							{#if seeded_sites > 0}
+								<li>{count_label(seeded_sites, 'site')}</li>
+							{/if}
+							{#if seeded_blocks > 0}
+								<li>{count_label(seeded_blocks, 'library block')}</li>
+							{/if}
+						</ul>
+					</div>
+				{/if}
+
 				{#if error}
 					<div class="error">{error}</div>
 				{/if}
@@ -231,6 +261,41 @@
 				span {
 					background-color: #4ade80;
 					color: white;
+				}
+			}
+		}
+	}
+	.seeded {
+		background-color: #2a2a2a;
+		border: 1px solid #444;
+		border-left: 2px solid #ff6b35;
+		border-radius: 4px;
+		padding: 1rem 1.25rem;
+		margin-bottom: 2rem;
+
+		.seeded-label {
+			font-size: 12px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: #b6b6b6;
+			margin: 0 0 0.5rem;
+		}
+
+		.seeded-list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: grid;
+			gap: 0.25rem;
+
+			li {
+				font-size: 14px;
+				color: #dadada;
+
+				&::before {
+					content: '✓';
+					color: #4ade80;
+					margin-right: 0.5rem;
 				}
 			}
 		}
