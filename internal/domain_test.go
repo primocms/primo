@@ -76,6 +76,47 @@ func TestManualProviderCustomDomainStaysPending(t *testing.T) {
 	}
 }
 
+// TestManualMarkLiveSurvivesStatusCheck guards the mark-live → status-check
+// sequence: the manual provider's poll always reports "pending" for an
+// external host, so persisting that poll would silently revert the operator's
+// explicit confirmation. The status endpoint must serve the stored "live"
+// instead of polling.
+func TestManualMarkLiveSurvivesStatusCheck(t *testing.T) {
+	t.Setenv("PRIMO_DOMAIN_PROVIDER", "")
+	t.Setenv("PRIMO_BASE_DOMAIN", "acme.primo.page")
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	// Attach an external domain: pending, and status checks still poll.
+	if err := applyDomainResult(app, site, "theirbrand.com", DomainResult{Status: DomainStatusPending}); err != nil {
+		t.Fatalf("attach: %v", err)
+	}
+	if _, ok := domainStatusOverride(site); ok {
+		t.Fatal("pending manual domain should still poll the provider")
+	}
+
+	// Operator confirms reachability (mark-live persists "live").
+	if err := applyDomainResult(app, site, "theirbrand.com", DomainResult{Status: DomainStatusLive}); err != nil {
+		t.Fatalf("mark-live: %v", err)
+	}
+
+	// A later status check must serve the stored confirmation, not the poll.
+	result, ok := domainStatusOverride(site)
+	if !ok {
+		t.Fatal("manual live domain should serve the stored status, not poll")
+	}
+	if result.Status != DomainStatusLive {
+		t.Errorf("status = %q, want live", result.Status)
+	}
+
+	// Railway liveness is driven by the real cert status — never overridden.
+	t.Setenv("PRIMO_DOMAIN_PROVIDER", "railway")
+	if _, ok := domainStatusOverride(site); ok {
+		t.Error("railway provider must poll real status even when stored live")
+	}
+}
+
 func TestLabelWithSuffix(t *testing.T) {
 	cases := []struct{ slug, suffix, want string }{
 		{"short", "-2", "short-2"},
@@ -307,9 +348,9 @@ func TestHostPattern(t *testing.T) {
 	// validHost mirrors the handler's check: pattern AND length limits.
 	validHost := func(h string) bool { return hostPattern.MatchString(h) && validHostLength(h) }
 
-	longLabel := strings.Repeat("a", 64) + ".com"          // one label > 63
-	longHost := strings.Repeat("a.", 130) + "com"          // total > 253
-	okLongLabel := strings.Repeat("a", 63) + ".com"        // label exactly 63
+	longLabel := strings.Repeat("a", 64) + ".com"   // one label > 63
+	longHost := strings.Repeat("a.", 130) + "com"   // total > 253
+	okLongLabel := strings.Repeat("a", 63) + ".com" // label exactly 63
 
 	valid := []string{"example.com", "sub.example.com", "a.b.c.example.com", "my-site.example.io", okLongLabel}
 	invalid := []string{

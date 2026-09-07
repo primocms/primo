@@ -125,6 +125,10 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 				return err
 			}
 
+			if result, ok := domainStatusOverride(site); ok {
+				return e.JSON(200, domainResponse(site, result))
+			}
+
 			result, err := getDomainProvider().DomainStatus(site.GetString("domain_provider_id"), site.GetString("host"))
 			if err != nil {
 				return e.BadRequestError("Failed to check domain status: "+err.Error(), err)
@@ -167,6 +171,21 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 		}
 	}
 	return site, nil
+}
+
+// domainStatusOverride returns a result the status endpoint should serve
+// without polling the provider (ok=true), or ok=false when a real poll should
+// run and be persisted. The manual provider can't verify an external domain
+// remotely — its poll always reports "pending" — so a stored "live" there is an
+// operator confirmation (via mark-live) that the poll cannot contradict.
+// Persisting the poll result would silently revert that confirmation and put
+// the host back on the pending-domain path. Railway liveness is driven by the
+// real cert status, so no override applies there.
+func domainStatusOverride(site *core.Record) (DomainResult, bool) {
+	if getDomainProvider().Name() == "manual" && site.GetString("domain_status") == DomainStatusLive {
+		return DomainResult{Status: DomainStatusLive}, true
+	}
+	return DomainResult{}, false
 }
 
 // domainErrorMax mirrors the domain_error TextField Max in the migration.
