@@ -3,7 +3,7 @@
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
 	import { Copy, Check, Loader, ChevronRight, ExternalLink, TriangleAlert } from 'lucide-svelte'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { self } from '$lib/pocketbase/managers'
 	import { is_host_assigned, is_base_subdomain } from '$lib/site_host'
 	import { instance } from '$lib/instance'
@@ -71,7 +71,12 @@
 		}
 		if (!site) return
 		const assigned = is_host_assigned(site) ? site.host : ''
-		if (!dirty) {
+		// `dirty` is a guard, not a trigger: read it untracked. Both call sites
+		// pass a snapshot captured when the dialog opened, so if changing `dirty`
+		// re-ran this effect (e.g. handle_connect clearing it after a successful
+		// attach), the stale snapshot would overwrite the just-connected state
+		// and reset the dialog to its initial prompt.
+		if (!untrack(() => dirty)) {
 			new_site_host = assigned
 		}
 		attached_host = assigned
