@@ -55,10 +55,12 @@ func TestApplyDomainResultTruncatesError(t *testing.T) {
 	}
 }
 
-// TestManualProviderStatusKeepsRecords guards that a manual-provider status
-// check keeps the routing record (so the CNAME guidance isn't erased) even
-// though it reports the domain live.
-func TestManualProviderStatusKeepsRecords(t *testing.T) {
+// TestManualProviderCustomDomainStaysPending guards that a manual-provider
+// external domain stays "pending" (not auto-flipped to live) and returns no
+// records — the operator points DNS + TLS out of band and confirms via the
+// mark-live endpoint. Previously this optimistically reported the domain live
+// after one status poll, claiming a site was serving before any DNS existed.
+func TestManualProviderCustomDomainStaysPending(t *testing.T) {
 	t.Setenv("PRIMO_BASE_DOMAIN", "acme.primo.page")
 	p := manualProvider{}
 
@@ -66,11 +68,11 @@ func TestManualProviderStatusKeepsRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Status != DomainStatusLive {
-		t.Errorf("status = %q, want live", res.Status)
+	if res.Status != DomainStatusPending {
+		t.Errorf("status = %q, want pending", res.Status)
 	}
-	if len(res.Records) != 1 || res.Records[0].Type != "CNAME" {
-		t.Errorf("expected the routing CNAME to survive, got %+v", res.Records)
+	if len(res.Records) != 0 {
+		t.Errorf("expected no records for a manual custom domain, got %+v", res.Records)
 	}
 }
 
@@ -294,8 +296,10 @@ func TestManualProviderSubdomainShortCircuit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if custom.Status != DomainStatusVerifying || len(custom.Records) != 1 {
-		t.Errorf("custom domain should return one record, got %+v", custom)
+	// A manual external domain can't be verified or cert-issued by Primo, so it
+	// stays pending with no records until the operator marks it connected.
+	if custom.Status != DomainStatusPending || len(custom.Records) != 0 {
+		t.Errorf("custom domain should be pending with no records, got %+v", custom)
 	}
 }
 

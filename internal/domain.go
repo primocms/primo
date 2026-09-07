@@ -91,6 +91,33 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			return e.JSON(200, domainResponse(site, result))
 		})
 
+		// Manually mark a site's attached custom domain as live. This is the
+		// confirmation step for the manual (self-hosted) provider: Primo can't
+		// verify an external domain remotely, so once the operator has pointed
+		// DNS at the box and fronted it with TLS, they click "Mark as connected"
+		// and we flip the status to live. Guarded to the manual provider — a
+		// Railway domain's liveness is driven by the real cert status, so faking
+		// it there would lie about whether the cert actually issued.
+		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain/mark-live", func(e *core.RequestEvent) error {
+			site, err := authorizeSiteDomain(pb, e)
+			if err != nil {
+				return err
+			}
+			if getDomainProvider().Name() != "manual" {
+				return e.BadRequestError("This domain's status is managed automatically.", nil)
+			}
+			host := site.GetString("host")
+			if host == "" || host == site.Id {
+				return e.BadRequestError("No custom domain is assigned to this site.", nil)
+			}
+			// Live + no records: a manual domain has no Primo-generated DNS
+			// records to track, and the operator has confirmed reachability.
+			if err := applyDomainResult(pb, site, host, DomainResult{Status: DomainStatusLive}); err != nil {
+				return e.InternalServerError("Failed to update domain status", err)
+			}
+			return e.JSON(200, domainResponse(site, DomainResult{Status: DomainStatusLive}))
+		})
+
 		// Re-check the status of a site's attached custom domain.
 		serveEvent.Router.GET("/api/primo/sites/{siteId}/domain/status", func(e *core.RequestEvent) error {
 			site, err := authorizeSiteDomain(pb, e)

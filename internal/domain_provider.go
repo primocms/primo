@@ -68,42 +68,28 @@ type manualProvider struct{}
 
 func (manualProvider) Name() string { return "manual" }
 
-// manualRoutingRecord is the single CNAME guidance a manual (self-hosted)
-// operator must create. Both AttachDomain and DomainStatus return it so the
-// records never disappear from the UI while the domain is reported live — the
-// operator still needs to see what to point at their reverse proxy.
-func manualRoutingRecord(host string) DNSRecord {
-	return DNSRecord{
-		Type:    "CNAME",
-		Host:    host,
-		Value:   "(point this at your Primo server)",
-		Status:  "pending",
-		Purpose: "routing",
-	}
-}
-
 func (manualProvider) AttachDomain(host string) (DomainResult, error) {
 	// A base-domain subdomain is already covered by the wildcard cert/routing —
 	// nothing for the user to do.
 	if isSubdomainOfBase(host) {
 		return DomainResult{Status: DomainStatusLive}, nil
 	}
-	return DomainResult{
-		Status:  DomainStatusVerifying,
-		Records: []DNSRecord{manualRoutingRecord(host)},
-	}, nil
+	// An external domain on a self-hosted box: Primo can't talk to a platform
+	// API to issue a cert or generate correct routing records (an apex can't
+	// even use a CNAME), so we can't honestly hand over DNS records. Report
+	// "pending" and let the operator point DNS + TLS out of band, then mark the
+	// domain connected via the mark-live endpoint. No records — the UI shows a
+	// plain "point this domain at your server" instruction instead.
+	return DomainResult{Status: DomainStatusPending}, nil
 }
 
 func (manualProvider) DomainStatus(_ string, host string) (DomainResult, error) {
 	if isSubdomainOfBase(host) {
 		return DomainResult{Status: DomainStatusLive}, nil
 	}
-	// Manual providers can't verify remotely; treat as live once assigned so the
-	// UI doesn't spin forever (the operator confirms reachability out of band).
-	// Keep returning the routing record so the CNAME guidance isn't erased —
-	// applyDomainResult would otherwise overwrite the stored records with [].
-	return DomainResult{
-		Status:  DomainStatusLive,
-		Records: []DNSRecord{manualRoutingRecord(host)},
-	}, nil
+	// Manual providers can't verify remotely. Report "pending" and leave the
+	// domain there until the operator explicitly marks it connected (mark-live).
+	// Previously this optimistically returned "live" after one poll, which made
+	// the UI claim a domain was serving before any DNS was pointed at the box.
+	return DomainResult{Status: DomainStatusPending}, nil
 }
