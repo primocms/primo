@@ -79,8 +79,14 @@
 		if (!untrack(() => dirty)) {
 			new_site_host = assigned
 		}
+		// Decide polling from the prop's status, not the local `domain_status`
+		// state: reading the local state here would make it a dependency, so
+		// every apply_status() (poll tick, refresh, mark-live) would re-run this
+		// effect and reseed from the possibly-stale snapshot — overwriting the
+		// fresher status the poll just delivered.
+		const status = site.domain_status || ''
 		attached_host = assigned
-		domain_status = site.domain_status || ''
+		domain_status = status
 		domain_error = site.domain_error || ''
 		domain_records = parse_dns_records(site.domain_dns_records)
 		// A domain that's attached but not yet live needs the poll running to
@@ -89,7 +95,7 @@
 		// domain: its status only changes when the operator marks it connected,
 		// so polling would just spin (and re-save) with nothing to advance.
 		const manual_ext = is_manual_provider && !!assigned && !is_base_subdomain(assigned)
-		if (assigned && domain_status && domain_status !== 'live' && domain_status !== 'error' && !manual_ext) {
+		if (assigned && status && status !== 'live' && status !== 'error' && !manual_ext) {
 			start_poll(site.id)
 		}
 	})
