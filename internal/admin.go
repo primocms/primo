@@ -57,9 +57,18 @@ func RegisterAdminApp(pb *pocketbase.PocketBase) error {
 					setupRequired := superuserCount == 0
 					isSetup := requestEvent.Request.URL.Path == "/admin/setup"
 					isFile := path.Ext(requestEvent.Request.URL.Path) != ""
-					if setupRequired && !isSetup && !isFile {
-						return requestEvent.Redirect(302, "/admin/setup")
+					if setupRequired {
+						// Setup isn't done yet — keep gating. Redirect every
+						// non-setup page (incl. /admin/auth) back to /admin/setup
+						// so an abandoned setup can't leave the instance stuck at
+						// the auth dead-end. Never latch setupCompleted here: a
+						// visit to /admin/setup itself must not count as "done".
+						if !isSetup && !isFile {
+							return requestEvent.Redirect(302, "/admin/setup")
+						}
 					} else {
+						// A real superuser exists — setup is genuinely complete.
+						// Latch so we stop counting superusers on every request.
 						setupCompleted = true
 					}
 				}
