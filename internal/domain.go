@@ -91,11 +91,42 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			return e.JSON(200, domainResponse(site, result))
 		})
 
+		// Manually mark a site's attached custom domain as live. This is the
+		// confirmation step for the manual (self-hosted) provider: Primo can't
+		// verify an external domain remotely, so once the operator has pointed
+		// DNS at the box and fronted it with TLS, they click "Mark as connected"
+		// and we flip the status to live. Guarded to the manual provider — a
+		// Railway domain's liveness is driven by the real cert status, so faking
+		// it there would lie about whether the cert actually issued.
+		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain/mark-live", func(e *core.RequestEvent) error {
+			site, err := authorizeSiteDomain(pb, e)
+			if err != nil {
+				return err
+			}
+			if getDomainProvider().Name() != "manual" {
+				return e.BadRequestError("This domain's status is managed automatically.", nil)
+			}
+			host := site.GetString("host")
+			if host == "" || host == site.Id {
+				return e.BadRequestError("No custom domain is assigned to this site.", nil)
+			}
+			// Live + no records: a manual domain has no Primo-generated DNS
+			// records to track, and the operator has confirmed reachability.
+			if err := applyDomainResult(pb, site, host, DomainResult{Status: DomainStatusLive}); err != nil {
+				return e.InternalServerError("Failed to update domain status", err)
+			}
+			return e.JSON(200, domainResponse(site, DomainResult{Status: DomainStatusLive}))
+		})
+
 		// Re-check the status of a site's attached custom domain.
 		serveEvent.Router.GET("/api/primo/sites/{siteId}/domain/status", func(e *core.RequestEvent) error {
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
+			}
+
+			if result, ok := domainStatusOverride(site); ok {
+				return e.JSON(200, domainResponse(site, result))
 			}
 
 			result, err := getDomainProvider().DomainStatus(site.GetString("domain_provider_id"), site.GetString("host"))
@@ -140,6 +171,21 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 		}
 	}
 	return site, nil
+}
+
+// domainStatusOverride returns a result the status endpoint should serve
+// without polling the provider (ok=true), or ok=false when a real poll should
+// run and be persisted. The manual provider can't verify an external domain
+// remotely — its poll always reports "pending" — so a stored "live" there is an
+// operator confirmation (via mark-live) that the poll cannot contradict.
+// Persisting the poll result would silently revert that confirmation and put
+// the host back on the pending-domain path. Railway liveness is driven by the
+// real cert status, so no override applies there.
+func domainStatusOverride(site *core.Record) (DomainResult, bool) {
+	if getDomainProvider().Name() == "manual" && site.GetString("domain_status") == DomainStatusLive {
+		return DomainResult{Status: DomainStatusLive}, true
+	}
+	return DomainResult{}, false
 }
 
 // domainErrorMax mirrors the domain_error TextField Max in the migration.

@@ -3,17 +3,27 @@
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
 	import { Copy, Check, Loader, ChevronRight, ExternalLink, TriangleAlert } from 'lucide-svelte'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { self } from '$lib/pocketbase/managers'
-	import { is_host_assigned } from '$lib/site_host'
+	import { is_host_assigned, is_base_subdomain } from '$lib/site_host'
+	import { instance } from '$lib/instance'
 	import type { Site } from '$lib/common/models/Site'
 
-	// Reusable connect-a-domain flow. The server-side domain provider (Railway
-	// in hosted mode, manual otherwise) attaches the host and returns the DNS
-	// records the user must create; we poll until the cert is live. Uniqueness +
-	// validation are enforced server-side. Used from the dashboard and the
-	// editor's publish dialog.
+	// Reusable connect-a-domain flow. The server-side domain provider attaches
+	// the host and reports status. Railway returns real DNS records and issues a
+	// cert (we poll until live); the manual (self-hosted) provider can't verify
+	// remotely, so an external domain there is a "point DNS at your box, then
+	// mark it connected" flow with no records to poll. Uniqueness + validation
+	// are enforced server-side. Used from the dashboard and the editor's publish
+	// dialog.
 	type DnsRecord = { type: string; host: string; value: string; status: string; purpose: string }
+
+	// Manual provider on an external (non-base) domain: Primo can't generate
+	// correct routing records or issue a cert, so we show plain "connect it
+	// yourself, then confirm" guidance + a Mark-as-connected button instead of
+	// the DNS-records/poll UI. A base-domain subdomain is always live instantly
+	// (wildcard-covered), so it never needs this path.
+	const is_manual_provider = instance.domain_provider === 'manual'
 
 	let {
 		site,
@@ -61,17 +71,31 @@
 		}
 		if (!site) return
 		const assigned = is_host_assigned(site) ? site.host : ''
-		if (!dirty) {
+		// `dirty` is a guard, not a trigger: read it untracked. Both call sites
+		// pass a snapshot captured when the dialog opened, so if changing `dirty`
+		// re-ran this effect (e.g. handle_connect clearing it after a successful
+		// attach), the stale snapshot would overwrite the just-connected state
+		// and reset the dialog to its initial prompt.
+		if (!untrack(() => dirty)) {
 			new_site_host = assigned
 		}
+		// Decide polling from the prop's status, not the local `domain_status`
+		// state: reading the local state here would make it a dependency, so
+		// every apply_status() (poll tick, refresh, mark-live) would re-run this
+		// effect and reseed from the possibly-stale snapshot — overwriting the
+		// fresher status the poll just delivered.
+		const status = site.domain_status || ''
 		attached_host = assigned
-		domain_status = site.domain_status || ''
+		domain_status = status
 		domain_error = site.domain_error || ''
 		domain_records = parse_dns_records(site.domain_dns_records)
 		// A domain that's attached but not yet live needs the poll running to
 		// advance to live on its own — otherwise reopening shows a spinner that
-		// never resolves without a manual refresh.
-		if (assigned && domain_status && domain_status !== 'live' && domain_status !== 'error') {
+		// never resolves without a manual refresh. Skip it for a manual external
+		// domain: its status only changes when the operator marks it connected,
+		// so polling would just spin (and re-save) with nothing to advance.
+		const manual_ext = is_manual_provider && !!assigned && !is_base_subdomain(assigned)
+		if (assigned && status && status !== 'live' && status !== 'error' && !manual_ext) {
 			start_poll(site.id)
 		}
 	})
@@ -92,6 +116,14 @@
 	// Show the attached domain's records only while the input still matches it.
 	// Once the user edits the input to switch domains, the old records are stale.
 	const show_records = $derived(domain_records.length > 0 && on_attached_host)
+
+	// Manual provider + external domain that's attached but not yet marked live:
+	// show the "point DNS at your server, then mark connected" guidance instead
+	// of the automated records/poll UI. Base-domain subdomains go live instantly
+	// server-side, so they never land here.
+	const manual_external = $derived(
+		is_manual_provider && !!attached_host && !is_base_subdomain(attached_host) && on_attached_host && !live
+	)
 
 	// In the live state the domain shows as read-only text; the editable input is
 	// revealed only when the user opts to change it.
@@ -164,10 +196,14 @@
 			// track the record again.
 			dirty = false
 			apply_status(result)
-			// Live immediately (e.g. base-domain subdomain or manual) — close.
+			// Live immediately (e.g. base-domain subdomain) — close. A manual
+			// external domain stays pending with no records to poll; the operator
+			// points DNS and then clicks Mark-as-connected, so don't start a poll
+			// that would never advance. Everything else (Railway) polls to live.
+			const manual_ext = is_manual_provider && !is_base_subdomain(host)
 			if (domain_status === 'live') {
 				open = false
-			} else if (domain_status !== 'error') {
+			} else if (domain_status !== 'error' && !manual_ext) {
 				start_poll(site.id)
 			}
 		} catch (err) {
@@ -204,6 +240,32 @@
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to check status'
+		} finally {
+			connecting = false
+		}
+	}
+
+	// Manual provider only: confirm the operator has pointed DNS at the box and
+	// fronted it with TLS, flipping the domain to live. The server guards this to
+	// the manual provider, so it's a no-op affordance elsewhere.
+	async function mark_live() {
+		if (!site) return
+		error = ''
+		connecting = true
+		try {
+			const response = await fetch(endpoint(site.id, '/mark-live'), {
+				method: 'POST',
+				headers: auth_headers()
+			})
+			if (response.ok) {
+				apply_status(await response.json())
+				open = false
+			} else {
+				const data = await response.json().catch(() => ({}))
+				error = data.message || `Failed to mark domain connected (${response.status})`
+			}
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to mark domain connected'
 		} finally {
 			connecting = false
 		}
@@ -289,6 +351,8 @@
 		<p class="text-muted-foreground text-sm">
 			{#if live && !changing}
 				This site is live at your domain.
+			{:else if manual_external}
+				Point this domain at your server, then mark it connected.
 			{:else}
 				Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
 			{/if}
@@ -333,13 +397,22 @@
 					<p class="text-muted-foreground text-xs mt-1">{domain_error}</p>
 				{/if}
 				<p class="text-muted-foreground text-xs mt-1">Check the DNS records below, then connect again.</p>
+			{:else if manual_external}
+				<!-- Manual/self-hosted: Primo can't issue a cert or generate correct
+				routing records (an apex can't use a CNAME), so give plain guidance
+				and let the operator confirm once DNS + TLS are wired up. -->
+				<p class="text-muted-foreground text-xs mt-3">
+					Add a DNS record at your registrar pointing <span class="font-mono text-foreground">{attached_host}</span> at this server
+					(an A/ALIAS record for a root domain, or a CNAME for a subdomain), and make sure it's served over HTTPS. Then click
+					<span class="text-foreground">Mark as connected</span>.
+				</p>
 			{:else if awaiting || show_records}
 				<div class="mt-4 flex items-center gap-2 text-sm">
 					<span class="inline-flex items-center gap-1.5 text-muted-foreground"><Loader class="h-3.5 w-3.5 animate-spin" /> Waiting for DNS &amp; certificate…</span>
 				</div>
 			{/if}
 
-			{#if show_records}
+			{#if show_records && !manual_external}
 				{#if live}
 					<button type="button" onclick={() => (records_open = !records_open)} class="mt-3 flex items-center gap-1 text-muted-foreground hover:text-foreground text-xs">
 						<ChevronRight class="h-3.5 w-3.5 transition-transform {records_open ? 'rotate-90' : ''}" /> DNS records
@@ -350,7 +423,11 @@
 
 				{#if !live || records_open}
 					<div class="space-y-2 min-w-0 {live ? 'mt-2' : ''}">
-						{#each domain_records as record}
+						<!-- Keyed by index: records carry no unique id (two TXT rows can
+						share type+host, which would crash the block on a duplicate key),
+						the list is display-only, and it's replaced wholesale on each
+						status poll. -->
+						{#each domain_records as record, i (i)}
 							<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5 min-w-0 overflow-hidden">
 								<div class="flex items-center justify-between gap-2">
 									<span class="text-muted-foreground uppercase">{record.type}</span>
@@ -383,10 +460,14 @@
 					</Button>
 				{:else}
 					<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
-						{show_records || live ? 'Done' : 'Cancel'}
+						{show_records || live || manual_external ? 'Done' : 'Cancel'}
 					</Button>
 				{/if}
-				{#if awaiting}
+				{#if manual_external}
+					<Button type="button" disabled={connecting} onclick={mark_live}>
+						{connecting ? 'Saving…' : 'Mark as connected'}
+					</Button>
+				{:else if awaiting}
 					<Button type="button" disabled={connecting} onclick={refresh_status}>
 						{connecting ? 'Checking…' : 'Refresh status'}
 					</Button>
