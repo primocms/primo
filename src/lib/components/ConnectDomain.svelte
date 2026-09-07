@@ -412,7 +412,11 @@
 
 				{#if !live || records_open}
 					<div class="space-y-2 min-w-0 {live ? 'mt-2' : ''}">
-						{#each domain_records as record (record.type + record.host)}
+						<!-- Keyed by index: records carry no unique id (two TXT rows can
+						share type+host, which would crash the block on a duplicate key),
+						the list is display-only, and it's replaced wholesale on each
+						status poll. -->
+						{#each domain_records as record, i (i)}
 							<div class="rounded-md bg-[#111] p-3 text-xs font-mono space-y-1.5 min-w-0 overflow-hidden">
 								<div class="flex items-center justify-between gap-2">
 									<span class="text-muted-foreground uppercase">{record.type}</span>
