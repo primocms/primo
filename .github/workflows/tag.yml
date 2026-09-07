@@ -1,9 +1,14 @@
 name: Build and push Docker image
 
+# Publishing a GitHub release IS the production deploy: this pushes the image
+# (including :latest, which Railway auto-redeploys on) only when a release is
+# published. A tag push alone now just builds binaries into a draft release
+# (release.yml) — review the draft, publish it, and that rolls prod. Before
+# 2026-09 this triggered on the tag push itself, which deployed to Railway the
+# moment a tag landed, making draft releases a decorative gate.
 on:
-  push:
-    tags:
-      - v3.*
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
@@ -11,6 +16,9 @@ env:
 
 jobs:
   build-image:
+    # Mirror the old `tags: v3.*` scoping — release events can't filter by tag
+    # pattern in `on:`, so guard here instead.
+    if: startsWith(github.event.release.tag_name, 'v3.')
     runs-on: ubuntu-latest
     permissions:
       contents: read
