@@ -14,7 +14,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
-		"@atlaskit/pragmatic-drag-and-drop": "^1.8.1",
+		"@atlaskit/pragmatic-drag-and-drop": "^2.0.1",
 		"@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
 		"@codemirror/autocomplete": "^6.20.3",
 		"@codemirror/lang-css": "^6.3.1",
