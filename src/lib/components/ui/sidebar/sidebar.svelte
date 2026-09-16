@@ -27,6 +27,24 @@
 	<div class={cn('bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col', className)} bind:this={ref} {...restProps}>
 		{@render children?.()}
 	</div>
+{:else if sidebar.isMobile}
+	<!-- On mobile the fixed desktop sidebar is CSS-hidden (`hidden md:block`
+	below), so the collapsed sidebar has to open as an off-canvas drawer.
+	`sidebar.toggle()` flips `openMobile`; without this Sheet the trigger
+	would update state that nothing renders — the "expand" button no-ops. -->
+	<Sheet.Root bind:open={() => sidebar.openMobile, (v) => sidebar.setOpenMobile(v)}>
+		<Sheet.Content
+			data-sidebar="sidebar"
+			data-mobile="true"
+			class="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+			style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE};"
+			side={side}
+		>
+			<div class="flex h-full w-full flex-col">
+				{@render children?.()}
+			</div>
+		</Sheet.Content>
+	</Sheet.Root>
 {:else}
 	<div
 		bind:this={ref}
