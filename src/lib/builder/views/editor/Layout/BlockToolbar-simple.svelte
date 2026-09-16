@@ -4,7 +4,6 @@
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
 	import { mod_key_held } from '../../../stores/app/misc'
-	import { click_to_copy } from '../../../utilities'
 	import { Code, Edit3, Trash2, ChevronUp, ChevronDown } from 'lucide-svelte'
 	import { current_user } from '$lib/pocketbase/user'
 
@@ -51,11 +50,6 @@
 					<span>Edit Content</span>
 				{/if}
 			</button>
-			{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
-				<button class="block-id" use:click_to_copy title="Copy block ID: {id}">
-					{id}
-				</button>
-			{/if}
 		</div>
 		{#if !is_instance_block}
 			<div class="top-right">
@@ -109,16 +103,6 @@
 
 	.top-right {
 		display: flex;
-	}
-
-	.block-id {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.25rem 0.5rem;
-		pointer-events: all;
-		background: rgba(0, 0, 0, 0.9);
-		color: white;
-		font-size: 0.75rem;
 	}
 
 	.button-delete {
