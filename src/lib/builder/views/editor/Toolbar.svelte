@@ -220,7 +220,11 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<ConnectDomain {site} bind:open={connect_domain_open} />
+<ConnectDomain
+	{site}
+	bind:open={connect_domain_open}
+	onconnected={(result) => self.update_record(site.id, { host: result.host, domain_status: result.status })}
+/>
 
 <nav aria-label="toolbar" id="primo-toolbar">
 	<div class="menu-container">
