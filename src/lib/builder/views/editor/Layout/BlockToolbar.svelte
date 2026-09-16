@@ -4,7 +4,6 @@
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
 	import { mod_key_held } from '../../../stores/app/misc'
-	import { click_to_copy } from '../../../utilities'
 	import Icon from '@iconify/svelte'
 	import { current_user } from '$lib/pocketbase/user'
 	import * as Tooltip from '$lib/components/ui/tooltip'
@@ -122,20 +121,6 @@
 			<span class="text-xs font-normal">Edit Content</span>
 		{/if}
 	</button>
-	{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
-		<Tooltip.Provider delayDuration={100} disableHoverableContent={true}>
-			<Tooltip.Root>
-				<Tooltip.Trigger>
-					<button class="block-id" use:click_to_copy aria-label="Copy block ID">
-						<Icon icon="ph:copy" />
-					</button>
-				</Tooltip.Trigger>
-				<Tooltip.Content side="bottom">
-					Copy block ID: {id}
-				</Tooltip.Content>
-			</Tooltip.Root>
-		</Tooltip.Provider>
-	{/if}
 {/snippet}
 
 <style lang="postcss">
@@ -167,16 +152,6 @@
 
 	.top-right {
 		display: flex;
-	}
-
-	.block-id {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.25rem 0.5rem;
-		pointer-events: all;
-		background: rgba(0, 0, 0, 0.9);
-		color: white;
-		font-size: 0.75rem;
 	}
 
 	.button-delete {
