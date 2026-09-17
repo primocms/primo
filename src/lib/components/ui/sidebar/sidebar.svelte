@@ -40,7 +40,10 @@
 			style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE};"
 			side={side}
 		>
-			<div class="flex h-full w-full flex-col">
+			<!-- Caller-provided attributes (id, data-*, ARIA, handlers) and the bound
+			`ref` land on this wrapper div, matching the desktop branch's contract —
+			Sheet.Content is a Dialog content and can't take the div HTMLAttributes. -->
+			<div bind:this={ref} class="flex h-full w-full flex-col" {...restProps}>
 				{@render children?.()}
 			</div>
 		</Sheet.Content>
