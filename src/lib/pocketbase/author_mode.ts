@@ -6,12 +6,22 @@ const author_mode_store = writable<AuthorMode>('both')
 
 export const author_mode = readonly(author_mode_store)
 
+// Whether the CLI asked to hide the read-only "files mode" banner
+// (primo dev --no-banner). Cosmetic only — does not affect sync behavior.
+const hide_files_banner_store = writable<boolean>(false)
+
+export const hide_files_banner = readonly(hide_files_banner_store)
+
 export const set_author_mode = (mode: unknown) => {
 	if (mode === 'files' || mode === 'cms' || mode === 'both') {
 		author_mode_store.set(mode)
 	} else {
 		author_mode_store.set('both')
 	}
+}
+
+export const set_hide_files_banner = (hide: unknown) => {
+	hide_files_banner_store.set(hide === true)
 }
 
 // Synchronous read for non-Svelte modules (e.g. CollectionManager).
@@ -36,6 +46,7 @@ export const refresh_author_mode = () => {
 			if (!response.ok) return
 			const data = await response.json().catch(() => null)
 			set_author_mode(data?.author_mode)
+			set_hide_files_banner(data?.hide_files_banner)
 		})
 		.catch(() => {
 			// Dev auth not available — leave default

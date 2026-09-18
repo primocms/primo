@@ -27,6 +27,13 @@ func resolveAuthorMode() string {
 	}
 }
 
+// hideFilesBanner reports whether the CLI asked to suppress the read-only
+// "files mode" banner in the editor (primo dev --no-banner). Purely cosmetic:
+// it doesn't change sync behavior, only whether the UI shows the banner.
+func hideFilesBanner() bool {
+	return os.Getenv("PRIMO_HIDE_FILES_BANNER") == "1"
+}
+
 // IsLocalhost reports whether the request originates from the local machine.
 // It checks the underlying connection's remote address (the client-controlled
 // Host header is ignored) so the gate cannot be bypassed by spoofing
@@ -103,8 +110,9 @@ func RegisterDevAuthEndpoint(pb *pocketbase.PocketBase) error {
 			}
 
 			return e.JSON(200, map[string]interface{}{
-				"token":       token,
-				"author_mode": resolveAuthorMode(),
+				"token":             token,
+				"author_mode":       resolveAuthorMode(),
+				"hide_files_banner": hideFilesBanner(),
 				"record": map[string]interface{}{
 					"id":             user.Id,
 					"collectionId":   user.Collection().Id,

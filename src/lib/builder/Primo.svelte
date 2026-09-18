@@ -19,7 +19,7 @@
 	import { useContent } from '$lib/Content.svelte'
 	import { fromStore } from 'svelte/store'
 	import { current_user } from '$lib/pocketbase/user'
-	import { author_mode } from '$lib/pocketbase/author_mode'
+	import { author_mode, hide_files_banner } from '$lib/pocketbase/author_mode'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
 
 	let {
@@ -139,7 +139,7 @@
 </script>
 
 <div class="h-screen flex flex-col">
-	{#if $author_mode === 'files'}
+	{#if $author_mode === 'files' && !$hide_files_banner}
 		<div class="files-mode-banner" role="status">
 			<strong>Read-only.</strong>
 			<span>Files are authoritative this session — edits made here will be discarded on the next sync. Restart with</span>
