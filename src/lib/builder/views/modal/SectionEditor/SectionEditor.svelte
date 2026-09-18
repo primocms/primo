@@ -25,6 +25,7 @@
 	import { self } from '$lib/pocketbase/managers'
 	import { beforeNavigate } from '$app/navigation'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let {
 		component,
@@ -126,6 +127,9 @@
 		// 	await refresh_preview()
 		// }
 
+		// Browse mode hides the Save button; ⌘S has to match.
+		if ($read_only) return
+
 		if (!$has_error && symbol) {
 			loading = true
 
@@ -202,13 +206,15 @@
 <Dialog.Header
 	title={symbol?.name || 'Section'}
 	icon="tabler:section-filled"
-	button={{
-		label: header.button.label || 'Save',
-		hint: '⌘S',
-		loading,
-		onclick: save_component,
-		disabled: $has_error || loading
-	}}
+	button={$read_only
+		? undefined
+		: {
+				label: header.button.label || 'Save',
+				hint: '⌘S',
+				loading,
+				onclick: save_component,
+				disabled: $has_error || loading
+			}}
 >
 	{#if $current_user?.siteRole === 'developer'}
 		<LargeSwitch bind:active_tab_id={tab} />

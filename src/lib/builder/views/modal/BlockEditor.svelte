@@ -25,6 +25,7 @@
 	import { self } from '$lib/pocketbase/managers'
 	import { beforeNavigate } from '$app/navigation'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	hide_page_field_field_type_context.set(false)
 
@@ -107,6 +108,8 @@
 	}
 
 	async function save_component() {
+		// Browse mode hides the Save button; ⌘S has to match.
+		if ($read_only) return
 		if (!$has_error) {
 			loading = true
 			// Update symbol code (doing this here to prevent compilation for the symbol in the sidebar/background
@@ -169,13 +172,15 @@
 <Dialog.Header
 	title={block.name || 'Block'}
 	icon="lucide:cuboid"
-	button={{
-		...header.button,
-		hint: '⌘S',
-		loading,
-		onclick: save_component,
-		disabled: $has_error || loading
-	}}
+	button={$read_only
+		? undefined
+		: {
+				...header.button,
+				hint: '⌘S',
+				loading,
+				onclick: save_component,
+				disabled: $has_error || loading
+			}}
 >
 	<LargeSwitch bind:active_tab_id={tab} />
 </Dialog.Header>

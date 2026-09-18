@@ -23,6 +23,7 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let editing_page = $state(false)
 
@@ -296,16 +297,17 @@
 			{/if}
 		</div>
 		<div class="options">
-			{#if has_children && page.id !== homepage?.id}
+			{#if has_children && page.id !== homepage?.id && !$read_only}
 				<button class="add-child-btn" onclick={() => (creating_page = true)} aria-label="Create Subpage">
 					<Icon icon="akar-icons:plus" />
 					<span>Create Subpage ({children.length})</span>
 				</button>
 			{/if}
-			<button class="drag-handle" bind:this={drag_handle_element} style:visibility={page.slug === '' ? 'hidden' : 'visible'}>
-				<Icon icon="material-symbols:drag-handle" />
-			</button>
-			<MenuPopup
+			{#if !$read_only}
+				<button class="drag-handle" bind:this={drag_handle_element} style:visibility={page.slug === '' ? 'hidden' : 'visible'}>
+					<Icon icon="material-symbols:drag-handle" />
+				</button>
+				<MenuPopup
 				icon="carbon:overflow-menu-vertical"
 				options={[
 					...(!has_children && !creating_page && page.id !== homepage?.id
@@ -402,8 +404,9 @@
 								}
 							]
 						: [])
-				]}
-			/>
+					]}
+				/>
+			{/if}
 		</div>
 	</div>
 

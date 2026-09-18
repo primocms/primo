@@ -7,6 +7,7 @@
 	import { site_context } from '$lib/builder/stores/context'
 	import { page as pageState } from '$app/state'
 	import { self } from '$lib/pocketbase/managers'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	// Get site from context (preferred) or fallback to hostname lookup
 	const { value: site } = site_context.get()
@@ -46,5 +47,7 @@
 			</li>
 		{/if}
 	</ul>
-	<Button variants="secondary fullwidth" disabled={creating_page_type === true} onclick={() => (creating_page_type = true)} label="Create Page Type" icon="akar-icons:plus" />
+	{#if !$read_only}
+		<Button variants="secondary fullwidth" disabled={creating_page_type === true} onclick={() => (creating_page_type = true)} label="Create Page Type" icon="akar-icons:plus" />
+	{/if}
 </main>

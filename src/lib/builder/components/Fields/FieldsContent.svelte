@@ -52,6 +52,7 @@
 	import type { Entry } from '$lib/common/models/Entry'
 	import EntryContent from './EntryContent.svelte'
 	import { current_user } from '$lib/pocketbase/user'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let {
 		entity,
@@ -287,7 +288,7 @@
 			</div>
 		</div>
 	{/each}
-	{#if $current_user?.siteRole === 'developer'}
+	{#if $current_user?.siteRole === 'developer' && !$read_only}
 		<button class="field-button" onclick={() => create_field()}>
 			<Icon icon="fa-solid:plus" />
 			<span>Create Field</span>

@@ -42,6 +42,7 @@
 		{#if title}
 			<button
 				class="header-button"
+				data-browse-allowed
 				onclick={() => {
 					hidden = !hidden
 				}}

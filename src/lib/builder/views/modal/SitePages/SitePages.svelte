@@ -14,6 +14,7 @@
 	import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let hover_position = $state<string | null>(null)
 
@@ -184,7 +185,7 @@
 					}}
 				/>
 			</li>
-		{:else}
+		{:else if !$read_only}
 			<li>
 				<button class="create-page-btn" onclick={() => (creating_page = true)}>
 					<Icon icon="akar-icons:plus" />

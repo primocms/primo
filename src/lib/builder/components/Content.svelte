@@ -5,6 +5,7 @@
 	import type { FieldValueHandler } from './Fields/FieldsContent.svelte'
 	import EntryContent from './Fields/EntryContent.svelte'
 	import { current_user } from '$lib/pocketbase/user'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	const {
 		entity,
@@ -34,9 +35,44 @@
 		delete_entry_related_records(entry_id)
 		ondelete(entry_id)
 	}
+
+	// In Browse mode fields stay visible, selectable and copyable — only the
+	// ability to change them goes away. Field types are pluggable (~20 of them,
+	// each wrapping a different primitive), so rather than thread a `readonly`
+	// prop through every one, mark the inputs read-only here once the subtree
+	// has rendered. `readonly` (not `disabled`) keeps text selectable and
+	// preserves contrast; checkboxes/radios/selects have no `readonly`, so
+	// those get `disabled` plus a pointer-events guard on the wrapper.
+	function apply_read_only(node: HTMLElement) {
+		function sync() {
+			if (!$read_only) return
+			for (const el of node.querySelectorAll<HTMLElement>('input, textarea, select, [contenteditable="true"]')) {
+				if (el instanceof HTMLInputElement) {
+					if (el.type === 'checkbox' || el.type === 'radio' || el.type === 'color' || el.type === 'range' || el.type === 'file') {
+						el.disabled = true
+					} else {
+						el.readOnly = true
+					}
+				} else if (el instanceof HTMLTextAreaElement) {
+					el.readOnly = true
+				} else if (el instanceof HTMLSelectElement) {
+					el.disabled = true
+				} else {
+					el.setAttribute('contenteditable', 'false')
+				}
+			}
+		}
+
+		sync()
+		// Field subtrees mount lazily (repeaters, groups, conditional fields),
+		// so re-apply whenever the rendered content changes.
+		const observer = new MutationObserver(sync)
+		observer.observe(node, { childList: true, subtree: true })
+		return { destroy: () => observer.disconnect() }
+	}
 </script>
 
-<div class="Content">
+<div class="Content" class:read-only={$read_only} use:apply_read_only>
 	{#each fields.filter((f) => !f.parent || f.parent === '').sort((a, b) => (a.index || 0) - (b.index || 0)) as field (field.id)}
 		<EntryContent {entity} {field} {fields} {entries} level={0} onchange={oninput} ondelete={handle_delete_entry} />
 	{:else}
@@ -73,6 +109,36 @@
 			align-items: flex-start;
 			justify-content: center;
 			margin-top: 12px;
+		}
+	}
+
+	/* Browse mode: values stay legible and selectable (no dimming), but the
+	   controls that would mutate them stop responding. Buttons inside a field
+	   (image upload, icon picker, repeater add/remove) have no readonly
+	   equivalent, so they're neutralised here. */
+	.Content.read-only {
+		:global(button:not([data-browse-allowed])),
+		:global(select),
+		:global(input[type='checkbox']),
+		:global(input[type='radio']),
+		:global(input[type='range']),
+		:global(input[type='color']),
+		:global(input[type='file']) {
+			pointer-events: none;
+		}
+
+		/* Keep disabled controls at full contrast — they're being shown for
+		   inspection, not signalling an error state. */
+		:global(input:disabled),
+		:global(select:disabled),
+		:global(textarea:disabled) {
+			opacity: 1;
+			cursor: default;
+		}
+
+		:global(input[readonly]),
+		:global(textarea[readonly]) {
+			cursor: text;
 		}
 	}
 </style>

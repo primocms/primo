@@ -18,6 +18,7 @@
 	import { useExportSiteSymbol } from '$lib/workers/ExportSymbol.svelte'
 	import { useContent } from '$lib/Content.svelte'
 	import { Badge } from '$lib/components/ui/badge'
+	import { read_only } from '$lib/pocketbase/author_mode'
 	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { page_context, page_type_context } from '$lib/builder/stores/context'
 	import { PageTypes, PageTypeFields } from '$lib/pocketbase/collections'
@@ -247,17 +248,19 @@
 						<button onclick={() => export_symbol()}>
 							<Icon icon="material-symbols:download" />
 						</button>
-						<button
-							onclick={() => {
-								new_name = symbol.name
-								renaming = true
-							}}
-						>
-							<Icon icon="material-symbols:edit" />
-						</button>
-						<button class="delete" onclick={() => dispatch('delete')}>
-							<Icon icon="ic:outline-delete" />
-						</button>
+						{#if !$read_only}
+							<button
+								onclick={() => {
+									new_name = symbol.name
+									renaming = true
+								}}
+							>
+								<Icon icon="material-symbols:edit" />
+							</button>
+							<button class="delete" onclick={() => dispatch('delete')}>
+								<Icon icon="ic:outline-delete" />
+							</button>
+						{/if}
 					</div>
 				{:else}
 					{#if show_toggle}
@@ -267,7 +270,7 @@
 						icon="carbon:overflow-menu-vertical"
 						options={[
 							{
-								label: 'Edit',
+								label: $read_only ? 'View code' : 'Edit',
 								icon: 'material-symbols:code',
 								on_click: () => {
 									dispatch('edit')
@@ -280,21 +283,26 @@
 									export_symbol()
 								}
 							},
-							{
-								label: 'Rename',
-								icon: 'material-symbols:edit',
-								on_click: () => {
-									new_name = symbol.name
-									renaming = true
-								}
-							},
-							{
-								label: 'Delete',
-								icon: 'ic:outline-delete',
-								on_click: () => {
-									dispatch('delete')
-								}
-							}
+							// Rename/Delete mutate the block; in Browse mode the files own it.
+							...($read_only
+								? []
+								: [
+										{
+											label: 'Rename',
+											icon: 'material-symbols:edit',
+											on_click: () => {
+												new_name = symbol.name
+												renaming = true
+											}
+										},
+										{
+											label: 'Delete',
+											icon: 'ic:outline-delete',
+											on_click: () => {
+												dispatch('delete')
+											}
+										}
+									])
 						]}
 					/>
 				{/if}
