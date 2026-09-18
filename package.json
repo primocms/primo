@@ -59,7 +59,7 @@
 		"postcss-nested": "^7.0.2",
 		"posthog-js": "^1.369.3",
 		"prettier": "^3.8.3",
-		"prettier-plugin-svelte": "^3.5.1",
+		"prettier-plugin-svelte": "^4.1.1",
 		"promise-worker": "^2.0.1",
 		"prosemirror-schema-basic": "^1.2.4",
 		"runed": "^0.37.1",
