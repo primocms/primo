@@ -183,11 +183,11 @@
 	<div class="flex flex-1 items-center gap-2 px-3">
 		<Sidebar.Trigger />
 		<Separator orientation="vertical" class="mr-2 h-4" />
-		<div class="text-sm">{active_site_group?.name}</div>
+		<h1 class="text-xs font-medium truncate">{active_site_group?.name ?? 'Sites'}</h1>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>
 				{#snippet child({ props })}
-					<button {...props}>
+					<button {...props} class="group-options" aria-label="Group options">
 						<ChevronDown class="h-4" />
 						<span class="sr-only">More</span>
 					</button>
@@ -213,7 +213,7 @@
 		{/if}
 		<Button
 			size="sm"
-			variant="outline"
+			class="create-site-button"
 			disabled={at_site_cap}
 			title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
 			onclick={() => (is_creating_site = true)}
@@ -223,9 +223,9 @@
 		</Button>
 	</div>
 </header>
-<div class="flex flex-1 flex-col gap-4 px-4 pb-4">
+<div class="sites-content">
 	{#if sites?.length}
-		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<div class="sites-grid">
 			{#each sites as site}
 				{@render SiteButton(site)}
 			{/each}
@@ -236,19 +236,19 @@
 </div>
 
 {#snippet SiteButton(site: Site)}
-	<div class="space-y-3 relative w-full bg-[#111]">
-		<div class="rounded-tl rounded-tr overflow-hidden">
-			<a href={site_editor_url(site)}>
-				<SitePreview {site} />
+	<div class="site-card">
+		<div class="site-thumbnail">
+			<a href={site_editor_url(site)} aria-label={`Open ${site.name}`}>
+				<SitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" />
 			</a>
 		</div>
-		<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-[#111] truncate flex items-center justify-between">
+		<div class="site-card-footer">
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
 				<a href={site_editor_url(site)} class="text-sm font-medium leading-none truncate">{site.name}</a>
-				<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'Unassigned'}</p>
+				<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
 			</div>
 			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="p-2 hover:bg-[#222] rounded-md">
+				<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>
 					<EllipsisVertical size={14} />
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
@@ -432,3 +432,93 @@
 		/>
 	</div>
 {/if}
+
+<style lang="postcss">
+	.sites-content {
+		flex: 1;
+		padding: 0 24px 24px;
+	}
+	.sites-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+		gap: 20px;
+	}
+	.site-card {
+		min-width: 0;
+		overflow: hidden;
+		border: 1px solid #36363a;
+		border-radius: 8px;
+		background: #202023;
+		box-shadow: 0 2px 8px #0002;
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
+		&:hover,
+		&:focus-within {
+			border-color: #60606b;
+			box-shadow: 0 4px 16px #0003;
+		}
+		a:focus-visible {
+			outline: 2px solid #c4c4ce;
+			outline-offset: -2px;
+			border-radius: 4px;
+		}
+	}
+	.site-thumbnail {
+		padding: 8px 8px 0;
+	}
+	.site-thumbnail a {
+		display: block;
+		overflow: hidden;
+		border-radius: 4px;
+	}
+	.site-card-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 16px;
+		min-height: 76px;
+	}
+	.site-card-footer p {
+		color: #a5a5ad;
+	}
+	.group-options {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+		color: #a5a5ad;
+		&:hover {
+			background: #303034;
+			color: white;
+		}
+		&:focus-visible {
+			outline: 2px solid #c4c4ce;
+			outline-offset: 2px;
+		}
+	}
+	:global(.create-site-button) {
+		height: 34px;
+		padding-inline: 14px;
+		border-radius: 6px;
+		background: #ededf0;
+		color: #202023;
+		font-size: 12px;
+		font-weight: 500;
+		box-shadow: 0 1px 2px #0003;
+		&:hover {
+			background: white;
+		}
+	}
+	@media (max-width: 700px) {
+		.sites-content {
+			padding: 0 16px 16px;
+		}
+		.sites-grid {
+			gap: 16px;
+		}
+	}
+</style>

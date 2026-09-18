@@ -1,4 +1,5 @@
 <script lang="ts">
+	import './catalog-cards.css'
 	import IFrame from '$lib/builder/components/IFrame.svelte'
 	import { LibrarySymbols } from '$lib/pocketbase/collections'
 	import { block_html } from '$lib/builder/code_generators'
@@ -55,18 +56,18 @@
 	const showing_footer = $derived(symbol?.name || children || show_price)
 </script>
 
-<div class="relative w-full bg-gray-900 rounded-bl rounded-br">
-	<button {onclick} class="w-full rounded-tl rounded-tr overflow-hidden" class:rounded={!showing_footer}>
+<div class="catalog-card">
+	<button {onclick} class="catalog-preview" aria-label={symbol?.name || 'Block preview'}>
 		<IFrame componentCode={generated_code} />
 	</button>
 	{#if showing_footer}
-		<div class="w-full p-3 pt-2 bg-gray-900 truncate flex items-center justify-between">
-			<div class="flex items-center gap-2" style="width: calc(100% - 2rem)">
+		<div class="catalog-footer">
+			<div class="catalog-identity">
 				{#if symbol?.name}
-					<div class="text-xs leading-none truncate">{symbol?.name}</div>
+					<div class="catalog-name" title={symbol.name}>{symbol?.name}</div>
 				{/if}
 				{#if show_price}
-					<div class="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">Free</div>
+					<div class="catalog-price">Free</div>
 				{/if}
 			</div>
 			{#if children}

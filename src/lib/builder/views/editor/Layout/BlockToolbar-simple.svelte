@@ -4,7 +4,6 @@
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
 	import { mod_key_held } from '../../../stores/app/misc'
-	import { click_to_copy } from '../../../utilities'
 	import { Code, Edit3, Trash2, ChevronUp, ChevronDown } from 'lucide-svelte'
 	import { current_user } from '$lib/pocketbase/user'
 
@@ -51,19 +50,14 @@
 					<span>Edit Content</span>
 				{/if}
 			</button>
-			{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
-				<button class="block-id" use:click_to_copy title="Copy block ID: {id}">
-					{id}
-				</button>
-			{/if}
 		</div>
 		{#if !is_instance_block}
 			<div class="top-right">
-				<button onclick={() => dispatch('delete')} class="button-delete">
+				<button onclick={() => dispatch('delete')} class="button-delete" aria-label="Delete block">
 					<Trash2 size={14} />
 				</button>
 				{#if !isFirst}
-					<button onclick={() => dispatch('moveUp')}>
+					<button aria-label="Move block up" onclick={() => dispatch('moveUp')}>
 						<ChevronUp size={14} />
 					</button>
 				{/if}
@@ -73,7 +67,7 @@
 	{#if !is_instance_block}
 		<div class="bottom">
 			{#if !is_last}
-				<button class="bottom-right" onclick={() => dispatch('moveDown')}>
+				<button aria-label="Move block down" class="bottom-right" onclick={() => dispatch('moveDown')}>
 					<ChevronDown size={14} />
 				</button>
 			{/if}
@@ -83,7 +77,7 @@
 
 <style lang="postcss">
 	.BlockToolbar {
-		box-shadow: inset 0 0 0 calc(4px) var(--color-gray-8);
+		box-shadow: inset 0 0 0 2px #9a9aa6;
 		z-index: 999;
 		position: fixed;
 		pointer-events: none;
@@ -111,16 +105,6 @@
 		display: flex;
 	}
 
-	.block-id {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.25rem 0.5rem;
-		pointer-events: all;
-		background: rgba(0, 0, 0, 0.9);
-		color: white;
-		font-size: 0.75rem;
-	}
-
 	.button-delete {
 		border-bottom-left-radius: 0.25rem;
 		padding-left: 0.75rem;
@@ -129,12 +113,13 @@
 
 	button {
 		pointer-events: all;
-		padding: 0.5rem 1rem;
+		padding: 0.5rem 0.75rem;
+		min-height: 34px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		font-size: 1rem;
-		background: var(--primo-color-codeblack);
+		background: #232327;
 		color: white;
 		font-weight: 500;
 		transition:
@@ -157,12 +142,12 @@
 
 		&:hover {
 			z-index: 1;
-			background: #292929;
+			background: #3b3b43;
 			color: #e7e7e7;
 		}
 	}
-	button:focus {
-		outline: 2px solid transparent;
+	button:focus-visible {
+		outline: 2px solid #d4d4dc;
 		outline-offset: 2px;
 	}
 

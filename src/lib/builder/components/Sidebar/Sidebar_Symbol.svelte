@@ -332,6 +332,15 @@
 <style lang="postcss">
 	.sidebar-symbol {
 		--IconButton-opacity: 0;
+		padding: 8px;
+		border: 1px solid #303034;
+		border-radius: 8px;
+		background: #202023;
+		transition: border-color 0.15s;
+		&:hover,
+		&:focus-within {
+			border-color: #60606b;
+		}
 
 		header {
 			display: flex;
@@ -347,7 +356,7 @@
 				display: flex;
 				align-items: center;
 				gap: 0.25rem;
-				font-size: 13px;
+				font-size: 12px;
 				line-height: 16px;
 
 				h3 {
@@ -420,7 +429,7 @@
 		}
 	}
 	.symbol {
-		border-radius: 0.25rem;
+		border-radius: 4px;
 		overflow: hidden;
 	}
 	.error {
