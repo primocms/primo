@@ -71,13 +71,13 @@
 	{#if has_symbols}
 		<Tabs.Root value="blocks" class="p-2">
 			<Tabs.List class="w-full mb-2">
-				<Tabs.Trigger value="blocks" class="flex-1 flex gap-1">
-					<Cuboid class="w-3" />
-					<span class="text-xs">Blocks</span>
+				<Tabs.Trigger value="blocks" class="flex-1 min-w-0 flex gap-1 px-2">
+					<Cuboid class="w-3 shrink-0" />
+					<span class="text-xs truncate">Blocks</span>
 				</Tabs.Trigger>
-				<Tabs.Trigger value="content" class="flex-1 flex gap-1">
-					<SquarePen class="w-3" />
-					<span class="text-xs">Fields</span>
+				<Tabs.Trigger value="content" class="flex-1 min-w-0 flex gap-1 px-2">
+					<SquarePen class="w-3 shrink-0" />
+					<span class="text-xs truncate">Fields</span>
 				</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="blocks">

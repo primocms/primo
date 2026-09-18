@@ -5,6 +5,17 @@
 
 	let { site, style, src }: { site?: Site; style?: string; src?: string } = $props()
 
+	// The default preview iframe serves the site's published files at
+	// `/?_site=ID`. That URL never changes, so after a re-publish the already
+	// loaded iframe keeps showing the old build. The publish worker writes the
+	// fresh home HTML to `site.preview` (a file field whose stored filename gets
+	// a new random suffix each publish), so fold it into the src as a
+	// cache-buster: when a publish lands, the src changes and the iframe reloads.
+	// Only applies to the default src — callers passing an explicit `src`
+	// (marketplace, starters) are left untouched.
+	const preview_token = $derived(typeof site?.preview === 'string' ? site.preview : '')
+	const iframe_src = $derived(src ?? `/?_site=${site?.id}${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
+
 	let container = $state()
 	let scale = $state()
 	let iframeHeight = $state()
@@ -59,7 +70,7 @@
 				style:height={iframeHeight}
 				class:fadein={iframeLoaded}
 				title="site preview"
-				src={src ?? `/?_site=${site.id}`}
+				src={iframe_src}
 				onload={async () => {
 					await init_preview()
 				}}

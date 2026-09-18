@@ -385,7 +385,7 @@
 <ConnectDomain
 	site={current_site}
 	bind:open={is_assign_domain_open}
-	onconnected={() => self.invalidate_lists({ collection_name: 'sites' })}
+	onconnected={(result) => current_site && self.update_record(current_site.id, { host: result.host, domain_status: result.status })}
 />
 
 <AlertDialog.Root bind:open={is_delete_site_open}>

@@ -91,6 +91,21 @@ export const createCollectionManager = (instance?: Client) => {
 				}
 			}
 		},
+		// Merge fresh fields into a single cached record so reactive by-id reads
+		// (e.g. Sites.one) re-derive with the update. Use after an out-of-band
+		// write to *one* record that bypassed the change pipeline and returned the
+		// changed fields (e.g. the domain connect/mark-live endpoints, which POST
+		// directly rather than through commit()). Prefer this over evicting the
+		// record: dropping it makes one(id) return `undefined` while it refetches,
+		// which tears down and remounts any subtree gated on the record (the
+		// editor blanks to a spinner). No-op if the record isn't cached — a later
+		// read will fetch it fresh anyway. `invalidate_lists` can't cover this: a
+		// record read by id is never part of a list, so its cache stays stale.
+		update_record: (id: string, fields: Record<string, unknown>) => {
+			const existing = records.get(id)
+			if (!existing?.data) return
+			records.set(id, { data: { ...existing.data, ...fields } })
+		},
 		commit: async () => {
 			// In files-author mode the CLI's sync layer overwrites the DB on
 			// the next pull, so committing here would create user-visible

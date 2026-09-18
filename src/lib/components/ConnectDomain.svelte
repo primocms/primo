@@ -32,7 +32,11 @@
 	}: {
 		site: Pick<Site, 'id' | 'host' | 'domain_status' | 'domain_dns_records' | 'domain_error'> | null | undefined
 		open?: boolean
-		onconnected?: () => void
+		// Fires whenever the server reports a new status (attach, refresh, poll,
+		// mark-live). Carries the fresh host + status so callers can update their
+		// cached site record in place instead of refetching — the component itself
+		// talks raw fetch and never touches the collection cache.
+		onconnected?: (result: { host: string; status: string }) => void
 	} = $props()
 
 	let new_site_host = $state('')
@@ -216,11 +220,13 @@
 	// Apply a /status response to local state and stop polling once the domain
 	// has reached a terminal state (live or error). Shared by the manual refresh
 	// and the background poll so they can't drift.
-	function apply_status(result: { status: string; records?: DnsRecord[]; error?: string }) {
+	function apply_status(result: { host?: string; status: string; records?: DnsRecord[]; error?: string }) {
 		domain_status = result.status
 		domain_records = result.records || []
 		domain_error = result.error || ''
-		onconnected?.()
+		// Every server domain response carries the current host; fall back to the
+		// host we attached so callers always get a concrete value to cache.
+		onconnected?.({ host: result.host || attached_host, status: result.status })
 		if (domain_status === 'live' || domain_status === 'error') stop_poll()
 	}
 
