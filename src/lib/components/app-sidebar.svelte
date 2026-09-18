@@ -5,9 +5,8 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
-	import { Globe, Library, Store, ChevronsUpDown, LogOut, ChevronRight, Plus, LayoutTemplate, Cuboid } from 'lucide-svelte'
+	import { Globe, Library, Store, ChevronsUpDown, LogOut, Plus } from 'lucide-svelte'
 	import * as Sidebar from '$lib/components/ui/sidebar'
-	import * as Collapsible from '$lib/components/ui/collapsible'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js'
 	import { marketplace, self } from '$lib/pocketbase/managers'
@@ -330,75 +329,19 @@
 				</div>
 			</Sidebar.Header>
 			<Sidebar.Content class="p-2">
+				{@const browsing_blocks = $page.url.pathname.endsWith('/blocks')}
+				<Sidebar.GroupLabel>{browsing_blocks ? 'Block categories' : 'Starter categories'}</Sidebar.GroupLabel>
 				<Sidebar.Menu>
-					<!-- Starters -->
-					<Sidebar.MenuItem>
-						<Collapsible.Root title="Starters" open={true} class="group/collapsible">
-							<Sidebar.Group class="p-0">
-								<Sidebar.GroupLabel class="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm">
-									{#snippet child({ props })}
-										<Collapsible.Trigger {...props}>
-											<LayoutTemplate />
-											<span class="pl-2">Starters</span>
-											<ChevronRight class="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-										</Collapsible.Trigger>
-									{/snippet}
-								</Sidebar.GroupLabel>
-								<Collapsible.Content>
-									<Sidebar.GroupContent>
-										<Sidebar.Menu>
-											{#each SiteGroups.from(marketplace).list({ sort: 'index' }) ?? [] as group}
-												{@const url = `/admin/dashboard/marketplace/starters?group=${group.id}`}
-												<Sidebar.MenuItem>
-													<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
-														{#snippet child({ props })}
-															<a href={url} {...props}>
-																<span>{group.name}</span>
-															</a>
-														{/snippet}
-													</Sidebar.MenuButton>
-												</Sidebar.MenuItem>
-											{/each}
-										</Sidebar.Menu>
-									</Sidebar.GroupContent>
-								</Collapsible.Content>
-							</Sidebar.Group>
-						</Collapsible.Root>
-					</Sidebar.MenuItem>
-					<!-- Blocks -->
-					<Sidebar.MenuItem>
-						<Collapsible.Root title="Blocks" open={true} class="group/collapsible">
-							<Sidebar.Group class="p-0">
-								<Sidebar.GroupLabel class="group/label text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm">
-									{#snippet child({ props })}
-										<Collapsible.Trigger {...props}>
-											<Cuboid />
-											<span class="pl-2">Blocks</span>
-											<ChevronRight class="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-										</Collapsible.Trigger>
-									{/snippet}
-								</Sidebar.GroupLabel>
-								<Collapsible.Content>
-									<Sidebar.GroupContent>
-										<Sidebar.Menu>
-											{#each LibrarySymbolGroups.from(marketplace).list() ?? [] as group}
-												{@const url = `/admin/dashboard/marketplace/blocks?group=${group.id}`}
-												<Sidebar.MenuItem>
-													<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
-														{#snippet child({ props })}
-															<a href={url} {...props}>
-																<span>{group.name}</span>
-															</a>
-														{/snippet}
-													</Sidebar.MenuButton>
-												</Sidebar.MenuItem>
-											{/each}
-										</Sidebar.Menu>
-									</Sidebar.GroupContent>
-								</Collapsible.Content>
-							</Sidebar.Group>
-						</Collapsible.Root>
-					</Sidebar.MenuItem>
+					{#each (browsing_blocks ? LibrarySymbolGroups.from(marketplace).list({ sort: 'index' }) : SiteGroups.from(marketplace).list({ sort: 'index' })) ?? [] as group}
+						{@const url = `/admin/dashboard/marketplace/${browsing_blocks ? 'blocks' : 'starters'}?group=${group.id}`}
+						<Sidebar.MenuItem>
+							<Sidebar.MenuButton isActive={$page.url.searchParams.get('group') === group.id}>
+								{#snippet child({ props })}
+									<a href={url} {...props}><span>{group.name}</span></a>
+								{/snippet}
+							</Sidebar.MenuButton>
+						</Sidebar.MenuItem>
+					{/each}
 				</Sidebar.Menu>
 			</Sidebar.Content>
 		{/if}

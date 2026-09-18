@@ -1,0 +1,80 @@
+/* Shared treatment for starter and block cards, including the block library. */
+.catalog-card {
+	min-width: 0;
+	overflow: hidden;
+	border: 1px solid #36363a;
+	border-radius: 8px;
+	background: #202023;
+	box-shadow: 0 2px 8px #0002;
+	transition:
+		border-color 0.15s,
+		box-shadow 0.15s;
+}
+.catalog-card:hover,
+.catalog-card:focus-within {
+	border-color: #60606b;
+	box-shadow: 0 4px 16px #0003;
+}
+.catalog-card a:focus-visible,
+.catalog-card button:focus-visible {
+	outline: 2px solid #c4c4ce;
+	outline-offset: -2px;
+	border-radius: 4px;
+}
+.catalog-preview {
+	display: block;
+	width: calc(100% - 16px);
+	margin: 8px 8px 0;
+	overflow: hidden;
+	border-radius: 4px;
+	background: #27272b;
+}
+.catalog-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px;
+	min-height: 64px;
+}
+.catalog-identity {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+.catalog-name {
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.catalog-price {
+	flex-shrink: 0;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 18px;
+	padding: 1px 7px;
+	border: 1px solid #3c3c42;
+	border-radius: 5px;
+	color: #b8b8c0;
+	background: #29292e;
+}
+.catalog-action {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 6px;
+	min-height: 30px;
+	padding: 5px 7px;
+	border-radius: 6px;
+	color: #b8b8c0;
+	font-size: 12px;
+}
+.catalog-action:hover {
+	color: #fff;
+	background: #303034;
+}

@@ -48,14 +48,15 @@
 
 <button
 	{id}
-	aria-label={title}
+	aria-label={title || label || undefined}
+	aria-busy={loading}
 	class="primo-button"
 	class:primo={type === 'primo'}
 	class:active
 	class:has-subbuttons={buttons}
 	class:has-icon-button={!label && icon}
 	{style}
-	{disabled}
+	disabled={disabled || loading}
 	onclick={() => {
 		subButtonsActive = !subButtonsActive
 		onclick ? onclick() : dispatch('click')
@@ -80,7 +81,7 @@
 			<Icon {icon} class={key && $mod_key_held ? 'invisible' : ''} />
 		{/if}
 		{#if key && $mod_key_held && !loading}
-			<span class="key-hint" aria-hidden>
+			<span class="key-hint" aria-hidden="true">
 				&#8984;{key.toUpperCase()}
 			</span>
 		{/if}
@@ -90,110 +91,68 @@
 </button>
 
 <style lang="postcss">
-	/* @tailwind base; */
-
 	.primo-button {
-		font-size: 0.85rem;
-		user-select: none;
-		/* border: 1px solid var(--color-gray-8); */
 		--Spinner-size: 0.75rem;
-
-		/* &:first-child {
-      border-top-left-radius: var(--primo-border-radius);
-      border-bottom-left-radius: var(--primo-border-radius);
-    }
-
-    &:last-child {
-      border-top-right-radius: var(--primo-border-radius);
-      border-bottom-right-radius: var(--primo-border-radius);
-    } */
-
-		&[disabled] {
-			background: none;
-			opacity: 0.35;
-			pointer-events: none;
-		}
-	}
-
-	.primo-button.primo {
-		box-shadow: var(--primo-ring-thin);
-		color: var(--primo-color-white);
-		transition: 0.1s;
-		/* border: 1.5px solid var(--primo-primary-color); */
-		/* border-radius: 0.25rem; */
-
-		&:hover {
-			background: var(--primo-primary-color);
-			color: white;
-		}
-	}
-
-	.primo-button {
-		padding: 6px 10px;
-		border-radius: 2px;
-		color: var(--primo-color-white);
-		font-weight: 400;
-		font-size: 0.75rem;
-		height: 100%;
-		transition: 0.1s box-shadow;
-		outline: 0;
 		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem;
-
-		&.has-icon-button {
-			/* padding: 10px; */
-
-			:global(svg) {
-				width: 1rem;
-				height: auto;
-			}
-		}
-
+		gap: 7px;
+		min-height: 32px;
+		height: 100%;
+		padding: 7px 11px;
+		border-radius: 6px;
+		color: #dedee3;
+		font-size: 12px;
+		font-weight: 500;
+		line-height: 18px;
+		user-select: none;
+		transition:
+			background-color 0.15s,
+			color 0.15s;
 		&:hover,
-		&:focus {
-			/* background: var(--primo-color-codeblack); */
-			background: var(--primo-color-codeblack);
-			/* z-index: 2; */
+		&.active {
+			background: #303034;
+			color: white;
 		}
-
+		&:focus-visible {
+			outline: 2px solid #c4c4ce;
+			outline-offset: 3px;
+		}
 		&:active {
-			background: #404040;
-			/* box-shadow: var(--primo-ring); */
-			/* background: var(--primo-primary-color); */
-			/* color: var(--color-gray-8); */
+			background: #3b3b40;
+		}
+		&[disabled] {
+			opacity: 0.45;
+			cursor: default;
+			pointer-events: none;
+		}
+		:global(svg) {
+			width: 14px;
+			height: 14px;
+			flex-shrink: 0;
 		}
 	}
-
-	.primo-button[disabled] {
-		opacity: 0.1;
-		cursor: default;
-		transition: var(--transition-colors);
-
-		&:hover,
-		&:focus {
-			box-shadow: none;
+	.primo-button.primo {
+		padding-inline: 14px;
+		background: #ededf0;
+		color: #202023;
+		box-shadow: 0 1px 2px #0003;
+		&:hover {
+			background: white;
+			color: #111113;
+		}
+		&:active {
+			background: #d4d4da;
 		}
 	}
-
-	@keyframes spin {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
 	.key-hint {
 		position: absolute;
 		inset: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 0.75rem;
+		font-size: 12px;
 		pointer-events: none;
 		white-space: nowrap;
 	}

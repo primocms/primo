@@ -159,9 +159,10 @@
 		const { top, left, bottom, right } = hovered_block_el.getBoundingClientRect()
 		const toolbar_height = 44
 
-		// Keep toolbar within viewport bounds
-		const toolbar_top = Math.max(toolbar_height, Math.min(top, window.innerHeight - toolbar_height))
-		const toolbar_bottom = Math.max(0, window.innerHeight - bottom)
+		// Keep block controls inside the canvas, including when a section scrolls above it.
+		const canvas = page_el.getBoundingClientRect()
+		const toolbar_top = Math.max(canvas.top, Math.min(top, canvas.bottom - toolbar_height))
+		const toolbar_bottom = Math.max(window.innerHeight - canvas.bottom, window.innerHeight - bottom)
 
 		block_toolbar_element.style.position = 'fixed'
 		block_toolbar_element.style.top = `${toolbar_top}px`
@@ -777,7 +778,7 @@
 				<div
 					class="empty-state"
 					class:dragging-over={hovered_block_el && dragging}
-					style="height: calc(100vh - 47px)"
+					style="min-height: 60vh"
 					onmouseenter={({ target }) => {
 						hovered_block_el = target
 					}}

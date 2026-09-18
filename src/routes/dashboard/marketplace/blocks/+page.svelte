@@ -1,4 +1,7 @@
 <script lang="ts">
+	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
+	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+
 	import * as Popover from '$lib/components/ui/popover'
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import { Separator } from '$lib/components/ui/separator'
@@ -156,11 +159,11 @@
 	<div class="flex flex-1 items-center gap-2 px-3">
 		<Sidebar.Trigger />
 		<Separator orientation="vertical" class="mr-2 h-4" />
-		<div class="text-sm">Blocks</div>
+		<MarketplaceTabs />
 	</div>
 </header>
 
-<div class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
+<div use:rememberMarketplaceScroll={page.url.pathname + page.url.search} class="marketplace-content flex flex-1 flex-col gap-4">
 	{#key group_id}
 		{#if marketplace_symbols?.length || marketplace_symbols === undefined}
 			<Masonry items={marketplace_symbols} loading={marketplace_symbols === undefined} skeletonCount={12}>
@@ -181,7 +184,8 @@
 							}}
 						>
 							<Popover.Trigger
-								class={buttonVariants({ variant: 'ghost', class: 'h-4 p-0' })}
+								aria-label={`Add ${symbol.name || 'block'} to library`}
+								class={buttonVariants({ variant: 'ghost', class: 'h-8 w-8 p-0 rounded-md text-[#b8b8c0] hover:bg-[#303034]' })}
 								onclick={(event) => {
 									event.preventDefault()
 									selected_symbol_id = symbol.id
@@ -237,3 +241,25 @@
 		{/if}
 	{/key}
 </div>
+
+<style lang="postcss">
+	.marketplace-content :global(.masonry) {
+		overflow: visible;
+		flex-shrink: 0;
+	}
+	.marketplace-content {
+		min-height: 0;
+		overflow: auto;
+		min-width: 0;
+		padding: 0 24px 24px;
+	}
+	@media (max-width: 700px) {
+		.marketplace-content {
+			padding: 0 16px 16px;
+		}
+	}
+	.marketplace-content :global(.masonry),
+	.marketplace-content :global(.masonry > ul) {
+		gap: 20px;
+	}
+</style>

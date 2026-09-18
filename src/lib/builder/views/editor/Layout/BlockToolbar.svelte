@@ -4,7 +4,6 @@
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
 	import { mod_key_held } from '../../../stores/app/misc'
-	import { click_to_copy } from '../../../utilities'
 	import Icon from '@iconify/svelte'
 	import { current_user } from '$lib/pocketbase/user'
 	import * as Tooltip from '$lib/components/ui/tooltip'
@@ -75,11 +74,11 @@
 		{/if}
 		{#if !immovable}
 			<div class="top-right">
-				<button onclick={() => dispatch('delete')} class="button-delete">
+				<button onclick={() => dispatch('delete')} class="button-delete" aria-label="Delete block">
 					<Icon icon="ion:trash" />
 				</button>
 				{#if !isFirst}
-					<button onclick={() => dispatch('moveUp')}>
+					<button aria-label="Move block up" onclick={() => dispatch('moveUp')}>
 						<Icon icon="heroicons-outline:chevron-up" />
 					</button>
 				{/if}
@@ -89,7 +88,7 @@
 	{#if !immovable}
 		<div class="bottom">
 			{#if !is_last}
-				<button class="bottom-right" onclick={() => dispatch('moveDown')}>
+				<button aria-label="Move block down" class="bottom-right" onclick={() => dispatch('moveDown')}>
 					<Icon icon="heroicons-outline:chevron-down" />
 				</button>
 			{/if}
@@ -122,25 +121,11 @@
 			<span class="text-xs font-normal">Edit Content</span>
 		{/if}
 	</button>
-	{#if $current_user?.siteRole === 'developer' && browser && window.location.hostname === 'localhost'}
-		<Tooltip.Provider delayDuration={100} disableHoverableContent={true}>
-			<Tooltip.Root>
-				<Tooltip.Trigger>
-					<button class="block-id" use:click_to_copy aria-label="Copy block ID">
-						<Icon icon="ph:copy" />
-					</button>
-				</Tooltip.Trigger>
-				<Tooltip.Content side="bottom">
-					Copy block ID: {id}
-				</Tooltip.Content>
-			</Tooltip.Root>
-		</Tooltip.Provider>
-	{/if}
 {/snippet}
 
 <style lang="postcss">
 	.BlockToolbar {
-		box-shadow: inset 0 0 0 4px var(--color-gray-8);
+		box-shadow: inset 0 0 0 2px #9a9aa6;
 		z-index: 999;
 		position: fixed;
 		pointer-events: none;
@@ -169,16 +154,6 @@
 		display: flex;
 	}
 
-	.block-id {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.25rem 0.5rem;
-		pointer-events: all;
-		background: rgba(0, 0, 0, 0.9);
-		color: white;
-		font-size: 0.75rem;
-	}
-
 	.button-delete {
 		border-bottom-left-radius: 0.25rem;
 		padding-left: 0.75rem;
@@ -187,7 +162,8 @@
 
 	button {
 		pointer-events: all;
-		padding: 0.5rem 1rem;
+		padding: 0.5rem 0.75rem;
+		min-height: 34px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -195,7 +171,7 @@
 		/* height: 2rem; */
 		/* color: var(--primo-color-white); */
 		/* background-color: var(--primo-color-black-opaque); */
-		background: var(--primo-color-codeblack);
+		background: #232327;
 		color: white;
 
 		/* font-size: var(--font-size-2); */
@@ -223,12 +199,12 @@
 			/* box-shadow: var(--primo-ring); */
 			/* background: var(--primo-primary-color); */
 			/* color: var(--colr-gray-9); */
-			background: #292929;
-			color: #E7E7E7l;
+			background: #3b3b43;
+			color: #f4f4f5;
 		}
 	}
-	button:focus {
-		outline: 2px solid transparent;
+	button:focus-visible {
+		outline: 2px solid #d4d4dc;
 		outline-offset: 2px;
 	}
 

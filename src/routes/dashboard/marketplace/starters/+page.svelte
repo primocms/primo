@@ -1,4 +1,7 @@
 <script lang="ts">
+	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
+	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Separator } from '$lib/components/ui/separator'
@@ -32,22 +35,22 @@
 	<div class="flex flex-1 items-center gap-2 px-3">
 		<Sidebar.Trigger />
 		<Separator orientation="vertical" class="mr-2 h-4" />
-		<div class="text-sm">Starter Sites</div>
+		<MarketplaceTabs />
 	</div>
 	<div class="ml-auto mr-4">
-		<Button size="sm" variant="outline" onclick={() => (is_info_dialog_open = true)}>
+		<Button size="sm" variant="outline" aria-label="How to Use Starters" onclick={() => (is_info_dialog_open = true)}>
 			<Info class="h-4 w-4" />
-			How to Use Starters
+			<span class="hidden sm:inline">How to Use Starters</span>
 		</Button>
 	</div>
 </header>
-<div class="flex flex-1 flex-col gap-4 px-4 pb-4">
+<div use:rememberMarketplaceScroll={page.url.pathname + page.url.search} class="marketplace-content flex flex-1 flex-col gap-4">
 	{#key group_id}
 		{#if starters?.length || starters === undefined}
-			<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+			<div class="starter-grid">
 				{#if starters === undefined}
 					{#each Array.from({ length: 8 }) as _}
-						<Skeleton class="aspect-video w-full" />
+						<Skeleton class="aspect-square w-full rounded-lg" />
 					{/each}
 				{:else}
 					{#each starters as site (site.id)}
@@ -115,3 +118,28 @@
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style lang="postcss">
+	.marketplace-content {
+		min-height: 0;
+		overflow: auto;
+		min-width: 0;
+		padding: 0 24px 24px;
+	}
+	@media (max-width: 700px) {
+		.marketplace-content {
+			padding: 0 16px 16px;
+		}
+	}
+	.starter-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+		gap: 20px;
+		align-items: start;
+	}
+	@media (max-width: 700px) {
+		.starter-grid {
+			gap: 16px;
+		}
+	}
+</style>

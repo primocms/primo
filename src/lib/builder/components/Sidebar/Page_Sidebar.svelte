@@ -69,8 +69,8 @@
 
 <div class="sidebar primo-reset">
 	{#if has_symbols}
-		<Tabs.Root value="blocks" class="p-2">
-			<Tabs.List class="w-full mb-2">
+		<Tabs.Root value="blocks" class="p-3">
+			<Tabs.List class="w-full mb-4">
 				<Tabs.Trigger value="blocks" class="flex-1 min-w-0 flex gap-1 px-2">
 					<Cuboid class="w-3 shrink-0" />
 					<span class="text-xs truncate">Blocks</span>
@@ -177,7 +177,7 @@
 	.sidebar {
 		width: 100%;
 		/* background: #171717; */
-		background: #111;
+		background: #171719;
 		z-index: 9;
 		display: flex;
 		flex-direction: column;
@@ -195,7 +195,7 @@
 	}
 
 	.symbols {
-		gap: 1rem;
+		gap: 1.25rem;
 		flex: 1;
 		display: flex;
 		flex-direction: column;

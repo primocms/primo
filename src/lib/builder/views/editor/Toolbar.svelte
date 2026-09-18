@@ -220,11 +220,7 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<ConnectDomain
-	{site}
-	bind:open={connect_domain_open}
-	onconnected={(result) => self.update_record(site.id, { host: result.host, domain_status: result.status })}
-/>
+<ConnectDomain {site} bind:open={connect_domain_open} onconnected={(result) => self.update_record(site.id, { host: result.host, domain_status: result.status })} />
 
 <nav aria-label="toolbar" id="primo-toolbar">
 	<div class="menu-container">
@@ -233,7 +229,7 @@
 				<PrimoButton />
 			{/if}
 			<div class="button-group">
-				<div class="flex rounded" style="border: 1px solid #222">
+				<div class="navigation-group">
 					<!-- <ToolbarButton label="Site" icon="gg:website" on:click={() => modal.show('SITE_EDITOR', {}, { showSwitch: true, disabledBgClose: true })} /> -->
 					<ToolbarButton label="Site" icon="gg:website" on:click={() => (editing_site = true)} />
 				</div>
@@ -245,13 +241,13 @@
 						<div style:color={going_down ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
 					</div>
 				{:else}
-					<div class="flex rounded" style="border: 1px solid #222" bind:this={page_dropdown_anchor}>
+					<div class="navigation-group" bind:this={page_dropdown_anchor}>
 						<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => (editing_pages = true)} />
 						{#if $current_user?.siteRole === 'developer' || $current_user?.serverRole === 'developer'}
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
 									{#snippet child({ props })}
-										<button {...props} class="hover:bg-[var(--primo-color-codeblack)]" style="border-left: 1px solid #222">
+										<button {...props} class="pages-menu-button" aria-label="Page options">
 											<ChevronDown class="h-4" />
 											<span class="sr-only">More</span>
 										</button>
@@ -351,7 +347,7 @@
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
-						<button {...props} class="more-menu-button">
+						<button {...props} class="more-menu-button" aria-label="More options">
 							<Icon icon="mdi:dots-vertical" />
 						</button>
 					{/snippet}
@@ -377,7 +373,14 @@
 			</DropdownMenu.Root>
 			{@render children?.()}
 			<!-- <LocaleSelector /> -->
-			<ToolbarButton type="primo" icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} label={instance.dev_mode ? 'Preview' : 'Publish'} key="p" loading={publish_in_progress} on:click={() => (publishing = true)} />
+			<ToolbarButton
+				type="primo"
+				icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}
+				label={instance.dev_mode ? 'Preview' : 'Publish'}
+				key="p"
+				loading={publish_in_progress}
+				on:click={() => (publishing = true)}
+			/>
 		</div>
 	</div>
 </nav>
@@ -385,137 +388,143 @@
 <style lang="postcss">
 	#primo-toolbar {
 		z-index: 99;
-		border-bottom: 1px solid var(--color-gray-8);
+		flex-shrink: 0;
+		border-bottom: 1px solid #303034;
+		background: #171719;
 	}
-
-	.left {
-		/* width: 100%; */
-		display: flex;
-		justify-content: flex-start;
-		gap: 0.25rem;
-	}
-
-	.dropdown {
-		display: flex;
-		position: relative;
-	}
-
-	.left .button-group {
-		display: flex;
-		flex-direction: row;
-	}
-
-	.site-name {
-		font-size: 0.75rem;
-		display: flex;
-		align-items: center;
-		place-content: center;
-
-		.site {
-			color: #b6b6b6;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-		.separator {
-			color: #b6b6b6;
-			margin: 0 0.25rem;
-		}
-		.page {
-			color: white;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-		.page-type {
-			display: flex;
-			align-items: center;
-			gap: 0.25rem;
-			color: white;
-			border-radius: 1rem;
-			padding: 2px 6px;
-		}
-		.page-type-badge {
-			padding: 5px;
-			border-radius: 1rem;
-			aspect-ratio: 1;
-			font-size: 0.75rem;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			color: white;
-			margin-left: 0.25rem;
-		}
-
-		@media (max-width: 670px) {
-			display: none;
-		}
-	}
-
 	.menu-container {
 		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
-		margin: 0 auto;
-		/* background: #121212; */
-		/* background: var(--color-gray-9); */
-		padding: 6px 0.5rem;
-		/* position: fixed;
-		left: 0;
-		right: 0;
-		top: 0;
-		z-index: 9999; */
-		backdrop-filter: blur(4px);
-		background: rgba(10, 10, 10, 0.95);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-
-		@media (max-width: 670px) {
-			grid-template-columns: 1fr 1fr;
-		}
+		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		align-items: center;
+		gap: 1.5rem;
+		min-height: 58px;
+		padding: 10px 16px;
 	}
-
-	.right {
+	.left,
+	.right,
+	.button-group,
+	.navigation-group {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		place-content: flex-end;
 	}
-
-	.more-menu-button {
+	.left {
+		gap: 8px;
+	}
+	.right {
+		justify-content: flex-end;
+		gap: 12px;
+	}
+	.navigation-group {
+		height: 34px;
+		border: 1px solid #36363a;
+		border-radius: 7px;
+		background: #202023;
+	}
+	.site-name {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.5rem;
-		border-radius: var(--primo-border-radius);
-		/* color: #888; */
-		transition:
-			color 0.15s,
-			background-color 0.15s;
-
-		&:hover {
-			/* color: white; */
-			background-color: var(--primo-color-codeblack);
+		min-width: 0;
+		max-width: 34vw;
+		gap: 10px;
+		font-size: 12px;
+		.site,
+		.page {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.site {
+			color: #a5a5ad;
+		}
+		.separator {
+			color: #64646d;
+		}
+		.page {
+			color: #f4f4f5;
+			font-weight: 500;
+		}
+		.page-type,
+		.page-type-badge {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 5px;
+			flex-shrink: 0;
+			color: white;
+			border-radius: 5px;
+			padding: 5px;
+		}
+		.page-type {
+			padding: 4px 8px;
 		}
 	}
-
-	.button-group {
-		height: 100%;
+	.more-menu-button,
+	.pages-menu-button {
 		display: flex;
-		flex-direction: row;
-		justify-content: flex-end;
-	}
-
-	.page-hotkeys {
-		font-size: 0.75rem;
-		padding-inline: 9px;
-		display: flex;
-		gap: 4px;
-		justify-content: space-around;
-		border: 1px solid var(--color-gray-8);
-		color: white;
-		height: 100%;
 		align-items: center;
-		border-radius: var(--primo-border-radius);
+		justify-content: center;
+		color: #b8b8c0;
+		border-radius: 6px;
+		height: 32px;
+		width: 32px;
+		transition:
+			background-color 0.15s,
+			color 0.15s;
+		&:hover {
+			background: #303034;
+			color: #fff;
+		}
+		&:focus-visible {
+			outline: 2px solid #c4c4ce;
+			outline-offset: 3px;
+		}
 	}
-
+	.pages-menu-button {
+		width: 26px;
+		border-left: 1px solid #36363a;
+		border-radius: 0 6px 6px 0;
+	}
+	.page-hotkeys {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		height: 34px;
+		padding: 0 10px;
+		border: 1px solid #36363a;
+		border-radius: 7px;
+		color: #d4d4d8;
+		font-size: 12px;
+	}
+	@media (max-width: 900px) {
+		.menu-container {
+			gap: 12px;
+			padding-inline: 10px;
+		}
+		.site-name {
+			max-width: 25vw;
+			gap: 6px;
+		}
+		.site-name .site,
+		.site-name .separator {
+			display: none;
+		}
+		.right {
+			gap: 8px;
+		}
+	}
+	@media (max-width: 600px) {
+		.menu-container {
+			grid-template-columns: 1fr auto;
+		}
+		.site-name {
+			display: none;
+		}
+		.left {
+			gap: 5px;
+		}
+		.right {
+			gap: 5px;
+		}
+	}
 </style>
