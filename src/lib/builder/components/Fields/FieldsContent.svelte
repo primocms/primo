@@ -143,12 +143,12 @@
 		const temp_index = field.index || current_index
 
 		// Update the indices by swapping them
-		onchange({ id: field.id, data: { index: field_to_swap.index || new_index } })
-		onchange({ id: field_to_swap.id, data: { index: temp_index } })
+		handle_change({ id: field.id, data: { index: field_to_swap.index || new_index } })
+		handle_change({ id: field_to_swap.id, data: { index: temp_index } })
 	}
 
 	function duplicate_field(field: Field) {
-		create_field(field)
+		handle_create_field(field)
 	}
 
 	function delete_field_related_records(field_id: string) {
@@ -179,7 +179,13 @@
 		}
 	}
 
+	// Shared mutation boundary for field definitions and entries. Callers like
+	// SectionEditor render <Fields> directly rather than through Content.svelte,
+	// so they sit outside that read-only subtree — guard here so every caller and
+	// every control is covered by one check instead of per-control guards.
 	function handle_change(details: { id: string; data: Partial<Field> }) {
+		if ($read_only) return
+
 		if ('type' in details.data) {
 			// Changing field type.
 			delete_field_related_records(details.id)
@@ -189,13 +195,25 @@
 	}
 
 	function handle_delete_field(field: Field) {
+		if ($read_only) return
 		delete_field_related_records(field.id)
 		ondelete(field)
 	}
 
 	function handle_delete_entry(entry_id: string) {
+		if ($read_only) return
 		delete_entry_related_records(entry_id)
 		ondelete_entry(entry_id)
+	}
+
+	function handle_create_field(data?: Partial<Field>) {
+		if ($read_only) return
+		create_field(data)
+	}
+
+	function handle_input(...args: Parameters<FieldValueHandler>) {
+		if ($read_only) return
+		oninput(...args)
 	}
 </script>
 
@@ -268,7 +286,7 @@
 						<FieldItem
 							{field}
 							{fields}
-							{create_field}
+							create_field={handle_create_field}
 							onchange={handle_change}
 							ondelete={handle_delete_field}
 							onduplicate={() => {
@@ -283,13 +301,13 @@
 						/>
 					</div>
 				{:else if active_tab === 'entry'}
-					<EntryContent {entity} {field} {fields} {entries} level={0} onchange={oninput} ondelete={handle_delete_entry} />
+					<EntryContent {entity} {field} {fields} {entries} level={0} onchange={handle_input} ondelete={handle_delete_entry} />
 				{/if}
 			</div>
 		</div>
 	{/each}
 	{#if $current_user?.siteRole === 'developer' && !$read_only}
-		<button class="field-button" onclick={() => create_field()}>
+		<button class="field-button" onclick={() => handle_create_field()}>
 			<Icon icon="fa-solid:plus" />
 			<span>Create Field</span>
 		</button>

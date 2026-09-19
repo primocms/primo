@@ -44,9 +44,20 @@
 	// preserves contrast; checkboxes/radios/selects have no `readonly`, so
 	// those get `disabled` plus a pointer-events guard on the wrapper.
 	function apply_read_only(node: HTMLElement) {
-		function sync() {
-			if (!$read_only) return
+		// Remember what each control looked like before we locked it, so leaving
+		// Browse mode restores its own state rather than a guessed default.
+		const originals = new WeakMap<HTMLElement, { readOnly?: boolean; disabled?: boolean; contenteditable: string | null }>()
+
+		function lock() {
 			for (const el of node.querySelectorAll<HTMLElement>('input, textarea, select, [contenteditable="true"]')) {
+				if (!originals.has(el)) {
+					originals.set(el, {
+						readOnly: 'readOnly' in el ? (el as HTMLInputElement).readOnly : undefined,
+						disabled: 'disabled' in el ? (el as HTMLInputElement).disabled : undefined,
+						contenteditable: el.getAttribute('contenteditable')
+					})
+				}
+
 				if (el instanceof HTMLInputElement) {
 					if (el.type === 'checkbox' || el.type === 'radio' || el.type === 'color' || el.type === 'range' || el.type === 'file') {
 						el.disabled = true
@@ -63,12 +74,46 @@
 			}
 		}
 
-		sync()
-		// Field subtrees mount lazily (repeaters, groups, conditional fields),
-		// so re-apply whenever the rendered content changes.
+		function unlock() {
+			// contenteditable="false" elements no longer match the lock selector,
+			// so match both states when restoring.
+			for (const el of node.querySelectorAll<HTMLElement>('input, textarea, select, [contenteditable]')) {
+				const before = originals.get(el)
+				if (!before) continue
+
+				if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+					if (before.readOnly !== undefined) el.readOnly = before.readOnly
+					if (before.disabled !== undefined) el.disabled = before.disabled
+				} else if (el instanceof HTMLSelectElement) {
+					if (before.disabled !== undefined) el.disabled = before.disabled
+				} else if (before.contenteditable === null) {
+					el.removeAttribute('contenteditable')
+				} else {
+					el.setAttribute('contenteditable', before.contenteditable)
+				}
+
+				originals.delete(el)
+			}
+		}
+
+		function sync() {
+			if ($read_only) lock()
+			else unlock()
+		}
+
+		// Field subtrees mount lazily (repeaters, groups, conditional fields), so
+		// re-apply whenever the rendered content changes — and whenever the mode
+		// itself flips, since Content can stay mounted across that change.
 		const observer = new MutationObserver(sync)
 		observer.observe(node, { childList: true, subtree: true })
-		return { destroy: () => observer.disconnect() }
+		const unsubscribe = read_only.subscribe(sync)
+
+		return {
+			destroy: () => {
+				observer.disconnect()
+				unsubscribe()
+			}
+		}
 	}
 </script>
 
