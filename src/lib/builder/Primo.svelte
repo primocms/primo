@@ -204,6 +204,7 @@
 		if (event.metaKey || event.ctrlKey) return
 		if (non_mutating_keys.has(event.key)) return
 		event.preventDefault()
+		event.stopPropagation()
 		warn_read_only()
 	}
 </script>
