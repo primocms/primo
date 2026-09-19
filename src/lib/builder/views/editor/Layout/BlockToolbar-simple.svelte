@@ -4,8 +4,9 @@
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
 	import { mod_key_held } from '../../../stores/app/misc'
-	import { Code, Edit3, Trash2, ChevronUp, ChevronDown } from 'lucide-svelte'
+	import { Code, Edit3, Eye, Trash2, ChevronUp, ChevronDown } from 'lucide-svelte'
 	import { current_user } from '$lib/pocketbase/user'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	const dispatch = createEventDispatcher()
 
@@ -33,7 +34,7 @@
 	<div class="top">
 		<div class="component-button">
 			{#if $current_user?.siteRole === 'developer'}
-				<button class:showing_key_hint={$mod_key_held} onclick={() => dispatch('edit-code')} aria-label="Edit Block Code">
+				<button class:showing_key_hint={$mod_key_held} onclick={() => dispatch('edit-code')} aria-label={$read_only ? 'View Block Code' : 'Edit Block Code'}>
 					{#if $mod_key_held}
 						<span class="key-hint">⌘ E</span>
 					{/if}
@@ -42,16 +43,20 @@
 					</span>
 				</button>
 			{/if}
-			<button onclick={() => dispatch('edit-content')} aria-label="Edit Block Content">
+			<button onclick={() => dispatch('edit-content')} aria-label={$read_only ? 'View Block Content' : 'Edit Block Content'}>
 				<span class="icon">
-					<Edit3 size={14} />
+					{#if $read_only}
+						<Eye size={14} />
+					{:else}
+						<Edit3 size={14} />
+					{/if}
 				</span>
 				{#if $current_user?.siteRole !== 'developer'}
-					<span>Edit Content</span>
+					<span>{$read_only ? 'View Content' : 'Edit Content'}</span>
 				{/if}
 			</button>
 		</div>
-		{#if !is_instance_block}
+		{#if !is_instance_block && !$read_only}
 			<div class="top-right">
 				<button onclick={() => dispatch('delete')} class="button-delete" aria-label="Delete block">
 					<Trash2 size={14} />
@@ -64,7 +69,7 @@
 			</div>
 		{/if}
 	</div>
-	{#if !is_instance_block}
+	{#if !is_instance_block && !$read_only}
 		<div class="bottom">
 			{#if !is_last}
 				<button aria-label="Move block down" class="bottom-right" onclick={() => dispatch('moveDown')}>

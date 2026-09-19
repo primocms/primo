@@ -18,6 +18,7 @@
 	import { site_context, hide_dynamic_field_types_context, hide_page_field_field_type_context, hide_site_field_field_type_context } from '$lib/builder/stores/context'
 	import type { Field } from '$lib/common/models/Field'
 	import pluralize from 'pluralize'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let {
 		field,
@@ -288,7 +289,7 @@
 				}}
 				placement="bottom-start"
 			/>
-			{#if collapsed}
+			{#if collapsed && !$read_only}
 				<div class="field-options">
 					{#if $mod_key_held}
 						<div class="overlay-actions">
@@ -364,7 +365,7 @@
 						})
 					}}
 				/>
-				{#if !collapsed}
+				{#if !collapsed && !$read_only}
 					<div class="field-options">
 						{#if $mod_key_held}
 							<div class="overlay-actions">
@@ -498,7 +499,7 @@
 						})
 					}}
 				/>
-				{#if !collapsed}
+				{#if !collapsed && !$read_only}
 					<div class="field-options">
 						{#if $mod_key_held}
 							<div class="overlay-actions">

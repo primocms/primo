@@ -6,6 +6,7 @@
 	import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import pluralize from 'pluralize'
+	import { read_only } from '$lib/pocketbase/author_mode'
 	import type { Field } from '$lib/common/models/Field'
 	import type { Entry } from '$lib/common/models/Entry'
 	import type { Entity } from '$lib/Entity'
@@ -143,6 +144,7 @@
 		<div class="item-options">
 			<button
 				class="title"
+				data-browse-allowed
 				ondblclick={() => dispatch('toggleall')}
 				onclick={(e) => {
 					if ($mod_key_held) {
@@ -171,15 +173,17 @@
 					<Icon icon={is_visible ? 'ph:caret-up-bold' : 'ph:caret-down-bold'} />
 				{/if}
 			</button>
-			<div class="primo-buttons">
-				<!-- disable for now -->
-				<!-- <button bind:this={drag_handle_element}>
-					<Icon icon="material-symbols:drag-handle" />
-				</button> -->
-				<button title="Delete {singular_label} item" onclick={() => dispatch('remove')}>
-					<Icon icon="ion:trash" />
-				</button>
-			</div>
+			{#if !$read_only}
+				<div class="primo-buttons">
+					<!-- disable for now -->
+					<!-- <button bind:this={drag_handle_element}>
+						<Icon icon="material-symbols:drag-handle" />
+					</button> -->
+					<button title="Delete {singular_label} item" onclick={() => dispatch('remove')}>
+						<Icon icon="ion:trash" />
+					</button>
+				</div>
+			{/if}
 		</div>
 		{#if is_visible}
 			<div class="field-values">

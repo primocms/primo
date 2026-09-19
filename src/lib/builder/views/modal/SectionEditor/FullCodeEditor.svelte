@@ -1,6 +1,7 @@
 <script>
 	import { createEventDispatcher } from 'svelte'
 	import CodeMirror from '$lib/builder/components/CodeEditor/CodeMirror.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	const dispatch = createEventDispatcher()
 
@@ -99,6 +100,7 @@
 		mode="html"
 		{data}
 		{completions}
+		disabled={$read_only}
 		bind:value={unified_code}
 		on:mod-e
 		on:mod-r

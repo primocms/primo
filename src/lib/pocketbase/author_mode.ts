@@ -1,10 +1,16 @@
-import { writable, readonly, get } from 'svelte/store'
+import { writable, readonly, derived, get } from 'svelte/store'
 
 export type AuthorMode = 'files' | 'cms' | 'both'
 
 const author_mode_store = writable<AuthorMode>('both')
 
 export const author_mode = readonly(author_mode_store)
+
+// Single source of truth for Browse mode. In files-author mode the CLI owns
+// the content on disk and re-projects it into the CMS, so the editor is an
+// inspector: everything stays navigable, nothing is writable. Components
+// should subscribe to this rather than comparing `author_mode` themselves.
+export const read_only = derived(author_mode_store, (mode) => mode === 'files')
 
 export const set_author_mode = (mode: unknown) => {
 	if (mode === 'files' || mode === 'cms' || mode === 'both') {
