@@ -25,7 +25,10 @@ async function waitForServer(url: string, timeoutMs = 20000) {
 // and/or the Go binary — deliberately excludes tests/, docs, and other
 // tracked files whose changes have no effect on `primo`'s build output, so
 // editing a spec file doesn't spuriously flag the binary as stale.
-const BUILD_INPUT_PATHS = ['src', 'internal', 'static', 'migrations', 'go.mod', 'go.sum', 'main.go', 'package.json', 'package-lock.json']
+// app.config.js and common.config.js are the vite configs the two build
+// commands run against, so a change to either invalidates existing
+// artifacts just as surely as a source change does.
+const BUILD_INPUT_PATHS = ['src', 'internal', 'static', 'migrations', 'go.mod', 'go.sum', 'main.go', 'package.json', 'package-lock.json', 'app.config.js', 'common.config.js']
 // Generated build output lives inside internal/ but must not count as an
 // input to itself.
 const BUILD_OUTPUT_EXCLUDES = ['internal/build/', 'internal/common/index.cjs']

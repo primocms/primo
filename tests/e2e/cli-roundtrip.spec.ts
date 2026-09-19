@@ -53,11 +53,17 @@ test.describe('CLI round trip', () => {
 		await expect(headline).toHaveText('Original Headline', { timeout: 10000 })
 		cmsEditedHeadline = `CMS Edit After Pull ${Date.now()}`
 		await replaceContentEditableText(page, headline, cmsEditedHeadline)
-		await headline.blur()
-		await page.waitForResponse(
+		// Register the listener BEFORE blur(), which is what triggers the
+		// save: waitForResponse only matches responses that arrive after
+		// it starts listening, so registering it afterward can miss a fast
+		// save and time out on content that was in fact persisted.
+		const savePromise = page.waitForResponse(
 			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
 			{ timeout: 5000 }
 		)
+		await headline.blur()
+		const saveRes = await savePromise
+		expect(saveRes.ok()).toBeTruthy()
 		await page.close()
 
 		// confirm it actually persisted server-side before touching the CLI

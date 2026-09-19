@@ -2,6 +2,22 @@ import type { Page, Locator, FrameLocator } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { TEST_SERVER_URL } from './paths'
 
+const TRANSPARENT_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+/** Serves every remote image request from the harness instead of the
+ * public internet. The fixture content (and the image dialog's own test
+ * input) deliberately keep real Unsplash URLs, because what those tests
+ * assert is the URL *value* round-tripping through the CMS — but
+ * page.goto()/page.reload() wait for the load event, which waits on
+ * <img> requests, so an actually-fetched slow or unreachable Unsplash
+ * response would burn the test timeout for reasons unrelated to the
+ * product. Intercepting keeps the asserted URLs intact while making the
+ * suite independent of external network access. Covers the canvas iframe
+ * too: page.route applies to every frame in the page. */
+export async function stubExternalImages(page: Page) {
+	await page.route('https://images.unsplash.com/**', (route) => route.fulfill({ status: 200, contentType: 'image/png', body: TRANSPARENT_PNG }))
+}
+
 /** Navigates directly to a specific seeded site's editor (by id, via
  * /admin/sites/[site_id]) as the localhost dev-auth "developer" account.
  *
@@ -20,6 +36,7 @@ import { TEST_SERVER_URL } from './paths'
  * check_session() passes immediately and /admin/sites/{siteId} loads with
  * no intermediate hop at all. */
 export async function loginAsDeveloper(page: Page, siteId: string) {
+	await stubExternalImages(page)
 	const res = await page.request.post(`${TEST_SERVER_URL}/api/primo/dev-auth`)
 	if (!res.ok()) throw new Error(`dev-auth failed: ${res.status()} ${await res.text()}`)
 	const { token, record } = await res.json()
@@ -39,6 +56,7 @@ export async function loginAsDeveloper(page: Page, siteId: string) {
  * for flows that start before any site exists in the test's context, like
  * creating a new site from scratch. */
 export async function loginAsDeveloperAtDashboard(page: Page) {
+	await stubExternalImages(page)
 	const res = await page.request.post(`${TEST_SERVER_URL}/api/primo/dev-auth`)
 	if (!res.ok()) throw new Error(`dev-auth failed: ${res.status()} ${await res.text()}`)
 	const { token, record } = await res.json()
@@ -59,8 +77,15 @@ export async function loginAsDeveloperAtDashboard(page: Page) {
  * Necessary because on localhost the auth layout's own onMount immediately
  * fires dev-auth and redirects, so the real sign-in form is unreachable in
  * this dev-mode test environment — this reproduces what a successful
- * sign-in leaves behind without racing that redirect. */
+ * sign-in leaves behind without racing that redirect.
+ *
+ * Must be given a page that hasn't already been logged in as someone
+ * else: addInitScript registrations accumulate on a page and Playwright
+ * does not define their evaluation order, so a second login on the same
+ * page leaves it non-deterministic which account's token the next
+ * navigation ends up storing. Use a fresh page/context per identity. */
 export async function loginAs(page: Page, email: string, password: string, siteId: string) {
+	await stubExternalImages(page)
 	const res = await page.request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {
 		data: { identity: email, password }
 	})

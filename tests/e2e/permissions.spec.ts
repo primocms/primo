@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { TEST_SERVER_URL } from './helpers/paths'
 import { loginAsDeveloper, loginAs, canvasFrame, replaceContentEditableText } from './helpers/editor'
 import { devAuth, ensureEditorUser, apiLoginAs } from './helpers/server'
@@ -46,11 +46,17 @@ test.describe('Client permissions', () => {
 
 		const editorHeadline = `Editor Edit ${Date.now()}`
 		await replaceContentEditableText(page, headline, editorHeadline)
-		await headline.blur()
-		await page.waitForResponse(
+		// Register the listener BEFORE blur(), which is what triggers the
+		// save: waitForResponse only matches responses that arrive after
+		// it starts listening, so registering it afterward can miss a fast
+		// save and time out on content that was in fact persisted.
+		const savePromise = page.waitForResponse(
 			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
 			{ timeout: 5000 }
 		)
+		await headline.blur()
+		const saveRes = await savePromise
+		expect(saveRes.ok()).toBeTruthy()
 
 		const entriesRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, {
 			headers: { Authorization: `Bearer ${devToken}` },
@@ -74,19 +80,29 @@ test.describe('Client permissions', () => {
 		// the compiled output. Target it structurally instead: the
 		// dropdown-menu trigger inside the same .button-group as the
 		// "Pages" button.
-		const pageOptionsTrigger = page.locator('.button-group', { has: page.getByRole('button', { name: 'Pages' }) }).locator('[data-dropdown-menu-trigger]')
+		const pageOptionsTriggerOn = (target: Page) =>
+			target.locator('.button-group', { has: target.getByRole('button', { name: 'Pages' }) }).locator('[data-dropdown-menu-trigger]')
 
 		// Confirm the control IS visible for a developer, to rule out a
 		// selector mistake before asserting its absence for the editor.
 		await loginAsDeveloper(page, ids.siteId)
 		const devFrame = canvasFrame(page)
 		await expect(devFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
-		await expect(pageOptionsTrigger).toBeVisible({ timeout: 5000 })
+		await expect(pageOptionsTriggerOn(page)).toBeVisible({ timeout: 5000 })
 
-		await loginAs(page, editor.email, editor.password, ids.siteId)
-		const editorFrame = canvasFrame(page)
+		// The editor session gets its OWN page. Both login helpers seed the
+		// auth token via addInitScript, and those registrations accumulate:
+		// logging in as the editor on this same page would leave both the
+		// developer's and the editor's script queued for the next
+		// navigation, with Playwright not defining which runs last. The
+		// assertion below would then be testing an undefined identity —
+		// the whole point of this test.
+		const editorPage = await page.context().newPage()
+		await loginAs(editorPage, editor.email, editor.password, ids.siteId)
+		const editorFrame = canvasFrame(editorPage)
 		await expect(editorFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
-		await expect(pageOptionsTrigger).toHaveCount(0)
+		await expect(pageOptionsTriggerOn(editorPage)).toHaveCount(0)
+		await editorPage.close()
 	})
 
 	// KNOWN GAP, reproduced (not papered over): every PocketBase collection API

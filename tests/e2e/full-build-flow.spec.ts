@@ -186,7 +186,13 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	)
 	await blockDialog.getByRole('button', { name: 'Create Block' }).click()
 	const blockSaveRes = await blockSaveResponsePromise
+	// Check the mutation itself before parsing it. A failed create would
+	// otherwise surface as the symbol locator below timing out, which
+	// reads like a UI regression instead of "block creation returned an
+	// error."
+	expect(blockSaveRes.ok(), `block creation failed: ${blockSaveRes.status()}`).toBeTruthy()
 	const newSymbol = await blockSaveRes.json()
+	expect(newSymbol?.id, 'block creation returned no record id').toBeTruthy()
 	await expect(blockDialog).toBeHidden({ timeout: 5000 })
 
 	// --- toggle the new block on for this page type (this is what makes
@@ -315,10 +321,16 @@ test.describe('Full build flow (site creation through publish)', () => {
 		test.setTimeout(60000)
 		const { newSiteId, newSymbol, newPage, devToken } = await buildSiteThroughPageCreation(page, request)
 
-		await request.post(`${TEST_SERVER_URL}/api/collections/page_sections/records`, {
+		// Assert the section create here rather than letting a failure
+		// resurface later as the "Expected exactly 1 section" check below,
+		// which would misreport a setup error as a product problem.
+		const sectionCreateRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_sections/records`, {
 			headers: { Authorization: `Bearer ${devToken}` },
 			data: { page: newPage.id, symbol: newSymbol.id, index: 0 }
 		})
+		if (!sectionCreateRes.ok()) {
+			throw new Error(`Failed to attach block to page: ${sectionCreateRes.status()} ${await sectionCreateRes.text()}`)
+		}
 
 		// The section's text field starts empty (no default value was set
 		// when the field was created), and ComponentNode.svelte's
@@ -367,11 +379,17 @@ test.describe('Full build flow (site creation through publish)', () => {
 
 		const finalHeadline = `Published from full build flow ${Date.now()}`
 		await replaceContentEditableText(page, headline, finalHeadline)
-		await headline.blur()
-		await page.waitForResponse(
+		// Register the listener BEFORE blur(), which is what triggers the
+		// save: waitForResponse only matches responses that arrive after
+		// it starts listening, so registering it afterward can miss a fast
+		// save and time out on content that was in fact persisted.
+		const entrySavePromise = page.waitForResponse(
 			(res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET',
 			{ timeout: 5000 }
 		)
+		await headline.blur()
+		const entrySaveRes = await entrySavePromise
+		expect(entrySaveRes.ok()).toBeTruthy()
 
 		const generateResponsePromise = page.waitForResponse(
 			(res) => res.url().includes('/api/primo/generate') && res.request().method() === 'POST',
