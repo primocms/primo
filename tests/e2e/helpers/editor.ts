@@ -79,11 +79,13 @@ export async function loginAsDeveloperAtDashboard(page: Page) {
  * this dev-mode test environment — this reproduces what a successful
  * sign-in leaves behind without racing that redirect.
  *
- * Must be given a page that hasn't already been logged in as someone
- * else: addInitScript registrations accumulate on a page and Playwright
- * does not define their evaluation order, so a second login on the same
- * page leaves it non-deterministic which account's token the next
- * navigation ends up storing. Use a fresh page/context per identity. */
+ * Give each identity its own browser CONTEXT, not just its own page.
+ * addInitScript registrations accumulate on a page and Playwright does
+ * not define their evaluation order, so a second login on one page
+ * leaves it non-deterministic whose token the next navigation stores —
+ * and pages sharing a context also share the localStorage that holds
+ * pocketbase_auth, so a session still open elsewhere in that context can
+ * write its token back over this one after the page has booted. */
 export async function loginAs(page: Page, email: string, password: string, siteId: string) {
 	await stubExternalImages(page)
 	const res = await page.request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {

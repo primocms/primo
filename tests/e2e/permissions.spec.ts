@@ -67,7 +67,7 @@ test.describe('Client permissions', () => {
 		expect(headlineEntry.value).toBe(editorHeadline)
 	})
 
-	test('UI hides the developer-only "Page options" (Page Types) control from an editor', async ({ page, request }) => {
+	test('UI hides the developer-only "Page options" (Page Types) control from an editor', async ({ page, browser, request }) => {
 		const { token: devToken } = await devAuth(request)
 		const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
@@ -90,19 +90,28 @@ test.describe('Client permissions', () => {
 		await expect(devFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
 		await expect(pageOptionsTriggerOn(page)).toBeVisible({ timeout: 5000 })
 
-		// The editor session gets its OWN page. Both login helpers seed the
-		// auth token via addInitScript, and those registrations accumulate:
-		// logging in as the editor on this same page would leave both the
-		// developer's and the editor's script queued for the next
-		// navigation, with Playwright not defining which runs last. The
-		// assertion below would then be testing an undefined identity —
-		// the whole point of this test.
-		const editorPage = await page.context().newPage()
+		// The editor session needs its own browser CONTEXT, not just its own
+		// page. Two reasons, and a separate page only addresses the first:
+		//   1. Both login helpers seed the auth token via addInitScript, and
+		//      those registrations accumulate per page — reusing this page
+		//      would leave the developer's and the editor's script both
+		//      queued for the next navigation, with Playwright not defining
+		//      which runs last.
+		//   2. Pages in one context share localStorage for the origin, which
+		//      is where pocketbase_auth lives. The developer session above is
+		//      still open, so its client can write its own token back over
+		//      the editor's after the editor page has booted. That raced:
+		//      it passed locally and on the first CI run, then failed on a
+		//      re-run with the developer's toolbar showing up here.
+		// A fresh context gives the editor its own storage, the same way
+		// content-persistence.spec.ts isolates its second session.
+		const editorContext = await browser.newContext()
+		const editorPage = await editorContext.newPage()
 		await loginAs(editorPage, editor.email, editor.password, ids.siteId)
 		const editorFrame = canvasFrame(editorPage)
 		await expect(editorFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
 		await expect(pageOptionsTriggerOn(editorPage)).toHaveCount(0)
-		await editorPage.close()
+		await editorContext.close()
 	})
 
 	// KNOWN GAP, reproduced (not papered over): every PocketBase collection API
