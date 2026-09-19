@@ -1,16 +1,20 @@
-import { PlaywrightTestConfig } from '@playwright/test'
+import { defineConfig } from '@playwright/test'
+import { TEST_SERVER_URL } from './tests/e2e/helpers/paths'
 
-const config: PlaywrightTestConfig = {
-	use: {
-		launchOptions: {
-			headless: false
-		},
-		storageState: './playwright/.auth/user.json',
-		baseURL: 'http://localhost:5173' // Adjust this to your app's URL
-	},
+export default defineConfig({
 	testDir: './tests/e2e',
+	testMatch: '**/*.spec.ts',
 	timeout: 30000,
-	globalSetup: './playwright/global-setup.js'
-}
-
-export default config
+	expect: { timeout: 10000 },
+	globalSetup: './tests/e2e/global-setup.ts',
+	globalTeardown: './tests/e2e/global-teardown.ts',
+	use: {
+		baseURL: TEST_SERVER_URL,
+		trace: 'retain-on-failure',
+		screenshot: 'only-on-failure'
+	},
+	fullyParallel: false,
+	workers: 1,
+	retries: 0,
+	reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
+})

@@ -1,0 +1,13 @@
+_id: idkwnnhj7xvg0fn
+name: Home
+page_type: default
+sections:
+    - _id: 9xpseimvihcwi64
+      block: content-block
+      content:
+        headline: Original Headline
+        body: <p>Original body text.</p>
+        image:
+            alt: Original alt text
+            url: https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80
+        items: []
