@@ -96,8 +96,12 @@
 			}
 		}
 
+		// Tracked explicitly rather than read off the store each time, so the
+		// MutationObserver and the subscription always agree on the current mode.
+		let locked = false
+
 		function sync() {
-			if ($read_only) lock()
+			if (locked) lock()
 			else unlock()
 		}
 
@@ -106,7 +110,10 @@
 		// itself flips, since Content can stay mounted across that change.
 		const observer = new MutationObserver(sync)
 		observer.observe(node, { childList: true, subtree: true })
-		const unsubscribe = read_only.subscribe(sync)
+		const unsubscribe = read_only.subscribe((value) => {
+			locked = value
+			sync()
+		})
 
 		return {
 			destroy: () => {
