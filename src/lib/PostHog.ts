@@ -4,7 +4,7 @@ import 'posthog-js/dist/tracing-headers'
 import 'posthog-js/dist/web-vitals'
 import { instance } from './instance'
 
-const POSTHOG_KEY = 'phc_uh5ILOgLhZ4Pg5KLdrzTmiuZNLwsQeihA1Af1rTqNK1'
+const POSTHOG_KEY = 'phc_BjtMaGQMikAbssG6oaMrrksEB9m5J825kJZnwR8Qx87B'
 const POSTHOG_HOST = 'https://us.i.posthog.com'
 
 export const initialized = (async () => {
