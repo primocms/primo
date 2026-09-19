@@ -54,6 +54,10 @@
 	// detect when all sections are mounted to fade in page
 	let sections_mounted = $state(0)
 
+	// How long mounting may stall — no further sections reporting in — before we
+	// show the page regardless. Generous enough not to fire on a slow compile.
+	const MOUNT_STALL_TIMEOUT_MS = 10000
+
 	beforeNavigate((nav) => {
 		// Navigating to the page we're already on doesn't remount sections,
 		// so the mount counter would never recover — leaving the spinner stuck
@@ -475,9 +479,28 @@
 		sections_mounted = Math.min(sections_mounted, target_count)
 		if (sections_mounted >= target_count) {
 			page_mounted = true
-		} else if (!page_mounted) {
-			page_mounted = false
+			return
 		}
+
+		// A section that never reports a mount (its content data never resolves,
+		// so it never compiles and never renders an iframe) would otherwise hold
+		// the spinner up indefinitely and hide every section that did render.
+		// Reveal the page anyway once mounting has stalled, so a single stuck
+		// block degrades to a partial page instead of a blank one with no way to
+		// tell what went wrong.
+		//
+		// The effect re-runs on each mount, so this timer is rebuilt while
+		// sections are still arriving — it measures time since the last mount,
+		// and only fires once progress has actually stopped. The timer is armed
+		// whenever sections are outstanding, including after an earlier timeout
+		// already revealed the page, so a later stall still gets reported.
+		const mounted_so_far = sections_mounted
+		const timer = setTimeout(() => {
+			console.warn(`[primo] ${target_count - mounted_so_far} of ${target_count} sections did not finish mounting; showing the page anyway.`)
+			page_mounted = true
+		}, MOUNT_STALL_TIMEOUT_MS)
+
+		return () => clearTimeout(timer)
 	})
 
 	type HoveredSectionSource = 'page' | 'page-type'
