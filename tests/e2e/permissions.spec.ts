@@ -89,46 +89,52 @@ test.describe('Client permissions', () => {
 		await expect(pageOptionsTrigger).toHaveCount(0)
 	})
 
-	test('DOCUMENTS (does not enforce) direct-API access: editor role has the same PocketBase collection permissions as developer', async ({
-		request
-	}) => {
-		const { token: devToken } = await devAuth(request)
-		const editor = await ensureEditorUser(request, devToken, ids.siteId)
+	// KNOWN GAP, reproduced (not papered over): every PocketBase collection API
+	// rule for page_types (and site_symbols, page_sections, entries) checks
+	// only whether a site_role_assignments row exists for (user, site) — it
+	// never inspects the row's `role` value. So an editor can create/modify
+	// page types via a direct API call, even though the documented
+	// collaboration model says editors "cannot ... modify page types." This
+	// is a product gap, tracked separately; this test documents it as an
+	// *expected* failure rather than accepting whatever the server does.
+	//
+	// test.fail() semantics: Playwright expects this test to fail. If a
+	// future fix adds server-side role-value enforcement, this assertion
+	// starts passing and Playwright reports it as an UNEXPECTED PASS — which
+	// fails the run and is exactly the signal to delete the test.fail() line
+	// below and let the assertion stand as a normal, enforced pass.
+	test.fail(
+		"editor can create a page_type via direct API — PocketBase rules don't check role value (product bug, not a test gap)",
+		async ({ request }) => {
+			const { token: devToken } = await devAuth(request)
+			const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
-		const editorLoginRes = await request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {
-			data: { identity: editor.email, password: editor.password }
-		})
-		const { token: editorToken } = await editorLoginRes.json()
-
-		// Attempt to create a new page_type directly via the PocketBase REST
-		// API as the editor — per docs, editors should not be able to modify
-		// page types. Record what actually happens rather than assuming.
-		const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
-			headers: { Authorization: `Bearer ${editorToken}` },
-			data: { site: ids.siteId, name: `Editor-created type ${Date.now()}` }
-		})
-
-		// EVIDENCE, not aspiration: as of this recon, page_types.createRule
-		// only checks site_role_assignments existence, not role value, so
-		// this is expected to SUCCEED (2xx) — the opposite of the documented
-		// editor restriction. If a future fix adds role-based server-side
-		// enforcement, this assertion should start failing and should be
-		// updated to expect 403, not silently loosened.
-		if (createRes.ok()) {
-			const created = await createRes.json()
-			console.warn(
-				`[KNOWN GAP] Editor was able to create a page_type via direct API (id=${created.id}). ` +
-					`Server-side role enforcement does not distinguish 'editor' from 'developer' — see permissions.spec.ts header comment.`
-			)
-			// cleanup using developer authority so we don't leave test pollution
-			await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${created.id}`, {
-				headers: { Authorization: `Bearer ${devToken}` }
+			const editorLoginRes = await request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {
+				data: { identity: editor.email, password: editor.password }
 			})
-			expect(createRes.status()).toBe(200)
-		} else {
-			// If this ever starts failing, that's a (welcome) product change,
-			// not a test bug — update the comment above.
+			const { token: editorToken } = await editorLoginRes.json()
+
+			// Attempt to create a new page_type directly via the PocketBase REST
+			// API as the editor — per docs, editors should not be able to modify
+			// page types.
+			const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+				headers: { Authorization: `Bearer ${editorToken}` },
+				data: { site: ids.siteId, name: `Editor-created type ${Date.now()}` }
+			})
+
+			// cleanup using developer authority so we don't leave test
+			// pollution, regardless of whether this assertion passes or fails
+			if (createRes.ok()) {
+				const created = await createRes.json()
+				await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${created.id}`, {
+					headers: { Authorization: `Bearer ${devToken}` }
+				})
+			}
+
+			// --- assert the CORRECT/documented behavior, not whatever the
+			// server actually does: editors must not be able to create page
+			// types. This currently fails because the check doesn't exist. ---
 			expect(createRes.status()).toBe(403)
 		}
-	})
+	)
 })

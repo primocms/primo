@@ -11,16 +11,17 @@ let ids: SeededSite
 const PULL_DIR = '/tmp/primo-e2e-cli-pull'
 let siteDir: string
 let componentPath: string
+let cmsEditedHeadline: string
+let afterHeadlineEntry: { value: string } | undefined
+let symbolCss: string
 
 test.describe('CLI round trip', () => {
-	test.beforeAll(async ({ request }) => {
+	test.beforeAll(async ({ browser, request }) => {
 		fs.rmSync(PULL_DIR, { recursive: true, force: true })
 		const { token } = await devAuth(request)
 		ids = await seedFixtureSite(token, 'CLI Roundtrip Fixture')
-	})
 
-	test('author-mode semantics: primo push after a post-pull CMS edit + local styling edit', async ({ page, request }) => {
-		const { token } = await devAuth(request)
+		const page = await browser.newPage()
 		await loginAsDeveloper(page, ids.siteId)
 
 		// --- establish baseline: pull the fixture as a developer would ---
@@ -50,13 +51,14 @@ test.describe('CLI round trip', () => {
 		const headline = frame.locator('[data-testid="headline"]')
 		await expect(headline).toBeVisible({ timeout: 15000 })
 		await expect(headline).toHaveText('Original Headline', { timeout: 10000 })
-		const cmsEditedHeadline = `CMS Edit After Pull ${Date.now()}`
+		cmsEditedHeadline = `CMS Edit After Pull ${Date.now()}`
 		await replaceContentEditableText(page, headline, cmsEditedHeadline)
 		await headline.blur()
 		await page.waitForResponse(
 			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
 			{ timeout: 5000 }
 		)
+		await page.close()
 
 		// confirm it actually persisted server-side before touching the CLI
 		const beforePushRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, {
@@ -80,7 +82,7 @@ test.describe('CLI round trip', () => {
 		// one-shot upload of the local directory's current state.) ---
 		execFileSync('node', [CLI_ENTRY, 'push', '-t', token], { cwd: siteDir, stdio: 'inherit' })
 
-		// --- check whether the CMS content edit survived ---
+		// --- capture what happened to the CMS content edit ---
 		const afterPushRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_sections/records`, {
 			headers: { Authorization: `Bearer ${token}` },
 			params: { filter: `page = "${ids.pageId}"` }
@@ -94,41 +96,42 @@ test.describe('CLI round trip', () => {
 			params: { filter: `section = "${currentSectionId}"` }
 		})
 		const afterEntries = (await afterEntriesRes.json()).items
-		const afterHeadlineEntry = afterEntries.find((e: any) => e.field === ids.fieldIds.headline)
+		afterHeadlineEntry = afterEntries.find((e: any) => e.field === ids.fieldIds.headline)
 
-		// --- record actual behavior; do not normalize data loss into a pass ---
-		// Reproduced destructive behavior (confirmed manually before writing
-		// this test, and asserted here so a fix is caught by a red test,
-		// not a silently-updated green one): `primo push` re-derives content
-		// from the LOCAL pulled YAML (which still has the pre-CMS-edit
-		// "Original Headline") and overwrites the server, discarding the
-		// CMS edit that was made after the pull — even though the only
-		// intentional local change was to component CSS, not content.
-		// Entries are recreated (delete+recreate), not diffed/merged in place.
-		if (afterHeadlineEntry?.value === cmsEditedHeadline) {
-			// If this ever passes, push started preserving concurrent CMS
-			// edits — a real fix, not a flake. Leave this branch in place so
-			// the test keeps working either way instead of hard-coding the
-			// bug as the only acceptable outcome.
-			expect(afterHeadlineEntry.value).toBe(cmsEditedHeadline)
-		} else {
-			console.warn(
-				'[PRODUCT BUG — destructive] primo push overwrote a CMS content edit made after the last pull ' +
-					`with the stale pulled value, even though only unrelated component styling was changed locally. ` +
-					`Expected headline "${cmsEditedHeadline}", got "${afterHeadlineEntry?.value}". ` +
-					`Section id ${currentSectionId === ids.sectionId ? 'unchanged but entries recreated' : `changed from ${ids.sectionId} to ${currentSectionId}`}.`
-			)
-			expect(afterHeadlineEntry?.value).toBe('Original Headline')
-		}
+		console.log(
+			`primo push result: expected headline "${cmsEditedHeadline}", got "${afterHeadlineEntry?.value}". ` +
+				`Section id ${currentSectionId === ids.sectionId ? 'unchanged but entries recreated' : `changed from ${ids.sectionId} to ${currentSectionId}`}.`
+		)
 
-		// The styling edit itself DID make it to the server, confirming push
-		// picked up local changes generally — it's specifically the
-		// concurrent-CMS-edit case that's destroyed.
+		// --- capture whether the unrelated styling edit made it to the server ---
 		const symbolRes = await request.get(`${TEST_SERVER_URL}/api/collections/site_symbols/records`, {
 			headers: { Authorization: `Bearer ${token}` },
 			params: { filter: `site = "${ids.siteId}"` }
 		})
 		const symbol = (await symbolRes.json()).items[0]
-		expect(symbol.css).toContain('hotpink')
+		symbolCss = symbol.css
+	})
+
+	// KNOWN BUG, reproduced (not papered over): `primo push` re-derives content
+	// from the LOCAL pulled YAML and overwrites the server, silently
+	// discarding a CMS content edit made after the pull — even when the only
+	// intentional local change was to component CSS, not content. This is a
+	// product bug, tracked separately; this test suite documents it as an
+	// *expected* failure rather than skipping or softening the assertion.
+	//
+	// test.fail() semantics: Playwright expects this test to fail. If the
+	// underlying push bug is ever fixed, this assertion starts passing and
+	// Playwright reports it as an UNEXPECTED PASS — which fails the run and
+	// is exactly the signal to delete the test.fail() line below and let the
+	// assertion stand as a normal, enforced pass.
+	test.fail('primo push overwrites concurrent CMS content edits with stale pulled values (product bug, not a test gap)', async () => {
+		expect(afterHeadlineEntry?.value).toBe(cmsEditedHeadline)
+	})
+
+	// Kept as a SEPARATE, normally-enforced test (not folded into the test
+	// above) so a genuine regression here can't hide behind the known-bug
+	// test.fail() on the assertion above.
+	test('primo push does propagate unrelated local file changes (styling) to the server', async () => {
+		expect(symbolCss).toContain('hotpink')
 	})
 })
