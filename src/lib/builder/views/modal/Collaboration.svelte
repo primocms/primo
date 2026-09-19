@@ -12,6 +12,7 @@
 	import Icon from '@iconify/svelte'
 	import { Loader } from 'lucide-svelte'
 	import { nanoid } from 'nanoid'
+	import { track_collaborator_added, track_operation_error, categorize_error } from '$lib/analytics'
 
 	let { site }: { site: ObjectOf<typeof Sites> } = $props()
 
@@ -56,10 +57,12 @@
 			})
 
 			await self.commit()
+			track_collaborator_added({ site_id: site.id, method: 'invite' })
 			email = ''
 			role = 'developer'
 		} catch (e) {
 			if (!error) error = 'Unexpected error'
+			track_operation_error({ operation: 'collaborator_add', category: categorize_error(e), site_id: site.id })
 			throw e
 		} finally {
 			sending = false
@@ -94,6 +97,7 @@
 				})
 
 				await self.commit()
+				track_collaborator_added({ site_id: site.id, method: 'link' })
 				email = ''
 				role = 'developer'
 				link = location.protocol + '//' + site.host + '/admin'
@@ -134,9 +138,11 @@
 				})
 				link = response.link
 				link_shown = true
+				track_collaborator_added({ site_id: site.id, method: 'link' })
 			}
 		} catch (e) {
 			if (!error) error = 'Unexpected error'
+			track_operation_error({ operation: 'collaborator_add', category: categorize_error(e), site_id: site.id })
 			throw e
 		} finally {
 			generating = false

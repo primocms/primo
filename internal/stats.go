@@ -1,25 +1,23 @@
 /**
  * Primo CMS Usage Statistics
  *
- * This module collects anonymous usage statistics to help improve Primo CMS.
- * Data collection is privacy-focused and can be disabled by setting
- * PRIMO_DISABLE_USAGE_STATS=true.
+ * This module sends a daily anonymous instance heartbeat (record counts only,
+ * no content) to help gauge deployment health. It is separate from the
+ * in-app product analytics (see src/lib/analytics.ts), which tracks specific
+ * editor/publish operations from the client.
  *
  * What we collect:
  * - Anonymous instance ID (random UUID, not linked to any personal data)
  * - Primo CMS version number
  * - Count of sites, pages, and users (numbers only, no content)
- * - Basic error events (sanitized, no user data)
- * - Geographic location (city-level only)
  *
  * What we DON'T collect:
  * - Email addresses or usernames
  * - Site content, URLs, or custom code
- * - IP addresses (anonymized by PostHog)
- * - Session recordings or screenshots
  * - Any personally identifiable information
  *
- * To disable: Set PRIMO_DISABLE_USAGE_STATS=true in your environment variables
+ * Self-hosted instances: OFF by default. Opt in with PRIMO_ENABLE_USAGE_STATS=true.
+ * Hosted mode (PRIMO_HOSTED_MODE=true): ON by default. Opt out with PRIMO_ENABLE_USAGE_STATS=false.
  */
 
 package internal
@@ -29,6 +27,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/pocketbase/pocketbase"
@@ -53,9 +52,15 @@ type event struct {
 const usageStatsKey = "phc_uh5ILOgLhZ4Pg5KLdrzTmiuZNLwsQeihA1Af1rTqNK1"
 const usageStatsHost = "https://us.i.posthog.com"
 
-// Check if usage statistics are enabled
+// Check if usage statistics are enabled.
+// Self-hosted: opt-in only (PRIMO_ENABLE_USAGE_STATS=true).
+// Hosted mode: opt-out (PRIMO_ENABLE_USAGE_STATS=false to disable).
 func isUsageStateEnabled() bool {
-	return false // Analytics disabled
+	override := os.Getenv("PRIMO_ENABLE_USAGE_STATS")
+	if override != "" {
+		return override == "true"
+	}
+	return isHostedMode()
 }
 
 // Send usage statistics

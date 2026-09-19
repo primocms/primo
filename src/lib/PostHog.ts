@@ -1,4 +1,3 @@
-import { self } from './pocketbase/managers'
 import posthog from 'posthog-js/dist/module.no-external'
 import 'posthog-js/dist/exception-autocapture'
 import 'posthog-js/dist/tracing-headers'

@@ -19,7 +19,14 @@ export type TrackedList = {
 
 export type CollectionManager = ReturnType<typeof createCollectionManager>
 
-export const createCollectionManager = (instance?: Client) => {
+export const createCollectionManager = (
+	instance?: Client,
+	// Called once per successfully-committed change (server confirmed), before
+	// any error handling for other changes in the same batch runs. Used by
+	// analytics.ts to detect content-entry saves without every manager (e.g.
+	// the marketplace or presence-activity ones) needing to know about it.
+	on_committed?: (change: { collection: string; operation: Change<ObjectWithId>['operation'] }) => void
+) => {
 	const changes = new OrderedSvelteMap<string, Change<ObjectWithId>>()
 	const records = new OrderedSvelteMap<string, TrackedRecord | undefined | null>()
 	const lists = new OrderedSvelteMap<string, TrackedList | undefined | null>()
@@ -60,6 +67,7 @@ export const createCollectionManager = (instance?: Client) => {
 						break
 					}
 				}
+				on_committed?.({ collection: change.collection, operation: change.operation })
 			} catch (error) {
 				// Undo change on failure
 				changes.delete(id)

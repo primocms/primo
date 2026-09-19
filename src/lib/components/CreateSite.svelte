@@ -15,6 +15,7 @@
 	import { watch } from 'runed'
 	import BlockPickerPanel from '$lib/components/BlockPickerPanel.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
+	import { track_site_created, track_operation_error, categorize_error } from '$lib/analytics'
 
 	/*
   Create Site Wizard
@@ -272,6 +273,7 @@
 			created_site_id = result.id
 			created_site_host = result.host
 			done_creating_site = true
+			track_site_created({ site_id: result.id, source: selected_starter_source })
 
 			// If no blocks to copy, finish immediately without waiting for
 			// the reactive store to sync (avoids race condition on large templates).
@@ -287,6 +289,7 @@
 			console.error('Site creation error:', e)
 			loading = false
 			error_message = e instanceof Error ? e.message : 'An error occurred while creating the site'
+			track_operation_error({ operation: 'site_create', category: categorize_error(e) })
 		}
 	}
 

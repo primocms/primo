@@ -9,6 +9,7 @@ export const handleError: HandleClientError = async ({ error, status }) => {
 	}
 
 	await initialized
+	if (!instance.telemetry_enabled || instance.dev_mode) return
 	posthog.captureException(error, {
 		version: instance.version
 	})

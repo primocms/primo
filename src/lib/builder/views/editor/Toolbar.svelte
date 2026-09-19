@@ -31,6 +31,7 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
+	import { track_site_published, track_operation_error, categorize_error } from '$lib/analytics'
 
 	let { children }: { children: Snippet } = $props()
 
@@ -67,6 +68,10 @@
 				SiteSnapshots.delete(existing_snapshot.id)
 			}
 			await self.commit()
+			track_site_published({ site_id: site.id })
+		} catch (e) {
+			track_operation_error({ operation: 'publish', category: categorize_error(e), site_id: site.id })
+			throw e
 		} finally {
 			publish_in_progress = false
 		}
