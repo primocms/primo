@@ -98,14 +98,21 @@ test.describe('Client permissions', () => {
 	// is a product gap, tracked separately; this test documents it as an
 	// *expected* failure rather than accepting whatever the server does.
 	test.describe('direct-API authorization: editor creating a page_type', () => {
-		// All of this runs as NORMAL, always-enforced assertions — outside any
-		// test.fail() body. If auth setup breaks, or the role assignment isn't
-		// what we think it is, that must fail this test outright rather than
-		// being absorbed into "the known bug's expected failure."
+		// Everything that can fail for a reason OTHER than "the known
+		// permission gap" — auth, the create attempt itself, and the
+		// independent lookup — runs here as NORMAL, always-enforced
+		// assertions, outside any test.fail() body. Only the final
+		// comparison against the documented denial contract lives in the
+		// expected-failure test below; this hook captures the raw
+		// observations it compares against.
+		let devToken: string
 		let editorToken: string
+		let attemptedName: string
+		let observedCreateStatus: number
+		let matchingRecordCount: number
 
 		test.beforeAll(async ({ request }) => {
-			const { token: devToken } = await devAuth(request)
+			;({ token: devToken } = await devAuth(request))
 			const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
 			// Confirm the editor actually authenticates successfully, and
@@ -122,6 +129,38 @@ test.describe('Client permissions', () => {
 			const assignments = (await assignmentsRes.json()).items
 			expect(assignments).toHaveLength(1)
 			expect(assignments[0].role).toBe('editor')
+
+			// Attempt to create a new page_type directly via the PocketBase
+			// REST API as the editor — per docs, editors should not be able
+			// to modify page types. Run and validate this here, not in the
+			// expected-failure test: a network/setup failure (e.g. a 5xx, a
+			// timeout, a malformed response) must fail this test outright,
+			// not be silently absorbed as "the known permission gap."
+			attemptedName = `Editor-created type ${Date.now()}`
+			const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+				headers: { Authorization: `Bearer ${editorToken}` },
+				data: { site: ids.siteId, name: attemptedName }
+			})
+			observedCreateStatus = createRes.status()
+			// Only 200 (bug: create succeeded) or 400 (correctly denied — see
+			// the expected-failure test for why 400, not 403, is the
+			// PocketBase-correct denial here) are outcomes this test is
+			// designed to compare against. Anything else — a 5xx, a 401 from
+			// a broken editor login, etc. — is an infrastructure problem and
+			// must fail loudly right here.
+			expect([200, 400]).toContain(observedCreateStatus)
+
+			// Independent lookup by the exact attempted name (don't trust
+			// createRes's own body/id) using developer authority, since an
+			// editor's create call — successful or not — has no reason to be
+			// trusted to report its own outcome honestly. Validate the
+			// lookup itself succeeded before trusting its count.
+			const listRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+				headers: { Authorization: `Bearer ${devToken}` },
+				params: { filter: `site = "${ids.siteId}" && name = "${attemptedName}"` }
+			})
+			expect(listRes.ok()).toBeTruthy()
+			matchingRecordCount = (await listRes.json()).items.length
 		})
 
 		// test.fail() semantics: Playwright expects THIS test to fail. If a
@@ -129,65 +168,45 @@ test.describe('Client permissions', () => {
 		// starts passing and Playwright reports it as an UNEXPECTED PASS —
 		// which fails the run and is exactly the signal to delete the
 		// test.fail() line below and let the assertion stand as a normal,
-		// enforced pass. Scoped to ONLY the authorization outcome: setup,
-		// auth, and cleanup all happen outside this body (above/below), so an
-		// unrelated infra failure can't be silently absorbed as "the known
-		// bug."
+		// enforced pass. No network calls or setup here — only a comparison
+		// against values already captured (and validated) in beforeAll, so
+		// this body can only fail for the one reason it claims to.
 		test.fail(
 			"editor can create a page_type via direct API — PocketBase rules don't check role value (product bug, not a test gap)",
-			async ({ request }) => {
-				const { token: devToken } = await devAuth(request)
-				const attemptedName = `Editor-created type ${Date.now()}`
-
-				// Attempt to create a new page_type directly via the PocketBase
-				// REST API as the editor — per docs, editors should not be able
-				// to modify page types.
-				const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
-					headers: { Authorization: `Bearer ${editorToken}` },
-					data: { site: ids.siteId, name: attemptedName }
-				})
-
-				// The PocketBase-correct denial for a CreateRule filter evaluating
-				// to false is HTTP 400 with a generic "Failed to create record"
-				// body — verified empirically against this same server (both a
-				// fully anonymous request and an authenticated user with zero
-				// site_role_assignments rows on the target site both return 400,
-				// never 403). Do not assume 403 just because that's the
-				// conventional REST "forbidden" code; assert what this system's
-				// permission contract actually produces on a genuine denial.
-				expect(createRes.status()).toBe(400)
-
-				// The stronger, real-world-meaningful check: no unauthorized
-				// record must exist afterward, regardless of what status code
-				// came back. Look it up independently by the exact attempted
-				// name (don't trust createRes's own body/id) using developer
-				// authority, since an editor's create call — successful or
-				// not — has no reason to be trusted to report its own outcome
-				// honestly here.
-				const listRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
-					headers: { Authorization: `Bearer ${devToken}` },
-					params: { filter: `site = "${ids.siteId}" && name = "${attemptedName}"` }
-				})
-				const created = (await listRes.json()).items
-				expect(created).toHaveLength(0)
+			async () => {
+				// The PocketBase-correct denial for a CreateRule filter
+				// evaluating to false is HTTP 400 with a generic "Failed to
+				// create record" body — verified empirically against this same
+				// server (both a fully anonymous request and an authenticated
+				// user with zero site_role_assignments rows on the target site
+				// return 400, never 403). Do not assume 403 just because
+				// that's the conventional REST "forbidden" code.
+				//
+				// The real-world-meaningful half of the contract: zero
+				// matching records must exist afterward, independent of
+				// status code.
+				expect({ status: observedCreateStatus, createdCount: matchingRecordCount }).toEqual({ status: 400, createdCount: 0 })
 			}
 		)
 
 		// Cleanup runs as a normal, always-executed hook — not conditionally
 		// inside the expected-failure body — so a change in behavior (e.g. the
 		// bug getting fixed, or the create unexpectedly returning a different
-		// shape) can never cause pollution to silently go uncleaned.
+		// shape) can never cause pollution to silently go uncleaned. Assert
+		// the lookup and every deletion succeed: a silent cleanup failure here
+		// would leak state into later runs/tests without ever being reported.
 		test.afterAll(async ({ request }) => {
-			const { token: devToken } = await devAuth(request)
 			const listRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
 				headers: { Authorization: `Bearer ${devToken}` },
 				params: { filter: `site = "${ids.siteId}" && name ~ "Editor-created type"` }
 			})
+			expect(listRes.ok()).toBeTruthy()
 			const leftover = (await listRes.json()).items ?? []
 			for (const record of leftover) {
-				await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${record.id}`, {
+				const deleteRes = await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${record.id}`, {
 					headers: { Authorization: `Bearer ${devToken}` }
 				})
+				expect(deleteRes.ok()).toBeTruthy()
 			}
 		})
 	})
