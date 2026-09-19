@@ -81,6 +81,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 			}
 
 			version := getBuildVersion()
+			telemetryEnabled := isUsageStateEnabled()
 			smtpEnabled := pb.Settings().SMTP.Enabled
 
 			// Expose plan caps so the UI can disable the create-site / add-editor
@@ -117,7 +118,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 			}{
 				Id:                id,
 				Version:           version,
-				TelemetryEnabled:  false, // Analytics disabled
+				TelemetryEnabled:  telemetryEnabled,
 				SMTPEnabled:       smtpEnabled,
 				HostedMode:        isHostedMode(),
 				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),

@@ -1,0 +1,25 @@
+- _id: 9xuy41ibljh75lx
+  label: Headline
+  name: headline
+  type: text
+- _id: o6qjiujv6oh9sdb
+  label: Body
+  name: body
+  type: rich-text
+- _id: dw2pcn9t84azytj
+  label: Image
+  name: image
+  type: image
+- _id: xepq85jsg65kxvf
+  label: Items
+  name: items
+  subfields:
+    - _id: 1t2tala753lc58d
+      label: Name
+      name: name
+      type: text
+    - _id: rc11ertj5pht0hl
+      label: Description
+      name: description
+      type: text
+  type: repeater

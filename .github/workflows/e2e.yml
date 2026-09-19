@@ -1,0 +1,77 @@
+name: E2E tests
+
+# Runs on every PR, including Dependabot's. That's the main reason this
+# exists: auto-merge.yml approves and merges npm patch/minor bumps
+# automatically, and until now the only checks on those were CodeQL, which
+# never executes the app. A bump to something like the drag-and-drop
+# library could land on main without anything having exercised it.
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Only the newest commit on a PR is worth testing; cancel superseded runs.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Browser builds are pinned to the @playwright/test version, so key the
+      # cache on that rather than on the lockfile hash.
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      # Runs even on a cache hit: --with-deps also installs OS-level shared
+      # libraries outside the cached directory. The cache only saves the
+      # browser download itself.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Deliberately NOT cached. global-setup.ts fails the run if the primo
+      # binary is older than the newest tracked source file, and
+      # actions/checkout stamps every file with the checkout time — so a
+      # restored build cache would always look stale and hard-fail here.
+      - name: Build binary and frontend under test
+        run: npm run test:e2e:build
+
+      - name: Run E2E suite
+        run: npx playwright test
+
+      # Kept on failure so a red run is diagnosable without a local repro:
+      # the HTML report, the traces playwright.config.ts retains on failure,
+      # and the primo server's own log.
+      - name: Upload report and traces
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            /tmp/primo-e2e-server.log
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,5 @@
+_id: 30t9nt3w5uzbikc
+name: Default
+icon: mdi:file-document-outline
+allowed_blocks:
+    - content-block
