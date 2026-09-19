@@ -266,7 +266,7 @@
 					</div>
 				{:else}
 					{#if show_toggle}
-						<Toggle label="Toggle Symbol for Page Type" disabled={!!component_error} hideLabel={true} {toggled} small={true} on:toggle />
+						<Toggle label="Toggle Symbol for Page Type" disabled={!!component_error || $read_only} hideLabel={true} {toggled} small={true} on:toggle />
 					{/if}
 					<MenuPopup
 						icon="carbon:overflow-menu-vertical"

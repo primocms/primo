@@ -350,7 +350,7 @@
 									show_toggle={true}
 									{toggled}
 									on:toggle={({ detail }) => {
-										if (!page_type || detail === toggled) return // dispatches on creation for some reason
+										if ($read_only || !page_type || detail === toggled) return // dispatches on creation for some reason
 
 										// Check if this toggle would make the page type static
 										const current_symbol_count = page_type_symbols.length
