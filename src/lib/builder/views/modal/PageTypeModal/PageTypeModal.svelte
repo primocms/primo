@@ -13,7 +13,9 @@
 	const { value: site } = site_context.get()
 
 	async function create_page_type(new_page_type) {
-		if (!site) return
+		// Guard the mutation itself, not just the trigger: a form already open
+		// when the mode flips would otherwise still submit.
+		if ($read_only || !site) return
 
 		// Add the site ID to the page type
 		const page_type_data = {
@@ -36,7 +38,7 @@
 				<Item {page_type} active={pageState.params.page_type === page_type.id} />
 			</li>
 		{/each}
-		{#if creating_page_type}
+		{#if creating_page_type && !$read_only}
 			<li style="background: #1a1a1a;">
 				<PageForm
 					on:create={({ detail: new_page_type }) => {

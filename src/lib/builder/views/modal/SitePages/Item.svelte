@@ -95,8 +95,15 @@
 
 	let drag_handle_element = $state()
 	let element = $state()
-	onMount(async () => {
-		draggable({
+	// Browse mode removes the drag handle from the DOM, so a registration made
+	// once on mount would keep pointing at the detached element after a
+	// CMS → Browse → CMS round trip and reordering would silently stop working.
+	// Re-register whenever the handle (or the mode) changes, and skip entirely
+	// while read-only.
+	$effect(() => {
+		if ($read_only || !element || !drag_handle_element) return
+
+		return draggable({
 			element,
 			dragHandle: drag_handle_element,
 			getInitialData: () => ({ page }),
@@ -107,6 +114,9 @@
 				is_dragging = false
 			}
 		})
+	})
+
+	onMount(async () => {
 		dropTargetForElements({
 			element,
 			getData({ input, element }) {
