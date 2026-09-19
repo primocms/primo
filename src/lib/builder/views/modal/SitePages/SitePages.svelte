@@ -137,6 +137,10 @@
 	})
 
 	async function create_page_with_sections(page_data: Omit<Page, 'id' | 'index'>) {
+		// Guard the mutation, not just the trigger: a form already open when the
+		// mode flips would otherwise still submit.
+		if ($read_only) return
+
 		// Get existing siblings and find the max index
 		const sibling_pages = all_pages.filter((page) => page.parent === page_data.parent)
 		const maxIndex = sibling_pages.length > 0 ? Math.max(...sibling_pages.map((p) => p.index)) : -1
@@ -169,7 +173,7 @@
 			</li>
 		{/if}
 
-		{#if creating_page}
+		{#if creating_page && !$read_only}
 			<li>
 				<PageForm
 					oncreate={async (new_page: any) => {

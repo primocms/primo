@@ -53,6 +53,8 @@
 	const related_activities = $derived(getUserActivity({ filter: ({ site_symbol }) => site_symbol?.id === symbol.id }))
 
 	async function save_rename() {
+		// The rename dialog can already be open when the mode flips.
+		if ($read_only) return
 		if (!symbol || !new_name.trim()) return
 
 		try {

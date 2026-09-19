@@ -264,6 +264,8 @@
 						use:content_editable={{
 							on_change: (val) => {},
 							on_submit: (val) => {
+								// Inline rename can already be open when the mode flips.
+								if ($read_only) return
 								Pages.update(page.id, { name: val })
 								selfManager.commit()
 								editing_page = false
@@ -420,7 +422,7 @@
 		</div>
 	</div>
 
-	{#if creating_page}
+	{#if creating_page && !$read_only}
 		<div style="border-left: 0.5rem solid #111;" transition:slide={{ duration: 200 }}>
 			<PageForm
 				parent={page}
@@ -495,7 +497,8 @@
 			<Button
 				variant="destructive"
 				onclick={async () => {
-					if (pending_delete) {
+					// The confirm dialog can already be open when the mode flips.
+					if (!$read_only && pending_delete) {
 						await pending_delete()
 					}
 					delete_warning_dialog = false
