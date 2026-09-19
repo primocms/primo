@@ -529,6 +529,7 @@
 				{
 					key: 'mod-s',
 					run: () => {
+						if (disabled) return true
 						dispatch('save')
 						return true
 					}
@@ -543,10 +544,11 @@
 				{
 					key: 'mod-Enter',
 					run: () => {
+						if (disabled) return true
 						const value = Editor.state.doc.toString()
 						const position = Editor.state.selection.main.head
 						format_code(value, { mode, position }).then((res) => {
-							if (!res) return
+							if (!res || disabled) return
 							const { formatted, cursorOffset } = res
 							Editor.dispatch({
 								changes: [
