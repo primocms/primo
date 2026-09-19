@@ -10,11 +10,14 @@
 	import { Loader } from 'lucide-svelte'
 
 	onMount(async () => {
+		// Before any await: read_only must be pending-locked before Primo can
+		// render during check_session() with the writable 'both' default.
+		refresh_author_mode()
+
 		if (!(await check_session())) {
 			await goto('/admin/auth')
 			return
 		}
-		refresh_author_mode()
 	})
 
 	let { children } = $props()

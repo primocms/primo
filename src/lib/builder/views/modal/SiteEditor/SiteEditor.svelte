@@ -157,7 +157,7 @@
 						<Pane minSize={1.4}>
 							<div class="container" style="margin-bottom: 1rem">
 								<span class="primo--field-label">Head HTML</span>
-								<CodeEditor mode="html" bind:value={head} on:save={saveComponent} />
+								<CodeEditor mode="html" bind:value={head} disabled={$read_only} on:save={saveComponent} />
 							</div>
 						</Pane>
 						<PaneResizer class="PaneResizer-secondary">
@@ -168,7 +168,7 @@
 						<Pane minSize={1.4}>
 							<div class="container">
 								<span class="primo--field-label">Body Footer HTML</span>
-								<CodeEditor mode="html" bind:value={foot} on:save={saveComponent} />
+								<CodeEditor mode="html" bind:value={foot} disabled={$read_only} on:save={saveComponent} />
 							</div>
 						</Pane>
 					</PaneGroup>
