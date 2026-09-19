@@ -2,6 +2,11 @@ import { read_only } from '$lib/pocketbase/author_mode'
 
 type Original = { readOnly?: boolean; disabled?: boolean; contenteditable: string | null }
 
+// Input types where `readonly` actually prevents editing. Everything else —
+// checkbox, radio, color, range, file, and the button-like types — ignores it
+// and has to be disabled instead.
+const READONLY_CAPABLE_INPUT_TYPES = new Set(['text', 'search', 'url', 'tel', 'email', 'password', 'date', 'month', 'week', 'time', 'datetime-local', 'number'])
+
 // Buttons that navigate rather than mutate (expand/collapse toggles) opt out.
 const LOCK_SELECTOR = 'input, textarea, select, button:not([data-browse-allowed]), [contenteditable="true"]'
 // `contenteditable="false"` no longer matches the lock selector, so match the
@@ -38,10 +43,14 @@ export function apply_read_only(node: HTMLElement) {
 			}
 
 			if (el instanceof HTMLInputElement) {
-				if (el.type === 'checkbox' || el.type === 'radio' || el.type === 'color' || el.type === 'range' || el.type === 'file') {
-					el.disabled = true
-				} else {
+				// Allowlist rather than denylist: field types are pluggable, so an
+				// input type that ignores `readonly` (button/submit/reset/image, or
+				// anything added later) has to fall through to `disabled` instead of
+				// silently staying live.
+				if (READONLY_CAPABLE_INPUT_TYPES.has(el.type)) {
 					el.readOnly = true
+				} else {
+					el.disabled = true
 				}
 			} else if (el instanceof HTMLTextAreaElement) {
 				el.readOnly = true
