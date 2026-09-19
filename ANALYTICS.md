@@ -86,7 +86,7 @@ the raw error message, stack, or any URL; only a coarse category.
 
 | Property | Meaning |
 |---|---|
-| `operation` | `site_create`, `content_save`, `publish`, or `collaborator_add` |
+| `operation` | `site_create`, `content_save`, `publish`, `collaborator_add`, or `uncaught_client_error` (SvelteKit's client error handler, `hooks.client.ts`) |
 | `category` | `network`, `validation`, `permission`, `compilation`, `server`, or `unknown` — see `categorize_error()` |
 | `site_id` | Present when the operation is scoped to a site (absent for `site_create`, which doesn't have one yet) |
 

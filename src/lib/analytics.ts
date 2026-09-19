@@ -107,12 +107,18 @@ const day_bucket_key = (event: AnalyticsEvent, key: string) => `primo_analytics_
 
 const is_new_day = (event: AnalyticsEvent, key: string) => {
 	if (typeof localStorage === 'undefined') return true
-	const storage_key = day_bucket_key(event, key)
-	const today = new Date().toISOString().slice(0, 10)
-	const last = localStorage.getItem(storage_key)
-	if (last === today) return false
-	localStorage.setItem(storage_key, today)
-	return true
+	try {
+		const storage_key = day_bucket_key(event, key)
+		const today = new Date().toISOString().slice(0, 10)
+		const last = localStorage.getItem(storage_key)
+		if (last === today) return false
+		localStorage.setItem(storage_key, today)
+		return true
+	} catch {
+		// Storage access can throw (private browsing, quota exceeded). Analytics
+		// must never break the caller — fall back to "always return activity".
+		return true
+	}
 }
 
 /** A new site record was successfully created (server-confirmed). */
@@ -173,5 +179,13 @@ export const track_operation_error = (properties: { operation: 'site_create' | '
 		operation: properties.operation,
 		category: properties.category,
 		site_id: properties.site_id
+	})
+}
+
+/** An uncaught client-side error surfaced to SvelteKit's error handler. Category only — never the raw error/message/stack/URL. */
+export const track_uncaught_error = (error: unknown) => {
+	track(ANALYTICS_EVENTS.OPERATION_FAILED, {
+		operation: 'uncaught_client_error',
+		category: categorize_error(error)
 	})
 }

@@ -116,6 +116,7 @@
 				})
 
 				await self.commit()
+				track_collaborator_added({ site_id: site.id, method: 'link' })
 				email = ''
 				role = 'developer'
 
@@ -138,7 +139,6 @@
 				})
 				link = response.link
 				link_shown = true
-				track_collaborator_added({ site_id: site.id, method: 'link' })
 			}
 		} catch (e) {
 			if (!error) error = 'Unexpected error'
