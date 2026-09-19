@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { TEST_SERVER_URL } from './helpers/paths'
 import { loginAsDeveloper, loginAs, canvasFrame, replaceContentEditableText } from './helpers/editor'
-import { devAuth, ensureEditorUser } from './helpers/server'
+import { devAuth, ensureEditorUser, apiLoginAs } from './helpers/server'
 import { seedFixtureSite, type SeededSite } from './helpers/seed'
 
 let ids: SeededSite
@@ -97,44 +97,98 @@ test.describe('Client permissions', () => {
 	// collaboration model says editors "cannot ... modify page types." This
 	// is a product gap, tracked separately; this test documents it as an
 	// *expected* failure rather than accepting whatever the server does.
-	//
-	// test.fail() semantics: Playwright expects this test to fail. If a
-	// future fix adds server-side role-value enforcement, this assertion
-	// starts passing and Playwright reports it as an UNEXPECTED PASS — which
-	// fails the run and is exactly the signal to delete the test.fail() line
-	// below and let the assertion stand as a normal, enforced pass.
-	test.fail(
-		"editor can create a page_type via direct API — PocketBase rules don't check role value (product bug, not a test gap)",
-		async ({ request }) => {
+	test.describe('direct-API authorization: editor creating a page_type', () => {
+		// All of this runs as NORMAL, always-enforced assertions — outside any
+		// test.fail() body. If auth setup breaks, or the role assignment isn't
+		// what we think it is, that must fail this test outright rather than
+		// being absorbed into "the known bug's expected failure."
+		let editorToken: string
+
+		test.beforeAll(async ({ request }) => {
 			const { token: devToken } = await devAuth(request)
 			const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
-			const editorLoginRes = await request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {
-				data: { identity: editor.email, password: editor.password }
-			})
-			const { token: editorToken } = await editorLoginRes.json()
+			// Confirm the editor actually authenticates successfully, and
+			// confirm the role assignment on record is really 'editor' (not
+			// just "some row exists") — both are prerequisites for the
+			// authorization assertion below to mean what it claims to mean.
+			editorToken = await apiLoginAs(request, editor.email, editor.password)
 
-			// Attempt to create a new page_type directly via the PocketBase REST
-			// API as the editor — per docs, editors should not be able to modify
-			// page types.
-			const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
-				headers: { Authorization: `Bearer ${editorToken}` },
-				data: { site: ids.siteId, name: `Editor-created type ${Date.now()}` }
+			const assignmentsRes = await request.get(`${TEST_SERVER_URL}/api/collections/site_role_assignments/records`, {
+				headers: { Authorization: `Bearer ${devToken}` },
+				params: { filter: `site = "${ids.siteId}" && user = "${editor.userId}"` }
 			})
+			expect(assignmentsRes.ok()).toBeTruthy()
+			const assignments = (await assignmentsRes.json()).items
+			expect(assignments).toHaveLength(1)
+			expect(assignments[0].role).toBe('editor')
+		})
 
-			// cleanup using developer authority so we don't leave test
-			// pollution, regardless of whether this assertion passes or fails
-			if (createRes.ok()) {
-				const created = await createRes.json()
-				await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${created.id}`, {
+		// test.fail() semantics: Playwright expects THIS test to fail. If a
+		// future fix adds server-side role-value enforcement, this assertion
+		// starts passing and Playwright reports it as an UNEXPECTED PASS —
+		// which fails the run and is exactly the signal to delete the
+		// test.fail() line below and let the assertion stand as a normal,
+		// enforced pass. Scoped to ONLY the authorization outcome: setup,
+		// auth, and cleanup all happen outside this body (above/below), so an
+		// unrelated infra failure can't be silently absorbed as "the known
+		// bug."
+		test.fail(
+			"editor can create a page_type via direct API — PocketBase rules don't check role value (product bug, not a test gap)",
+			async ({ request }) => {
+				const { token: devToken } = await devAuth(request)
+				const attemptedName = `Editor-created type ${Date.now()}`
+
+				// Attempt to create a new page_type directly via the PocketBase
+				// REST API as the editor — per docs, editors should not be able
+				// to modify page types.
+				const createRes = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+					headers: { Authorization: `Bearer ${editorToken}` },
+					data: { site: ids.siteId, name: attemptedName }
+				})
+
+				// The PocketBase-correct denial for a CreateRule filter evaluating
+				// to false is HTTP 400 with a generic "Failed to create record"
+				// body — verified empirically against this same server (both a
+				// fully anonymous request and an authenticated user with zero
+				// site_role_assignments rows on the target site both return 400,
+				// never 403). Do not assume 403 just because that's the
+				// conventional REST "forbidden" code; assert what this system's
+				// permission contract actually produces on a genuine denial.
+				expect(createRes.status()).toBe(400)
+
+				// The stronger, real-world-meaningful check: no unauthorized
+				// record must exist afterward, regardless of what status code
+				// came back. Look it up independently by the exact attempted
+				// name (don't trust createRes's own body/id) using developer
+				// authority, since an editor's create call — successful or
+				// not — has no reason to be trusted to report its own outcome
+				// honestly here.
+				const listRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+					headers: { Authorization: `Bearer ${devToken}` },
+					params: { filter: `site = "${ids.siteId}" && name = "${attemptedName}"` }
+				})
+				const created = (await listRes.json()).items
+				expect(created).toHaveLength(0)
+			}
+		)
+
+		// Cleanup runs as a normal, always-executed hook — not conditionally
+		// inside the expected-failure body — so a change in behavior (e.g. the
+		// bug getting fixed, or the create unexpectedly returning a different
+		// shape) can never cause pollution to silently go uncleaned.
+		test.afterAll(async ({ request }) => {
+			const { token: devToken } = await devAuth(request)
+			const listRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+				headers: { Authorization: `Bearer ${devToken}` },
+				params: { filter: `site = "${ids.siteId}" && name ~ "Editor-created type"` }
+			})
+			const leftover = (await listRes.json()).items ?? []
+			for (const record of leftover) {
+				await request.delete(`${TEST_SERVER_URL}/api/collections/page_types/records/${record.id}`, {
 					headers: { Authorization: `Bearer ${devToken}` }
 				})
 			}
-
-			// --- assert the CORRECT/documented behavior, not whatever the
-			// server actually does: editors must not be able to create page
-			// types. This currently fails because the check doesn't exist. ---
-			expect(createRes.status()).toBe(403)
-		}
-	)
+		})
+	})
 })
