@@ -140,8 +140,10 @@
 
 	let element = $state()
 	$effect(() => {
-		if (element) {
-			draggable({
+		// Re-registered when read_only flips (e.g. the startup author-mode
+		// refresh) so a Browse-mode session never carries a live drag source.
+		if (element && !$read_only) {
+			const cleanup = draggable({
 				element,
 				getInitialData: () => ({ block: symbol }),
 				onDragStart: () => {
@@ -161,6 +163,7 @@
 					}
 				}
 			})
+			return cleanup
 		}
 	})
 	// move cursor to end of name

@@ -363,7 +363,7 @@
 				}
 			},
 			async onDrop({ source }) {
-				if (!source.data?.block || !page_type) return
+				if ($read_only || !source.data?.block || !page_type) return
 
 				const block_being_dragged = source.data.block
 				const zone_sections = page_type_sections.filter((s) => (s.zone || 'body') === zone)
@@ -451,7 +451,7 @@
 				position_drop_indicator()
 			},
 			async onDrop({ self, source }) {
-				if (!source.data?.block || !page_type) return
+				if ($read_only || !source.data?.block || !page_type) return
 
 				const block_being_dragged = source.data.block
 				const section_dragged_over = self.data.section

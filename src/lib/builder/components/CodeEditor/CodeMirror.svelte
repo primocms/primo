@@ -76,6 +76,7 @@
 	}
 
 	function save_tooltip_styles_silent() {
+		if (disabled) return
 		if (!Editor || !tooltip_editor_views.length) return
 
 		let doc = Editor.state.doc.toString()
@@ -275,6 +276,10 @@
 					basicSetup,
 					css_highlighter,
 					vsCodeDark,
+					// Tooltip editors are separate views — the main editor's
+					// disabled compartment doesn't reach them.
+					EditorState.readOnly.of(disabled),
+					EditorView.editable.of(!disabled),
 					EditorView.theme({
 						'&': { fontSize: '12px' },
 						'.cm-scroller': { overflow: 'auto', fontFamily: 'Fira Code, monospace' },
