@@ -89,24 +89,32 @@
 	let generated_js = $state('')
 	async function generate_component_code(block) {
 		const safeData = component_data && typeof component_data === 'object' ? component_data : {}
-		const res = await processCode({
-			component: {
-				head: '',
-				html: block.html,
-				css: block.css,
-				js: block.js,
-				data: safeData
-			},
-			buildStatic: false,
-			runtime: ['mount', 'unmount']
-		})
+		try {
+			const res = await processCode({
+				component: {
+					head: '',
+					html: block.html,
+					css: block.css,
+					js: block.js,
+					data: safeData
+				},
+				buildStatic: false,
+				runtime: ['mount', 'unmount']
+			})
 
-		if (res.error) {
-			error = res.error
+			if (res.error) {
+				error = res.error
+				dispatch_mount()
+			} else {
+				error = ''
+				generated_js = res.js
+			}
+		} catch (e) {
+			// processCode rejecting (rather than returning {error}) would otherwise
+			// skip both branches above, so this block would never report itself
+			// mounted and the page spinner would hang on it forever.
+			error = e instanceof Error ? e.message : String(e)
 			dispatch_mount()
-		} else {
-			error = ''
-			generated_js = res.js
 		}
 	}
 
