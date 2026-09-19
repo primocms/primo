@@ -164,6 +164,16 @@
 							</div>
 						{/if}
 					</button>
+					{#if instance.telemetry_enabled}
+						<p class="telemetry-note" data-test-id="telemetry-note">
+							This server sends anonymous usage analytics (no page content or emails) to help
+							improve Primo.
+							{#if !instance.hosted_mode}
+								Disable with <code>PRIMO_ENABLE_USAGE_STATS=false</code>.
+							{/if}
+							<a href="https://github.com/primocms/primo/blob/main/ANALYTICS.md" target="_blank" rel="noopener noreferrer">What's collected</a>
+						</p>
+					{/if}
 				</form>
 			{/if}
 		</div>
@@ -373,6 +383,26 @@
 				}
 				to {
 					transform: rotate(360deg);
+				}
+			}
+		}
+
+		.telemetry-note {
+			margin-top: -1rem;
+			font-size: 12px;
+			line-height: 1.5;
+			color: #797979;
+
+			code {
+				font-size: 11px;
+				color: #b6b6b6;
+			}
+
+			a {
+				color: #ff6b35;
+
+				&:hover {
+					text-decoration: underline;
 				}
 			}
 		}
