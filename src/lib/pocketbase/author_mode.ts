@@ -49,14 +49,20 @@ export const refresh_author_mode = () => {
 		.then(async (response) => {
 			if (!response.ok) return
 			const data = await response.json().catch(() => null)
-			set_author_mode(data?.author_mode)
+			const mode = data?.author_mode
+			// Only an authoritative answer may unlock: a failed or malformed
+			// refresh leaves no grounds to expose mutation controls, so the
+			// pending lock stays up rather than falling back to editable.
+			if (mode === 'files' || mode === 'cms' || mode === 'both') {
+				set_author_mode(mode)
+				refresh_pending_store.set(false)
+			}
 		})
 		.catch(() => {
-			// Dev auth not available — leave default
+			// Dev auth failed — stay pending-locked (see above)
 		})
 		.finally(() => {
 			refresh_promise = null
-			refresh_pending_store.set(false)
 		})
 	return refresh_promise
 }
