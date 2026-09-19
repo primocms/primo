@@ -53,6 +53,7 @@
 	import EntryContent from './EntryContent.svelte'
 	import { current_user } from '$lib/pocketbase/user'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { apply_read_only } from '$lib/builder/utils/read_only_dom'
 
 	let {
 		entity,
@@ -217,7 +218,7 @@
 	}
 </script>
 
-<div class="Fields">
+<div class="Fields" class:read-only={$read_only} use:apply_read_only>
 	{#each (fields || []).filter((f) => !f.parent || f.parent === '').sort((a, b) => a.index - b.index) as field (field.id)}
 		{@const active_tab = selected_tabs[field.id] ?? 'entry'}
 		<div class="entries-item">
@@ -225,6 +226,7 @@
 				<div class="top-tabs">
 					<button
 						data-test-id="field"
+						data-browse-allowed
 						class:active={active_tab === 'field'}
 						class:showing_key_hint={$mod_key_held && active_tab !== 'field'}
 						ondblclick={() => set_all_tabs('field')}
@@ -250,6 +252,7 @@
 					</button>
 					<button
 						data-test-id="entry"
+						data-browse-allowed
 						class="border-t border-(--color-gray-9)"
 						class:active={active_tab === 'entry'}
 						class:showing_key_hint={$mod_key_held && active_tab !== 'entry'}
@@ -315,6 +318,24 @@
 </div>
 
 <style lang="postcss">
+	/* Browse mode: controls are disabled by the action so they can't be reached
+	   by keyboard either — keep them at full contrast, since they're shown for
+	   inspection rather than signalling an error state. */
+	.Fields.read-only {
+		:global(input:disabled),
+		:global(select:disabled),
+		:global(textarea:disabled),
+		:global(button:disabled) {
+			opacity: 1;
+			cursor: default;
+		}
+
+		:global(input[readonly]),
+		:global(textarea[readonly]) {
+			cursor: text;
+		}
+	}
+
 	.Fields {
 		width: 100%;
 		display: grid;
