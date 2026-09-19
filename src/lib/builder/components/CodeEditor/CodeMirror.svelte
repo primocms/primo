@@ -457,6 +457,9 @@
 		doc: value,
 		extensions: [
 			EditorState.readOnly.of(disabled),
+			// readOnly alone doesn't remove contenteditable, so typed input can
+			// still mutate the doc and dirty the editor without a save path.
+			EditorView.editable.of(!disabled),
 			language,
 			vsCodeDark,
 			keymap.of([
