@@ -157,16 +157,18 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 			"site_id":     siteId,
 			"name":        siteName,
 			"host":        siteHost,
+			"group_id":    groupId,
 			"warnings":    result.Warnings,
 			"created_ids": result.CreatedIDs,
 		})
 	}
 
 	return e.JSON(200, map[string]interface{}{
-		"success": true,
-		"site_id": siteId,
-		"name":    siteName,
-		"host":    siteHost,
+		"success":  true,
+		"site_id":  siteId,
+		"name":     siteName,
+		"host":     siteHost,
+		"group_id": groupId,
 	})
 }
 
