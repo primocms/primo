@@ -232,7 +232,7 @@
 					{fields}
 					{entries}
 					create_field={(data) => {
-						if (!symbol) {
+						if ($read_only || !symbol) {
 							return
 						}
 
@@ -257,6 +257,7 @@
 						}
 					}}
 					oninput={(values) => {
+						if ($read_only) return
 						if ('page_type' in component) {
 							setFieldEntries({
 								fields,
@@ -276,12 +277,15 @@
 						}
 					}}
 					onchange={({ id, data }) => {
+						if ($read_only) return
 						SiteSymbolFields.update(id, data)
 					}}
 					ondelete={(field) => {
+						if ($read_only) return
 						SiteSymbolFields.delete(field.id)
 					}}
 					ondelete_entry={(entry_id) => {
+						if ($read_only) return
 						if ('page_type' in component) {
 							PageTypeSectionEntries.delete(entry_id)
 						} else {
