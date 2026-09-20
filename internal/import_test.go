@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -602,6 +603,11 @@ func newImportTestApp(t *testing.T) *pocketbase.PocketBase {
 	return app
 }
 
+var importTestSiteSeq atomic.Int64
+
+// createImportTestSite gives each call its own host: the sites collection
+// enforces a unique host, and several tests (cross-site isolation, forms
+// end-to-end) call this more than once per test to get distinct sites.
 func createImportTestSite(t *testing.T, app *pocketbase.PocketBase) *core.Record {
 	t.Helper()
 
@@ -614,9 +620,10 @@ func createImportTestSite(t *testing.T, app *pocketbase.PocketBase) *core.Record
 	if err != nil {
 		t.Fatalf("find sites collection: %v", err)
 	}
+	seq := importTestSiteSeq.Add(1)
 	site := core.NewRecord(sites)
 	site.Set("name", "Import Test")
-	site.Set("host", "import-test.localhost")
+	site.Set("host", fmt.Sprintf("import-test-%d.localhost", seq))
 	site.Set("group", groupID)
 	if err := app.Save(site); err != nil {
 		t.Fatalf("save test site: %v", err)

@@ -1,0 +1,19 @@
+{
+  "id": "forms",
+  "name": "Forms",
+  "version": "1.0.0",
+  "description": "Server-owned form submissions with private inbox and optional email notifications.",
+  "requires": [
+    {
+      "capability": "data",
+      "reason": "Stores form definitions and submissions in server-managed collections."
+    },
+    {
+      "capability": "email",
+      "optional": true,
+      "reason": "Sends notification emails to the configured recipient. Submissions are stored regardless."
+    }
+  ],
+  "collections": [],
+  "hooks": []
+}

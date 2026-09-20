@@ -1,16 +1,26 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 
+	"github.com/pocketbase/pocketbase"
 	"github.com/primocms/primo/internal"
 	_ "github.com/primocms/primo/migrations"
-	"github.com/pocketbase/pocketbase"
 )
 
 // Build info - set via ldflags
 var BuildTime = "dev"
+
+// formsPluginManifest is plugins/forms/manifest.json, the single source of
+// truth for which capabilities the forms plugin may request. Embedded here
+// (rather than in internal/) because go:embed patterns can't cross out of
+// the containing package's directory, and plugins/ lives at the repo root
+// alongside main.go.
+//
+//go:embed plugins/forms/manifest.json
+var formsPluginManifest []byte
 
 func main() {
 	fmt.Printf("[primo build: %s]\n", BuildTime)
@@ -26,6 +36,10 @@ func main() {
 }
 
 func setup(pb *pocketbase.PocketBase) error {
+	if err := internal.RegisterForms(pb, formsPluginManifest); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterCORS(pb); err != nil {
 		return err
 	}

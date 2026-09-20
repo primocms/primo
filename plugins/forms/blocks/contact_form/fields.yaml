@@ -1,0 +1,9 @@
+- name: title
+  label: Heading
+  type: text
+- name: site_id
+  label: Site ID
+  type: text
+- name: server_url
+  label: Primo server URL
+  type: text
