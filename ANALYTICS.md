@@ -105,9 +105,19 @@ messages, and URLs that could encode private data. `analytics.ts`'s
 allowlist per event — there's no generic "attach these properties" call site
 that could accidentally widen what's collected.
 
+## Legal basis (GDPR)
+
+Collection rests on **legitimate interest**: identifiers are pseudonymous
+(opaque instance/user ids), the events answer narrow activation questions,
+no content or PII is sent (see above), and reporting is disableable
+(`PRIMO_ENABLE_USAGE_STATS=false`; self-hosted defaults to off). The setup
+screen discloses the collection at the point it's enabled. A DPA with
+PostHog (including SCCs for the US region) can be self-served at
+`app.posthog.com/legal`.
+
 ## Answering the activation questions
 
-These map directly to PostHog insights (see the 4 saved insights linked from
+These map directly to PostHog insights (see the 5 saved insights linked from
 the PR description, or build your own):
 
 - **Created but never published**: funnel `site_created` → `site_published`,
