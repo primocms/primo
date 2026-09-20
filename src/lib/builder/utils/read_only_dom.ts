@@ -8,9 +8,13 @@ type Original = { readOnly?: boolean; disabled?: boolean; contenteditable: strin
 const READONLY_CAPABLE_INPUT_TYPES = new Set(['text', 'search', 'url', 'tel', 'email', 'password', 'date', 'month', 'week', 'time', 'datetime-local', 'number'])
 
 // Buttons that navigate rather than mutate (expand/collapse toggles) opt out.
-const LOCK_SELECTOR = 'input, textarea, select, button:not([data-browse-allowed]), [contenteditable="true"]'
-// `contenteditable="false"` no longer matches the lock selector, so match the
-// bare attribute when restoring.
+// `contenteditable` matches every spelling ("true", "", "plaintext-only");
+// elements that resolve to non-editable are skipped in lock() via
+// isContentEditable, which also does the case-insensitive enumeration the CSS
+// attribute match can't.
+const LOCK_SELECTOR = 'input, textarea, select, button:not([data-browse-allowed]), [contenteditable]'
+// Kept explicit rather than collapsed into LOCK_SELECTOR: unlock must also
+// catch elements whose editable state was removed while locked.
 const UNLOCK_SELECTOR = 'input, textarea, select, button:not([data-browse-allowed]), [contenteditable]'
 
 /**
@@ -34,6 +38,7 @@ export function apply_read_only(node: HTMLElement) {
 
 	function lock() {
 		for (const el of node.querySelectorAll<HTMLElement>(LOCK_SELECTOR)) {
+			if (el.hasAttribute('contenteditable') && !el.isContentEditable) continue
 			if (!originals.has(el)) {
 				originals.set(el, {
 					readOnly: 'readOnly' in el ? (el as HTMLInputElement).readOnly : undefined,
