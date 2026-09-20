@@ -16,6 +16,8 @@
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
 
+	let { onManagePageTypes }: { onManagePageTypes?: () => void } = $props()
+
 	let hover_position = $state<string | null>(null)
 
 	function gapDropTarget(node: HTMLElement, page: ObjectOf<typeof Pages>) {
@@ -154,9 +156,13 @@
 	}
 </script>
 
-<Dialog.Header title="Pages ({all_pages.length})" icon="iconoir:multiple-pages" />
+<div class="pages-heading">
+	<Dialog.Title class="text-base font-medium">Pages <span class="page-count">{all_pages.length}</span></Dialog.Title>
+	{#if onManagePageTypes}<button class="manage-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
+</div>
+<p class="pages-description">Open a page to edit its content, or create a new one.</p>
 {#if active_page}
-	<ul class="grid p-2 bg-[var(--primo-color-black)] page-list">
+	<ul class="grid page-list">
 		{#each [homepage, ...root_pages].sort((a, b) => a.index - b.index) as page, i (page.id)}
 			<li animate:flip={{ duration: 200 }}>
 				<Item {page} {page_slug} active_page_id={!pageState.params.page_type ? active_page.id : null} oncreate={create_page_with_sections} bind:hover_position />
@@ -193,7 +199,7 @@
 			<li>
 				<button class="create-page-btn" onclick={() => (creating_page = true)}>
 					<Icon icon="akar-icons:plus" />
-					<span>Create Page</span>
+					<span>Create page</span>
 				</button>
 			</li>
 		{/if}
@@ -201,6 +207,17 @@
 {/if}
 
 <style lang="postcss">
+	.page-count { font-size: 12px; font-weight: 400; color: #a1a1aa; margin-left: 6px; }
+	.pages-description { font-size: 12px; line-height: 1.5; color: #a1a1aa; margin: -4px 0 0; }
+	.page-list { min-height: 0; padding: 4px; border: 1px solid #343437; border-radius: 7px; background: #19191b; align-content: start; }
+	.create-page-btn { border: 1px solid #3a3a40; margin-top: 6px; min-height: 38px; }
+	.create-page-btn:focus-visible { outline: 2px solid #956e51; outline-offset: -2px; }
+
+	.pages-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-left: 28px; }
+	.manage-types { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid #3a3a40; border-radius: 5px; color: #c4c4cc; font-size: 12px; }
+	.manage-types:hover { background: #ffffff0a; color: white; }
+	.manage-types:focus-visible { outline: 2px solid #956e51; outline-offset: 2px; }
+
 	.page-list {
 		overflow: auto;
 
@@ -255,10 +272,10 @@
 	}
 
 	.create-page-btn {
-		font-size: 0.75;
+		font-size: 13px;
 		width: 100%;
-		padding: 0.5rem 1.125rem;
-		background: #1a1a1a;
+		padding: 12px;
+		background: #252528;
 		border-radius: var(--primo-border-radius);
 		display: flex;
 		justify-content: center;
@@ -274,7 +291,7 @@
 	}
 
 	.building-page-item {
-		background: #1a1a1a;
+		background: #252528;
 		border: 1px dashed var(--color-gray-6);
 		border-radius: var(--primo-border-radius);
 		padding: 1rem;

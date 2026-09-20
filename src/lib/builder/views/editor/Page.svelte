@@ -1,6 +1,9 @@
 <script lang="ts">
 	import * as _ from 'lodash-es'
-	import { tick } from 'svelte'
+	import { tick, onDestroy } from 'svelte'
+	import { createOutlineHistory, moveInOrder, recoverOutlineOperation } from '$lib/builder/stores/app/outline-order.js'
+	import { current_user } from '$lib/pocketbase/user'
+	import { outline, outlineSelection, outlineInsertion, outlineBusy, outlineMessage, sidebarReveal, pageSidebarTab, readPreference, writePreference } from '$lib/builder/stores/app/outline'
 	import { flip } from 'svelte/animate'
 	import UI from '$lib/builder/ui'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -43,10 +46,157 @@
 	const footer_sections = $derived(page_type_sections.filter((s) => s.zone === 'footer'))
 	const page_type_body_sections = $derived(page_type_sections.filter((s) => s.zone === 'body'))
 
-	const sections = $derived(page.sections())
+	const sections = $derived(page.sections() ?? [])
 
 	// Check if page type is static (no symbols toggled - sections can't be added/removed/reordered)
 	const is_static_page_type = $derived(page_type ? page_type.symbols()?.length === 0 : false)
+
+	const history = createOutlineHistory()
+	let historyVersion = $state(0)
+	let operationChanges = new Map()
+	let operationBefore = new Map()
+	let originalSections = new Map()
+	async function commit_outline() {
+		operationChanges = new Map(
+			[...self.changes].filter(([id, change]) => (change.collection === 'page_sections' || change.collection === 'page_section_entries') && operationBefore.get(id) !== change)
+		)
+		await self.commit()
+	}
+	async function restoreOrder(ids: string[]) {
+		if (!can_structure || ids.length !== sections.length || ids.some((id) => !sections.some((s) => s.id === id))) throw new Error('Page structure changed; outline history is no longer applicable')
+		ids.forEach((id, index) => PageSections.update(id, { index }))
+		await commit_outline()
+	}
+	const can_edit = $derived($author_mode !== 'files' && !!$current_user?.siteRole)
+	const structure_ready = $derived(sections.every((section) => !!SiteSymbols.one(section.symbol)))
+	const can_structure = $derived(can_edit && !is_static_page_type && structure_ready)
+	const rendered_sections = $derived([...header_sections, ...sections, ...footer_sections].filter((s) => SiteSymbols.one(s.symbol)))
+	const outline_rows = $derived.by(() => {
+		return rendered_sections.map((section) => {
+			const block = SiteSymbols.one(section.symbol)!
+			const shared = page_type_sections.some((s) => s.id === section.id)
+			return {
+				id: section.id,
+				name: block.name,
+				shared,
+				movable: !shared && can_structure,
+				zone: 'zone' in section ? section.zone : 'body'
+			}
+		})
+	})
+	watch(
+		() => page.id,
+		(id) => {
+			$outlineSelection = readPreference(`primo:outline-selection:${id}`)
+			$outlineInsertion = null
+			$outlineMessage = ''
+			history.clear()
+			historyVersion++
+		},
+		{ lazy: false }
+	)
+	$effect(() => {
+		if (page.sections() !== undefined && page_type?.sections() !== undefined && $outlineSelection && ![...header_sections, ...sections, ...footer_sections].some((s) => s.id === $outlineSelection))
+			$outlineSelection = null
+		writePreference(`primo:outline-selection:${page.id}`, $outlineSelection ?? '')
+	})
+	function select_section(id: string, scroll = false) {
+		if (!rendered_sections.some((s) => s.id === id)) return
+		$outlineSelection = id
+		const selectedPage = page.id
+		if (scroll)
+			tick().then(() => {
+				if (page.id !== selectedPage || get(outlineSelection) !== id) return
+				page_el?.querySelector(`[data-section="${id}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center' })
+			})
+	}
+	async function mutate_outline(operation: () => Promise<void>, message: string) {
+		if (!can_edit || get(outlineBusy)) return false
+		$outlineBusy = true
+		$outlineMessage = ''
+		operationBefore = new Map(self.changes)
+		operationChanges = new Map()
+		originalSections = new Map(sections.map((section) => [section.id, section.values()]))
+		try {
+			await operation()
+			$outlineMessage = message
+			return true
+		} catch (error) {
+			// Compensate only this operation's writes. The manager commits records sequentially,
+			// so an API error can otherwise leave half a reorder persisted.
+			if (!operationChanges.size)
+				operationChanges = new Map(
+					[...self.changes].filter(([id, change]) => (change.collection === 'page_sections' || change.collection === 'page_section_entries') && operationBefore.get(id) !== change)
+				)
+			const recovered = await recoverOutlineOperation({
+				changes: self.changes,
+				before: operationBefore,
+				operation: operationChanges,
+				originals: originalSections,
+				records: self.records,
+				client: self.instance
+			})
+			self.invalidate_lists({ collection_name: 'page_sections' })
+			history.clear()
+			historyVersion++
+			$outlineMessage = recovered
+				? 'Could not save the change. The previous state was restored. Please try again.'
+				: 'Could not finish saving or restoring all changes. Reload the page to check its saved state.'
+			console.error('Page outline change failed', error)
+			return false
+		} finally {
+			$outlineBusy = false
+		}
+	}
+	async function move_section(id: string, target: number) {
+		if (!can_structure) return
+		const before = sections.map((s) => s.id)
+		const after = moveInOrder(before, id, target)
+		if (!after || before.every((id, index) => after[index] === id)) return
+		if (await mutate_outline(() => restoreOrder(after), 'Section moved.')) {
+			history.record({ undo: () => restoreOrder(before), redo: () => restoreOrder(after) })
+			historyVersion++
+		}
+	}
+	$effect(() => {
+		historyVersion
+		outline.set({
+			canUndo: history.canUndo,
+			canRedo: history.canRedo,
+			undo: async () => {
+				await mutate_outline(() => history.undo(), 'Outline change undone.')
+				historyVersion++
+			},
+			redo: async () => {
+				await mutate_outline(() => history.redo(), 'Outline change redone.')
+				historyVersion++
+			},
+			pageId: page.id,
+			pageName: page.name,
+			rows: outline_rows,
+			canAdd: can_structure,
+			structureReason: structure_ready ? 'This page’s structure is controlled by its template.' : 'Some blocks are unavailable. Structure editing will be available when they load.',
+			canEdit: can_edit,
+			select: select_section,
+			move: move_section,
+			add: async (symbolId) => {
+				const symbol = SiteSymbols.one(symbolId)
+				if (symbol) await add_section_to_page({ symbol, position: get(outlineInsertion) ?? sections.length })
+			},
+			edit: (id) => {
+				if (!rendered_sections.some((s) => s.id === id)) return
+				select_section(id)
+				hovered_section_id = id
+				tick().then(() => {
+					if (get(outlineSelection) === id && rendered_sections.some((s) => s.id === id)) edit_section('content')
+				})
+			}
+		})
+	})
+	onDestroy(() => {
+		outline.set(null)
+		outlineInsertion.set(null)
+	})
 
 	// Fade in page when all components mounted
 	let page_mounted = $state(false)
@@ -59,6 +209,10 @@
 	const MOUNT_STALL_TIMEOUT_MS = 10000
 
 	beforeNavigate((nav) => {
+		if (get(outlineBusy)) {
+			nav.cancel()
+			return
+		}
 		// Navigating to the page we're already on doesn't remount sections,
 		// so the mount counter would never recover — leaving the spinner stuck
 		if (nav.to?.url.href === nav.from?.url.href) return
@@ -78,7 +232,61 @@
 	let symbol_to_add = $state<ObjectOf<typeof SiteSymbols>>()
 	const copy_symbol_entries = $derived(useCopyEntries([symbol_to_add]))
 	async function add_section_to_page({ symbol, position }) {
-		if (get(author_mode) === 'files') return
+		if (!can_structure || !symbol || !page_type?.symbols()?.some((s) => s.symbol === symbol.id)) return
+		let new_id: string | undefined
+		const originalOrder = sections.map((s) => s.id)
+		const success = await mutate_outline(async () => {
+			new_id = await insert_section({ symbol, position: Math.max(0, Math.min(position, sections.length)) })
+			$outlineInsertion = null
+			$pageSidebarTab = 'outline'
+			if (new_id) select_section(new_id, true)
+		}, 'Block added.')
+		if (success && new_id) {
+			const id = new_id
+			let sectionSnapshot: any
+			let entrySnapshots: any[] = []
+			const addedOrder = sections.map((s) => s.id)
+			history.record({
+				undo: async () => {
+					if (!can_structure || !sections.some((s) => s.id === id) || sections.length !== addedOrder.length || addedOrder.some((id) => !sections.some((section) => section.id === id)))
+						throw new Error('Page structure changed')
+					// Flush pending inline edits before reading content for undo/redo.
+					await self.commit()
+					sectionSnapshot = sections.find((s) => s.id === id)!.values()
+					const entries = await self.instance!.collection('page_section_entries').getFullList({ filter: `section = "${id}"` })
+					entrySnapshots = entries.map(({ id, section, field, locale, value, parent, index }) => ({ id, section, field, locale, value, parent, index }))
+					originalOrder.forEach((id, index) => PageSections.update(id, { index }))
+					PageSections.delete(id) // The existing relation cascades to its content entries.
+					await commit_outline()
+					entrySnapshots.forEach((entry) => {
+						self.records.set(entry.id, null)
+						self.changes.delete(entry.id)
+					})
+					$outlineSelection = null
+				},
+				redo: async () => {
+					if (!can_structure || sections.length !== originalOrder.length || originalOrder.some((id) => !sections.some((s) => s.id === id))) throw new Error('Page structure changed')
+					PageSections.create(sectionSnapshot)
+					const pending = [...entrySnapshots]
+					const created = new Set<string>()
+					while (pending.length) {
+						const index = pending.findIndex((entry) => !entry.parent || created.has(entry.parent))
+						if (index < 0) throw new Error('Cannot restore nested content')
+						const [entry] = pending.splice(index, 1)
+						PageSectionEntries.create(entry)
+						created.add(entry.id)
+					}
+					addedOrder.forEach((id, index) => PageSections.update(id, { index }))
+					await commit_outline()
+					select_section(id, true)
+				}
+			})
+			historyVersion++
+		}
+		return new_id
+	}
+
+	async function insert_section({ symbol, position }) {
 		symbol_to_add = symbol
 		await tick()
 
@@ -104,13 +312,13 @@
 			PageSections.update(section.id, { index: section.index + 1 })
 		}
 
-		await self.commit()
+		await commit_outline()
 
 		return new_section.id
 	}
 
 	async function remove_section_from_page(section_id) {
-		if (get(author_mode) === 'files') return
+		if (!can_structure || get(outlineBusy)) return
 		const section_to_delete = sections.find((s) => s.id === section_id)
 		if (!section_to_delete) return
 
@@ -125,7 +333,7 @@
 		await self.commit()
 	}
 
-	let page_el = $state()
+	let page_el: HTMLElement = $state()!
 	let hovered_block_el = $state()
 
 	////////////////////////////
@@ -243,14 +451,14 @@
 
 	let editing_section_tab = $state('code')
 	async function edit_section(tab) {
-		if (!hovered_section) return
+		if (!hovered_section || get(outlineBusy)) return
 		editing_section = true
 		editing_section_tab = tab
 	}
 
 	// Listen for Command-E hotkey to open section editor when hovered
 	onModKey('e', () => {
-		if (hovered_section && showing_block_toolbar) {
+		if (hovered_section && showing_block_toolbar && !get(outlineBusy)) {
 			editing_section = true
 			editing_section_tab = 'code'
 		}
@@ -284,8 +492,9 @@
 	let drag_leave_timeout = null
 
 	function drag_fallback(element) {
-		dropTargetForElements({
+		const cleanup = dropTargetForElements({
 			element,
+			canDrop: ({ source }) => can_structure && !!source.data.block,
 			getData({ input, element }) {
 				return attachClosestEdge(
 					{},
@@ -315,10 +524,7 @@
 						hovered_block_el = page_el
 					}
 
-					if (!showing_drop_indicator) {
-						await show_drop_indicator()
-					}
-					position_drop_indicator()
+					hide_drop_indicator()
 					dragging = {
 						id: 'empty-page',
 						position: 'bottom'
@@ -369,7 +575,7 @@
 				const new_section_el = new_section_id ? page_el.querySelector(`[data-section="${new_section_id}"]`) : null
 				if (new_section_el instanceof HTMLElement) {
 					new_section_el.scrollIntoView({
-						behavior: 'smooth',
+						behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
 						block: 'center',
 						inline: 'center'
 					})
@@ -378,11 +584,13 @@
 				$dragging_symbol = false
 			}
 		})
+		return { destroy: cleanup }
 	}
 
 	function drag_item(element, section) {
-		dropTargetForElements({
+		const cleanup = dropTargetForElements({
 			element,
+			canDrop: ({ source }) => can_structure && !!source.data.block,
 			getData({ input, element }) {
 				return attachClosestEdge(
 					{ section },
@@ -459,6 +667,7 @@
 				$dragging_symbol = false
 			}
 		})
+		return { destroy: cleanup }
 	}
 
 	$effect(() => {
@@ -621,12 +830,14 @@
 		<BlockToolbar
 			bind:node={block_toolbar_element}
 			id={hovered_section_id}
+			name={outline_rows.find((row) => row.id === hovered_section_id)?.name ?? 'Block'}
 			i={hovered_section_details.index}
 			is_last={hovered_section_details.is_last}
 			immovable={is_static_page_type || hovered_section_details.source === 'page-type'}
 			layout_zone={hovered_section_details.zone !== 'body' ? hovered_section_details.zone : null}
 			{page_type}
 			on:delete={async () => {
+				if (get(outlineBusy)) return
 				// Get the section ID before clearing state
 				const section_id_to_delete = hovered_section_id
 				// Force hide the toolbar immediately
@@ -639,50 +850,8 @@
 			}}
 			on:edit-code={() => edit_section('code')}
 			on:edit-content={() => edit_section('content')}
-			on:moveUp={async () => {
-				if ($author_mode === 'files') return
-				if (!hovered_section) return
-
-				let section_to_move = hovered_section
-
-				if (!section_to_move || section_to_move.index === 0) return
-
-				const section_above = sections.find((s) => s.index === section_to_move.index - 1)
-				if (!section_above) return
-
-				moving = true
-				hide_block_toolbar()
-
-				PageSections.update(section_to_move.id, { index: section_to_move.index - 1 })
-				PageSections.update(section_above.id, { index: section_to_move.index })
-				await self.commit()
-
-				setTimeout(() => {
-					moving = false
-				}, 300)
-			}}
-			on:moveDown={async () => {
-				if ($author_mode === 'files') return
-				if (!hovered_section) return
-
-				let section_to_move = hovered_section
-
-				if (!section_to_move || section_to_move.index === sections.length - 1) return
-
-				const section_below = sections.find((s) => s.index === section_to_move.index + 1)
-				if (!section_below) return
-
-				moving = true
-				hide_block_toolbar()
-
-				PageSections.update(section_to_move.id, { index: section_to_move.index + 1 })
-				PageSections.update(section_below.id, { index: section_to_move.index })
-				await self.commit()
-
-				setTimeout(() => {
-					moving = false
-				}, 300)
-			}}
+			on:moveUp={() => hovered_section_id && move_section(hovered_section_id, sections.findIndex((s) => s.id === hovered_section_id) - 1)}
+			on:moveDown={() => hovered_section_id && move_section(hovered_section_id, sections.findIndex((s) => s.id === hovered_section_id) + 1)}
 		/>
 	</div>
 {/if}
@@ -698,7 +867,9 @@
 				{#if block}
 					<div
 						role="presentation"
+						inert={$outlineBusy}
 						data-section={page_type_section.id}
+						class:outline-selected={$outlineSelection === page_type_section.id}
 						data-symbol={block?.id}
 						class="page-type-section header-section"
 						onmousemove={(e) => {
@@ -729,6 +900,7 @@
 						<ComponentNode
 							{block}
 							section={page_type_section}
+							on:select={() => select_section(page_type_section.id)}
 							on:mount={() => sections_mounted++}
 							on:resize={() => {
 								if (showing_block_toolbar) {
@@ -751,7 +923,11 @@
 				{@const show_block_toolbar_on_hover = page_mounted && !moving}
 				<div
 					role="presentation"
+					inert={$outlineBusy}
 					data-section={section.id}
+					class:outline-selected={$outlineSelection === section.id}
+					class:insert-before={$outlineInsertion === section.index}
+					class:insert-after={$outlineInsertion === sections.length && section.index === sections.length - 1}
 					data-symbol={block?.id}
 					onmousemove={(e) => {
 						if (show_block_toolbar_on_hover && hovered_section_id === section.id) {
@@ -779,12 +955,13 @@
 							}
 						}, 100)
 					}}
-					animate:flip={{ duration: 100 }}
+					animate:flip={{ duration: typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 100 }}
 					use:drag_item={section}
 				>
 					<ComponentNode
 						{block}
 						{section}
+						on:select={() => select_section(section.id)}
 						on:mount={() => sections_mounted++}
 						on:resize={() => {
 							if (showing_block_toolbar) {
@@ -800,17 +977,23 @@
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="empty-state"
-					class:dragging-over={hovered_block_el && dragging}
-					style="min-height: 60vh"
-					onmouseenter={({ target }) => {
-						hovered_block_el = target
+					class:insert-before={$outlineInsertion === 0}
+					class:dragging-over={$dragging_symbol && dragging.id === 'empty-page'}
+					onmouseenter={({ currentTarget }) => {
+						hovered_block_el = currentTarget
 					}}
 					onmouseleave={() => {
 						hovered_block_el = null
 					}}
 				>
 					<div class="_container">
-						<span>Drag blocks here to add them to the page</span>
+						<span class="empty-eyebrow">{page.name}</span>
+						<h2>{$dragging_symbol && dragging.id === 'empty-page' ? 'Drop your block here' : can_structure ? 'Make this page your own' : 'No page content yet'}</h2>
+						<p>{$dragging_symbol && dragging.id === 'empty-page' ? 'Release to add it to this page.' : can_structure ? 'Drag a block from the Blocks tab into this space to get started.' : !can_edit ? 'This page has no content blocks. You have read-only access.' : 'This page’s content structure is managed by its template.'}</p>
+						{#if can_structure}
+							<button class="browse-blocks" class:drag-hidden={$dragging_symbol && dragging.id === 'empty-page'} onclick={() => { $pageSidebarTab = 'blocks'; $sidebarReveal += 1 }}>Browse blocks <span aria-hidden="true">→</span></button>
+						{/if}
+						{#if header_sections.length || footer_sections.length}<small>Your shared {header_sections.length && footer_sections.length ? 'header and footer are' : header_sections.length ? 'header is' : 'footer is'} already in place.</small>{/if}
 					</div>
 				</div>
 			{/if}
@@ -826,7 +1009,9 @@
 				{#if block}
 					<div
 						role="presentation"
+						inert={$outlineBusy}
 						data-section={page_type_section.id}
+						class:outline-selected={$outlineSelection === page_type_section.id}
 						data-symbol={block?.id}
 						class="page-type-section footer-section"
 						onmousemove={(e) => {
@@ -857,6 +1042,7 @@
 						<ComponentNode
 							{block}
 							section={page_type_section}
+							on:select={() => select_section(page_type_section.id)}
 							on:lock={() => {}}
 							on:unlock={() => {}}
 							on:mount={() => sections_mounted++}
@@ -880,48 +1066,38 @@
 </main>
 
 <style lang="postcss">
+	.outline-selected {
+		outline: 2px solid #956e51;
+		outline-offset: -2px;
+	}
+	.insert-before {
+		border-top: 3px solid var(--primo-primary-color);
+	}
+	.insert-after {
+		border-bottom: 3px solid var(--primo-primary-color);
+	}
+
 	[data-section] {
 		overflow: hidden;
 		position: relative;
 		min-height: 2rem;
 		line-height: 0;
 	}
-	.empty-state {
-		background: var(--color-gray-1);
-		padding: 1rem;
+	.empty-state { background: #f7f7f5; padding: clamp(18px, 4vw, 40px); }
+	.empty-state ._container { width: 100%; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 1px dashed #c9c9c3; border-radius: 8px; padding: 32px 20px; color: #35352f; }
+	.empty-state.dragging-over ._container { border: 2px solid #956e51; background: #ede5dc; box-shadow: 0 0 0 4px #956e5118; }
+	.empty-state.dragging-over h2 { color: #765337; }
+	.empty-state ._container { transition: background-color 120ms, border-color 120ms, box-shadow 120ms; }
+	.browse-blocks.drag-hidden { visibility: hidden; }
+	@media (prefers-reduced-motion: reduce) { .empty-state ._container { transition: none; } }
+	.empty-eyebrow { color: #85857c; font-size: 11px; line-height: 1.5; }
+	.empty-state h2 { font-size: clamp(18px, 2.4vw, 23px); font-weight: 500; line-height: 1.3; margin: 0; }
+	.empty-state p { font-size: 13px; line-height: 1.6; max-width: 320px; color: #77776e; margin: 0; }
+	.empty-state small { font-size: 11px; line-height: 1.5; color: #85857c; margin-top: 8px; max-width: 320px; }
+	.browse-blocks { display: inline-flex; align-items: center; gap: 12px; min-height: 38px; padding: 9px 14px; background: #252528; color: #f4f4f5; border: 1px solid #252528; border-radius: 5px; font-size: 12px; margin-top: 4px; }
+	.browse-blocks:hover { background: #37373b; }
+	.browse-blocks:focus-visible { outline: 2px solid #956e51; outline-offset: 3px; }
 
-		&:hover ._container {
-			border-color: var(--primo-primary-color);
-			background: var(--color-gray-2);
-			color: var(--primo-primary-color);
-		}
-
-		&.dragging-over ._container {
-			border-color: var(--primo-primary-color);
-			background: rgba(248, 68, 73, 0.1);
-			color: var(--primo-primary-color);
-			transform: scale(1.02);
-		}
-
-		._container {
-			height: 100%;
-			width: 100%;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			padding-block: 2rem;
-			border: 2px dashed var(--color-gray-5);
-			border-radius: 8px;
-			min-height: 300px;
-			color: var(--color-gray-7);
-			font-size: 1.1rem;
-			transition: all 0.1s ease;
-		}
-
-		span {
-			pointer-events: none;
-		}
-	}
 	.spinner {
 		position: absolute;
 		top: 0;

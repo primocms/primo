@@ -4,7 +4,6 @@
 	import { find as _find } from 'lodash-es'
 	import Icon from '@iconify/svelte'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
-	import { ChevronDown } from 'lucide-svelte'
 	import ToolbarButton from './ToolbarButton.svelte'
 	import { PrimoButton } from '$lib/builder/components/buttons'
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
@@ -114,7 +113,6 @@
 		setTimeout(() => (going_down = false), 150)
 	}
 
-	let page_dropdown_anchor = $state<HTMLElement>(null!)
 
 	let editing_site = $state(false)
 	let site_has_unsaved_changes = $state(false)
@@ -185,8 +183,11 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={editing_pages}>
-	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4">
-		<SitePages />
+	<Dialog.Content class="z-999 w-[calc(100vw-1rem)] max-w-[720px] min-h-[260px] max-h-[min(80dvh,640px)] flex flex-col gap-4 bg-[#1e1e20] border-[#343437] p-5">
+		<SitePages onManagePageTypes={($current_user?.siteRole === 'developer' || $current_user?.serverRole === 'developer') ? () => {
+			editing_pages = false
+			editing_page_types = true
+		} : undefined} />
 	</Dialog.Content>
 </Dialog.Root>
 
@@ -211,7 +212,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] max-w-[500px] flex flex-col p-0">
+	<Dialog.Content class="z-[999] w-[calc(100vw-1rem)] max-w-[500px] max-h-[calc(100dvh-1rem)] overflow-y-auto flex flex-col p-0 bg-[#1e1e20] border-[#343437]">
 		<Deploy
 			bind:stage={publish_stage}
 			publish_fn={handle_publish}
@@ -241,7 +242,7 @@
 			<div class="button-group">
 				<div class="navigation-group">
 					<!-- <ToolbarButton label="Site" icon="gg:website" on:click={() => modal.show('SITE_EDITOR', {}, { showSwitch: true, disabledBgClose: true })} /> -->
-					<ToolbarButton label="Site" icon="gg:website" on:click={() => (editing_site = true)} />
+					<ToolbarButton label="Site content" title="Content shared across your site." icon="gg:website" on:click={() => (editing_site = true)} />
 				</div>
 			</div>
 			<div class="button-group">
@@ -251,26 +252,8 @@
 						<div style:color={going_down ? 'var(--primo-primary-color)' : 'inherit'} style:opacity={can_navigate_down ? 1 : 0.3}>&#8984; ↓</div>
 					</div>
 				{:else}
-					<div class="navigation-group" bind:this={page_dropdown_anchor}>
+					<div class="navigation-group">
 						<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => (editing_pages = true)} />
-						{#if $current_user?.siteRole === 'developer' || $current_user?.serverRole === 'developer'}
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									{#snippet child({ props })}
-										<button {...props} class="pages-menu-button" aria-label="Page options">
-											<ChevronDown class="h-4" />
-											<span class="sr-only">More</span>
-										</button>
-									{/snippet}
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content side="bottom" class="z-[999]" align="start" sideOffset={4} customAnchor={page_dropdown_anchor}>
-									<DropdownMenu.Item onclick={() => (editing_page_types = true)} class="text-xs cursor-pointer">
-										<Icon icon="lucide:layout-template" style="width: .75rem" />
-										<span>Page Types</span>
-									</DropdownMenu.Item>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-						{/if}
 					</div>
 				{/if}
 			</div>
@@ -409,7 +392,7 @@
 	}
 	.menu-container {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 1.5rem;
 		min-height: 58px;
@@ -423,6 +406,7 @@
 		align-items: center;
 	}
 	.left {
+		flex-shrink: 0;
 		gap: 8px;
 	}
 	.right {
@@ -440,7 +424,8 @@
 		align-items: center;
 		justify-content: center;
 		min-width: 0;
-		max-width: 34vw;
+		max-width: 100%;
+		overflow: hidden;
 		gap: 10px;
 		font-size: 12px;
 		.site,
@@ -474,8 +459,7 @@
 			padding: 4px 8px;
 		}
 	}
-	.more-menu-button,
-	.pages-menu-button {
+	.more-menu-button {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -495,11 +479,6 @@
 			outline-offset: 3px;
 		}
 	}
-	.pages-menu-button {
-		width: 26px;
-		border-left: 1px solid #36363a;
-		border-radius: 0 6px 6px 0;
-	}
 	.page-hotkeys {
 		display: flex;
 		align-items: center;
@@ -517,7 +496,7 @@
 			padding-inline: 10px;
 		}
 		.site-name {
-			max-width: 25vw;
+			max-width: 100%;
 			gap: 6px;
 		}
 		.site-name .site,
@@ -528,9 +507,9 @@
 			gap: 8px;
 		}
 	}
-	@media (max-width: 600px) {
+	@media (max-width: 760px) {
 		.menu-container {
-			grid-template-columns: 1fr auto;
+			grid-template-columns: minmax(0, 1fr) auto;
 		}
 		.site-name {
 			display: none;
@@ -541,5 +520,12 @@
 		.right {
 			gap: 5px;
 		}
+	}
+	@media (max-width: 480px) {
+		.menu-container { gap: 6px; padding-inline: 6px; }
+		.left :global(.primo-button .label),
+		.right :global(.primo-button .label) { display: none; }
+		.left :global(.primo-button),
+		.right :global(.primo-button) { padding-inline: 8px; }
 	}
 </style>

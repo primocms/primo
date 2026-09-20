@@ -786,4 +786,13 @@
 			opacity: 0.6;
 		}
 	}
+	.page-item-container { align-items: center; min-height: 48px; padding: 10px 12px; background: transparent; border: 1px solid transparent; border-radius: 5px; gap: 8px; }
+	.page-item-container:hover { background: #252528; }
+	.page-item-container.active { background: #3a3027; border-color: #956e51; border-bottom-right-radius: 5px; }
+	.page-item-container.active a { color: #ece8e3; }
+	.page-item-container .left { min-width: 0; flex: 1; }
+	.page-item-container .left .details { min-width: 0; grid-template-columns: auto minmax(0, auto) minmax(0, 1fr); gap: 9px; }
+	.page-item-container .left .details .url { font-size: 12px; color: #93939e; }
+	.page-item-container .options { flex-shrink: 0; gap: 6px; }
+	@media (max-width: 480px) { .page-item-container .options .add-child-btn span { display: none; } }
 </style>

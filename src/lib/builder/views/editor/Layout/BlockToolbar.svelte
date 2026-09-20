@@ -16,6 +16,7 @@
 
 	/**
 	 * @typedef {Object} Props
+	 * @property {string} [name]
 	 * @property {any} id
 	 * @property {any} i
 	 * @property {any} [node]
@@ -27,7 +28,7 @@
 	 */
 
 	/** @type {Props} */
-	let { id, i, node = $bindable(), layout_zone = null, immovable = false, is_last = false, page_type } = $props()
+	let { id, i, name = '', node = $bindable(), layout_zone = null, immovable = false, is_last = false, page_type } = $props()
 
 	let isFirst = $derived(i === 0)
 
@@ -39,7 +40,34 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
-<div in:fade={{ duration: 100 }} class="BlockToolbar primo-reset" bind:this={node}>
+<div in:fade={{ duration: 100 }} class="BlockToolbar primo-reset" class:page-toolbar={!!name} bind:this={node}>
+	{#if name}
+		<div class="page-toolbar-top">
+			<div class="block-label"><span>{name}</span>{#if layout_zone}<small>Shared · {layout_zone === 'header' ? 'Header' : 'Footer'}</small>{/if}</div>
+			<div class="page-toolbar-actions">
+				<button class="primary-edit" onclick={() => dispatch('edit-content')} aria-label={$read_only ? 'View Block Content' : 'Edit Block Content'}>
+					<Icon icon={$read_only ? 'ph:eye-bold' : 'material-symbols:edit-square-outline-rounded'} />
+					<span>{$read_only ? 'View content' : 'Edit content'}</span>
+				</button>
+				{#if $current_user?.siteRole === 'developer' || (!immovable && !$read_only)}
+					<details class="more-actions">
+						<summary aria-label="More block actions" title="More block actions"><Icon icon="lucide:ellipsis" /></summary>
+						<div class="action-menu" onclick={(event) => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false }} onkeydown={(event) => { if (event.key === 'Escape') { const details = event.currentTarget.closest('details'); details.open = false; details.querySelector('summary').focus() } }} role="group" aria-label="Block actions">
+							{#if $current_user?.siteRole === 'developer'}
+								<button onclick={() => dispatch('edit-code')}><Icon icon="ph:code-bold" />{$read_only ? 'View code' : 'Edit code'}</button>
+								{#if layout_zone && page_type}<a href="{base_path}/page-type--{page_type.id}">Edit shared template</a>{/if}
+							{/if}
+							{#if !immovable && !$read_only}
+								{#if !isFirst}<button onclick={() => dispatch('moveUp')}>Move up</button>{/if}
+								{#if !is_last}<button onclick={() => dispatch('moveDown')}>Move down</button>{/if}
+								<button onclick={() => dispatch('delete')}>Delete block</button>
+							{/if}
+						</div>
+					</details>
+				{/if}
+			</div>
+		</div>
+	{:else}
 	<div class="top">
 		{#if layout_zone}
 			<Tooltip.Provider delayDuration={100} disableHoverableContent={true}>
@@ -95,6 +123,7 @@
 			{/if}
 		</div>
 	{/if}
+	{/if}
 </div>
 
 {#snippet EditingButtons()}
@@ -119,12 +148,28 @@
 			<Icon icon={$read_only ? 'ph:eye-bold' : 'material-symbols:edit-square-outline-rounded'} />
 		</span>
 		{#if $current_user?.siteRole !== 'developer'}
-			<span class="text-xs font-normal">{$read_only ? 'View Content' : 'Edit Content'}</span>
+			<span class="text-xs font-normal">{$read_only ? 'View content' : 'Edit content'}</span>
 		{/if}
 	</button>
 {/snippet}
 
 <style lang="postcss">
+	.BlockToolbar.page-toolbar { box-shadow: inset 0 0 0 2px #956e51; }
+	.page-toolbar-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+	.block-label { display: flex; align-items: center; gap: 8px; max-width: 55%; background: #a95730; color: white; padding: 5px 9px; border-radius: 0 0 4px 0; font-size: 12px; }
+	.block-label > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.block-label small { font-size: 10px; white-space: nowrap; opacity: .85; }
+	.page-toolbar-actions { display: flex; align-items: flex-start; gap: 5px; margin: 9px; }
+	.page-toolbar-actions .primary-edit { box-sizing: border-box; height: 36px; min-height: 36px; gap: 6px; border: 1px solid #d4d2c9; background: #fff; color: #34362e; border-radius: 5px; font-size: 12px; white-space: nowrap; box-shadow: 0 1px 3px #0001; }
+	.page-toolbar-actions .primary-edit:hover { background: #f4f3ef; }
+	.more-actions { position: relative; pointer-events: auto; }
+	.more-actions summary { box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; list-style: none; cursor: pointer; padding: 9px; border: 1px solid #d4d2c9; border-radius: 5px; background: white; color: #34362e; }
+	.more-actions summary::-webkit-details-marker { display: none; }
+	.more-actions summary:focus-visible { outline: 2px solid #a95730; outline-offset: 2px; }
+	.action-menu { position: absolute; right: 0; top: calc(100% + 5px); min-width: 160px; padding: 4px; background: #232327; border: 1px solid #45454b; border-radius: 6px; box-shadow: 0 4px 15px #0004; }
+	.action-menu button, .action-menu a { width: 100%; display: flex; justify-content: flex-start; gap: 7px; padding: 8px; font-size: 12px; border-radius: 3px; color: white; box-shadow: none; }
+	.action-menu a:hover { background: #3b3b43; }
+
 	.BlockToolbar {
 		box-shadow: inset 0 0 0 2px #9a9aa6;
 		z-index: 999;

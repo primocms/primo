@@ -205,9 +205,7 @@
 				return a.length - b.length
 			}
 			const path_by_id = new Map(entries.map((e) => [e.id, render_path(e)]))
-			const relevant_entries = entries
-				.filter((e) => e.field === field.id)
-				.sort((a, b) => compare_paths(path_by_id.get(a.id), path_by_id.get(b.id)))
+			const relevant_entries = entries.filter((e) => e.field === field.id).sort((a, b) => compare_paths(path_by_id.get(a.id), path_by_id.get(b.id)))
 			for (const entry of relevant_entries) {
 				search_elements_for_value({
 					id: entry.id,
@@ -732,6 +730,14 @@
 			// Clean up previous doc event listeners
 			doc_event_listeners.forEach((cleanup) => cleanup())
 			doc_event_listeners.clear()
+
+			const select_section = () => dispatch('select')
+			doc.addEventListener('pointerdown', select_section, true)
+			doc.addEventListener('focusin', select_section, true)
+			doc_event_listeners.set('outline-selection', () => {
+				doc.removeEventListener('pointerdown', select_section, true)
+				doc.removeEventListener('focusin', select_section, true)
+			})
 
 			doc.body.addEventListener('scroll', on_page_scroll)
 

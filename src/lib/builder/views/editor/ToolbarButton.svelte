@@ -48,7 +48,8 @@
 
 <button
 	{id}
-	aria-label={title || label || undefined}
+	title={title || undefined}
+	aria-label={label || title || undefined}
 	aria-busy={loading}
 	class="primo-button"
 	class:primo={type === 'primo'}
@@ -94,6 +95,8 @@
 	.primo-button {
 		--Spinner-size: 0.75rem;
 		position: relative;
+		white-space: nowrap;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;

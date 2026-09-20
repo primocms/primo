@@ -18,6 +18,7 @@
 	import { useExportSiteSymbol } from '$lib/workers/ExportSymbol.svelte'
 	import { useContent } from '$lib/Content.svelte'
 	import { Badge } from '$lib/components/ui/badge'
+	import { get } from 'svelte/store'
 	import { read_only } from '$lib/pocketbase/author_mode'
 	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { page_context, page_type_context } from '$lib/builder/stores/context'
@@ -145,6 +146,7 @@
 		if (element && !$read_only) {
 			const cleanup = draggable({
 				element,
+				canDrag: () => !get(read_only),
 				getInitialData: () => ({ block: symbol }),
 				onDragStart: () => {
 					if (typeof window !== 'undefined') {

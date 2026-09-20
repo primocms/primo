@@ -1,5 +1,6 @@
 <script>
 	import Icon from '@iconify/svelte'
+	import * as Dialog from '$lib/components/ui/dialog'
 	import { page } from '$app/state'
 	import { onModKey } from '$lib/builder/utils/keyboard'
 	import { mod_key_held } from '$lib/builder/stores/app/misc'
@@ -34,7 +35,7 @@
 <div class="Deploy primo-reset">
 	{#if stage === 'INITIAL'}
 		<div class="container">
-			<h3 class="title">{instance.dev_mode ? 'Preview Site' : 'Publish Site'}</h3>
+			<Dialog.Title class="publish-title">{instance.dev_mode ? 'Preview site' : 'Publish site'}</Dialog.Title>
 			{#if site_host}
 				<p class="description">
 					{instance.dev_mode ? 'Your website will be previewed at' : 'Your website will be published to'}
@@ -51,7 +52,7 @@
 				</button>
 				<button class="primo-button primary" onclick={handle_publish} disabled={loading}>
 					<Icon icon={loading ? 'line-md:loading-twotone-loop' : instance.dev_mode ? 'lucide:eye' : 'entypo:publish'} class={$mod_key_held && !loading ? 'invisible' : ''} />
-					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : instance.dev_mode ? 'Build Preview' : 'Publish Changes'}</span>
+					<span class:invisible={$mod_key_held && !loading}>{loading ? (instance.dev_mode ? 'Building...' : 'Publishing...') : instance.dev_mode ? 'Build preview' : 'Publish changes'}</span>
 					{#if $mod_key_held && !loading}
 						<span class="key-hint">⌘P</span>
 					{/if}
@@ -60,7 +61,7 @@
 		</div>
 	{:else if stage === 'PUBLISHED'}
 		<div class="container">
-			<h3 class="title">{instance.dev_mode ? 'Preview Ready!' : 'Published Successfully!'}</h3>
+			<Dialog.Title class="publish-title">{instance.dev_mode ? 'Preview ready' : 'Changes published'}</Dialog.Title>
 			<p class="description">
 				{#if site_host}
 					{instance.dev_mode ? 'Your website preview is ready at' : 'Your website changes have been published to'}
@@ -78,7 +79,7 @@
 				{#if site_host}
 					<a href="{page.url.protocol}//{site_host}" target="_blank" class="primo-button">
 						<Icon icon="lucide:external-link" />
-						<span>{instance.dev_mode ? 'View Preview' : 'View Site'}</span>
+						<span>{instance.dev_mode ? 'View preview' : 'View site'}</span>
 					</a>
 				{:else if !instance.dev_mode && onConnectDomain}
 					<button class="primo-button" onclick={onConnectDomain}>
@@ -90,14 +91,14 @@
 		</div>
 	{:else if stage === 'ERROR'}
 		<div class="container">
-			<h3 class="title">Publishing Failed</h3>
-			<p class="error">{error}</p>
+			<Dialog.Title class="publish-title">{instance.dev_mode ? 'Preview failed' : 'Publishing failed'}</Dialog.Title>
+			<p class="error" role="alert">{error}</p>
 			<div class="buttons">
 				<button class="primo-button" onclick={onClose}>
 					<span>Close</span>
 				</button>
 				<button class="primo-button primary" onclick={() => (stage = 'INITIAL')}>
-					<span>Try Again</span>
+					<span>Try again</span>
 				</button>
 			</div>
 		</div>
@@ -105,102 +106,20 @@
 </div>
 
 <style lang="postcss">
-	.Deploy.primo-reset {
-		color: white;
-		background: var(--primo-color-black);
-		padding: 3rem 1.25rem 1.125rem 1.25rem;
-		display: grid;
-		gap: 1rem;
-		width: 100%;
-	}
-	.container {
-		display: grid;
-	}
-
-	.title {
-		font-size: 1.125rem;
-		font-weight: 600;
-		color: white;
-	}
-
-	.error {
-		padding: 0.5rem;
-		background: var(--primo-color-danger);
-		border-radius: 0.25rem;
-		margin: 0.5rem 0;
-	}
-
-	.description {
-		margin-bottom: 2rem;
-		line-height: 1.5;
-		a {
-			text-decoration: underline;
-			color: var(--primo-primary-color);
-		}
-		a:hover {
-			color: white;
-		}
-	}
-
-	.buttons {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 0.75rem;
-	}
-	.primo-button {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 8px 16px;
-		background: var(--primo-color-codeblack);
-		border: 1px solid #333;
-		border-radius: 0.25rem;
-		color: white;
-		cursor: pointer;
-		text-decoration: none;
-		transition: all 0.2s;
-	}
-	.primo-button:hover {
-		background: #333;
-		border-color: #555;
-	}
-	.primo-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-	.primo-button.primary {
-		background: var(--primo-primary-color, #4f46e5);
-		border-color: var(--primo-primary-color, #4f46e5);
-		position: relative;
-	}
-	.primo-button.primary:hover {
-		background: var(--primo-primary-color-dark, #4338ca);
-		border-color: var(--primo-primary-color-dark, #4338ca);
-	}
-	.key-hint {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.75rem;
-		pointer-events: none;
-	}
-	.primo-button:disabled:hover {
-		background: var(--primo-color-codeblack);
-		border-color: #333;
-	}
-	.primo-button.primary {
-		border: 1px solid var(--primo-primary-color);
-		background: transparent;
-	}
-	.primo-button.primary:hover {
-		background: var(--primo-primary-color);
-		border-color: var(--primo-primary-color);
-	}
-	:global(form > label) {
-		flex: 1;
-	}
+	.Deploy.primo-reset { color: #e4e4e7; background: #1e1e20; padding: 44px 24px 22px; width: 100%; border-radius: inherit; }
+	.container { display: grid; gap: 14px; }
+	.Deploy :global(.publish-title) { font-size: 18px; font-weight: 500; color: #f4f4f5; }
+	.description { color: #a9a9b2; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+	.description a { display: block; width: fit-content; max-width: 100%; margin-top: 10px; color: #e4e4e7; text-decoration: underline; text-underline-offset: 3px; }
+	.error { padding: 12px; background: #ef444410; border: 1px solid #ef444450; color: #fca5a5; border-radius: 6px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+	.buttons { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 8px; padding-top: 18px; border-top: 1px solid #343437; }
+	.primo-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 13px; background: #252528; border: 1px solid #3a3a40; border-radius: 5px; color: #dedee3; cursor: pointer; text-decoration: none; font-size: 12px; font-weight: 400; position: relative; }
+	.primo-button:hover { background: #303034; }
+	.primo-button.primary { background: #ededf0; color: #202023; border-color: #ededf0; font-weight: 500; }
+	.primo-button.primary:hover { background: white; border-color: white; }
+	.primo-button:disabled { opacity: .55; cursor: not-allowed; }
+	.primo-button:focus-visible { outline: 2px solid #956e51; outline-offset: 3px; }
+	.primo-button :global(svg) { width: 15px; height: 15px; flex-shrink: 0; }
+	.key-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: none; }
+	@media (max-width: 480px) { .Deploy.primo-reset { padding-inline: 18px; } }
 </style>
