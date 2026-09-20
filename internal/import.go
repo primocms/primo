@@ -898,7 +898,8 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 
 	// Process pages - collect and sort by depth to import parents before children
 	type pageImportInfo struct {
-		path     string
+		path     string // route path with any trailing "/index" stripped, for parent/nesting
+		file     string // original zip entry, e.g. "pages/services/index.yaml", for created_ids write-back
 		data     ExportedPage
 		raw      []byte // original zip bytes for this page file, for the no-op skip
 		existing *core.Record
@@ -1036,7 +1037,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		// Calculate depth based on path separators
 		depth := strings.Count(pagePath, "/")
 
-		allPages = append(allPages, pageImportInfo{path: pagePath, data: pageData, raw: data, existing: existing, depth: depth})
+		allPages = append(allPages, pageImportInfo{path: pagePath, file: path, data: pageData, raw: data, existing: existing, depth: depth})
 	}
 
 	// Sort pages by depth (parents before children)
@@ -1124,9 +1125,13 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			// Store the page ID for children to reference
 			pathToId[info.path] = pageId
 
-			// Track created page ID
-			pagePath := "pages/" + info.path + ".yaml"
-			createdIDs[pagePath] = map[string]interface{}{
+			// Track created page ID, keyed by the original file path.
+			// `info.path` has had a trailing "/index" stripped, so reconstructing
+			// it as "pages/<path>.yaml" would key a nested index page as
+			// "pages/services.yaml" while the file on disk is
+			// "pages/services/index.yaml" — and the CLI's write-back would then
+			// look for a file that doesn't exist and silently skip it.
+			createdIDs[info.file] = map[string]interface{}{
 				"_id":      pageId,
 				"sections": sectionIds,
 			}
