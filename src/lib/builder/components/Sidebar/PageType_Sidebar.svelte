@@ -41,6 +41,7 @@
 	import { tick } from 'svelte'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte.ts'
 	import { create_site_symbol_entries, create_site_symbol_fields, create_site_symbols } from '$lib/workers/CopySymbols.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	const { value: site } = site_context.getOr({ value: null })
 	const page_type_id = $derived(page.params.page_type)
@@ -318,7 +319,7 @@
 		</Tabs.List>
 		<Tabs.Content value="blocks" class="px-1">
 			{#if site_symbols.length > 0}
-				{#if $current_user?.siteRole === 'developer'}
+				{#if $current_user?.siteRole === 'developer' && !$read_only}
 					<div class="primo-buttons">
 						<button class="primo-button" onclick={show_block_picker}>
 							<Icon icon="mdi:plus" />
@@ -349,7 +350,7 @@
 									show_toggle={true}
 									{toggled}
 									on:toggle={({ detail }) => {
-										if (!page_type || detail === toggled) return // dispatches on creation for some reason
+										if ($read_only || !page_type || detail === toggled) return // dispatches on creation for some reason
 
 										// Check if this toggle would make the page type static
 										const current_symbol_count = page_type_symbols.length
@@ -395,20 +396,22 @@
 				{/if}
 			{:else}
 				<div class="empty">Add a Block to your site to use it on your pages.</div>
-				<div class="primo-buttons">
-					<button class="primo-button" onclick={show_block_picker}>
-						<Icon icon="mdi:plus" />
-						<span>Add</span>
-					</button>
-					<button class="primo-button" onclick={create_block}>
-						<Icon icon="mdi:code" />
-						<span>Create</span>
-					</button>
-					<button class="primo-button" onclick={() => (upload_dialog_open = true)}>
-						<Icon icon="mdi:upload" />
-						<span>Import</span>
-					</button>
-				</div>
+				{#if !$read_only}
+					<div class="primo-buttons">
+						<button class="primo-button" onclick={show_block_picker}>
+							<Icon icon="mdi:plus" />
+							<span>Add</span>
+						</button>
+						<button class="primo-button" onclick={create_block}>
+							<Icon icon="mdi:code" />
+							<span>Create</span>
+						</button>
+						<button class="primo-button" onclick={() => (upload_dialog_open = true)}>
+							<Icon icon="mdi:upload" />
+							<span>Import</span>
+						</button>
+					</div>
+				{/if}
 			{/if}
 		</Tabs.Content>
 		<Tabs.Content value="content" class="px-1">

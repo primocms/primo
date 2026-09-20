@@ -23,6 +23,7 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let editing_page = $state(false)
 
@@ -94,8 +95,15 @@
 
 	let drag_handle_element = $state()
 	let element = $state()
-	onMount(async () => {
-		draggable({
+	// Browse mode removes the drag handle from the DOM, so a registration made
+	// once on mount would keep pointing at the detached element after a
+	// CMS → Browse → CMS round trip and reordering would silently stop working.
+	// Re-register whenever the handle (or the mode) changes, and skip entirely
+	// while read-only.
+	$effect(() => {
+		if ($read_only || !element || !drag_handle_element) return
+
+		return draggable({
 			element,
 			dragHandle: drag_handle_element,
 			getInitialData: () => ({ page }),
@@ -106,6 +114,9 @@
 				is_dragging = false
 			}
 		})
+	})
+
+	onMount(async () => {
 		dropTargetForElements({
 			element,
 			getData({ input, element }) {
@@ -253,6 +264,8 @@
 						use:content_editable={{
 							on_change: (val) => {},
 							on_submit: (val) => {
+								// Inline rename can already be open when the mode flips.
+								if ($read_only) return
 								Pages.update(page.id, { name: val })
 								selfManager.commit()
 								editing_page = false
@@ -296,16 +309,17 @@
 			{/if}
 		</div>
 		<div class="options">
-			{#if has_children && page.id !== homepage?.id}
+			{#if has_children && page.id !== homepage?.id && !$read_only}
 				<button class="add-child-btn" onclick={() => (creating_page = true)} aria-label="Create Subpage">
 					<Icon icon="akar-icons:plus" />
 					<span>Create Subpage ({children.length})</span>
 				</button>
 			{/if}
-			<button class="drag-handle" bind:this={drag_handle_element} style:visibility={page.slug === '' ? 'hidden' : 'visible'}>
-				<Icon icon="material-symbols:drag-handle" />
-			</button>
-			<MenuPopup
+			{#if !$read_only}
+				<button class="drag-handle" bind:this={drag_handle_element} style:visibility={page.slug === '' ? 'hidden' : 'visible'}>
+					<Icon icon="material-symbols:drag-handle" />
+				</button>
+				<MenuPopup
 				icon="carbon:overflow-menu-vertical"
 				options={[
 					...(!has_children && !creating_page && page.id !== homepage?.id
@@ -402,12 +416,13 @@
 								}
 							]
 						: [])
-				]}
-			/>
+					]}
+				/>
+			{/if}
 		</div>
 	</div>
 
-	{#if creating_page}
+	{#if creating_page && !$read_only}
 		<div style="border-left: 0.5rem solid #111;" transition:slide={{ duration: 200 }}>
 			<PageForm
 				parent={page}
@@ -482,7 +497,8 @@
 			<Button
 				variant="destructive"
 				onclick={async () => {
-					if (pending_delete) {
+					// The confirm dialog can already be open when the mode flips.
+					if (!$read_only && pending_delete) {
 						await pending_delete()
 					}
 					delete_warning_dialog = false

@@ -8,6 +8,7 @@
 	import type { Entity } from '$lib/Entity'
 	import type { Field } from '$lib/common/models/Field'
 	import { get_empty_value } from '../utils'
+	import { read_only } from '$lib/pocketbase/author_mode'
 	import type { FieldValueHandler } from '../components/Fields/FieldsContent.svelte'
 
 	let {
@@ -136,10 +137,12 @@
 			</li>
 		{/each}
 	</ul>
-	<button class="field-button" onclick={add_item}>
-		<Icon icon="akar-icons:plus" />
-		<span>Create {pluralize.singular(field.label)}</span>
-	</button>
+	{#if !$read_only}
+		<button class="field-button" onclick={add_item}>
+			<Icon icon="akar-icons:plus" />
+			<span>Create {pluralize.singular(field.label)}</span>
+		</button>
+	{/if}
 </div>
 
 <style lang="postcss">

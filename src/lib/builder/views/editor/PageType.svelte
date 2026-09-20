@@ -11,6 +11,7 @@
 	import BlockToolbar from './Layout/BlockToolbar-simple.svelte'
 	import DropIndicator from './Layout/DropIndicator.svelte'
 	import CodeEditor from '$lib/builder/components/CodeEditor/CodeMirror.svelte'
+	import { read_only } from '$lib/pocketbase/author_mode'
 	import { locale, dragging_symbol } from '../../stores/app/misc.js'
 	import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
@@ -362,7 +363,7 @@
 				}
 			},
 			async onDrop({ source }) {
-				if (!source.data?.block || !page_type) return
+				if ($read_only || !source.data?.block || !page_type) return
 
 				const block_being_dragged = source.data.block
 				const zone_sections = page_type_sections.filter((s) => (s.zone || 'body') === zone)
@@ -450,7 +451,7 @@
 				position_drop_indicator()
 			},
 			async onDrop({ self, source }) {
-				if (!source.data?.block || !page_type) return
+				if ($read_only || !source.data?.block || !page_type) return
 
 				const block_being_dragged = source.data.block
 				const section_dragged_over = self.data.section
@@ -722,7 +723,7 @@
 		<div class="head-editor-container">
 			<div class="zone-label">Head HTML</div>
 			<div class="code-zone head-zone" style="height: {head_editor_height}px;">
-				<CodeEditor mode="html" bind:value={head} on:save={save_page_type_code} />
+				<CodeEditor mode="html" bind:value={head} disabled={$read_only} on:save={save_page_type_code} />
 			</div>
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="resize-handle" onmousedown={start_resize} class:resizing={is_resizing}>
@@ -924,7 +925,7 @@
 			<!-- Foot Zone -->
 			<div class="zone-label">Body Footer HTML</div>
 			<section class="code-zone foot-zone">
-				<CodeEditor mode="html" bind:value={foot} on:save={save_page_type_code} />
+				<CodeEditor mode="html" bind:value={foot} disabled={$read_only} on:save={save_page_type_code} />
 			</section>
 		</div>
 	</div>

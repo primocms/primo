@@ -14,6 +14,7 @@
 	import { locale } from '$lib/builder/stores/app/misc.js'
 	import { self } from '$lib/pocketbase/managers'
 	import { beforeNavigate } from '$app/navigation'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	let { onClose, has_unsaved_changes = $bindable(false) } = $props()
 
@@ -64,6 +65,8 @@
 	})
 
 	async function saveComponent() {
+		// Browse mode hides the Save button; any other path here has to match.
+		if ($read_only) return
 		if (!site) {
 			return
 		}
@@ -91,11 +94,13 @@
 <Dialog.Header
 	title="Site"
 	icon="gg:website"
-	button={{
-		label: 'Save',
-		onclick: saveComponent,
-		disabled: disableSave
-	}}
+	button={$read_only
+		? undefined
+		: {
+				label: 'Save',
+				onclick: saveComponent,
+				disabled: disableSave
+			}}
 />
 
 {#if site}
@@ -152,7 +157,7 @@
 						<Pane minSize={1.4}>
 							<div class="container" style="margin-bottom: 1rem">
 								<span class="primo--field-label">Head HTML</span>
-								<CodeEditor mode="html" bind:value={head} on:save={saveComponent} />
+								<CodeEditor mode="html" bind:value={head} disabled={$read_only} on:save={saveComponent} />
 							</div>
 						</Pane>
 						<PaneResizer class="PaneResizer-secondary">
@@ -163,7 +168,7 @@
 						<Pane minSize={1.4}>
 							<div class="container">
 								<span class="primo--field-label">Body Footer HTML</span>
-								<CodeEditor mode="html" bind:value={foot} on:save={saveComponent} />
+								<CodeEditor mode="html" bind:value={foot} disabled={$read_only} on:save={saveComponent} />
 							</div>
 						</Pane>
 					</PaneGroup>

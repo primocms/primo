@@ -31,6 +31,8 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
+	import { read_only } from '$lib/pocketbase/author_mode'
+	import BrowseModePill from './BrowseModePill.svelte'
 	import { track_site_published, track_operation_error, categorize_error } from '$lib/analytics'
 
 	let { children }: { children: Snippet } = $props()
@@ -154,6 +156,9 @@
 	})
 
 	onModKey('p', () => {
+		// Browse mode hides the publish button; the hotkey has to match or the
+		// dialog stays reachable.
+		if ($read_only) return
 		publishing = true
 	})
 
@@ -349,6 +354,9 @@
 				<ToolbarButton id="redo" title="Redo" icon="material-symbols:redo" style="border: 0; font-size: 1.5rem;" on:click={redo_change} />
 			{/if} -->
 			<div id="primo-dev-indicator-slot"></div>
+			{#if $read_only}
+				<BrowseModePill />
+			{/if}
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
 					{#snippet child({ props })}
@@ -378,14 +386,16 @@
 			</DropdownMenu.Root>
 			{@render children?.()}
 			<!-- <LocaleSelector /> -->
-			<ToolbarButton
-				type="primo"
-				icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}
-				label={instance.dev_mode ? 'Preview' : 'Publish'}
-				key="p"
-				loading={publish_in_progress}
-				on:click={() => (publishing = true)}
-			/>
+			{#if !$read_only}
+				<ToolbarButton
+					type="primo"
+					icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}
+					label={instance.dev_mode ? 'Preview' : 'Publish'}
+					key="p"
+					loading={publish_in_progress}
+					on:click={() => (publishing = true)}
+				/>
+			{/if}
 		</div>
 	</div>
 </nav>

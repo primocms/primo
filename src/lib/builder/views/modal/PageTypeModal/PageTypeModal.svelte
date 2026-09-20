@@ -7,12 +7,15 @@
 	import { site_context } from '$lib/builder/stores/context'
 	import { page as pageState } from '$app/state'
 	import { self } from '$lib/pocketbase/managers'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	// Get site from context (preferred) or fallback to hostname lookup
 	const { value: site } = site_context.get()
 
 	async function create_page_type(new_page_type) {
-		if (!site) return
+		// Guard the mutation itself, not just the trigger: a form already open
+		// when the mode flips would otherwise still submit.
+		if ($read_only || !site) return
 
 		// Add the site ID to the page type
 		const page_type_data = {
@@ -35,7 +38,7 @@
 				<Item {page_type} active={pageState.params.page_type === page_type.id} />
 			</li>
 		{/each}
-		{#if creating_page_type}
+		{#if creating_page_type && !$read_only}
 			<li style="background: #1a1a1a;">
 				<PageForm
 					on:create={({ detail: new_page_type }) => {
@@ -46,5 +49,7 @@
 			</li>
 		{/if}
 	</ul>
-	<Button variants="secondary fullwidth" disabled={creating_page_type === true} onclick={() => (creating_page_type = true)} label="Create Page Type" icon="akar-icons:plus" />
+	{#if !$read_only}
+		<Button variants="secondary fullwidth" disabled={creating_page_type === true} onclick={() => (creating_page_type = true)} label="Create Page Type" icon="akar-icons:plus" />
+	{/if}
 </main>

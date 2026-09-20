@@ -76,6 +76,7 @@
 	}
 
 	function save_tooltip_styles_silent() {
+		if (disabled) return
 		if (!Editor || !tooltip_editor_views.length) return
 
 		let doc = Editor.state.doc.toString()
@@ -275,6 +276,10 @@
 					basicSetup,
 					css_highlighter,
 					vsCodeDark,
+					// Tooltip editors are separate views — the main editor's
+					// disabled compartment doesn't reach them.
+					EditorState.readOnly.of(disabled),
+					EditorView.editable.of(!disabled),
 					EditorView.theme({
 						'&': { fontSize: '12px' },
 						'.cm-scroller': { overflow: 'auto', fontFamily: 'Fira Code, monospace' },
@@ -399,6 +404,10 @@
 
 	const css_completions_compartment = new Compartment()
 	const svelte_completions_compartment = new Compartment()
+	// Read-only state must reconfigure rather than bake into editor_state,
+	// because an editor can mount while the author-mode refresh is still
+	// pending (disabled=true) and flip once the real mode lands.
+	const disabled_compartment = new Compartment()
 	let css_variables = $state([])
 
 	// Decoration for classes that have styles defined (underline them)
@@ -456,7 +465,12 @@
 		},
 		doc: value,
 		extensions: [
-			EditorState.readOnly.of(disabled),
+			disabled_compartment.of([
+				EditorState.readOnly.of(disabled),
+				// readOnly alone doesn't remove contenteditable, so typed input can
+				// still mutate the doc and dirty the editor without a save path.
+				EditorView.editable.of(!disabled)
+			]),
 			language,
 			vsCodeDark,
 			keymap.of([
@@ -515,6 +529,7 @@
 				{
 					key: 'mod-s',
 					run: () => {
+						if (disabled) return true
 						dispatch('save')
 						return true
 					}
@@ -529,10 +544,11 @@
 				{
 					key: 'mod-Enter',
 					run: () => {
+						if (disabled) return true
 						const value = Editor.state.doc.toString()
 						const position = Editor.state.selection.main.head
 						format_code(value, { mode, position }).then((res) => {
-							if (!res) return
+							if (!res || disabled) return
 							const { formatted, cursorOffset } = res
 							Editor.dispatch({
 								changes: [
@@ -570,6 +586,16 @@
 			...(mode === 'css' ? [css_completions_compartment.of(cssCompletions(css_variables))] : []),
 			...(mode !== 'javascript' ? [emmetExtension(mode === 'css' ? 'css' : 'html')] : [])
 		]
+	})
+
+	$effect(() => {
+		Editor &&
+			Editor.dispatch({
+				effects: disabled_compartment.reconfigure([
+					EditorState.readOnly.of(disabled),
+					EditorView.editable.of(!disabled)
+				])
+			})
 	})
 
 	$effect(() => {

@@ -9,6 +9,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { site_context } from '$lib/builder/stores/context'
 	import { page as pageState } from '$app/state'
+	import { read_only } from '$lib/pocketbase/author_mode'
 
 	const dispatch = createEventDispatcher()
 	const { value: site } = site_context.getOr({ value: null })
@@ -72,7 +73,7 @@
 				{@render EditingButtons()}
 			</div>
 		{/if}
-		{#if !immovable}
+		{#if !immovable && !$read_only}
 			<div class="top-right">
 				<button onclick={() => dispatch('delete')} class="button-delete" aria-label="Delete block">
 					<Icon icon="ion:trash" />
@@ -85,7 +86,7 @@
 			</div>
 		{/if}
 	</div>
-	{#if !immovable}
+	{#if !immovable && !$read_only}
 		<div class="bottom">
 			{#if !is_last}
 				<button aria-label="Move block down" class="bottom-right" onclick={() => dispatch('moveDown')}>
@@ -103,7 +104,7 @@
 			onclick={() => {
 				dispatch('edit-code')
 			}}
-			aria-label="Edit Block Code"
+			aria-label={$read_only ? 'View Block Code' : 'Edit Block Code'}
 		>
 			{#if $mod_key_held}
 				<span class="key-hint">&#8984; E</span>
@@ -113,12 +114,12 @@
 			</span>
 		</button>
 	{/if}
-	<button onclick={() => dispatch('edit-content')} aria-label="Edit Block Content">
+	<button onclick={() => dispatch('edit-content')} aria-label={$read_only ? 'View Block Content' : 'Edit Block Content'}>
 		<span class="icon">
-			<Icon icon="material-symbols:edit-square-outline-rounded" />
+			<Icon icon={$read_only ? 'ph:eye-bold' : 'material-symbols:edit-square-outline-rounded'} />
 		</span>
 		{#if $current_user?.siteRole !== 'developer'}
-			<span class="text-xs font-normal">Edit Content</span>
+			<span class="text-xs font-normal">{$read_only ? 'View Content' : 'Edit Content'}</span>
 		{/if}
 	</button>
 {/snippet}

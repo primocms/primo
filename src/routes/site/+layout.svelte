@@ -22,14 +22,15 @@
 	let should_create_site = $state(false)
 
 	onMount(async () => {
+		// Start the author-mode refresh before any await — Primo can render
+		// during check_session() while the store still holds the writable
+		// 'both' default, and read_only must already be pending-locked then.
+		refresh_author_mode()
+
 		if (!(await check_session())) {
 			await goto('/admin/auth')
 			return
 		}
-
-		// Refresh author_mode on every load — needed because reloads on
-		// /admin/site skip the auth layout's dev-auth handshake.
-		refresh_author_mode()
 
 		// On localhost root, check if we need to redirect to first available site
 		if (is_localhost) {

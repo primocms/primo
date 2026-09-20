@@ -19,7 +19,8 @@
 	import { useContent } from '$lib/Content.svelte'
 	import { fromStore } from 'svelte/store'
 	import { current_user } from '$lib/pocketbase/user'
-	import { author_mode } from '$lib/pocketbase/author_mode'
+	import { read_only } from '$lib/pocketbase/author_mode'
+	import { toast } from 'svelte-sonner'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
 
 	let {
@@ -136,17 +137,79 @@
 			$site_html = generated_code
 		})
 	})
+
+	// --- Browse mode safety net ---------------------------------------------
+	// Fields and controls are rendered read-only at the source in files mode.
+	// This capture-phase interceptor exists only to catch edit paths that slip
+	// through (a field type that forgets to pass `readonly`, a third-party
+	// widget, a paste handler). Prefer fixing the component over relying on it.
+
+	let last_toast_at = 0
+	function warn_read_only() {
+		// Typing fires an event per keystroke; throttle so we show one toast.
+		const now = Date.now()
+		if (now - last_toast_at < 3000) return
+		last_toast_at = now
+		toast('Files are authoritative — edit the file locally, or restart with --author cms.')
+	}
+
+	// Keys that only move the caret or copy; blocking them would break the
+	// "selectable and copyable" requirement.
+	const non_mutating_keys = new Set([
+		'Tab',
+		'Escape',
+		'Enter',
+		'ArrowLeft',
+		'ArrowRight',
+		'ArrowUp',
+		'ArrowDown',
+		'Home',
+		'End',
+		'PageUp',
+		'PageDown',
+		'Shift',
+		'Control',
+		'Alt',
+		'Meta',
+		'CapsLock'
+	])
+
+	function is_editable_target(target: EventTarget | null) {
+		if (!(target instanceof HTMLElement)) return false
+		if (target.isContentEditable) return true
+		if (target instanceof HTMLTextAreaElement) return !target.readOnly && !target.disabled
+		if (target instanceof HTMLInputElement) return !target.readOnly && !target.disabled
+		return false
+	}
+
+	function onbeforeinputcapture(event: InputEvent) {
+		if (!$read_only) return
+		if (!is_editable_target(event.target)) return
+		event.preventDefault()
+		event.stopPropagation()
+		warn_read_only()
+	}
+
+	function oninputcapture(event: Event) {
+		if (!$read_only) return
+		if (!is_editable_target(event.target)) return
+		event.stopPropagation()
+		warn_read_only()
+	}
+
+	function onkeydowncapture(event: KeyboardEvent) {
+		if (!$read_only) return
+		if (!is_editable_target(event.target)) return
+		// Let copy/select-all and other mod-key shortcuts through.
+		if (event.metaKey || event.ctrlKey) return
+		if (non_mutating_keys.has(event.key)) return
+		event.preventDefault()
+		event.stopPropagation()
+		warn_read_only()
+	}
 </script>
 
-<div class="h-screen flex flex-col">
-	{#if $author_mode === 'files'}
-		<div class="files-mode-banner" role="status">
-			<strong>Read-only.</strong>
-			<span>Files are authoritative this session — edits made here will be discarded on the next sync. Restart with</span>
-			<code>primo dev --author cms</code>
-			<span>to author from the CMS.</span>
-		</div>
-	{/if}
+<div class="h-screen flex flex-col" {oninputcapture} {onkeydowncapture} {onbeforeinputcapture}>
 	<Toolbar>
 		{@render toolbar?.()}
 	</Toolbar>
@@ -203,27 +266,6 @@
 <svelte:window onresize={reset} />
 
 <style lang="postcss">
-	.files-mode-banner {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.5rem 0.75rem;
-		background: #3a2a08;
-		color: #fcd9a3;
-		border-bottom: 1px solid #5a3f12;
-		font-family: Inter, system-ui, sans-serif;
-		font-size: 0.8125rem;
-		line-height: 1.2;
-		z-index: 100;
-	}
-	.files-mode-banner code {
-		background: rgba(0, 0, 0, 0.3);
-		padding: 1px 6px;
-		border-radius: 3px;
-		font-family: 'Fira Code', monospace;
-		font-size: 0.75rem;
-	}
 	.expand {
 		height: 100%;
 		color: var(--color-gray-1);
