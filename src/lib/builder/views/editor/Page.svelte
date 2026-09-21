@@ -242,7 +242,9 @@
 		const success = await mutate_outline(async () => {
 			new_id = await insert_section({ symbol, position: Math.max(0, Math.min(position, sections.length)) })
 			$outlineInsertion = null
-			$pageSidebarTab = 'outline'
+			// Deliberately stay on the current sidebar tab: dropping several blocks
+			// in a row is the normal case, and switching to Outline hid the block
+			// list each time.
 			if (new_id) select_section(new_id, true)
 		}, 'Block added.')
 		if (success && new_id) {
@@ -388,6 +390,26 @@
 	}
 
 	let hide_toolbar_timeout = null
+
+	// Sections render inside an iframe, which swallows pointer events once the
+	// cursor is over it — so a section's mouseleave never fires when the pointer
+	// leaves the canvas, and the block toolbar (whose inset shadow draws the
+	// block's hover outline) stays on screen. Watch pointer moves at the window
+	// and schedule the same hide once the pointer is outside the hovered section;
+	// entering the toolbar cancels it, as with the other paths.
+	function hide_block_toolbar_if_pointer_left(event: PointerEvent) {
+		if (!showing_block_toolbar || hovering_toolbar || !hovered_block_el) return
+		const { top, left, bottom, right } = hovered_block_el.getBoundingClientRect()
+		if (event.clientX >= left && event.clientX <= right && event.clientY >= top && event.clientY <= bottom) return
+		hovering_section = false
+		if (hide_toolbar_timeout) clearTimeout(hide_toolbar_timeout)
+		hide_toolbar_timeout = setTimeout(() => {
+			if (!hovering_toolbar && !hovering_section) {
+				hovered_section_id = null
+				hide_block_toolbar()
+			}
+		}, 100)
+	}
 
 	async function hide_block_toolbar() {
 		// Clear any existing timeout
@@ -861,6 +883,7 @@
 {/if}
 
 <!-- Page with Zone-Based Layout -->
+<svelte:window onpointermove={hide_block_toolbar_if_pointer_left} />
 <main id="Page" bind:this={page_el} class:fadein={page_mounted} class:dragging={$dragging_symbol} lang={$locale} use:drag_fallback>
 	<!-- Page Type Header Sections -->
 	{#if header_sections.length > 0}
