@@ -7,7 +7,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import MenuPopup from '../../ui/Dropdown.svelte'
-	import { locale, mod_key_held } from '../../stores/app/misc'
+	import { locale, mod_key_held, dragging_symbol } from '../../stores/app/misc'
 	import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import IFrame from '../../components/IFrame.svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -149,6 +149,10 @@
 				canDrag: () => !get(read_only),
 				getInitialData: () => ({ block: symbol }),
 				onDragStart: () => {
+					// Drives `main.dragging`, which sets pointer-events:none on the
+					// canvas iframe — without it the iframe swallows the drag and no
+					// drop target fires on a page that already has sections.
+					$dragging_symbol = true
 					if (typeof window !== 'undefined') {
 						const detail = { block: symbol }
 						window.dispatchEvent(new CustomEvent('primoDragStart', { detail }))
@@ -156,7 +160,11 @@
 						window.dispatchEvent(new CustomEvent('palaDragStart', { detail }))
 					}
 				},
+				onDragEnd: () => {
+					$dragging_symbol = false
+				},
 				onDrop: () => {
+					$dragging_symbol = false
 					if (typeof window !== 'undefined') {
 						const detail = { block: symbol }
 						window.dispatchEvent(new CustomEvent('primoDragEnd', { detail }))
