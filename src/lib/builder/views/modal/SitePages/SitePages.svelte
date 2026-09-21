@@ -158,7 +158,7 @@
 
 <div class="pages-heading">
 	<Dialog.Title class="text-base font-medium">Pages <span class="page-count">{all_pages.length}</span></Dialog.Title>
-	{#if onManagePageTypes}<button class="manage-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
+	{#if onManagePageTypes}<button class="manage-types" data-testid="manage-page-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
 </div>
 <p class="pages-description">Open a page to edit its content, or create a new one.</p>
 {#if active_page}

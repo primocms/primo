@@ -72,8 +72,15 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await expect(page).toHaveURL(new RegExp(`/admin/sites/${newSiteId}`), { timeout: 15000 })
 
 	// --- 2. Create Page Type ---
-	await page.getByRole('button', { name: 'Page options' }).click()
-	await page.getByRole('menuitem', { name: 'Page Types' }).click()
+	// Page Types moved out of the toolbar's developer-only "Page options"
+	// dropdown into the Pages modal (#1250). The Pages button itself isn't
+	// role-gated; the "Manage page types" affordance inside it is.
+	await page.getByRole('button', { name: 'Pages' }).click()
+	await page.getByTestId('manage-page-types').click()
+	// The Pages dialog closes as the Page Types dialog opens; wait for the
+	// Pages one to leave so the unscoped getByRole('dialog') below can't
+	// match two dialogs.
+	await expect(page.getByTestId('manage-page-types')).toBeHidden({ timeout: 5000 })
 	const pageTypesDialog = page.getByRole('dialog')
 	await expect(pageTypesDialog).toBeVisible()
 	await pageTypesDialog.getByRole('button', { name: 'Create Page Type' }).click()

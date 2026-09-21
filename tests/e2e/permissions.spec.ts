@@ -22,8 +22,9 @@ let ids: SeededSite
  * (user, site)" — none of them inspect the row's `role` value ('editor' vs
  * 'developer'). The only place `role`/`serverRole` VALUE is checked is:
  *   - internal/limits.go — a billing seat-counter, not a permission gate.
- *   - A handful of frontend {#if} conditionals in Toolbar.svelte (gates the
- *     "Page options" menu / Page Types link visibility only).
+ *   - A handful of frontend {#if} conditionals in Toolbar.svelte and
+ *     SitePages.svelte (gates the "Manage page types" affordance in the
+ *     Pages modal only).
  * So: editor vs developer is a UI-only distinction today. This test
  * documents that gap with evidence rather than asserting the aspirational
  * contract as if it were enforced.
@@ -67,28 +68,28 @@ test.describe('Client permissions', () => {
 		expect(headlineEntry.value).toBe(editorHeadline)
 	})
 
-	test('UI hides the developer-only "Page options" (Page Types) control from an editor', async ({ page, browser, request }) => {
+	test('UI hides the developer-only page-type management control from an editor', async ({ page, browser, request }) => {
 		const { token: devToken } = await devAuth(request)
 		const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
-		// The dropdown trigger is annotated aria-label="Page options" in
-		// source (Toolbar.svelte) but bits-ui's prop-spread on the snippet
-		// child does not forward it through to the rendered DOM — the only
-		// accessible name that survives is the shared sr-only "More" text,
-		// which collides with an unrelated "More" button elsewhere in the
-		// toolbar, and .navigation-group's class is similarly stripped from
-		// the compiled output. Target it structurally instead: the
-		// dropdown-menu trigger inside the same .button-group as the
-		// "Pages" button.
-		const pageOptionsTriggerOn = (target: Page) =>
-			target.locator('.button-group', { has: target.getByRole('button', { name: 'Pages' }) }).locator('[data-dropdown-menu-trigger]')
+		// Page Types moved out of the toolbar's developer-only "Page options"
+		// dropdown into the Pages modal (#1250). The Pages button itself isn't
+		// role-gated — SitePages.svelte renders the "Manage page types" button
+		// only when Toolbar.svelte passes onManagePageTypes, which it supplies
+		// for developers only. Assert on that affordance by test id: bits-ui
+		// strips classes/aria from snippet children, so structural selectors
+		// are unreliable here.
+		const managePageTypesOn = (target: Page) => target.getByTestId('manage-page-types')
 
 		// Confirm the control IS visible for a developer, to rule out a
 		// selector mistake before asserting its absence for the editor.
 		await loginAsDeveloper(page, ids.siteId)
 		const devFrame = canvasFrame(page)
 		await expect(devFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
-		await expect(pageOptionsTriggerOn(page)).toBeVisible({ timeout: 5000 })
+		await page.getByRole('button', { name: 'Pages' }).click()
+		await expect(managePageTypesOn(page)).toBeVisible({ timeout: 5000 })
+		await page.keyboard.press('Escape')
+		await expect(managePageTypesOn(page)).toBeHidden({ timeout: 5000 })
 
 		// The editor session needs its own browser CONTEXT, not just its own
 		// page. Two reasons, and a separate page only addresses the first:
@@ -110,7 +111,11 @@ test.describe('Client permissions', () => {
 		await loginAs(editorPage, editor.email, editor.password, ids.siteId)
 		const editorFrame = canvasFrame(editorPage)
 		await expect(editorFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
-		await expect(pageOptionsTriggerOn(editorPage)).toHaveCount(0)
+		// The Pages button is ordinary navigation — available to the editor.
+		// The page-type control inside that modal is not.
+		await editorPage.getByRole('button', { name: 'Pages' }).click()
+		await expect(editorPage.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+		await expect(managePageTypesOn(editorPage)).toHaveCount(0)
 		await editorContext.close()
 	})
 
