@@ -52,15 +52,39 @@
 	const create_snapshot = $derived(useSiteSnapshot({ source_site_id: site?.id }))
 
 	let publish_in_progress = $state(false)
+	// Both workers lazily load the whole site (site → pages → sections →
+	// symbols → fields → entries) as part of run(), and read it as one
+	// all-or-nothing aggregate. On a site created moments ago that aggregate
+	// can still be settling when the work runs, so the worker throws a bare
+	// 'Not loaded' — which surfaced as "Publishing failed" on a brand-new site.
+	// run() returns the worker to standby on failure, so waiting a beat and
+	// retrying once is safe; only a genuine failure survives both attempts.
+	async function run_when_loaded<T>(worker: { run: () => Promise<T> }): Promise<T> {
+		try {
+			return await worker.run()
+		} catch (e) {
+			if (!(e instanceof Error) || e.message !== 'Not loaded') throw e
+			await new Promise((resolve) => setTimeout(resolve, 500))
+			try {
+				return await worker.run()
+			} catch (retry) {
+				if (retry instanceof Error && retry.message === 'Not loaded') {
+					throw new Error('This site was still loading. Try publishing again.')
+				}
+				throw retry
+			}
+		}
+	}
+
 	async function handle_publish() {
 		publish_in_progress = true
 		try {
-			await publish.run()
+			await run_when_loaded(publish)
 
 			// Create new snapshot and remove all other ones
 			// TODO: The amount of snapshots could be larger once make UI for managing and restoring them
 			const snapshots_to_remove = [...(existing_snapshots ?? [])]
-			const snapshot = await create_snapshot.run()
+			const snapshot = await run_when_loaded(create_snapshot)
 			SiteSnapshots.create({
 				site: site.id,
 				file: Snapshot.encode(snapshot)
