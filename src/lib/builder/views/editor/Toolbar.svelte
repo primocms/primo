@@ -37,7 +37,14 @@
 
 	let { children }: { children: Snippet } = $props()
 
-	const { value: site } = site_context.get()
+	// Read the site through the context reactively. Destructuring it here
+	// (`const { value: site } = …`) snapshots it once at mount, so an in-place
+	// update to the cached record — e.g. `update_record` after the domain
+	// endpoints return — never re-renders the toolbar, and the publish dialog
+	// keeps showing its stale (empty) host until a reload. Reading `value`
+	// inside a $derived keeps the dependency live.
+	const site_context_value = site_context.get()
+	const site = $derived(site_context_value.value)
 	const homepage = $derived(site.homepage())
 
 	const active_page_path = $derived(pageState.params.page?.split('/'))
