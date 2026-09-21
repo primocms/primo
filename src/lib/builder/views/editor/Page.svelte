@@ -50,6 +50,10 @@
 
 	// Check if page type is static (no symbols toggled - sections can't be added/removed/reordered)
 	const is_static_page_type = $derived(page_type ? page_type.symbols()?.length === 0 : false)
+	// Resolve the type's available blocks during render. page_type.symbols() is a
+	// CollectionMapping relation accessor that lazily spins up a reactive query,
+	// so calling it from the drop callback throws Svelte's effect_orphan.
+	const page_type_symbol_ids = $derived(new Set((page_type?.symbols() ?? []).map((s) => s.symbol)))
 
 	const history = createOutlineHistory()
 	let historyVersion = $state(0)
@@ -232,7 +236,7 @@
 	let symbol_to_add = $state<ObjectOf<typeof SiteSymbols>>()
 	const copy_symbol_entries = $derived(useCopyEntries([symbol_to_add]))
 	async function add_section_to_page({ symbol, position }) {
-		if (!can_structure || !symbol || !page_type?.symbols()?.some((s) => s.symbol === symbol.id)) return
+		if (!can_structure || !symbol || !page_type_symbol_ids.has(symbol.id)) return
 		let new_id: string | undefined
 		const originalOrder = sections.map((s) => s.id)
 		const success = await mutate_outline(async () => {
