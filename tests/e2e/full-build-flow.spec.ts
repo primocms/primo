@@ -266,7 +266,7 @@ test.describe('Full build flow (site creation through publish)', () => {
 	// the flow "work" — a false pass here would hide a real regression in
 	// the drag-and-drop path. (API reads to verify state, e.g. confirming a
 	// section now exists, are fine and used below.)
-	test('UI: developer can drag a block onto a new page', async ({ page, request }) => {
+	test('UI: developer can drag a block onto a page, empty or already populated', async ({ page, request }) => {
 		test.setTimeout(60000)
 		const { newSymbol, newPage, devToken } = await buildSiteThroughPageCreation(page, request)
 
@@ -312,6 +312,38 @@ test.describe('Full build flow (site creation through publish)', () => {
 			const sections = (await sectionsRes.json()).items
 			expect(sections, 'no page_sections record was created by the drag — the drop did not register').toHaveLength(1)
 			expect(sections[0].symbol).toBe(newSymbol.id)
+		}).toPass({ timeout: 5000 })
+
+		// Second drop, now onto a page that ALREADY has a section. The canvas
+		// is the compiled iframe at this point, so the drag only reaches a
+		// drop target if `main.dragging` has turned off the iframe's
+		// pointer-events — which Sidebar_Symbol drives via dragging_symbol on
+		// drag start. Drop that wiring and every target is swallowed by the
+		// iframe: the drop silently does nothing. The empty-page case above
+		// cannot catch that (the .empty-state lives outside the iframe), so
+		// this second pass exists specifically to cover it.
+		const canvas = page.locator('main#Page')
+		const canvasBox = await canvas.boundingBox()
+		expect(canvasBox, 'canvas has no bounding box').toBeTruthy()
+		const secondSourceBox = await dragSource.boundingBox()
+		expect(secondSourceBox, 'drag source (sidebar block) has no bounding box').toBeTruthy()
+
+		await page.mouse.move(secondSourceBox!.x + secondSourceBox!.width / 2, secondSourceBox!.y + secondSourceBox!.height / 2)
+		await page.mouse.down()
+		await page.mouse.move(canvasBox!.x + canvasBox!.width / 2, canvasBox!.y + canvasBox!.height / 2, { steps: 12 })
+		await page.mouse.move(canvasBox!.x + canvasBox!.width / 2, canvasBox!.y + canvasBox!.height / 2, { steps: 3 })
+		await page.mouse.up()
+
+		await expect(async () => {
+			const sectionsRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_sections/records`, {
+				headers: { Authorization: `Bearer ${devToken}` },
+				params: { filter: `page = "${newPage.id}"` }
+			})
+			const sections = (await sectionsRes.json()).items
+			expect(
+				sections,
+				'second drop onto a page that already has sections did not register — the canvas iframe swallowed the drag'
+			).toHaveLength(2)
 		}).toPass({ timeout: 5000 })
 	})
 
