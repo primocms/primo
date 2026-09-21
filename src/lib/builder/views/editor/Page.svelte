@@ -894,7 +894,6 @@
 				{#if block}
 					<div
 						role="presentation"
-						inert={$outlineBusy}
 						data-section={page_type_section.id}
 						class:outline-selected={$outlineSelection === page_type_section.id}
 						data-symbol={block?.id}
@@ -950,7 +949,6 @@
 				{@const show_block_toolbar_on_hover = page_mounted && !moving}
 				<div
 					role="presentation"
-					inert={$outlineBusy}
 					data-section={section.id}
 					class:outline-selected={$outlineSelection === section.id}
 					class:insert-before={$outlineInsertion === section.index}
@@ -1036,7 +1034,6 @@
 				{#if block}
 					<div
 						role="presentation"
-						inert={$outlineBusy}
 						data-section={page_type_section.id}
 						class:outline-selected={$outlineSelection === page_type_section.id}
 						data-symbol={block?.id}
