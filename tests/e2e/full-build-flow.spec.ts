@@ -314,6 +314,12 @@ test.describe('Full build flow (site creation through publish)', () => {
 			expect(sections[0].symbol).toBe(newSymbol.id)
 		}).toPass({ timeout: 5000 })
 
+		// add_section_to_page switches the sidebar to the Outline tab after a
+		// drop (so the new section is highlighted there), so re-open Blocks
+		// before dragging a second time.
+		await page.getByRole('tab', { name: 'Blocks' }).click()
+		await expect(dragSource).toBeVisible({ timeout: 5000 })
+
 		// Second drop, now onto a page that ALREADY has a section. The canvas
 		// is the compiled iframe at this point, so the drag only reaches a
 		// drop target if `main.dragging` has turned off the iframe's
