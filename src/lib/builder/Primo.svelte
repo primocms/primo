@@ -274,8 +274,10 @@
 				</span>
 			{/if}
 		</PaneResizer>
-		<Pane class="editor-canvas relative bg-white" defaultSize={80}>
-			{@render children?.()}
+		<Pane class="editor-canvas relative min-w-0" defaultSize={80}>
+			<div class="canvas-surround">
+				<div class="canvas-frame">{@render children?.()}</div>
+			</div>
 		</Pane>
 	</PaneGroup>
 </div>
@@ -293,6 +295,30 @@
 		:global(.editor-panes > .editor-sidebar.mobile-open) { display: block; flex: 0 0 min(42vh, 320px) !important; width: 100%; min-height: 0; border-bottom: 1px solid #343437; }
 		:global(.editor-panes > .PaneResizer) { display: none !important; }
 		:global(.editor-panes > .editor-canvas) { flex: 1 1 0% !important; min-height: 0; width: 100%; }
+	}
+
+	/* Breathing room around the page so the canvas reads as a framed sheet
+	   rather than butting into the toolbar/sidebar. Recovered from the
+	   closed #1231 (the banner half of that PR was superseded by #1233). */
+	.canvas-surround {
+		height: 100%;
+		padding: 16px;
+		min-width: 0;
+	}
+	.canvas-frame {
+		height: 100%;
+		position: relative;
+		overflow: hidden;
+		border-radius: 8px;
+		background: white;
+		box-shadow:
+			0 0 0 1px #ffffff12,
+			0 4px 20px #0003;
+	}
+	@media (max-width: 700px) {
+		.canvas-surround {
+			padding: 8px;
+		}
 	}
 
 	.expand {
