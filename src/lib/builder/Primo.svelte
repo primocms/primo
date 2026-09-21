@@ -257,8 +257,10 @@
 				</span>
 			{/if}
 		</PaneResizer>
-		<Pane class="relative bg-white" defaultSize={80}>
-			{@render children?.()}
+		<Pane class="relative min-w-0" defaultSize={80}>
+			<div class="canvas-surround">
+				<div class="canvas-frame">{@render children?.()}</div>
+			</div>
 		</Pane>
 	</PaneGroup>
 </div>
@@ -266,6 +268,30 @@
 <svelte:window onresize={reset} />
 
 <style lang="postcss">
+	/* Breathing room around the page so the canvas reads as a framed sheet
+	   rather than butting into the toolbar/sidebar. Recovered from the
+	   closed #1231 (the banner half of that PR was superseded by #1233). */
+	.canvas-surround {
+		height: 100%;
+		padding: 16px;
+		min-width: 0;
+	}
+	.canvas-frame {
+		height: 100%;
+		position: relative;
+		overflow: hidden;
+		border-radius: 8px;
+		background: white;
+		box-shadow:
+			0 0 0 1px #ffffff12,
+			0 4px 20px #0003;
+	}
+	@media (max-width: 700px) {
+		.canvas-surround {
+			padding: 8px;
+		}
+	}
+
 	.expand {
 		height: 100%;
 		color: var(--color-gray-1);
