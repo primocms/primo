@@ -185,13 +185,13 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={editing_pages}>
-	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4 bg-[#1e1e20] border-[#343437] rounded-lg text-[#e4e4e7]">
+	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4">
 		<SitePages />
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={editing_page_types}>
-	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4">
+	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4 bg-[#1e1e20] border-[#343437] rounded-lg text-[#e4e4e7]">
 		<PageTypeModal />
 	</Dialog.Content>
 </Dialog.Root>
