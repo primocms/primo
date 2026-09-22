@@ -133,13 +133,17 @@
 		}
 	}
 
-	// Helper function to clean up event listeners
+	// Content matchers are rebuilt every time the iframe's content settles, so
+	// they're torn down per pass. Document-lifetime listeners (outline
+	// selection, scroll) must outlive that — clearing them here silently killed
+	// pointer/focus section selection once make_content_editable() ran.
 	function cleanup_event_listeners() {
-		// Clean up all stored event listeners
 		event_listeners.forEach((cleanup) => cleanup())
 		event_listeners.clear()
+	}
 
-		// Clean up doc event listeners
+	function cleanup_all_event_listeners() {
+		cleanup_event_listeners()
 		doc_event_listeners.forEach((cleanup) => cleanup())
 		doc_event_listeners.clear()
 	}
@@ -624,7 +628,7 @@
 			}
 
 			// Clean up all event listeners
-			cleanup_event_listeners()
+			cleanup_all_event_listeners()
 
 			// Clear timeouts
 			if (field_save_timeout) clearTimeout(field_save_timeout)

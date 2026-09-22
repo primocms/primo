@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte'
 	import { dropIndex } from '$lib/builder/stores/app/outline-order.js'
-	import { ListTree, GripVertical, Lock, SquarePen } from 'lucide-svelte'
+	import { ListTree, GripVertical, Lock, SquarePen, Undo2, Redo2 } from 'lucide-svelte'
 	import { outline, outlineSelection, outlineBusy } from '$lib/builder/stores/app/outline'
 	let dragging = $state<string | null>(null)
 	let dropAt = $state<number | null>(null)
@@ -16,7 +16,19 @@
 <div class="page-outline" bind:this={list}>
 	<div class="heading">
 		<strong>{$outline?.pageName ?? 'Page'}</strong>
-		<span>{$outline?.rows.length ?? 0} {$outline?.rows.length === 1 ? 'section' : 'sections'}</span>
+		<div class="heading-meta">
+			<span>{$outline?.rows.length ?? 0} {$outline?.rows.length === 1 ? 'section' : 'sections'}</span>
+			<!-- The controller records reorder history; without these it was
+			     unreachable (no other control or shortcut invoked it). -->
+			<div class="history">
+				<button type="button" aria-label="Undo outline change" title="Undo" disabled={!$outline?.canUndo || $outlineBusy} onclick={() => $outline?.undo()}>
+					<Undo2 class="h-3.5 w-3.5" />
+				</button>
+				<button type="button" aria-label="Redo outline change" title="Redo" disabled={!$outline?.canRedo || $outlineBusy} onclick={() => $outline?.redo()}>
+					<Redo2 class="h-3.5 w-3.5" />
+				</button>
+			</div>
+		</div>
 	</div>
 	{#each $outline?.rows ?? [] as row, rowIndex (row.id)}
 		{#if rowIndex > 0 && $outline?.rows[rowIndex - 1].zone !== row.zone}<div class="zone-divider"></div>{/if}
@@ -107,6 +119,12 @@
 	}
 	.heading strong { color: #e4e4e7; font-size: 13px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 	.heading > span { flex-shrink: 0; }
+	.heading-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+	.history { display: flex; align-items: center; gap: 2px; }
+	.history button { display: inline-flex; align-items: center; justify-content: center; padding: 3px; border-radius: 4px; color: #a1a1aa; }
+	.history button:hover:not(:disabled) { background: #303034; color: #f4f4f5; }
+	.history button:disabled { opacity: .35; cursor: default; }
+	.history button:focus-visible { outline: 2px solid #956e51; outline-offset: 2px; }
 	.zone-divider { height: 1px; background: #343437; margin: 5px 0; }
 	.row {
 		border: 1px solid transparent;
