@@ -38,6 +38,110 @@ func getExportedID(data map[string]interface{}) string {
 	return ""
 }
 
+// recognisedFieldKeys are the keys a field definition in fields.yaml may carry.
+// Everything the importer reads is listed here; any other key is ignored, so a
+// typo — most commonly `fields:` for `subfields:` — silently drops
+// configuration and the field imports as if it were empty.
+var recognisedFieldKeys = map[string]bool{
+	"name":        true,
+	"label":       true,
+	"type":        true,
+	"config":      true,
+	"options":     true, // pre-config spelling, still read
+	"subfields":   true,
+	"placeholder": true,
+	"help":        true,
+	"parent":      true, // written by nesting, accepted if authored
+}
+
+// closestFieldKey returns a recognised key that looks like a misspelling of the
+// given one, for a "did you mean" hint.
+func closestFieldKey(key string) string {
+	best := ""
+	for candidate := range recognisedFieldKeys {
+		if candidate == key {
+			continue
+		}
+		if !strings.Contains(candidate, key) && !strings.Contains(key, candidate) {
+			continue
+		}
+		if best == "" || len(candidate) < len(best) || (len(candidate) == len(best) && candidate < best) {
+			best = candidate
+		}
+	}
+	return best
+}
+
+// warnFieldDefinitionIssues reports field definitions the importer will ignore
+// or that will import empty: unrecognised keys, and repeaters/groups declared
+// without subfields. Without this a malformed fields.yaml imports
+// "successfully" while quietly doing nothing.
+func warnFieldDefinitionIssues(fieldEntries []interface{}, sourceFile, ownerName string, supports_nested bool, warnings *[]ImportWarning) {
+	if warnings == nil {
+		return
+	}
+
+	var walk func(entries []interface{}, path string)
+	walk = func(entries []interface{}, path string) {
+		for i, entry := range entries {
+			field, ok := entry.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			name := getString(field, "name")
+			fieldPath := fmt.Sprintf("%s[%d]", path, i)
+
+			for key := range field {
+				if key == "subfields" && !supports_nested {
+					// The page-type importer reads neither `subfields` nor `parent`,
+					// so nested children are dropped silently there (the exporter
+					// still nests them — see nestSubfields in export.go).
+					*warnings = append(*warnings, ImportWarning{
+						Kind:    "unsupported_subfields",
+						File:    sourceFile,
+						Path:    fieldPath + ".subfields",
+						Field:   name,
+						Message: fmt.Sprintf("%s: field %q in %q nests `subfields:`, which page-type fields don't support yet — its children are ignored. Declare them flat instead.", sourceFile, name, ownerName),
+					})
+					continue
+				}
+				if recognisedFieldKeys[key] {
+					continue
+				}
+				hint := ""
+				if suggestion := closestFieldKey(key); suggestion != "" {
+					hint = fmt.Sprintf(" Did you mean `%s:`?", suggestion)
+				}
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "unknown_field_key",
+					File:    sourceFile,
+					Path:    fieldPath + "." + key,
+					Field:   name,
+					Message: fmt.Sprintf("%s: field %q in %q declares `%s:`, which the importer ignores.%s", sourceFile, name, ownerName, key, hint),
+				})
+			}
+
+			fieldType := getString(field, "type")
+			subfields, hasSubfields := field["subfields"].([]interface{})
+			if supports_nested && (fieldType == "repeater" || fieldType == "group") && (!hasSubfields || len(subfields) == 0) {
+				*warnings = append(*warnings, ImportWarning{
+					Kind:    "missing_subfields",
+					File:    sourceFile,
+					Path:    fieldPath,
+					Field:   name,
+					Message: fmt.Sprintf("%s: %s %q in %q declares no subfields, so it imports with no fields. Nest its definitions under `subfields:`.", sourceFile, fieldType, name, ownerName),
+				})
+			}
+			if hasSubfields {
+				walk(subfields, fieldPath+".subfields")
+			}
+		}
+	}
+
+	walk(fieldEntries, "fields")
+}
+
 // parseBareFieldList unmarshals a fields.yaml file. Block, page-type, and
 // site fields.yaml files are canonical bare top-level lists; wrapper objects
 // such as `{ fields: [...] }` are rejected so the importer and validators stay
@@ -629,6 +733,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			ptFields = parsed
+			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, false, &warnings)
 		}
 
 		// Read layout.yaml if it exists
@@ -772,6 +877,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			blockFields = parsed
+			warnFieldDefinitionIssues(blockFields, fieldsPath, blockName, true, &warnings)
 		}
 
 		// config.yaml provides the block's display name and stable _id.
@@ -1141,6 +1247,9 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	// Process site config
 	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		diff.Site.Modified = append(diff.Site.Modified, "fields")
+		if parsed, err := parseBareFieldList(siteFieldsData, "site/fields.yaml"); err == nil {
+			warnFieldDefinitionIssues(parsed, "site/fields.yaml", site.GetString("name"), true, &warnings)
+		}
 		if !previewOnly {
 			if err := importSiteFields(app, site, siteFieldsData); err != nil {
 				return nil, fmt.Errorf("failed to import site fields: %w", err)

@@ -59,6 +59,7 @@
 	let historyVersion = $state(0)
 	let operationChanges = new Map()
 	let operationBefore = new Map()
+	let operationCommittedBefore = new Map()
 	let originalSections = new Map()
 	async function commit_outline() {
 		operationChanges = new Map(
@@ -124,6 +125,7 @@
 		$outlineBusy = true
 		$outlineMessage = ''
 		operationBefore = new Map(self.changes)
+		operationCommittedBefore = new Map([...self.changes].map(([id, change]) => [id, !!change.committed]))
 		operationChanges = new Map()
 		originalSections = new Map(sections.map((section) => [section.id, section.values()]))
 		try {
@@ -140,6 +142,7 @@
 			const recovered = await recoverOutlineOperation({
 				changes: self.changes,
 				before: operationBefore,
+				committed_before: operationCommittedBefore,
 				operation: operationChanges,
 				originals: originalSections,
 				records: self.records,

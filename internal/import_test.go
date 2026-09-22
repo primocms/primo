@@ -1927,3 +1927,104 @@ func TestSiteContentUrlLinkResolvesAfterRekey(t *testing.T) {
 		t.Fatalf("no page ref stored for the site url link (conversion did not run); entries=%d", len(entries))
 	}
 }
+
+// A repeater whose definitions are nested under `fields:` instead of
+// `subfields:` used to import "successfully" as a repeater with no fields,
+// with no warning of any kind (the only guard, missing_subfields, fires when
+// *content* items exist, so a fresh block was completely silent).
+func TestWarnFieldDefinitionIssues(t *testing.T) {
+	const file = "blocks/feature/fields.yaml"
+	input := []byte(`
+- name: items
+  label: Feature Items
+  type: repeater
+  fields:
+    - name: title
+      type: text
+- name: empty_group
+  type: group
+- name: fine
+  type: repeater
+  subfields:
+    - name: title
+      type: text
+`)
+
+	parsed, err := parseBareFieldList(input, file)
+	if err != nil {
+		t.Fatalf("parse fields.yaml: %v", err)
+	}
+
+	var warnings []ImportWarning
+	warnFieldDefinitionIssues(parsed, file, "Feature", true, &warnings)
+
+	kinds := map[string][]ImportWarning{}
+	for _, w := range warnings {
+		kinds[w.Kind] = append(kinds[w.Kind], w)
+	}
+
+	unknown := kinds["unknown_field_key"]
+	if len(unknown) != 1 {
+		t.Fatalf("expected 1 unknown_field_key warning, got %d (%+v)", len(unknown), warnings)
+	}
+	if !strings.Contains(unknown[0].Message, "`fields:`") || !strings.Contains(unknown[0].Message, "`subfields:`") {
+		t.Errorf("unknown-key warning should name the key and suggest subfields: %q", unknown[0].Message)
+	}
+	if unknown[0].Field != "items" {
+		t.Errorf("warning should attribute the key to the `items` field, got %q", unknown[0].Field)
+	}
+
+	// `items` (repeater, no subfields) and `empty_group` (group, no subfields).
+	if missing := kinds["missing_subfields"]; len(missing) != 2 {
+		t.Errorf("expected 2 missing_subfields warnings, got %d (%+v)", len(missing), missing)
+	}
+
+	// A well-formed file must stay quiet.
+	clean, err := parseBareFieldList([]byte(`
+- name: title
+  type: text
+- name: fine
+  type: repeater
+  subfields:
+    - name: title
+      type: text
+`), file)
+	if err != nil {
+		t.Fatalf("parse clean fields.yaml: %v", err)
+	}
+	var quiet []ImportWarning
+	warnFieldDefinitionIssues(clean, file, "Feature", true, &quiet)
+	if len(quiet) != 0 {
+		t.Errorf("well-formed fields.yaml should produce no warnings, got %+v", quiet)
+	}
+}
+
+// Page-type fields don't support nesting yet, so `subfields:` there must be
+// reported rather than accepted (the importer reads neither `subfields` nor
+// `parent` for page_type_fields).
+func TestWarnFieldDefinitionIssuesPageTypesRejectNesting(t *testing.T) {
+	parsed, err := parseBareFieldList([]byte(`
+- name: items
+  type: repeater
+  subfields:
+    - name: title
+      type: text
+`), "page-types/landing/fields.yaml")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	var warnings []ImportWarning
+	warnFieldDefinitionIssues(parsed, "page-types/landing/fields.yaml", "Landing", false, &warnings)
+
+	var kinds []string
+	for _, w := range warnings {
+		kinds = append(kinds, w.Kind)
+	}
+	if len(warnings) != 1 || warnings[0].Kind != "unsupported_subfields" {
+		t.Fatalf("expected exactly one unsupported_subfields warning, got %v (%+v)", kinds, warnings)
+	}
+	if !strings.Contains(warnings[0].Message, "don't support") {
+		t.Errorf("warning should say nesting is unsupported: %q", warnings[0].Message)
+	}
+}
