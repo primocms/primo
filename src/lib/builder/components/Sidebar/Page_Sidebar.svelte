@@ -36,7 +36,7 @@
 
 <div class="sidebar primo-reset">
 	<Tabs.Root bind:value={$pageSidebarTab} class="p-3">
-		<Tabs.List class="w-full mb-4">
+		<Tabs.List class="w-full mb-4 sticky -top-3 z-10 bg-[#1e1e20] pt-3 pb-1">
 			<Tabs.Trigger value="outline" class="flex-1 min-w-0 flex gap-1 px-2 font-normal data-[state=active]:bg-[#1e1e20]">
 				<ListTree class="w-3 shrink-0" />
 				<span class="text-xs truncate">Outline</span>
