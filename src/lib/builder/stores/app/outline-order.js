@@ -51,7 +51,7 @@ export function createOutlineHistory(limit = 30) {
 }
 
 /** Compensate only records written by a failed outline operation. */
-export async function recoverOutlineOperation({ changes, before, operation, originals, records, client }) {
+export async function recoverOutlineOperation({ changes, before, committed_before, operation, originals, records, client }) {
 	let recovered = true
 	for (const [id, change] of operation) {
 		if (changes.get(id) === change) changes.delete(id)
@@ -71,8 +71,13 @@ export async function recoverOutlineOperation({ changes, before, operation, orig
 			recovered = false
 			records.delete(id)
 		}
+		// `before` holds the same Change objects as the live map, and commit()
+		// flips `committed` on them before each request — so reading it here
+		// would report a change that was still pending when the operation began
+		// as already committed, and drop the user's unsaved edit instead of
+		// restoring it. Use the pre-operation snapshot.
 		const previous = before.get(id)
-		if (previous && !previous.committed) changes.set(id, previous)
+		if (previous && !committed_before?.get(id)) changes.set(id, previous)
 	}
 	return recovered
 }
