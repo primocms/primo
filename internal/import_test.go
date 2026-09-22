@@ -1956,7 +1956,7 @@ func TestWarnFieldDefinitionIssues(t *testing.T) {
 	}
 
 	var warnings []ImportWarning
-	warnFieldDefinitionIssues(parsed, file, "Feature", &warnings)
+	warnFieldDefinitionIssues(parsed, file, "Feature", true, &warnings)
 
 	kinds := map[string][]ImportWarning{}
 	for _, w := range warnings {
@@ -1993,8 +1993,38 @@ func TestWarnFieldDefinitionIssues(t *testing.T) {
 		t.Fatalf("parse clean fields.yaml: %v", err)
 	}
 	var quiet []ImportWarning
-	warnFieldDefinitionIssues(clean, file, "Feature", &quiet)
+	warnFieldDefinitionIssues(clean, file, "Feature", true, &quiet)
 	if len(quiet) != 0 {
 		t.Errorf("well-formed fields.yaml should produce no warnings, got %+v", quiet)
+	}
+}
+
+// Page-type fields don't support nesting yet, so `subfields:` there must be
+// reported rather than accepted (the importer reads neither `subfields` nor
+// `parent` for page_type_fields).
+func TestWarnFieldDefinitionIssuesPageTypesRejectNesting(t *testing.T) {
+	parsed, err := parseBareFieldList([]byte(`
+- name: items
+  type: repeater
+  subfields:
+    - name: title
+      type: text
+`), "page-types/landing/fields.yaml")
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+
+	var warnings []ImportWarning
+	warnFieldDefinitionIssues(parsed, "page-types/landing/fields.yaml", "Landing", false, &warnings)
+
+	var kinds []string
+	for _, w := range warnings {
+		kinds = append(kinds, w.Kind)
+	}
+	if len(warnings) != 1 || warnings[0].Kind != "unsupported_subfields" {
+		t.Fatalf("expected exactly one unsupported_subfields warning, got %v (%+v)", kinds, warnings)
+	}
+	if !strings.Contains(warnings[0].Message, "don't support") {
+		t.Errorf("warning should say nesting is unsupported: %q", warnings[0].Message)
 	}
 }

@@ -76,7 +76,7 @@ func closestFieldKey(key string) string {
 // or that will import empty: unrecognised keys, and repeaters/groups declared
 // without subfields. Without this a malformed fields.yaml imports
 // "successfully" while quietly doing nothing.
-func warnFieldDefinitionIssues(fieldEntries []interface{}, sourceFile, ownerName string, warnings *[]ImportWarning) {
+func warnFieldDefinitionIssues(fieldEntries []interface{}, sourceFile, ownerName string, supports_nested bool, warnings *[]ImportWarning) {
 	if warnings == nil {
 		return
 	}
@@ -93,6 +93,19 @@ func warnFieldDefinitionIssues(fieldEntries []interface{}, sourceFile, ownerName
 			fieldPath := fmt.Sprintf("%s[%d]", path, i)
 
 			for key := range field {
+				if key == "subfields" && !supports_nested {
+					// The page-type importer reads neither `subfields` nor `parent`,
+					// so nested children are dropped silently there (the exporter
+					// still nests them — see nestSubfields in export.go).
+					*warnings = append(*warnings, ImportWarning{
+						Kind:    "unsupported_subfields",
+						File:    sourceFile,
+						Path:    fieldPath + ".subfields",
+						Field:   name,
+						Message: fmt.Sprintf("%s: field %q in %q nests `subfields:`, which page-type fields don't support yet — its children are ignored. Declare them flat instead.", sourceFile, name, ownerName),
+					})
+					continue
+				}
 				if recognisedFieldKeys[key] {
 					continue
 				}
@@ -111,7 +124,7 @@ func warnFieldDefinitionIssues(fieldEntries []interface{}, sourceFile, ownerName
 
 			fieldType := getString(field, "type")
 			subfields, hasSubfields := field["subfields"].([]interface{})
-			if (fieldType == "repeater" || fieldType == "group") && (!hasSubfields || len(subfields) == 0) {
+			if supports_nested && (fieldType == "repeater" || fieldType == "group") && (!hasSubfields || len(subfields) == 0) {
 				*warnings = append(*warnings, ImportWarning{
 					Kind:    "missing_subfields",
 					File:    sourceFile,
@@ -720,7 +733,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			ptFields = parsed
-			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, &warnings)
+			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, false, &warnings)
 		}
 
 		// Read layout.yaml if it exists
@@ -864,7 +877,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			blockFields = parsed
-			warnFieldDefinitionIssues(blockFields, fieldsPath, blockName, &warnings)
+			warnFieldDefinitionIssues(blockFields, fieldsPath, blockName, true, &warnings)
 		}
 
 		// config.yaml provides the block's display name and stable _id.
@@ -1235,7 +1248,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		diff.Site.Modified = append(diff.Site.Modified, "fields")
 		if parsed, err := parseBareFieldList(siteFieldsData, "site/fields.yaml"); err == nil {
-			warnFieldDefinitionIssues(parsed, "site/fields.yaml", site.GetString("name"), &warnings)
+			warnFieldDefinitionIssues(parsed, "site/fields.yaml", site.GetString("name"), true, &warnings)
 		}
 		if !previewOnly {
 			if err := importSiteFields(app, site, siteFieldsData); err != nil {
