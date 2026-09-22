@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
-	import { Button } from '$lib/components/ui/button'
 	import { Copy, Check, Loader, ChevronRight, ExternalLink, TriangleAlert } from 'lucide-svelte'
 	import { onDestroy, untrack } from 'svelte'
 	import { self } from '$lib/pocketbase/managers'
@@ -350,11 +349,11 @@
 		}
 	}}
 >
-	<Dialog.Content class="!w-[min(525px,calc(100vw-1rem))] max-w-none pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">
+	<Dialog.Content class="!w-[min(540px,calc(100vw-1rem))] max-w-none gap-0 pt-11 pb-6 bg-[#1e1e20] border-[#343437] rounded-lg text-[#e4e4e7]">
+		<Dialog.Title class="text-[18px] font-medium leading-none tracking-tight text-[#f4f4f5]">
 			{live && !changing ? 'Domain' : 'Connect a domain'}
-		</h2>
-		<p class="text-muted-foreground text-sm">
+		</Dialog.Title>
+		<p class="text-[13px] leading-[1.65] text-[#a9a9b2]">
 			{#if live && !changing}
 				This site is live at your domain.
 			{:else if manual_external}
@@ -453,9 +452,9 @@
 				{#if changing && on_attached_host}
 					<!-- Revealed the input to change the domain but haven't typed a
 					new one yet: let the user back out to the live view. -->
-					<Button
+					<button
 						type="button"
-						variant="outline"
+						class="pub-btn"
 						onclick={() => {
 							changing = false
 							dirty = false
@@ -463,24 +462,35 @@
 						}}
 					>
 						Cancel
-					</Button>
+					</button>
 				{:else}
-					<Button type="button" variant={live ? 'default' : 'outline'} onclick={() => (open = false)}>
+					<button type="button" class:primary={live} class="pub-btn" onclick={() => (open = false)}>
 						{show_records || live || manual_external ? 'Done' : 'Cancel'}
-					</Button>
+					</button>
 				{/if}
 				{#if manual_external}
-					<Button type="button" disabled={connecting} onclick={mark_live}>
+					<button type="button" class="pub-btn primary" disabled={connecting} onclick={mark_live}>
 						{connecting ? 'Saving…' : 'Mark as connected'}
-					</Button>
+					</button>
 				{:else if awaiting}
-					<Button type="button" disabled={connecting} onclick={refresh_status}>
+					<button type="button" class="pub-btn" disabled={connecting} onclick={refresh_status}>
 						{connecting ? 'Checking…' : 'Refresh status'}
-					</Button>
+					</button>
 				{:else if !live}
-					<Button type="submit" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</Button>
+					<button type="submit" class="pub-btn primary" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</button>
 				{/if}
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style lang="postcss">
+	/* Match the publish dialog's button styling (Deploy.svelte) so the two
+	   dialogs read as one surface. */
+	.pub-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 13px; background: #252528; border: 1px solid #3a3a40; border-radius: 5px; color: #dedee3; cursor: pointer; text-decoration: none; font-size: 12px; font-weight: 400; }
+	.pub-btn:hover { background: #303034; }
+	.pub-btn.primary { background: #ededf0; color: #202023; border-color: #ededf0; font-weight: 500; }
+	.pub-btn.primary:hover { background: white; border-color: white; }
+	.pub-btn:disabled { opacity: .55; cursor: not-allowed; }
+	.pub-btn:focus-visible { outline: 2px solid #956e51; outline-offset: 3px; }
+</style>
