@@ -133,7 +133,13 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			if (change && change.operation === 'delete') {
 				return undefined
 			} else if (change) {
-				data = Object.assign({}, data, change.data)
+				// A pending update carries only the changed fields, so with no
+				// cached base record the merge is a partial object that fails the
+				// model's schema (missing id/site) and logs "Invalid <name> record"
+				// for every read. There's nothing to map yet — the fetch below (or
+				// the commit) will populate it.
+				if (data === undefined && change.operation === 'update') return undefined
+				data = Object.assign({}, data, change.data, { id })
 			} else if (!data) {
 				$effect(() => {
 					// If no cached record exists, start loading it
