@@ -7,7 +7,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Input } from '$lib/components/ui/input'
 	import MenuPopup from '../../ui/Dropdown.svelte'
-	import { locale, mod_key_held } from '../../stores/app/misc'
+	import { locale, mod_key_held, dragging_symbol } from '../../stores/app/misc'
 	import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import IFrame from '../../components/IFrame.svelte'
 	import { createEventDispatcher, onMount } from 'svelte'
@@ -18,6 +18,7 @@
 	import { useExportSiteSymbol } from '$lib/workers/ExportSymbol.svelte'
 	import { useContent } from '$lib/Content.svelte'
 	import { Badge } from '$lib/components/ui/badge'
+	import { get } from 'svelte/store'
 	import { read_only } from '$lib/pocketbase/author_mode'
 	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { page_context, page_type_context } from '$lib/builder/stores/context'
@@ -145,8 +146,13 @@
 		if (element && !$read_only) {
 			const cleanup = draggable({
 				element,
+				canDrag: () => !get(read_only),
 				getInitialData: () => ({ block: symbol }),
 				onDragStart: () => {
+					// Drives `main.dragging`, which sets pointer-events:none on the
+					// canvas iframe — without it the iframe swallows the drag and no
+					// drop target fires on a page that already has sections.
+					$dragging_symbol = true
 					if (typeof window !== 'undefined') {
 						const detail = { block: symbol }
 						window.dispatchEvent(new CustomEvent('primoDragStart', { detail }))
@@ -155,6 +161,7 @@
 					}
 				},
 				onDrop: () => {
+					$dragging_symbol = false
 					if (typeof window !== 'undefined') {
 						const detail = { block: symbol }
 						window.dispatchEvent(new CustomEvent('primoDragEnd', { detail }))
@@ -163,7 +170,19 @@
 					}
 				}
 			})
-			return cleanup
+			// The draggable adapter has no onDragEnd, and its onDrop only fires for a
+			// completed drop — so a cancelled drag (Escape, or released outside any
+			// target) would leave dragging_symbol set and the canvas iframes
+			// non-interactive. The row is natively draggable, so the browser's
+			// dragend fires for both outcomes.
+			const on_native_dragend = () => {
+				$dragging_symbol = false
+			}
+			element.addEventListener('dragend', on_native_dragend)
+			return () => {
+				cleanup()
+				element?.removeEventListener('dragend', on_native_dragend)
+			}
 		}
 	})
 	// move cursor to end of name

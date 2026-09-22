@@ -292,7 +292,10 @@ export const usePublishSite = (site_id?: string) => {
 				'</head><body id="page">' +
 				body_content +
 				(no_js ? `` : '<script type="module">' + fetch_modules(page_symbols_with_js) + '</script>') +
-				site?.foot +
+				// Mirror the head order (site, then page type): the page type's
+				// footer is per-template markup that was previously dropped here.
+				(site?.foot ?? '') +
+				(page_type?.foot ?? '') +
 				'</body></html>'
 
 			console.log(`Successfully generated page "${page.name || page.id}"`)

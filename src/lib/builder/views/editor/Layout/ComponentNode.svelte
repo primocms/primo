@@ -133,13 +133,17 @@
 		}
 	}
 
-	// Helper function to clean up event listeners
+	// Content matchers are rebuilt every time the iframe's content settles, so
+	// they're torn down per pass. Document-lifetime listeners (outline
+	// selection, scroll) must outlive that — clearing them here silently killed
+	// pointer/focus section selection once make_content_editable() ran.
 	function cleanup_event_listeners() {
-		// Clean up all stored event listeners
 		event_listeners.forEach((cleanup) => cleanup())
 		event_listeners.clear()
+	}
 
-		// Clean up doc event listeners
+	function cleanup_all_event_listeners() {
+		cleanup_event_listeners()
 		doc_event_listeners.forEach((cleanup) => cleanup())
 		doc_event_listeners.clear()
 	}
@@ -205,9 +209,7 @@
 				return a.length - b.length
 			}
 			const path_by_id = new Map(entries.map((e) => [e.id, render_path(e)]))
-			const relevant_entries = entries
-				.filter((e) => e.field === field.id)
-				.sort((a, b) => compare_paths(path_by_id.get(a.id), path_by_id.get(b.id)))
+			const relevant_entries = entries.filter((e) => e.field === field.id).sort((a, b) => compare_paths(path_by_id.get(a.id), path_by_id.get(b.id)))
 			for (const entry of relevant_entries) {
 				search_elements_for_value({
 					id: entry.id,
@@ -626,7 +628,7 @@
 			}
 
 			// Clean up all event listeners
-			cleanup_event_listeners()
+			cleanup_all_event_listeners()
 
 			// Clear timeouts
 			if (field_save_timeout) clearTimeout(field_save_timeout)
@@ -732,6 +734,14 @@
 			// Clean up previous doc event listeners
 			doc_event_listeners.forEach((cleanup) => cleanup())
 			doc_event_listeners.clear()
+
+			const select_section = () => dispatch('select')
+			doc.addEventListener('pointerdown', select_section, true)
+			doc.addEventListener('focusin', select_section, true)
+			doc_event_listeners.set('outline-selection', () => {
+				doc.removeEventListener('pointerdown', select_section, true)
+				doc.removeEventListener('focusin', select_section, true)
+			})
 
 			doc.body.addEventListener('scroll', on_page_scroll)
 
