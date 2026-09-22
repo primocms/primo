@@ -872,9 +872,9 @@
 		</footer>
 	{/if}
 
-	{#if site?.foot}
+	{#if site?.foot || page_type?.foot}
 		<div class="site-foot">
-			{@html site.foot}
+			{@html (site?.foot ?? '') + (page_type?.foot ?? '')}
 		</div>
 	{/if}
 </main>
