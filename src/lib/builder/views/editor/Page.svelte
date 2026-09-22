@@ -66,8 +66,13 @@
 		)
 		await self.commit()
 	}
-	async function restoreOrder(ids: string[]) {
-		if (!can_structure || ids.length !== sections.length || ids.some((id) => !sections.some((s) => s.id === id))) throw new Error('Page structure changed; outline history is no longer applicable')
+	async function restoreOrder(ids: string[], expected_current: string[]) {
+		// Count + membership isn't enough: a reorder with the same ids would pass
+		// and let a stale command overwrite the newer order. Require the exact
+		// order the command was recorded against.
+		const current = sections.map((s) => s.id)
+		if (!can_structure || current.length !== expected_current.length || current.some((id, index) => id !== expected_current[index]))
+			throw new Error('Page structure changed; outline history is no longer applicable')
 		ids.forEach((id, index) => PageSections.update(id, { index }))
 		await commit_outline()
 	}
@@ -157,8 +162,8 @@
 		const before = sections.map((s) => s.id)
 		const after = moveInOrder(before, id, target)
 		if (!after || before.every((id, index) => after[index] === id)) return
-		if (await mutate_outline(() => restoreOrder(after), 'Section moved.')) {
-			history.record({ undo: () => restoreOrder(before), redo: () => restoreOrder(after) })
+		if (await mutate_outline(() => restoreOrder(after, before), 'Section moved.')) {
+			history.record({ undo: () => restoreOrder(before, after), redo: () => restoreOrder(after, before) })
 			historyVersion++
 		}
 	}
@@ -254,7 +259,8 @@
 			const addedOrder = sections.map((s) => s.id)
 			history.record({
 				undo: async () => {
-					if (!can_structure || !sections.some((s) => s.id === id) || sections.length !== addedOrder.length || addedOrder.some((id) => !sections.some((section) => section.id === id)))
+					const current = sections.map((s) => s.id)
+					if (!can_structure || !current.includes(id) || current.length !== addedOrder.length || current.some((section_id, index) => section_id !== addedOrder[index]))
 						throw new Error('Page structure changed')
 					// Flush pending inline edits before reading content for undo/redo.
 					await self.commit()
@@ -271,7 +277,8 @@
 					$outlineSelection = null
 				},
 				redo: async () => {
-					if (!can_structure || sections.length !== originalOrder.length || originalOrder.some((id) => !sections.some((s) => s.id === id))) throw new Error('Page structure changed')
+					const current = sections.map((s) => s.id)
+					if (!can_structure || current.length !== originalOrder.length || current.some((section_id, index) => section_id !== originalOrder[index])) throw new Error('Page structure changed')
 					PageSections.create(sectionSnapshot)
 					const pending = [...entrySnapshots]
 					const created = new Set<string>()

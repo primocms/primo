@@ -160,9 +160,6 @@
 						window.dispatchEvent(new CustomEvent('palaDragStart', { detail }))
 					}
 				},
-				onDragEnd: () => {
-					$dragging_symbol = false
-				},
 				onDrop: () => {
 					$dragging_symbol = false
 					if (typeof window !== 'undefined') {
@@ -173,7 +170,19 @@
 					}
 				}
 			})
-			return cleanup
+			// The draggable adapter has no onDragEnd, and its onDrop only fires for a
+			// completed drop — so a cancelled drag (Escape, or released outside any
+			// target) would leave dragging_symbol set and the canvas iframes
+			// non-interactive. The row is natively draggable, so the browser's
+			// dragend fires for both outcomes.
+			const on_native_dragend = () => {
+				$dragging_symbol = false
+			}
+			element.addEventListener('dragend', on_native_dragend)
+			return () => {
+				cleanup()
+				element?.removeEventListener('dragend', on_native_dragend)
+			}
 		}
 	})
 	// move cursor to end of name
