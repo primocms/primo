@@ -59,8 +59,22 @@
 	const data = $derived(useContent(component, { target: 'cms' }))
 	const component_data = $derived(data && (data[$locale] ?? {}))
 
-	const initial_code = $state({ html: symbol?.html, css: symbol?.css, js: symbol?.js })
-	const initial_data = $state(_.cloneDeep(component_data))
+	// Normalise the baseline exactly like the editable values below
+	// (`?? ''`). Without this, a symbol whose html/css/js comes back null or
+	// undefined (no JS, or a freshly-copied symbol still settling) compares
+	// '' !== null and the editor opens already marked dirty — so closing it
+	// asks about unsaved changes that don't exist.
+	const initial_code = $state({ html: symbol?.html ?? '', css: symbol?.css ?? '', js: symbol?.js ?? '' })
+	let initial_data = $state(_.cloneDeep(component_data))
+	let initial_data_seeded = $state(component_data !== undefined)
+	// component_data resolves asynchronously; if it wasn't ready at mount the
+	// baseline would be undefined and every later value would look like an edit.
+	$effect(() => {
+		if (!initial_data_seeded && component_data !== undefined) {
+			initial_data = _.cloneDeep(component_data)
+			initial_data_seeded = true
+		}
+	})
 	let loading = $state(false)
 	let newly_created_fields = new Set()
 
