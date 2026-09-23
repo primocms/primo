@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { dropIndex, moveInOrder, createOutlineHistory, recoverOutlineOperation } from '../../src/lib/builder/stores/app/outline-order.js'
+import { dropIndex, moveInOrder, recoverOutlineOperation } from '../../src/lib/builder/stores/app/outline-order.js'
 
 test('outline drop gaps match resulting order in both directions and at the end', () => {
 	const ids = ['a', 'b', 'c', 'd']
@@ -11,36 +11,6 @@ test('outline drop gaps match resulting order in both directions and at the end'
 	assert.equal(moveInOrder(ids, 'missing', 0), null)
 	assert.equal(dropIndex(-1, 0, 4), null)
 	assert.deepEqual(ids, ['a', 'b', 'c', 'd'])
-})
-
-test('outline history executes persistence and retains cursor after failed save', async () => {
-	const history = createOutlineHistory()
-	let persisted = 'renamed'
-	let fail = true
-	history.record({
-		undo: async () => {
-			if (fail) throw new Error('offline')
-			persisted = 'original'
-		},
-		redo: async () => {
-			persisted = 'renamed'
-		}
-	})
-	await assert.rejects(history.undo(), /offline/)
-	assert.equal(history.canUndo, true)
-	assert.equal(history.canRedo, false)
-	fail = false
-	await history.undo()
-	assert.equal(persisted, 'original')
-	assert.equal(history.canUndo, false)
-	assert.equal(history.canRedo, true)
-	await history.redo()
-	assert.equal(persisted, 'renamed')
-	await history.undo()
-	history.record({ undo: async () => {}, redo: async () => {} })
-	assert.equal(history.canRedo, false)
-	history.clear()
-	assert.equal(history.canUndo, false)
 })
 
 test('failed outline save restores partial writes and leaves unrelated pending work intact', async () => {
@@ -106,14 +76,4 @@ test('rollback reports failed recovery and discards stale cache instead of repor
 	})
 	assert.equal(success, false)
 	assert.equal(records.has('a'), false)
-})
-
-test('clearing page history prevents stale commands executing on another page', async () => {
-	const history = createOutlineHistory()
-	let writes = 0
-	history.record({ undo: async () => writes++, redo: async () => writes++ })
-	history.clear()
-	await history.undo()
-	await history.redo()
-	assert.equal(writes, 0)
 })

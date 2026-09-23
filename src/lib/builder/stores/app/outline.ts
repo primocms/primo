@@ -12,10 +12,6 @@ export type OutlineController = {
 	move: (id: string, target: number) => Promise<void>
 	add: (symbolId: string) => Promise<void>
 	edit: (id: string) => void
-	canUndo: boolean
-	canRedo: boolean
-	undo: () => Promise<void>
-	redo: () => Promise<void>
 }
 export const outline = writable<OutlineController | null>(null)
 export const outlineSelection = writable<string | null>(null)
