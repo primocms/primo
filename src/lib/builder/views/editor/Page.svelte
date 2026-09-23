@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as _ from 'lodash-es'
 	import { tick, onDestroy } from 'svelte'
-	import { createOutlineHistory, moveInOrder, recoverOutlineOperation } from '$lib/builder/stores/app/outline-order.js'
+	import { moveInOrder, recoverOutlineOperation } from '$lib/builder/stores/app/outline-order.js'
 	import { current_user } from '$lib/pocketbase/user'
 	import { outline, outlineSelection, outlineInsertion, outlineBusy, outlineMessage, sidebarReveal, pageSidebarTab, readPreference, writePreference } from '$lib/builder/stores/app/outline'
 	import { flip } from 'svelte/animate'
@@ -55,8 +55,6 @@
 	// so calling it from the drop callback throws Svelte's effect_orphan.
 	const page_type_symbol_ids = $derived(new Set((page_type?.symbols() ?? []).map((s) => s.symbol)))
 
-	const history = createOutlineHistory()
-	let historyVersion = $state(0)
 	let operationChanges = new Map()
 	let operationBefore = new Map()
 	let operationCommittedBefore = new Map()
@@ -100,8 +98,6 @@
 			$outlineSelection = readPreference(`primo:outline-selection:${id}`)
 			$outlineInsertion = null
 			$outlineMessage = ''
-			history.clear()
-			historyVersion++
 		},
 		{ lazy: false }
 	)
@@ -149,8 +145,6 @@
 				client: self.instance
 			})
 			self.invalidate_lists({ collection_name: 'page_sections' })
-			history.clear()
-			historyVersion++
 			$outlineMessage = recovered
 				? 'Could not save the change. The previous state was restored. Please try again.'
 				: 'Could not finish saving or restoring all changes. Reload the page to check its saved state.'
@@ -165,24 +159,10 @@
 		const before = sections.map((s) => s.id)
 		const after = moveInOrder(before, id, target)
 		if (!after || before.every((id, index) => after[index] === id)) return
-		if (await mutate_outline(() => restoreOrder(after, before), 'Section moved.')) {
-			history.record({ undo: () => restoreOrder(before, after), redo: () => restoreOrder(after, before) })
-			historyVersion++
-		}
+		await mutate_outline(() => restoreOrder(after, before), 'Section moved.')
 	}
 	$effect(() => {
-		historyVersion
 		outline.set({
-			canUndo: history.canUndo,
-			canRedo: history.canRedo,
-			undo: async () => {
-				await mutate_outline(() => history.undo(), 'Outline change undone.')
-				historyVersion++
-			},
-			redo: async () => {
-				await mutate_outline(() => history.redo(), 'Outline change redone.')
-				historyVersion++
-			},
 			pageId: page.id,
 			pageName: page.name,
 			rows: outline_rows,
@@ -246,7 +226,6 @@
 	async function add_section_to_page({ symbol, position }) {
 		if (!can_structure || !symbol || !page_type_symbol_ids.has(symbol.id)) return
 		let new_id: string | undefined
-		const originalOrder = sections.map((s) => s.id)
 		const success = await mutate_outline(async () => {
 			new_id = await insert_section({ symbol, position: Math.max(0, Math.min(position, sections.length)) })
 			$outlineInsertion = null
@@ -255,50 +234,6 @@
 			// list each time.
 			if (new_id) select_section(new_id, true)
 		}, 'Block added.')
-		if (success && new_id) {
-			const id = new_id
-			let sectionSnapshot: any
-			let entrySnapshots: any[] = []
-			const addedOrder = sections.map((s) => s.id)
-			history.record({
-				undo: async () => {
-					const current = sections.map((s) => s.id)
-					if (!can_structure || !current.includes(id) || current.length !== addedOrder.length || current.some((section_id, index) => section_id !== addedOrder[index]))
-						throw new Error('Page structure changed')
-					// Flush pending inline edits before reading content for undo/redo.
-					await self.commit()
-					sectionSnapshot = sections.find((s) => s.id === id)!.values()
-					const entries = await self.instance!.collection('page_section_entries').getFullList({ filter: `section = "${id}"` })
-					entrySnapshots = entries.map(({ id, section, field, locale, value, parent, index }) => ({ id, section, field, locale, value, parent, index }))
-					originalOrder.forEach((id, index) => PageSections.update(id, { index }))
-					PageSections.delete(id) // The existing relation cascades to its content entries.
-					await commit_outline()
-					entrySnapshots.forEach((entry) => {
-						self.records.set(entry.id, null)
-						self.changes.delete(entry.id)
-					})
-					$outlineSelection = null
-				},
-				redo: async () => {
-					const current = sections.map((s) => s.id)
-					if (!can_structure || current.length !== originalOrder.length || current.some((section_id, index) => section_id !== originalOrder[index])) throw new Error('Page structure changed')
-					PageSections.create(sectionSnapshot)
-					const pending = [...entrySnapshots]
-					const created = new Set<string>()
-					while (pending.length) {
-						const index = pending.findIndex((entry) => !entry.parent || created.has(entry.parent))
-						if (index < 0) throw new Error('Cannot restore nested content')
-						const [entry] = pending.splice(index, 1)
-						PageSectionEntries.create(entry)
-						created.add(entry.id)
-					}
-					addedOrder.forEach((id, index) => PageSections.update(id, { index }))
-					await commit_outline()
-					select_section(id, true)
-				}
-			})
-			historyVersion++
-		}
 		return new_id
 	}
 

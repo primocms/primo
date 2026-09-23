@@ -13,43 +13,6 @@ export function moveInOrder(ids, id, target) {
 	return next
 }
 
-/** Keep history page-local; a failed operation never advances the cursor. */
-export function createOutlineHistory(limit = 30) {
-	let undo = []
-	let redo = []
-	return {
-		get canUndo() {
-			return undo.length > 0
-		},
-		get canRedo() {
-			return redo.length > 0
-		},
-		record(command) {
-			undo.push(command)
-			undo = undo.slice(-limit)
-			redo = []
-		},
-		clear() {
-			undo = []
-			redo = []
-		},
-		async undo() {
-			const command = undo.at(-1)
-			if (!command) return
-			await command.undo()
-			undo.pop()
-			redo.push(command)
-		},
-		async redo() {
-			const command = redo.at(-1)
-			if (!command) return
-			await command.redo()
-			redo.pop()
-			undo.push(command)
-		}
-	}
-}
-
 /** Compensate only records written by a failed outline operation. */
 export async function recoverOutlineOperation({ changes, before, committed_before, operation, originals, records, client }) {
 	let recovered = true
