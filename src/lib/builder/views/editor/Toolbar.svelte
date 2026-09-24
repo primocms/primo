@@ -268,7 +268,7 @@
 	<div class="menu-container">
 		<div class="left">
 			{#if $current_user?.serverRole}
-				<PrimoButton />
+				<PrimoButton group={site?.group} />
 			{/if}
 			<div class="button-group">
 				<div class="navigation-group">

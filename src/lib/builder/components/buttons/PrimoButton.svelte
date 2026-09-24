@@ -3,6 +3,8 @@
 	import { loadingSite } from '../../stores/app/misc'
 	import UI from '../../ui'
 
+	let { group = null } = $props()
+
 	function get_sites_url() {
 		if (typeof window === 'undefined') return '/admin/dashboard/sites'
 		const { protocol, hostname, port } = window.location
@@ -11,9 +13,13 @@
 		}
 		return '/admin/dashboard/sites'
 	}
+
+	// Carry the current site's group back to the dashboard so it reopens on
+	// the group the user was just working in instead of the first group.
+	const sites_url = $derived(group ? `${get_sites_url()}?group=${encodeURIComponent(group)}` : get_sites_url())
 </script>
 
-<a class="sites-link" href={get_sites_url()}>
+<a class="sites-link" href={sites_url}>
 	{#if $loadingSite}<UI.Spinner />{:else}<ArrowLeft size={14} aria-hidden="true" />{/if}
 	<span>Sites</span>
 </a>
