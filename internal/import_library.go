@@ -143,14 +143,48 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				deletes = DeletesManifest{}
 			}
 
-			summary, err := processLibraryImport(pb, zipData, deletes)
+			var summary *LibraryImportSummary
+			var revision, backup string
+			err = pb.RunInTransaction(func(app core.App) error {
+				if err := authorizePushState(app, e, "library"); err != nil {
+					return err
+				}
+				state, err := readPushState(app, "library")
+				if err != nil {
+					return err
+				}
+				expected := e.Request.FormValue("expected_revision")
+				if (!(DevMode && IsLocalhost(e)) && state.Exists) || expected != "" || e.Request.FormValue("force") == "true" {
+					if err := checkPushRevision(state, expected); err != nil {
+						return err
+					}
+				}
+				if freshServer && state.Exists {
+					return e.ForbiddenError("Library is no longer empty", nil)
+				}
+				if e.Request.FormValue("force") == "true" {
+					backup, err = savePushBackup(app, "library", state)
+					if err != nil {
+						return err
+					}
+				}
+				summary, err = processLibraryImport(app, zipData, deletes)
+				if err != nil {
+					return err
+				}
+				state, err = readPushState(app, "library")
+				revision = state.Revision
+				return err
+			})
 			if err != nil {
-				return e.InternalServerError("Library import failed: "+err.Error(), err)
+				return pushImportError(e, err)
 			}
 
 			return e.JSON(200, map[string]interface{}{
-				"success": true,
-				"summary": summary,
+				"success":  true,
+				"summary":  summary,
+				"revision": revision,
+				"backup":   backup,
 			})
 		})
 		return serveEvent.Next()
@@ -158,7 +192,7 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
-func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte, deletes DeletesManifest) (*LibraryImportSummary, error) {
+func processLibraryImport(pb core.App, zipData []byte, deletes DeletesManifest) (*LibraryImportSummary, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, fmt.Errorf("invalid ZIP file: %w", err)
@@ -312,7 +346,7 @@ func processLibraryImport(pb *pocketbase.PocketBase, zipData []byte, deletes Del
 	}, nil
 }
 
-func importLibraryGroups(pb *pocketbase.PocketBase, files map[string][]byte) (map[string]*core.Record, error) {
+func importLibraryGroups(pb core.App, files map[string][]byte) (map[string]*core.Record, error) {
 	existingGroups, err := pb.FindAllRecords("library_symbol_groups")
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch library groups: %w", err)
@@ -477,7 +511,7 @@ func findLibraryBlocks(files map[string][]byte) []libraryBlockLocation {
 	return result
 }
 
-func findExistingLibrarySymbol(pb *pocketbase.PocketBase, groupID, folderName, displayName, exportedID string) (*core.Record, error) {
+func findExistingLibrarySymbol(pb core.App, groupID, folderName, displayName, exportedID string) (*core.Record, error) {
 	if exportedID != "" {
 		symbol, err := pb.FindRecordById("library_symbols", exportedID)
 		if err == nil && symbol != nil {
@@ -504,7 +538,7 @@ func findExistingLibrarySymbol(pb *pocketbase.PocketBase, groupID, folderName, d
 	return nil, nil
 }
 
-func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, existing *core.Record) error {
+func importLibraryBlock(pb core.App, group *core.Record, folderName, displayName string, componentData []byte, blockFields []interface{}, contentData []byte, existing *core.Record) error {
 	symbolsColl, err := pb.FindCollectionByNameOrId("library_symbols")
 	if err != nil {
 		return err
@@ -561,7 +595,7 @@ func importLibraryBlock(pb *pocketbase.PocketBase, group *core.Record, folderNam
 	return nil
 }
 
-func importLibraryBlockFields(pb *pocketbase.PocketBase, symbol *core.Record, nestedFields []interface{}) error {
+func importLibraryBlockFields(pb core.App, symbol *core.Record, nestedFields []interface{}) error {
 	// Convert to the concrete shape flattenSubfields expects. Entries that
 	// aren't maps (shouldn't happen in valid input) are dropped.
 	concrete := make([]map[string]interface{}, 0, len(nestedFields))
@@ -694,7 +728,7 @@ func importLibraryBlockFields(pb *pocketbase.PocketBase, symbol *core.Record, ne
 	return nil
 }
 
-func importLibraryBlockContent(pb *pocketbase.PocketBase, symbol *core.Record, data []byte) error {
+func importLibraryBlockContent(pb core.App, symbol *core.Record, data []byte) error {
 	var contentMap map[string]interface{}
 	err := yaml.Unmarshal(data, &contentMap)
 	if err != nil {
@@ -765,7 +799,7 @@ func fieldDepth(field *core.Record, fieldByID map[string]*core.Record) int {
 	return depth
 }
 
-func deleteLibrarySymbol(pb *pocketbase.PocketBase, symbol *core.Record) error {
+func deleteLibrarySymbol(pb core.App, symbol *core.Record) error {
 	fields, err := pb.FindRecordsByFilter("library_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbol.Id})
 	if err != nil {
 		return err

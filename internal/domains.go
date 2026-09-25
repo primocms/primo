@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 // Base domain for auto-assigned site subdomains. When set (e.g.
@@ -67,7 +67,7 @@ func labelWithSuffix(slug, suffix string) string {
 // concurrent create racing on the same slug is caught by the sites collection's
 // UNIQUE(host) constraint (the losing save fails and can retry); this loop just
 // avoids the common non-concurrent collision.
-func assignSubdomain(pb *pocketbase.PocketBase, name, base string) string {
+func assignSubdomain(pb core.App, name, base string) string {
 	slug := slugifyHost(name)
 	candidate := slug + "." + base
 	for i := 2; i < maxSubdomainAttempts; i++ {
@@ -86,7 +86,7 @@ func assignSubdomain(pb *pocketbase.PocketBase, name, base string) string {
 // caller did not supply one. With a base domain configured it returns a live
 // "<slug>.<base>" subdomain; otherwise it returns "" to signal the caller
 // should fall back to the unassigned sentinel (host === id).
-func resolveNewSiteHost(pb *pocketbase.PocketBase, name string) string {
+func resolveNewSiteHost(pb core.App, name string) string {
 	base := baseDomain()
 	if base == "" {
 		return ""

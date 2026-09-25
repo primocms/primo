@@ -342,118 +342,144 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 	// a new group land with the right label instead of a humanized ID.
 	siteGroupName := strings.TrimSpace(e.Request.FormValue("group_name"))
 
-	// Find the site or create it if it doesn't exist
-	siteCreated := false
-	site, err := pb.FindRecordById("sites", siteId)
-	if err != nil {
-		createName := siteName
-		if createName == "" {
-			createName = "Imported Site"
+	var result *ImportResult
+	var revision, backup string
+	apply := func(app core.App) error {
+		if err := authorizePushState(app, e, siteId); err != nil {
+			return err
 		}
-		// Auto-create needs a unique non-empty host because the sites
-		// collection has a UNIQUE constraint on `host`. With a base domain
-		// configured (PRIMO_BASE_DOMAIN), assign a live "<slug>.<base>"
-		// subdomain so a pushed site is reachable immediately. Otherwise seed
-		// with siteId (the unassigned sentinel); real routing hosts arrive
-		// separately (bootstrap form field in dev, or dashboard config in prod).
-		createHost := resolveNewSiteHost(pb, createName)
-		if createHost == "" {
-			createHost = siteId
+		if !previewOnly {
+			state, err := readPushState(app, siteId)
+			if err != nil {
+				return err
+			}
+			expected := e.Request.FormValue("expected_revision")
+			// Local file-watcher imports retain their own author-mode policy.
+			// An explicit guarded request is always checked, even in dev mode.
+			if !(DevMode && IsLocalhost(e)) || expected != "" || e.Request.FormValue("force") == "true" {
+				if err := checkPushRevision(state, expected); err != nil {
+					return err
+				}
+			}
+			if e.Request.FormValue("force") == "true" {
+				backup, err = savePushBackup(app, siteId, state)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		// Find the site or create it if it doesn't exist
+		siteCreated := false
+		site, err := app.FindRecordById("sites", siteId)
+		if err != nil {
+			if previewOnly {
+				return e.NotFoundError("Site not found", err)
+			}
+			createName := siteName
+			if createName == "" {
+				createName = "Imported Site"
+			}
+			// Auto-create needs a unique non-empty host because the sites
+			// collection has a UNIQUE constraint on `host`. With a base domain
+			// configured (PRIMO_BASE_DOMAIN), assign a live "<slug>.<base>"
+			// subdomain so a pushed site is reachable immediately. Otherwise seed
+			// with siteId (the unassigned sentinel); real routing hosts arrive
+			// separately (bootstrap form field in dev, or dashboard config in prod).
+			createHost := resolveNewSiteHost(app, createName)
+			if createHost == "" {
+				createHost = siteId
+			}
+
+			groupId, groupErr := ensureDefaultGroup(app)
+			if groupErr != nil {
+				return e.InternalServerError("Failed to ensure default site group", groupErr)
+			}
+			if siteGroup != "" {
+				if resolvedGroupId, resolveErr := ensureBootstrapGroup(app, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName}); resolveErr == nil {
+					groupId = resolvedGroupId
+				}
+			}
+
+			sitesColl, collErr := app.FindCollectionByNameOrId("sites")
+			if collErr != nil {
+				return e.InternalServerError("Failed to find sites collection", collErr)
+			}
+
+			// Access to sites is governed by the collection's rules (any user with a
+			// non-empty serverRole, or a per-site role assignment) — the sites
+			// collection has no `owner` field, so we don't record a per-creator tie
+			// here; a serverRole holder who creates a site can already push to it.
+			site = core.NewRecord(sitesColl)
+			site.Set("id", siteId)
+			site.Set("name", createName)
+			site.Set("host", createHost)
+			site.Set("group", groupId)
+
+			if saveErr := app.Save(site); saveErr != nil {
+				return e.InternalServerError("Failed to create site", saveErr)
+			}
+			siteCreated = true
 		}
 
-		groupId, groupErr := ensureDefaultGroup(pb)
-		if groupErr != nil {
-			return e.InternalServerError("Failed to ensure default site group", groupErr)
-		}
-		if siteGroup != "" {
-			if resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName}); resolveErr == nil {
-				groupId = resolvedGroupId
+		// Only check access if site already existed (skip for newly created sites and localhost)
+		if !siteCreated && !IsLocalhost(e) {
+			info, err := e.RequestInfo()
+			if err != nil {
+				return e.InternalServerError("Failed to get request info", err)
+			}
+			canAccess, _ := e.App.CanAccessRecord(site, info, site.Collection().UpdateRule)
+			if !canAccess {
+				return e.ForbiddenError("Access denied", nil)
 			}
 		}
 
-		sitesColl, collErr := pb.FindCollectionByNameOrId("sites")
-		if collErr != nil {
-			return e.InternalServerError("Failed to find sites collection", collErr)
-		}
-
-		// Access to sites is governed by the collection's rules (any user with a
-		// non-empty serverRole, or a per-site role assignment) — the sites
-		// collection has no `owner` field, so we don't record a per-creator tie
-		// here; a serverRole holder who creates a site can already push to it.
-		site = core.NewRecord(sitesColl)
-		site.Set("id", siteId)
-		site.Set("name", createName)
-		site.Set("host", createHost)
-		site.Set("group", groupId)
-
-		if saveErr := pb.Save(site); saveErr != nil {
-			return e.InternalServerError("Failed to create site", saveErr)
-		}
-		siteCreated = true
-	}
-
-	// Only check access if site already existed (skip for newly created sites and localhost)
-	if !siteCreated && !IsLocalhost(e) {
-		info, err := e.RequestInfo()
-		if err != nil {
-			return e.InternalServerError("Failed to get request info", err)
-		}
-		canAccess, _ := e.App.CanAccessRecord(site, info, site.Collection().UpdateRule)
-		if !canAccess {
-			return e.ForbiddenError("Access denied", nil)
-		}
-	}
-
-	// Sync name/group from site.yaml onto an existing site. Skipped on
-	// create (the values were just written above) and during preview (no
-	// writes). Empty fields in site.yaml leave the existing record untouched
-	// so users editing those values in the dashboard aren't reverted. Host
-	// is deliberately excluded: see the comment above readSiteConfigFromZip.
-	if !siteCreated && !previewOnly {
-		dirty := false
-		if siteName != "" && site.GetString("name") != siteName {
-			site.Set("name", siteName)
-			dirty = true
-		}
-		if siteGroup != "" {
-			resolvedGroupId, resolveErr := ensureBootstrapGroup(pb, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName})
-			if resolveErr == nil && site.GetString("group") != resolvedGroupId {
-				site.Set("group", resolvedGroupId)
+		// Sync name/group from site.yaml onto an existing site. Skipped on
+		// create (the values were just written above) and during preview (no
+		// writes). Empty fields in site.yaml leave the existing record untouched
+		// so users editing those values in the dashboard aren't reverted. Host
+		// is deliberately excluded: see the comment above readSiteConfigFromZip.
+		if !siteCreated && !previewOnly {
+			dirty := false
+			if siteName != "" && site.GetString("name") != siteName {
+				site.Set("name", siteName)
 				dirty = true
 			}
-		}
-		if dirty {
-			if saveErr := pb.Save(site); saveErr != nil {
-				return e.InternalServerError("Failed to update site", saveErr)
+			if siteGroup != "" {
+				resolvedGroupId, resolveErr := ensureBootstrapGroup(app, bootstrapSiteGroup{ID: siteGroup, Name: siteGroupName})
+				if resolveErr == nil && site.GetString("group") != resolvedGroupId {
+					site.Set("group", resolvedGroupId)
+					dirty = true
+				}
+			}
+			if dirty {
+				if saveErr := app.Save(site); saveErr != nil {
+					return e.InternalServerError("Failed to update site", saveErr)
+				}
 			}
 		}
-	}
 
-	// Parse and process the import inside a single transaction. The import
-	// makes thousands of individual record writes (one per page, field, and
-	// content entry); without a transaction each is its own commit+fsync,
-	// which on a network-backed volume adds up to minutes and blows past the
-	// hosting proxy's request timeout. Committing once collapses those fsyncs
-	// into one. It also makes the import atomic: a failure part-way through
-	// rolls back instead of leaving the site half-written.
-	//
-	// Preview is skipped — it performs no writes, so there's nothing to wrap
-	// (reconcileSiteUploads and the ref rewrite run read-only in that mode).
-	var result *ImportResult
-	if previewOnly {
-		result, err = processImport(pb, site, zipData, previewOnly)
-	} else {
-		err = pb.RunInTransaction(func(txApp core.App) error {
-			var txErr error
-			result, txErr = processImport(txApp, site, zipData, previewOnly)
-			return txErr
-		})
+		var importErr error
+		result, importErr = processImport(app, site, zipData, previewOnly)
+		if importErr != nil {
+			return importErr
+		}
+		if !previewOnly {
+			state, err := readPushState(app, site.Id)
+			if err != nil {
+				return err
+			}
+			revision = state.Revision
+		}
+		return nil
 	}
+	// This includes metadata writes and the revision check. A client edit
+	// between preflight and upload cannot slip through a separate check.
+	err = pb.RunInTransaction(apply)
 	if err != nil {
 		// No-op outside dev mode; lets the dev indicator surface import
 		// failures the same way it surfaces successful pushes.
 		BroadcastStatus("error", err.Error())
-		return e.InternalServerError("Import failed: "+err.Error(), err)
+		return pushImportError(e, err)
 	}
 
 	if previewOnly {
@@ -494,6 +520,8 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 
 	return e.JSON(200, map[string]interface{}{
 		"success":     true,
+		"revision":    revision,
+		"backup":      backup,
 		"diff":        result.Diff,
 		"created_ids": result.CreatedIDs,
 		"warnings":    result.Warnings,
