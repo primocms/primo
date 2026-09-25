@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pocketbase/pocketbase"
 	"github.com/primocms/primo/internal"
 	_ "github.com/primocms/primo/migrations"
-	"github.com/pocketbase/pocketbase"
 )
 
 // Build info - set via ldflags
@@ -79,6 +79,10 @@ func setup(pb *pocketbase.PocketBase) error {
 	}
 
 	if err := internal.RegisterLibraryExportEndpoint(pb); err != nil {
+		return err
+	}
+
+	if err := internal.RegisterPushGuardEndpoints(pb); err != nil {
 		return err
 	}
 

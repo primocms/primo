@@ -27,11 +27,23 @@ func RegisterLibraryExportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.UnauthorizedError("Authentication required", nil)
 			}
 
-			zipData, err := exportLibraryToZip(pb)
+			var zipData []byte
+			var state pushState
+			err := pb.RunInTransaction(func(app core.App) error {
+				var err error
+				state, err = readPushState(app, "library")
+				if err != nil {
+					return err
+				}
+				zipData, err = exportLibraryToZip(app)
+				return err
+			})
 			if err != nil {
 				return e.InternalServerError("Library export failed: "+err.Error(), err)
 			}
 
+			e.Response.Header().Set(pushRevisionHeader, state.Revision)
+			e.Response.Header().Set("Cache-Control", "no-store")
 			e.Response.Header().Set("Content-Type", "application/zip")
 			e.Response.Header().Set("Content-Disposition", "attachment; filename=\"library.zip\"")
 			e.Response.Write(zipData)
@@ -42,7 +54,7 @@ func RegisterLibraryExportEndpoint(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
-func exportLibraryToZip(pb *pocketbase.PocketBase) ([]byte, error) {
+func exportLibraryToZip(pb core.App) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	zw := zip.NewWriter(buf)
 
