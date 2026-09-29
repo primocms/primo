@@ -88,18 +88,26 @@
 		try {
 			await run_when_loaded(publish)
 
-			// Create new snapshot and remove all other ones
-			// TODO: The amount of snapshots could be larger once make UI for managing and restoring them
-			const snapshots_to_remove = [...(existing_snapshots ?? [])]
-			const snapshot = await run_when_loaded(create_snapshot)
-			SiteSnapshots.create({
-				site: site.id,
-				file: Snapshot.encode(snapshot)
-			})
-			for (const existing_snapshot of snapshots_to_remove) {
-				SiteSnapshots.delete(existing_snapshot.id)
+			// In browse (files-author) mode the CLI owns the DB — snapshotting
+			// and committing here would write records the next CLI pull
+			// discards. The build itself only writes publish artifacts
+			// (compiled_js, compiled_html, site.preview), which the file-sync
+			// layer ignores, so the bare build is the same work `primo preview`
+			// performs from the CLI.
+			if (!$read_only) {
+				// Create new snapshot and remove all other ones
+				// TODO: The amount of snapshots could be larger once make UI for managing and restoring them
+				const snapshots_to_remove = [...(existing_snapshots ?? [])]
+				const snapshot = await run_when_loaded(create_snapshot)
+				SiteSnapshots.create({
+					site: site.id,
+					file: Snapshot.encode(snapshot)
+				})
+				for (const existing_snapshot of snapshots_to_remove) {
+					SiteSnapshots.delete(existing_snapshot.id)
+				}
+				await self.commit()
 			}
-			await self.commit()
 			track_site_published({ site_id: site.id })
 		} catch (e) {
 			track_operation_error({ operation: 'publish', category: categorize_error(e), site_id: site.id })
@@ -185,9 +193,8 @@
 	})
 
 	onModKey('p', () => {
-		// Browse mode hides the publish button; the hotkey has to match or the
-		// dialog stays reachable.
-		if ($read_only) return
+		// In browse (files-author) mode the dialog builds the local preview
+		// (`primo preview` equivalent), so the hotkey stays available.
 		publishing = true
 	})
 
@@ -400,16 +407,18 @@
 			</DropdownMenu.Root>
 			{@render children?.()}
 			<!-- <LocaleSelector /> -->
-			{#if !$read_only}
-				<ToolbarButton
-					type="primo"
-					icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}
-					label={instance.dev_mode ? 'Preview' : 'Publish'}
-					key="p"
-					loading={publish_in_progress}
-					on:click={() => (publishing = true)}
-				/>
-			{/if}
+			<!-- In browse (files-author) mode dev_mode is always on (the CLI sets
+			PRIMO_DEV_MODE=1), so this reads "Preview" and opens the build-preview
+			dialog — the in-editor counterpart of `primo preview`. In CMS mode it
+			reads "Preview" in dev and "Publish" in production. -->
+			<ToolbarButton
+				type="primo"
+				icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}
+				label={instance.dev_mode ? 'Preview' : 'Publish'}
+				key="p"
+				loading={publish_in_progress}
+				on:click={() => (publishing = true)}
+			/>
 		</div>
 	</div>
 </nav>
