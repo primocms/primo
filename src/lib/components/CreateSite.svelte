@@ -578,7 +578,7 @@
 				<Upload class="h-4 w-4" />
 				<span>Import .primo</span>
 			{/if}
-			<input type="file" class="hidden" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
+			<input type="file" class="sr-only" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
 		</label>
 	{/if}
 	{#if file_upload_error}

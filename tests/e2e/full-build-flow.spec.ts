@@ -56,7 +56,9 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 		(res) => res.url().includes('/api/primo/clone-site') && res.request().method() === 'POST',
 		{ timeout: 15000 }
 	)
-	await page.getByRole('button', { name: 'Done' }).click()
+	// Scoped to the wizard footer: the dashboard's own "Create Site" button
+	// is still in the DOM behind the wizard overlay.
+	await page.locator('.create-site-footer').getByRole('button', { name: 'Create Site' }).click()
 	const cloneRes = await cloneResponsePromise
 	expect(cloneRes.ok()).toBeTruthy()
 	const { id: newSiteId } = await cloneRes.json()

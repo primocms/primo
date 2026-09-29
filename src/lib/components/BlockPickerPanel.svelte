@@ -109,7 +109,7 @@
 				{:else}
 					<div class="wizard-mobile-groups">
 						{#each library_symbol_groups as group (group.id)}
-							<button class="wizard-group-chip" aria-pressed={active_library_blocks_group_id === group.id} onclick={() => (active_library_blocks_group_id = group.id)}>{group.name}</button>
+							<button type="button" class="wizard-group-chip" aria-pressed={active_library_blocks_group_id === group.id} onclick={() => (active_library_blocks_group_id = group.id)}>{group.name}</button>
 						{/each}
 					</div>
 					<div class="wizard-tab-split">
@@ -118,7 +118,7 @@
 							<ul class="wizard-group-list">
 								{#each library_symbol_groups as group (group.id)}
 									<li>
-										<button class="wizard-group-button" aria-pressed={active_library_blocks_group_id === group.id} onclick={() => (active_library_blocks_group_id = group.id)}>{group.name}</button>
+										<button type="button" class="wizard-group-button" aria-pressed={active_library_blocks_group_id === group.id} onclick={() => (active_library_blocks_group_id = group.id)}>{group.name}</button>
 									</li>
 								{/each}
 							</ul>
@@ -144,7 +144,7 @@
 			<Tabs.Content value="marketplace" class="wizard-tab-inner mt-0">
 				<div class="wizard-mobile-groups">
 					{#each marketplace_symbol_groups as group (group.id)}
-						<button class="wizard-group-chip" aria-pressed={active_marketplace_blocks_group_id === group.id} onclick={() => (active_marketplace_blocks_group_id = group.id)}>{group.name}</button>
+						<button type="button" class="wizard-group-chip" aria-pressed={active_marketplace_blocks_group_id === group.id} onclick={() => (active_marketplace_blocks_group_id = group.id)}>{group.name}</button>
 					{/each}
 				</div>
 				<div class="wizard-tab-split">
@@ -153,7 +153,7 @@
 						<ul class="wizard-group-list">
 							{#each marketplace_symbol_groups as group (group.id)}
 								<li>
-									<button class="wizard-group-button" aria-pressed={active_marketplace_blocks_group_id === group.id} onclick={() => (active_marketplace_blocks_group_id = group.id)}>{group.name}</button>
+									<button type="button" class="wizard-group-button" aria-pressed={active_marketplace_blocks_group_id === group.id} onclick={() => (active_marketplace_blocks_group_id = group.id)}>{group.name}</button>
 								</li>
 							{/each}
 						</ul>
@@ -187,7 +187,7 @@
 				{/if}
 			</div>
 			{#if selected_symbols.length > 0}
-				<button onclick={() => (selected = [])}>Clear</button>
+				<button type="button" onclick={() => (selected = [])}>Clear</button>
 			{/if}
 		</div>
 		{#if selected_symbols.length > 0}
@@ -195,7 +195,7 @@
 				{#each selected_symbols as symbol (symbol?.id)}
 					<div class="relative" animate:flip={{ duration: 100 }}>
 						<SymbolButton {symbol} />
-						<button class="picker-remove" onclick={() => remove_block(symbol.id)}>Remove</button>
+						<button type="button" class="picker-remove" onclick={() => remove_block(symbol.id)}>Remove</button>
 					</div>
 				{/each}
 			</div>

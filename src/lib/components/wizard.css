@@ -244,6 +244,11 @@
 	border-color: #4a4a52;
 	background: #ffffff05;
 }
+/* The file input is visually hidden but focusable, so show focus on the label */
+.wizard-import-button:focus-within {
+	outline: 2px solid #f4f4f5;
+	outline-offset: 2px;
+}
 .wizard-import-button.is-loading {
 	opacity: 0.5;
 	pointer-events: none;
