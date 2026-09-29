@@ -48,6 +48,14 @@
 
 	const sections = $derived(page.sections() ?? [])
 
+	// True once the page's section list has loaded — even when the page has no
+	// sections. `sections` alone can't tell "still loading" apart from "empty
+	// page", so the fade effect below used to see `[]` while the list was
+	// loading and reveal the canvas immediately, letting each section pop in
+	// on its own as its iframe finished rendering instead of fading the page
+	// in once they were all ready.
+	const sections_loaded = $derived(page.sections() !== undefined)
+
 	// Check if page type is static (no symbols toggled - sections can't be added/removed/reordered)
 	const is_static_page_type = $derived(page_type ? page_type.symbols()?.length === 0 : false)
 	// Resolve the type's available blocks during render. page_type.symbols() is a
@@ -642,7 +650,7 @@
 	}
 
 	$effect(() => {
-		if (!sections) {
+		if (!sections_loaded) {
 			sections_mounted = 0
 			page_mounted = false
 			return
