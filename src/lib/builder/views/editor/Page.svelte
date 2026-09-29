@@ -48,6 +48,15 @@
 
 	const sections = $derived(page.sections() ?? [])
 
+	// True once the page's section list has loaded — even when the page has no
+	// sections. `sections` alone can't tell "still loading" apart from "empty
+	// page", so the fade effect below used to see `[]` while the list was
+	// loading and reveal the canvas immediately, letting each section pop in
+	// on its own as its iframe finished rendering instead of fading the page
+	// in once they were all ready.
+	// Header/footer come from the page type, so wait for its list too.
+	const sections_loaded = $derived(page.sections() !== undefined && (!page_type || page_type.sections() !== undefined))
+
 	// Check if page type is static (no symbols toggled - sections can't be added/removed/reordered)
 	const is_static_page_type = $derived(page_type ? page_type.symbols()?.length === 0 : false)
 	// Resolve the type's available blocks during render. page_type.symbols() is a
@@ -642,13 +651,17 @@
 	}
 
 	$effect(() => {
-		if (!sections) {
+		if (!sections_loaded) {
 			sections_mounted = 0
 			page_mounted = false
 			return
 		}
 
-		const target_count = sections.length
+		// Header, body, and footer sections all report mounts, so count all
+		// three zones. Unfiltered on purpose: filtering by loaded blocks would
+		// shrink the target while blocks are still loading and reveal early; a
+		// block that never loads is covered by the stall timeout below.
+		const target_count = header_sections.length + sections.length + footer_sections.length
 
 		if (target_count === 0) {
 			sections_mounted = 0
@@ -763,7 +776,9 @@
 {/if}
 
 <!-- Loading Spinner -->
-{#if !page_mounted && sections && sections.length > 1}
+<!-- Also covers the unloaded list and single-section pages, where the canvas
+stays hidden until mount with nothing else to show. -->
+{#if !page_mounted && (!sections_loaded || header_sections.length + sections.length + footer_sections.length > 0)}
 	<div class="spinner" style="--Spinner-color: var(--color-gray-7);">
 		<UI.Spinner variant="loop" />
 	</div>
