@@ -358,7 +358,9 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 			expected := e.Request.FormValue("expected_revision")
 			// Local file-watcher imports retain their own author-mode policy.
 			// An explicit guarded request is always checked, even in dev mode.
-			if !(DevMode && IsLocalhost(e)) || expected != "" || e.Request.FormValue("force") == "true" {
+			// Creating a site that doesn't exist yet has nothing to protect, so
+			// (as with the library) a baseline is only required once it exists.
+			if (!(DevMode && IsLocalhost(e)) && state.Exists) || expected != "" || e.Request.FormValue("force") == "true" {
 				if err := checkPushRevision(state, expected); err != nil {
 					return err
 				}

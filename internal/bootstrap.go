@@ -32,6 +32,20 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 }
 
 func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
+	// Cheap early rejection so a non-empty server doesn't read the upload at
+	// all. The authoritative check still runs inside the transaction below.
+	if !(DevMode && IsLocalhost(e)) {
+		if count, err := pb.CountRecords("sites"); err == nil && count > 0 {
+			return e.ForbiddenError("Bootstrap not allowed - sites already exist", nil)
+		}
+	}
+	// Parse before the transaction: PocketBase serializes writes through one
+	// connection, so reading a slow upload inside the transaction would block
+	// every other write on the server for the duration of the upload.
+	if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
+		return e.BadRequestError("Failed to parse form", err)
+	}
+
 	var response map[string]interface{}
 	err := pb.RunInTransaction(func(app core.App) error {
 		// Check if any sites exist - only allow bootstrap when none exist.
@@ -48,11 +62,6 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 			if len(sites) > 0 {
 				return e.ForbiddenError("Bootstrap not allowed - sites already exist", nil)
 			}
-		}
-
-		// Parse form data
-		if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
-			return e.BadRequestError("Failed to parse form", err)
 		}
 
 		// Get site info from form

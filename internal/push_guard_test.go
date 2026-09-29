@@ -167,6 +167,30 @@ func TestPushGuardRejectsStaleAndMissingBaselinesAndPreservesContent(t *testing.
 	}
 }
 
+func TestPushGuardAllowsCreatingANewSiteWithoutBaseline(t *testing.T) {
+	app := newPushTestApp(t)
+	defer app.ResetBootstrapState()
+	pushFixture(t, app)
+	handler, token := pushTestHTTP(t, app)
+	archive := zipFiles(t, map[string]string{
+		"site.yaml":                      "name: Fresh Site\n",
+		"blocks/hero/config.yaml":        "name: Hero\n",
+		"blocks/hero/component.svelte":   "<h1>{heading}</h1>",
+		"blocks/hero/fields.yaml":        "- name: heading\n  type: text\n",
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks: [hero]\n",
+		"pages/index.yaml":               "name: Home\npage_type: Default\n",
+	})
+	// Older CLIs and direct API callers create sites without expected_revision;
+	// there's nothing on the server to protect yet, so this must not 428.
+	endpoint := "/api/primo/import/newpushsite0001"
+	pushHTTP(t, handler, pushRequest(t, endpoint, token, "", false, archive), 200)
+	if !mustPushState(t, app, "newpushsite0001").Exists {
+		t.Fatal("site was not created")
+	}
+	// Once it exists, the same unguarded push is rejected like any other.
+	pushHTTP(t, handler, pushRequest(t, endpoint, token, "", false, archive), 428)
+}
+
 func TestPushGuardForceBacksUpAndReturnsExactRevision(t *testing.T) {
 	app := newPushTestApp(t)
 	defer app.ResetBootstrapState()
