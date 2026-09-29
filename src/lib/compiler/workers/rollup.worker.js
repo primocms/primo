@@ -1,5 +1,9 @@
 import { rollup } from '@rollup/browser'
-import svelteWorker from './svelte.worker?worker'
+// Inlined so the nested worker starts from a blob: URL. Some embedded browsers
+// (e.g. app webviews) refuse to start a worker from an http(s) URL when the
+// request comes from inside another worker — it fails instantly with an empty
+// error, the compiler never answers, and every editor section hangs blank.
+import svelteWorker from './svelte.worker?worker&inline'
 import PromiseWorker from 'promise-worker'
 import registerPromiseWorker from 'promise-worker/register'
 import commonjs from './plugins/commonjs'
