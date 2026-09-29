@@ -21,18 +21,52 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
-	import { is_host_assigned, site_editor_url } from '$lib/site_host'
+	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
 
 	const sidebar = useSidebar()
 
 	const site_group_id = $derived(page.url.searchParams.get('group'))
+
+	// Remember the most-recently selected group so revisiting the dashboard
+	// without a ?group= param (e.g. the editor's "Sites" button when the site's
+	// group couldn't be passed along) reopens on that group instead of the
+	// first one in the list.
+	const LAST_SITE_GROUP_KEY = 'primo:last-site-group'
+	function last_site_group_key() {
+		const user_id = self.instance?.authStore.record?.id
+		return user_id ? `${LAST_SITE_GROUP_KEY}:${user_id}` : LAST_SITE_GROUP_KEY
+	}
+	function get_last_site_group() {
+		try {
+			return typeof localStorage === 'undefined' ? null : localStorage.getItem(last_site_group_key())
+		} catch {
+			return null
+		}
+	}
+	function set_last_site_group(id: string) {
+		try {
+			if (typeof localStorage !== 'undefined') localStorage.setItem(last_site_group_key(), id)
+		} catch {
+			/* storage may be unavailable */
+		}
+	}
+
 	$effect(() => {
 		if (!site_group_id && site_groups.length > 0) {
+			const last_group = get_last_site_group()
+			const fallback = last_group && site_groups.some((group) => group.id === last_group) ? last_group : site_groups[0].id
 			const url = new URL(page.url)
-			url.searchParams.set('group', site_groups[0].id)
+			url.searchParams.set('group', fallback)
 			goto(url, { replaceState: true })
+		}
+	})
+	$effect(() => {
+		// Only persist groups that actually exist so a stale ?group= can't
+		// pin the dashboard to a deleted group.
+		if (site_group_id && site_groups.some((group) => group.id === site_group_id)) {
+			set_last_site_group(site_group_id)
 		}
 	})
 
@@ -245,7 +279,11 @@
 		<div class="site-card-footer">
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
 				<a href={site_editor_url(site)} class="text-sm font-medium leading-none truncate">{site.name}</a>
-				<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
+				{#if is_host_reachable(site)}
+					<a href={`https://${site.host}`} target="_blank" rel="noopener noreferrer" title={`Open ${site.host} in a new tab`} class="text-xs text-muted-foreground leading-tight truncate hover:underline">{site.host}</a>
+				{:else}
+					<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
+				{/if}
 			</div>
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>

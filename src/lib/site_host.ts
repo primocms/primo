@@ -19,6 +19,22 @@ export const is_base_subdomain = (host: string) => {
 	return host === base || host.endsWith(`.${base}`)
 }
 
+// Whether `host` is a bare hostname (optionally with a port, as the dev
+// bootstrap host can have). `host` is only checked for non-emptiness when it's
+// stored, and site-role users can update it, so a value like
+// `trusted.example@attacker.example` would render as one host but navigate to
+// another once interpolated into an href. Anything that isn't plain
+// letters/digits/hyphens/dots is treated as unreachable instead.
+const hostname_label = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/
+export const is_valid_host = (host: string) => {
+	const match = /^([^:]+)(?::(\d{1,5}))?$/.exec(host.toLowerCase())
+	if (!match) return false
+	const [, hostname, port] = match
+	if (port && Number(port) > 65535) return false
+	if (hostname.length > 253) return false
+	return hostname.split('.').every((label) => hostname_label.test(label))
+}
+
 // Whether the site's assigned host will actually resolve/serve right now.
 // Assigning a domain stores it optimistically (status "verifying"/"pending" for
 // a custom domain, or empty for an auto-assigned base subdomain), but a custom
@@ -26,7 +42,7 @@ export const is_base_subdomain = (host: string) => {
 // subdomains are reachable immediately. Used to keep the dashboard from linking
 // a card at a domain that would dead-end on a connection error.
 export const is_host_reachable = (site: Pick<Site, 'id' | 'host' | 'domain_status'>) =>
-	is_host_assigned(site) && (is_base_subdomain(site.host) || site.domain_status === 'live')
+	is_host_assigned(site) && is_valid_host(site.host) && (is_base_subdomain(site.host) || site.domain_status === 'live')
 
 // Where to open a site in the editor.
 //
