@@ -58,6 +58,9 @@ jobs:
       - name: Build binary and frontend under test
         run: npm run test:e2e:build
 
+      - name: Run server tests (including push conflicts and backup recovery)
+        run: go test ./...
+
       - name: Run E2E suite
         run: npx playwright test
 

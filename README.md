@@ -73,6 +73,9 @@ Freelancers, small agencies, and small teams who code their clients' sites and n
 - **Stable:** visual CMS, block library, static output, multi-site, self-hosted deployment.
 - **Beta:** CLI + local-file workflow (`primo pull` / `primo push`), AI-agent compatibility.
 
+CLI pushes protect client edits with revision checks and an explicit overwrite
+option that saves a backup. See [safe pushes and upgrade instructions](SAFE_PUSH.md).
+
 ## Documentation
 
 - **[Installation](https://docs.primo.build/getting-started/installation)** — self-host or run locally

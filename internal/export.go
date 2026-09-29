@@ -160,7 +160,22 @@ func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 			}
 
 			// Generate the export
-			zipData, err := exportSiteToZip(pb, site)
+			var zipData []byte
+			var state pushState
+			err = pb.RunInTransaction(func(app core.App) error {
+				var err error
+				// Fetch the parent again inside the same snapshot as its children.
+				site, err = app.FindRecordById("sites", siteId)
+				if err != nil {
+					return err
+				}
+				state, err = readPushState(app, siteId)
+				if err != nil {
+					return err
+				}
+				zipData, err = exportSiteToZip(app, site)
+				return err
+			})
 			if err != nil {
 				return e.InternalServerError("Export failed: "+err.Error(), err)
 			}
@@ -175,6 +190,8 @@ func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 			if disposition == "" {
 				disposition = "attachment"
 			}
+			e.Response.Header().Set(pushRevisionHeader, state.Revision)
+			e.Response.Header().Set("Cache-Control", "no-store")
 			e.Response.Header().Set("Content-Type", "application/zip")
 			e.Response.Header().Set("Content-Disposition", disposition)
 			e.Response.Write(zipData)
@@ -185,7 +202,7 @@ func RegisterExportEndpoint(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
-func exportSiteToZip(pb *pocketbase.PocketBase, site *core.Record) ([]byte, error) {
+func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	zw := zip.NewWriter(buf)
 
