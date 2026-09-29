@@ -21,6 +21,13 @@ export const usePublishSite = (site_id?: string) => {
 			}
 
 			const promises: Promise<void>[] = []
+			// Homepage previews are rendered in parallel with everything else,
+			// but the sites.preview upload is deferred until after the published
+			// files have been regenerated (see below) — its filename is the
+			// thumbnail iframe's cache-buster, so uploading it early would make
+			// the dashboard reload the iframe while `sites/{host}/…` still holds
+			// the previous build, leaving the thumbnail stale.
+			const preview_uploads: (() => Promise<void>)[] = []
 			for (const { symbol, field_keys } of symbols_with_field_keys!) {
 				if (!symbol.js) {
 					// No need to compile symbol JavaScript if there's none
@@ -76,18 +83,22 @@ export const usePublishSite = (site_id?: string) => {
 
 			for (const page of data.pages) {
 				if (!page.parent) {
-					// Generate site preview from homepage
+					// Generate the homepage preview now, but only upload it to
+					// sites.preview after the published files are refreshed.
 					const promise = generate_page(page, true).then(async ({ success, html, error }) => {
 						if (!success) {
 							console.error(`Site preview generation failed for page "${page.name || page.id}":`, error || 'Unknown error')
 							throw new Error(`Generating site preview not successful for page "${page.name || page.id}": ${error || 'Unknown error'}`)
 						}
-						if (!site) {
-							throw new Error('No site')
-						}
 
-						await self.instance?.collection('sites').update(site.id, {
-							preview: new File([html], 'index.html')
+						preview_uploads.push(async () => {
+							if (!site) {
+								throw new Error('No site')
+							}
+
+							await self.instance?.collection('sites').update(site.id, {
+								preview: new File([html], 'index.html')
+							})
 						})
 					})
 					promises.push(promise)
@@ -130,6 +141,16 @@ export const usePublishSite = (site_id?: string) => {
 					throw new Error('Failed to generate site: Not OK response')
 				}
 			})
+
+			// Only now that `sites/{host}/…` holds the fresh build, write the
+			// homepage preview. The sites.preview filename is the thumbnail
+			// iframe's cache-buster, so this update (and the iframe reload it
+			// triggers via realtime) must land after the published files —
+			// otherwise the dashboard reloads the thumbnail mid-publish and
+			// shows the previous build forever.
+			for (const upload of preview_uploads) {
+				await upload()
+			}
 		}
 	)
 

@@ -1,0 +1,429 @@
+/* Shared treatment for the create-site wizard and block picker, matching the
+   dashboard/marketplace design language: #171719 shell, #1e1e21 content,
+   #202023 cards, #36363a borders, #a5a5ad muted text. */
+
+/* Card container used by wizard step panels */
+.wizard-panel {
+	min-height: 0;
+	border: 1px solid #36363a;
+	border-radius: 8px;
+	background: #202023;
+	padding: 12px;
+}
+
+/* Tab containers (styles the bits-ui Tabs.Root element, so they live here —
+   scoped styles don't reach into child components) */
+.wizard-starter-tabs {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.wizard-picker-tabs {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.wizard-starter-tabs .wizard-pill-tabs,
+.wizard-picker-tabs .wizard-pill-tabs {
+	align-self: flex-start;
+	width: 100%;
+	max-width: 420px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}
+
+/* Masonry area inside the picker's grid column */
+.wizard-masonry-area {
+	min-height: 0;
+	height: 100%;
+	overflow: auto;
+	padding: 1px 2px 8px 0;
+}
+
+/* Pill tabs (Sites/Marketplace, Library/Marketplace) */
+.wizard-pill-tabs {
+	display: flex;
+	flex-shrink: 0;
+	gap: 3px;
+	padding: 3px;
+	border: 1px solid #36363a;
+	border-radius: 8px;
+	background: #202023;
+}
+.wizard-pill-tab {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	padding: 6px 12px;
+	border-radius: 5px;
+	color: #a5a5ad;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 18px;
+}
+.wizard-pill-tab:hover {
+	color: #f4f4f5;
+	background: #303034;
+}
+.wizard-pill-tab[data-state='active'] {
+	color: #f4f4f5;
+	background: #39393f;
+	box-shadow: 0 1px 3px #0003;
+}
+.wizard-pill-tab:focus-visible {
+	outline: 2px solid #c4c4ce;
+	outline-offset: 2px;
+}
+
+/* Layout inside a tab: optional mobile group strip, then sidebar + grid */
+.wizard-tab-inner {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.wizard-tab-split {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	gap: 14px;
+}
+.wizard-desktop-sidebar {
+	width: 216px;
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	padding-right: 12px;
+	border-right: 1px solid #303034;
+}
+.wizard-grid-area {
+	flex: 1;
+	min-width: 0;
+	overflow: auto;
+}
+
+/* Group list (desktop sidebar) */
+.wizard-group-label {
+	padding: 2px 10px 6px;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #a5a5ad;
+}
+.wizard-group-list {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.wizard-group-button {
+	display: block;
+	width: 100%;
+	min-height: 34px;
+	padding: 7px 10px;
+	border-radius: 7px;
+	text-align: left;
+	font-size: 12px;
+	color: #a5a5ad;
+}
+.wizard-group-button:hover {
+	background: #303034;
+	color: #f4f4f5;
+}
+.wizard-group-button[aria-pressed='true'] {
+	background: #303034;
+	color: #f4f4f5;
+	box-shadow: inset 0 0 0 1px #ffffff08;
+}
+.wizard-group-button:focus-visible {
+	outline: 2px solid #c4c4ce;
+	outline-offset: 2px;
+}
+
+/* Mobile group chips (replaces the sidebar under 900px) */
+.wizard-mobile-groups {
+	display: none;
+}
+.wizard-group-chip {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	min-height: 30px;
+	padding: 5px 11px;
+	border: 1px solid #36363a;
+	border-radius: 999px;
+	font-size: 12px;
+	color: #a5a5ad;
+	background: #202023;
+}
+.wizard-group-chip:hover {
+	color: #f4f4f5;
+	background: #303034;
+}
+.wizard-group-chip[aria-pressed='true'] {
+	color: #f4f4f5;
+	background: #39393f;
+	border-color: #45454c;
+}
+.wizard-group-chip:focus-visible {
+	outline: 2px solid #c4c4ce;
+	outline-offset: 2px;
+}
+
+/* Starter selection cards (built on catalog-cards.css) */
+.wizard-starter-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+	align-content: start;
+	gap: 16px;
+	padding: 2px 2px 8px 0;
+}
+.wizard-starter-card {
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 0;
+	text-align: left;
+	cursor: pointer;
+}
+.wizard-starter-card:focus-visible {
+	outline: 2px solid #c4c4ce;
+	outline-offset: -2px;
+}
+.wizard-starter-selected {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.66);
+	color: var(--primo-primary-color, #ff6b35);
+}
+.wizard-starter-selected svg {
+	width: 28px;
+	height: 28px;
+}
+.wizard-empty-note {
+	padding: 32px 16px;
+	text-align: center;
+	font-size: 13px;
+	color: #a5a5ad;
+}
+
+/* Import .primo file button + uploaded state */
+.wizard-import-zone {
+	flex-shrink: 0;
+	padding-top: 12px;
+	border-top: 1px solid #303034;
+}
+.wizard-import-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	width: 100%;
+	min-height: 34px;
+	padding: 6px 10px;
+	border: 1px dashed #36363a;
+	border-radius: 7px;
+	font-size: 12px;
+	color: #a5a5ad;
+	cursor: pointer;
+}
+.wizard-import-button:hover {
+	color: #f4f4f5;
+	border-color: #4a4a52;
+	background: #ffffff05;
+}
+/* The file input is visually hidden but focusable, so show focus on the label */
+.wizard-import-button:focus-within {
+	outline: 2px solid #f4f4f5;
+	outline-offset: 2px;
+}
+.wizard-import-button.is-loading {
+	opacity: 0.5;
+	pointer-events: none;
+}
+.wizard-imported {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.wizard-imported-name {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	flex: 1;
+	font-size: 12px;
+	color: #f4f4f5;
+}
+.wizard-imported-name svg {
+	flex-shrink: 0;
+	color: var(--primo-primary-color, #ff6b35);
+}
+.wizard-imported-name span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.wizard-imported-remove {
+	flex-shrink: 0;
+	height: 26px;
+	font-size: 11px;
+}
+.wizard-import-error {
+	margin-top: 8px;
+	font-size: 12px;
+	color: #f87171;
+}
+
+/* Live preview column (starter step, hidden on narrow screens) */
+.wizard-preview {
+	display: none;
+	width: 380px;
+	flex-shrink: 0;
+	flex-direction: column;
+}
+.wizard-preview-box {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid #36363a;
+	border-radius: 8px;
+	background: #27272b;
+}
+.wizard-preview-frame {
+	flex: 1;
+	min-height: 0;
+}
+.wizard-preview-link {
+	flex-shrink: 0;
+	padding: 9px 12px;
+	border-top: 1px solid #303034;
+	background: #171719;
+	text-align: right;
+	font-size: 12px;
+}
+.wizard-preview-link a {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	color: #a5a5ad;
+}
+.wizard-preview-link a:hover {
+	color: #f4f4f5;
+	text-decoration: underline;
+}
+.wizard-preview-empty {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 24px;
+	text-align: center;
+}
+.wizard-preview-check {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: #ffffff0d;
+	color: var(--primo-primary-color, #ff6b35);
+}
+.wizard-preview-check svg {
+	width: 28px;
+	height: 28px;
+}
+.wizard-preview-title {
+	font-size: 14px;
+	font-weight: 500;
+	color: #f4f4f5;
+}
+.wizard-preview-note {
+	max-width: 220px;
+	font-size: 12px;
+	line-height: 1.6;
+	color: #a5a5ad;
+}
+
+/* Selected blocks panel (block picker step) */
+.wizard-selected-panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid #36363a;
+	border-radius: 8px;
+	background: #202023;
+}
+.wizard-selected-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-shrink: 0;
+	padding: 10px 12px;
+	border-bottom: 1px solid #303034;
+	font-size: 12px;
+	color: #a5a5ad;
+}
+.wizard-selected-header button {
+	font-size: 11px;
+	color: #a5a5ad;
+	text-decoration: underline;
+}
+.wizard-selected-header button:hover {
+	color: #f4f4f5;
+}
+.wizard-selected-list {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	overflow: auto;
+	padding: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+	.wizard-desktop-sidebar {
+		width: 180px;
+	}
+}
+@media (max-width: 899px) {
+	.wizard-mobile-groups {
+		display: flex;
+		gap: 6px;
+		overflow-x: auto;
+		padding-bottom: 4px;
+	}
+	.wizard-desktop-sidebar {
+		display: none;
+	}
+}
+@media (min-width: 1100px) {
+	.wizard-preview {
+		display: flex;
+	}
+}
+@media (max-width: 700px) {
+	.wizard-starter-grid {
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 148px), 1fr));
+		gap: 12px;
+	}
+}
