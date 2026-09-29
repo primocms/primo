@@ -4,8 +4,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -2062,12 +2064,52 @@ func existingPageSectionIds(app core.App, pageId string) ([]string, error) {
 	return ids, nil
 }
 
+// rekeyPage retires oldPage in favor of the already-saved record newId: direct
+// children are re-parented onto newId first, so deleting oldPage cascades only
+// to its own sections/entries and never to descendant pages. Deeper
+// descendants keep their parent (a direct child) and so are untouched.
+func rekeyPage(app core.App, oldPage *core.Record, newId string) error {
+	children, err := app.FindRecordsByFilter("pages", "parent = {:parent}", "", 0, 0, dbx.Params{"parent": oldPage.Id})
+	if err != nil {
+		return fmt.Errorf("find children of %s: %w", oldPage.Id, err)
+	}
+	for _, child := range children {
+		child.Set("parent", newId)
+		if err := app.Save(child); err != nil {
+			return fmt.Errorf("re-parent child %s: %w", child.Id, err)
+		}
+	}
+	if err := app.Delete(oldPage); err != nil {
+		return fmt.Errorf("delete old record %s: %w", oldPage.Id, err)
+	}
+	return nil
+}
+
 func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []byte, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
 	// Derive slug from file path (last segment)
 	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
 	slug := pagePath
 	if lastSlash := strings.LastIndex(pagePath, "/"); lastSlash >= 0 {
 		slug = pagePath[lastSlash+1:]
+	}
+
+	// `existing` was preloaded before any page was written, so it can be stale
+	// by the time we get here — most importantly, deleted as a side effect of an
+	// earlier page in this same import. "Updating" a deleted record doesn't
+	// recreate it, and the first section saved against it then fails with
+	// validation_missing_rel_records. Re-read it: gone means create it fresh;
+	// any other read error is real and must fail the import, not be mistaken
+	// for a new page (which would fork a duplicate).
+	if existing != nil {
+		fresh, err := app.FindRecordById("pages", existing.Id)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			existing = nil
+		case err != nil:
+			return "", nil, fmt.Errorf("reload page %q (%s): %w", pagePath, existing.Id, err)
+		default:
+			existing = fresh
+		}
 	}
 
 	// `existing` was matched in an earlier pass by id, then slug, then name —
@@ -2092,12 +2134,16 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	// exported _id still orphans every cross-file `page:` link that references
 	// that _id — the link points at an id no page has. The importer already
 	// rebuilds a page's sections/entries from the file on every import, so the
-	// record carries no state worth preserving: delete it and let the create
-	// branch recreate it under the exported _id. Children rebuild as usual.
+	// record carries no state worth preserving: let the create branch recreate
+	// it under the exported _id, then retire the old record (rekeyPage below).
+	//
+	// The old record is NOT deleted up front: pages.parent cascades, so that
+	// would silently delete every descendant — including server-only children
+	// this push doesn't mention, since push never deletes pages. Instead its
+	// children are re-pointed at the new record before the old one goes.
+	var rekeyFrom *core.Record
 	if existing != nil && pbRecordIdPattern.MatchString(pageData.ID) && existing.Id != pageData.ID {
-		if err := app.Delete(existing); err != nil {
-			return "", nil, fmt.Errorf("re-key page %q to exported _id %s: %w", pagePath, pageData.ID, err)
-		}
+		rekeyFrom = existing
 		existing = nil
 	}
 
@@ -2188,6 +2234,12 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 	if err := app.Save(page); err != nil {
 		return "", nil, err
+	}
+
+	if rekeyFrom != nil {
+		if err := rekeyPage(app, rekeyFrom, page.Id); err != nil {
+			return "", nil, fmt.Errorf("re-key page %q to exported _id %s: %w", pagePath, pageData.ID, err)
+		}
 	}
 
 	// Import page-type field values (page_entries)

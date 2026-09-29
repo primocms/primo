@@ -2028,3 +2028,165 @@ func TestWarnFieldDefinitionIssuesPageTypesRejectNesting(t *testing.T) {
 		t.Errorf("warning should say nesting is unsupported: %q", warnings[0].Message)
 	}
 }
+
+// TestParentRekeyKeepsNestedChildren reproduces the `primo push` failure
+// "failed to import page services/ev-charging: page: Failed to find all
+// relation records with the provided ids." A parent first imported idless (random
+// id) and then re-imported WITH a valid _id gets re-keyed to that _id. The re-key
+// used to delete the old parent record, and the pages.parent cascade silently
+// deleted every child with it — while the importer still held the preloaded
+// child records and "updated" them, so saving their sections failed on a
+// dangling page relation. Children (in the export or server-only) must survive
+// the re-key under the new parent id with their ids, content, and sections.
+func TestParentRekeyKeepsNestedChildren(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	const (
+		parentID     = "servicespage001"
+		childID      = "evchargingpg001"
+		grandchildID = "evchargefaq0001"
+	)
+
+	build := func(withParentID, withLegacy bool) map[string]string {
+		f := baseSiteFiles()
+		idLine := ""
+		if withParentID {
+			idLine = "_id: " + parentID + "\n"
+		}
+		f["pages/services/index.yaml"] = idLine + "" +
+			"name: Services\npage_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Our services\n"
+		f["pages/services/ev-charging/index.yaml"] = "" +
+			"_id: " + childID + "\nname: EV Charging\npage_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Charge at home\n"
+		f["pages/services/ev-charging/faq.yaml"] = "" +
+			"_id: " + grandchildID + "\nname: EV FAQ\npage_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      heading: Charging questions\n"
+		if withLegacy {
+			f["pages/services/legacy.yaml"] = "name: Legacy\npage_type: Default\nsections: []\n"
+		}
+		return f
+	}
+
+	// First import: parent has NO _id -> random id. Includes a child that the
+	// second push omits, standing in for a server-only child.
+	if _, err := processImport(app, site, zipFiles(t, build(false, true)), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	oldParentID := findPageByName(t, app, site, "Services").Id
+	if oldParentID == parentID {
+		t.Fatalf("precondition: idless parent unexpectedly got id %q", parentID)
+	}
+
+	// Second import: parent now carries a different, valid _id -> re-key.
+	if _, err := processImport(app, site, zipFiles(t, build(true, false)), false); err != nil {
+		t.Fatalf("second import (parent re-key): %v", err)
+	}
+
+	if _, err := app.FindRecordById("pages", parentID); err != nil {
+		t.Fatalf("parent not present under exported _id %q: %v", parentID, err)
+	}
+	if _, err := app.FindRecordById("pages", oldParentID); err == nil {
+		t.Fatalf("old parent record %q still exists after re-key", oldParentID)
+	}
+	if n := countPagesNamed(t, app, site, "Services"); n != 1 {
+		t.Fatalf("expected exactly one Services page after re-key, got %d", n)
+	}
+
+	assertPage := func(id, wantParent, wantHeading string) {
+		t.Helper()
+		page, err := app.FindRecordById("pages", id)
+		if err != nil {
+			t.Fatalf("page %q missing after parent re-key: %v", id, err)
+		}
+		if got := page.GetString("parent"); got != wantParent {
+			t.Fatalf("page %q parent = %q, want %q", id, got, wantParent)
+		}
+		sections, err := existingPageSectionIds(app, id)
+		if err != nil {
+			t.Fatalf("sections of %q: %v", id, err)
+		}
+		if len(sections) != 1 {
+			t.Fatalf("page %q has %d sections, want 1", id, len(sections))
+		}
+		findEntryWithValue(t, app, id, `"`+wantHeading+`"`)
+	}
+	assertPage(parentID, findPageByName(t, app, site, "Home").Id, "Our services")
+	assertPage(childID, parentID, "Charge at home")
+	assertPage(grandchildID, childID, "Charging questions")
+
+	// Push is upsert-only: a child absent from this push must not be deleted
+	// as a side effect of its parent's re-key; it follows the parent instead.
+	legacy := findPageByName(t, app, site, "Legacy")
+	if got := legacy.GetString("parent"); got != parentID {
+		t.Fatalf("server-only child parent = %q, want re-keyed parent %q", got, parentID)
+	}
+
+	// Third, byte-identical import: everything is a no-op skip.
+	result, err := processImport(app, site, zipFiles(t, build(true, false)), false)
+	if err != nil {
+		t.Fatalf("third import (unchanged): %v", err)
+	}
+	if len(result.Diff.Pages.Added) != 0 || len(result.Diff.Pages.Modified) != 0 {
+		t.Fatalf("unchanged re-push after re-key should be a no-op, got Added=%v Modified=%v",
+			result.Diff.Pages.Added, result.Diff.Pages.Modified)
+	}
+	assertPage(childID, parentID, "Charge at home")
+}
+
+// TestImportPageTreatsDeletedExistingAsNew guards the reload at the top of
+// importPage: a preloaded `existing` record that was deleted earlier in the same
+// import (e.g. by a cascade) must be recreated, not "updated" into nothing.
+func TestImportPageTreatsDeletedExistingAsNew(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	if _, err := processImport(app, site, zipFiles(t, baseSiteFiles()), false); err != nil {
+		t.Fatalf("first import: %v", err)
+	}
+	stale := findPageByName(t, app, site, "Vs WordPress")
+	homeId := findPageByName(t, app, site, "Home").Id
+	if err := app.Delete(stale); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+
+	pageData := ExportedPage{
+		Name:     "Vs WordPress",
+		PageType: "Default",
+		Sections: []map[string]interface{}{{
+			"block":   "hero",
+			"content": map[string]interface{}{"heading": "Back"},
+		}},
+	}
+	pageId, sectionIds, err := importPage(app, site, pageData, nil, stale, map[string]string{}, homeId, "wordpress", nil)
+	if err != nil {
+		t.Fatalf("importPage with deleted existing: %v", err)
+	}
+	if _, err := app.FindRecordById("pages", pageId); err != nil {
+		t.Fatalf("page not recreated: %v", err)
+	}
+	if len(sectionIds) != 1 {
+		t.Fatalf("expected 1 section, got %d", len(sectionIds))
+	}
+}
+
+func countPagesNamed(t *testing.T, app core.App, site *core.Record, name string) int {
+	t.Helper()
+	recs, err := app.FindRecordsByFilter("pages", "site = {:site} && name = {:name}", "", 0, 0, map[string]any{"site": site.Id, "name": name})
+	if err != nil {
+		t.Fatalf("find pages named %q: %v", name, err)
+	}
+	return len(recs)
+}
