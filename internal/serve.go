@@ -54,9 +54,12 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			reqHost := requestEvent.Request.Host
 			var site *core.Record
 			if siteId != "" {
-				site, err = pb.FindRecordById("sites", siteId)
-				if err != nil {
-					return err
+				// Request-local error: `err` in the enclosing OnServe scope is
+				// shared by every concurrent request, so assigning to it races.
+				var lookupErr error
+				site, lookupErr = pb.FindRecordById("sites", siteId)
+				if lookupErr != nil {
+					return lookupErr
 				}
 
 				// Override host based on the resolved site ID
