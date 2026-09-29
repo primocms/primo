@@ -9,9 +9,9 @@
 </script>
 
 {#if variant === 'loop'}
-	<div class="Spinner loop"></div>
+	<div class="Spinner loop" role="status" aria-label="Loading"></div>
 {:else}
-	<div class="Spinner dots">
+	<div class="Spinner dots" role="status" aria-label="Loading">
 		<span></span>
 		<span></span>
 		<span></span>

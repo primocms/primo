@@ -771,7 +771,9 @@
 {/if}
 
 <!-- Loading Spinner -->
-{#if !page_mounted && sections && sections.length > 1}
+<!-- Also covers the unloaded list and single-section pages, where the canvas
+stays hidden until mount with nothing else to show. -->
+{#if !page_mounted && (!sections_loaded || sections.length > 0)}
 	<div class="spinner" style="--Spinner-color: var(--color-gray-7);">
 		<UI.Spinner variant="loop" />
 	</div>
