@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X } from 'lucide-svelte'
+	import './catalog-cards.css'
+	import './wizard.css'
+	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X, ChevronLeft } from 'lucide-svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { Input } from '$lib/components/ui/input/index.js'
@@ -90,6 +92,10 @@
 			create_site()
 		}
 	}
+	function go_back() {
+		if (step === 'blocks') step = 'starter'
+		else if (step === 'starter') step = 'name'
+	}
 
 	let starter_tab = $state('sites')
 	let selected_starter_id = $state(``)
@@ -146,6 +152,7 @@
 	// Stepper state
 	const step_order = ['name', 'starter', 'blocks'] as const
 	let step = $state<(typeof step_order)[number]>('name')
+	const step_index = $derived(step_order.indexOf(step))
 	const can_go_starter = $derived(!!site_name)
 	const can_go_blocks = $derived(!!site_name && (!!selected_starter_id || !!uploaded_snapshot))
 
@@ -326,342 +333,632 @@
 	})
 </script>
 
-<div class="max-w-[1400px] h-screen px-2 flex flex-col mx-auto">
-	<!-- Header -->
-	<div class="pt-6 pb-6 h-[12vh] min-h-[7rem] relative">
-		<h1 class="text-md leading-none tracking-tight text-center">Create Site</h1>
-		{#if oncancel}
-			<button type="button" onclick={() => oncancel?.()} class="absolute right-2 top-6 p-2 text-muted-foreground hover:text-foreground rounded-md" aria-label="Cancel">
-				<X class="w-4 h-4" />
-			</button>
-		{/if}
+<div class="create-site-root">
+	<header class="create-site-header">
+		<div class="create-site-header-inner">
+			<div class="create-site-titlebar">
+				<h1>Create Site</h1>
+				{#if oncancel}
+					<button type="button" onclick={() => oncancel?.()} class="cancel-button" aria-label="Cancel">
+						<X class="h-4 w-4" />
+					</button>
+				{/if}
+			</div>
 
-		<!-- Stepper -->
-		<div class="max-w-[900px] mx-auto mt-4 flex items-center gap-4 overflow-x-auto whitespace-nowrap w-full">
-			<!-- Step 1 -->
-			<button class="flex items-center gap-3 focus:outline-none whitespace-nowrap" onclick={() => (step = 'name')}>
-				<div
-					class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium {step_order.indexOf(step) >= step_order.indexOf('name')
-						? 'bg-primary text-primary-foreground'
-						: 'bg-muted text-foreground'}"
-				>
-					{#if can_go_starter}
-						<Check class="w-4 h-4" />
-					{:else}
-						<SquarePen class="w-4 h-4" />
+			<!-- Stepper -->
+			<nav class="stepper" aria-label="Create site steps">
+				{#each step_order as step_name, i (step_name)}
+					{@const is_active = step === step_name}
+					{@const is_done = step_index > i}
+					{@const is_clickable = i === 0 || step_index >= i || (i === 1 ? can_go_starter : can_go_blocks)}
+					<button
+						class="step"
+						data-state={is_active ? 'active' : is_done ? 'done' : 'todo'}
+						onclick={() => (step = step_name)}
+						disabled={!is_clickable}
+						aria-current={is_active ? 'step' : undefined}
+					>
+						<span class="step-circle">
+							{#if is_done || (step_name === 'name' && can_go_starter) || (step_name === 'starter' && can_go_blocks) || (step_name === 'blocks' && selected_block_ids.length > 0)}
+								<Check class="h-4 w-4" />
+							{:else if step_name === 'name'}
+								<SquarePen class="h-4 w-4" />
+							{:else if step_name === 'starter'}
+								<Globe class="h-4 w-4" />
+							{:else}
+								<Cuboid class="h-4 w-4" />
+							{/if}
+						</span>
+						<span class="step-label">
+							{#if step_name === 'name'}Enter Name{:else if step_name === 'starter'}Choose a Starter{:else}Add Blocks (optional){/if}
+						</span>
+					</button>
+					{#if i < step_order.length - 1}
+						<span class="step-connector" aria-hidden="true"></span>
 					{/if}
-				</div>
-				<span class="text-sm {step === 'name' ? 'text-foreground font-medium' : 'text-muted-foreground'}">Enter Name</span>
-			</button>
-
-			<div class="border-t border-border h-px flex-1"></div>
-
-			<!-- Step 2 -->
-			<button
-				class="flex items-center gap-3 focus:outline-none whitespace-nowrap {can_go_starter ? '' : 'opacity-50 pointer-events-none'}"
-				onclick={() => (step = 'starter')}
-				disabled={!can_go_starter}
-			>
-				<div
-					class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium {step_order.indexOf(step) >= step_order.indexOf('starter')
-						? 'bg-primary text-primary-foreground'
-						: 'bg-muted text-foreground'}"
-				>
-					{#if can_go_blocks}
-						<Check class="w-4 h-4" />
-					{:else}
-						<Globe class="w-4 h-4" />
-					{/if}
-				</div>
-				<span class="text-sm {step === 'starter' ? 'text-foreground font-medium' : 'text-muted-foreground'}">Choose a Starter</span>
-			</button>
-			<div class="border-t border-border h-px flex-1"></div>
-
-			<!-- Step 3 -->
-			<button class="flex items-center gap-3 focus:outline-none whitespace-nowrap {can_go_blocks ? '' : 'opacity-50 pointer-events-none'}" onclick={() => (step = 'blocks')} disabled={!can_go_blocks}>
-				<div
-					class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium {step_order.indexOf(step) >= step_order.indexOf('blocks')
-						? 'bg-primary text-primary-foreground'
-						: 'bg-muted text-foreground'}"
-				>
-					{#if selected_block_ids.length > 0}
-						<Check class="w-4 h-4" />
-					{:else}
-						<Cuboid class="w-4 h-4" />
-					{/if}
-				</div>
-				<span class="text-sm {step === 'blocks' ? 'text-foreground font-medium' : 'text-muted-foreground'}">Add Blocks (optional)</span>
-			</button>
+				{/each}
+			</nav>
 		</div>
-	</div>
+	</header>
 
 	<!-- Content -->
-	{#if step === 'name'}
-		<!-- Identity -->
-		<div class="rounded-lg border bg-[#111] p-4 shadow-sm w-full max-w-lg mx-auto">
-			<form
-				class="grid w-full items-center gap-1.5"
-				onsubmit={(e) => {
-					e.preventDefault()
-					can_go_starter ? (step = 'starter') : null
-				}}
-			>
-				<Label for="site-name">Site Name</Label>
-				<Input
-					type="text"
-					id="site-name"
-					value={site_name}
-					oninput={(e) => {
-						site_name = (e.currentTarget as HTMLInputElement).value.trim()
+	<div class="create-site-body">
+		{#if step === 'name'}
+			<!-- Identity -->
+			<div class="name-panel">
+				<form
+					onsubmit={(e) => {
+						e.preventDefault()
+						can_go_starter ? (step = 'starter') : null
 					}}
-					autofocus
-				/>
-			</form>
-		</div>
-	{/if}
-
-	{#if step === 'starter'}
-		<Tabs.Root bind:value={starter_tab} class="h-[78vh] min-h-[30rem] w-full flex gap-4 flex-1 rounded-lg border bg-[#111] p-3 shadow-sm">
-			<!-- Left: groups + grid -->
-			<div class="flex flex-col flex-6">
-				<Tabs.List
-					class="rounded-9px bg-dark-10 shadow-mini-inset dark:bg-background grid w-full h-11 grid-cols-2 gap-1 p-1 text-sm font-semibold leading-[0.01em] dark:border dark:border-neutral-600/30"
 				>
-					<Tabs.Trigger value="sites" class="data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted h-8 rounded-[4px] bg-transparent py-2 data-[state=active]:bg-white flex gap-2">
-						<Globe class="h-4 w-4" />
-						<span>Sites</span>
-					</Tabs.Trigger>
-					<Tabs.Trigger value="marketplace" class="data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted h-8 rounded-[4px] bg-transparent py-2 data-[state=active]:bg-white flex gap-2">
-						<Store class="h-4 w-4" />
-						<span>Marketplace</span>
-					</Tabs.Trigger>
-				</Tabs.List>
-				<Tabs.Content value="sites" class="flex overflow-hidden h-full">
-					{#if active_starters_group_sites === undefined}
-						<!-- Loading skeletons for local starters -->
+					<Label for="site-name">Site Name</Label>
+					<Input
+						type="text"
+						id="site-name"
+						value={site_name}
+						oninput={(e) => {
+							site_name = (e.currentTarget as HTMLInputElement).value.trim()
+						}}
+						autofocus
+					/>
+					<p class="name-hint">You'll pick a starting design next — or import a .primo file.</p>
+				</form>
+			</div>
+		{/if}
+
+		{#if step === 'starter'}
+			<div class="starter-layout">
+				<Tabs.Root bind:value={starter_tab} class="wizard-panel wizard-starter-tabs">
+					<Tabs.List class="wizard-pill-tabs">
+						<Tabs.Trigger value="sites" class="wizard-pill-tab">
+							<Globe class="h-4 w-4" />
+							<span>Sites</span>
+						</Tabs.Trigger>
+						<Tabs.Trigger value="marketplace" class="wizard-pill-tab">
+							<Store class="h-4 w-4" />
+							<span>Marketplace</span>
+						</Tabs.Trigger>
+					</Tabs.List>
+					<Tabs.Content value="sites" class="wizard-tab-inner mt-0">
+						{@render StarterGroupContent(
+							all_site_groups,
+							active_starters_group_id,
+							(id) => (active_starters_group_id = id),
+							active_starters_group_sites,
+							'local',
+							true,
+							starter_sites?.length === 0
+								? {
+										icon: Globe,
+										title: 'No sites to display',
+										description: "You don't have any sites here yet. When you create one, you'll be able to use it as a starting point for other sites. In the meantime, check the marketplace.",
+										button: { label: 'Open Marketplace', icon: Store, onclick: () => (starter_tab = 'marketplace') }
+									}
+								: null
+						)}
+					</Tabs.Content>
+					<Tabs.Content value="marketplace" class="wizard-tab-inner mt-0">
+						{@render StarterGroupContent(marketplace_site_groups, active_marketplace_starters_group_id, (id) => (active_marketplace_starters_group_id = id), marketplace_starter_sites, 'marketplace', false, null)}
+					</Tabs.Content>
+				</Tabs.Root>
+
+				<!-- Right: live preview -->
+				<aside class="wizard-preview">
+					<div class="wizard-preview-box">
+						{#if selected_starter_site}
+							{@const preview_url = selected_starter_source === 'marketplace' ? `https://${selected_starter_site?.host}` : `/?_site=${selected_starter_site?.id}`}
+							<div class="wizard-preview-frame">
+								{#key selected_starter_id}
+									<SitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} src={selected_starter_site ? preview_url : ''} />
+								{/key}
+							</div>
+							{#if preview_url}
+								<div class="wizard-preview-link">
+									<a href={preview_url} target="_blank" rel="noopener noreferrer">
+										<span>Open live preview</span>
+										<ExternalLink class="h-3 w-3" aria-hidden="true" />
+									</a>
+								</div>
+							{/if}
+						{:else if uploaded_snapshot}
+							<div class="wizard-preview-empty">
+								<div class="wizard-preview-check">
+									<Check />
+								</div>
+								<p class="wizard-preview-title">{uploaded_snapshot.records.sites[0]?.name ?? 'Imported Site'}</p>
+								<p class="wizard-preview-note">Ready to create</p>
+							</div>
+						{:else}
+							<div class="wizard-preview-empty">
+								<p class="wizard-preview-note">Choose a starter site on the left to see a live preview here.</p>
+							</div>
+						{/if}
+					</div>
+				</aside>
+			</div>
+		{/if}
+
+		{#if step === 'blocks'}
+			<div class="blocks-step">
+				<BlockPickerPanel bind:selected={selected_block_ids} />
+			</div>
+		{/if}
+	</div>
+
+	<!-- Footer -->
+	<footer class="create-site-footer">
+		<div class="create-site-footer-inner">
+			{#if step !== 'name' && !loading}
+				<button type="button" class="back-button" onclick={go_back}>
+					<ChevronLeft class="h-4 w-4" />
+					<span>Back</span>
+				</button>
+			{/if}
+			<div class="footer-actions">
+				<Button
+					onclick={next_or_create}
+					disabled={loading || (step === 'name' && !can_go_starter) || (step === 'starter' && !can_go_blocks) || (step === 'blocks' && !completed)}
+					class="next-button"
+				>
+					{step === 'blocks' ? 'Create Site' : 'Next'}
+				</Button>
+			</div>
+		</div>
+	</footer>
+</div>
+
+{#snippet StarterGroupContent(groups, active_group_id, select_group, sites, source, show_import, empty)}
+	<div class="wizard-tab-inner">
+		<!-- Mobile: group chips + import -->
+		<div class="wizard-mobile-groups">
+			{#each groups as group (group.id)}
+				<button class="wizard-group-chip" aria-pressed={active_group_id === group.id} onclick={() => select_group(group.id)}>{group.name}</button>
+			{/each}
+			{#if show_import}
+				<div class="wizard-mobile-import">{@render ImportFile()}</div>
+			{/if}
+		</div>
+		<div class="wizard-tab-split">
+			<!-- Desktop: groups sidebar -->
+			<aside class="wizard-desktop-sidebar">
+				<div class="sidebar-groups">
+					<p class="wizard-group-label">Groups</p>
+					<ul class="wizard-group-list">
+						{#each groups as group (group.id)}
+							<li>
+								<button class="wizard-group-button" aria-pressed={active_group_id === group.id} onclick={() => select_group(group.id)}>{group.name}</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
+				{#if show_import}
+					<div class="wizard-import-zone">{@render ImportFile()}</div>
+				{/if}
+			</aside>
+			<!-- Starter grid -->
+			<div class="wizard-grid-area">
+				{#if sites === undefined}
+					<div class="wizard-starter-grid">
 						{#each Array.from({ length: 6 }) as _}
 							<Skeleton class="aspect-video w-full" />
 						{/each}
-					{:else if starter_sites?.length === 0}
-						<EmptyState
-							class="h-full col-span-4"
-							icon={Globe}
-							title="No sites to display"
-							description="You don't have any sites here yet. When you create one, you'll be able to use it as a starting point for other sites. In the meantime, check the marketplace."
-							button={{
-								label: 'Open Marketplace',
-								icon: Store,
-								onclick: () => (starter_tab = 'marketplace')
-							}}
-						/>
-					{:else}
-						<!-- Groups sidebar -->
-						<div class="h-full md:border-r flex-1 flex flex-col">
-							<div class="flex-1">
-								<div class="p-2 text-xs text-muted-foreground">Groups</div>
-								<ul class="p-2 pt-0 flex flex-col gap-1">
-									{#each all_site_groups ?? [] as group (group.id)}
-										<li>
-											<button
-												class="w-full text-left px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground {active_starters_group_id === group.id ? 'bg-accent text-accent-foreground' : ''}"
-												onclick={() => (active_starters_group_id = group.id)}
-											>
-												{group.name}
-											</button>
-										</li>
-									{/each}
-								</ul>
-							</div>
-							<!-- Import from file section -->
-							<div class="border-t p-3">
-								{#if uploaded_snapshot_file}
-									<div class="rounded-md border bg-muted/50 p-2 space-y-2">
-										<div class="flex items-center gap-2">
-											<Check class="h-4 w-4 text-primary flex-shrink-0" />
-											<span class="text-xs truncate">{uploaded_snapshot_file.name}</span>
-										</div>
-										<Button variant="ghost" size="sm" class="w-full h-7 text-xs" onclick={clear_uploaded_file}>Remove</Button>
-									</div>
-								{:else}
-									<label
-										class="flex items-center justify-center gap-2 w-full h-9 px-3 rounded-md border border-dashed cursor-pointer hover:bg-accent hover:border-accent-foreground/20 transition-colors text-sm text-muted-foreground hover:text-accent-foreground {parsing_file
-											? 'opacity-50 pointer-events-none'
-											: ''}"
-									>
-										{#if parsing_file}
-											<Loader class="h-4 w-4 animate-spin" />
-											<span>Reading...</span>
-										{:else}
-											<Upload class="h-4 w-4" />
-											<span>Import .primo</span>
-										{/if}
-										<input type="file" class="hidden" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
-									</label>
-								{/if}
-								{#if file_upload_error}
-									<p class="text-xs text-destructive mt-2">{file_upload_error}</p>
-								{/if}
-							</div>
-						</div>
-						<!-- Server Sites grid -->
-						<div class="flex-4 overflow-auto">
-							{#if active_starters_group_sites?.length === 0}
-								<div class="text-sm text-muted-foreground p-6 text-center">No sites in this group.</div>
-							{:else if active_starters_group_sites}
-								<div class="p-3 pr-0 grid gap-4 place-content-start sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-									{#each active_starters_group_sites as site}
-										{@render StarterButton(site)}
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</Tabs.Content>
-
-				<!-- Marketplace-->
-				<Tabs.Content value="marketplace" class="flex overflow-hidden h-full">
-					<!-- Groups sidebar -->
-					<div class="h-full md:border-r flex-1">
-						<div class="p-2 text-xs text-muted-foreground">Groups</div>
-						<ul class="p-2 pt-0 flex flex-col gap-1">
-							{#each marketplace_site_groups ?? [] as group (group.id)}
-								<li>
-									<button
-										class="w-full text-left px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground {active_marketplace_starters_group_id === group.id
-											? 'bg-accent text-accent-foreground'
-											: ''}"
-										onclick={() => (active_marketplace_starters_group_id = group.id)}
-									>
-										{group.name}
-									</button>
-								</li>
-							{/each}
-						</ul>
 					</div>
-					<!-- Marketplace Sites grid -->
-					<div class="flex-4 overflow-auto">
-						<div class="p-3 pr-0 grid gap-4 col-span-3 place-content-start sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-							{#if marketplace_starter_sites === undefined}
-								{#each Array.from({ length: 6 }) as _}
-									<Skeleton class="aspect-video w-full" />
-								{/each}
-							{:else}
-								{#each marketplace_starter_sites as site (site.id)}
-									{@render StarterButton(site, 'marketplace')}
-								{/each}
-								{#if (marketplace_starter_sites?.length ?? 0) === 0}
-									<div class="text-sm text-muted-foreground p-6 text-center">No starters in this group.</div>
-								{/if}
-							{/if}
-						</div>
+				{:else if sites.length === 0 && empty}
+					<EmptyState class="h-full" icon={empty.icon} title={empty.title} description={empty.description} button={empty.button} />
+				{:else if sites.length === 0}
+					<p class="wizard-empty-note">No starters in this group.</p>
+				{:else}
+					<div class="wizard-starter-grid">
+						{#each sites as site (site.id)}
+							{@render StarterButton(site, source)}
+						{/each}
 					</div>
-				</Tabs.Content>
-			</div>
-
-			<!-- Right: preview takes 2/5 -->
-			<div class="flex-3">
-				<div class="h-[73vh] rounded-md bg-muted/20 flex flex-col overflow-hidden">
-					{#if selected_starter_site}
-						{@const preview_url = selected_starter_source === 'marketplace' ? `https://${selected_starter_site?.host}` : `/?_site=${selected_starter_site?.id}`}
-						<div class="flex-1 min-h-0">
-							{#key selected_starter_id}
-								<SitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} src={selected_starter_site ? preview_url : ''} />
-							{/key}
-						</div>
-						{#if preview_url}
-							<div class="px-3 py-2 text-xs text-right text-muted-foreground relative bg-[#111]">
-								<a href={preview_url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 hover:text-foreground hover:underline">
-									<span>Open live preview</span>
-									<ExternalLink class="h-3 w-3" aria-hidden="true" />
-								</a>
-							</div>
-						{/if}
-					{:else if uploaded_snapshot}
-						<div class="flex-1 flex flex-col items-center justify-center gap-4 px-6 py-8 text-center">
-							<div class="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-								<Check class="h-8 w-8 text-primary" />
-							</div>
-							<div>
-								<p class="font-medium">{uploaded_snapshot.records.sites[0]?.name ?? 'Imported Site'}</p>
-								<p class="text-sm text-muted-foreground mt-1">Ready to create</p>
-							</div>
-						</div>
-					{:else}
-						<div class="flex-1 flex flex-col items-center justify-center gap-2 px-6 py-8 text-center">
-							<p class="text-xs text-muted-foreground/80 max-w-[14rem]">Choose a starter site on the left to see a live preview here.</p>
-						</div>
-					{/if}
-				</div>
-			</div>
-		</Tabs.Root>
-	{/if}
-
-	{#if step === 'blocks'}
-		<BlockPickerPanel bind:selected={selected_block_ids} />
-	{/if}
-
-	<!-- Footer -->
-	<div class="h-[10vh] bg-background pt-4 pb-4 flex items-center z-10">
-		<div class={step === 'name' ? 'w-full max-w-lg mx-auto flex justify-end gap-3' : 'w-full max-w-[1400px] mx-auto flex justify-end gap-3'}>
-			<Button
-				onclick={next_or_create}
-				disabled={loading || (step === 'name' && !can_go_starter) || (step === 'starter' && !can_go_blocks) || (step === 'blocks' && !completed)}
-				class="inline-flex justify-center items-center relative gap-2"
-			>
-				{step === 'blocks' ? 'Done' : 'Next'}
-			</Button>
-		</div>
-	</div>
-</div>
-
-{#snippet StarterButton(site: Site, source: 'local' | 'marketplace' = 'local')}
-	<button onclick={() => select_starter(site.id, source)} class="group relative w-full aspect-[.69] rounded-lg border bg-background overflow-hidden text-left">
-		<div class="relative h-full">
-			<!-- Ensure preview reserves the same height as the card to avoid tall grid rows -->
-			<SitePreview {site} src={source === 'marketplace' ? `https://${site.host}` : undefined} />
-			{#if selected_starter_id === site.id}
-				<div class="pointer-events-none absolute inset-0 bg-[#000000AA] flex items-center justify-center">
-					<Check class="text-primary" />
-				</div>
-			{/if}
-		</div>
-		<div class="absolute bottom-0 w-full p-3 z-20 bg-[#000] border-t">
-			<div class="flex items-center gap-2">
-				<div class="text-sm leading-none truncate">{site.name}</div>
-				{#if source === 'marketplace'}
-					<div class="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">Free</div>
 				{/if}
 			</div>
 		</div>
+	</div>
+{/snippet}
+
+{#snippet ImportFile()}
+	{#if uploaded_snapshot_file}
+		<div class="wizard-imported">
+			<div class="wizard-imported-name">
+				<Check class="h-3.5 w-3.5" />
+				<span>{uploaded_snapshot_file.name}</span>
+			</div>
+			<Button variant="ghost" size="sm" class="wizard-imported-remove" onclick={clear_uploaded_file}>Remove</Button>
+		</div>
+	{:else}
+		<label class="wizard-import-button" class:is-loading={parsing_file}>
+			{#if parsing_file}
+				<Loader class="h-4 w-4 animate-spin" />
+				<span>Reading...</span>
+			{:else}
+				<Upload class="h-4 w-4" />
+				<span>Import .primo</span>
+			{/if}
+			<input type="file" class="hidden" accept=".primo,.pala" onchange={handle_file_upload} disabled={parsing_file} />
+		</label>
+	{/if}
+	{#if file_upload_error}
+		<p class="wizard-import-error">{file_upload_error}</p>
+	{/if}
+{/snippet}
+
+{#snippet StarterButton(site: Site, source: 'local' | 'marketplace' = 'local')}
+	<button onclick={() => select_starter(site.id, source)} class="catalog-card wizard-starter-card" type="button" aria-pressed={selected_starter_id === site.id}>
+		<span class="catalog-preview">
+			<SitePreview {site} src={source === 'marketplace' ? `https://${site.host}` : undefined} style="--thumbnail-height: 100%; background: #27272b;" />
+		</span>
+		<span class="catalog-footer">
+			<span class="catalog-identity">
+				<span class="catalog-name">{site.name}</span>
+				{#if source === 'marketplace'}
+					<span class="catalog-price">Free</span>
+				{/if}
+			</span>
+		</span>
+		{#if selected_starter_id === site.id}
+			<span class="wizard-starter-selected">
+				<Check />
+			</span>
+		{/if}
 	</button>
 {/snippet}
 
 <!-- Fullscreen loading overlay -->
 {#if loading}
-	<div class="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center">
-		<div class="flex flex-col items-center gap-4">
-			<Loader class="h-12 w-12 animate-spin text-primary" />
-			<p class="text-lg font-medium">{progress_message}</p>
+	<div class="loading-overlay">
+		<div class="loading-overlay-inner">
+			<Loader class="h-12 w-12 animate-spin" />
+			<p>{progress_message}</p>
 		</div>
 	</div>
 {/if}
 
 <!-- Error message display -->
 {#if error_message}
-	<div class="fixed bottom-4 right-4 z-50 max-w-md">
-		<div class="bg-destructive text-destructive-foreground rounded-lg p-4 shadow-lg">
-			<div class="flex items-start gap-3">
-				<div class="flex-1">
-					<p class="font-medium">Failed to create site</p>
-					<p class="text-sm mt-1">{error_message}</p>
-				</div>
-				<button onclick={() => (error_message = '')} class="text-destructive-foreground/80 hover:text-destructive-foreground">
-					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<line x1="18" y1="6" x2="6" y2="18"></line>
-						<line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
+	<div class="error-toast">
+		<div class="error-toast-inner">
+			<div class="error-toast-body">
+				<p class="font-medium">Failed to create site</p>
+				<p class="error-toast-message">{error_message}</p>
 			</div>
+			<button onclick={() => (error_message = '')} aria-label="Dismiss error">
+				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
 		</div>
 	</div>
 {/if}
+
+<style lang="postcss">
+	.create-site-root {
+		height: 100%;
+		/* The /admin/site route mounts the wizard in an unsized parent, where
+		height: 100% resolves to auto and the picker grows the whole page.
+		Cap at the viewport so panes scroll internally on both routes. */
+		max-height: 100dvh;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		background: #1e1e21;
+		color: #f4f4f5;
+	}
+
+	/* Header */
+	.create-site-header {
+		flex-shrink: 0;
+		background: #171719;
+		border-bottom: 1px solid #303034;
+	}
+	.create-site-header-inner {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 12px 16px 14px;
+	}
+	.create-site-titlebar {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.create-site-titlebar h1 {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 500;
+		letter-spacing: -0.01em;
+	}
+	.cancel-button {
+		position: absolute;
+		right: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+		color: #a5a5ad;
+	}
+	.cancel-button:hover {
+		background: #303034;
+		color: #f4f4f5;
+	}
+	.cancel-button:focus-visible {
+		outline: 2px solid #c4c4ce;
+		outline-offset: 2px;
+	}
+
+	/* Stepper */
+	.stepper {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		max-width: 900px;
+		width: 100%;
+		margin: 14px auto 0;
+		overflow-x: auto;
+		padding-bottom: 2px;
+	}
+	.step {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+	.step:disabled {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+	.step-circle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		flex-shrink: 0;
+		border: 1px solid #36363a;
+		border-radius: 50%;
+		background: #202023;
+		color: #a5a5ad;
+		font-size: 13px;
+	}
+	.step[data-state='active'] .step-circle {
+		background: #39393f;
+		border-color: #45454c;
+		color: #f4f4f5;
+		box-shadow: 0 1px 3px #0003;
+	}
+	.step[data-state='done'] .step-circle {
+		border-color: #45454c;
+		color: #f4f4f5;
+	}
+	.step-label {
+		font-size: 12px;
+		white-space: nowrap;
+		color: #a5a5ad;
+	}
+	.step[data-state='active'] .step-label {
+		color: #f4f4f5;
+		font-weight: 500;
+	}
+	.step:focus-visible {
+		outline: 2px solid #c4c4ce;
+		outline-offset: 2px;
+		border-radius: 6px;
+	}
+	.step-connector {
+		flex: 1;
+		min-width: 12px;
+		height: 1px;
+		background: #303034;
+	}
+
+	/* Body */
+	.create-site-body {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 16px;
+	}
+
+	/* Name step */
+	.name-panel {
+		width: 100%;
+		max-width: 520px;
+		margin: auto;
+		padding: 20px;
+		border: 1px solid #36363a;
+		border-radius: 8px;
+		background: #202023;
+		box-shadow: 0 2px 8px #0002;
+	}
+	.name-panel label {
+		color: #a5a5ad;
+		font-size: 12px;
+	}
+	.name-panel :global(input) {
+		margin-top: 8px;
+	}
+	.name-hint {
+		margin: 10px 0 0;
+		font-size: 12px;
+		line-height: 1.5;
+		color: #a5a5ad;
+	}
+
+	/* Starter step */
+	.starter-layout {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		gap: 14px;
+	}
+	.sidebar-groups {
+		flex: 1;
+		min-height: 0;
+		overflow: auto;
+	}
+	.wizard-mobile-import {
+		flex-shrink: 0;
+		width: 210px;
+		margin-left: 6px;
+	}
+
+	/* Blocks step */
+	.blocks-step {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Footer */
+	.create-site-footer {
+		flex-shrink: 0;
+		background: #171719;
+		border-top: 1px solid #303034;
+	}
+	.create-site-footer-inner {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 12px;
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 10px 16px;
+	}
+	.footer-actions {
+		display: flex;
+		align-items: center;
+	}
+	.back-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		min-height: 34px;
+		padding: 6px 12px;
+		border: 1px solid #36363a;
+		border-radius: 6px;
+		background: #202023;
+		color: #a5a5ad;
+		font-size: 12px;
+		font-weight: 500;
+		margin-right: auto;
+	}
+	.back-button:hover {
+		background: #303034;
+		color: #f4f4f5;
+	}
+	.back-button:focus-visible {
+		outline: 2px solid #c4c4ce;
+		outline-offset: 2px;
+	}
+	:global(.next-button) {
+		min-height: 34px;
+		padding: 6px 14px;
+		border-radius: 6px;
+		background: #ededf0;
+		color: #202023;
+		font-size: 12px;
+		font-weight: 500;
+		box-shadow: 0 1px 2px #0003;
+	}
+	:global(.next-button:hover) {
+		background: white;
+	}
+	:global(.next-button:disabled) {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+
+	/* Loading overlay */
+	.loading-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(23, 23, 25, 0.95);
+		backdrop-filter: blur(4px);
+	}
+	.loading-overlay-inner {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 16px;
+		color: var(--primo-primary-color, #ff6b35);
+	}
+	.loading-overlay-inner p {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 500;
+		color: #f4f4f5;
+	}
+
+	/* Error toast */
+	.error-toast {
+		position: fixed;
+		right: 16px;
+		bottom: 16px;
+		z-index: 50;
+		max-width: 420px;
+	}
+	.error-toast-inner {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		padding: 14px 16px;
+		border-radius: 8px;
+		background: #7f1d1d;
+		color: #fecaca;
+		box-shadow: 0 8px 24px #0006;
+	}
+	.error-toast-body {
+		flex: 1;
+	}
+	.error-toast-message {
+		margin: 4px 0 0;
+		font-size: 13px;
+	}
+	.error-toast-inner button {
+		opacity: 0.8;
+	}
+	.error-toast-inner button:hover {
+		opacity: 1;
+	}
+
+	/* Mobile */
+	@media (max-width: 640px) {
+		.step-label {
+			display: none;
+		}
+		.step[data-state='active'] .step-label {
+			display: inline;
+		}
+		.create-site-header-inner {
+			padding: 10px 12px 12px;
+		}
+		.create-site-body {
+			padding: 12px;
+		}
+		.starter-layout {
+			gap: 0;
+		}
+		.wizard-mobile-import {
+			width: auto;
+			margin-left: 0;
+		}
+		.wizard-mobile-import .wizard-imported {
+			max-width: 220px;
+		}
+	}
+</style>
