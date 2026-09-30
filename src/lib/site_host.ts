@@ -1,5 +1,6 @@
 import type { Site } from '$lib/common/models/Site'
 import { instance } from '$lib/instance'
+import { marketplace_url } from '$lib/pocketbase/instances'
 
 // A pushed/auto-created site is seeded with `host = id` as a placeholder (see
 // import.go: the sites collection has a UNIQUE, required `host`, so "no host"
@@ -55,3 +56,9 @@ export const is_host_reachable = (site: Pick<Site, 'id' | 'host' | 'domain_statu
 // isn't connected yet.
 export const site_editor_url = (site: Pick<Site, 'id' | 'host' | 'domain_status'>) =>
 	is_host_reachable(site) ? `//${site.host}/admin/site` : `/admin/sites/${site.id}`
+
+// Public URL of a marketplace starter. Starters without an assigned domain
+// (host === id) aren't reachable at `https://<host>`; the marketplace server
+// serves them by id through its `?_site=` preview route instead.
+export const marketplace_site_url = (site: Pick<Site, 'id' | 'host'>) =>
+	is_host_assigned(site) && is_valid_host(site.host) ? `https://${site.host}` : `${marketplace_url}/?_site=${encodeURIComponent(site.id)}`
