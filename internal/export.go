@@ -1175,7 +1175,7 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	// Keep in sync with primo-cli's generated AGENTS.md "Fields" section.
 	sb.WriteString("## Fields\n\n")
 	sb.WriteString("- Field types: `text`, `rich-text`, `markdown`, `image`, `link`, `url`, `icon`, `number`, `switch`, `select`, `repeater`, `group`, `page`, `page-list`, `page-field`, `site-field`, `slider`, `date`, `info`. Anything else fails validation.\n")
-	sb.WriteString("- Nested fields of a `repeater` or `group` go under `subfields:` (not `fields:`).\n")
+	sb.WriteString("- Nested fields of a `repeater` or `group` in block or site field definitions go under `subfields:` (not `fields:`). Page-type fields don't support nested fields.\n")
 	sb.WriteString("- `site-field` references a site field by name: `config: { field: <site-field-name> }`.\n")
 	sb.WriteString("- `page-field` references a page type field as `<page-type-folder>--<field-key>`, e.g. `config: { field: blog-post--author }`.\n")
 	sb.WriteString("- `url` holds a plain string (`/about`, `https://...`). `link` holds `{ label, url }`; a `url` that matches a page path is stored as a reference to that page.\n")
