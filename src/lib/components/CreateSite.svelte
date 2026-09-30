@@ -19,6 +19,7 @@
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { track_site_created, track_operation_error, categorize_error } from '$lib/analytics'
 	import { marketplace_site_url } from '$lib/site_host'
+	import { toast } from 'svelte-sonner'
 
 	/*
   Create Site Wizard
@@ -27,11 +28,17 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated, oncancel }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void } = $props()
+	const { oncreated, oncancel, group_id: target_group_id }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void; group_id?: string | null } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
-	const site_group = $derived(all_site_groups?.find((g) => g.name === 'Default') || all_site_groups?.[0])
+	// The group the dashboard was showing when the wizard opened, so the new
+	// site appears where the user is looking; otherwise Default.
+	const site_group = $derived(
+		(target_group_id ? all_site_groups?.find((g) => g.id === target_group_id) : undefined) ||
+			all_site_groups?.find((g) => g.name === 'Default') ||
+			all_site_groups?.[0]
+	)
 
 	// Keep undefined until loaded so we can show skeletons
 	const starter_sites = $derived(Sites.list({ sort: 'index' }) ?? undefined)
@@ -321,7 +328,15 @@
 				copy_selected_blocks_to_site()
 					.then(() => self.commit())
 					.then(() => oncreated?.(created_payload))
-					.catch((e) => console.error(e))
+					.catch((e) => {
+						// The site already exists at this point; don't leave the
+						// wizard hanging over it. Finish, and say what didn't land.
+						console.error(e)
+						toast.warning('Site created, but some blocks could not be added', {
+							description: 'Add them from the editor\'s Blocks panel.'
+						})
+						oncreated?.(created_payload)
+					})
 					.finally(() => {
 						loading = false
 					})
