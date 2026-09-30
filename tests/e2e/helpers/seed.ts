@@ -132,7 +132,10 @@ export async function seedFixtureSite(devToken: string, siteName: string): Promi
 	// (not a random replacement), and name must be this call's unique name.
 	fs.writeFileSync(path.join(tmpDir, 'site.yaml'), `name: ${uniqueSiteName}\nsite_id: ${siteId}\n`)
 
-	execFileSync('node', [CLI_ENTRY, 'push', '--server', TEST_SERVER_URL, '--site', siteId, '--dir', tmpDir, '-t', devToken], {
+	// The record above is a fresh, empty placeholder with no pull baseline, so
+	// the push guard (CLI 0.2.0+) requires an explicit overwrite. It backs up
+	// the empty site first, which is harmless here.
+	execFileSync('node', [CLI_ENTRY, 'push', '--server', TEST_SERVER_URL, '--site', siteId, '--dir', tmpDir, '-t', devToken, '--force', '--yes'], {
 		stdio: 'inherit'
 	})
 	fs.rmSync(tmpDir, { recursive: true, force: true })

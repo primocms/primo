@@ -9,7 +9,10 @@ import { seedFixtureSite, type SeededSite } from './helpers/seed'
 
 let ids: SeededSite
 const PULL_DIR = '/tmp/primo-e2e-cli-pull'
+const REPULL_DIR = '/tmp/primo-e2e-cli-repull'
 let siteDir: string
+let stalePushOutput = ''
+let stalePushRejected = false
 let componentPath: string
 let cmsEditedHeadline: string
 let afterHeadlineEntry: { value: string } | undefined
@@ -18,6 +21,7 @@ let symbolCss: string
 test.describe('CLI round trip', () => {
 	test.beforeAll(async ({ browser, request }) => {
 		fs.rmSync(PULL_DIR, { recursive: true, force: true })
+		fs.rmSync(REPULL_DIR, { recursive: true, force: true })
 		const { token } = await devAuth(request)
 		ids = await seedFixtureSite(token, 'CLI Roundtrip Fixture')
 
@@ -81,12 +85,24 @@ test.describe('CLI round trip', () => {
 		expect(styledComponent).not.toBe(originalComponent) // sanity: the replace actually matched
 		fs.writeFileSync(componentPath, styledComponent)
 
-		// --- push using the supported workflow (primo push, no --author flag:
-		// that flag only exists on `primo dev`'s live local-sync command: see
-		// primo-cli/src/commands/dev.ts's resolve_sync_policy. `primo push`
-		// against a deployed server has no author-mode concept — it's a
-		// one-shot upload of the local directory's current state.) ---
-		execFileSync('node', [CLI_ENTRY, 'push', '-t', token], { cwd: siteDir, stdio: 'inherit' })
+		// --- push from the stale pull. The push guard (primo#1263, CLI 0.2.0)
+		// must refuse: the server changed since this copy was pulled. ---
+		try {
+			execFileSync('node', [CLI_ENTRY, 'push', '-t', token], { cwd: siteDir, encoding: 'utf8', stdio: 'pipe' })
+		} catch (error: any) {
+			stalePushRejected = true
+			stalePushOutput = `${error.stdout ?? ''}${error.stderr ?? ''}`
+		}
+
+		// --- the supported recovery: pull fresh, redo the local change, push ---
+		execFileSync('node', [CLI_ENTRY, 'pull', TEST_SERVER_URL, REPULL_DIR, '-t', token], { stdio: 'inherit' })
+		const repulledSite = path.join(REPULL_DIR, 'sites', path.basename(siteDir))
+		const repulledComponent = path.join(repulledSite, 'blocks', 'content-block', 'component.svelte')
+		const freshComponent = fs.readFileSync(repulledComponent, 'utf8')
+		const restyled = freshComponent.replace('padding: 2rem;', 'padding: 2rem;\n\t\tbackground: hotpink;')
+		expect(restyled).not.toBe(freshComponent)
+		fs.writeFileSync(repulledComponent, restyled)
+		execFileSync('node', [CLI_ENTRY, 'push', '-t', token], { cwd: repulledSite, stdio: 'inherit' })
 
 		// --- capture what happened to the CMS content edit ---
 		const afterPushRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_sections/records`, {
@@ -118,19 +134,14 @@ test.describe('CLI round trip', () => {
 		symbolCss = symbol.css
 	})
 
-	// KNOWN BUG, reproduced (not papered over): `primo push` re-derives content
-	// from the LOCAL pulled YAML and overwrites the server, silently
-	// discarding a CMS content edit made after the pull — even when the only
-	// intentional local change was to component CSS, not content. This is a
-	// product bug, tracked separately; this test suite documents it as an
-	// *expected* failure rather than skipping or softening the assertion.
-	//
-	// test.fail() semantics: Playwright expects this test to fail. If the
-	// underlying push bug is ever fixed, this assertion starts passing and
-	// Playwright reports it as an UNEXPECTED PASS — which fails the run and
-	// is exactly the signal to delete the test.fail() line below and let the
-	// assertion stand as a normal, enforced pass.
-	test.fail('primo push overwrites concurrent CMS content edits with stale pulled values (product bug, not a test gap)', async () => {
+	// Formerly a documented known bug (test.fail): a push from a stale pull
+	// silently overwrote the CMS edit. The push guard now refuses that push.
+	test('a push from a stale pull is refused instead of overwriting the CMS edit', async () => {
+		expect(stalePushRejected).toBe(true)
+		expect(stalePushOutput).toContain('changed on the server')
+	})
+
+	test('after pulling again, the CMS content edit survives the push', async () => {
 		expect(afterHeadlineEntry?.value).toBe(cmsEditedHeadline)
 	})
 
