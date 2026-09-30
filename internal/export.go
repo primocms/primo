@@ -244,11 +244,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 	}
 	pageTypeFolderById := make(map[string]string)
 	for _, pt := range pageTypesAll {
-		folder := sanitizeFilename(pt.GetString("name"))
-		if folder == "" {
-			folder = pt.Id
-		}
-		pageTypeFolderById[pt.Id] = folder
+		pageTypeFolderById[pt.Id] = recordFolder(pt)
 	}
 	pageTypeFieldIdToCompound := make(map[string]string)
 	for _, pt := range pageTypesAll {
@@ -273,10 +269,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 
 	symbolNames := make(map[string]string) // id -> name for reference
 	for _, symbol := range symbols {
-		symbolName := sanitizeFilename(symbol.GetString("name"))
-		if symbolName == "" {
-			symbolName = symbol.Id
-		}
+		symbolName := recordFolder(symbol)
 		symbolNames[symbol.Id] = symbolName
 
 		// Prefer the raw bytes captured at import time so the file
@@ -334,7 +327,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 
 		exportedFields := make([]map[string]interface{}, 0, len(fields))
 		for _, field := range fields {
-			exportedFields = append(exportedFields, fieldRecordToMap(field, symbolFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound))
+			exportedFields = append(exportedFields, pageTypeRefsToFolders(fieldRecordToMap(field, symbolFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound), pageTypeFolderById))
 		}
 
 		blockConfig := ExportedBlockConfig{
@@ -405,10 +398,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 
 	pageTypeNames := make(map[string]string) // id -> name
 	for _, pt := range pageTypes {
-		ptName := sanitizeFilename(pt.GetString("name"))
-		if ptName == "" {
-			ptName = pt.Id
-		}
+		ptName := recordFolder(pt)
 		pageTypeNames[pt.Id] = ptName
 
 		// Fetch allowed blocks (page_type_symbols)
@@ -424,6 +414,9 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 				allowedBlocks = append(allowedBlocks, name)
 			}
 		}
+		// page_type_symbols has no order column and the query returns rows in
+		// no particular order, so sort for a stable file across exports.
+		sort.Strings(allowedBlocks)
 
 		// Fetch page type fields
 		ptFields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "+index", 0, 0, dbx.Params{"pt": pt.Id})
@@ -443,7 +436,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 
 		exportedPTFields := make([]map[string]interface{}, 0, len(ptFields))
 		for _, field := range ptFields {
-			exportedPTFields = append(exportedPTFields, fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound))
+			exportedPTFields = append(exportedPTFields, pageTypeRefsToFolders(fieldRecordToMap(field, ptFieldIdToKey, siteFieldIdToKey, pageTypeFieldIdToCompound), pageTypeFolderById))
 		}
 
 		// config.yaml holds page-type identity and editor metadata only.
@@ -730,7 +723,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 	// Export site fields with parent resolution
 	exportedSiteFields := make([]map[string]interface{}, 0, len(siteFields))
 	for _, field := range siteFields {
-		exportedSiteFields = append(exportedSiteFields, fieldRecordToMap(field, siteFieldIdToKey, nil, pageTypeFieldIdToCompound))
+		exportedSiteFields = append(exportedSiteFields, pageTypeRefsToFolders(fieldRecordToMap(field, siteFieldIdToKey, nil, pageTypeFieldIdToCompound), pageTypeFolderById))
 	}
 
 	if len(exportedSiteFields) > 0 {
@@ -969,6 +962,44 @@ func writeFileToZip(zw *zip.Writer, filename string, data []byte) error {
 	}
 	_, err = w.Write(data)
 	return err
+}
+
+// recordFolder returns the folder a block or page type lives in: the folder it
+// was imported from when known, otherwise one derived from its display name
+// (records created in the CMS, or imported before the folder was stored).
+func recordFolder(record *core.Record) string {
+	if folder := record.GetString("folder"); folder != "" {
+		return folder
+	}
+	if folder := sanitizeFilename(record.GetString("name")); folder != "" {
+		return folder
+	}
+	return record.Id
+}
+
+// pageTypeRefsToFolders rewrites a page-list/page field's config.page_type from
+// the stored page type id back to its folder name, mirroring the import that
+// resolves folder names to ids, so exported files don't carry server ids.
+func pageTypeRefsToFolders(field map[string]interface{}, pageTypeFolderById map[string]string) map[string]interface{} {
+	if t, _ := field["type"].(string); t != "page-list" && t != "page" {
+		return field
+	}
+	config, ok := field["config"].(map[string]interface{})
+	if !ok {
+		return field
+	}
+	id, _ := config["page_type"].(string)
+	folder, found := pageTypeFolderById[id]
+	if !found {
+		return field
+	}
+	newConfig := make(map[string]interface{}, len(config))
+	for k, v := range config {
+		newConfig[k] = v
+	}
+	newConfig["page_type"] = folder
+	field["config"] = newConfig
+	return field
 }
 
 func sanitizeFilename(name string) string {

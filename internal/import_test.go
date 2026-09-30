@@ -2190,3 +2190,71 @@ func countPagesNamed(t *testing.T, app core.App, site *core.Record, name string)
 	}
 	return len(recs)
 }
+
+// Blocks and page types are addressed by folder in the file format. Export
+// used to rebuild folders from display names, so a block in blocks/hours-cta/
+// named "Hours & CTA Strip" came back as blocks/hours-&-cta-strip/ on pull
+// (with allowed_blocks and page references rewritten to match). Export must
+// reproduce the imported folders, emit allowed_blocks in a stable order, and
+// write page-list page types as folder names rather than server ids.
+func TestExportPreservesFolderKeysAndStableReferences(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	f := baseSiteFiles()
+	f["blocks/zeta-cta/config.yaml"] = "name: Hours & CTA Strip\n"
+	f["blocks/zeta-cta/component.svelte"] = "<p>{note}</p>\n"
+	f["blocks/zeta-cta/fields.yaml"] = "- name: note\n  label: Note\n  type: text\n"
+	f["blocks/zeta-cta/content.yaml"] = "note: Open daily\n"
+	f["blocks/post-listing/config.yaml"] = "name: Post Listing\n"
+	f["blocks/post-listing/component.svelte"] = "<ul></ul>\n"
+	f["blocks/post-listing/fields.yaml"] = "- name: posts\n  label: Posts\n  type: page-list\n  config:\n    page_type: blog-post\n"
+	f["blocks/post-listing/content.yaml"] = "{}\n"
+	f["page-types/default/config.yaml"] = "name: Default\nallowed_blocks:\n  - zeta-cta\n  - post-listing\n  - hero\n"
+	f["page-types/blog-post/config.yaml"] = "name: Blog Posts & News\nallowed_blocks:\n  - hero\n"
+	f["page-types/blog-post/fields.yaml"] = "[]\n"
+	f["page-types/blog-post/layout.yaml"] = "{}\n"
+	f["pages/news.yaml"] = "name: News\npage_type: blog-post\nsections:\n  - block: zeta-cta\n    content:\n      note: Closed Sundays\n"
+	if _, err := processImport(app, site, zipFiles(t, f), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	exported, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatalf("export: %v", err)
+	}
+	for _, path := range []string{"blocks/zeta-cta/config.yaml", "page-types/blog-post/config.yaml"} {
+		if readZipFile(t, exported, path) == "" {
+			t.Errorf("%s missing from export (folder renamed from display name?)", path)
+		}
+	}
+	if pt := readZipFile(t, exported, "page-types/default/config.yaml"); !strings.Contains(pt, "- hero\n    - post-listing\n    - zeta-cta") && !strings.Contains(pt, "- hero\n  - post-listing\n  - zeta-cta") {
+		t.Errorf("allowed_blocks not sorted by folder:\n%s", pt)
+	}
+	if fields := readZipFile(t, exported, "blocks/post-listing/fields.yaml"); !strings.Contains(fields, "page_type: blog-post") {
+		t.Errorf("page-list page_type not exported as folder name:\n%s", fields)
+	}
+	if page := readZipFile(t, exported, "pages/news.yaml"); !strings.Contains(page, "page_type: blog-post") || !strings.Contains(page, "block: zeta-cta") {
+		t.Errorf("page references not exported as folders:\n%s", page)
+	}
+
+	// Full round trip: the export imports cleanly into another server and
+	// exports again with the same folders. (Record ids are global, so this
+	// has to be a separate database, as a pull/push to another server is.)
+	other := newImportTestApp(t)
+	defer other.ResetBootstrapState()
+	second := createImportTestSite(t, other)
+	if _, err := processImport(other, second, exported, false); err != nil {
+		t.Fatalf("re-import: %v", err)
+	}
+	again, err := exportSiteToZip(other, second)
+	if err != nil {
+		t.Fatalf("second export: %v", err)
+	}
+	for _, path := range []string{"blocks/zeta-cta/config.yaml", "page-types/blog-post/config.yaml", "pages/news.yaml"} {
+		if readZipFile(t, again, path) == "" {
+			t.Errorf("%s missing after round trip", path)
+		}
+	}
+}

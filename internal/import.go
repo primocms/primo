@@ -791,6 +791,9 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			existingPt, _ = app.FindFirstRecordByFilter("page_types", "site = {:site} && id = {:id}", dbx.Params{"site": siteId, "id": pageTypeId})
 		}
 		if existingPt == nil {
+			existingPt, _ = app.FindFirstRecordByFilter("page_types", "site = {:site} && folder = {:folder}", dbx.Params{"site": siteId, "folder": ptName})
+		}
+		if existingPt == nil {
 			existingPt, _ = app.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": siteId, "name": ptData.Name})
 		}
 		if existingPt == nil {
@@ -813,6 +816,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			existingPt = core.NewRecord(ptColl)
 			existingPt.Set("site", site.Id)
 			existingPt.Set("name", ptData.Name)
+			existingPt.Set("folder", ptName)
 			if err := app.Save(existingPt); err != nil {
 				return nil, fmt.Errorf("failed to pre-create page type %s: %w", ptData.Name, err)
 			}
@@ -936,6 +940,15 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		}
 
 		existing := existingSymbolsById[blockConfig.ID]
+		if existing == nil {
+			// The folder is the stable key; the display name can change freely.
+			for _, s := range existingSymbols {
+				if s.GetString("folder") == blockName {
+					existing = s
+					break
+				}
+			}
+		}
 		if existing == nil {
 			existing = existingSymbolsByName[displayName]
 		}
@@ -1440,6 +1453,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 	}
 
 	symbol.Set("name", displayName)
+	symbol.Set("folder", folderName)
 
 	if componentData != nil {
 		// Parse component.svelte to extract html, css, js for the compile
@@ -2236,8 +2250,12 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 	// Find page type by name or slug-style name
 	if pageData.PageType != "" {
-		// Try exact name match first
-		pt, err := app.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": site.Id, "name": pageData.PageType})
+		// `page_type:` references the page type's folder; fall back to the
+		// display name, then a folder-style slug of the name.
+		pt, err := app.FindFirstRecordByFilter("page_types", "site = {:site} && folder = {:name}", dbx.Params{"site": site.Id, "name": pageData.PageType})
+		if err != nil {
+			pt, err = app.FindFirstRecordByFilter("page_types", "site = {:site} && name = {:name}", dbx.Params{"site": site.Id, "name": pageData.PageType})
+		}
 		if err != nil {
 			// Try matching by sanitized name (folder name style)
 			allPts, _ := app.FindRecordsByFilter("page_types", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
@@ -3068,6 +3086,7 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 	}
 
 	pageType.Set("name", ptData.Name)
+	pageType.Set("folder", ptFolder)
 	if ptData.Icon != "" {
 		pageType.Set("icon", ptData.Icon)
 	}
