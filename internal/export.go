@@ -1172,6 +1172,15 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	}
 	sb.WriteString("\n")
 
+	// Keep in sync with primo-cli's generated AGENTS.md "Fields" section.
+	sb.WriteString("## Fields\n\n")
+	sb.WriteString("- Field types: `text`, `rich-text`, `markdown`, `image`, `link`, `url`, `icon`, `number`, `switch`, `select`, `repeater`, `group`, `page`, `page-list`, `page-field`, `site-field`, `slider`, `date`, `info`. Anything else fails validation.\n")
+	sb.WriteString("- Nested fields of a `repeater` or `group` go under `subfields:` (not `fields:`).\n")
+	sb.WriteString("- `site-field` references a site field by name: `config: { field: <site-field-name> }`.\n")
+	sb.WriteString("- `page-field` references a page type field as `<page-type-folder>--<field-key>`, e.g. `config: { field: blog-post--author }`.\n")
+	sb.WriteString("- `url` holds a plain string (`/about`, `https://...`). `link` holds `{ label, url }`; a `url` that matches a page path is stored as a reference to that page.\n")
+	sb.WriteString("- Run `primo validate` (from the workspace root it checks every site) before assuming a schema change landed.\n\n")
+
 	sb.WriteString("## Workflow\n")
 	sb.WriteString("The tool calls below need the Primo MCP server. Without it, follow the content design checklist below and read the site's source files directly.\n\n")
 	sb.WriteString("- Before creating a site or changing its content structure, call `get_docs({section: 'recommended-defaults'})` for field-scope decisions, block availability, page types, and the wiring checklist. Without MCP, use the content design checklist below.\n")
