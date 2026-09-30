@@ -2891,9 +2891,6 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 		return err
 	}
 
-	// Convert URL-based links to page references
-	content = convertUrlsToPageRefs(content, pathToPageId).(map[string]interface{})
-
 	// Get all fields for this site
 	fields, _ := app.FindRecordsByFilter("site_fields", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
 
@@ -2930,7 +2927,7 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 			continue
 		}
 
-		if err := importSiteContentField(app, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey); err != nil {
+		if err := importSiteContentField(app, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
 			return err
 		}
 	}
@@ -2939,7 +2936,13 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 }
 
 // importSiteContentField recursively imports a field's value, handling repeaters and groups
-func importSiteContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record) error {
+//
+// URL-to-page-ref conversion happens per leaf value, not over the whole content
+// map: convertUrlsToPageRefs treats any object with a `url` key as a link value,
+// so running it on repeater items/groups rewrote e.g. a nav item
+// `{label, url: /tours}` to `{label, page: <id>}` and the `url` subfield
+// imported as null whenever the path matched a page.
+func importSiteContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
 
@@ -2976,7 +2979,7 @@ func importSiteContentField(app core.App, entriesColl *core.Collection, field *c
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSiteContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey); err != nil {
+				if err := importSiteContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
 					return err
 				}
 			}
@@ -3004,19 +3007,20 @@ func importSiteContentField(app core.App, entriesColl *core.Collection, field *c
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSiteContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey); err != nil {
+				if err := importSiteContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
 					return err
 				}
 			}
 		}
 
 	default:
-		// Simple field (text, image, link, select, etc.)
+		// Simple field (text, image, link, select, etc.). Only a leaf's own
+		// value is a candidate for link-to-page conversion.
 		entry := core.NewRecord(entriesColl)
 		entry.Set("field", fieldId)
 		entry.Set("locale", "en")
 		entry.Set("index", index)
-		entry.Set("value", normalizeValueForStorage(value))
+		entry.Set("value", convertUrlsToPageRefs(value, pathToPageId))
 		if parentEntryId != "" {
 			entry.Set("parent", parentEntryId)
 		}
