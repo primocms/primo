@@ -1928,6 +1928,51 @@ func TestSiteContentUrlLinkResolvesAfterRekey(t *testing.T) {
 	}
 }
 
+// A site repeater item shaped like {label, url} with a `url`-typed subfield
+// is not a link value. Converting the whole content map to page refs used to
+// rewrite such items to {label, page} whenever the path matched a page, so the
+// url subfield imported as null and every internal nav link was lost.
+func TestSiteRepeaterUrlSubfieldKeepsPagePaths(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+
+	f := baseSiteFiles()
+	f["site/fields.yaml"] = "- name: nav\n  label: Nav\n  type: repeater\n  subfields:\n" +
+		"    - name: label\n      label: Label\n      type: text\n" +
+		"    - name: url\n      label: URL\n      type: url\n" +
+		"- name: cta\n  label: CTA\n  type: link\n"
+	f["site/content.yaml"] = "nav:\n  - label: Home\n    url: /\n  - label: Tours\n    url: /tours\n" +
+		"cta:\n  label: Book\n  url: /tours\n"
+	f["pages/tours.yaml"] = "name: Tours\npage_type: Default\nsections: []\n"
+	if _, err := processImport(app, site, zipFiles(t, f), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	entries, err := app.FindRecordsByFilter("site_entries", "field.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatalf("load site entries: %v", err)
+	}
+	values := map[string]bool{}
+	var ctaIsPageRef bool
+	for _, e := range entries {
+		v := e.GetString("value")
+		values[v] = true
+		if strings.Contains(v, "\"page\"") && strings.Contains(v, "Book") {
+			ctaIsPageRef = true
+		}
+	}
+	for _, want := range []string{`"/"`, `"/tours"`} {
+		if !values[want] {
+			t.Errorf("url subfield value %s was not stored; values=%v", want, values)
+		}
+	}
+	// Real link fields still convert to page refs.
+	if !ctaIsPageRef {
+		t.Errorf("link field url:/tours was not converted to a page ref; values=%v", values)
+	}
+}
+
 // A repeater whose definitions are nested under `fields:` instead of
 // `subfields:` used to import "successfully" as a repeater with no fields,
 // with no warning of any kind (the only guard, missing_subfields, fires when
