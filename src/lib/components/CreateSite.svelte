@@ -18,6 +18,8 @@
 	import BlockPickerPanel from '$lib/components/BlockPickerPanel.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { track_site_created, track_operation_error, categorize_error } from '$lib/analytics'
+	import { marketplace_site_url } from '$lib/site_host'
+	import { toast } from 'svelte-sonner'
 
 	/*
   Create Site Wizard
@@ -26,11 +28,17 @@
   - Data sources: local PocketBase (manager/self) and marketplace (marketplace).
 */
 
-	const { oncreated, oncancel }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void } = $props()
+	const { oncreated, oncancel, group_id: target_group_id }: { oncreated?: (created: { id: string; host: string }) => void; oncancel?: () => void; group_id?: string | null } = $props()
 
 	const all_site_groups = $derived(SiteGroups.list({ sort: 'index' }) ?? [])
 	// Prefer group named "Default"; otherwise fall back to the first group.
-	const site_group = $derived(all_site_groups?.find((g) => g.name === 'Default') || all_site_groups?.[0])
+	// The group the dashboard was showing when the wizard opened, so the new
+	// site appears where the user is looking; otherwise Default.
+	const site_group = $derived(
+		(target_group_id ? all_site_groups?.find((g) => g.id === target_group_id) : undefined) ||
+			all_site_groups?.find((g) => g.name === 'Default') ||
+			all_site_groups?.[0]
+	)
 
 	// Keep undefined until loaded so we can show skeletons
 	const starter_sites = $derived(Sites.list({ sort: 'index' }) ?? undefined)
@@ -320,7 +328,15 @@
 				copy_selected_blocks_to_site()
 					.then(() => self.commit())
 					.then(() => oncreated?.(created_payload))
-					.catch((e) => console.error(e))
+					.catch((e) => {
+						// The site already exists at this point; don't leave the
+						// wizard hanging over it. Finish, and say what didn't land.
+						console.error(e)
+						toast.warning('Site created, but some blocks could not be added', {
+							description: 'Add them from the editor\'s Blocks panel.'
+						})
+						oncreated?.(created_payload)
+					})
 					.finally(() => {
 						loading = false
 					})
@@ -447,7 +463,7 @@
 				<aside class="wizard-preview">
 					<div class="wizard-preview-box">
 						{#if selected_starter_site}
-							{@const preview_url = selected_starter_source === 'marketplace' ? `https://${selected_starter_site?.host}` : `/?_site=${selected_starter_site?.id}`}
+							{@const preview_url = selected_starter_source === 'marketplace' ? marketplace_site_url(selected_starter_site) : `/?_site=${selected_starter_site?.id}`}
 							<div class="wizard-preview-frame">
 								{#key selected_starter_id}
 									<SitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} src={selected_starter_site ? preview_url : ''} />
@@ -589,7 +605,7 @@
 {#snippet StarterButton(site: Site, source: 'local' | 'marketplace' = 'local')}
 	<button onclick={() => select_starter(site.id, source)} class="catalog-card wizard-starter-card" type="button" aria-pressed={selected_starter_id === site.id}>
 		<span class="catalog-preview">
-			<SitePreview {site} src={source === 'marketplace' ? `https://${site.host}` : undefined} style="--thumbnail-height: 100%; background: #27272b;" />
+			<SitePreview {site} src={source === 'marketplace' ? marketplace_site_url(site) : undefined} style="--thumbnail-height: 100%; background: #27272b;" />
 		</span>
 		<span class="catalog-footer">
 			<span class="catalog-identity">
@@ -637,11 +653,11 @@
 
 <style lang="postcss">
 	.create-site-root {
-		height: 100%;
-		/* The /admin/site route mounts the wizard in an unsized parent, where
-		height: 100% resolves to auto and the picker grows the whole page.
-		Cap at the viewport so panes scroll internally on both routes. */
-		max-height: 100dvh;
+		/* Exactly the viewport on both routes: /admin/site mounts the wizard in
+		an unsized parent, where height: 100% resolves to auto (the picker grew
+		the page, or the wizard stopped short of the bottom). Panes scroll
+		internally. */
+		height: 100dvh;
 		min-height: 0;
 		display: flex;
 		flex-direction: column;

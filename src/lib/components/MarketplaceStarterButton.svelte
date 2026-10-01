@@ -3,14 +3,15 @@
 	import SitePreview from '$lib/components/SitePreview.svelte'
 	import { ExternalLink } from 'lucide-svelte'
 	import type { Site } from '$lib/common/models/Site'
+	import { marketplace_site_url } from '$lib/site_host'
 
 	let { site }: { site: Site } = $props()
 	const description = $derived(site.description?.trim())
 </script>
 
-<a class="catalog-card starter-card" href={`https://${site.host}`} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${site.name} (opens in a new tab)`}>
+<a class="catalog-card starter-card" href={marketplace_site_url(site)} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${site.name} (opens in a new tab)`}>
 	<div class="catalog-preview">
-		<SitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" src={`https://${site.host}`} />
+		<SitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" src={marketplace_site_url(site)} />
 	</div>
 	<div class="starter-details">
 		<div class="starter-heading">

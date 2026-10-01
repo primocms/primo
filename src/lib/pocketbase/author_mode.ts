@@ -10,7 +10,8 @@ export const author_mode = readonly(author_mode_store)
 // ('both') is editable, so on a files-author CLI the pre-refresh window would
 // briefly render mutation controls as editable; read_only stays locked until
 // the real mode lands. Only refresh_author_mode() sets this, and it only runs
-// on localhost — production keeps the unlocked 'both' default.
+// on localhost — production hosts keep the unlocked 'both' default, and a
+// production server reached at localhost unlocks once dev-auth 404s.
 const refresh_pending_store = writable(false)
 
 // Single source of truth for Browse mode. In files-author mode the CLI owns
@@ -47,6 +48,15 @@ export const refresh_author_mode = () => {
 	refresh_pending_store.set(true)
 	refresh_promise = fetch('/api/primo/dev-auth', { method: 'POST' })
 		.then(async (response) => {
+			// No dev-auth route means this isn't a `primo dev` server at all
+			// (a production binary or Docker image opened at localhost), so
+			// there's no CLI author mode to wait for: the CMS is the author.
+			// Failing closed here left self-hosted local installs read-only.
+			if (response.status === 404) {
+				set_author_mode('both')
+				refresh_pending_store.set(false)
+				return
+			}
 			if (!response.ok) return
 			const data = await response.json().catch(() => null)
 			const mode = data?.author_mode
