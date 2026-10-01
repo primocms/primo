@@ -456,6 +456,7 @@
 	the wizard and stay on the dashboard, where the new card appears. -->
 	<div class="fixed inset-0 z-50 bg-background overflow-auto">
 		<CreateSite
+			group_id={site_group_id}
 			oncreated={() => {
 				// The site was created server-side via the clone-site endpoint —
 				// an out-of-band write the Sites cache doesn't know about — so
