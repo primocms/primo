@@ -321,10 +321,15 @@ export const usePublishSite = (site_id?: string) => {
 
 			console.log(`Successfully generated page "${page.name || page.id}"`)
 
+			// A page with sections that all rendered to nothing points at a
+			// silent compile failure. A page with no sections at all (just
+			// created, not built yet) is legitimately empty and must not fail
+			// the whole site's publish.
+			const rendered = !!(header_result.body || body_result.body || footer_result.body)
 			return {
-				success: !!(header_result.body || body_result.body || footer_result.body),
+				success: rendered || sections.length === 0,
 				html: final,
-				error: '',
+				error: rendered || sections.length === 0 ? '' : 'Page has sections but none of them rendered any HTML',
 				page_info
 			}
 		} catch (e) {
