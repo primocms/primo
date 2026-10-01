@@ -39,14 +39,11 @@ func init() {
 			}
 			return app.Save(settings)
 		},
-		func(app core.App) error {
-			settings := app.Settings()
-			for i, rule := range settings.RateLimits.Rules {
-				if rule.Audience == core.RateLimitRuleAudienceGuest && isDefault(rule) {
-					settings.RateLimits.Rules[i].Audience = core.RateLimitRuleAudienceAll
-				}
-			}
-			return app.Save(settings)
-		},
+		// Irreversible on purpose: by the time this would run, an admin may have
+		// added separate @auth rules next to these, and turning a @guest rule
+		// back into an all-users one would conflict with them (PocketBase
+		// rejects overlapping rules), failing the rollback. The previous
+		// behaviour is restored, if wanted, from the admin UI.
+		func(app core.App) error { return nil },
 	)
 }
