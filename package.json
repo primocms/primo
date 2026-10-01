@@ -63,7 +63,7 @@
 		"posthog-js": "^1.369.3",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^3.5.1",
-		"primo-cli": "0.1.25",
+		"primo-cli": "0.2.0",
 		"promise-worker": "^2.0.1",
 		"prosemirror-schema-basic": "^1.2.4",
 		"runed": "^0.37.1",
