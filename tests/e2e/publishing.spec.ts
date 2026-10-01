@@ -87,4 +87,32 @@ test.describe('Publishing', () => {
 		expect(html2).toContain(secondHeadline)
 		expect(html2).not.toContain(firstHeadline)
 	})
+
+	// A just-created page has no sections. Page generation used to report that
+	// as a failure with no error ("Unknown error"), which aborted publishing for
+	// the whole site until the page got a section: the client never reached
+	// /api/primo/generate, so publishViaUI's wait for it times out.
+	test('a site with an empty new page still publishes', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const headers = { Authorization: `Bearer ${token}` }
+		const typesRes = await request.get(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
+			headers,
+			params: { filter: `site = "${ids.siteId}"` }
+		})
+		const pageType = (await typesRes.json()).items[0]
+		expect(pageType).toBeTruthy()
+		const created = await request.post(`${TEST_SERVER_URL}/api/collections/pages/records`, {
+			headers,
+			data: { name: 'Empty Page', slug: `empty-${Date.now()}`, page_type: pageType.id, site: ids.siteId }
+		})
+		expect(created.ok()).toBeTruthy()
+
+		await loginAsDeveloper(page, ids.siteId)
+		await expect(page.getByRole('button', { name: 'Preview' })).toBeVisible({ timeout: 15000 })
+		await publishViaUI(page)
+
+		// publishViaUI asserted /api/primo/generate succeeded; the site stays served.
+		const homeRes = await request.get(`${TEST_SERVER_URL}/?_site=${ids.siteId}`)
+		expect(homeRes.ok()).toBeTruthy()
+	})
 })
