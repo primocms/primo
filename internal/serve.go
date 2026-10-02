@@ -78,6 +78,20 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				fileName = "index.html"
 			}
 
+			// Static dashboard thumbnails prefer the stored homepage preview.
+			// Its generated hydration script is omitted, but custom head/footer
+			// code can still contain scripts, so block all script execution on
+			// this response (including when falling back to the published home).
+			staticPreview := isHome && siteId != "" && requestEvent.Request.URL.Query().Get("_preview") == "1"
+			policy := "frame-ancestors *"
+			if staticPreview {
+				policy += "; script-src 'none'"
+			}
+			requestEvent.Response.Header().Set("Content-Security-Policy", policy)
+			if staticPreview && serveSitePreview(pb, requestEvent, fs, site) {
+				return nil
+			}
+
 			exists, err := fs.Exists(fileKey)
 			if err != nil {
 				return err
@@ -102,8 +116,6 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				return err
 			}
 			defer reader.Close()
-
-			requestEvent.Response.Header().Set("Content-Security-Policy", "frame-ancestors *")
 
 			// Preview requests (`?_site=ID`, incl. subresources resolved via the
 			// referrer) must never be served from cache: the preview iframe's
@@ -145,8 +157,8 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 
 // serveSitePreview serves the homepage preview file stored on a site record's
 // `preview` field (written by the publish worker on every publish). Used as a
-// fallback when a `?_site=ID` request finds no published home yet, so dashboard
-// thumbnail iframes get a real homepage instead of bouncing to the admin app.
+// thumbnail document for `?_site=ID&_preview=1`, and as a fallback when a
+// live `?_site=ID` request finds no published home yet. The caller sets CSP.
 // Returns false when the site has no preview file or it can't be served.
 func serveSitePreview(pb *pocketbase.PocketBase, requestEvent *core.RequestEvent, system *filesystem.System, site *core.Record) bool {
 	previewName := site.GetString("preview")
@@ -165,7 +177,6 @@ func serveSitePreview(pb *pocketbase.PocketBase, requestEvent *core.RequestEvent
 	}
 	defer reader.Close()
 
-	requestEvent.Response.Header().Set("Content-Security-Policy", "frame-ancestors *")
 	requestEvent.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	requestEvent.Response.Header().Set("Cache-Control", "no-store")
 	http.ServeContent(
