@@ -23,7 +23,17 @@ export type UseContentOptions = {
 	page?: ObjectOf<typeof Pages>
 }
 
+// Empty resolved links carry state; saved entry defaults stay content-only.
+const get_empty_content_value = (field: Field) =>
+	field.type === 'link' ? { url: '', label: '', text: '', active: false } : get_empty_value(field)
+
 export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(entity: EntityOf<Collection>, options: UseContentOptions) => {
+	// Keep the viewed page separate from pages referenced by page/page-list fields.
+	const current_page_id =
+		options.page?.id ??
+		(options.target === 'cms' ? page_context.getOr({ value: null }).value?.id : undefined) ??
+		(is_entity_of(entity, 'pages') ? entity.id : is_entity_of(entity, 'page_sections') ? entity.page : undefined)
+
 	const [fields, entries, uploads] = (() => {
 		switch (true) {
 			case is_entity_of(entity, 'library_symbols'): {
@@ -126,10 +136,10 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 			// Fallback behavior: If the referenced page field doesn't exist on the
 			// current page type (or the value hasn't loaded yet), we degrade
 			// gracefully by assigning a type-appropriate empty value via
-			// get_empty_value(pageField). This prevents render errors and matches
+			// get_empty_content_value(pageField). This prevents render errors and matches
 			// the editor behavior where irrelevant Page Fields are hidden from
 			// content editors. The fallback is applied consistently in all
-			// assignment branches below using `?? get_empty_value(pageField)`.
+			// assignment branches below using `?? get_empty_content_value(pageField)`.
 			if (field.type === 'page-field') {
 				const locale = 'en'
 				if (!content[locale]) content[locale] = {}
@@ -164,7 +174,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					data = getContent({ entity: page, fields: pageTypeFields, entries: pageEntries })
 					if (!data) return
 
-					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_value(pageField)
+					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_content_value(pageField)
 				}
 				// No override, use the page or page_type context if available
 				else if (page) {
@@ -184,7 +194,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					data = getContent({ entity: page, fields: pageTypeFields, entries: pageEntries })
 					if (!data) return
 
-					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_value(pageField)
+					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_content_value(pageField)
 				} else if (pageType) {
 					// Use the current page type
 					const pageTypeFields = pageType.fields()
@@ -198,7 +208,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					data = getContent({ entity: pageType, fields: pageTypeFields, entries: pageTypeEntries })
 					if (!data) return
 
-					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_value(pageField)
+					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_content_value(pageField)
 				}
 				// No page or page_type contexts, use parent entity
 				else if ('page' in entity) {
@@ -222,7 +232,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					data = getContent({ entity: page, fields: pageTypeFields, entries: pageEntries })
 					if (!data) return
 
-					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_value(pageField)
+					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_content_value(pageField)
 				} else if ('page_type' in entity) {
 					// This is page type section, use the parent page type
 					const pageType = PageTypes.one(entity.page_type)
@@ -240,7 +250,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 					data = getContent({ entity: pageType, fields: pageTypeFields, entries: pageTypeEntries })
 					if (!data) return
 
-					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_value(pageField)
+					content[locale]![field.key] = data[locale]?.[pageField.key] ?? get_empty_content_value(pageField)
 				}
 			}
 
@@ -470,7 +480,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				const [entry] = fieldEntries
 				if (!entry) {
 					if (!content.en) content.en = {}
-					content.en![field.key] = get_empty_value(field)
+					content.en![field.key] = get_empty_content_value(field)
 					continue
 				}
 				if (!content[entry.locale]) content[entry.locale] = {}
@@ -503,7 +513,7 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				const safe_url = url ?? ''
 
 				const label = value.label ?? ''
-				content[entry.locale]![field.key] = { url: safe_url, label, text: label }
+				content[entry.locale]![field.key] = { url: safe_url, label, text: label, active: !!safe_url && !!page && page.id === current_page_id }
 			}
 
 			// If field has a key but no entries, fill with empty value
