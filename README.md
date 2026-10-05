@@ -1,5 +1,7 @@
 # Primo [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev) ![](https://img.shields.io/badge/PocketBase-555555?logo=pocketbase&logoColor=white)
 
+[![Deploy to Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/primocms/primo)
+
 Primo is a CMS for developers who build sites for clients who need to manage them afterward. Your entire site stays in sync as both a database and a folder of files, so Claude Code, Cursor, and any AI agent can edit it directly. Your clients manage content visually in the browser.
 
 *In active development since 2019. Self-hosted by freelancers, agencies, and small teams.*
