@@ -3,10 +3,14 @@ package internal
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestImportUploadsAcrossDatabasesRepairsForeignIDs(t *testing.T) {
@@ -118,10 +122,10 @@ func TestUploadReferenceRepairPreservesValidIDsAndWarnsOnUnknowns(t *testing.T) 
 		"current.png": {ID: "current-id", Hash: "hash-current"},
 		"other.png":   {ID: "other-id", Hash: "hash-other"},
 	}
-	refs, valid := uploadImportRefs(uploads, []byte(`{
+	refs, valid := uploadImportRefs(uploads, map[string][]byte{"uploads/.manifest.json": []byte(`{
 		"other.png":{"id":"current-id","hash":"hash-other"},
 		"old-name.png":{"id":"foreign-id","hash":"hash-current"}
-	}`))
+	}`)})
 	value := map[string]interface{}{"images": []interface{}{
 		map[string]interface{}{"upload": "current-id"},
 		map[string]interface{}{"upload": "foreign-id"},
@@ -162,8 +166,174 @@ func TestImportUnknownUploadWarnsWithoutGuessing(t *testing.T) {
 func TestUploadReferenceRepairRejectsAmbiguousManifest(t *testing.T) {
 	refs, _ := uploadImportRefs(map[string]uploadReconcileEntry{
 		"a.png": {ID: "first-id"}, "b.png": {ID: "second-id"},
-	}, []byte(`{"a.png":{"id":"ambiguous-id"},"b.png":{"id":"ambiguous-id"}}`))
+	}, map[string][]byte{
+		"uploads/.manifest.json": []byte(`{"a.png":{"id":"ambiguous-id"},"b.png":{"id":"ambiguous-id"}}`),
+		"uploads/a.png":          {}, "uploads/b.png": {},
+	})
 	if refs["ambiguous-id"] != "" {
 		t.Fatalf("ambiguous upload must not resolve: %#v", refs)
+	}
+}
+
+// TestImportUploadFormats repairs both page and block/site content in each
+// supported format, including JSON keys that do not contain a literal upload.
+func TestImportUploadFormats(t *testing.T) {
+	for _, format := range []string{"yaml", "yml", "json", "escaped-json"} {
+		t.Run(format, func(t *testing.T) {
+			app := newImportTestApp(t)
+			defer app.ResetBootstrapState()
+			site := createImportTestSite(t, app)
+			files := reproSiteFiles("hero.png", fakePNG())
+			files["blocks/hero/content.yaml"] = []byte("image:\n  upload: foreignupload01\n")
+			files["site/fields.yaml"] = []byte("- name: favicon\n  type: image\n")
+			files["site/content.yaml"] = []byte("favicon:\n  upload: foreignupload01\n")
+			files["pages/index.yaml"] = bytes.ReplaceAll(files["pages/index.yaml"], []byte("uploads/hero.png"), []byte("foreignupload01"))
+			files["uploads/.manifest.json"] = []byte(`{"hero.png":{"id":"foreignupload01"}}`)
+			if format == "yml" {
+				files["pages/index.yml"] = files["pages/index.yaml"]
+				delete(files, "pages/index.yaml")
+			} else if strings.Contains(format, "json") {
+				for _, name := range []string{"pages/index.yaml", "blocks/hero/content.yaml", "site/content.yaml"} {
+					var value interface{}
+					if err := yaml.Unmarshal(files[name], &value); err != nil {
+						t.Fatal(err)
+					}
+					data, err := json.Marshal(value)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if format == "escaped-json" {
+						data = bytes.ReplaceAll(data, []byte(`"upload"`), []byte(`"\u0075pload"`))
+					}
+					files[strings.TrimSuffix(name, ".yaml")+".json"] = data
+					delete(files, name)
+				}
+			}
+			result, err := processImport(app, site, zipFilesBinary(t, files), false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, warning := range result.Warnings {
+				if warning.Kind == "unresolved_upload" {
+					t.Fatalf("resolvable upload warned: %#v", warning)
+				}
+			}
+			uploads, err := app.FindAllRecords("site_uploads")
+			if err != nil || len(uploads) != 1 {
+				t.Fatalf("expected one image: %v, %d", err, len(uploads))
+			}
+			for _, collection := range []string{"page_section_entries", "site_symbol_entries", "site_entries"} {
+				entries, err := app.FindAllRecords(collection)
+				if err != nil || len(entries) == 0 {
+					t.Fatalf("missing %s image entries: %v", collection, err)
+				}
+				for _, entry := range entries {
+					if !strings.Contains(entry.GetString("value"), uploads[0].Id) {
+						t.Fatalf("%s image was not repaired: %s", collection, entry.GetString("value"))
+					}
+				}
+			}
+		})
+	}
+}
+
+// TestUploadRewritePreservesUnchangedBytes keeps authored YAML and JSON intact
+// while still warning on unknown IDs; replacement also preserves JSON integers.
+func TestUploadRewritePreservesUnchangedBytes(t *testing.T) {
+	for _, extension := range []string{"yaml", "yml", "json"} {
+		for _, id := range []string{"valid-id", "unknown-id"} {
+			raw := []byte("# authored comment\nimage: { upload: " + id + ", alt: 'Keep me' }\n")
+			if extension == "json" {
+				raw = []byte(`{ "image" : {"upload": "` + id + `", "alt": "Keep me"} }`)
+			}
+			var warnings []ImportWarning
+			out, err := rewriteUploadFile(raw, "pages/index."+extension, nil, map[string]bool{"valid-id": true}, &warnings)
+			if err != nil || !bytes.Equal(out, raw) {
+				t.Fatalf("unchanged %s was re-encoded: %v, %s", extension, err, out)
+			}
+			if (id == "unknown-id") != (len(warnings) == 1) {
+				t.Fatalf("unexpected warnings: %#v", warnings)
+			}
+		}
+	}
+	var warnings []ImportWarning
+	out, err := rewriteUploadFile([]byte(`{"image":{"\u0075pload":"foreign-id"},"large":9007199254740993}`), "pages/index.json", map[string]string{"foreign-id": "target-id"}, nil, &warnings)
+	if err != nil || !bytes.Contains(out, []byte("9007199254740993")) || !bytes.Contains(out, []byte("target-id")) {
+		t.Fatalf("JSON replacement failed or lost numeric precision: %v, %s", err, out)
+	}
+}
+
+// TestImportValidUploadNoOpPreservesClientEdit ensures an unchanged page with
+// custom YAML formatting takes the raw_source guard and retains a CMS edit.
+func TestImportValidUploadNoOpPreservesClientEdit(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	files := reproSiteFiles("hero.png", fakePNG())
+	if _, err := processImport(app, site, zipFilesBinary(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	uploads, _ := app.FindAllRecords("site_uploads")
+	raw := append([]byte("# Keep this authored comment\n"), bytes.ReplaceAll(files["pages/index.yaml"], []byte("uploads/hero.png"), []byte(uploads[0].Id))...)
+	files["pages/index.yaml"] = raw
+	if _, err := processImport(app, site, zipFilesBinary(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	pages, _ := app.FindAllRecords("pages")
+	if pages[0].GetString("raw_source") != string(raw) {
+		t.Fatal("import changed authored YAML without replacing a reference")
+	}
+	entries, _ := app.FindAllRecords("page_section_entries")
+	entry := entries[0]
+	entry.Set("value", map[string]interface{}{"upload": uploads[0].Id, "alt": "Client edit"})
+	if err := app.Save(entry); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := processImport(app, site, zipFilesBinary(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := app.FindRecordById("page_section_entries", entry.Id)
+	if err != nil || !strings.Contains(reloaded.GetString("value"), "Client edit") {
+		t.Fatalf("unchanged import overwrote the client image edit: %v", err)
+	}
+}
+
+// TestImportStaleManifestFilenameCollision distinguishes a renamed source
+// image from an unrelated destination upload occupying the old filename.
+func TestImportStaleManifestFilenameCollision(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	red := []byte(`<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="red"/></svg>`)
+	blue := []byte(`<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="blue"/></svg>`)
+	if _, err := processImport(app, site, zipFilesBinary(t, reproSiteFiles("existing.svg", red)), false); err != nil {
+		t.Fatal(err)
+	}
+	existing, _ := app.FindAllRecords("site_uploads")
+	files := reproSiteFiles("renamed.svg", blue)
+	files["pages/index.yaml"] = bytes.ReplaceAll(files["pages/index.yaml"], []byte("uploads/renamed.svg"), []byte("foreignupload01"))
+	files["uploads/.manifest.json"] = []byte(fmt.Sprintf(`{%q:{"id":"foreignupload01","hash":"%x"}}`, existing[0].GetString("file"), sha256.Sum256(blue)))
+	if _, err := processImport(app, site, zipFilesBinary(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	entries, _ := app.FindAllRecords("page_section_entries")
+	if len(entries) != 1 || strings.Contains(entries[0].GetString("value"), existing[0].Id) || strings.Contains(entries[0].GetString("value"), "foreignupload01") {
+		t.Fatal("stale manifest selected the unrelated destination image")
+	}
+}
+
+// TestUploadManifestFilenameNeedsIdentity rejects unverified destination-only
+// names, but accepts a supplied file even if its bytes were intentionally edited.
+func TestUploadManifestFilenameNeedsIdentity(t *testing.T) {
+	uploads := map[string]uploadReconcileEntry{"image.png": {ID: "target-id", Hash: "new-hash"}}
+	files := map[string][]byte{"uploads/.manifest.json": []byte(`{"image.png":{"id":"foreign-id","hash":"old-hash"}}`)}
+	refs, _ := uploadImportRefs(uploads, files)
+	if refs["foreign-id"] != "" {
+		t.Fatal("unrelated destination filename was trusted")
+	}
+	files["uploads/image.png"] = []byte("edited bytes")
+	refs, _ = uploadImportRefs(uploads, files)
+	if refs["foreign-id"] != "target-id" {
+		t.Fatal("the supplied file's identity was not accepted")
 	}
 }

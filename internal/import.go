@@ -656,21 +656,16 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		// Resolve both symbolic paths and IDs from another CMS before importing
 		// content. A manifest identifies foreign IDs by filename/content hash;
 		// never infer an image from an ID alone or remap a valid site-local ID.
-		refs, validIDs := uploadImportRefs(uploadMap, files["uploads/.manifest.json"])
+		refs, validIDs := uploadImportRefs(uploadMap, files)
 		for path, data := range files {
-			if !strings.HasSuffix(path, ".yaml") || !bytes.Contains(data, []byte("upload")) {
+			if !strings.HasPrefix(path, "pages/") && !strings.HasPrefix(path, "blocks/") &&
+				!strings.HasPrefix(path, "site/") && !strings.HasPrefix(path, "page-types/") {
 				continue
 			}
-			var parsed interface{}
-			if err := yaml.Unmarshal(data, &parsed); err != nil {
-				continue
+			out, err := rewriteUploadFile(data, path, refs, validIDs, &warnings)
+			if err == nil {
+				files[path] = out
 			}
-			rewritten := rewriteUploadRefs(parsed, refs, validIDs, path, "", &warnings)
-			out, err := yaml.Marshal(rewritten)
-			if err != nil {
-				continue
-			}
-			files[path] = out
 		}
 	}
 
@@ -3999,7 +3994,7 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 // uploadImportRefs uses manifest metadata to repair foreign IDs. Filename
 // matches prefer the file actually supplied (which may have been edited);
 // hashes recover stale manifest filenames after an older CLI renamed them.
-func uploadImportRefs(uploads map[string]uploadReconcileEntry, manifestBytes []byte) (map[string]string, map[string]bool) {
+func uploadImportRefs(uploads map[string]uploadReconcileEntry, files map[string][]byte) (map[string]string, map[string]bool) {
 	refs := make(map[string]string)
 	valid := make(map[string]bool)
 	byHash := make(map[string]string)
@@ -4020,14 +4015,22 @@ func uploadImportRefs(uploads map[string]uploadReconcileEntry, manifestBytes []b
 		ID   string `json:"id"`
 		Hash string `json:"hash"`
 	}
-	if json.Unmarshal(manifestBytes, &manifest) == nil {
+	if json.Unmarshal(files["uploads/.manifest.json"], &manifest) == nil {
 		// Conflicting entries for one foreign ID cannot safely identify a file.
 		ambiguous := make(map[string]bool)
 		for filename, source := range manifest {
 			if source.ID == "" || strings.HasPrefix(source.ID, "uploads/") || valid[source.ID] {
 				continue
 			}
-			id := uploads[filename].ID
+			entry := uploads[filename]
+			_, supplied := files["uploads/"+filename]
+			id := ""
+			// A stale manifest name can collide with an unrelated destination
+			// upload. A name alone establishes identity only for a supplied
+			// file; destination-only matches must agree with the manifest hash.
+			if supplied || (source.Hash != "" && source.Hash == entry.Hash) {
+				id = entry.ID
+			}
 			if id == "" && source.Hash != "" {
 				id = byHash[source.Hash]
 			}
@@ -4046,9 +4049,41 @@ func uploadImportRefs(uploads map[string]uploadReconcileEntry, manifestBytes []b
 	return refs, valid
 }
 
-// Walk all image values, including nested repeaters and site metadata. Unknown
-// nonempty refs stay intact and produce a warning rather than silently failing.
-func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[string]bool, file, fieldPath string, warnings *[]ImportWarning) interface{} {
+// rewriteUploadFile decodes each supported content format and preserves the
+// exact source bytes when no reference changes, including unresolved refs.
+// This keeps page raw_source no-op checks and authored comments intact.
+func rewriteUploadFile(data []byte, file string, refs map[string]string, validIDs map[string]bool, warnings *[]ImportWarning) ([]byte, error) {
+	var parsed interface{}
+	isJSON := strings.HasSuffix(file, ".json")
+	if isJSON {
+		if !json.Valid(data) {
+			return data, fmt.Errorf("invalid JSON in %s", file)
+		}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.UseNumber()
+		if err := decoder.Decode(&parsed); err != nil {
+			return data, err
+		}
+	} else if strings.HasSuffix(file, ".yaml") || strings.HasSuffix(file, ".yml") {
+		if err := yaml.Unmarshal(data, &parsed); err != nil {
+			return data, err
+		}
+	} else {
+		return data, nil
+	}
+	if !rewriteUploadRefs(parsed, refs, validIDs, file, "", warnings) {
+		return data, nil
+	}
+	if isJSON {
+		return json.MarshalIndent(parsed, "", "  ")
+	}
+	return yaml.Marshal(parsed)
+}
+
+// rewriteUploadRefs walks nested image values and reports whether it replaced
+// a reference. Unknown nonempty refs stay intact and produce a warning.
+func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[string]bool, file, fieldPath string, warnings *[]ImportWarning) bool {
+	changed := false
 	switch v := value.(type) {
 	case map[string]interface{}:
 		for k, val := range v {
@@ -4063,6 +4098,7 @@ func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[s
 					}
 					if id := refs[ref]; id != "" {
 						v[k] = id
+						changed = true
 						continue
 					}
 					*warnings = append(*warnings, ImportWarning{
@@ -4071,15 +4107,12 @@ func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[s
 					})
 				}
 			}
-			v[k] = rewriteUploadRefs(val, refs, validIDs, file, childPath, warnings)
+			changed = rewriteUploadRefs(val, refs, validIDs, file, childPath, warnings) || changed
 		}
-		return v
 	case []interface{}:
 		for i, item := range v {
-			v[i] = rewriteUploadRefs(item, refs, validIDs, file, fmt.Sprintf("%s[%d]", fieldPath, i), warnings)
+			changed = rewriteUploadRefs(item, refs, validIDs, file, fmt.Sprintf("%s[%d]", fieldPath, i), warnings) || changed
 		}
-		return v
-	default:
-		return value
 	}
+	return changed
 }
