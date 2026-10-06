@@ -2029,7 +2029,7 @@ func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
 		return pageData.Fields, "fields"
 	}
 
-	merged := make(map[string]interface{}, len(pageData.Fields)+len(pageData.Content))
+	merged := make(map[string]interface{}, len(pageData.Fields))
 	for key, value := range pageData.Content {
 		merged[key] = value
 	}
@@ -2755,7 +2755,7 @@ func resolvePageFieldRef(ref string, pageTypeFieldKeyToId map[string]map[string]
 			Path:    path,
 			Field:   fieldKey,
 			Block:   blockName,
-			Message: fmt.Sprintf("page-field %q uses a bare field key. Prefer compound form \"<page-type>--%s\" so the reference is unambiguous when the block is reused.", ref, ref),
+			Message: fmt.Sprintf("page-field %q uses a bare field key. Prefer compound form %q so the reference is unambiguous when the block is reused.", ref, "<page-type>--"+ref),
 		}
 	}
 	return "", &ImportWarning{

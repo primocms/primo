@@ -17,6 +17,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func TestResolvePageFieldRefEscapesCompoundSuggestion(t *testing.T) {
+	ref := `heading"quoted`
+	fields := map[string]map[string]string{"default": {ref: "field-id"}}
+	id, warning := resolvePageFieldRef(ref, fields, "blocks/hero/fields.yaml", "heading", ref, "hero")
+	if id != "field-id" || warning == nil {
+		t.Fatalf("expected a resolved bare key with a warning, got %q, %#v", id, warning)
+	}
+	if !strings.Contains(warning.Message, `Prefer compound form "<page-type>--heading\"quoted"`) {
+		t.Fatalf("compound suggestion contains an unescaped quote: %s", warning.Message)
+	}
+}
+
 func TestImportReimportsBlockFieldsBeforePageContent(t *testing.T) {
 	app := newImportTestApp(t)
 	defer app.ResetBootstrapState()
