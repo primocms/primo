@@ -2044,6 +2044,46 @@ func TestWarnFieldDefinitionIssues(t *testing.T) {
 	}
 }
 
+func TestWarnFieldDefinitionIssuesAcceptsSystemIDs(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		nested bool
+		input  string
+	}{
+		{"block_and_site", true, `
+- _id: systemparent001
+  name: items
+  type: repeater
+  subfields:
+    - _id: systemchild0001
+      name: title
+      type: text
+      lable: Title
+`},
+		{"page_type", false, `
+- _id: systemfield001
+  name: title
+  type: text
+  lable: Title
+`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			parsed, err := parseBareFieldList([]byte(tc.input), "fields.yaml")
+			if err != nil {
+				t.Fatalf("parse: %v", err)
+			}
+			var warnings []ImportWarning
+			warnFieldDefinitionIssues(parsed, "fields.yaml", "Example", tc.nested, &warnings)
+			// Exported system IDs must be quiet without hiding an actual typo,
+			// including in a nested field definition.
+			if len(warnings) != 1 || warnings[0].Kind != "unknown_field_key" ||
+				!strings.Contains(warnings[0].Message, "`lable:`") {
+				t.Fatalf("expected only the typo warning, got %+v", warnings)
+			}
+		})
+	}
+}
+
 // Page-type fields don't support nesting yet, so `subfields:` there must be
 // reported rather than accepted (the importer reads neither `subfields` nor
 // `parent` for page_type_fields).
