@@ -629,13 +629,9 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		}
 		uploadMap = um
 
-		// Surface upload changes to the CLI under a non-standard key inside
-		// the manifest entry. write_created_ids on the CLI inspects this to
-		// rename local files to their canonical (PocketBase-suffixed) names
-		// and to rewrite any lingering `upload: "uploads/..."` symbolic refs
-		// to record IDs. Only entries whose canonical name differs from the
-		// symbolic name need a rename, but we surface all of them so the
-		// CLI can also reconcile yaml content rewrites.
+		// Surface filename/ID/hash identity for CLI writeback. New CLIs keep
+		// source upload paths portable and use this to recover legacy bare IDs;
+		// older CLIs also need the canonical stored filename for their renames.
 		if len(uploadMap) > 0 {
 			uploadsManifest := make(map[string]interface{}, len(uploadMap))
 			for symbolic, entry := range uploadMap {
@@ -658,30 +654,19 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			}
 		}
 
-		// Rewrite symbolic upload paths once, in the parsed yaml file bytes,
-		// so downstream importers can keep treating image values as opaque
-		// maps. Skipped for files that don't even mention `uploads/` to
-		// avoid pointlessly re-marshaling (and renormalizing whitespace in)
-		// every yaml file in the zip. Files that fail to parse here are
-		// left untouched and will produce the same error they would have
-		// anyway when the dedicated importer reaches them.
+		// Resolve both symbolic paths and IDs from another CMS before importing
+		// content. A manifest identifies foreign IDs by filename/content hash;
+		// never infer an image from an ID alone or remap a valid site-local ID.
+		refs, validIDs := uploadImportRefs(uploadMap, files)
 		for path, data := range files {
-			if !strings.HasSuffix(path, ".yaml") {
+			if !strings.HasPrefix(path, "pages/") && !strings.HasPrefix(path, "blocks/") &&
+				!strings.HasPrefix(path, "site/") && !strings.HasPrefix(path, "page-types/") {
 				continue
 			}
-			if !bytes.Contains(data, []byte("uploads/")) {
-				continue
+			out, err := rewriteUploadFile(data, path, refs, validIDs, &warnings)
+			if err == nil {
+				files[path] = out
 			}
-			var parsed interface{}
-			if err := yaml.Unmarshal(data, &parsed); err != nil {
-				continue
-			}
-			rewritten := rewriteUploadRefs(parsed, uploadMap)
-			out, err := yaml.Marshal(rewritten)
-			if err != nil {
-				continue
-			}
-			files[path] = out
 		}
 	}
 
@@ -2045,7 +2030,7 @@ func pageContentValues(pageData ExportedPage) (map[string]interface{}, string) {
 		return pageData.Fields, "fields"
 	}
 
-	merged := make(map[string]interface{}, len(pageData.Fields)+len(pageData.Content))
+	merged := make(map[string]interface{}, len(pageData.Fields))
 	for key, value := range pageData.Content {
 		merged[key] = value
 	}
@@ -2771,7 +2756,7 @@ func resolvePageFieldRef(ref string, pageTypeFieldKeyToId map[string]map[string]
 			Path:    path,
 			Field:   fieldKey,
 			Block:   blockName,
-			Message: fmt.Sprintf("page-field %q uses a bare field key. Prefer compound form \"<page-type>--%s\" so the reference is unambiguous when the block is reused.", ref, ref),
+			Message: fmt.Sprintf("page-field %q uses a bare field key. Prefer compound form %q so the reference is unambiguous when the block is reused.", ref, "<page-type>--"+ref),
 		}
 	}
 	return "", &ImportWarning{
@@ -3928,6 +3913,7 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 	// small relative to the zip we already decompressed. A read failure just
 	// leaves that record out of the hash index — it can still match by filename.
 	existingByHash := make(map[string]*core.Record, len(existing))
+	existingHashes := make(map[string]string, len(existing))
 	for _, rec := range existing {
 		fn := rec.GetString("file")
 		if fn == "" {
@@ -3941,6 +3927,7 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 		reader.Close()
 		sum := sha256.Sum256(b)
 		hexSum := hex.EncodeToString(sum[:])
+		existingHashes[rec.Id] = hexSum
 		// First writer wins on hash collision (byte-identical duplicates that
 		// this very bug may have already created); the loser stays reachable by
 		// filename and is a candidate for `--prune-uploads` garbage collection.
@@ -3998,44 +3985,135 @@ func reconcileSiteUploads(app core.App, site *core.Record, files map[string][]by
 	// the file isn't being re-uploaded.
 	for filename, rec := range existingByFilename {
 		if _, ok := filenameToEntry[filename]; !ok {
-			filenameToEntry[filename] = uploadReconcileEntry{ID: rec.Id, Canonical: filename}
+			filenameToEntry[filename] = uploadReconcileEntry{ID: rec.Id, Canonical: filename, Hash: existingHashes[rec.Id]}
 		}
 	}
 
 	return filenameToEntry, nil
 }
 
-// rewriteUploadRefs walks an arbitrary yaml-decoded value and rewrites every
-// `upload: "uploads/<filename>"` string into the corresponding PocketBase
-// record ID, in place. Strings that don't start with `uploads/` are left
-// untouched, so raw IDs already present in the file (from a prior pull) and
-// empty values continue to round-trip cleanly.
-//
-// This runs once over the parsed file contents up front, so the rest of the
-// import pipeline can keep treating image values as opaque maps without
-// any awareness of the symbolic-path convention.
-func rewriteUploadRefs(value interface{}, uploadMap map[string]uploadReconcileEntry) interface{} {
+// uploadImportRefs uses manifest metadata to repair foreign IDs. Filename
+// matches prefer the file actually supplied (which may have been edited);
+// hashes recover stale manifest filenames after an older CLI renamed them.
+func uploadImportRefs(uploads map[string]uploadReconcileEntry, files map[string][]byte) (map[string]string, map[string]bool) {
+	refs := make(map[string]string)
+	valid := make(map[string]bool)
+	byHash := make(map[string]string)
+	keys := make([]string, 0, len(uploads))
+	for name := range uploads {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		entry := uploads[name]
+		refs["uploads/"+name] = entry.ID
+		valid[entry.ID] = true
+		if entry.Hash != "" {
+			byHash[entry.Hash] = entry.ID
+		}
+	}
+	var manifest map[string]struct {
+		ID   string `json:"id"`
+		Hash string `json:"hash"`
+	}
+	if json.Unmarshal(files["uploads/.manifest.json"], &manifest) == nil {
+		// Conflicting entries for one foreign ID cannot safely identify a file.
+		ambiguous := make(map[string]bool)
+		for filename, source := range manifest {
+			if source.ID == "" || strings.HasPrefix(source.ID, "uploads/") || valid[source.ID] {
+				continue
+			}
+			entry := uploads[filename]
+			_, supplied := files["uploads/"+filename]
+			id := ""
+			// A stale manifest name can collide with an unrelated destination
+			// upload. A name alone establishes identity only for a supplied
+			// file; destination-only matches must agree with the manifest hash.
+			if supplied || (source.Hash != "" && source.Hash == entry.Hash) {
+				id = entry.ID
+			}
+			if id == "" && source.Hash != "" {
+				id = byHash[source.Hash]
+			}
+			if id == "" {
+				continue
+			}
+			if previous := refs[source.ID]; previous != "" && previous != id {
+				ambiguous[source.ID] = true
+			}
+			refs[source.ID] = id
+		}
+		for id := range ambiguous {
+			delete(refs, id)
+		}
+	}
+	return refs, valid
+}
+
+// rewriteUploadFile decodes each supported content format and preserves the
+// exact source bytes when no reference changes, including unresolved refs.
+// This keeps page raw_source no-op checks and authored comments intact.
+func rewriteUploadFile(data []byte, file string, refs map[string]string, validIDs map[string]bool, warnings *[]ImportWarning) ([]byte, error) {
+	var parsed interface{}
+	isJSON := strings.HasSuffix(file, ".json")
+	if isJSON {
+		if !json.Valid(data) {
+			return data, fmt.Errorf("invalid JSON in %s", file)
+		}
+		decoder := json.NewDecoder(bytes.NewReader(data))
+		decoder.UseNumber()
+		if err := decoder.Decode(&parsed); err != nil {
+			return data, err
+		}
+	} else if strings.HasSuffix(file, ".yaml") || strings.HasSuffix(file, ".yml") {
+		if err := yaml.Unmarshal(data, &parsed); err != nil {
+			return data, err
+		}
+	} else {
+		return data, nil
+	}
+	if !rewriteUploadRefs(parsed, refs, validIDs, file, "", warnings) {
+		return data, nil
+	}
+	if isJSON {
+		return json.MarshalIndent(parsed, "", "  ")
+	}
+	return yaml.Marshal(parsed)
+}
+
+// rewriteUploadRefs walks nested image values and reports whether it replaced
+// a reference. Unknown nonempty refs stay intact and produce a warning.
+func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[string]bool, file, fieldPath string, warnings *[]ImportWarning) bool {
+	changed := false
 	switch v := value.(type) {
 	case map[string]interface{}:
 		for k, val := range v {
+			childPath := k
+			if fieldPath != "" {
+				childPath = fieldPath + "." + k
+			}
 			if k == "upload" {
-				if s, ok := val.(string); ok && strings.HasPrefix(s, "uploads/") {
-					filename := strings.TrimPrefix(s, "uploads/")
-					if entry, found := uploadMap[filename]; found {
-						v[k] = entry.ID
+				if ref, ok := val.(string); ok && ref != "" {
+					if validIDs[ref] {
 						continue
 					}
+					if id := refs[ref]; id != "" {
+						v[k] = id
+						changed = true
+						continue
+					}
+					*warnings = append(*warnings, ImportWarning{
+						Kind: "unresolved_upload", File: file, Path: childPath,
+						Message: fmt.Sprintf("Upload %q could not be resolved for this site. Restore its uploads/.manifest.json and image file, or use upload: uploads/<filename>.", ref),
+					})
 				}
 			}
-			v[k] = rewriteUploadRefs(val, uploadMap)
+			changed = rewriteUploadRefs(val, refs, validIDs, file, childPath, warnings) || changed
 		}
-		return v
 	case []interface{}:
 		for i, item := range v {
-			v[i] = rewriteUploadRefs(item, uploadMap)
+			changed = rewriteUploadRefs(item, refs, validIDs, file, fmt.Sprintf("%s[%d]", fieldPath, i), warnings) || changed
 		}
-		return v
-	default:
-		return value
 	}
+	return changed
 }
