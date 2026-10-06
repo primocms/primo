@@ -41,10 +41,11 @@ func getExportedID(data map[string]interface{}) string {
 }
 
 // recognisedFieldKeys are the keys a field definition in fields.yaml may carry.
-// Everything the importer reads is listed here; any other key is ignored, so a
-// typo — most commonly `fields:` for `subfields:` — silently drops
-// configuration and the field imports as if it were empty.
+// Import settings and exported system metadata are listed here. Other keys
+// are ignored, so a typo — most commonly `fields:` for `subfields:` — silently
+// drops configuration and the field imports as if it were empty.
 var recognisedFieldKeys = map[string]bool{
+	"_id":         true, // system metadata emitted by the exporter; fields match by key
 	"name":        true,
 	"label":       true,
 	"type":        true,
