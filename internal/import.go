@@ -1409,6 +1409,9 @@ func flattenSubfields(fields []map[string]interface{}, parentKey string) []map[s
 		// Recursively flatten subfields
 		if subfields, ok := field["subfields"].([]interface{}); ok {
 			fieldKey := getString(field, "name")
+			if declaredParent := getString(flat, "parent"); declaredParent != "" {
+				fieldKey = declaredParent + "/" + fieldKey
+			}
 			for _, sf := range subfields {
 				if sfMap, ok := sf.(map[string]interface{}); ok {
 					flattened := flattenSubfields([]map[string]interface{}{sfMap}, fieldKey)
@@ -1492,7 +1495,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 			return "", err
 		}
 
-		// Track field key -> record for parent resolution, and fields with parents
+		// Track full field paths for parent resolution, and fields with parents
 		fieldKeyToRecord := make(map[string]*core.Record)
 		fieldsWithParent := make([]struct {
 			field     *core.Record
@@ -1509,9 +1512,13 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 			if fieldKey == "" {
 				continue
 			}
+			fieldPath := fieldKey
+			if parentKey := getString(fieldData, "parent"); parentKey != "" {
+				fieldPath = parentKey + "/" + fieldKey
+			}
 
 			var field *core.Record
-			if existing, ok := existingFieldsByKey[fieldKey]; ok {
+			if existing, ok := existingFieldsByKey[fieldPath]; ok {
 				field = existing
 			} else {
 				field = core.NewRecord(fieldsColl)
@@ -1581,7 +1588,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 			}
 			matchedFieldIds[field.Id] = true
 
-			fieldKeyToRecord[fieldKey] = field
+			fieldKeyToRecord[fieldPath] = field
 
 			// Track fields that have a parent for second pass
 			if parentKey := getString(fieldData, "parent"); parentKey != "" {
@@ -1636,7 +1643,6 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 					matchedFieldIds[nestedField.Id] = true
 
 					fieldKeyToRecord[compositeKey] = nestedField
-					fieldKeyToRecord[nestedKey] = nestedField
 
 					// Recursively process subfields if this is a repeater or group
 					if nestedFieldType == "repeater" || nestedFieldType == "group" {
@@ -1652,7 +1658,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 
 			// Process subfields for repeaters/groups
 			if subfields, ok := fieldData["subfields"].([]interface{}); ok {
-				if err := processNestedFields(field, fieldKey, subfields); err != nil {
+				if err := processNestedFields(field, fieldPath, subfields); err != nil {
 					return "", err
 				}
 			}
@@ -1703,15 +1709,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 		fields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
 
 		// Build lookup maps
-		fieldByKey := make(map[string]*core.Record)
-		fieldsByParent := make(map[string][]*core.Record)
-		for _, f := range fields {
-			fieldByKey[f.GetString("key")] = f
-			parentId := f.GetString("parent")
-			if parentId != "" {
-				fieldsByParent[parentId] = append(fieldsByParent[parentId], f)
-			}
-		}
+		fieldByKey, fieldsByParent := contentFieldScopes(fields)
 
 		entriesColl, err := app.FindCollectionByNameOrId("site_symbol_entries")
 		if err != nil {
@@ -1732,14 +1730,7 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 			if !ok {
 				continue
 			}
-			// Only process top-level fields here (those without parent or with parent outside this symbol)
-			parentId := field.GetString("parent")
-			if parentId != "" {
-				if _, hasParent := fieldByKey[getFieldKeyById(fields, parentId)]; hasParent {
-					continue // This field's parent is in this symbol, will be processed recursively
-				}
-			}
-			if err := importSymbolContentField(app, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+			if err := importSymbolContentField(app, entriesColl, field, value, "", 0, fieldsByParent, pathToPageId); err != nil {
 				return "", err
 			}
 		}
@@ -1748,18 +1739,24 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 	return symbol.Id, nil
 }
 
-// getFieldKeyById finds a field's key by its ID in a list of fields
-func getFieldKeyById(fields []*core.Record, id string) string {
-	for _, f := range fields {
-		if f.Id == id {
-			return f.GetString("key")
+// contentFieldScopes keeps root name resolution separate from children. Child
+// fields are resolved only among the records belonging to their actual parent.
+func contentFieldScopes(fields []*core.Record) (map[string]*core.Record, map[string][]*core.Record) {
+	roots := make(map[string]*core.Record)
+	children := make(map[string][]*core.Record)
+	for _, field := range fields {
+		parentID := field.GetString("parent")
+		if parentID == "" {
+			roots[field.GetString("key")] = field
+		} else {
+			children[parentID] = append(children[parentID], field)
 		}
 	}
-	return ""
+	return roots, children
 }
 
 // importSymbolContentField recursively imports a symbol field's value, handling repeaters and groups
-func importSymbolContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string) error {
+func importSymbolContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, pathToPageId map[string]string) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
 
@@ -1796,7 +1793,7 @@ func importSymbolContentField(app core.App, entriesColl *core.Collection, field 
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSymbolContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				if err := importSymbolContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, pathToPageId); err != nil {
 					return err
 				}
 			}
@@ -1824,7 +1821,7 @@ func importSymbolContentField(app core.App, entriesColl *core.Collection, field 
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSymbolContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				if err := importSymbolContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, pathToPageId); err != nil {
 					return err
 				}
 			}
@@ -1849,7 +1846,7 @@ func importSymbolContentField(app core.App, entriesColl *core.Collection, field 
 }
 
 // importPageSectionContentField recursively imports a page section field's value, handling repeaters and groups
-func importPageSectionContentField(app core.App, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string, warnings *[]ImportWarning, sourceFile string, blockName string, pathPrefix string) error {
+func importPageSectionContentField(app core.App, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, pathToPageId map[string]string, warnings *[]ImportWarning, sourceFile string, blockName string, pathPrefix string) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
 
@@ -1925,7 +1922,7 @@ func importPageSectionContentField(app core.App, entriesColl *core.Collection, s
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
 				childPath := fmt.Sprintf("%s[%d].%s", pathPrefix, i, childKey)
-				if err := importPageSectionContentField(app, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
+				if err := importPageSectionContentField(app, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
 					return err
 				}
 			}
@@ -1984,7 +1981,7 @@ func importPageSectionContentField(app core.App, entriesColl *core.Collection, s
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
 				childPath := fmt.Sprintf("%s.%s", pathPrefix, childKey)
-				if err := importPageSectionContentField(app, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
+				if err := importPageSectionContentField(app, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent, pathToPageId, warnings, sourceFile, blockName, childPath); err != nil {
 					return err
 				}
 			}
@@ -2456,15 +2453,7 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 				symbolFields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbolId})
 
 				// Build lookup maps
-				fieldByKey := make(map[string]*core.Record)
-				fieldsByParent := make(map[string][]*core.Record)
-				for _, f := range symbolFields {
-					fieldByKey[f.GetString("key")] = f
-					parentId := f.GetString("parent")
-					if parentId != "" {
-						fieldsByParent[parentId] = append(fieldsByParent[parentId], f)
-					}
-				}
+				fieldByKey, fieldsByParent := contentFieldScopes(symbolFields)
 
 				// Delete ALL existing entries for this section (clean slate)
 				existingEntries, _ := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, dbx.Params{"section": section.Id})
@@ -2496,15 +2485,8 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 						}
 						continue
 					}
-					// Only process top-level fields here
-					parentId := field.GetString("parent")
-					if parentId != "" {
-						if _, hasParent := fieldByKey[getFieldKeyById(symbolFields, parentId)]; hasParent {
-							continue // This field's parent is in this symbol, will be processed recursively
-						}
-					}
 					itemPath := fmt.Sprintf("sections[%d].content.%s", i, fieldKey)
-					if err := importPageSectionContentField(app, entriesColl, section.Id, field, value, "", 0, fieldsByParent, fieldByKey, nil, warnings, sourceFile, blockName, itemPath); err != nil {
+					if err := importPageSectionContentField(app, entriesColl, section.Id, field, value, "", 0, fieldsByParent, nil, warnings, sourceFile, blockName, itemPath); err != nil {
 						return "", nil, err
 					}
 				}
@@ -2527,111 +2509,8 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 }
 
 func importSiteFields(app core.App, site *core.Record, data []byte) error {
-	fieldEntries, err := parseBareFieldList(data, "site/fields.yaml")
-	if err != nil {
-		return err
-	}
-	fields := fieldListToMaps(fieldEntries)
-
-	// Flatten nested subfields to flat format with parent keys
-	fields = flattenSubfields(fields, "")
-
-	fieldsColl, err := app.FindCollectionByNameOrId("site_fields")
-	if err != nil {
-		return err
-	}
-
-	existingFields, _ := app.FindRecordsByFilter("site_fields", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-
-	// Build a map from field ID -> key for resolving parent keys
-	existingIdToKey := make(map[string]string)
-	for _, f := range existingFields {
-		existingIdToKey[f.Id] = f.GetString("key")
-	}
-
-	// Build existingByCompositeKey using "parentKey/fieldKey" as the composite key
-	// This handles fields with the same name at different nesting levels
-	existingByCompositeKey := make(map[string]*core.Record)
-	for _, f := range existingFields {
-		fieldKey := f.GetString("key")
-		parentId := f.GetString("parent")
-		parentKey := ""
-		if parentId != "" {
-			parentKey = existingIdToKey[parentId]
-		}
-		compositeKey := parentKey + "/" + fieldKey
-		existingByCompositeKey[compositeKey] = f
-	}
-
-	// Track composite key -> record for parent resolution, and fields with parents
-	fieldKeyToRecord := make(map[string]*core.Record)
-	fieldsWithParent := make([]struct {
-		field        *core.Record
-		parentKey    string
-		compositeKey string
-	}, 0)
-
-	// First pass: Create/update all fields without parent relationships
-	for i, fieldData := range fields {
-		fieldKey := getString(fieldData, "name") // exported as "name" but stored as "key"
-		if fieldKey == "" {
-			continue
-		}
-
-		parentKey := getString(fieldData, "parent")
-		compositeKey := parentKey + "/" + fieldKey
-
-		var field *core.Record
-		if existing, ok := existingByCompositeKey[compositeKey]; ok {
-			field = existing
-		} else {
-			field = core.NewRecord(fieldsColl)
-			field.Set("site", site.Id)
-		}
-
-		field.Set("key", fieldKey)
-		field.Set("label", getString(fieldData, "label"))
-		field.Set("type", getString(fieldData, "type"))
-		field.Set("index", i)
-
-		// Read config (preferred) or options (backwards compatibility)
-		config, hasConfig := fieldData["config"]
-		if !hasConfig {
-			config, hasConfig = fieldData["options"]
-		}
-		if hasConfig && config != nil {
-			field.Set("config", config)
-		}
-
-		if err := app.Save(field); err != nil {
-			return err
-		}
-
-		// Store by both simple key (for top-level lookups) and composite key (for nested lookups)
-		fieldKeyToRecord[fieldKey] = field
-		fieldKeyToRecord[compositeKey] = field
-
-		// Track fields that have a parent for second pass
-		if parentKey != "" {
-			fieldsWithParent = append(fieldsWithParent, struct {
-				field        *core.Record
-				parentKey    string
-				compositeKey string
-			}{field, parentKey, compositeKey})
-		}
-	}
-
-	// Second pass: Set parent relationships
-	for _, fp := range fieldsWithParent {
-		if parentRecord, ok := fieldKeyToRecord[fp.parentKey]; ok {
-			fp.field.Set("parent", parentRecord.Id)
-			if err := app.Save(fp.field); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	_, err := importSiteFieldsWithMap(app, site, data)
+	return err
 }
 
 // importPageTypeFieldsOnly creates/updates page_type_fields rows for a page
@@ -2790,31 +2669,21 @@ func importSiteFieldsWithMap(app core.App, site *core.Record, data []byte) (map[
 
 	existingFields, _ := app.FindRecordsByFilter("site_fields", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
 
-	// Build a map from field ID -> key for resolving parent keys
-	existingIdToKey := make(map[string]string)
-	for _, f := range existingFields {
-		existingIdToKey[f.Id] = f.GetString("key")
+	// Reuse fields by their full ancestry, including repeated group names.
+	existingByID := make(map[string]*core.Record)
+	for _, field := range existingFields {
+		existingByID[field.Id] = field
 	}
-
-	// Build existingByCompositeKey using "parentKey/fieldKey" as the composite key
 	existingByCompositeKey := make(map[string]*core.Record)
-	for _, f := range existingFields {
-		fieldKey := f.GetString("key")
-		parentId := f.GetString("parent")
-		parentKey := ""
-		if parentId != "" {
-			parentKey = existingIdToKey[parentId]
-		}
-		compositeKey := parentKey + "/" + fieldKey
-		existingByCompositeKey[compositeKey] = f
+	for _, field := range existingFields {
+		existingByCompositeKey[buildBlockFieldCompositeKey(field, existingByID)] = field
 	}
 
 	// Track composite key -> record for parent resolution, and fields with parents
 	fieldKeyToRecord := make(map[string]*core.Record)
 	fieldsWithParent := make([]struct {
-		field        *core.Record
-		parentKey    string
-		compositeKey string
+		field     *core.Record
+		parentKey string
 	}, 0)
 
 	// First pass: Create/update all fields without parent relationships
@@ -2825,7 +2694,10 @@ func importSiteFieldsWithMap(app core.App, site *core.Record, data []byte) (map[
 		}
 
 		parentKey := getString(fieldData, "parent")
-		compositeKey := parentKey + "/" + fieldKey
+		compositeKey := fieldKey
+		if parentKey != "" {
+			compositeKey = parentKey + "/" + fieldKey
+		}
 
 		var field *core.Record
 		if existing, ok := existingByCompositeKey[compositeKey]; ok {
@@ -2853,20 +2725,18 @@ func importSiteFieldsWithMap(app core.App, site *core.Record, data []byte) (map[
 			return keyToId, err
 		}
 
-		// Build the key -> ID map (use simple key for top-level lookups)
-		keyToId[fieldKey] = field.Id
-
-		// Store by both simple key and composite key
-		fieldKeyToRecord[fieldKey] = field
+		// Bare names resolve only roots; nested parents use their full path.
+		if parentKey == "" {
+			keyToId[fieldKey] = field.Id
+		}
 		fieldKeyToRecord[compositeKey] = field
 
 		// Track fields that have a parent for second pass
 		if parentKey != "" {
 			fieldsWithParent = append(fieldsWithParent, struct {
-				field        *core.Record
-				parentKey    string
-				compositeKey string
-			}{field, parentKey, compositeKey})
+				field     *core.Record
+				parentKey string
+			}{field, parentKey})
 		}
 	}
 
@@ -2899,15 +2769,7 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 	fields, _ := app.FindRecordsByFilter("site_fields", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
 
 	// Build field maps
-	fieldByKey := make(map[string]*core.Record)
-	fieldsByParent := make(map[string][]*core.Record) // parent field ID -> child fields
-	for _, f := range fields {
-		fieldByKey[f.GetString("key")] = f
-		parentId := f.GetString("parent")
-		if parentId != "" {
-			fieldsByParent[parentId] = append(fieldsByParent[parentId], f)
-		}
-	}
+	fieldByKey, fieldsByParent := contentFieldScopes(fields)
 
 	entriesColl, err := app.FindCollectionByNameOrId("site_entries")
 	if err != nil {
@@ -2926,12 +2788,8 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 		if field == nil {
 			continue
 		}
-		// Only process top-level fields (no parent)
-		if field.GetString("parent") != "" {
-			continue
-		}
 
-		if err := importSiteContentField(app, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+		if err := importSiteContentField(app, entriesColl, field, value, "", 0, fieldsByParent, pathToPageId); err != nil {
 			return err
 		}
 	}
@@ -2946,7 +2804,7 @@ func importSiteContent(app core.App, site *core.Record, data []byte, isYaml bool
 // so running it on repeater items/groups rewrote e.g. a nav item
 // `{label, url: /tours}` to `{label, page: <id>}` and the `url` subfield
 // imported as null whenever the path matched a page.
-func importSiteContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record, pathToPageId map[string]string) error {
+func importSiteContentField(app core.App, entriesColl *core.Collection, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, pathToPageId map[string]string) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
 
@@ -2983,7 +2841,7 @@ func importSiteContentField(app core.App, entriesColl *core.Collection, field *c
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSiteContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				if err := importSiteContentField(app, entriesColl, childField, childValue, itemEntry.Id, 0, fieldsByParent, pathToPageId); err != nil {
 					return err
 				}
 			}
@@ -3011,7 +2869,7 @@ func importSiteContentField(app core.App, entriesColl *core.Collection, field *c
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importSiteContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey, pathToPageId); err != nil {
+				if err := importSiteContentField(app, entriesColl, childField, childValue, groupEntry.Id, 0, fieldsByParent, pathToPageId); err != nil {
 					return err
 				}
 			}
@@ -3485,13 +3343,7 @@ func importPageTypeSectionContent(app core.App, section *core.Record, fields []*
 	}
 
 	// Build field lookup maps
-	fieldByKey := make(map[string]*core.Record)
-	fieldsByParent := make(map[string][]*core.Record)
-	for _, f := range fields {
-		fieldByKey[f.GetString("key")] = f
-		parentId := f.GetString("parent")
-		fieldsByParent[parentId] = append(fieldsByParent[parentId], f)
-	}
+	fieldByKey, fieldsByParent := contentFieldScopes(fields)
 
 	// Import each content field
 	for key, value := range content {
@@ -3499,7 +3351,7 @@ func importPageTypeSectionContent(app core.App, section *core.Record, fields []*
 		if !ok {
 			continue
 		}
-		if err := importPageTypeSectionContentField(app, entriesColl, section.Id, field, value, "", 0, fieldsByParent, fieldByKey); err != nil {
+		if err := importPageTypeSectionContentField(app, entriesColl, section.Id, field, value, "", 0, fieldsByParent); err != nil {
 			return err
 		}
 	}
@@ -3508,7 +3360,7 @@ func importPageTypeSectionContent(app core.App, section *core.Record, fields []*
 }
 
 // importPageTypeSectionContentField recursively imports a page type section field's value
-func importPageTypeSectionContentField(app core.App, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record, fieldByKey map[string]*core.Record) error {
+func importPageTypeSectionContentField(app core.App, entriesColl *core.Collection, sectionId string, field *core.Record, value interface{}, parentEntryId string, index int, fieldsByParent map[string][]*core.Record) error {
 	fieldType := field.GetString("type")
 	fieldId := field.Id
 
@@ -3542,7 +3394,7 @@ func importPageTypeSectionContentField(app core.App, entriesColl *core.Collectio
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := itemMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importPageTypeSectionContentField(app, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent, fieldByKey); err != nil {
+				if err := importPageTypeSectionContentField(app, entriesColl, sectionId, childField, childValue, itemEntry.Id, 0, fieldsByParent); err != nil {
 					return err
 				}
 			}
@@ -3568,7 +3420,7 @@ func importPageTypeSectionContentField(app core.App, entriesColl *core.Collectio
 			for _, childField := range childFields {
 				childKey := childField.GetString("key")
 				childValue := groupMap[childKey] // May be nil if not in YAML, that's ok
-				if err := importPageTypeSectionContentField(app, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent, fieldByKey); err != nil {
+				if err := importPageTypeSectionContentField(app, entriesColl, sectionId, childField, childValue, groupEntry.Id, 0, fieldsByParent); err != nil {
 					return err
 				}
 			}
