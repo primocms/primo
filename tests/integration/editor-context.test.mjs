@@ -10,10 +10,7 @@ async function loadIframeHelpers() {
 	const source = await readFile(iframeHelpersPath, 'utf8')
 	const testableSource = source
 		.replace("import { VERSION as SVELTE_VERSION } from 'svelte/compiler'", "const SVELTE_VERSION = 'test'")
-		.replace(
-			/import \{ PRIMO_BASELINE_CSS \} from '\$lib\/common\/baseline-css'/,
-			"const PRIMO_BASELINE_CSS = ''"
-		)
+		.replace(/import \{ PRIMO_BASELINE_CSS \} from '\$lib\/common\/baseline-css'/, "const PRIMO_BASELINE_CSS = ''")
 		.replaceAll('export const ', 'const ')
 
 	return Function(
@@ -64,3 +61,108 @@ test('component editor iframe exposes documented context to loaded blocks', asyn
 	assert.equal(window.__PRIMO_CONTEXT__.environment, 'editor')
 	assert.equal(window.__loadedBlock.is_editor, true)
 })
+
+async function previewRuntime(kind) {
+	const helpers = await loadIframeHelpers()
+	const srcdoc = kind === 'component' ? helpers.component_iframe_srcdoc({}) : helpers.dynamic_iframe_srcdoc('', 'test')
+	const script = srcdoc.match(/<script type="module">([\s\S]*?)<\/script>/)[1]
+	const target = { innerHTML: '' }
+	const messages = []
+	let handler
+	let imports = 0
+	let revocations = 0
+	const window = {
+		addEventListener: (_event, callback) => {
+			handler = callback
+		},
+		parent: { postMessage: (message) => messages.push(message) }
+	}
+	class Channel {
+		set onmessage(callback) {
+			handler = callback
+		}
+		postMessage(message) {
+			messages.push(message)
+		}
+	}
+	class SourceBlob {
+		constructor(parts) {
+			this.source = parts.join('')
+		}
+	}
+	const urls = {
+		// Node cannot import blob URLs; use unique data URLs for real ESM imports.
+		createObjectURL: (blob) => `data:text/javascript;base64,${Buffer.from(blob.source).toString('base64')}#${kind}-${++imports}`,
+		revokeObjectURL: () => {
+			revocations++
+		}
+	}
+	Function(
+		'window',
+		'document',
+		'BroadcastChannel',
+		'Blob',
+		'URL',
+		'console',
+		'setTimeout',
+		script
+	)(window, { body: target, querySelector: () => target }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0)
+	return {
+		target,
+		messages,
+		get imports() {
+			return imports
+		},
+		get revocations() {
+			return revocations
+		},
+		send: (source, data) => handler({ data: { payload: { [kind === 'component' ? 'js' : 'componentApp']: source, data } } })
+	}
+}
+
+function blockSource(version) {
+	return `
+		export default { version: ${JSON.stringify(version)} };
+		export function mount(App, { target, props }) {
+			target.innerHTML = App.version + ':' + props.text;
+			return { target };
+		}
+		export function unmount(component) { component.target.innerHTML = ''; }
+	`
+}
+
+for (const kind of ['component', 'dynamic']) {
+	test(`${kind} preview updates content without reimporting, but loads changed code`, async () => {
+		const preview = await previewRuntime(kind)
+		await preview.send(blockSource('v1'), { text: 'first' })
+		assert.equal(preview.target.innerHTML, 'v1:first')
+		await preview.send(blockSource('v1'), { text: 'edited' })
+		assert.equal(preview.target.innerHTML, 'v1:edited')
+		assert.equal(preview.imports, 1)
+		await preview.send(blockSource('v2'), { text: 'edited' })
+		assert.equal(preview.target.innerHTML, 'v2:edited')
+		assert.equal(preview.imports, 2)
+		assert.equal(preview.revocations, 2)
+	})
+
+	test(`${kind} preview shares an in-flight import for rapid content updates`, async () => {
+		const preview = await previewRuntime(kind)
+		await Promise.all([preview.send(blockSource('v1'), { text: 'first' }), preview.send(blockSource('v1'), { text: 'latest' })])
+		assert.equal(preview.imports, 1)
+		assert.equal(preview.target.innerHTML, 'v1:latest')
+	})
+
+	test(`${kind} preview retries failed imports and recovers after code is corrected`, async () => {
+		const preview = await previewRuntime(kind)
+		const invalid = 'export default {'
+		await assert.rejects(preview.send(invalid, { text: 'first' }), SyntaxError)
+		await assert.rejects(preview.send(invalid, { text: 'retry' }), SyntaxError)
+		assert.equal(preview.imports, 2)
+		assert.equal(preview.revocations, 2)
+		if (kind === 'component') {
+			assert(preview.messages.some((message) => message.type === 'component-error' && message.error))
+		}
+		await preview.send(blockSource('fixed'), { text: 'recovered' })
+		assert.equal(preview.target.innerHTML, 'fixed:recovered')
+	})
+}
