@@ -246,11 +246,7 @@
 						onclick={handle_frame_click}
 						onkeydown={handle_frame_keydown}
 					>
-						<img
-							src={url}
-							alt="Preview"
-							onload={({ currentTarget }) => (natural_size = { width: currentTarget.naturalWidth, height: currentTarget.naturalHeight })}
-						/>
+						<img src={url} alt="Preview" onload={({ currentTarget }) => (natural_size = { width: currentTarget.naturalWidth, height: currentTarget.naturalHeight })} />
 						<span class="focal-marker" style:left="{focal_point.x * 100}%" style:top="{focal_point.y * 100}%"></span>
 					</button>
 				{:else if url}
