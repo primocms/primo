@@ -11,15 +11,19 @@
 	import { site_context } from '../stores/context'
 	import { self } from '$lib/pocketbase/managers'
 	import { watch } from 'runed'
+	import { get_focal_point } from '../utils'
 
 	const {
 		field,
 		entry: passedEntry,
-		onchange
+		onchange,
+		show_focal_point = true
 	}: {
 		field: Field
 		entry?: Entry
 		onchange: FieldValueHandler
+		// Off where the value only feeds an <img> tag (e.g. rich-text images)
+		show_focal_point?: boolean
 	} = $props()
 
 	type ImageFieldValue = {
@@ -28,6 +32,8 @@
 		upload?: string | null
 		width?: number | null
 		height?: number | null
+		// Fractions (0..1) of the original image; missing means centered
+		focal_point?: { x: number; y: number }
 	}
 
 	const default_value: ImageFieldValue = {
@@ -126,7 +132,8 @@
 							upload: upload_record.id,
 							url: '',
 							width: dimensions?.width ?? null,
-							height: dimensions?.height ?? null
+							height: dimensions?.height ?? null,
+							focal_point: undefined
 						}
 					}
 				}
@@ -150,6 +157,41 @@
 	)
 	let input_url = $derived(entry.value.url)
 	let url = $derived(input_url || upload_url)
+
+	// FOCAL POINT
+	// The frame is sized to the rendered (letterboxed) image so pointer and
+	// marker coordinates map straight onto the original image.
+	let focal_point = $derived(get_focal_point(entry.value))
+	let can_set_focal_point = $derived(!!url && show_focal_point)
+	let preview_width = $state(0)
+	let preview_height = $state(0)
+	let natural_size = $state<{ width: number; height: number } | null>(null)
+	let frame_style = $derived.by(() => {
+		if (!natural_size?.width || !natural_size?.height || !preview_width || !preview_height) return 'inset: 0'
+		const scale = Math.min(preview_width / natural_size.width, preview_height / natural_size.height)
+		const width = natural_size.width * scale
+		const height = natural_size.height * scale
+		return `left: ${(preview_width - width) / 2}px; top: ${(preview_height - height) / 2}px; width: ${width}px; height: ${height}px`
+	})
+
+	function set_focal_point(point?: { x: number; y: number }) {
+		onchange({ [field.key]: { 0: { value: { ...entry.value, focal_point: point && get_focal_point({ focal_point: point }) } } } })
+	}
+
+	function handle_frame_click(event: MouseEvent & { currentTarget: HTMLElement }) {
+		// Enter/Space also fire click; only pointer clicks carry a position
+		if (event.detail === 0) return
+		const rect = event.currentTarget.getBoundingClientRect()
+		set_focal_point({ x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height })
+	}
+
+	function handle_frame_keydown(event: KeyboardEvent) {
+		const step = event.shiftKey ? 0.1 : 0.01
+		const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[event.key]
+		if (!delta) return
+		event.preventDefault()
+		set_focal_point({ x: focal_point.x + delta[0], y: focal_point.y + delta[1] })
+	}
 
 	// Extract dimensions when URL changes (for external URLs)
 	watch(
@@ -179,7 +221,7 @@
 <div class="ImageField" bind:clientWidth={width} class:collapsed>
 	<span class="primo--field-label">{field.label}</span>
 	<div class="image-info">
-		<div class="image-preview">
+		<div class="image-preview" bind:clientWidth={preview_width} bind:clientHeight={preview_height}>
 			{#if loading}
 				<div class="spinner-container">
 					<Spinner />
@@ -195,12 +237,28 @@
 						{entry.value.width} × {entry.value.height}
 					</span>
 				{/if}
-				{#if url}
+				{#if can_set_focal_point}
+					<button
+						type="button"
+						class="focal-frame"
+						style={frame_style}
+						aria-label="Focus point at {Math.round(focal_point.x * 100)}% {Math.round(focal_point.y * 100)}%. Click the image or use the arrow keys to move it."
+						onclick={handle_frame_click}
+						onkeydown={handle_frame_keydown}
+					>
+						<img
+							src={url}
+							alt="Preview"
+							onload={({ currentTarget }) => (natural_size = { width: currentTarget.naturalWidth, height: currentTarget.naturalHeight })}
+						/>
+						<span class="focal-marker" style:left="{focal_point.x * 100}%" style:top="{focal_point.y * 100}%"></span>
+					</button>
+				{:else if url}
 					<img src={url} alt="Preview" />
 				{/if}
-				<label class="image-upload">
+				<label class="image-upload" class:corner={can_set_focal_point} title="Upload image">
 					<Icon icon="uil:image-upload" />
-					{#if !entry.value.url}
+					{#if !entry.value.url && !can_set_focal_point}
 						<span>Upload</span>
 					{/if}
 					<input
@@ -223,12 +281,20 @@
 				value={entry.value.url}
 				label="URL"
 				oninput={(value) => {
-					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined } } } })
+					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined, focal_point: undefined } } } })
 				}}
 				onchange={(value) => {
-					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined } } } })
+					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined, focal_point: undefined } } } })
 				}}
 			/>
+			{#if can_set_focal_point}
+				<div class="focal-hint">
+					<span>Click the image to set its focus point</span>
+					{#if focal_point.x !== 0.5 || focal_point.y !== 0.5}
+						<button type="button" onclick={() => set_focal_point()}>Reset to center</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>
@@ -313,6 +379,45 @@
 				width: 0;
 				position: absolute;
 			}
+
+			/* With an image set, the preview itself picks the focal point */
+			&.corner {
+				inset: 0.25rem 0.25rem auto auto;
+				width: auto;
+				padding: 0.25rem;
+				border-radius: 0.25rem;
+				z-index: 2;
+			}
+		}
+
+		.focal-frame {
+			position: absolute;
+			padding: 0;
+			border: 0;
+			background: none;
+			cursor: crosshair;
+
+			&:focus-visible {
+				outline: 2px solid var(--primo-primary-color);
+				outline-offset: 2px;
+			}
+
+			img {
+				object-fit: contain;
+			}
+		}
+
+		.focal-marker {
+			position: absolute;
+			width: 0.875rem;
+			height: 0.875rem;
+			border: 2px solid white;
+			border-radius: 50%;
+			box-shadow:
+				0 0 0 1px rgba(0, 0, 0, 0.6),
+				0 1px 4px rgba(0, 0, 0, 0.5);
+			transform: translate(-50%, -50%);
+			pointer-events: none;
 		}
 
 		.field-size {
@@ -326,6 +431,7 @@
 			font-size: var(--font-size-1);
 			font-weight: 600;
 			border-bottom-right-radius: 0.25rem;
+			pointer-events: none;
 		}
 
 		.field-dimensions {
@@ -338,6 +444,7 @@
 			padding: 2px 4px;
 			font-size: 0.5rem;
 			border-top-left-radius: 0.25rem;
+			pointer-events: none;
 		}
 
 		img {
@@ -354,6 +461,20 @@
 		row-gap: 6px;
 		width: 100%;
 		--TextInput-font-size: 0.75rem;
+	}
+
+	.focal-hint {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+		color: var(--color-gray-4);
+
+		button {
+			color: var(--color-gray-2);
+			text-decoration: underline;
+		}
 	}
 
 	/* .image-type-buttons {

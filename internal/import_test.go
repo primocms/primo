@@ -921,6 +921,62 @@ func TestImportUploadsResolvesSymbolicPathAndRoundTrips(t *testing.T) {
 	}
 }
 
+// Image values carry an optional focal_point that must survive push/pull
+// untouched, so blocks keep cropping around the editor's chosen point.
+func TestImportExportImageFocalPointRoundTrip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+	files := map[string]string{
+		"blocks/hero/config.yaml":        "name: hero\n",
+		"blocks/hero/component.svelte":   "<img src={image.url} alt={image.alt} style:object-position={image.position} />\n",
+		"blocks/hero/fields.yaml":        "- name: image\n  label: Image\n  type: image\n",
+		"blocks/hero/content.yaml":       "{}\n",
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks:\n  - hero\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "{}\n",
+		"pages/index.yaml": "" +
+			"name: Home\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      image:\n" +
+			"        url: https://example.com/hero.jpg\n" +
+			"        alt: A hero image\n" +
+			"        focal_point:\n" +
+			"          x: 0.25\n" +
+			"          y: 0.8\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	exportedZip, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatalf("export site: %v", err)
+	}
+	var page struct {
+		Sections []struct {
+			Content map[string]struct {
+				FocalPoint map[string]float64 `yaml:"focal_point"`
+			} `yaml:"content"`
+		} `yaml:"sections"`
+	}
+	if err := yaml.Unmarshal([]byte(readZipFile(t, exportedZip, "pages/index.yaml")), &page); err != nil {
+		t.Fatalf("parse exported page: %v", err)
+	}
+	if len(page.Sections) != 1 {
+		t.Fatalf("expected 1 exported section, got %d", len(page.Sections))
+	}
+	if got := page.Sections[0].Content["image"].FocalPoint; got["x"] != 0.25 || got["y"] != 0.8 {
+		t.Fatalf("expected focal_point {x: 0.25, y: 0.8} to round-trip, got %#v", got)
+	}
+}
+
 func TestImportUploadsEmitsOrphanWarning(t *testing.T) {
 	app := newImportTestApp(t)
 	defer app.ResetBootstrapState()

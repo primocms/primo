@@ -835,7 +835,7 @@
 	let editing_image = $state(false)
 	let current_image_element = $state<HTMLImageElement | null>(null)
 	let current_image_id = $state<string | null>(null)
-	let current_image_value = $state<{ url: string; alt: string; upload?: string | null }>({ url: '', alt: '' })
+	let current_image_value = $state<{ url: string; alt: string; upload?: string | null; focal_point?: { x: number; y: number } }>({ url: '', alt: '' })
 
 	let editing_link = $state(false)
 	let current_link_element = $state<HTMLLinkElement | null>(null)
@@ -1049,6 +1049,7 @@
 			<ImageField
 				{field}
 				{entry}
+				show_focal_point={!!current_image_id}
 				onchange={async (changeData: any) => {
 					// Extract the actual value from the nested structure
 					const fieldKey = Object.keys(changeData)[0]
@@ -1226,7 +1227,9 @@
 			current_image_value = {
 				url: image_editor_element?.src || '',
 				alt: image_editor_element?.alt || '',
-				upload: null // Clear any previous upload
+				upload: null, // Clear any previous upload
+				// The element only knows src and alt; keep the entry's stored focal point
+				focal_point: entries?.find((e) => e.id === current_image_id)?.value?.focal_point
 			}
 			editing_image = true
 			image_overlay_is_visible = false
