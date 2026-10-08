@@ -31,14 +31,19 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           const { event, payload = {} } = data
           if (!payload.componentApp && !payload.data) return;
           const request = ++render_request;
-          if (payload.componentApp) {
-            await init(payload.componentApp)
-          } else if (module_import) {
-            await module_import;
-          }
-          if (request !== render_request) return;
-          if (payload.data) {
-            update(payload.data)
+          try {
+            if (payload.componentApp) {
+              await init(payload.componentApp)
+            } else if (module_import) {
+              await module_import;
+            }
+            if (request !== render_request) return;
+            if (payload.data) {
+              update(payload.data)
+            }
+          } catch (error) {
+            if (request !== render_request) return;
+            channel.postMessage({ event: 'SET_ERROR', payload: { error: String(error) } });
           }
         }
         channel.postMessage({ event: 'INITIALIZED' });
@@ -213,14 +218,23 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             if (!payload) return
             if (!payload.js && !Object.prototype.hasOwnProperty.call(payload, 'data')) return;
             const request = ++render_request;
-            if (payload.js) {
-              await init(payload.js)
-            } else if (module_import) {
-              await module_import;
-            }
-            if (request !== render_request) return;
-            if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
-              update(payload.data)
+            try {
+              if (payload.js) {
+                await init(payload.js)
+              } else if (module_import) {
+                await module_import;
+              }
+              if (request !== render_request) return;
+              if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+                update(payload.data)
+              }
+            } catch (e) {
+              if (request !== render_request) return;
+              const target = document.querySelector('#component')
+              if (target) target.innerHTML = ''
+              console.error(e)
+              const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
+              window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
             }
           })
 
@@ -239,11 +253,6 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
               .catch((e) => {
                 if (request !== import_request) return;
                 imported_source = undefined;
-                const target = document.querySelector('#component')
-                if (target) target.innerHTML = ''
-                console.error(e)
-                const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
-                window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
                 throw e
               })
               .finally(() => {

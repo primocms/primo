@@ -189,6 +189,23 @@ for (const kind of ['component', 'dynamic']) {
 		assert.equal(preview.imports, 1)
 	})
 
+	test(`${kind} preview handles failed imports during data-only updates and recovers`, async () => {
+		const preview = await previewRuntime(kind, { delayImports: true })
+		const initial = preview.send(blockSource('v1'), { text: 'old' })
+		const updated = preview.send(undefined, { text: 'latest' })
+		preview.pendingImports[0].reject(new Error('import failed'))
+		await assert.doesNotReject(Promise.all([initial, updated]))
+		const errors = preview.messages.filter((message) => (kind === 'component' ? message.type === 'component-error' && message.error : message.event === 'SET_ERROR'))
+		assert.equal(errors.length, 1)
+		assert.match(kind === 'component' ? errors[0].error : errors[0].payload.error, /import failed/)
+		assert.equal(preview.revocations, 1)
+		const retry = preview.send(blockSource('v1'), { text: 'recovered' })
+		await preview.pendingImports[1].resolve()
+		await retry
+		assert.equal(preview.target.innerHTML, 'v1:recovered')
+		assert.equal(preview.imports, 2)
+	})
+
 	test(`${kind} preview updates content without reimporting, but loads changed code`, async () => {
 		const preview = await previewRuntime(kind)
 		await preview.send(blockSource('v1'), { text: 'first' })
@@ -212,13 +229,13 @@ for (const kind of ['component', 'dynamic']) {
 	test(`${kind} preview retries failed imports and recovers after code is corrected`, async () => {
 		const preview = await previewRuntime(kind)
 		const invalid = 'export default {'
-		await assert.rejects(preview.send(invalid, { text: 'first' }), SyntaxError)
-		await assert.rejects(preview.send(invalid, { text: 'retry' }), SyntaxError)
+		await assert.doesNotReject(preview.send(invalid, { text: 'first' }))
+		await assert.doesNotReject(preview.send(invalid, { text: 'retry' }))
 		assert.equal(preview.imports, 2)
 		assert.equal(preview.revocations, 2)
-		if (kind === 'component') {
-			assert(preview.messages.some((message) => message.type === 'component-error' && message.error))
-		}
+		const errors = preview.messages.filter((message) => (kind === 'component' ? message.type === 'component-error' && message.error : message.event === 'SET_ERROR'))
+		assert.equal(errors.length, 2)
+		assert.match(kind === 'component' ? errors[0].error : errors[0].payload.error, /SyntaxError/)
 		await preview.send(blockSource('fixed'), { text: 'recovered' })
 		assert.equal(preview.target.innerHTML, 'fixed:recovered')
 	})
