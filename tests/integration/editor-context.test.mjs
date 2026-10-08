@@ -62,12 +62,25 @@ test('component editor iframe exposes documented context to loaded blocks', asyn
 	assert.equal(window.__loadedBlock.is_editor, true)
 })
 
-async function previewRuntime(kind) {
+async function previewRuntime(kind, { delayImports = false } = {}) {
 	const helpers = await loadIframeHelpers()
 	const srcdoc = kind === 'component' ? helpers.component_iframe_srcdoc({}) : helpers.dynamic_iframe_srcdoc('', 'test')
-	const script = srcdoc.match(/<script type="module">([\s\S]*?)<\/script>/)[1]
+	const script = srcdoc.match(/<script type="module">([\s\S]*?)<\/script>/)[1].replaceAll('import(url)', 'loadModule(url)')
 	const target = { innerHTML: '' }
 	const messages = []
+	const pendingImports = []
+	const loadModule = (url) => {
+		const imported = import(url)
+		if (!delayImports) return imported
+		// Control completion order while still loading real ESM modules.
+		imported.catch(() => {})
+		return new Promise((resolve, reject) => {
+			pendingImports.push({
+				resolve: () => imported.then(resolve, reject),
+				reject
+			})
+		})
+	}
 	let handler
 	let imports = 0
 	let revocations = 0
@@ -105,11 +118,13 @@ async function previewRuntime(kind) {
 		'URL',
 		'console',
 		'setTimeout',
+		'loadModule',
 		script
-	)(window, { body: target, querySelector: () => target }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0)
+	)(window, { body: target, querySelector: () => target }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0, loadModule)
 	return {
 		target,
 		messages,
+		pendingImports,
 		get imports() {
 			return imports
 		},
@@ -132,6 +147,48 @@ function blockSource(version) {
 }
 
 for (const kind of ['component', 'dynamic']) {
+	test(`${kind} preview keeps the latest code when imports finish in reverse order`, async () => {
+		const preview = await previewRuntime(kind, { delayImports: true })
+		const older = preview.send(blockSource('v1'), { text: 'old' })
+		const newer = preview.send(blockSource('v2'), { text: 'new' })
+		await preview.pendingImports[1].resolve()
+		await newer
+		assert.equal(preview.target.innerHTML, 'v2:new')
+		await preview.pendingImports[0].resolve()
+		await older
+		assert.equal(preview.target.innerHTML, 'v2:new')
+		await preview.send(blockSource('v2'), { text: 'latest' })
+		assert.equal(preview.target.innerHTML, 'v2:latest')
+		assert.equal(preview.imports, 2)
+		assert.equal(preview.revocations, 2)
+	})
+
+	test(`${kind} preview ignores failures from superseded imports`, async () => {
+		const preview = await previewRuntime(kind, { delayImports: true })
+		const older = preview.send(blockSource('v1'), { text: 'old' })
+		const newer = preview.send(blockSource('v2'), { text: 'new' })
+		await preview.pendingImports[1].resolve()
+		await newer
+		const messagesBefore = preview.messages.length
+		preview.pendingImports[0].reject(new Error('superseded import failed'))
+		await older
+		assert.equal(preview.target.innerHTML, 'v2:new')
+		assert.equal(preview.messages.length, messagesBefore)
+		await preview.send(blockSource('v2'), { text: 'latest' })
+		assert.equal(preview.target.innerHTML, 'v2:latest')
+		assert.equal(preview.imports, 2)
+	})
+
+	test(`${kind} preview applies data-only updates arriving during an import`, async () => {
+		const preview = await previewRuntime(kind, { delayImports: true })
+		const initial = preview.send(blockSource('v1'), { text: 'old' })
+		const updated = preview.send(undefined, { text: 'latest' })
+		await preview.pendingImports[0].resolve()
+		await Promise.all([initial, updated])
+		assert.equal(preview.target.innerHTML, 'v1:latest')
+		assert.equal(preview.imports, 1)
+	})
+
 	test(`${kind} preview updates content without reimporting, but loads changed code`, async () => {
 		const preview = await previewRuntime(kind)
 		await preview.send(blockSource('v1'), { text: 'first' })

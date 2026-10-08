@@ -22,14 +22,21 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
         let reset;
         let imported_source;
         let module_import;
+        let import_request = 0;
+        let render_request = 0;
         let last_rendered_html = '';
 
         const channel = new BroadcastChannel('${broadcast_id}');
         channel.onmessage = async ({data}) => {
           const { event, payload = {} } = data
+          if (!payload.componentApp && !payload.data) return;
+          const request = ++render_request;
           if (payload.componentApp) {
             await init(payload.componentApp)
+          } else if (module_import) {
+            await module_import;
           }
+          if (request !== render_request) return;
           if (payload.data) {
             update(payload.data)
           }
@@ -42,13 +49,15 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           if (source === imported_source) return module_import;
           const blob = new Blob([source], { type: 'text/javascript' })
           const url = URL.createObjectURL(blob)
+          const request = ++import_request;
           imported_source = source;
           module_import = import(url)
             .then((module) => {
-              mod = module
+              if (request === import_request) mod = module;
             })
             .catch((error) => {
-              if (imported_source === source) imported_source = undefined;
+              if (request !== import_request) return;
+              imported_source = undefined;
               throw error;
             })
             .finally(() => {
@@ -196,13 +205,20 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
           let reset;
           let imported_source;
           let module_import;
+          let import_request = 0;
+          let render_request = 0;
 
           window.addEventListener('message', async ({ data }) => {
             const payload = data && data.payload
             if (!payload) return
+            if (!payload.js && !Object.prototype.hasOwnProperty.call(payload, 'data')) return;
+            const request = ++render_request;
             if (payload.js) {
               await init(payload.js)
+            } else if (module_import) {
+              await module_import;
             }
+            if (request !== render_request) return;
             if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
               update(payload.data)
             }
@@ -214,13 +230,15 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             if (source === imported_source) return module_import;
             const blob = new Blob([source], { type: 'text/javascript' })
             const url = URL.createObjectURL(blob)
+            const request = ++import_request;
             imported_source = source;
             module_import = import(url)
               .then((module) => {
-                mod = module
+                if (request === import_request) mod = module;
               })
               .catch((e) => {
-                if (imported_source === source) imported_source = undefined;
+                if (request !== import_request) return;
+                imported_source = undefined;
                 const target = document.querySelector('#component')
                 if (target) target.innerHTML = ''
                 console.error(e)
