@@ -28,8 +28,9 @@ or send product events or instance heartbeats, even if
 `PRIMO_ENABLE_USAGE_STATS=true`. The local `devenv.nix` also explicitly sets
 `PRIMO_ENABLE_USAGE_STATS=false`.
 
-Heartbeat delivery is best-effort, with a five-second timeout. A PostHog
-outage or blocked outbound request does not prevent the CMS from starting.
+Heartbeat delivery is best-effort, with a five-second timeout. The startup
+heartbeat runs in the background, so a PostHog outage or blocked outbound
+request does not delay or prevent the CMS from starting.
 
 ## Events
 

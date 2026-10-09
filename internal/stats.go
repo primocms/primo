@@ -153,7 +153,13 @@ func RegisterUsageStats(pb *pocketbase.PocketBase) error {
 				pb.Logger().Warn("Usage statistics delivery failed", "error", err)
 			}
 		}
-		send()
+		// Initialize identity before accepting requests so the background send
+		// cannot race the info endpoint while creating the instance ID.
+		if _, err := getInstanceId(pb); err != nil {
+			pb.Logger().Warn("Usage statistics identity initialization failed", "error", err)
+		} else {
+			go send()
+		}
 
 		// Set up daily heartbeat
 		if err := pb.Cron().Add(

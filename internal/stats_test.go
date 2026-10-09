@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -119,29 +120,63 @@ func TestUsageStatsHeartbeatAndOptOut(t *testing.T) {
 	}
 }
 
-func TestUsageStatsFailureDoesNotStopServer(t *testing.T) {
+func TestUsageStatsStartupDoesNotWaitForDelivery(t *testing.T) {
 	t.Setenv("PRIMO_ENABLE_USAGE_STATS", "")
 	t.Setenv("PRIMO_DEV_MODE", "")
 	app := newImportTestApp(t)
-	defer app.ResetBootstrapState()
+	t.Cleanup(func() { app.ResetBootstrapState() })
 	old := usageStatsClient
 	t.Cleanup(func() { usageStatsClient = old })
-	calls := 0
+	attempted := make(chan struct{})
+	release := make(chan struct{})
+	finished := make(chan struct{})
+	t.Cleanup(func() {
+		close(release)
+		select {
+		case <-finished:
+		case <-time.After(5 * time.Second):
+			t.Error("heartbeat did not finish after releasing the transport")
+		}
+	})
 	usageStatsClient = &http.Client{Transport: statsTestTransport(func(r *http.Request) (*http.Response, error) {
-		calls++
+		close(attempted)
+		<-release
+		defer close(finished)
 		return nil, errors.New("outbound analytics blocked")
 	})}
 	if err := RegisterUsageStats(app); err != nil {
+		t.Fatal(err)
+	}
+	if err := RegisterInfoEndpoint(app); err != nil {
 		t.Fatal(err)
 	}
 	router, err := apis.NewRouter(app)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := app.OnServe().Trigger(&core.ServeEvent{App: app, Router: router}); err != nil {
-		t.Fatalf("analytics failure stopped server: %v", err)
+	served := make(chan error, 1)
+	go func() { served <- app.OnServe().Trigger(&core.ServeEvent{App: app, Router: router}) }()
+	select {
+	case err := <-served:
+		if err != nil {
+			t.Fatalf("analytics prevented startup: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("startup waited for stalled analytics delivery")
 	}
-	if calls != 1 {
+	select {
+	case <-attempted:
+	case <-time.After(2 * time.Second):
 		t.Fatal("startup heartbeat was not attempted")
+	}
+	// A request must be served while the analytics request is still stalled.
+	mux, err := router.BuildMux()
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	mux.ServeHTTP(response, httptest.NewRequest("GET", "/api/primo/info", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("info unavailable during analytics delivery: %s", response.Body.String())
 	}
 }
