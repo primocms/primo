@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Crosshair } from 'lucide-svelte'
 	import { get_focal_point } from '../utils'
-	import type { ImageCrop } from './image-crop'
+	import { image_position_bounds, type ImageCrop } from './image-crop'
 	let {
 		src,
 		point,
@@ -36,7 +36,7 @@
 	// A fractional object-position anchors the source point at the same fraction
 	// of the crop box, so the handle stays under the pointer as the crop moves.
 	function move(event: PointerEvent & { currentTarget: HTMLButtonElement }) {
-		const rect = event.currentTarget.getBoundingClientRect()
+		const rect = image_position_bounds(event.currentTarget.getBoundingClientRect(), natural, crop?.fit ?? 'contain', point)
 		if (rect.width && rect.height) onchange(get_focal_point({ focal_point: { x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height } }))
 	}
 	function keydown(event: KeyboardEvent) {

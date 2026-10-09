@@ -18,9 +18,13 @@ export function image_crop_snapshot(image: HTMLImageElement, src?: string): stri
 	const index = [...doc.querySelectorAll('img')].indexOf(image)
 	const target = clone.querySelectorAll('img')[index]
 	target?.setAttribute('data-primo-crop-target', '')
-	if (src && target) {
+	if (src && target && src !== image.src && src !== image.currentSrc) {
 		target.src = src
 		target.removeAttribute('srcset')
+		target
+			.closest('picture')
+			?.querySelectorAll('source')
+			.forEach((source) => source.remove())
 	}
 	clone.querySelectorAll('script, iframe, object, embed, meta[http-equiv="refresh"]').forEach((element) => element.remove())
 	clone.querySelectorAll('*').forEach((element) => {
@@ -34,4 +38,18 @@ export function image_crop_snapshot(image: HTMLImageElement, src?: string): stri
 	base.href = doc.baseURI
 	head.prepend(base)
 	return `<!doctype html>${clone.outerHTML}`
+}
+
+// Normalize against the visible image, excluding contain-mode letterboxing.
+export function image_position_bounds(
+	rect: { left: number; top: number; width: number; height: number },
+	natural: { width: number; height: number },
+	fit: ImageCrop['fit'],
+	point: { x: number; y: number }
+) {
+	if (fit !== 'contain' || !natural.width || !natural.height) return rect
+	const scale = Math.min(rect.width / natural.width, rect.height / natural.height)
+	const width = natural.width * scale
+	const height = natural.height * scale
+	return { left: rect.left + (rect.width - width) * point.x, top: rect.top + (rect.height - height) * point.y, width, height }
 }

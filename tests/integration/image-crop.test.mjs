@@ -7,7 +7,7 @@ const source = await readFile(new URL('../../src/lib/builder/field-types/image-c
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } })
 const module = { exports: {} }
 Function('exports', 'module', outputText)(module.exports, module)
-const { measure_image_crop } = module.exports
+const { measure_image_crop, image_position_bounds } = module.exports
 
 function image({ width = 704, height = 300, fit = 'cover', padding = 0, connected = true } = {}) {
 	return {
@@ -33,4 +33,11 @@ test('unrendered and unsupported crops are unavailable instead of fabricated', (
 	for (const unavailable of [undefined, null, image({ connected: false }), image({ width: 0 }), image({ height: 0 }), image({ fit: 'none' }), image({ fit: 'scale-down' })]) {
 		assert.equal(measure_image_crop(unavailable), null)
 	}
+})
+
+test('contain positioning uses visible image bounds including asymmetric object-position', () => {
+	const rect = { left: 10, top: 20, width: 100, height: 100 }
+	assert.deepEqual(image_position_bounds(rect, { width: 100, height: 50 }, 'contain', { x: 0.5, y: 0.5 }), { left: 10, top: 45, width: 100, height: 50 })
+	assert.deepEqual(image_position_bounds(rect, { width: 50, height: 100 }, 'contain', { x: 0.2, y: 0.8 }), { left: 20, top: 20, width: 50, height: 100 })
+	assert.deepEqual(image_position_bounds(rect, { width: 100, height: 50 }, 'cover', { x: 0.5, y: 0.5 }), rect)
 })

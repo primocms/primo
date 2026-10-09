@@ -13,10 +13,12 @@
 	]
 	let snapshot = $state('')
 	let crops = $state<(ImageCrop | null)[]>([null, null, null])
+	let sources = $state<string[]>(['', '', ''])
 	let cleanups: (() => void)[] = []
 	$effect(() => {
 		snapshot = image?.isConnected ? image_crop_snapshot(image, src) : ''
 		crops = [null, null, null]
+		sources = ['', '', '']
 		return () => {
 			cleanups.forEach((cleanup) => cleanup())
 			cleanups = []
@@ -26,7 +28,10 @@
 	function observe_frame(frame: HTMLIFrameElement, index: number) {
 		const target = frame.contentDocument?.querySelector<HTMLImageElement>('img[data-primo-crop-target]')
 		if (!target) return
-		const measure = () => (crops[index] = measure_image_crop(target))
+		const measure = () => {
+			crops[index] = measure_image_crop(target)
+			sources[index] = target.currentSrc || target.src
+		}
 		const observer = new ResizeObserver(measure)
 		observer.observe(target)
 		target.addEventListener('load', measure)
@@ -61,7 +66,7 @@
 				<div class="crop-stage">
 					{#if crop}
 						<img
-							{src}
+							src={sources[index] || src}
 							alt={`${size.label} crop preview`}
 							style:width="{Math.min(compact ? 120 : 160, (preview_height * crop.width) / crop.height)}px"
 							style:aspect-ratio="{crop.width} / {crop.height}"

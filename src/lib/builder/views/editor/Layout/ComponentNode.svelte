@@ -1262,10 +1262,12 @@
 		onClick={() => {
 			current_image_id = current_image_id // for image entries (non-tiptap)
 			current_image_element = image_editor_element
+			const stored_image = entries?.find((e) => e.id === current_image_id)?.value
 			current_image_value = {
-				url: image_editor_element?.src || '',
+				..._.cloneDeep(stored_image || {}),
+				url: stored_image?.url || image_editor_element?.src || '',
 				alt: image_editor_element?.alt || '',
-				upload: null, // Clear any previous upload
+				upload: stored_image?.upload ?? null,
 				// The element only knows src and alt; keep the entry's stored focal point
 				focal_point: entries?.find((e) => e.id === current_image_id)?.value?.focal_point
 			}
