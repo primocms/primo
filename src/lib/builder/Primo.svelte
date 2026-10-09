@@ -293,7 +293,7 @@
 				<div
 					{...props}
 					onmousedown={(event) => {
-						if (event.button === 0) props.onmousedown?.(event)
+						if (event.button === 0) (props.onmousedown as ((event: MouseEvent) => void) | undefined)?.(event)
 					}}
 					use:capture_sidebar_resize={props.onmouseup as () => void}
 				>
