@@ -61,6 +61,19 @@ test.describe('Sidebar resize release', () => {
 		})
 	}
 
+	test('non-primary buttons never start an uncaptured drag', async ({ page }) => {
+		const handle = page.locator('.editor-panes > [data-pane-resizer]')
+		const box = (await handle.boundingBox())!
+		for (const button of ['middle', 'right'] as const) {
+			await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+			await page.mouse.down({ button })
+			await expect(handle).not.toHaveAttribute('data-active', 'pointer')
+			await page.mouse.move(box.x + 100, box.y + box.height / 2)
+			await page.mouse.up({ button })
+			await expect(page.locator('#editor-sidebar')).not.toHaveCSS('pointer-events', 'none')
+		}
+	})
+
 	test('losing window focus clears an active drag', async ({ page }) => {
 		const handle = page.locator('.editor-panes > [data-pane-resizer]')
 		const sidebar = page.locator('#editor-sidebar')

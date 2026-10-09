@@ -58,11 +58,12 @@
 
 	$effect(() => {
 		const request = $sidebarReveal
-		if (request) untrack(() => {
-			showing_sidebar = true
-			mobile_sidebar_open = true
-			if (window.matchMedia('(min-width: 641px)').matches) sidebar_pane?.resize(30)
-		})
+		if (request)
+			untrack(() => {
+				showing_sidebar = true
+				mobile_sidebar_open = true
+				if (window.matchMedia('(min-width: 641px)').matches) sidebar_pane?.resize(30)
+			})
 	})
 
 	function reset() {
@@ -203,24 +204,7 @@
 
 	// Keys that only move the caret or copy; blocking them would break the
 	// "selectable and copyable" requirement.
-	const non_mutating_keys = new Set([
-		'Tab',
-		'Escape',
-		'Enter',
-		'ArrowLeft',
-		'ArrowRight',
-		'ArrowUp',
-		'ArrowDown',
-		'Home',
-		'End',
-		'PageUp',
-		'PageDown',
-		'Shift',
-		'Control',
-		'Alt',
-		'Meta',
-		'CapsLock'
-	])
+	const non_mutating_keys = new Set(['Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown', 'Shift', 'Control', 'Alt', 'Meta', 'CapsLock'])
 
 	function is_editable_target(target: EventTarget | null) {
 		if (!(target instanceof HTMLElement)) return false
@@ -306,7 +290,13 @@
 			justify-content: center;"
 		>
 			{#snippet child({ props })}
-				<div {...props} use:capture_sidebar_resize={props.onmouseup as () => void}>
+				<div
+					{...props}
+					onmousedown={(event) => {
+						if (event.button === 0) props.onmousedown?.(event)
+					}}
+					use:capture_sidebar_resize={props.onmouseup as () => void}
+				>
 					{#if showing_sidebar}
 						<span class="grab-handle">
 							<Icon icon="octicon:grabber-16" />
@@ -326,16 +316,54 @@
 <svelte:window onresize={reset} />
 
 <style lang="postcss">
-	.mobile-sidebar-bar { display: none; }
+	.mobile-sidebar-bar {
+		display: none;
+	}
 	@media (max-width: 640px) {
-		.mobile-sidebar-bar { display: flex; align-items: center; gap: 7px; flex-shrink: 0; width: 100%; min-height: 44px; padding: 10px 18px; background: #1e1e20; border-bottom: 1px solid #343437; color: #ddd; font-size: 12px; text-align: left; cursor: pointer; }
-		.mobile-sidebar-bar:hover { background: #262629; }
-		.mobile-sidebar-bar:focus-visible { outline: 2px solid #956e51; outline-offset: -2px; }
-		:global(.editor-panes) { flex-direction: column !important; min-height: 0; }
-		:global(.editor-panes > .editor-sidebar) { display: none; }
-		:global(.editor-panes > .editor-sidebar.mobile-open) { display: block; flex: 0 0 min(42vh, 320px) !important; width: 100%; min-height: 0; border-bottom: 1px solid #343437; }
-		:global(.editor-panes > .PaneResizer) { display: none !important; }
-		:global(.editor-panes > .editor-canvas) { flex: 1 1 0% !important; min-height: 0; width: 100%; }
+		.mobile-sidebar-bar {
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			flex-shrink: 0;
+			width: 100%;
+			min-height: 44px;
+			padding: 10px 18px;
+			background: #1e1e20;
+			border-bottom: 1px solid #343437;
+			color: #ddd;
+			font-size: 12px;
+			text-align: left;
+			cursor: pointer;
+		}
+		.mobile-sidebar-bar:hover {
+			background: #262629;
+		}
+		.mobile-sidebar-bar:focus-visible {
+			outline: 2px solid #956e51;
+			outline-offset: -2px;
+		}
+		:global(.editor-panes) {
+			flex-direction: column !important;
+			min-height: 0;
+		}
+		:global(.editor-panes > .editor-sidebar) {
+			display: none;
+		}
+		:global(.editor-panes > .editor-sidebar.mobile-open) {
+			display: block;
+			flex: 0 0 min(42vh, 320px) !important;
+			width: 100%;
+			min-height: 0;
+			border-bottom: 1px solid #343437;
+		}
+		:global(.editor-panes > .PaneResizer) {
+			display: none !important;
+		}
+		:global(.editor-panes > .editor-canvas) {
+			flex: 1 1 0% !important;
+			min-height: 0;
+			width: 100%;
+		}
 	}
 
 	/* Breathing room around the page so the canvas reads as a framed sheet
