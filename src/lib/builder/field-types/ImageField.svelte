@@ -21,12 +21,13 @@
 	import { measure_image_crop, type ImageCrop } from './image-crop'
 	import type { Snippet } from 'svelte'
 
-	const {
+	let {
 		field,
 		entry: passedEntry,
 		onchange,
 		show_focal_point = true,
 		inline_focus = false,
+		editing_focus = $bindable(false),
 		rendered_image,
 		header_actions
 	}: {
@@ -37,6 +38,7 @@
 		show_focal_point?: boolean
 		// Switch modes within the existing image dialog instead of nesting a modal.
 		inline_focus?: boolean
+		editing_focus?: boolean
 		rendered_image?: HTMLImageElement | null
 		header_actions?: Snippet
 	} = $props()
@@ -176,7 +178,6 @@
 
 	let focal_point = $derived(get_focal_point(entry.value))
 	let can_set_focal_point = $derived(!!url && show_focal_point)
-	let editing_focus = $state(false)
 	let file_input = $state<HTMLInputElement>()
 	let position_button = $state<HTMLButtonElement>()
 	const preview_image = $derived(rendered_image || find_image_preview(entry.id))
@@ -234,7 +235,7 @@
 	<div class="field-header">
 		<div class="field-heading">
 			{#if inline_focus && editing_focus}<button type="button" class="back-button" aria-label="Back to image fields" title="Back to image fields" onclick={back_to_fields}>
-					<ArrowLeft size={14} />
+					<ArrowLeft size={14} /> Image
 				</button>{/if}
 			{#if inline_focus}<Dialog.Title class="text-xs font-medium">{editing_focus ? 'Position image' : 'Image'}</Dialog.Title>{:else}<span class="primo--field-label">{field.label}</span>{/if}
 		</div>
@@ -265,6 +266,7 @@
 	/>
 	{#if inline_focus && editing_focus && can_set_focal_point}
 		<ImageFocusPicker src={url!} point={focal_point} custom={has_custom_position} rendered_image={preview_image} expanded onchange={set_focal_point} />
+		<div class="flex justify-end mt-6"><Button type="button" onclick={back_to_fields}>Done</Button></div>
 	{:else}
 		<div class="image-info">
 			<div class="image-preview" class:large={inline_focus && !!url}>
@@ -356,7 +358,9 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 28px;
+		padding: 0 5px;
+		gap: 5px;
+		font-size: 12px;
 		height: 28px;
 		border-radius: 4px;
 		cursor: pointer;

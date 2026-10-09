@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Smartphone, Tablet, Monitor } from 'lucide-svelte'
+	import { Smartphone, Tablet, Monitor, Info } from 'lucide-svelte'
+	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { image_crop_snapshot, measure_image_crop, type ImageCrop } from './image-crop'
 
 	let { image, src, point }: { image?: HTMLImageElement | null; src: string; point: { x: number; y: number } } = $props()
@@ -81,11 +82,19 @@
 		{/each}
 	</section>
 {/if}
-<p class="preview-note">
-	{snapshot
-		? 'Previews use the component’s CSS at 390, 768, and 1280px. Layout changes made by JavaScript are not included.'
-		: 'Example crops. Open an image on the page to preview its responsive layout.'}
-</p>
+<div class="preview-note">
+	<span>{snapshot ? 'Responsive crops' : 'Example crops'}</span>
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger type="button" class="crop-info" aria-label="About crop previews"><Info size={14} /></Tooltip.Trigger>
+			<Tooltip.Content class="max-w-[280px] text-xs">
+				{snapshot
+					? 'Previews use the component’s CSS at 390, 768, and 1280px. Layout changes made by JavaScript are not included.'
+					: 'Example crops. Open an image on the page to preview its responsive layout.'}
+			</Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
+</div>
 
 <style lang="postcss">
 	.measurement-frames {
@@ -140,6 +149,19 @@
 		color: var(--color-gray-4);
 	}
 	.preview-note {
+		display: flex;
+		align-items: center;
+		gap: 5px;
 		margin: 0;
+	}
+	:global(.crop-info) {
+		display: inline-flex;
+		padding: 2px;
+		border-radius: 3px;
+		cursor: help;
+	}
+	:global(.crop-info:focus-visible) {
+		outline: 2px solid var(--primo-primary-color);
+		outline-offset: 2px;
 	}
 </style>
