@@ -114,6 +114,43 @@
 
 	let sidebar_pane = $state<ReturnType<typeof Pane>>()
 
+	function capture_sidebar_resize(node: HTMLElement, stop_dragging: () => void) {
+		let pointer_id: number | null = null
+
+		function start(event: PointerEvent) {
+			if (event.button !== 0) return
+			pointer_id = event.pointerId
+			node.setPointerCapture(pointer_id)
+		}
+
+		function stop() {
+			if (pointer_id === null) return
+			const captured_pointer = pointer_id
+			pointer_id = null
+			stop_dragging()
+			if (node.hasPointerCapture(captured_pointer)) node.releasePointerCapture(captured_pointer)
+		}
+
+		// Keep the release on the handle when the sidebar snaps shut or the
+		// pointer crosses an iframe. Paneforge otherwise relies on window mouseup.
+		node.addEventListener('pointerdown', start)
+		node.addEventListener('pointerup', stop)
+		node.addEventListener('pointercancel', stop)
+		node.addEventListener('lostpointercapture', stop)
+		window.addEventListener('blur', stop)
+
+		return {
+			destroy() {
+				stop()
+				node.removeEventListener('pointerdown', start)
+				node.removeEventListener('pointerup', stop)
+				node.removeEventListener('pointercancel', stop)
+				node.removeEventListener('lostpointercapture', stop)
+				window.removeEventListener('blur', stop)
+			}
+		}
+	}
+
 	// reset site html to avoid issues when navigating to new site
 	onDestroy(() => {
 		$site_html = null
@@ -268,11 +305,15 @@
 			align-items: center;
 			justify-content: center;"
 		>
-			{#if showing_sidebar}
-				<span class="grab-handle">
-					<Icon icon="octicon:grabber-16" />
-				</span>
-			{/if}
+			{#snippet child({ props })}
+				<div {...props} use:capture_sidebar_resize={props.onmouseup as () => void}>
+					{#if showing_sidebar}
+						<span class="grab-handle">
+							<Icon icon="octicon:grabber-16" />
+						</span>
+					{/if}
+				</div>
+			{/snippet}
 		</PaneResizer>
 		<Pane class="editor-canvas relative min-w-0" defaultSize={80}>
 			<div class="canvas-surround">
