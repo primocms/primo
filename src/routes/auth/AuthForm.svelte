@@ -151,7 +151,7 @@
 {#if passwordResetRequested}
 	<div class="auth-alert" role="status">
 		If an account exists for <strong>{email}</strong>
-		, you’ll receive a password reset link. Check your spam folder too.
+		{','} you’ll receive a password reset link. Check your spam folder too.
 	</div>
 {:else}
 	<form class="auth-form" onsubmit={submit} aria-busy={loading}>
