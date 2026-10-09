@@ -282,7 +282,9 @@
 					return true
 				}
 			} else if (type === 'image' && element.nodeName === 'IMG') {
-				const image_matches = compare_urls(value.url, element.src)
+				const upload = value?.upload && (site ? SiteUploads.one(value.upload) : LibraryUploads.one(value.upload))
+				const image_url = upload && typeof upload.file === 'string' ? `${self.instance?.baseURL}/api/files/${site ? 'site_uploads' : 'library_uploads'}/${upload.id}/${upload.file}` : value?.url
+				const image_matches = compare_urls(image_url, element.src)
 				if (image_matches) {
 					set_editable_image({ element, id })
 					return true
