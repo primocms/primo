@@ -1,9 +1,12 @@
 <script>
 	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
+	import { auth_destination } from '$lib/auth_navigation'
 	import { check_session } from '$lib/pocketbase/user'
 	import { set_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
 	import { onMount } from 'svelte'
+	import { Loader } from 'lucide-svelte'
 
 	let loading = $state(true)
 
@@ -30,15 +33,16 @@
 	}
 
 	onMount(async () => {
+		const destination = auth_destination(page.url)
 		// Check existing session first
 		if (await check_session()) {
-			await goto('/admin/site')
+			await goto(destination, { replaceState: true })
 			return
 		}
 
 		// Try auto-login on localhost
-		if (isLocalhost() && await tryDevAuth()) {
-			await goto('/admin/site')
+		if (isLocalhost() && (await tryDevAuth())) {
+			await goto(destination, { replaceState: true })
 			return
 		}
 
@@ -49,7 +53,7 @@
 </script>
 
 {#if loading}
-	<div class="loading">Loading...</div>
+	<div class="loading" role="status"><Loader size={18} class="animate-spin" aria-hidden="true" />Loading workspace…</div>
 {:else}
 	{@render children?.()}
 {/if}
@@ -59,7 +63,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		height: 100vh;
-		color: #888;
+		min-height: 100dvh;
+		gap: 8px;
+		font-size: 13px;
+		color: hsl(var(--muted-foreground));
 	}
 </style>

@@ -57,12 +57,12 @@
 		--foreground: 0 0% 98%;
 		--muted: 0 0% 14.9%;
 		--muted-foreground: 0 0% 63.9%;
-		--popover: 0 0% 3.9%;
+		--popover: 240 3% 12%;
 		--popover-foreground: 0 0% 98%;
-		--card: 0 0% 3.9%;
+		--card: 240 3% 12%;
 		--card-foreground: 0 0% 98%;
-		--border: 0 0% 14.9%;
-		--input: 0 0% 14.9%;
+		--border: 240 3% 21%;
+		--input: 240 3% 24%;
 		--primary: 0 0% 98%;
 		--primary-foreground: 0 0% 9%;
 		--secondary: 0 0% 14.9%;

@@ -110,7 +110,21 @@
 	})
 </script>
 
-<div class="Select {variant}" use:clickOutside onclick_outside={() => (showing_dropdown = false)} role="menu">
+<div
+	class="Select {variant}"
+	use:clickOutside
+	onclick_outside={() => (showing_dropdown = false)}
+	role="group"
+	onkeydown={(event) => {
+		if (showing_dropdown && event.key === 'Escape') {
+			showing_dropdown = false
+			active_submenu = null
+			event.preventDefault()
+			event.stopPropagation()
+			document.getElementById(select_id)?.focus()
+		}
+	}}
+>
 	<div class="select-container">
 		{#if label}
 			<label class="primo--field-label" for={select_id}>
@@ -122,7 +136,7 @@
 				</span>
 			</label>
 		{/if}
-		<button id={select_id} class="primary" class:highlighted type="button" use:popperRef onclick={() => (showing_dropdown = !showing_dropdown)}>
+		<button id={select_id} aria-expanded={showing_dropdown} class="primary" class:highlighted type="button" use:popperRef onclick={() => (showing_dropdown = !showing_dropdown)}>
 			{#if loading}
 				<div style="padding: 3.5px;">
 					<Icon icon="line-md:loading-twotone-loop" />
@@ -268,7 +282,7 @@
 		align-items: center;
 		justify-content: flex-start;
 		gap: 0.5rem;
-		border: 1px solid var(--color-gray-8);
+		border: 1px solid hsl(var(--input));
 		padding: 6px 0.5rem;
 		padding-right: 4px; /* offset dropdown icon */
 		width: 100%;
@@ -301,12 +315,15 @@
 		place-items: normal;
 		padding: 0.25rem;
 		font-size: 0.75rem;
-		border-radius: 0.25rem;
+		border-radius: 8px;
+		max-width: calc(100vw - 2rem);
 		max-height: 20rem;
 		overflow: auto;
-		background: #171717;
-		border: 1px solid #292929;
-		z-index: 1;
+		background: hsl(var(--popover));
+		color: hsl(var(--popover-foreground));
+		box-shadow: 0 8px 24px #0003;
+		border: 1px solid hsl(var(--border));
+		z-index: 1100;
 
 		.options {
 			hr {
@@ -320,11 +337,12 @@
 		}
 
 		.item button {
-			padding: 0.25rem 0.5rem;
+			padding: 6px 8px;
+			min-height: 32px;
 		}
 
 		.item button:disabled {
-			opacity: 0.2;
+			opacity: 0.5;
 			cursor: not-allowed;
 
 			&:hover {
@@ -367,7 +385,12 @@
 		}
 
 		&:hover:not(.active) {
-			background: #292929;
+			background: hsl(var(--accent));
+		}
+
+		&:focus-visible {
+			outline: 2px solid hsl(var(--ring));
+			outline-offset: 1px;
 		}
 
 		&.active {

@@ -6,8 +6,7 @@ const preview_iframe_head = (head = '') => `
   ${head}
 `
 
-const editor_context_tag =
-	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
+const editor_context_tag = "<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
 
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `
@@ -20,31 +19,57 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
       ${preview_iframe_head(head)}
       <script type="module">
         let mod;
-        let reset;
+        let preview;
+        let preview_module;
+        let imported_source;
+        let module_import;
+        let import_request = 0;
+        let render_request = 0;
         let last_rendered_html = '';
 
         const channel = new BroadcastChannel('${broadcast_id}');
         channel.onmessage = async ({data}) => {
           const { event, payload = {} } = data
-          if (payload.componentApp) {
-            await init(payload.componentApp)
-          }
-          if (payload.data) {
-            update(payload.data)
+          if (!payload.componentApp && !payload.data) return;
+          const request = ++render_request;
+          try {
+            if (payload.componentApp) {
+              await init(payload.componentApp)
+            } else if (module_import) {
+              await module_import;
+            }
+            if (request !== render_request) return;
+            if (payload.data) {
+              update(payload.data)
+            }
+          } catch (error) {
+            if (request !== render_request) return;
+            channel.postMessage({ event: 'SET_ERROR', payload: { error: String(error) } });
           }
         }
         channel.postMessage({ event: 'INITIALIZED' });
 
         async function init(source) {
+          if (!source) return;
+          // Content updates reuse both loaded modules and in-flight imports.
+          if (source === imported_source) return module_import;
           const blob = new Blob([source], { type: 'text/javascript' })
           const url = URL.createObjectURL(blob)
-          await import(url)
+          const request = ++import_request;
+          imported_source = source;
+          module_import = import(url)
             .then((module) => {
-              mod = module
+              if (request === import_request) mod = module;
+            })
+            .catch((error) => {
+              if (request !== import_request) return;
+              imported_source = undefined;
+              throw error;
             })
             .finally(() => {
               try { URL.revokeObjectURL(url) } catch (_) {}
             });
+          return module_import;
         }
 
         function update(props) {
@@ -54,23 +79,19 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           // Reset log tracking for this render
           logsThisRender = false;
 
-          const previous_html = document.body.innerHTML;
-          document.body.innerHTML = '';
-
-          if (reset) {
-            try { reset() } catch (_) {}
-            reset = null;
-          }
-
           if (!mod) return
 
           try {
-            const component = mod.mount(mod.default, {
-              target: document.body,
-              props
-            })
-            const { unmount } = mod
-            reset = () => unmount(component)
+            if (preview && preview_module === mod) {
+              preview.update(props)
+            } else {
+              if (preview) preview.destroy()
+              preview = null;
+              document.body.innerHTML = '';
+              preview = mod.createPreview(mod.default, { target: document.body, props })
+              preview_module = mod;
+            }
+            document.dispatchEvent(new Event('primo-rendered'));
             last_rendered_html = document.body.innerHTML;
             channel.postMessage({ event: 'MOUNTED' })
             // After enough time for console logs to be called and sent, check if any were produced
@@ -81,11 +102,8 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
               }
             }, 300)
           } catch(e) {
-            reset = null;
-            if (last_rendered_html) {
+            if (!preview && last_rendered_html) {
               document.body.innerHTML = last_rendered_html;
-            } else {
-              document.body.innerHTML = previous_html;
             }
             channel.postMessage({
               event: 'SET_ERROR',
@@ -183,54 +201,76 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
           let mod;
-          let reset;
+          let preview;
+          let preview_module;
+          let imported_source;
+          let module_import;
+          let import_request = 0;
+          let render_request = 0;
 
           window.addEventListener('message', async ({ data }) => {
             const payload = data && data.payload
             if (!payload) return
-            if (payload.js) {
-              await init(payload.js)
-            }
-            if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
-              update(payload.data)
+            if (!payload.js && !Object.prototype.hasOwnProperty.call(payload, 'data')) return;
+            const request = ++render_request;
+            try {
+              if (payload.js) {
+                await init(payload.js)
+              } else if (module_import) {
+                await module_import;
+              }
+              if (request !== render_request) return;
+              if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+                update(payload.data)
+              }
+            } catch (e) {
+              if (request !== render_request) return;
+              console.error(e)
+              const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
+              window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
             }
           })
 
           async function init(source) {
             if (!source) return
+            // Content updates reuse both loaded modules and in-flight imports.
+            if (source === imported_source) return module_import;
             const blob = new Blob([source], { type: 'text/javascript' })
             const url = URL.createObjectURL(blob)
-            await import(url)
+            const request = ++import_request;
+            imported_source = source;
+            module_import = import(url)
               .then((module) => {
-                mod = module
+                if (request === import_request) mod = module;
               })
               .catch((e) => {
-                target.innerHTML = ''
-                console.error(e)
-                const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
-                window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
+                if (request !== import_request) return;
+                imported_source = undefined;
                 throw e
               })
               .finally(() => {
                 try { URL.revokeObjectURL(url) } catch (_) {}
               })
+            return module_import;
           }
 
           function update(props) {
             const target = document.querySelector('#component')
             if (!target) return
             if (!mod) return
-            if (reset) reset()
             try {
-              const component = mod.mount(mod.default, {
-                target,
-                props
-              })
-              const { unmount } = mod
-              reset = () => unmount(component)
+              if (preview && preview_module === mod) {
+                preview.update(props)
+              } else {
+                if (preview) preview.destroy()
+                preview = null;
+                target.innerHTML = ''
+                preview = mod.createPreview(mod.default, { target, props })
+                preview_module = mod;
+              }
+              document.dispatchEvent(new Event('primo-rendered'));
               window.parent.postMessage({ type: 'component-error', error: '' }, '*')
             } catch (e) {
-              target.innerHTML = ''
               console.error(e)
               const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
               window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')

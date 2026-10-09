@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as _ from 'lodash-es'
 	import Icon from '@iconify/svelte'
 	import TextInput from '../ui/TextInput.svelte'
 	import Spinner from '../ui/Spinner.svelte'
@@ -11,15 +10,36 @@
 	import { site_context } from '../stores/context'
 	import { self } from '$lib/pocketbase/managers'
 	import { watch } from 'runed'
+	import { get_focal_point } from '../utils'
+	import ImageFocusPicker from './ImageFocusPicker.svelte'
+	import ImageCropPreviews from './ImageCropPreviews.svelte'
+	import * as Dialog from '$lib/components/ui/dialog'
+	import { Button } from '$lib/components/ui/button'
+	import { ImageUp, Crosshair, X } from 'lucide-svelte'
+	import { tick } from 'svelte'
+	import ImagePositionThumbnail from './ImagePositionThumbnail.svelte'
+	import { find_image_preview } from './image-preview.svelte'
+	import { measure_image_crop, type ImageCrop } from './image-crop'
+	import type { Snippet } from 'svelte'
 
 	const {
 		field,
 		entry: passedEntry,
-		onchange
+		onchange,
+		show_focal_point = true,
+		inline_focus = false,
+		rendered_image,
+		header_actions
 	}: {
 		field: Field
 		entry?: Entry
 		onchange: FieldValueHandler
+		// Off where the value only feeds an <img> tag (e.g. rich-text images)
+		show_focal_point?: boolean
+		// Edit positioning directly within the on-page image dialog.
+		inline_focus?: boolean
+		rendered_image?: HTMLImageElement | null
+		header_actions?: Snippet
 	} = $props()
 
 	type ImageFieldValue = {
@@ -28,6 +48,8 @@
 		upload?: string | null
 		width?: number | null
 		height?: number | null
+		// Fractions (0..1) of the original image; missing means centered
+		focal_point?: { x: number; y: number }
 	}
 
 	const default_value: ImageFieldValue = {
@@ -53,10 +75,12 @@
 			const img = new Image()
 
 			img.onload = () => {
+				if (typeof source !== 'string') URL.revokeObjectURL(img.src)
 				resolve({ width: img.naturalWidth, height: img.naturalHeight })
 			}
 
 			img.onerror = () => {
+				if (typeof source !== 'string') URL.revokeObjectURL(img.src)
 				resolve(null)
 			}
 
@@ -126,7 +150,8 @@
 							upload: upload_record.id,
 							url: '',
 							width: dimensions?.width ?? null,
-							height: dimensions?.height ?? null
+							height: dimensions?.height ?? null,
+							focal_point: undefined
 						}
 					}
 				}
@@ -136,7 +161,6 @@
 		}
 	}
 
-	let image_size = $state(null)
 	let loading = $state(false)
 
 	let width = $state<number | undefined>()
@@ -151,13 +175,45 @@
 	let input_url = $derived(entry.value.url)
 	let url = $derived(input_url || upload_url)
 
+	let focal_point = $derived(get_focal_point(entry.value))
+	let can_set_focal_point = $derived(!!url && show_focal_point)
+	let file_input = $state<HTMLInputElement>()
+	let position_button = $state<HTMLButtonElement>()
+	let thumbnail_button = $state<HTMLButtonElement>()
+	let editing_focus = $state(false)
+	const preview_image = $derived(rendered_image || find_image_preview(entry.id))
+	let current_crop = $state<ImageCrop | null>(null)
+	const has_custom_position = $derived(!!entry.value.focal_point)
+	$effect(() => {
+		const image = preview_image
+		const measure = () => (current_crop = measure_image_crop(image))
+		measure()
+		if (!image) return
+		const observer = new ResizeObserver(measure)
+		observer.observe(image)
+		image.addEventListener('load', measure)
+		return () => {
+			observer.disconnect()
+			image.removeEventListener('load', measure)
+		}
+	})
+	async function reset_position() {
+		set_focal_point()
+		await tick()
+		thumbnail_button?.focus()
+	}
+
+	function set_focal_point(point?: { x: number; y: number }) {
+		onchange({ [field.key]: { 0: { value: { ...entry.value, focal_point: point } } } })
+	}
+
 	// Extract dimensions when URL changes (for external URLs)
 	watch(
 		() => input_url,
 		(current_url) => {
 			if (current_url && !entry.value.width && !entry.value.height) {
 				get_image_dimensions(current_url).then((dimensions) => {
-					if (dimensions) {
+					if (dimensions && current_url === entry.value.url) {
 						onchange({
 							[field.key]: {
 								0: {
@@ -176,62 +232,108 @@
 	)
 </script>
 
-<div class="ImageField" bind:clientWidth={width} class:collapsed>
-	<span class="primo--field-label">{field.label}</span>
-	<div class="image-info">
-		<div class="image-preview">
-			{#if loading}
-				<div class="spinner-container">
-					<Spinner />
-				</div>
-			{:else}
-				{#if image_size}
-					<span class="field-size">
-						{image_size}KB
-					</span>
-				{/if}
-				{#if entry.value.width && entry.value.height}
-					<span class="field-dimensions">
-						{entry.value.width} × {entry.value.height}
-					</span>
-				{/if}
+<div class="ImageField" bind:clientWidth={width} class:collapsed class:inline-focus={inline_focus && !!url}>
+	<div class="field-header">
+		<div class="field-heading">
+			{#if inline_focus}<Dialog.Title class="text-xs font-medium">Image</Dialog.Title>{:else}<span class="primo--field-label">{field.label}</span>{/if}
+		</div>
+		{#if url || header_actions}
+			<div class="field-actions">
 				{#if url}
-					<img src={url} alt="Preview" />
-				{/if}
-				<label class="image-upload">
-					<Icon icon="uil:image-upload" />
-					{#if !entry.value.url}
-						<span>Upload</span>
+					<button type="button" class="replace-button" disabled={loading} onclick={() => file_input?.click()}><ImageUp size={14} /> Replace</button>
+					{#if can_set_focal_point && !inline_focus}
+						<button type="button" class="position-button" bind:this={position_button} disabled={loading} onclick={() => (editing_focus = true)}><Crosshair size={14} /> Position</button>
 					{/if}
-					<input
-						onchange={({ target }) => {
-							const { files } = target as HTMLInputElement
-							if (files?.length) {
-								const image = files[0]
-								upload_image(image)
-							}
-						}}
-						type="file"
-						accept="image/*"
-					/>
-				</label>
+				{/if}
+				{@render header_actions?.()}
+			</div>
+		{/if}
+	</div>
+	<input
+		class="file-input"
+		bind:this={file_input}
+		type="file"
+		accept="image/*"
+		aria-label="Upload image"
+		tabindex="-1"
+		onchange={({ currentTarget }) => {
+			const image = currentTarget.files?.[0]
+			if (image) upload_image(image)
+			currentTarget.value = ''
+		}}
+	/>
+	<div class="image-info">
+		<div class="image-preview" class:large={inline_focus && !!url}>
+			{#if loading}
+				<div class="spinner-container"><Spinner /></div>
+			{:else if can_set_focal_point}
+				<ImagePositionThumbnail
+					src={url!}
+					point={focal_point}
+					custom={has_custom_position}
+					crop={current_crop}
+					large={inline_focus}
+					editable={inline_focus}
+					bind:ref={thumbnail_button}
+					onchange={set_focal_point}
+					onopen={() => (editing_focus = true)}
+				/>
+			{:else if url}
+				<button type="button" class="image-upload has-image" class:dialog-image={inline_focus} aria-label="Replace image" title="Replace image" onclick={() => file_input?.click()}>
+					<img src={url} alt="Preview" />
+				</button>
+			{:else}
+				<button type="button" class="image-upload" onclick={() => file_input?.click()}>
+					<Icon icon="uil:image-upload" />
+					<span>Upload image</span>
+				</button>
+			{/if}
+			{#if !inline_focus && entry.value.width && entry.value.height}
+				<span class="field-dimensions">{entry.value.width} × {entry.value.height}</span>
 			{/if}
 		</div>
+		{#if inline_focus && can_set_focal_point && has_custom_position}
+			<div class="dialog-crop-previews">
+				<ImageCropPreviews image={preview_image} src={url!} point={focal_point} compact footer_actions={reset_action} />
+			</div>
+		{/if}
+		{#if inline_focus && can_set_focal_point && !has_custom_position}<p class="position-hint">Click or drag the image to set its position.</p>{/if}
 		<div class="inputs">
 			<TextInput value={entry.value.alt} label="Description" oninput={(alt) => onchange({ [field.key]: { 0: { value: { ...entry.value, alt } } } })} />
 			<TextInput
 				value={entry.value.url}
 				label="URL"
 				oninput={(value) => {
-					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined } } } })
-				}}
-				onchange={(value) => {
-					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined } } } })
+					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined, width: null, height: null, focal_point: undefined } } } })
 				}}
 			/>
 		</div>
 	</div>
 </div>
+
+{#snippet reset_action()}
+	<button type="button" class="reset-position" onclick={reset_position}>Reset to center</button>
+{/snippet}
+
+{#if !inline_focus}
+	<Dialog.Root bind:open={editing_focus}>
+		<Dialog.Content
+			showCloseButton={false}
+			class="sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0"
+			onCloseAutoFocus={(event) => {
+				event.preventDefault()
+				position_button?.focus()
+			}}
+		>
+			<div class="position-header">
+				<Dialog.Title class="text-xs font-medium">Position image</Dialog.Title><Dialog.Close class="quiet-close" aria-label="Close position editor" title="Close"><X size={14} /></Dialog.Close>
+			</div>
+			<Dialog.Description class="sr-only">Choose the part of the image to keep visible when cropped.</Dialog.Description>
+			{#if can_set_focal_point}<ImageFocusPicker src={url!} point={focal_point} custom={has_custom_position} rendered_image={preview_image} expanded onchange={set_focal_point} />{/if}
+			<div class="flex justify-end mt-6"><Button onclick={() => (editing_focus = false)}>Done</Button></div>
+		</Dialog.Content>
+	</Dialog.Root>
+{/if}
 
 <style lang="postcss">
 	* {
@@ -239,142 +341,202 @@
 	}
 	.ImageField {
 		display: grid;
-
-		&.collapsed .image-info {
-			display: grid;
-			gap: 0;
+		gap: 6px;
+		min-width: 0;
+	}
+	.field-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+	.field-header .primo--field-label {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+	.field-heading {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.position-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
+	}
+	.position-header :global(.quiet-close) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.position-header :global(.quiet-close:hover) {
+		background: var(--color-gray-8);
+	}
+	.position-header :global(.quiet-close:focus-visible) {
+		outline: 2px solid var(--primo-primary-color);
+		outline-offset: 2px;
+	}
+	.field-actions {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+	}
+	.field-actions button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		height: 28px;
+		padding: 4px 8px;
+		border: 1px solid var(--color-gray-7);
+		border-radius: 4px;
+		background: var(--color-gray-9);
+		color: var(--color-gray-2);
+		font-size: 12px;
+		cursor: pointer;
+		&:hover {
+			background: var(--color-gray-8);
 		}
-
-		&.collapsed .inputs {
-			padding: 0.5rem;
-			background: var(--color-gray-9);
+		&:focus-visible {
+			outline: 2px solid var(--primo-primary-color);
+			outline-offset: 2px;
 		}
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+	.file-input {
+		display: none;
 	}
 	.image-info {
 		display: flex;
-		gap: 0.75rem;
-		overflow: hidden;
+		gap: 12px;
 		align-items: flex-start;
-		/* border: 1px solid var(--primo-primary-color); */
-		/* padding: 0.5rem; */
-
-		.spinner-container {
-			background: var(--primo-primary-color);
-			height: 100%;
-			width: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-	}
-	input {
-		background: var(--color-gray-8);
+		min-width: 0;
 	}
 	.image-preview {
-		border: 1px dashed #3e4041;
+		border: 1px solid var(--color-gray-7);
 		border-radius: 4px;
 		aspect-ratio: 1;
-		height: 100%;
-		/* width: 13rem; */
+		width: 96px;
+		flex-shrink: 0;
 		position: relative;
-
-		.image-upload {
-			flex: 1 1 0%;
-			padding: 1rem;
-			cursor: pointer;
-			position: relative;
+		&.large {
 			width: 100%;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			color: var(--color-gray-2);
-			background: var(--color-gray-9);
-			font-weight: 600;
-			text-align: center;
-			position: absolute;
-			inset: 0;
-			opacity: 0.5;
-			transition: opacity, background;
-			transition-duration: 0.1s;
-
-			&:hover {
-				opacity: 0.95;
-				background: var(--primo-primary-color);
-			}
-
-			span {
-				margin-top: 0.25rem;
-			}
-
-			input {
-				visibility: hidden;
-				border: 0;
-				width: 0;
-				position: absolute;
-			}
-		}
-
-		.field-size {
-			background: var(--color-gray-8);
-			color: var(--color-gray-3);
-			position: absolute;
-			top: 0;
-			left: 0;
-			z-index: 1;
-			padding: 0.25rem 0.5rem;
-			font-size: var(--font-size-1);
-			font-weight: 600;
-			border-bottom-right-radius: 0.25rem;
-		}
-
-		.field-dimensions {
-			background: var(--color-gray-8);
-			color: var(--color-gray-3);
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			z-index: 1;
-			padding: 2px 4px;
-			font-size: 0.5rem;
-			border-top-left-radius: 0.25rem;
-		}
-
-		img {
-			position: absolute;
-			inset: 0;
-			object-fit: cover;
-			height: 100%;
-			width: 100%;
+			aspect-ratio: auto;
+			border: 0;
 		}
 	}
-
+	.position-hint {
+		margin: 0;
+		font-size: 11px;
+		color: var(--color-gray-4);
+	}
+	.reset-position {
+		padding: 5px 8px;
+		border: 1px solid var(--color-gray-7);
+		border-radius: 4px;
+		font-size: 11px;
+		cursor: pointer;
+		&:hover {
+			background: var(--color-gray-8);
+		}
+		&:focus-visible {
+			outline: 2px solid var(--primo-primary-color);
+			outline-offset: 2px;
+		}
+	}
+	.dialog-crop-previews {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
+	}
+	.spinner-container {
+		background: var(--color-gray-9);
+		min-height: 96px;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.image-upload {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		padding: 8px;
+		cursor: pointer;
+		background: var(--color-gray-9);
+		color: var(--color-gray-2);
+		font-size: 12px;
+		border-radius: 4px;
+		&:hover {
+			background: var(--color-gray-8);
+		}
+		&:focus-visible {
+			outline: 2px solid var(--primo-primary-color);
+			outline-offset: 2px;
+		}
+		&.has-image {
+			padding: 0;
+		}
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+		}
+	}
+	.image-upload.dialog-image {
+		position: relative;
+		height: clamp(160px, 36vh, 260px);
+	}
+	.field-dimensions {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		padding: 2px 4px;
+		border-top-left-radius: 4px;
+		background: var(--color-gray-8);
+		color: var(--color-gray-3);
+		font-size: 8px;
+		pointer-events: none;
+	}
 	.inputs {
 		display: grid;
-		row-gap: 6px;
+		gap: 6px;
 		width: 100%;
+		min-width: 0;
 		--TextInput-font-size: 0.75rem;
 	}
-
-	/* .image-type-buttons {
-		margin-top: 3px;
-		font-size: 0.75rem;
-		display: flex;
-		border-radius: var(--primo-border-radius);
-		border: 1px solid var(--color-gray-8);
-		justify-self: flex-start;
-
-		button {
-			padding: 2px 6px;
-
-			&.active {
-				cursor: unset;
-				color: var(--primo-primary-color);
-			}
-
-			&:last-child {
-				border-left: 1px solid var(--color-gray-8);
-			}
+	.collapsed,
+	.inline-focus {
+		.image-info {
+			display: grid;
 		}
-	} */
+		.image-preview {
+			width: 100%;
+		}
+	}
+	@media (pointer: coarse) {
+		.field-actions button,
+		.reset-position {
+			min-height: 44px;
+		}
+		:global(.quiet-close) {
+			min-width: 44px;
+			min-height: 44px;
+		}
+	}
 </style>

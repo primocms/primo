@@ -66,12 +66,16 @@
 
 	const homepage = $derived(site.homepage())
 	const all_pages = $derived(site.pages() ?? [])
-	const root_pages = $derived(homepage?.children() || [])
+	// The toolbar already loads the site's pages. A separate children() query
+	// first renders only Home, then resizes the centered dialog when it resolves.
+	const root_pages = $derived(all_pages.filter((page) => page.parent === homepage?.id))
 
 	let creating_page = $state(false)
 	let building_page = $state(false)
 	let building_page_name = $state('')
 	let new_page = $state<ObjectOf<typeof Pages>>()
+	let finish_creation: ((error?: unknown) => void) | undefined
+	let committing_page = false
 	let new_page_page_type = $derived(new_page && PageTypes.one(new_page.page_type))
 	let new_page_page_type_sections = $derived(new_page_page_type?.sections())
 
@@ -91,7 +95,7 @@
 			.then(() => {
 				copying_page_type_entries = 'done'
 			})
-			.catch((error) => console.error(error))
+			.catch((error) => finish_creation?.(error))
 	})
 
 	// Copy page type sections to new page
@@ -121,20 +125,16 @@
 			.then(async () => {
 				copying_page_type_section_entries = 'done'
 			})
-			.catch((error) => console.error(error))
+			.catch((error) => finish_creation?.(error))
 	})
 
 	$effect(() => {
-		if (building_page && copying_page_type_entries === 'done' && copying_page_type_section_entries === 'done') {
-			new_page = undefined
-			self
-				.commit()
-				.catch((error) => console.error(error))
-				.finally(() => {
-					building_page = false
-					copying_page_type_entries = 'no'
-					copying_page_type_section_entries = 'no'
-				})
+		if (new_page && !committing_page && copying_page_type_entries === 'done' && copying_page_type_section_entries === 'done') {
+			committing_page = true
+			self.commit().then(
+				() => finish_creation?.(),
+				(error) => finish_creation?.(error)
+			)
 		}
 	})
 
@@ -149,15 +149,47 @@
 		const new_index = maxIndex + 1
 
 		// Create the page with the next available index
-		new_page = Pages.create({
-			...page_data,
-			index: new_index
+		building_page = true
+		building_page_name = page_data.name
+		return new Promise<void>((resolve, reject) => {
+			finish_creation = async (error) => {
+				const page_id = new_page?.id
+				new_page = undefined
+				finish_creation = undefined
+				if (error && page_id) {
+					// Remove only this failed creation's changes; keep other edits intact.
+					const section_ids = new Set(
+						[...self.changes].filter(([, change]) => 'data' in change && change.collection === 'page_sections' && (change.data as Record<string, unknown>).page === page_id).map(([id]) => id)
+					)
+					for (const [id, change] of [...self.changes]) {
+						if (id === page_id || ('data' in change && ((change.data as Record<string, unknown>).page === page_id || section_ids.has((change.data as Record<string, unknown>).section as string))))
+							self.changes.delete(id)
+					}
+					if (self.records.get(page_id)?.data) {
+						try {
+							await self.instance?.collection('pages').delete(page_id)
+							self.records.set(page_id, null)
+						} catch (cleanup_error) {
+							console.error('Could not remove partially created page', cleanup_error)
+						}
+					}
+				}
+				building_page = false
+				committing_page = false
+				copying_page_type_entries = 'no'
+				copying_page_type_section_entries = 'no'
+				if (error) reject(error)
+				else resolve()
+			}
+			new_page = Pages.create({ ...page_data, index: new_index })
 		})
 	}
 </script>
 
 <div class="pages-heading">
-	<Dialog.Title class="text-base font-medium">Pages <span class="page-count">{all_pages.length}</span></Dialog.Title>
+	<Dialog.Title class="text-base font-medium">
+		Pages <span class="page-count">{all_pages.length}</span>
+	</Dialog.Title>
 	{#if onManagePageTypes}<button class="manage-types" data-testid="manage-page-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
 </div>
 <p class="pages-description">Open a page to edit its content, or create a new one.</p>
@@ -183,14 +215,14 @@
 			<li>
 				<PageForm
 					oncreate={async (new_page: any) => {
-						creating_page = false
 						const url_taken = all_pages.some((page) => page?.slug === new_page.slug && page.parent === homepage.id)
 						if (url_taken) {
-							alert(`That URL is already in use`)
+							throw new Error('That URL is already in use')
 						} else {
 							building_page = true
 							building_page_name = new_page.name
 							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+							creating_page = false
 						}
 					}}
 				/>
@@ -207,16 +239,62 @@
 {/if}
 
 <style lang="postcss">
-	.page-count { font-size: 12px; font-weight: 400; color: #a1a1aa; margin-left: 6px; }
-	.pages-description { font-size: 12px; line-height: 1.5; color: #a1a1aa; margin: -4px 0 0; }
-	.page-list { min-height: 0; padding: 4px; border: 1px solid #343437; border-radius: 7px; background: #19191b; align-content: start; }
-	.create-page-btn { border: 1px solid #3a3a40; margin-top: 6px; min-height: 38px; }
-	.create-page-btn:focus-visible { outline: 2px solid #956e51; outline-offset: -2px; }
+	.page-count {
+		font-size: 12px;
+		font-weight: 400;
+		color: #a1a1aa;
+		margin-left: 6px;
+	}
+	.pages-description {
+		font-size: 12px;
+		line-height: 1.5;
+		color: #a1a1aa;
+		margin: -4px 0 0;
+	}
+	.page-list {
+		min-height: 0;
+		padding: 4px;
+		border: 1px solid #343437;
+		border-radius: 7px;
+		background: #19191b;
+		align-content: start;
+	}
+	.create-page-btn {
+		border: 1px solid #3a3a40;
+		margin-top: 6px;
+		min-height: 38px;
+	}
+	.create-page-btn:focus-visible {
+		outline: 2px solid #956e51;
+		outline-offset: -2px;
+	}
 
-	.pages-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-left: 28px; }
-	.manage-types { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid #3a3a40; border-radius: 5px; color: #c4c4cc; font-size: 12px; }
-	.manage-types:hover { background: #ffffff0a; color: white; }
-	.manage-types:focus-visible { outline: 2px solid #956e51; outline-offset: 2px; }
+	.pages-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding-left: 28px;
+	}
+	.manage-types {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 9px;
+		border: 1px solid #3a3a40;
+		border-radius: 5px;
+		color: #c4c4cc;
+		font-size: 12px;
+	}
+	.manage-types:hover {
+		background: #ffffff0a;
+		color: white;
+	}
+	.manage-types:focus-visible {
+		outline: 2px solid #956e51;
+		outline-offset: 2px;
+	}
 
 	.page-list {
 		overflow: auto;

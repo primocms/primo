@@ -12,6 +12,46 @@ test.describe('Content persistence', () => {
 		ids = await seedFixtureSite(token, 'Content Persistence Fixture')
 	})
 
+	test('position-only edits preserve uploaded image identity after reload', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const headers = { Authorization: `Bearer ${token}` }
+		const uploadRes = await request.post(`${TEST_SERVER_URL}/api/collections/site_uploads/records`, {
+			headers,
+			multipart: {
+				site: ids.siteId,
+				file: {
+					name: 'focal-point.png',
+					mimeType: 'image/png',
+					buffer: Buffer.from(
+						'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyCAYAAACqNX6+AAAAkElEQVR4nO3RMREAIBDAsJeIJjThD2TQIUP23nXOXpeO+R2AIWmGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0jMA8FGOIiljfewAAAAAElFTkSuQmCC',
+						'base64'
+					)
+				}
+			}
+		})
+		expect(uploadRes.ok()).toBeTruthy()
+		const upload = await uploadRes.json()
+		const entries = await (await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, { headers, params: { filter: `section = "${ids.sectionId}"` } })).json()
+		const imageEntry = entries.items.find((e) => e.field === ids.fieldIds.image)
+		const original = { upload: upload.id, url: '', alt: 'Uploaded fixture', width: 100, height: 50 }
+		const patched = await request.patch(`${TEST_SERVER_URL}/api/collections/page_section_entries/records/${imageEntry.id}`, { headers, data: { value: original } })
+		expect(patched.ok()).toBeTruthy()
+		await loginAsDeveloper(page, ids.siteId)
+		const image = canvasFrame(page).locator('[data-testid="image"]')
+		await expect(image).toBeVisible()
+		await image.hover()
+		await page.locator('.image-editor-overlay .edit-button').click({ force: true })
+		const dialog = page.getByRole('dialog')
+		const position = dialog.getByRole('button', { name: /Adjust position at/ })
+		await position.press('ArrowRight')
+		await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+		await expect.poll(async () => (await (await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records/${imageEntry.id}`, { headers })).json()).value.focal_point?.x).toBe(0.51)
+		const saved = await (await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records/${imageEntry.id}`, { headers })).json()
+		expect(saved.value.upload).toBe(upload.id)
+		await page.reload()
+		await expect(canvasFrame(page).locator('[data-testid="image"]')).toHaveAttribute('src', new RegExp(`/site_uploads/${upload.id}/`))
+	})
+
 	test('headline, rich text, and image edits survive reload and a new browser session', async ({ page, browser, request }) => {
 		const { token } = await devAuth(request)
 		await loginAsDeveloper(page, ids.siteId)
@@ -25,10 +65,7 @@ test.describe('Content persistence', () => {
 		await headline.blur()
 
 		// wait for the debounced PATCH to page_section_entries to complete
-		await page.waitForResponse(
-			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
-			{ timeout: 5000 }
-		)
+		await page.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH', { timeout: 5000 })
 
 		// rich text: click into the body div (TipTap-mounted), select all, retype
 		const body = frame.locator('[data-testid="body"]')
@@ -48,7 +85,7 @@ test.describe('Content persistence', () => {
 		const newImageUrl = 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&q=80'
 		const urlInput = imageDialog.locator('label:has-text("URL") input')
 		await urlInput.fill(newImageUrl)
-		await imageDialog.getByRole('button', { name: 'Done' }).click()
+		await imageDialog.getByRole('button', { name: 'Save' }).click()
 		await expect(imageDialog).toBeHidden({ timeout: 5000 })
 		await page.waitForTimeout(1000) // save_edited_value debounce
 

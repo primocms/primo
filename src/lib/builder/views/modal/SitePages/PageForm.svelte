@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition'
 	import UI from '../../../ui'
-	import Icon from '@iconify/svelte'
+	import { Button } from '$lib/components/ui/button'
+	import { Loader } from 'lucide-svelte'
 	import { validate_url } from '../../../utilities'
 	import { Page } from '$lib/common/models/Page'
 	import { page } from '$app/state'
@@ -17,7 +18,7 @@
 	// set page type equal to the last type used under this parent
 	const default_page_type_id = $derived(parent?.children()?.[0]?.page_type ?? site?.page_types()?.[0]?.id ?? '')
 
-	let new_page = $state<Omit<Page, 'id' | 'parent' | 'site'>>({
+	let new_page = $state<Omit<Page, 'id' | 'parent' | 'site' | 'index'>>({
 		name: '',
 		slug: '',
 		page_type: ''
@@ -30,7 +31,10 @@
 		}
 	})
 
-	let page_creation_disabled = $derived(!new_page.name || !new_page.slug)
+	let saving = $state(false)
+	let error = $state('')
+
+	let page_creation_disabled = $derived(!new_page.name.trim() || !new_page.slug || saving)
 
 	let page_label_edited = $state(false)
 	$effect(() => {
@@ -41,13 +45,23 @@
 <form
 	onsubmit={async (e) => {
 		e.preventDefault()
-		await oncreate(new_page)
+		if (page_creation_disabled) return
+		saving = true
+		error = ''
+		try {
+			await oncreate(new_page)
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Could not create the page. Please try again.'
+		} finally {
+			saving = false
+		}
 	}}
+	aria-busy={saving}
 	in:fade={{ duration: 100 }}
 	class:has-page-types={page_types && page_types.length > 1}
 >
-	<UI.TextInput autofocus={true} bind:value={new_page.name} id="page-label" label="Page Name" placeholder="About Us" />
-	<UI.TextInput bind:value={new_page.slug} id="page-slug" label="Page Slug" oninput={() => (page_label_edited = true)} placeholder="about-us" />
+	<UI.TextInput autofocus={true} bind:value={new_page.name} id="page-label" label="Page name" disabled={saving} placeholder="About Us" />
+	<UI.TextInput bind:value={new_page.slug} id="page-slug" label="Page slug" disabled={saving} oninput={() => (page_label_edited = true)} placeholder="about-us" />
 	{#if page_types && page_types.length > 1}
 		<UI.Select
 			fullwidth={true}
@@ -57,35 +71,35 @@
 			on:input={({ detail: page_type_id }) => (new_page.page_type = page_type_id)}
 		/>
 	{/if}
-	<button disabled={page_creation_disabled}>
-		<Icon icon="akar-icons:check" />
-	</button>
+	<Button type="submit" disabled={page_creation_disabled}>
+		{#if saving}<Loader class="animate-spin" aria-hidden="true" />{/if}{saving ? 'Creating…' : 'Create page'}
+	</Button>
+	{#if error}<p class="error" role="alert">{error}</p>{/if}
 </form>
 
-<style lang="postcss">
+<style>
 	form {
-		padding: 0.25rem;
 		display: grid;
-		grid-template-columns: 1fr 1fr auto;
-		gap: 0.5rem;
-		padding: 0.825rem 1.125rem;
-		align-items: flex-end;
-		background: #1a1a1a;
-		--TextInput-label-font-size: 0.75rem;
-
-		&.has-page-types {
-			grid-template-columns: 1fr 1fr 1fr auto;
-		}
-
-		button {
-			border: 1px solid var(--primo-primary-color);
-			border-radius: 0.25rem;
-			padding: 9px 0.75rem;
-			margin-top: 23px;
-
-			&:disabled {
-				opacity: 20%;
-			}
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+		gap: 12px;
+		padding: 16px;
+		align-items: end;
+		background: hsl(var(--muted) / 0.2);
+		border-radius: 6px;
+	}
+	form.has-page-types {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+	}
+	.error {
+		grid-column: 1 / -1;
+		color: #fca5a5;
+		font-size: 13px;
+		overflow-wrap: anywhere;
+	}
+	@media (max-width: 700px) {
+		form,
+		form.has-page-types {
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 </style>

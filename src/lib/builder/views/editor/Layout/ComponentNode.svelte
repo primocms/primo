@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { X } from 'lucide-svelte'
 	import { fade } from 'svelte/transition'
 	import * as _ from 'lodash-es'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import ImageField from '$lib/builder/field-types/ImageField.svelte'
+	import { register_image_preview, find_image_preview } from '$lib/builder/field-types/image-preview.svelte'
 	import LinkField from '$lib/builder/field-types/Link.svelte'
 	import VideoModal from '$lib/builder/views/modal/VideoModal.svelte'
 	import { tick, createEventDispatcher } from 'svelte'
@@ -27,6 +29,7 @@
 	import { build_live_page_url } from '$lib/pages'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { getUserActivity, setUserActivity } from '$lib/UserActivity.svelte'
+	import { rememberTextDOM, restoreTextDOM, createRichTextSurface, restoreRichTextSurface } from './content-dom'
 
 	const { value: site } = site_context.getOr({ value: null })
 
@@ -49,6 +52,7 @@
 	let floating_menu_state = $state({ visible: false, top: 0, left: 0 })
 
 	let image_overlay_is_visible = $state(false)
+	let image_overlay = $state<{ focus: () => void }>()
 	let image_editor_element = $state<HTMLImageElement | null>(null)
 
 	async function attach_image_overlay(element, id: string | null = null) {
@@ -60,7 +64,6 @@
 	let editing_markdown = $state(false)
 	let current_markdown_entry_id = $state<string>()
 	let current_markdown_value = $state<string>()
-	const markdown_elements = new Map<string, HTMLElement>()
 
 	let active_editor = $state<Editor>()
 	let formatting_state = $state({
@@ -72,6 +75,8 @@
 
 	// Store editor instances by rich-text ID so we can access them later
 	let rich_text_editors = new Map<string, Editor>()
+	const rich_text_values = new Map<string, any>()
+	const rich_text_elements = new Map<string, HTMLElement>()
 	const rich_text_classes = {}
 
 	// Keep markdown locked when blur is caused by clicking editor UI buttons
@@ -99,7 +104,7 @@
 					data: safeData
 				},
 				buildStatic: false,
-				runtime: ['mount', 'unmount']
+				runtime: ['createPreview']
 			})
 
 			if (res.error) {
@@ -148,29 +153,27 @@
 		doc_event_listeners.clear()
 	}
 
-	async function make_content_editable() {
+	function destroy_rich_text_editor(id: string, editor: Editor) {
+		if (active_editor === editor) active_editor = undefined
+		editor.destroy()
+		rich_text_editors.delete(id)
+		rich_text_values.delete(id)
+		rich_text_elements.delete(id)
+		delete rich_text_classes[id]
+	}
+
+	function make_content_editable() {
 		if (!node?.contentDocument || !entries || !fields) return
 
-		// Wait for content to load, then get valid elements
-		const valid_elements: HTMLElement[] = await (async () => {
-			const doc = node.contentDocument!
-			const component = doc.querySelector('#component')
-
-			// Poll every 200ms for up to 10 seconds
-			for (let i = 0; i < 50; i++) {
-				await new Promise((resolve) => setTimeout(resolve, 200))
-
-				// Check if component container has content
-				if (component && component.children.length > 0) {
-					// Now get the actual editable elements
-					const elements = Array.from(doc.querySelectorAll('img, a, p, span, h1, h2, h3, h4, h5, h6, div'))
-					return elements.filter((el): el is HTMLElement => el.tagName === 'IMG' || !!el.textContent?.trim())
-				}
-			}
-
-			// Return empty array if no content found after timeout
-			return []
-		})()
+		// The iframe acknowledges a render after Svelte has flushed its updates.
+		// Rebind listeners to the settled DOM without polling or replacing editors.
+		for (const [id, editor] of rich_text_editors) {
+			const element = rich_text_elements.get(id)!
+			if (!element.isConnected) destroy_rich_text_editor(id, editor)
+			else restoreRichTextSurface(element, editor.options.element as HTMLElement)
+		}
+		const elements = Array.from(node.contentDocument.querySelectorAll('img, a, p, span, h1, h2, h3, h4, h5, h6, div'))
+		const valid_elements = elements.filter((el): el is HTMLElement => !el.closest('[data-primo-rich-text-editor]') && (el.tagName === 'IMG' || !!el.textContent?.trim() || !!el.getAttribute('data-entry') || !!el.getAttribute('data-key')))
 
 		// Clean up previous event listeners before adding new ones
 		cleanup_event_listeners()
@@ -243,17 +246,18 @@
 		}
 
 		function match_value_to_element({ id, element, key, value, type }) {
+			if (!element.isConnected) return false
 			// ignore element (user override)
 			if (element.dataset.key === '') {
 				return false
 			}
 
 			// skip empty element
-			if (type !== 'image' && !element.textContent.trim()) return false
+			if (type !== 'image' && !element.textContent.trim() && element.dataset.entry !== id && element.dataset.key !== key) return false
 
 			// Match by explicitly set key
 			const key_matches = element.dataset.key === key
-			if (key_matches) {
+			if (key_matches || element.dataset.entry === id) {
 				if (type === 'rich-text') {
 					set_editable_rich_text({ element, id, value })
 				} else if (type === 'markdown') {
@@ -278,7 +282,9 @@
 					return true
 				}
 			} else if (type === 'image' && element.nodeName === 'IMG') {
-				const image_matches = compare_urls(value.url, element.src)
+				const upload = value?.upload && (site ? SiteUploads.one(value.upload) : LibraryUploads.one(value.upload))
+				const image_url = upload && typeof upload.file === 'string' ? `${self.instance?.baseURL}/api/files/${site ? 'site_uploads' : 'library_uploads'}/${upload.id}/${upload.file}` : value?.url
+				const image_matches = compare_urls(image_url, element.src)
 				if (image_matches) {
 					set_editable_image({ element, id })
 					return true
@@ -309,23 +315,37 @@
 			}
 		}
 
-		async function set_editable_rich_text({ id, element, value }) {
-			element.innerHTML = ''
+		function set_editable_rich_text({ id, element, value }) {
+			const previous_id = element.getAttribute('data-rich-text-id')
+			const previous_classes = previous_id && rich_text_classes[previous_id]
+			if (previous_id && previous_id !== id) {
+				const previous_editor = rich_text_editors.get(previous_id)
+				if (previous_editor) destroy_rich_text_editor(previous_id, previous_editor)
+			}
 			element.setAttribute('data-entry', id)
 
 			// move element classes to tiptap div to maintain styling
-			const rich_text_id = element.getAttribute('data-rich-text-id') || createUniqueID()
-			let saved_rich_text_classes = rich_text_classes[rich_text_id]
-			if (!saved_rich_text_classes) {
-				rich_text_classes[rich_text_id] = element.className
-				saved_rich_text_classes = rich_text_classes[rich_text_id]
-				element.classList.remove(...element.classList)
-				element.setAttribute('data-rich-text-id', rich_text_id) // necessary since data attribute gets cleared when hydrating (i.e. editing from fields)
+			const rich_text_id = id
+			const existing = rich_text_editors.get(rich_text_id)
+			if (existing && existing.view.dom.parentElement?.parentElement === element) {
+				if (!_.isEqual(rich_text_values.get(rich_text_id), value) && !_.isEqual(existing.getJSON(), value)) existing.commands.setContent(value, { emitUpdate: false })
+				rich_text_values.set(rich_text_id, _.cloneDeep(value))
+				return
 			}
+			if (existing) destroy_rich_text_editor(rich_text_id, existing)
+			const editor_element = createRichTextSurface(element)
+			let saved_rich_text_classes = rich_text_classes[rich_text_id]
+			if (!(rich_text_id in rich_text_classes)) {
+				rich_text_classes[rich_text_id] = previous_classes ?? element.className
+				saved_rich_text_classes = rich_text_classes[rich_text_id]
+			}
+			element.classList.remove(...element.classList)
+			element.setAttribute('data-rich-text-id', rich_text_id)
 
+			let pending_save = false
 			const editor = new Editor({
 				content: value,
-				element,
+				element: editor_element,
 				extensions: [
 					...rich_text_extensions,
 					Extension.create({
@@ -340,11 +360,17 @@
 							update_menu_positions()
 						},
 						onBlur: async () => {
+							clearTimeout(field_save_timeout)
+							// Save the final edit before unlocking the renderer. Blurring
+							// within the debounce window must not discard that edit.
+							if (pending_save) {
+								pending_save = false
+								save_edited_value({ id, value: editor.getJSON() })
+							}
 							// Only unlock when blur wasn't caused by clicking editor UI
 							if (!suppress_blur_unlock) {
 								is_editing = false
 							}
-							clearTimeout(field_save_timeout)
 							setTimeout(() => {
 								// Hide floating menu on blur, timeout so click registers first
 								hide_menus()
@@ -352,8 +378,10 @@
 						},
 						onUpdate: async ({ editor }) => {
 							// Debounce saves to avoid constant re-renders while editing
+							pending_save = true
 							clearTimeout(field_save_timeout)
 							field_save_timeout = setTimeout(async () => {
+								pending_save = false
 								const json = editor.getJSON()
 								save_edited_value({ id, value: json })
 							}, 200)
@@ -422,12 +450,13 @@
 
 			// Store the editor instance for later access
 			rich_text_editors.set(rich_text_id, editor)
+			rich_text_values.set(rich_text_id, _.cloneDeep(value))
+			rich_text_elements.set(rich_text_id, element)
 		}
 
 		function set_editable_markdown({ id, element, value }: { id: string; element: HTMLElement; value: any }) {
 			element.setAttribute('data-entry', id)
 			element.style.cursor = 'text'
-			markdown_elements.set(id, element as HTMLElement)
 
 			const click_handler = (event: Event) => {
 				const entry = entries?.find((e) => e.id === id) // get updated value (bc formatting differences register as updates)
@@ -455,6 +484,9 @@
 
 		async function set_editable_image({ id, element }: { id: string; element: HTMLElement }) {
 			element.setAttribute(`data-entry`, id)
+			event_listeners.get(`image-${id}`)?.()
+			const unregister = register_image_preview(element as HTMLImageElement, id)
+			event_listeners.set(`image-${id}`, unregister)
 			element.onmousemove = () => {
 				attach_image_overlay(element, id)
 			}
@@ -489,7 +521,7 @@
 			})
 		}
 
-		async function set_editable_text({ id, element }) {
+		function set_editable_text({ id, element }) {
 			element.style.outline = '0'
 			element.setAttribute(`data-entry`, id)
 
@@ -515,10 +547,17 @@
 				// Final save on blur
 				clearTimeout(field_save_timeout)
 				const target = e.target as HTMLElement
-				if (target) save_edited_value({ id, value: target.innerText })
+				if (target) {
+					const value = target.innerText
+					// Browser editing can replace text nodes that Svelte still references.
+					// Restore those nodes before applying the saved value through props.
+					restoreTextDOM(element)
+					save_edited_value({ id, value })
+				}
 			}
 
 			const focus_handler = () => {
+				rememberTextDOM(element)
 				is_editing = true
 			}
 
@@ -541,8 +580,6 @@
 	function handle_markdown_save() {
 		const value = current_markdown_value
 		save_edited_value({ id: current_markdown_entry_id, value })
-		const target = markdown_elements.get(current_markdown_entry_id!)
-		target!.innerHTML = convert_markdown_to_html(value)
 		editing_markdown = false
 	}
 
@@ -629,6 +666,7 @@
 
 			// Clean up all event listeners
 			cleanup_all_event_listeners()
+			for (const [id, editor] of rich_text_editors) destroy_rich_text_editor(id, editor)
 
 			// Clear timeouts
 			if (field_save_timeout) clearTimeout(field_save_timeout)
@@ -717,7 +755,7 @@
 	function setup_component_iframe() {
 		setup_complete = false
 		// Clear previous editor instances
-		rich_text_editors.clear()
+		for (const [id, editor] of rich_text_editors) destroy_rich_text_editor(id, editor)
 		// Wait for iframe to be ready
 		node.removeEventListener('load', setup)
 
@@ -734,6 +772,10 @@
 			// Clean up previous doc event listeners
 			doc_event_listeners.forEach((cleanup) => cleanup())
 			doc_event_listeners.clear()
+			// This runs synchronously inside the iframe's render task, before it
+			// can paint. Reattach rich-text editors after controlled HTML updates.
+			doc.addEventListener('primo-rendered', make_content_editable)
+			doc_event_listeners.set('content-render', () => doc.removeEventListener('primo-rendered', make_content_editable))
 
 			const select_section = () => dispatch('select')
 			doc.addEventListener('pointerdown', select_section, true)
@@ -791,7 +833,7 @@
 			if (data === undefined) return
 
 			// Recompile when any source (html/css/js) changes or an error exists.
-			const updated_code_signature = `${html}\n/*__CSS__*/\n${css}\n/*__JS__*/\n${js}`
+			const updated_code_signature = `${html}\n/*__CSS__*/\n${css}\n/*__JS__*/\n${js}\n/*__FIELDS__*/\n${Object.keys(data).sort().join(',')}`
 			if (last_code_signature !== updated_code_signature || error) {
 				generate_component_code(block)
 				last_code_signature = updated_code_signature
@@ -822,7 +864,6 @@
 	async function send_component_to_iframe(js, data) {
 		try {
 			node.contentWindow!.postMessage({ type: 'component', payload: { js, data } }, '*')
-			make_content_editable()
 		} catch (e) {
 			console.error(e)
 			error = e
@@ -835,7 +876,7 @@
 	let editing_image = $state(false)
 	let current_image_element = $state<HTMLImageElement | null>(null)
 	let current_image_id = $state<string | null>(null)
-	let current_image_value = $state<{ url: string; alt: string; upload?: string | null }>({ url: '', alt: '' })
+	let current_image_value = $state<{ url: string; alt: string; upload?: string | null; focal_point?: { x: number; y: number } }>({ url: '', alt: '' })
 
 	let editing_link = $state(false)
 	let current_link_element = $state<HTMLLinkElement | null>(null)
@@ -849,6 +890,12 @@
 	let current_link_position = $state<{ from: number; to: number } | null>(null)
 	let editing_existing_link = $state(false)
 
+	// Keep the overlay attached when saving an entry remounts the component's image.
+	$effect(() => {
+		const image = find_image_preview(current_image_id || undefined)
+		if (image_overlay_is_visible && image && image_editor_element && !image_editor_element.isConnected) image_editor_element = image
+	})
+
 	const editing = $derived(is_editing || editing_video || editing_image || editing_existing_link || editing_link || editing_markdown)
 	if ('page_type' in section) {
 		$effect(() => setUserActivity(editing ? { page_type_section: section.id } : {}))
@@ -858,7 +905,19 @@
 </script>
 
 <Dialog.Root bind:open={editing_image}>
-	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12">
+	<Dialog.Content
+		showCloseButton={false}
+		class="z-[999] sm:max-w-[640px] overflow-y-auto gap-0"
+		style="top: clamp(0.5rem, 8dvh, 4rem); translate: -50% 0; max-height: calc(100dvh - clamp(0.5rem, 8dvh, 4rem) - 0.5rem)"
+		onCloseAutoFocus={(event) => {
+			if (!current_image_element?.isConnected) return
+			event.preventDefault()
+			image_editor_element = current_image_element
+			image_overlay_is_visible = true
+			tick().then(() => image_overlay?.focus())
+		}}
+	>
+		<Dialog.Description class="sr-only">Replace the image, adjust its position, or edit its description and URL.</Dialog.Description>
 		{@const field =
 			fields?.find((f) => entries?.find((e) => e.id === current_image_id)?.field === f.id) || ({ id: '', label: 'Image', key: 'image', type: 'image' as const, config: {}, index: 0 } as any)}
 		{@const entry = {
@@ -1049,6 +1108,10 @@
 			<ImageField
 				{field}
 				{entry}
+				show_focal_point={!!current_image_id}
+				inline_focus
+				rendered_image={current_image_element}
+				header_actions={image_dialog_close}
 				onchange={async (changeData: any) => {
 					// Extract the actual value from the nested structure
 					const fieldKey = Object.keys(changeData)[0]
@@ -1113,11 +1176,21 @@
 						Delete
 					</button>
 				{/if}
-				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Done</button>
+				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Save</button>
 			</div>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#snippet image_dialog_close()}
+	<Dialog.Close
+		class="ml-4 inline-flex h-7 w-7 items-center justify-center rounded text-[var(--color-gray-2)] hover:bg-[var(--color-gray-8)] focus-visible:outline-2 focus-visible:outline-[var(--primo-primary-color)] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+		aria-label="Close image dialog"
+		title="Close"
+	>
+		<X size={14} />
+	</Dialog.Close>
+{/snippet}
 
 <Dialog.Root bind:open={editing_link}>
 	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12 overflow-visible">
@@ -1171,11 +1244,9 @@
 					current_link_element.href = current_link_url || ''
 					current_link_element.textContent = current_link_value.label
 					// TODO: Save link into Markdown content
-				} else if (current_link_element && current_link_entry_id) {
-					// Handle direct link editing (entry-based)
-					current_link_element.href = current_link_url || ''
-					current_link_element.innerText = current_link_value.label
-					save_edited_value({ id: current_link_entry_id as string, value: _.cloneDeep(current_link_value) })
+					} else if (current_link_element && current_link_entry_id) {
+						// Handle direct link editing (entry-based)
+						save_edited_value({ id: current_link_entry_id as string, value: _.cloneDeep(current_link_value) })
 				}
 				editing_link = false
 				editing_existing_link = false
@@ -1217,16 +1288,21 @@
 
 {#if image_overlay_is_visible}
 	<ImageOverlay
+		bind:this={image_overlay}
 		bind:visible={image_overlay_is_visible}
 		bind:image_element={image_editor_element}
 		showDelete={current_image_id === null}
 		onClick={() => {
 			current_image_id = current_image_id // for image entries (non-tiptap)
 			current_image_element = image_editor_element
+			const stored_image = entries?.find((e) => e.id === current_image_id)?.value
 			current_image_value = {
-				url: image_editor_element?.src || '',
+				..._.cloneDeep(stored_image || {}),
+				url: stored_image?.url || image_editor_element?.src || '',
 				alt: image_editor_element?.alt || '',
-				upload: null // Clear any previous upload
+				upload: stored_image?.upload ?? null,
+				// The element only knows src and alt; keep the entry's stored focal point
+				focal_point: entries?.find((e) => e.id === current_image_id)?.value?.focal_point
 			}
 			editing_image = true
 			image_overlay_is_visible = false
