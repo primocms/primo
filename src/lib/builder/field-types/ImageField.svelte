@@ -12,6 +12,7 @@
 	import { watch } from 'runed'
 	import { get_focal_point } from '../utils'
 	import ImageFocusPicker from './ImageFocusPicker.svelte'
+	import ImageCropPreviews from './ImageCropPreviews.svelte'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Button } from '$lib/components/ui/button'
 	import { ImageUp, Crosshair, ArrowLeft, X } from 'lucide-svelte'
@@ -296,6 +297,11 @@
 					<span class="field-dimensions">{entry.value.width} × {entry.value.height}</span>
 				{/if}
 			</div>
+			{#if inline_focus && can_set_focal_point && has_custom_position}
+				<div class="dialog-crop-previews">
+					<ImageCropPreviews image={preview_image} src={url!} point={focal_point} compact />
+				</div>
+			{/if}
 			<div class="inputs">
 				<TextInput value={entry.value.alt} label="Description" oninput={(alt) => onchange({ [field.key]: { 0: { value: { ...entry.value, alt } } } })} />
 				<TextInput
@@ -446,6 +452,11 @@
 			aspect-ratio: auto;
 			border: 0;
 		}
+	}
+	.dialog-crop-previews {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
 	}
 	.spinner-container {
 		background: var(--color-gray-9);

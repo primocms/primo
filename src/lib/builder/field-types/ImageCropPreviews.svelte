@@ -3,7 +3,8 @@
 	import * as Tooltip from '$lib/components/ui/tooltip'
 	import { image_crop_snapshot, measure_image_crop, type ImageCrop } from './image-crop'
 
-	let { image, src, point }: { image?: HTMLImageElement | null; src: string; point: { x: number; y: number } } = $props()
+	let { image, src, point, compact = false }: { image?: HTMLImageElement | null; src: string; point: { x: number; y: number }; compact?: boolean } = $props()
+	const preview_height = $derived(compact ? 80 : 110)
 	const sizes = [
 		{ label: 'Phone', width: 390, height: 844, icon: Smartphone },
 		{ label: 'Tablet', width: 768, height: 1024, icon: Tablet },
@@ -52,7 +53,7 @@
 			></iframe>
 		{/each}
 	</div>
-	<section class="crop-previews" aria-label="Responsive crop previews">
+	<section class="crop-previews" aria-label="Responsive crop previews" style:--crop-preview-height="{preview_height}px">
 		{#each sizes as size, index}
 			{@const crop = crops[index]}
 			<figure>
@@ -61,7 +62,7 @@
 						<img
 							{src}
 							alt={`${size.label} crop preview`}
-							style:width="{Math.min(160, (110 * crop.width) / crop.height)}px"
+							style:width="{Math.min(compact ? 120 : 160, (preview_height * crop.width) / crop.height)}px"
 							style:aspect-ratio="{crop.width} / {crop.height}"
 							style:object-fit={crop.fit}
 							style:object-position={position}
@@ -73,8 +74,8 @@
 		{/each}
 	</section>
 {:else}
-	<section class="crop-previews examples" aria-label="Example crops">
-		{#each [{ label: 'Square', width: 110, height: 110 }, { label: 'Portrait', width: 83, height: 110 }] as crop}
+	<section class="crop-previews examples" aria-label="Example crops" style:--crop-preview-height="{preview_height}px">
+		{#each [{ label: 'Square', width: preview_height, height: preview_height }, { label: 'Portrait', width: Math.round((preview_height * 3) / 4), height: preview_height }] as crop}
 			<figure>
 				<div class="crop-stage"><img {src} alt={`${crop.label} crop preview`} style:width="{crop.width}px" style:height="{crop.height}px" style:object-position={position} /></div>
 				<figcaption>{crop.label}</figcaption>
@@ -121,7 +122,7 @@
 		min-width: 0;
 	}
 	.crop-stage {
-		height: 110px;
+		height: var(--crop-preview-height, 110px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
