@@ -3,11 +3,15 @@
 	import { page } from '$app/state'
 	import { Users } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
+	import { onDestroy } from 'svelte'
+	import { Input } from '$lib/components/ui/input'
+	import { Button } from '$lib/components/ui/button'
+	import PasswordInput from '$lib/components/auth/PasswordInput.svelte'
 	import { Loader, User } from 'lucide-svelte'
 
 	type AuthAction = 'sign_in' | 'reset_password' | 'confirm_password_reset' | 'create_account'
 
-	let { title, email = $bindable(), password = $bindable(null), action, footer = null }: { action: AuthAction } & Record<string, any> = $props()
+	let { title, email = $bindable(''), password = $bindable(''), action, footer = null }: { action: AuthAction } & Record<string, any> = $props()
 
 	let confirm_password = $state('')
 	let passwordResetRequested = $state(false)
@@ -16,6 +20,11 @@
 	let name = $state('')
 	let avatar = $state('')
 	let avatarFile = $state<File | null>(null)
+
+	const newPassword = $derived(action === 'confirm_password_reset' || action === 'create_account')
+	onDestroy(() => {
+		if (avatar) URL.revokeObjectURL(avatar)
+	})
 
 	const createToken = $derived(page.url.searchParams.get('create') || '')
 	const invitedEmail = $derived(page.url.searchParams.get('email') || '')
@@ -45,12 +54,19 @@
 			}
 		}
 
+		if (avatar) URL.revokeObjectURL(avatar)
 		avatarFile = file
 		avatar = URL.createObjectURL(file)
 	}
 
 	const submit = async (event: SubmitEvent) => {
 		event.preventDefault()
+		if (loading || passwordResetRequested) return
+		error = ''
+		if (newPassword && password !== confirm_password) {
+			error = 'Passwords do not match. Please check both fields.'
+			return
+		}
 		switch (action) {
 			case 'sign_in':
 				loading = true
@@ -131,150 +147,60 @@
 <header>
 	<h1>{title}</h1>
 </header>
-{#if error}
-	<div class="error">{error}</div>
-{/if}
+{#if error}<div class="auth-alert auth-error" role="alert">{error}</div>{/if}
 {#if passwordResetRequested}
-	<div class="message">Password reset has been sent to your email. Remember to also check the spam folder.</div>
-{/if}
-<form class="form" onsubmit={submit}>
-	<div class="fields">
-		{#if action !== 'confirm_password_reset' && action !== 'create_account'}
-			<label>
-				<span>Email</span>
-				<input data-test-id="email" bind:value={email} type="text" name="email" disabled={passwordResetRequested} />
-			</label>
-		{/if}
-		{#if action === 'create_account' && invitedEmail}
-			<label>
-				<span>Email</span>
-				<input data-test-id="email" bind:value={email} type="text" name="email" disabled />
-			</label>
-			<div class="grid grid-cols-[1fr_auto] gap-2 items-end">
-				<label class="grid gap-2">
-					<span>Name & Avatar</span>
-					<input data-test-id="name" bind:value={name} type="text" name="name" placeholder="John Doe" />
-				</label>
-				<div class="relative">
-					{#if avatar}
-						<img src={avatar} alt="Avatar preview" class="h-[50px] w-[50px] rounded-lg object-cover border border-gray-600 bg-gray-800" />
-					{:else}
-						<div class="h-[50px] w-[50px] rounded-lg border border-gray-600 bg-gray-800 flex items-center justify-center text-gray-600">
-							<User size={20} />
-						</div>
-					{/if}
-					<input type="file" accept="image/*" onchange={handleAvatarChange} class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-				</div>
-			</div>
-		{/if}
-		{#if action !== 'reset_password'}
-			<label>
-				<span>Password</span>
-				<input data-test-id="password" bind:value={password} type="password" name="password" />
-			</label>
-		{/if}
-		{#if action === 'confirm_password_reset' || action === 'create_account'}
-			<label>
-				<span>Confirm Password</span>
-				<input data-test-id="confirm-password" bind:value={confirm_password} type="password" name="confirm-password" />
-			</label>
-		{/if}
+	<div class="auth-alert" role="status">
+		If an account exists for <strong>{email}</strong>
+		, you’ll receive a password reset link. Check your spam folder too.
 	</div>
-	<button class="button" type="submit" data-test-id="submit" disabled={passwordResetRequested}>
-		<span class:invisible={loading}>{title}</span>
-		{#if loading}
-			<div class="animate-spin absolute">
-				<Loader />
-			</div>
-		{/if}
-	</button>
-</form>
-{#if footer}
-	<span class="footer-text">{@render footer()}</span>
+{:else}
+	<form class="auth-form" onsubmit={submit} aria-busy={loading}>
+		<div class="auth-fields">
+			{#if !newPassword}
+				<div class="auth-label">
+					<label for="auth-email">Email</label>
+					<Input id="auth-email" data-test-id="email" bind:value={email} type="email" name="email" autocomplete="email" required disabled={loading} class="h-10" />
+				</div>
+			{/if}
+			{#if action === 'create_account' && invitedEmail}
+				<div class="auth-label">
+					<label for="invited-email">Email</label>
+					<Input id="invited-email" value={invitedEmail} type="email" data-test-id="email" disabled class="h-10" />
+				</div>
+				<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
+					<div class="auth-label">
+						<label for="auth-name">
+							Name <span class="auth-note">(optional)</span>
+						</label>
+						<Input id="auth-name" data-test-id="name" bind:value={name} name="name" autocomplete="name" placeholder="Your name" disabled={loading} class="h-10" />
+					</div>
+					<label class="relative flex h-10 w-10 items-center justify-center rounded-md border border-input bg-muted text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
+						{#if avatar}<img src={avatar} alt="Avatar preview" class="h-full w-full rounded-md object-cover" />{:else}<User size={18} aria-hidden="true" />{/if}
+						<input type="file" accept="image/*" aria-label="Upload profile photo" onchange={handleAvatarChange} disabled={loading} class="absolute inset-0 h-full w-full opacity-0 cursor-pointer" />
+					</label>
+				</div>
+			{/if}
+			{#if action !== 'reset_password'}
+				<PasswordInput
+					id="auth-password"
+					name="password"
+					testId="password"
+					bind:value={password}
+					autocomplete={newPassword ? 'new-password' : 'current-password'}
+					disabled={loading}
+					minlength={newPassword ? 8 : undefined}
+					describedby={newPassword ? 'password-help' : undefined}
+				/>
+			{/if}
+			{#if newPassword}
+				<p id="password-help" class="auth-note -mt-2">Use at least 8 characters.</p>
+				<PasswordInput id="auth-confirm-password" name="confirm-password" label="Confirm password" testId="confirm-password" bind:value={confirm_password} disabled={loading} minlength={8} />
+			{/if}
+		</div>
+		<Button class="w-full h-10" type="submit" data-test-id="submit" disabled={loading}>
+			{#if loading}<Loader class="animate-spin" aria-hidden="true" />{/if}
+			{loading ? 'Please wait…' : action === 'reset_password' ? 'Send reset link' : action === 'confirm_password_reset' ? 'Save new password' : title}
+		</Button>
+	</form>
 {/if}
-
-<style lang="postcss">
-	header {
-		h1 {
-			text-align: left;
-			font-weight: 500;
-			font-size: 24px;
-			line-height: 24px;
-			padding-bottom: 1rem;
-		}
-	}
-	.error {
-		color: #f72228;
-		margin-bottom: 1rem;
-	}
-	.message {
-		margin-bottom: 1rem;
-	}
-	.form {
-		display: grid;
-		gap: 2rem;
-		width: 100%;
-
-		.fields {
-			display: grid;
-			gap: 1rem;
-		}
-
-		label {
-			color: #b6b6b6;
-			display: grid;
-			gap: 0.5rem;
-			font-size: 0.875rem;
-			font-weight: 400;
-		}
-
-		input {
-			color: #dadada;
-			border-radius: 0.25rem;
-			border: 1px solid #6e6e6e;
-			padding: 0.75rem;
-			background-color: #1c1c1c;
-			font-size: 1rem;
-		}
-
-		::file-selector-button {
-			display: none;
-		}
-
-		.button {
-			color: #cecece;
-			font-weight: 500;
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			padding: 0.65rem;
-			border: 1.5px solid var(--primo-primary-color);
-			border-radius: 0.25rem;
-
-			&:hover {
-				background-color: var(--primo-primary-color);
-				transition: 0.2s;
-				color: white;
-			}
-
-			@keyframes icon-spin {
-				0% {
-					transform: rotate(0deg);
-				}
-				100% {
-					transform: rotate(360deg);
-				}
-			}
-		}
-	}
-	.footer-text {
-		display: flex;
-		gap: 0.25rem;
-		font-size: 0.875rem;
-		line-height: 1.125rem;
-		color: #797979;
-		text-align: left;
-		margin-top: 1rem;
-	}
-</style>
+{#if footer}<div class="auth-footer">{@render footer()}</div>{/if}

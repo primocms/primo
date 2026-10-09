@@ -11,6 +11,7 @@
 
 	/**
 	 * @typedef {Object} Props
+	 * @property {string} [title]
 	 * @property {string} [label]
 	 * @property {string} [icon]
 	 * @property {'sm' | 'lg'} [size]
@@ -21,11 +22,13 @@
 	 */
 
 	/** @type {Props} */
-	let { label = '', icon = 'carbon:overflow-menu-vertical', options = [], dividers = [], px = 1, size = 'sm' } = $props()
+	let { title = 'More options', label = '', icon = 'carbon:overflow-menu-vertical', options = [], dividers = [], px = 1, size = 'sm' } = $props()
 </script>
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger
+		aria-label={label || title}
+		title={label || title}
 		class={buttonVariants({ variant: 'ghost', size, class: `py-1 px-${px} rounded-md focus-visible:ring-1 focus-visible:ring-[var(--primo-primary-color)] focus-visible:outline-none` })}
 	>
 		{#if label}
@@ -38,12 +41,12 @@
 			<Icon {icon} />
 		{/if}
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content class="text-sm bg-[#171717] border-[#292929] border-[1px] z-999999999">
+	<DropdownMenu.Content class="text-sm">
 		<DropdownMenu.Group>
 			<div class="options">
 				{#each options as option, i}
 					<DropdownMenu.Item
-						class="p-1 rounded {option.danger ? 'text-[var(--primo-color-danger)]' : ''} {option.disabled ? 'text-gray-500 cursor-not-allowed' : 'cursor-pointer'}"
+						class={option.danger ? 'text-red-400 data-highlighted:bg-red-500/10 data-highlighted:text-red-300' : ''}
 						disabled={option.disabled}
 						onSelect={(e) => {
 							if (option.disabled) return

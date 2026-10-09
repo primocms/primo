@@ -41,7 +41,8 @@
 	let selected_group_id = $state((get(last_library_group_id) || LibrarySymbolGroups.list()?.[0]?.id) ?? '')
 	let selected_symbol_id = $state<string>()
 	let selected_symbol = $derived(selected_symbol_id ? LibrarySymbols.from(marketplace).one(selected_symbol_id) : null)
-	let added_to_library = $state(false)
+	let added_to_library = $state<Set<string>>(new Set())
+	let adding_to_library = $state(false)
 	async function add_to_library(sym?: ObjectOf<typeof LibrarySymbols> | string) {
 		const symbolToAdd = typeof sym === 'string' ? LibrarySymbols.from(marketplace).one(sym) : sym || selected_symbol
 		if (!symbolToAdd) {
@@ -191,7 +192,7 @@
 									selected_symbol_id = symbol.id
 								}}
 							>
-								{#if added_to_library}
+								{#if added_to_library.has(symbol.id)}
 									<CircleCheck />
 								{:else}
 									<CirclePlus />
@@ -213,21 +214,24 @@
 									</RadioGroup.Root>
 									<div class="flex justify-end">
 										<Button
-											onclick={() => {
-												const grp = LibrarySymbolGroups.one(selected_group_id)
-												const displayName = (symbol?.name || '').trim() || 'Block'
-												toast.success(`Added ${displayName} to ${grp?.name ?? 'Library'}`)
-												selected_symbol_id = undefined
-												added_to_library = true
-												// Fire-and-forget background add
-												add_to_library(symbol).catch((e) => {
-													console.error(e)
-													toast.error('Failed to add block. Please try again.')
-													added_to_library = false
-												})
+											disabled={adding_to_library || !selected_group_id}
+											onclick={async () => {
+												if (adding_to_library) return
+												adding_to_library = true
+												try {
+													await add_to_library(symbol)
+													const grp = LibrarySymbolGroups.one(selected_group_id)
+													toast.success(`Added ${(symbol.name || '').trim() || 'Block'} to ${grp?.name ?? 'Library'}`)
+													selected_symbol_id = undefined
+													added_to_library = new Set([...added_to_library, symbol.id])
+												} catch (error) {
+													toast.error('Could not add this block. Please try again.')
+												} finally {
+													adding_to_library = false
+												}
 											}}
 										>
-											Add to Library
+											{adding_to_library ? 'Adding…' : 'Add to library'}
 										</Button>
 									</div>
 								</div>
@@ -237,7 +241,7 @@
 				{/snippet}
 			</Masonry>
 		{:else}
-			<EmptyState class="h-[50vh]" icon={Cuboid} title="No Blocks to display" description="Blocks are components you can add to any site. When you create one it'll show up here." />
+			<EmptyState class="h-[50vh]" icon={Cuboid} title="No blocks in this category" description="Choose another category from the sidebar to keep browsing." />
 		{/if}
 	{/key}
 </div>

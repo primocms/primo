@@ -59,14 +59,14 @@
 				{/if}
 			</div>
 		{:else}
-			<EmptyState class="h-[50vh]" icon={LayoutTemplate} title="No Starters to display" description="Starters are starting points for your sites. When you create one it'll show up here." />
+			<EmptyState class="h-[50vh]" icon={LayoutTemplate} title="No starters in this category" description="Choose another category from the sidebar to keep browsing." />
 		{/if}
 	{/key}
 </div>
 
 <Dialog.Root bind:open={is_info_dialog_open}>
 	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">How to Use Starter Sites</h2>
+		<Dialog.Title>How to Use Starter Sites</Dialog.Title>
 		<p class="text-muted-foreground text-sm mb-6">Follow these steps to create a new site using a starter:</p>
 
 		<div class="space-y-4">

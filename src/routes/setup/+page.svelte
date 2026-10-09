@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { Users } from '$lib/pocketbase/collections'
+	import AuthShell from '$lib/components/auth/AuthShell.svelte'
+	import PasswordInput from '$lib/components/auth/PasswordInput.svelte'
+	import { Input } from '$lib/components/ui/input'
+	import { Button } from '$lib/components/ui/button'
 	import { Loader } from 'lucide-svelte'
 	import { self } from '$lib/pocketbase/managers'
 	import { instance } from '$lib/instance'
@@ -94,417 +98,46 @@
 		}
 		loading = false
 	}
-
 </script>
 
-<main class="primo-reset">
-	<div class="left">
-		<div class="box">
-			<header>
-				<h1>Welcome to Primo</h1>
-				<p class="subtitle">
-					{#if has_seeded_content}
-						Your workspace is loaded. Create your admin account to start editing.
-					{:else}
-						Create your admin account to get started
+<svelte:head><title>Set up your workspace · Primo</title></svelte:head>
+<AuthShell>
+	<header>
+		<h1>Welcome to Primo</h1>
+	</header>
+	{#if error}<div class="auth-alert auth-error" role="alert">{error}</div>{/if}
+	{#if checking_setup}
+		{#if !error}<div class="flex items-center gap-2 text-sm text-muted-foreground" role="status"><Loader class="size-4 animate-spin" aria-hidden="true" />Checking setup status…</div>{/if}
+	{:else}
+		{#if has_seeded_content}
+			<div class="auth-alert" data-test-id="seeded-content">
+				<p class="font-medium mb-1">Already loaded on this server</p>
+				<ul>
+					{#if seeded_sites > 0}<li>{count_label(seeded_sites, 'site')}</li>{/if}{#if seeded_blocks > 0}<li>{count_label(seeded_blocks, 'library block')}</li>{/if}
+				</ul>
+			</div>
+		{/if}
+		<form class="auth-form" onsubmit={create_user} aria-busy={loading}>
+			<div class="auth-fields">
+				<div class="auth-label">
+					<label for="setup-email">Email</label>
+					<Input id="setup-email" data-test-id="email" bind:value={email} type="email" name="email" autocomplete="email" required disabled={loading} class="h-10" />
+				</div>
+				<PasswordInput id="setup-password" name="password" testId="password" bind:value={password} minlength={8} disabled={loading} describedby="setup-password-help" />
+				<p id="setup-password-help" class="auth-note -mt-2">Use at least 8 characters.</p>
+				<PasswordInput id="setup-confirm-password" name="confirm-password" label="Confirm password" testId="confirm-password" bind:value={confirm_password} minlength={8} disabled={loading} />
+			</div>
+			<Button class="w-full h-10" type="submit" data-test-id="create-user" disabled={loading || !is_form_valid}>
+				{#if loading}<Loader class="animate-spin" aria-hidden="true" />{/if}{loading ? 'Creating account…' : 'Create account'}
+			</Button>
+			{#if instance.telemetry_enabled}<p class="auth-note" data-test-id="telemetry-note">
+					This server sends anonymous usage analytics (no page content or emails) to help improve Primo.
+					{#if !instance.hosted_mode}
+						Disable with <code>PRIMO_ENABLE_USAGE_STATS=false</code>
+						.
 					{/if}
-				</p>
-			</header>
-
-			{#if checking_setup}
-				{#if error}
-					<div class="loading-container">
-						<p class="error">{error}</p>
-					</div>
-				{:else}
-					<div class="loading-container">
-						<Loader class="animate-spin" />
-						<p>Checking setup status...</p>
-					</div>
-				{/if}
-			{:else}
-				{#if has_seeded_content}
-					<div class="seeded" data-test-id="seeded-content">
-						<p class="seeded-label">Already loaded on this server</p>
-						<ul class="seeded-list">
-							{#if seeded_sites > 0}
-								<li>{count_label(seeded_sites, 'site')}</li>
-							{/if}
-							{#if seeded_blocks > 0}
-								<li>{count_label(seeded_blocks, 'library block')}</li>
-							{/if}
-						</ul>
-					</div>
-				{/if}
-
-				{#if error}
-					<div class="error">{error}</div>
-				{/if}
-
-				<form class="form" onsubmit={create_user}>
-					<div class="fields">
-						<label>
-							<span>Email</span>
-							<input data-test-id="email" bind:value={email} type="email" name="email" required />
-						</label>
-						<label>
-							<span>Password</span>
-							<input data-test-id="password" bind:value={password} type="password" name="password" required minlength="8" />
-						</label>
-						<label>
-							<span>Confirm Password</span>
-							<input data-test-id="confirm-password" bind:value={confirm_password} type="password" name="confirm-password" required />
-						</label>
-					</div>
-					<button class="button" type="submit" data-test-id="create-user" disabled={loading || !is_form_valid}>
-						<span class:invisible={loading}>Create Account</span>
-						{#if loading}
-							<div class="animate-spin absolute">
-								<Loader />
-							</div>
-						{/if}
-					</button>
-					{#if instance.telemetry_enabled}
-						<p class="telemetry-note" data-test-id="telemetry-note">
-							This server sends anonymous usage analytics (no page content or emails) to help
-							improve Primo.
-							{#if !instance.hosted_mode}
-								Disable with <code>PRIMO_ENABLE_USAGE_STATS=false</code>.
-							{/if}
-							<a href="https://github.com/primocms/primo/blob/main/ANALYTICS.md" target="_blank" rel="noopener noreferrer">What's collected</a>
-						</p>
-					{/if}
-				</form>
-			{/if}
-		</div>
-	</div>
-</main>
-
-<style lang="postcss">
-	main {
-		display: grid;
-		min-height: 100vh;
-		background: var(--color-gray-9);
-		color: white;
-	}
-	.loading-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1rem;
-		padding: 2rem;
-		color: #b6b6b6;
-
-		p {
-			font-size: 14px;
-			margin: 0;
-		}
-	}
-	.box {
-		width: 100%;
-		max-width: 500px;
-		padding: 2.5rem;
-		border-radius: 6px;
-		background-color: #1a1a1a;
-	}
-	.left {
-		padding: 3rem clamp(3rem, 10vw, 160px);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-	}
-	header {
-		margin-bottom: 2rem;
-
-		h1 {
-			text-align: center;
-			font-weight: 500;
-			font-size: 28px;
-			line-height: 32px;
-			margin-bottom: 0.5rem;
-		}
-
-		.subtitle {
-			text-align: center;
-			color: #b6b6b6;
-			font-size: 14px;
-		}
-	}
-	.steps-indicator {
-		display: flex;
-		gap: 1rem;
-		margin-bottom: 2rem;
-
-		.step {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			flex: 1;
-			font-size: 14px;
-			color: #6e6e6e;
-
-			span {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 24px;
-				height: 24px;
-				border-radius: 50%;
-				background-color: #2a2a2a;
-				font-size: 12px;
-				font-weight: 500;
-			}
-
-			&.active {
-				color: #ff6b35;
-
-				span {
-					background-color: #ff6b35;
-					color: white;
-				}
-			}
-
-			&.completed {
-				color: #4ade80;
-
-				span {
-					background-color: #4ade80;
-					color: white;
-				}
-			}
-		}
-	}
-	.seeded {
-		background-color: #2a2a2a;
-		border: 1px solid #444;
-		border-left: 2px solid #ff6b35;
-		border-radius: 4px;
-		padding: 1rem 1.25rem;
-		margin-bottom: 2rem;
-
-		.seeded-label {
-			font-size: 12px;
-			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: #b6b6b6;
-			margin: 0 0 0.5rem;
-		}
-
-		.seeded-list {
-			list-style: none;
-			margin: 0;
-			padding: 0;
-			display: grid;
-			gap: 0.25rem;
-
-			li {
-				font-size: 14px;
-				color: #dadada;
-
-				&::before {
-					content: '✓';
-					color: #4ade80;
-					margin-right: 0.5rem;
-				}
-			}
-		}
-	}
-	.error {
-		color: #f72228;
-		margin-bottom: 1rem;
-	}
-	.form {
-		display: grid;
-		gap: 2rem;
-		width: 100%;
-
-		.fields {
-			display: grid;
-			gap: 1rem;
-		}
-
-		label {
-			color: #b6b6b6;
-			display: grid;
-			gap: 0.5rem;
-			font-size: 0.875rem;
-			font-weight: 400;
-		}
-
-		input {
-			color: #dadada;
-			border-radius: 0.25rem;
-			border: 1px solid #6e6e6e;
-			padding: 0.75rem;
-			background-color: #1c1c1c;
-			font-size: 1rem;
-
-			&:focus {
-				outline: none;
-				border-color: #ff6b35;
-			}
-		}
-
-		.button {
-			color: #cecece;
-			font-weight: 500;
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			padding: 0.65rem;
-			border: 1.5px solid #ff6b35;
-			border-radius: 0.25rem;
-			position: relative;
-			transition: 0.2s;
-
-			&:not(:disabled):hover {
-				background-color: #ff6b35;
-				color: #121212;
-			}
-
-			&:disabled {
-				opacity: 0.75;
-				cursor: not-allowed;
-				color: #6e6e6e !important;
-				border-color: #444 !important;
-				background-color: #2a2a2a !important;
-				pointer-events: none;
-			}
-
-			.invisible {
-				visibility: hidden;
-			}
-
-			@keyframes spin {
-				from {
-					transform: rotate(0deg);
-				}
-				to {
-					transform: rotate(360deg);
-				}
-			}
-		}
-
-		.telemetry-note {
-			margin-top: -1rem;
-			font-size: 12px;
-			line-height: 1.5;
-			color: #797979;
-
-			code {
-				font-size: 11px;
-				color: #b6b6b6;
-			}
-
-			a {
-				color: #ff6b35;
-
-				&:hover {
-					text-decoration: underline;
-				}
-			}
-		}
-	}
-	.step-content {
-		text-align: center;
-
-		h2 {
-			font-size: 24px;
-			font-weight: 500;
-			margin-bottom: 1rem;
-		}
-
-		p {
-			color: #b6b6b6;
-			margin-bottom: 1rem;
-			line-height: 1.5;
-		}
-
-		.instructions {
-			font-size: 14px;
-			color: #797979;
-			margin-top: 1.5rem;
-		}
-
-		.credentials-box {
-			background-color: #2a2a2a;
-			border: 1px solid #444;
-			border-radius: 8px;
-			padding: 1rem;
-			margin: 1.5rem 0;
-			font-family: 'Fira Code', monospace;
-			position: relative;
-
-			.credential-item {
-				margin-bottom: 0.5rem;
-				font-size: 14px;
-
-				strong {
-					color: #ff6b35;
-					margin-right: 0.5rem;
-				}
-			}
-
-			.warning {
-				margin-top: 1rem;
-				padding: 0.5rem;
-				background-color: #4a3728;
-				border: 1px solid #8b6914;
-				border-radius: 4px;
-				color: #fbbf24;
-				font-size: 12px;
-				text-align: center;
-			}
-
-			.info {
-				margin-top: 1rem;
-				padding: 0.5rem;
-				background-color: #1e3a4a;
-				border: 1px solid #3b82f6;
-				border-radius: 4px;
-				color: #60a5fa;
-				font-size: 12px;
-				text-align: center;
-			}
-		}
-
-		.database-link {
-			font-size: 0.75rem;
-			display: inline-block;
-			margin-top: 1rem;
-			color: #ff6b35;
-			text-decoration: underline;
-
-			&:hover {
-				color: #5a6b7f;
-			}
-		}
-
-		.button {
-			color: #cecece;
-			font-weight: 500;
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			align-items: center;
-			padding: 0.65rem 2rem;
-			border: 1.5px solid #ff6b35;
-			border-radius: 0.25rem;
-			margin: 0 auto;
-			min-width: 200px;
-
-			&:hover {
-				background-color: #ff6b35;
-				transition: 0.2s;
-				color: #121212;
-			}
-
-			&.full-width {
-				width: 100%;
-				margin: 0;
-			}
-		}
-	}
-</style>
+					<a href="https://github.com/primocms/primo/blob/main/ANALYTICS.md" target="_blank" rel="noopener noreferrer">What's collected</a>
+				</p>{/if}
+		</form>
+	{/if}
+</AuthShell>

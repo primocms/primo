@@ -94,6 +94,7 @@
 			</div>
 			<div class="options">
 				<MenuPopup
+					title={`Options for ${page_type.name}`}
 					icon="carbon:overflow-menu-vertical"
 					options={[
 						{

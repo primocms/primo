@@ -211,7 +211,7 @@
 
 <Dialog.Root bind:open={renaming}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Block</h2>
+		<Dialog.Title>Rename block</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your Block</p>
 		<form
 			onsubmit={(e) => {
@@ -219,7 +219,7 @@
 				save_rename()
 			}}
 		>
-			<Input bind:value={new_name} placeholder="Enter new Block name" class="my-4" />
+			<Input aria-label="Block name" required bind:value={new_name} placeholder="Enter new Block name" class="my-4" />
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={() => (renaming = false)}>Cancel</Button>
 				<Button type="submit">Rename</Button>
@@ -291,6 +291,7 @@
 						<Toggle label="Toggle Symbol for Page Type" disabled={!!component_error || $read_only} hideLabel={true} {toggled} small={true} on:toggle />
 					{/if}
 					<MenuPopup
+						title={`Options for ${symbol.name}`}
 						icon="carbon:overflow-menu-vertical"
 						options={[
 							{

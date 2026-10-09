@@ -4,6 +4,7 @@
 	import { set_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
 	import { onMount } from 'svelte'
+	import { Loader } from 'lucide-svelte'
 
 	let loading = $state(true)
 
@@ -37,7 +38,7 @@
 		}
 
 		// Try auto-login on localhost
-		if (isLocalhost() && await tryDevAuth()) {
+		if (isLocalhost() && (await tryDevAuth())) {
 			await goto('/admin/site')
 			return
 		}
@@ -49,7 +50,7 @@
 </script>
 
 {#if loading}
-	<div class="loading">Loading...</div>
+	<div class="loading" role="status"><Loader size={18} class="animate-spin" aria-hidden="true" />Loading workspace…</div>
 {:else}
 	{@render children?.()}
 {/if}
@@ -59,7 +60,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		height: 100vh;
-		color: #888;
+		min-height: 100dvh;
+		gap: 8px;
+		font-size: 13px;
+		color: hsl(var(--muted-foreground));
 	}
 </style>

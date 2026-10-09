@@ -41,7 +41,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await page.addStyleTag({ content: '#__primo_dev_indicator__ { display: none !important; }' })
 
 	// --- 1. Create Site ---
-	await page.getByRole('button', { name: 'Create Site' }).click()
+	await page.locator('.create-site-button').click()
 	const newSiteName = `Built Site ${Date.now()}`
 	await page.getByLabel('Site Name').fill(newSiteName)
 	await page.getByRole('button', { name: 'Next' }).click()
@@ -52,10 +52,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await page.getByRole('button', { name: 'Next' }).click()
 
 	// Blocks step: optional, skip straight to create.
-	const cloneResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/primo/clone-site') && res.request().method() === 'POST',
-		{ timeout: 15000 }
-	)
+	const cloneResponsePromise = page.waitForResponse((res) => res.url().includes('/api/primo/clone-site') && res.request().method() === 'POST', { timeout: 15000 })
 	// Scoped to the wizard footer: the dashboard's own "Create Site" button
 	// is still in the DOM behind the wizard overlay.
 	await page.locator('.create-site-footer').getByRole('button', { name: 'Create Site' }).click()
@@ -88,10 +85,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await pageTypesDialog.getByRole('button', { name: 'Create Page Type' }).click()
 
 	const pageTypeName = `Landing Page ${Date.now()}`
-	const pageTypeCreateResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/collections/page_types/records') && res.request().method() === 'POST',
-		{ timeout: 10000 }
-	)
+	const pageTypeCreateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/page_types/records') && res.request().method() === 'POST', { timeout: 10000 })
 	await pageTypesDialog.getByPlaceholder('Post').fill(pageTypeName)
 	await pageTypesDialog.locator('button.save').click()
 	const pageTypeCreateRes = await pageTypeCreateResponsePromise
@@ -189,10 +183,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await expect(codeArea).toHaveText(componentCode, { timeout: 2000 })
 	await expect(blockDialog.getByRole('button', { name: 'Create Block' })).toBeEnabled({ timeout: 5000 })
 
-	const blockSaveResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/collections/site_symbols/records') && res.request().method() === 'POST',
-		{ timeout: 10000 }
-	)
+	const blockSaveResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/site_symbols/records') && res.request().method() === 'POST', { timeout: 10000 })
 	await blockDialog.getByRole('button', { name: 'Create Block' }).click()
 	const blockSaveRes = await blockSaveResponsePromise
 	// Check the mutation itself before parsing it. A failed create would
@@ -206,10 +197,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 
 	// --- toggle the new block on for this page type (this is what makes
 	// the page type "dynamic" instead of static — PageType_Sidebar.svelte) ---
-	const blockToggleResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/collections/page_type_symbols/records') && res.request().method() === 'POST',
-		{ timeout: 10000 }
-	)
+	const blockToggleResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/page_type_symbols/records') && res.request().method() === 'POST', { timeout: 10000 })
 	const blockRow = page.locator('.sidebar-symbol').filter({ has: page.locator(`[data-test-id="symbol-${newSymbol.id}"]`) })
 	await blockRow.getByRole('switch', { name: 'Toggle Symbol for Page Type' }).click()
 	await blockToggleResponsePromise
@@ -238,10 +226,7 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	// the intended option and leave the dropdown never actually opened/selected.
 	await pageTypeSelect.locator('.popup .options button', { hasText: pageTypeName }).click()
 
-	const pageCreateResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/collections/pages/records') && res.request().method() === 'POST',
-		{ timeout: 10000 }
-	)
+	const pageCreateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/pages/records') && res.request().method() === 'POST', { timeout: 10000 })
 	// Click the form's actual submit button rather than pressing Enter —
 	// after clicking the dropdown option above, focus is on the (now
 	// closed) dropdown trigger, not inside the form's text input, so
@@ -348,10 +333,7 @@ test.describe('Full build flow (site creation through publish)', () => {
 				params: { filter: `page = "${newPage.id}"` }
 			})
 			const sections = (await sectionsRes.json()).items
-			expect(
-				sections,
-				'second drop onto a page that already has sections did not register — the canvas iframe swallowed the drag'
-			).toHaveLength(2)
+			expect(sections, 'second drop onto a page that already has sections did not register — the canvas iframe swallowed the drag').toHaveLength(2)
 		}).toPass({ timeout: 5000 })
 	})
 
@@ -430,18 +412,12 @@ test.describe('Full build flow (site creation through publish)', () => {
 		// save: waitForResponse only matches responses that arrive after
 		// it starts listening, so registering it afterward can miss a fast
 		// save and time out on content that was in fact persisted.
-		const entrySavePromise = page.waitForResponse(
-			(res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET',
-			{ timeout: 5000 }
-		)
+		const entrySavePromise = page.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET', { timeout: 5000 })
 		await headline.blur()
 		const entrySaveRes = await entrySavePromise
 		expect(entrySaveRes.ok()).toBeTruthy()
 
-		const generateResponsePromise = page.waitForResponse(
-			(res) => res.url().includes('/api/primo/generate') && res.request().method() === 'POST',
-			{ timeout: 15000 }
-		)
+		const generateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/primo/generate') && res.request().method() === 'POST', { timeout: 15000 })
 		await page.getByRole('button', { name: /^(Preview|Publish)$/ }).click()
 		const publishDialog = page.getByRole('dialog')
 		const confirmButton = publishDialog.getByRole('button', { name: /publish|preview|confirm/i }).first()
