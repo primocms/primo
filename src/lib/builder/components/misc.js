@@ -19,7 +19,8 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
       ${preview_iframe_head(head)}
       <script type="module">
         let mod;
-        let reset;
+        let preview;
+        let preview_module;
         let imported_source;
         let module_import;
         let import_request = 0;
@@ -78,23 +79,19 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           // Reset log tracking for this render
           logsThisRender = false;
 
-          const previous_html = document.body.innerHTML;
-          document.body.innerHTML = '';
-
-          if (reset) {
-            try { reset() } catch (_) {}
-            reset = null;
-          }
-
           if (!mod) return
 
           try {
-            const component = mod.mount(mod.default, {
-              target: document.body,
-              props
-            })
-            const { unmount } = mod
-            reset = () => unmount(component)
+            if (preview && preview_module === mod) {
+              preview.update(props)
+            } else {
+              if (preview) preview.destroy()
+              preview = null;
+              document.body.innerHTML = '';
+              preview = mod.createPreview(mod.default, { target: document.body, props })
+              preview_module = mod;
+            }
+            document.dispatchEvent(new Event('primo-rendered'));
             last_rendered_html = document.body.innerHTML;
             channel.postMessage({ event: 'MOUNTED' })
             // After enough time for console logs to be called and sent, check if any were produced
@@ -105,11 +102,8 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
               }
             }, 300)
           } catch(e) {
-            reset = null;
-            if (last_rendered_html) {
+            if (!preview && last_rendered_html) {
               document.body.innerHTML = last_rendered_html;
-            } else {
-              document.body.innerHTML = previous_html;
             }
             channel.postMessage({
               event: 'SET_ERROR',
@@ -207,7 +201,8 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <script type="module">
           let mod;
-          let reset;
+          let preview;
+          let preview_module;
           let imported_source;
           let module_import;
           let import_request = 0;
@@ -230,8 +225,6 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
               }
             } catch (e) {
               if (request !== render_request) return;
-              const target = document.querySelector('#component')
-              if (target) target.innerHTML = ''
               console.error(e)
               const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
               window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
@@ -265,17 +258,19 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             const target = document.querySelector('#component')
             if (!target) return
             if (!mod) return
-            if (reset) reset()
             try {
-              const component = mod.mount(mod.default, {
-                target,
-                props
-              })
-              const { unmount } = mod
-              reset = () => unmount(component)
+              if (preview && preview_module === mod) {
+                preview.update(props)
+              } else {
+                if (preview) preview.destroy()
+                preview = null;
+                target.innerHTML = ''
+                preview = mod.createPreview(mod.default, { target, props })
+                preview_module = mod;
+              }
+              document.dispatchEvent(new Event('primo-rendered'));
               window.parent.postMessage({ type: 'component-error', error: '' }, '*')
             } catch (e) {
-              target.innerHTML = ''
               console.error(e)
               const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
               window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')

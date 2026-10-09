@@ -120,7 +120,7 @@ async function previewRuntime(kind, { delayImports = false } = {}) {
 		'setTimeout',
 		'loadModule',
 		script
-	)(window, { body: target, querySelector: () => target }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0, loadModule)
+	)(window, { body: target, querySelector: () => target, dispatchEvent() {} }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0, loadModule)
 	return {
 		target,
 		messages,
@@ -138,11 +138,11 @@ async function previewRuntime(kind, { delayImports = false } = {}) {
 function blockSource(version) {
 	return `
 		export default { version: ${JSON.stringify(version)} };
-		export function mount(App, { target, props }) {
-			target.innerHTML = App.version + ':' + props.text;
-			return { target };
+		export function createPreview(App, { target, props }) {
+			const update = (next) => { target.innerHTML = App.version + ':' + next.text; };
+			update(props);
+			return { update, destroy() { target.innerHTML = ''; } };
 		}
-		export function unmount(component) { component.target.innerHTML = ''; }
 	`
 }
 
