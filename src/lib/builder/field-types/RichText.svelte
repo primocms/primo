@@ -605,6 +605,7 @@
 			<ImageField
 				field={{ id: 'temp-image', label: 'Image', key: 'image', type: 'image', config: {}, index: 0 }}
 				entry={{ id: 'temp-entry', locale: 'en', value: current_image_value, field: 'temp-image', index: 0 } as any}
+				show_focal_point={false}
 				onchange={(changeData) => {
 					const fieldKey = Object.keys(changeData)[0]
 					const newValue = changeData[fieldKey][0].value as { url: string; alt: string }

@@ -1210,6 +1210,7 @@ func generateReadme(site *core.Record, symbols []*core.Record, pageTypes []*core
 	sb.WriteString("- `site-field` references a site field by name: `config: { field: <site-field-name> }`.\n")
 	sb.WriteString("- `page-field` references a page type field as `<page-type-folder>--<field-key>`, e.g. `config: { field: blog-post--author }`.\n")
 	sb.WriteString("- `url` holds a plain string (`/about`, `https://...`). `link` holds `{ label, url }`; a `url` that matches a page path is stored as a reference to that page.\n")
+	sb.WriteString("- `image` holds `{ url, alt, upload, width, height }` and an optional `focal_point: { x, y }` (fractions 0..1 of the image; centered when missing). Blocks also receive `position` (e.g. `\"37.5% 62%\"`): use it as `object-position` or `background-position` so cropped images keep the focal point in view.\n")
 	sb.WriteString("- Run `primo validate` (from the workspace root it checks every site) before assuming a schema change landed.\n\n")
 
 	sb.WriteString("## Workflow\n")

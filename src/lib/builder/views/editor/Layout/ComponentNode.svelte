@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { X } from 'lucide-svelte'
 	import { fade } from 'svelte/transition'
 	import * as _ from 'lodash-es'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import ImageField from '$lib/builder/field-types/ImageField.svelte'
+	import { register_image_preview, find_image_preview } from '$lib/builder/field-types/image-preview.svelte'
 	import LinkField from '$lib/builder/field-types/Link.svelte'
 	import VideoModal from '$lib/builder/views/modal/VideoModal.svelte'
 	import { tick, createEventDispatcher } from 'svelte'
@@ -50,6 +52,7 @@
 	let floating_menu_state = $state({ visible: false, top: 0, left: 0 })
 
 	let image_overlay_is_visible = $state(false)
+	let image_overlay = $state<{ focus: () => void }>()
 	let image_editor_element = $state<HTMLImageElement | null>(null)
 
 	async function attach_image_overlay(element, id: string | null = null) {
@@ -479,6 +482,9 @@
 
 		async function set_editable_image({ id, element }: { id: string; element: HTMLElement }) {
 			element.setAttribute(`data-entry`, id)
+			event_listeners.get(`image-${id}`)?.()
+			const unregister = register_image_preview(element as HTMLImageElement, id)
+			event_listeners.set(`image-${id}`, unregister)
 			element.onmousemove = () => {
 				attach_image_overlay(element, id)
 			}
@@ -868,7 +874,7 @@
 	let editing_image = $state(false)
 	let current_image_element = $state<HTMLImageElement | null>(null)
 	let current_image_id = $state<string | null>(null)
-	let current_image_value = $state<{ url: string; alt: string; upload?: string | null }>({ url: '', alt: '' })
+	let current_image_value = $state<{ url: string; alt: string; upload?: string | null; focal_point?: { x: number; y: number } }>({ url: '', alt: '' })
 
 	let editing_link = $state(false)
 	let current_link_element = $state<HTMLLinkElement | null>(null)
@@ -882,6 +888,12 @@
 	let current_link_position = $state<{ from: number; to: number } | null>(null)
 	let editing_existing_link = $state(false)
 
+	// Keep the overlay attached when saving an entry remounts the component's image.
+	$effect(() => {
+		const image = find_image_preview(current_image_id || undefined)
+		if (image_overlay_is_visible && image && image_editor_element && !image_editor_element.isConnected) image_editor_element = image
+	})
+
 	const editing = $derived(is_editing || editing_video || editing_image || editing_existing_link || editing_link || editing_markdown)
 	if ('page_type' in section) {
 		$effect(() => setUserActivity(editing ? { page_type_section: section.id } : {}))
@@ -891,7 +903,19 @@
 </script>
 
 <Dialog.Root bind:open={editing_image}>
-	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12">
+	<Dialog.Content
+		showCloseButton={false}
+		class="z-[999] sm:max-w-[640px] overflow-y-auto gap-0"
+		style="top: clamp(0.5rem, 8dvh, 4rem); translate: -50% 0; max-height: calc(100dvh - clamp(0.5rem, 8dvh, 4rem) - 0.5rem)"
+		onCloseAutoFocus={(event) => {
+			if (!current_image_element?.isConnected) return
+			event.preventDefault()
+			image_editor_element = current_image_element
+			image_overlay_is_visible = true
+			tick().then(() => image_overlay?.focus())
+		}}
+	>
+		<Dialog.Description class="sr-only">Replace the image, adjust its position, or edit its description and URL.</Dialog.Description>
 		{@const field =
 			fields?.find((f) => entries?.find((e) => e.id === current_image_id)?.field === f.id) || ({ id: '', label: 'Image', key: 'image', type: 'image' as const, config: {}, index: 0 } as any)}
 		{@const entry = {
@@ -1082,6 +1106,10 @@
 			<ImageField
 				{field}
 				{entry}
+				show_focal_point={!!current_image_id}
+				inline_focus
+				rendered_image={current_image_element}
+				header_actions={image_dialog_close}
 				onchange={async (changeData: any) => {
 					// Extract the actual value from the nested structure
 					const fieldKey = Object.keys(changeData)[0]
@@ -1146,11 +1174,21 @@
 						Delete
 					</button>
 				{/if}
-				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Done</button>
+				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Save</button>
 			</div>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#snippet image_dialog_close()}
+	<Dialog.Close
+		class="ml-4 inline-flex h-7 w-7 items-center justify-center rounded text-[var(--color-gray-2)] hover:bg-[var(--color-gray-8)] focus-visible:outline-2 focus-visible:outline-[var(--primo-primary-color)] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+		aria-label="Close image dialog"
+		title="Close"
+	>
+		<X size={14} />
+	</Dialog.Close>
+{/snippet}
 
 <Dialog.Root bind:open={editing_link}>
 	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12 overflow-visible">
@@ -1248,16 +1286,21 @@
 
 {#if image_overlay_is_visible}
 	<ImageOverlay
+		bind:this={image_overlay}
 		bind:visible={image_overlay_is_visible}
 		bind:image_element={image_editor_element}
 		showDelete={current_image_id === null}
 		onClick={() => {
 			current_image_id = current_image_id // for image entries (non-tiptap)
 			current_image_element = image_editor_element
+			const stored_image = entries?.find((e) => e.id === current_image_id)?.value
 			current_image_value = {
-				url: image_editor_element?.src || '',
+				..._.cloneDeep(stored_image || {}),
+				url: stored_image?.url || image_editor_element?.src || '',
 				alt: image_editor_element?.alt || '',
-				upload: null // Clear any previous upload
+				upload: stored_image?.upload ?? null,
+				// The element only knows src and alt; keep the entry's stored focal point
+				focal_point: entries?.find((e) => e.id === current_image_id)?.value?.focal_point
 			}
 			editing_image = true
 			image_overlay_is_visible = false
