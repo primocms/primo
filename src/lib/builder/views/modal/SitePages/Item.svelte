@@ -320,6 +320,7 @@
 					<Icon icon="material-symbols:drag-handle" />
 				</button>
 				<MenuPopup
+					title={`Options for ${page.name}`}
 				icon="carbon:overflow-menu-vertical"
 				options={[
 					...(!has_children && !creating_page && page.id !== homepage?.id

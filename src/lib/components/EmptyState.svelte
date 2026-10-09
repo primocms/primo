@@ -1,32 +1,21 @@
 <script>
 	import { Button } from '$lib/components/ui/button'
-
-	let { icon, title, description, class: className = '', link = null, button = null } = $props()
+	let { icon: Icon, title, description, class: className = '', link = null, button = null, secondary = null } = $props()
 </script>
 
-<div class="flex flex-col items-center justify-center gap-6 flex-1 {className}">
-	<div class="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full dark:bg-gray-800">
-		<svelte:component this={icon} class="w-10 h-10 text-gray-500 dark:text-gray-400" />
-	</div>
+<div class="flex flex-col items-center justify-center gap-4 flex-1 px-4 py-8 {className}">
+	<div class="flex items-center justify-center size-12 rounded-lg border bg-muted/30 text-muted-foreground"><Icon class="size-6" aria-hidden="true" /></div>
 	<div class="space-y-2 text-center">
-		<h2 class="text-2xl font-bold tracking-tight">{title}</h2>
-		<p class="text-gray-500 dark:text-gray-400 text-balance max-w-[30rem]">
-			{description}
-		</p>
+		<h2 class="text-base font-medium tracking-tight">{title}</h2>
+		<p class="text-sm text-muted-foreground text-balance max-w-sm leading-relaxed">{description}</p>
 	</div>
-	{#if link}
-		<Button href={link.url} variant="outline">
-			<span>{link.label}</span>
-			{#if link.icon}
-				<svelte:component this={link.icon} />
-			{/if}
-		</Button>
-	{:else if button}
-		<Button onclick={button.onclick} variant="outline">
-			<span>{button.label}</span>
-			{#if button.icon}
-				<svelte:component this={button.icon} />
-			{/if}
-		</Button>
+	{#if link || button || secondary}
+		<div class="flex flex-wrap justify-center gap-2">
+			{#if link}<Button href={link.url} variant="outline" size="sm">{link.label}</Button>
+			{:else if button}<Button onclick={button.onclick} disabled={button.disabled} size="sm">
+					{#if button.icon}<button.icon aria-hidden="true" />{/if}{button.label}
+				</Button>{/if}
+			{#if secondary}<Button href={secondary.url} onclick={secondary.onclick} variant="outline" size="sm">{secondary.label}</Button>{/if}
+		</div>
 	{/if}
 </div>

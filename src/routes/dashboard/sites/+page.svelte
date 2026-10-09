@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { createDialogAction } from '$lib/components/dialog-action.svelte'
+	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as AlertDialog from '$lib/components/ui/alert-dialog'
@@ -17,6 +19,7 @@
 	import { Sites, SiteGroups, Pages } from '$lib/pocketbase/collections'
 	import { self as pb, self } from '$lib/pocketbase/managers'
 	import { goto } from '$app/navigation'
+	import { toast } from 'svelte-sonner'
 	import { ClientResponseError } from 'pocketbase'
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
@@ -88,10 +91,13 @@
 	})
 	async function handle_group_rename(e) {
 		e.preventDefault()
-		if (!active_site_group) return
-		SiteGroups.update(active_site_group.id, { name: new_group_name })
-		await self.commit()
-		is_rename_group_open = false
+		await save.run(async () => {
+			if (!new_group_name.trim()) return
+			if (!active_site_group) return
+			SiteGroups.update(active_site_group.id, { name: new_group_name.trim() })
+			await self.commit()
+			is_rename_group_open = false
+		})
 	}
 
 	let is_delete_group_open = $state(false)
@@ -113,25 +119,29 @@
 	$effect(() => {
 		if (download_site_id && snapshot_worker && snapshot_worker.status === 'standby' && !downloading) {
 			downloading = true
-			snapshot_worker.run().then((snapshot) => {
-				const file = Snapshot.encode(snapshot)
-				const url = URL.createObjectURL(file)
-				const a = document.createElement('a')
-				a.href = url
-				a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
-				document.body.appendChild(a)
-				a.click()
-				document.body.removeChild(a)
-				URL.revokeObjectURL(url)
-				download_site_id = null
-				download_site_name = null
-				downloading = false
-			}).catch((error) => {
-				console.error('Failed to download site:', error)
-				download_site_id = null
-				download_site_name = null
-				downloading = false
-			})
+			snapshot_worker
+				.run()
+				.then((snapshot) => {
+					const file = Snapshot.encode(snapshot)
+					const url = URL.createObjectURL(file)
+					const a = document.createElement('a')
+					a.href = url
+					a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
+					document.body.appendChild(a)
+					a.click()
+					document.body.removeChild(a)
+					URL.revokeObjectURL(url)
+					download_site_id = null
+					download_site_name = null
+					downloading = false
+				})
+				.catch((error) => {
+					console.error('Failed to download site:', error)
+					toast.error('Could not download this site. Please try again.')
+					download_site_id = null
+					download_site_name = null
+					downloading = false
+				})
 		}
 	})
 
@@ -150,11 +160,15 @@
 		}
 	})
 
-	async function handle_rename() {
-		if (!current_site) return
-		Sites.update(current_site.id, { name: new_site_name })
-		await self.commit()
-		is_rename_site_open = false
+	async function handle_rename(e) {
+		e.preventDefault()
+		await save.run(async () => {
+			if (!new_site_name.trim()) return
+			if (!current_site) return
+			Sites.update(current_site.id, { name: new_site_name.trim() })
+			await self.commit()
+			is_rename_site_open = false
+		})
 	}
 
 	// Connect-a-domain flow lives in the reusable ConnectDomain component; the
@@ -204,13 +218,21 @@
 	let is_move_site_open = $state(false)
 	let selected_group_id = $state(site_groups[0]?.id ?? '')
 	async function move_site() {
-		if (!current_site) return
-		Sites.update(current_site.id, { group: selected_group_id })
-		await self.commit()
-		is_move_site_open = false
+		await save.run(async () => {
+			if (!current_site) return
+			Sites.update(current_site.id, { group: selected_group_id })
+			await self.commit()
+			is_move_site_open = false
+		})
 	}
 
 	let is_creating_site = $state(false)
+	$effect(() => {
+		is_rename_group_open
+		is_rename_site_open
+		is_move_site_open
+		save.reset()
+	})
 </script>
 
 <header class="flex h-14 shrink-0 items-center gap-2">
@@ -265,7 +287,13 @@
 			{/each}
 		</div>
 	{:else}
-		<EmptyState class="h-[50vh]" icon={Globe} title="No Sites to display" description="It looks like you haven't created any websites yet." />
+		<EmptyState
+			class="min-h-[50vh]"
+			icon={Globe}
+			title={all_sites.length ? 'This group is empty' : 'Create your first site'}
+			description={all_sites.length ? 'Create a site here, or move an existing site into this group.' : 'Start with a template, import a site, or build something from scratch.'}
+			button={{ label: 'Create site', icon: CirclePlus, disabled: at_site_cap, onclick: () => (is_creating_site = true) }}
+		/>
 	{/if}
 </div>
 
@@ -280,7 +308,15 @@
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
 				<a href={site_editor_url(site)} class="text-sm font-medium leading-none truncate">{site.name}</a>
 				{#if is_host_reachable(site)}
-					<a href={`https://${site.host}`} target="_blank" rel="noopener noreferrer" title={`Open ${site.host} in a new tab`} class="text-xs text-muted-foreground leading-tight truncate hover:underline">{site.host}</a>
+					<a
+						href={`https://${site.host}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						title={`Open ${site.host} in a new tab`}
+						class="text-xs text-muted-foreground leading-tight truncate hover:underline"
+					>
+						{site.host}
+					</a>
 				{:else}
 					<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
 				{/if}
@@ -346,13 +382,14 @@
 
 <Dialog.Root bind:open={is_rename_group_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename group</h2>
+		<Dialog.Title>Rename group</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your group</p>
-		<form onsubmit={handle_group_rename}>
-			<Input bind:value={new_group_name} placeholder="Enter new group name" class="my-4" />
+		<form onsubmit={handle_group_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_group_name} aria-label="Enter new group name" placeholder="Enter new group name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_rename_group_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_rename_group_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_group_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -388,7 +425,7 @@
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<div class="grid gap-4">
 			<div class="space-y-2">
-				<h4 class="font-medium leading-none">Move to group</h4>
+				<Dialog.Title>Move to group</Dialog.Title>
 				<p class="text-muted-foreground text-sm">Select a group for this site</p>
 			</div>
 			<RadioGroup.Root bind:value={selected_group_id}>
@@ -399,22 +436,26 @@
 					</div>
 				{/each}
 			</RadioGroup.Root>
-			<div class="flex justify-end">
-				<Button onclick={move_site}>Move</Button>
-			</div>
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
+			<Dialog.Footer>
+				<Button variant="outline" onclick={() => (is_move_site_open = false)}>Cancel</Button><Button onclick={move_site} disabled={save.busy || !selected_group_id}>
+					{save.busy ? 'Moving…' : 'Move'}
+				</Button>
+			</Dialog.Footer>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={is_rename_site_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Site</h2>
+		<Dialog.Title>Rename site</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your site</p>
-		<form onsubmit={handle_rename}>
-			<Input bind:value={new_site_name} placeholder="Enter new site name" class="my-4" />
+		<form onsubmit={handle_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_site_name} aria-label="Enter new site name" placeholder="Enter new site name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_rename_site_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_rename_site_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_site_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
