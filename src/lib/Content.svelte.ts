@@ -24,12 +24,11 @@ export type UseContentOptions = {
 }
 
 // Empty resolved links and images carry derived keys; saved entry defaults stay content-only.
-const get_empty_content_value = (field: Field) =>
-	field.type === 'link'
-		? { url: '', label: '', text: '', active: false }
-		: field.type === 'image'
-			? { ...get_empty_value(field), focal_point: { x: 0.5, y: 0.5 }, position: '50% 50%' }
-			: get_empty_value(field)
+const get_empty_content_value = (field: Field) => {
+	if (field.type === 'link') return { url: '', label: '', text: '', active: false }
+	const value = get_empty_value(field)
+	return field.type === 'image' && value && typeof value === 'object' ? { ...value, focal_point: { x: 0.5, y: 0.5 }, position: '50% 50%' } : value
+}
 
 export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(entity: EntityOf<Collection>, options: UseContentOptions) => {
 	// Keep the viewed page separate from pages referenced by page/page-list fields.
