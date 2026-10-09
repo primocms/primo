@@ -24,6 +24,8 @@
 	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
+	import { fade } from 'svelte/transition'
+	import { prefersReducedMotion } from 'svelte/motion'
 
 	const sidebar = useSidebar()
 
@@ -258,15 +260,19 @@
 	</div>
 </header>
 <div class="sites-content">
-	{#if sites?.length}
-		<div class="sites-grid">
-			{#each sites as site}
-				{@render SiteButton(site)}
-			{/each}
+	{#key site_group_id}
+		<div class="sites-list" transition:fade|global={{ duration: prefersReducedMotion.current ? 0 : 160 }}>
+			{#if sites?.length}
+				<div class="sites-grid">
+					{#each sites as site (site.id)}
+						{@render SiteButton(site)}
+					{/each}
+				</div>
+			{:else}
+				<EmptyState class="h-[50vh]" icon={Globe} title="No Sites to display" description="It looks like you haven't created any websites yet." />
+			{/if}
 		</div>
-	{:else}
-		<EmptyState class="h-[50vh]" icon={Globe} title="No Sites to display" description="It looks like you haven't created any websites yet." />
-	{/if}
+	{/key}
 </div>
 
 {#snippet SiteButton(site: Site)}
@@ -474,8 +480,14 @@
 
 <style lang="postcss">
 	.sites-content {
+		display: grid;
 		flex: 1;
 		padding: 0 24px 24px;
+	}
+	.sites-list {
+		grid-area: 1 / 1;
+		align-self: start;
+		min-width: 0;
 	}
 	.sites-grid {
 		display: grid;
