@@ -434,7 +434,14 @@
 </div>
 
 <!-- Symbol Dialogs -->
-<Dialog.Root bind:open={is_symbol_move_open}>
+<Dialog.Root
+	bind:open={
+		() => is_symbol_move_open,
+		(open) => {
+			if (!save.busy) is_symbol_move_open = open
+		}
+	}
+>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<div class="grid gap-4">
 			<div class="space-y-2">
@@ -451,7 +458,7 @@
 			</RadioGroup.Root>
 			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button variant="outline" onclick={() => (is_symbol_move_open = false)}>Cancel</Button><Button onclick={move_symbol} disabled={save.busy || !selected_group_id}>
+				<Button variant="outline" disabled={save.busy} onclick={() => (is_symbol_move_open = false)}>Cancel</Button><Button onclick={move_symbol} disabled={save.busy || !selected_group_id}>
 					{save.busy ? 'Moving…' : 'Move'}
 				</Button>
 			</Dialog.Footer>

@@ -41,7 +41,7 @@
 	let selected_group_id = $state((get(last_library_group_id) || LibrarySymbolGroups.list()?.[0]?.id) ?? '')
 	let selected_symbol_id = $state<string>()
 	let selected_symbol = $derived(selected_symbol_id ? LibrarySymbols.from(marketplace).one(selected_symbol_id) : null)
-	let added_to_library = $state(false)
+	let added_to_library = $state<Set<string>>(new Set())
 	let adding_to_library = $state(false)
 	async function add_to_library(sym?: ObjectOf<typeof LibrarySymbols> | string) {
 		const symbolToAdd = typeof sym === 'string' ? LibrarySymbols.from(marketplace).one(sym) : sym || selected_symbol
@@ -192,7 +192,7 @@
 									selected_symbol_id = symbol.id
 								}}
 							>
-								{#if added_to_library}
+								{#if added_to_library.has(symbol.id)}
 									<CircleCheck />
 								{:else}
 									<CirclePlus />
@@ -223,7 +223,7 @@
 													const grp = LibrarySymbolGroups.one(selected_group_id)
 													toast.success(`Added ${(symbol.name || '').trim() || 'Block'} to ${grp?.name ?? 'Library'}`)
 													selected_symbol_id = undefined
-													added_to_library = true
+													added_to_library = new Set([...added_to_library, symbol.id])
 												} catch (error) {
 													toast.error('Could not add this block. Please try again.')
 												} finally {

@@ -146,6 +146,7 @@
 	})
 
 	function download_site_file(site: Site) {
+		if (download_site_id) return
 		download_site_id = site.id
 		download_site_name = site.name
 	}
@@ -355,7 +356,7 @@
 							<span>Move</span>
 						</DropdownMenu.Item>
 					{/if}
-					<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={downloading && download_site_id === site.id}>
+					<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={!!download_site_id}>
 						{#if downloading && download_site_id === site.id}
 							<Loader class="h-4 w-4 animate-spin" />
 							<span>Downloading...</span>
@@ -421,7 +422,14 @@
 	</AlertDialog.Content>
 </AlertDialog.Root>
 
-<Dialog.Root bind:open={is_move_site_open}>
+<Dialog.Root
+	bind:open={
+		() => is_move_site_open,
+		(open) => {
+			if (!save.busy) is_move_site_open = open
+		}
+	}
+>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<div class="grid gap-4">
 			<div class="space-y-2">
@@ -438,7 +446,7 @@
 			</RadioGroup.Root>
 			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button variant="outline" onclick={() => (is_move_site_open = false)}>Cancel</Button><Button onclick={move_site} disabled={save.busy || !selected_group_id}>
+				<Button variant="outline" disabled={save.busy} onclick={() => (is_move_site_open = false)}>Cancel</Button><Button onclick={move_site} disabled={save.busy || !selected_group_id}>
 					{save.busy ? 'Moving…' : 'Move'}
 				</Button>
 			</Dialog.Footer>

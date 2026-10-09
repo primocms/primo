@@ -34,7 +34,7 @@ test.describe('Auth forms', () => {
 		await expect(password).toHaveAttribute('type', 'password')
 		await page.getByRole('button', { name: 'Sign in', exact: true }).click()
 		await expect(page.getByRole('button', { name: 'Please wait…' })).toBeDisabled()
-		expect(submissions).toBe(1)
+		await expect.poll(() => submissions).toBe(1)
 		release()
 		await expect(page.getByRole('alert')).toHaveText('Email or password is incorrect.')
 		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeEnabled()
@@ -110,6 +110,32 @@ test.describe('Editor dialogs', () => {
 		await expect(dialog.getByRole('link', { name: 'UI review page', exact: true })).toBeVisible()
 	})
 
+	test('page creation retains values on duplicate slugs and server failures, then retries', async ({ page }) => {
+		await loginAsDeveloper(page, ids.siteId)
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		const dialog = page.getByRole('dialog', { name: /^Pages/ })
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await page.getByLabel('Page name', { exact: true }).fill('UI review page')
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await expect(dialog.getByRole('alert')).toHaveText('That URL is already in use')
+		await expect(page.getByLabel('Page name', { exact: true })).toHaveValue('UI review page')
+		await page.getByLabel('Page name', { exact: true }).fill('Retry creation')
+		const target = '**/api/collections/pages/records'
+		await page.route(target, (route) =>
+			route.request().method() === 'POST' ? route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ message: 'Page creation was rejected.' }) }) : route.continue()
+		)
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await expect(dialog.getByRole('alert')).toContainText('Page creation was rejected')
+		await expect(page.getByLabel('Page name', { exact: true })).toHaveValue('Retry creation')
+		await page.unroute(target)
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await expect(dialog.getByRole('link', { name: 'Retry creation', exact: true })).toBeVisible()
+		await expect(page.getByLabel('Page name', { exact: true })).toHaveCount(0)
+		await page.reload()
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		await expect(page.getByRole('dialog').getByRole('link', { name: 'Retry creation', exact: true })).toBeVisible()
+	})
+
 	test('rename keeps the dialog open on failure, blocks duplicate saves, and persists a retry', async ({ page, request }) => {
 		const { token } = await devAuth(request)
 		const headers = { Authorization: `Bearer ${token}` }
@@ -133,7 +159,7 @@ test.describe('Editor dialogs', () => {
 		})
 		await dialog.getByRole('button', { name: 'Rename', exact: true }).click()
 		await expect(dialog.getByRole('button', { name: 'Saving…' })).toBeDisabled()
-		expect(attempts).toBe(1)
+		await expect.poll(() => attempts).toBe(1)
 		release()
 		await expect(dialog.getByRole('alert')).toHaveText('Could not save this name.')
 		await expect(dialog).toBeVisible()
