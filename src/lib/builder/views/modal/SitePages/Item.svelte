@@ -499,12 +499,15 @@
 				variant="destructive"
 				onclick={async () => {
 					// The confirm dialog can already be open when the mode flips.
-					if (!$read_only && pending_delete) {
-						await pending_delete()
+					try {
+						if (!$read_only && pending_delete) await pending_delete()
+					} catch (error) {
+						toast.error(error instanceof Error ? error.message : 'Could not delete these pages. Please try again.')
+					} finally {
+						delete_warning_dialog = false
+						pages_to_delete = []
+						pending_delete = null
 					}
-					delete_warning_dialog = false
-					pages_to_delete = []
-					pending_delete = null
 				}}
 			>
 				<Icon icon="mdi:delete" class="w-4 h-4 mr-1" />
