@@ -151,8 +151,7 @@
 {#if error}<div class="auth-alert auth-error" role="alert">{error}</div>{/if}
 {#if passwordResetRequested}
 	<div class="auth-alert" role="status">
-		If an account exists for <strong>{email}</strong>
-		, you’ll receive a password reset link. Check your spam folder too.
+		If an account exists for {email}, you’ll receive a password reset link. Check your spam folder too.
 	</div>
 {:else}
 	<form class="auth-form" onsubmit={submit} aria-busy={loading}>

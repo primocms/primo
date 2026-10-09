@@ -133,8 +133,8 @@
 			{#if instance.telemetry_enabled}<p class="auth-note" data-test-id="telemetry-note">
 					This server sends anonymous usage analytics (no page content or emails) to help improve Primo.
 					{#if !instance.hosted_mode}
-						Disable with <code>PRIMO_ENABLE_USAGE_STATS=false</code>
-						.
+						Set <code>PRIMO_ENABLE_USAGE_STATS=false</code>
+						 to disable.
 					{/if}
 					<a href="https://github.com/primocms/primo/blob/main/ANALYTICS.md" target="_blank" rel="noopener noreferrer">What's collected</a>
 				</p>{/if}
