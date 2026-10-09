@@ -872,7 +872,8 @@
 <Dialog.Root bind:open={editing_image}>
 	<Dialog.Content
 		showCloseButton={false}
-		class="z-[999] sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0"
+		class="z-[999] sm:max-w-[640px] overflow-y-auto gap-0"
+		style="top: clamp(0.5rem, 8dvh, 4rem); translate: -50% 0; max-height: calc(100dvh - clamp(0.5rem, 8dvh, 4rem) - 0.5rem)"
 		onCloseAutoFocus={(event) => {
 			if (!current_image_element?.isConnected) return
 			event.preventDefault()
@@ -1140,7 +1141,7 @@
 						Delete
 					</button>
 				{/if}
-				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Done</button>
+				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Save</button>
 			</div>
 		</form>
 	</Dialog.Content>
