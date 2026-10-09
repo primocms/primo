@@ -13,7 +13,7 @@ gate), [`internal/info.go`](internal/info.go) +
 
 | Deployment | Default | Override |
 |---|---|---|
-| Self-hosted (`PRIMO_HOSTED_MODE` unset) | **Off** | `PRIMO_ENABLE_USAGE_STATS=true` to opt in |
+| Self-hosted (`PRIMO_HOSTED_MODE` unset) | **On** | `PRIMO_ENABLE_USAGE_STATS=false` to opt out |
 | Hosted (`PRIMO_HOSTED_MODE=true`) | **On** | `PRIMO_ENABLE_USAGE_STATS=false` to opt out |
 
 The server exposes the resolved value as `telemetry_enabled` on
@@ -23,9 +23,13 @@ sending — so flipping the env var off stops all reporting immediately on next
 load, both for the daily instance heartbeat (`stats.go`) and for the product
 events below.
 
-Local development (`PRIMO_DEV_MODE=1`, i.e. `npm run dev`) never sends
-events, independent of the above — see `instance.dev_mode` gate in
-`analytics.ts`.
+Development and E2E instances (`PRIMO_DEV_MODE=1`) never initialize PostHog
+or send product events or instance heartbeats, even if
+`PRIMO_ENABLE_USAGE_STATS=true`. The local `devenv.nix` also explicitly sets
+`PRIMO_ENABLE_USAGE_STATS=false`.
+
+Heartbeat delivery is best-effort, with a five-second timeout. A PostHog
+outage or blocked outbound request does not prevent the CMS from starting.
 
 ## Events
 
@@ -122,14 +126,8 @@ the PR description, or build your own):
 
 ## Known gaps / follow-ups
 
-- No JS/TS test runner exists in this repo (`primocms/package.json` has no
-  `test` script). Verification for `analytics.ts` is: `svelte-check` (clean),
-  the three enablement scenarios curled against a live built binary
-  (hosted-default-on, self-hosted-default-off, self-hosted-opt-in — see PR),
-  and code review of the gating logic. No live PostHog ingestion was
-  verified — see the PR description for what was and wasn't confirmed.
-- `devenv.nix` still sets the old `PRIMO_DISABLE_USAGE_STATS=true` for local
-  dev. It's inert now (self-hosted already defaults off, and `dev_mode`
-  independently blocks all events), but worth cleaning up in a follow-up so
-  it doesn't imply the old variable name still does something.
+- Enablement and heartbeat regressions run in `go test ./...`. Browser tests
+  exercise a real content save with PostHog requests intercepted, plus opt-out
+  and development suppression. Live ingestion into the PostHog project is not
+  verified by these tests.
 - `content_saved` has no `site_id` and no error variant (see above).
