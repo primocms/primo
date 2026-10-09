@@ -22,14 +22,6 @@
 	let avatarFile = $state<File | null>(null)
 
 	const newPassword = $derived(action === 'confirm_password_reset' || action === 'create_account')
-	const description = $derived(
-		{
-			sign_in: 'Sign in to your workspace to start editing.',
-			reset_password: 'Enter your email and we’ll send you a reset link.',
-			confirm_password_reset: 'Choose a new password for your account.',
-			create_account: 'Set up your profile to join the workspace.'
-		}[action]
-	)
 	onDestroy(() => {
 		if (avatar) URL.revokeObjectURL(avatar)
 	})
@@ -154,7 +146,6 @@
 
 <header>
 	<h1>{title}</h1>
-	<p class="auth-description">{description}</p>
 </header>
 {#if error}<div class="auth-alert auth-error" role="alert">{error}</div>{/if}
 {#if passwordResetRequested}

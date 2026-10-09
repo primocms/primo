@@ -104,7 +104,6 @@
 <AuthShell>
 	<header>
 		<h1>Welcome to Primo</h1>
-		<p class="auth-description">{has_seeded_content ? 'Your workspace is loaded. Create your admin account to start editing.' : 'Create your admin account to get started.'}</p>
 	</header>
 	{#if error}<div class="auth-alert auth-error" role="alert">{error}</div>{/if}
 	{#if checking_setup}

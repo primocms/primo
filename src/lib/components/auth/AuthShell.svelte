@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { Globe } from 'lucide-svelte'
 	import type { Snippet } from 'svelte'
 	let { children }: { children: Snippet } = $props()
 </script>
 
 <main class="auth-shell">
 	<div class="auth-card">
-		<div class="auth-brand">
-			<Globe size={20} aria-hidden="true" />
-			<span>Primo</span>
-		</div>
 		{@render children()}
 	</div>
 </main>
@@ -33,13 +28,8 @@
 		background: hsl(var(--card));
 		box-shadow: 0 8px 32px #0002;
 	}
-	.auth-brand {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 28px;
-		font-size: 14px;
-		font-weight: 600;
+	.auth-shell :global(header) {
+		margin-bottom: 24px;
 	}
 	.auth-shell :global(h1) {
 		margin: 0;
@@ -47,12 +37,6 @@
 		line-height: 1.3;
 		font-weight: 500;
 		letter-spacing: -0.025em;
-	}
-	.auth-shell :global(.auth-description) {
-		margin: 8px 0 24px;
-		color: hsl(var(--muted-foreground));
-		font-size: 13px;
-		line-height: 1.6;
 	}
 	.auth-shell :global(.auth-form) {
 		display: grid;
