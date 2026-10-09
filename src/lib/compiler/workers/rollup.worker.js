@@ -10,6 +10,7 @@ import commonjs from './plugins/commonjs'
 import json from './plugins/json'
 import glsl from './plugins/glsl'
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
+import preview_runtime from '../preview-runtime.svelte.js?raw'
 
 const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 
@@ -77,7 +78,12 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 
 	const Entrypoint = () => {
 		let code = `export { default } from './App.svelte';\n`
-		if (runtime.length > 0) code += `export { ${runtime.join(', ')} } from 'svelte'\n`
+		const svelte_runtime = runtime.filter((name) => name !== 'createPreview')
+		if (svelte_runtime.length > 0) code += `export { ${svelte_runtime.join(', ')} } from 'svelte'\n`
+		if (runtime.includes('createPreview')) {
+			component_lookup.set('./preview-runtime.svelte.js', preview_runtime)
+			code += `export { createPreview } from './preview-runtime.svelte.js'\n`
+		}
 		return code
 	}
 
@@ -225,12 +231,13 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 						async transform(code, id) {
 							// our only transform is to compile svelte components
 							//@ts-ignore
-							if (!/.*\.svelte/.test(id)) return null
+							if (!/\.svelte(?:\.js)?$/.test(id)) return null
 
 							try {
 								const res = await sveltePromiseWorker.postMessage({
 									code,
-									svelteOptions
+										svelteOptions,
+										module: id.endsWith('.svelte.js')
 								})
 								return res.code
 
