@@ -31,12 +31,12 @@
 	>
 		{@render children?.()}
 		{#if showCloseButton}
-		<DialogPrimitive.Close
-			class="absolute top-3 left-3 flex h-7 w-7 items-center justify-center justify-self-start self-start ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none"
-		>
-			<X class="size-4" />
-			<span class="sr-only">Close</span>
-		</DialogPrimitive.Close>
+			<DialogPrimitive.Close
+				class="absolute top-3 left-3 flex h-7 w-7 items-center justify-center justify-self-start self-start ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none"
+			>
+				<X class="size-4" />
+				<span class="sr-only">Close</span>
+			</DialogPrimitive.Close>
 		{/if}
 	</DialogPrimitive.Content>
 </Dialog.Portal>

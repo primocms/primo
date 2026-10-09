@@ -41,7 +41,7 @@
 		}
 
 		// Try auto-login on localhost
-		if (isLocalhost() && await tryDevAuth()) {
+		if (isLocalhost() && (await tryDevAuth())) {
 			await goto(destination, { replaceState: true })
 			return
 		}
