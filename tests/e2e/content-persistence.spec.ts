@@ -19,21 +19,28 @@ test.describe('Content persistence', () => {
 			headers,
 			multipart: {
 				site: ids.siteId,
-				file: { name: 'focal-point.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') }
+				file: {
+					name: 'focal-point.png',
+					mimeType: 'image/png',
+					buffer: Buffer.from(
+						'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyCAYAAACqNX6+AAAAkElEQVR4nO3RMREAIBDAsJeIJjThD2TQIUP23nXOXpeO+R2AIWmGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0iMITGGxBgSY0jMA8FGOIiljfewAAAAAElFTkSuQmCC',
+						'base64'
+					)
+				}
 			}
 		})
 		expect(uploadRes.ok()).toBeTruthy()
 		const upload = await uploadRes.json()
 		const entries = await (await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, { headers, params: { filter: `section = "${ids.sectionId}"` } })).json()
 		const imageEntry = entries.items.find((e) => e.field === ids.fieldIds.image)
-		const original = { upload: upload.id, url: '', alt: 'Uploaded fixture', width: 1, height: 1 }
+		const original = { upload: upload.id, url: '', alt: 'Uploaded fixture', width: 100, height: 50 }
 		const patched = await request.patch(`${TEST_SERVER_URL}/api/collections/page_section_entries/records/${imageEntry.id}`, { headers, data: { value: original } })
 		expect(patched.ok()).toBeTruthy()
 		await loginAsDeveloper(page, ids.siteId)
 		const image = canvasFrame(page).locator('[data-testid="image"]')
 		await expect(image).toBeVisible()
 		await image.hover()
-		await image.click({ force: true })
+		await page.locator('.image-editor-overlay .edit-button').click({ force: true })
 		const dialog = page.getByRole('dialog')
 		const position = dialog.getByRole('button', { name: /Adjust position at/ })
 		await position.press('ArrowRight')
