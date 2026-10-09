@@ -120,7 +120,8 @@
 	let going_up = $state(false)
 	let going_down = $state(false)
 
-	const all_pages = $derived(site?.pages() ?? [])
+	const loaded_pages = $derived(site?.pages())
+	const all_pages = $derived(loaded_pages ?? [])
 
 	const pages_at_current_level = $derived.by(() => {
 		if (!active_page || !homepage) return []
@@ -152,10 +153,16 @@
 		setTimeout(() => (going_down = false), 150)
 	}
 
-
 	let editing_site = $state(false)
 	let site_has_unsaved_changes = $state(false)
 	let editing_pages = $state(false)
+	let pages_requested = $state(false)
+	$effect(() => {
+		if (pages_requested && Array.isArray(loaded_pages) && homepage && $current_user !== undefined) {
+			pages_requested = false
+			editing_pages = true
+		}
+	})
 	let editing_page_types = $state(false)
 	let editing_collaborators = $state(false)
 	let publishing = $state(false)
@@ -164,6 +171,7 @@
 
 	// Close all dialogs on navigation
 	onNavigate(() => {
+		pages_requested = false
 		editing_pages = false
 		editing_page_types = false
 		publishing = false
@@ -222,10 +230,14 @@
 
 <Dialog.Root bind:open={editing_pages}>
 	<Dialog.Content class="z-999 w-[calc(100vw-1rem)] max-w-[720px] min-h-[260px] max-h-[min(80dvh,640px)] flex flex-col gap-4 bg-[#1e1e20] border-[#343437] p-5">
-		<SitePages onManagePageTypes={($current_user?.siteRole === 'developer' || $current_user?.serverRole === 'developer') ? () => {
-			editing_pages = false
-			editing_page_types = true
-		} : undefined} />
+		<SitePages
+			onManagePageTypes={$current_user?.siteRole === 'developer' || $current_user?.serverRole === 'developer'
+				? () => {
+						editing_pages = false
+						editing_page_types = true
+					}
+				: undefined}
+		/>
 	</Dialog.Content>
 </Dialog.Root>
 
@@ -291,7 +303,7 @@
 					</div>
 				{:else}
 					<div class="navigation-group">
-						<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => (editing_pages = true)} />
+						<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => (pages_requested = true)} />
 					</div>
 				{/if}
 			</div>
@@ -562,10 +574,17 @@
 		}
 	}
 	@media (max-width: 480px) {
-		.menu-container { gap: 6px; padding-inline: 6px; }
+		.menu-container {
+			gap: 6px;
+			padding-inline: 6px;
+		}
 		.left :global(.primo-button .label),
-		.right :global(.primo-button .label) { display: none; }
+		.right :global(.primo-button .label) {
+			display: none;
+		}
 		.left :global(.primo-button),
-		.right :global(.primo-button) { padding-inline: 8px; }
+		.right :global(.primo-button) {
+			padding-inline: 8px;
+		}
 	}
 </style>
