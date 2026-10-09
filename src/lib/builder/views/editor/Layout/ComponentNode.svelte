@@ -839,10 +839,6 @@
 	let editing_video = $state(false)
 
 	let editing_image = $state(false)
-	let editing_image_focus = $state(false)
-	$effect(() => {
-		if (!editing_image) editing_image_focus = false
-	})
 	let current_image_element = $state<HTMLImageElement | null>(null)
 	let current_image_id = $state<string | null>(null)
 	let current_image_value = $state<{ url: string; alt: string; upload?: string | null; focal_point?: { x: number; y: number } }>({ url: '', alt: '' })
@@ -1078,7 +1074,6 @@
 				{entry}
 				show_focal_point={!!current_image_id}
 				inline_focus
-				bind:editing_focus={editing_image_focus}
 				rendered_image={current_image_element}
 				header_actions={image_dialog_close}
 				onchange={async (changeData: any) => {
@@ -1115,40 +1110,38 @@
 					current_image_value = newValue as any
 				}}
 			/>
-			{#if !editing_image_focus}
-				<div class="flex justify-end gap-2 mt-2">
-					<!-- Delete button (for TipTap images) -->
-					{#if current_image_element && !current_image_id}
-						<button
-							type="button"
-							onclick={() => {
-								// Delete the image from TipTap rich-text only (not for image fields)
-								const rich_text_container = current_image_element!.closest('[data-rich-text-id]')
-								if (rich_text_container) {
-									const rich_text_id = rich_text_container.getAttribute('data-rich-text-id')
-									const editor = rich_text_editors.get(rich_text_id!)
-									// Find and delete the image node
-									let image_position: null | number = null
-									editor!.view.state.doc.descendants((node, position) => {
-										if (node.type.name === 'image' && node.attrs.src === current_image_element!.src) {
-											image_position = position
-											return false
-										}
-									})
-									if (image_position !== null) {
-										editor!.chain().focus().setNodeSelection(image_position).deleteSelection().run()
+			<div class="flex justify-end gap-2 mt-2">
+				<!-- Delete button (for TipTap images) -->
+				{#if current_image_element && !current_image_id}
+					<button
+						type="button"
+						onclick={() => {
+							// Delete the image from TipTap rich-text only (not for image fields)
+							const rich_text_container = current_image_element!.closest('[data-rich-text-id]')
+							if (rich_text_container) {
+								const rich_text_id = rich_text_container.getAttribute('data-rich-text-id')
+								const editor = rich_text_editors.get(rich_text_id!)
+								// Find and delete the image node
+								let image_position: null | number = null
+								editor!.view.state.doc.descendants((node, position) => {
+									if (node.type.name === 'image' && node.attrs.src === current_image_element!.src) {
+										image_position = position
+										return false
 									}
+								})
+								if (image_position !== null) {
+									editor!.chain().focus().setNodeSelection(image_position).deleteSelection().run()
 								}
-								editing_image = false
-							}}
-							class="px-4 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-900 rounded-md"
-						>
-							Delete
-						</button>
-					{/if}
-					<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Done</button>
-				</div>
-			{/if}
+							}
+							editing_image = false
+						}}
+						class="px-4 py-2 text-sm bg-red-100 hover:bg-red-200 text-red-900 rounded-md"
+					>
+						Delete
+					</button>
+				{/if}
+				<button type="submit" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-md">Done</button>
+			</div>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>

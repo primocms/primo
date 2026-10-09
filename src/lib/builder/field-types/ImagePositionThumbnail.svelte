@@ -8,6 +8,8 @@
 		custom,
 		crop,
 		large = false,
+		editable = false,
+		ref = $bindable<HTMLButtonElement>(),
 		onchange,
 		onopen
 	}: {
@@ -16,6 +18,8 @@
 		custom: boolean
 		crop?: ImageCrop | null
 		large?: boolean
+		editable?: boolean
+		ref?: HTMLButtonElement
 		onchange: (point: { x: number; y: number }) => void
 		onopen: () => void
 	} = $props()
@@ -23,6 +27,7 @@
 	let height = $state(0)
 	let natural = $state({ width: 1, height: 1 })
 	let dragging = $state(false)
+	const can_position = $derived(custom || editable)
 	const frame_style = $derived.by(() => {
 		const size = crop || natural
 		const scale = Math.min(width / size.width, height / size.height)
@@ -35,7 +40,7 @@
 		if (rect.width && rect.height) onchange(get_focal_point({ focal_point: { x: (event.clientX - rect.left) / rect.width, y: (event.clientY - rect.top) / rect.height } }))
 	}
 	function keydown(event: KeyboardEvent) {
-		if (!custom) return
+		if (!can_position) return
 		const step = event.shiftKey ? 0.1 : 0.01
 		const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[event.key]
 		if (!delta) return
@@ -48,14 +53,16 @@
 	<button
 		type="button"
 		class:positioned={custom}
+		class:editable
+		bind:this={ref}
 		style={frame_style}
-		aria-label={custom ? `Adjust position at ${Math.round(point.x * 100)}% ${Math.round(point.y * 100)}%. Click, drag, or use arrow keys.` : 'Position image'}
-		title={custom ? 'Click or drag to adjust position' : 'Position image'}
+		aria-label={can_position ? `Adjust position at ${Math.round(point.x * 100)}% ${Math.round(point.y * 100)}%. Click, drag, or use arrow keys.` : 'Position image'}
+		title={can_position ? 'Click or drag to adjust position' : 'Position image'}
 		onclick={() => {
-			if (!custom) onopen()
+			if (!can_position) onopen()
 		}}
 		onpointerdown={(event) => {
-			if (!custom || event.button !== 0 || !event.isPrimary) return
+			if (!can_position || event.button !== 0 || !event.isPrimary) return
 			dragging = true
 			event.currentTarget.setPointerCapture(event.pointerId)
 			move(event)
@@ -102,7 +109,8 @@
 		cursor: pointer;
 		border-radius: 4px;
 	}
-	button.positioned {
+	button.positioned,
+	button.editable {
 		cursor: crosshair;
 		touch-action: none;
 	}

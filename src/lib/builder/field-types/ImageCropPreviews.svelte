@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Smartphone, Tablet, Monitor, Info } from 'lucide-svelte'
 	import * as Tooltip from '$lib/components/ui/tooltip'
+	import type { Snippet } from 'svelte'
 	import { image_crop_snapshot, measure_image_crop, type ImageCrop } from './image-crop'
 
-	let { image, src, point, compact = false }: { image?: HTMLImageElement | null; src: string; point: { x: number; y: number }; compact?: boolean } = $props()
+	let { image, src, point, compact = false, footer_actions }: { image?: HTMLImageElement | null; src: string; point: { x: number; y: number }; compact?: boolean; footer_actions?: Snippet } = $props()
 	const preview_height = $derived(compact ? 80 : 110)
 	const sizes = [
 		{ label: 'Phone', width: 390, height: 844, icon: Smartphone },
@@ -84,17 +85,20 @@
 	</section>
 {/if}
 <div class="preview-note">
-	<span>{snapshot ? 'Responsive crops' : 'Example crops'}</span>
-	<Tooltip.Provider>
-		<Tooltip.Root>
-			<Tooltip.Trigger type="button" class="crop-info" aria-label="About crop previews"><Info size={14} /></Tooltip.Trigger>
-			<Tooltip.Content class="max-w-[280px] text-xs">
-				{snapshot
-					? 'Previews use the component’s CSS at 390, 768, and 1280px. Layout changes made by JavaScript are not included.'
-					: 'Example crops. Open an image on the page to preview its responsive layout.'}
-			</Tooltip.Content>
-		</Tooltip.Root>
-	</Tooltip.Provider>
+	<div class="preview-caption">
+		<span>{snapshot ? 'Responsive crops' : 'Example crops'}</span>
+		<Tooltip.Provider>
+			<Tooltip.Root>
+				<Tooltip.Trigger type="button" class="crop-info" aria-label="About crop previews"><Info size={14} /></Tooltip.Trigger>
+				<Tooltip.Content class="max-w-[280px] text-xs">
+					{snapshot
+						? 'Previews use the component’s CSS at 390, 768, and 1280px. Layout changes made by JavaScript are not included.'
+						: 'Example crops. Open an image on the page to preview its responsive layout.'}
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</Tooltip.Provider>
+	</div>
+	{@render footer_actions?.()}
 </div>
 
 <style lang="postcss">
@@ -152,8 +156,14 @@
 	.preview-note {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		justify-content: space-between;
+		gap: 8px;
 		margin: 0;
+	}
+	.preview-caption {
+		display: flex;
+		align-items: center;
+		gap: 5px;
 	}
 	:global(.crop-info) {
 		display: inline-flex;
