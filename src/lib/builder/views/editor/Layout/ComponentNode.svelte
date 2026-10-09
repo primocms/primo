@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte'
+	import { X } from 'lucide-svelte'
 	import { fade } from 'svelte/transition'
 	import * as _ from 'lodash-es'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -858,7 +859,8 @@
 </script>
 
 <Dialog.Root bind:open={editing_image}>
-	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12">
+	<Dialog.Content showCloseButton={false} class="z-[999] sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0">
+		<Dialog.Title class="sr-only">Edit image</Dialog.Title>
 		{@const field =
 			fields?.find((f) => entries?.find((e) => e.id === current_image_id)?.field === f.id) || ({ id: '', label: 'Image', key: 'image', type: 'image' as const, config: {}, index: 0 } as any)}
 		{@const entry = {
@@ -1050,6 +1052,8 @@
 				{field}
 				{entry}
 				show_focal_point={!!current_image_id}
+				inline_focus
+				header_actions={image_dialog_close}
 				onchange={async (changeData: any) => {
 					// Extract the actual value from the nested structure
 					const fieldKey = Object.keys(changeData)[0]
@@ -1119,6 +1123,16 @@
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#snippet image_dialog_close()}
+	<Dialog.Close
+		class="ml-4 inline-flex h-7 w-7 items-center justify-center rounded text-[var(--color-gray-2)] hover:bg-[var(--color-gray-8)] focus-visible:outline-2 focus-visible:outline-[var(--primo-primary-color)] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+		aria-label="Close image dialog"
+		title="Close"
+	>
+		<X size={14} />
+	</Dialog.Close>
+{/snippet}
 
 <Dialog.Root bind:open={editing_link}>
 	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12 overflow-visible">
