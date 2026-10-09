@@ -1,5 +1,7 @@
 <script>
 	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
+	import { auth_destination } from '$lib/auth_navigation'
 	import { check_session } from '$lib/pocketbase/user'
 	import { set_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
@@ -30,15 +32,16 @@
 	}
 
 	onMount(async () => {
+		const destination = auth_destination(page.url)
 		// Check existing session first
 		if (await check_session()) {
-			await goto('/admin/site')
+			await goto(destination, { replaceState: true })
 			return
 		}
 
 		// Try auto-login on localhost
 		if (isLocalhost() && await tryDevAuth()) {
-			await goto('/admin/site')
+			await goto(destination, { replaceState: true })
 			return
 		}
 
