@@ -5,6 +5,7 @@
 	import { self } from '$lib/pocketbase/managers'
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
+	import { auth_url } from '$lib/auth_navigation'
 	import { page } from '$app/state'
 	import { Sites } from '$lib/pocketbase/collections'
 	import CreateSite from '$lib/components/CreateSite.svelte'
@@ -22,13 +23,14 @@
 	let should_create_site = $state(false)
 
 	onMount(async () => {
+		const login_url = auth_url(page.url)
 		// Start the author-mode refresh before any await — Primo can render
 		// during check_session() while the store still holds the writable
 		// 'both' default, and read_only must already be pending-locked then.
 		refresh_author_mode()
 
 		if (!(await check_session())) {
-			await goto('/admin/auth')
+			await goto(login_url, { replaceState: true })
 			return
 		}
 

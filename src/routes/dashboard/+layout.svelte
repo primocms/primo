@@ -6,11 +6,13 @@
 	import { check_session } from '$lib/pocketbase/user'
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
+	import { auth_url } from '$lib/auth_navigation'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 
 	onMount(async () => {
+		const login_url = auth_url(page.url)
 		if (!(await check_session())) {
-			await goto('/admin/auth')
+			await goto(login_url, { replaceState: true })
 		}
 	})
 
