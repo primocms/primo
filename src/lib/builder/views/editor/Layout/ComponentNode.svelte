@@ -5,6 +5,7 @@
 	import * as _ from 'lodash-es'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import ImageField from '$lib/builder/field-types/ImageField.svelte'
+	import { register_image_preview, find_image_preview } from '$lib/builder/field-types/image-preview.svelte'
 	import LinkField from '$lib/builder/field-types/Link.svelte'
 	import VideoModal from '$lib/builder/views/modal/VideoModal.svelte'
 	import { tick, createEventDispatcher } from 'svelte'
@@ -50,6 +51,7 @@
 	let floating_menu_state = $state({ visible: false, top: 0, left: 0 })
 
 	let image_overlay_is_visible = $state(false)
+	let image_overlay = $state<{ focus: () => void }>()
 	let image_editor_element = $state<HTMLImageElement | null>(null)
 
 	async function attach_image_overlay(element, id: string | null = null) {
@@ -456,6 +458,9 @@
 
 		async function set_editable_image({ id, element }: { id: string; element: HTMLElement }) {
 			element.setAttribute(`data-entry`, id)
+			event_listeners.get(`image-${id}`)?.()
+			const unregister = register_image_preview(element as HTMLImageElement, id)
+			event_listeners.set(`image-${id}`, unregister)
 			element.onmousemove = () => {
 				attach_image_overlay(element, id)
 			}
@@ -850,6 +855,12 @@
 	let current_link_position = $state<{ from: number; to: number } | null>(null)
 	let editing_existing_link = $state(false)
 
+	// Keep the overlay attached when saving an entry remounts the component's image.
+	$effect(() => {
+		const image = find_image_preview(current_image_id || undefined)
+		if (image_overlay_is_visible && image && image_editor_element && !image_editor_element.isConnected) image_editor_element = image
+	})
+
 	const editing = $derived(is_editing || editing_video || editing_image || editing_existing_link || editing_link || editing_markdown)
 	if ('page_type' in section) {
 		$effect(() => setUserActivity(editing ? { page_type_section: section.id } : {}))
@@ -859,8 +870,18 @@
 </script>
 
 <Dialog.Root bind:open={editing_image}>
-	<Dialog.Content showCloseButton={false} class="z-[999] sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0">
-		<Dialog.Title class="sr-only">Edit image</Dialog.Title>
+	<Dialog.Content
+		showCloseButton={false}
+		class="z-[999] sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0"
+		onCloseAutoFocus={(event) => {
+			if (!current_image_element?.isConnected) return
+			event.preventDefault()
+			image_editor_element = current_image_element
+			image_overlay_is_visible = true
+			tick().then(() => image_overlay?.focus())
+		}}
+	>
+		<Dialog.Description class="sr-only">Replace the image, adjust its position, or edit its description and URL.</Dialog.Description>
 		{@const field =
 			fields?.find((f) => entries?.find((e) => e.id === current_image_id)?.field === f.id) || ({ id: '', label: 'Image', key: 'image', type: 'image' as const, config: {}, index: 0 } as any)}
 		{@const entry = {
@@ -1053,6 +1074,7 @@
 				{entry}
 				show_focal_point={!!current_image_id}
 				inline_focus
+				rendered_image={current_image_element}
 				header_actions={image_dialog_close}
 				onchange={async (changeData: any) => {
 					// Extract the actual value from the nested structure
@@ -1232,6 +1254,7 @@
 
 {#if image_overlay_is_visible}
 	<ImageOverlay
+		bind:this={image_overlay}
 		bind:visible={image_overlay_is_visible}
 		bind:image_element={image_editor_element}
 		showDelete={current_image_id === null}

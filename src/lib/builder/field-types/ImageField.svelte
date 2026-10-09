@@ -14,7 +14,11 @@
 	import ImageFocusPicker from './ImageFocusPicker.svelte'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { Button } from '$lib/components/ui/button'
-	import { ImageUp, Expand } from 'lucide-svelte'
+	import { ImageUp, Crosshair, ArrowLeft, X } from 'lucide-svelte'
+	import { tick } from 'svelte'
+	import ImagePositionThumbnail from './ImagePositionThumbnail.svelte'
+	import { find_image_preview } from './image-preview.svelte'
+	import { measure_image_crop, type ImageCrop } from './image-crop'
 	import type { Snippet } from 'svelte'
 
 	const {
@@ -23,6 +27,7 @@
 		onchange,
 		show_focal_point = true,
 		inline_focus = false,
+		rendered_image,
 		header_actions
 	}: {
 		field: Field
@@ -30,8 +35,9 @@
 		onchange: FieldValueHandler
 		// Off where the value only feeds an <img> tag (e.g. rich-text images)
 		show_focal_point?: boolean
-		// The image dialog already has room for the full picker.
+		// Switch modes within the existing image dialog instead of nesting a modal.
 		inline_focus?: boolean
+		rendered_image?: HTMLImageElement | null
 		header_actions?: Snippet
 	} = $props()
 
@@ -68,10 +74,12 @@
 			const img = new Image()
 
 			img.onload = () => {
+				if (typeof source !== 'string') URL.revokeObjectURL(img.src)
 				resolve({ width: img.naturalWidth, height: img.naturalHeight })
 			}
 
 			img.onerror = () => {
+				if (typeof source !== 'string') URL.revokeObjectURL(img.src)
 				resolve(null)
 			}
 
@@ -170,7 +178,28 @@
 	let can_set_focal_point = $derived(!!url && show_focal_point)
 	let editing_focus = $state(false)
 	let file_input = $state<HTMLInputElement>()
-	let expand_button = $state<HTMLButtonElement>()
+	let position_button = $state<HTMLButtonElement>()
+	const preview_image = $derived(rendered_image || find_image_preview(entry.id))
+	let current_crop = $state<ImageCrop | null>(null)
+	const has_custom_position = $derived(!!entry.value.focal_point)
+	$effect(() => {
+		const image = preview_image
+		const measure = () => (current_crop = measure_image_crop(image))
+		measure()
+		if (!image) return
+		const observer = new ResizeObserver(measure)
+		observer.observe(image)
+		image.addEventListener('load', measure)
+		return () => {
+			observer.disconnect()
+			image.removeEventListener('load', measure)
+		}
+	})
+	async function back_to_fields() {
+		editing_focus = false
+		await tick()
+		position_button?.focus()
+	}
 
 	function set_focal_point(point?: { x: number; y: number }) {
 		onchange({ [field.key]: { 0: { value: { ...entry.value, focal_point: point } } } })
@@ -182,7 +211,7 @@
 		(current_url) => {
 			if (current_url && !entry.value.width && !entry.value.height) {
 				get_image_dimensions(current_url).then((dimensions) => {
-					if (dimensions) {
+					if (dimensions && current_url === entry.value.url) {
 						onchange({
 							[field.key]: {
 								0: {
@@ -201,17 +230,20 @@
 	)
 </script>
 
-<div class="ImageField" bind:clientWidth={width} class:collapsed class:inline-focus={inline_focus && can_set_focal_point}>
+<div class="ImageField" bind:clientWidth={width} class:collapsed class:inline-focus={inline_focus && !!url}>
 	<div class="field-header">
-		<span class="primo--field-label">{field.label}</span>
+		<div class="field-heading">
+			{#if inline_focus && editing_focus}<button type="button" class="back-button" aria-label="Back to image fields" title="Back to image fields" onclick={back_to_fields}>
+					<ArrowLeft size={14} />
+				</button>{/if}
+			{#if inline_focus}<Dialog.Title class="text-xs font-medium">{editing_focus ? 'Position image' : 'Image'}</Dialog.Title>{:else}<span class="primo--field-label">{field.label}</span>{/if}
+		</div>
 		{#if url || header_actions}
 			<div class="field-actions">
 				{#if url}
 					<button type="button" class="replace-button" disabled={loading} onclick={() => file_input?.click()}><ImageUp size={14} /> Replace</button>
-					{#if can_set_focal_point && !inline_focus}
-						<button type="button" class="expand-button" bind:this={expand_button} aria-label="Adjust focus" title="Adjust focus" disabled={loading} onclick={() => (editing_focus = true)}>
-							<Expand size={14} />
-						</button>
+					{#if can_set_focal_point && !(inline_focus && editing_focus)}
+						<button type="button" class="position-button" bind:this={position_button} disabled={loading} onclick={() => (editing_focus = true)}><Crosshair size={14} /> Position</button>
 					{/if}
 				{/if}
 				{@render header_actions?.()}
@@ -231,53 +263,70 @@
 			currentTarget.value = ''
 		}}
 	/>
-	<div class="image-info">
-		<div class="image-preview" class:large={inline_focus && can_set_focal_point}>
-			{#if loading}
-				<div class="spinner-container"><Spinner /></div>
-			{:else if can_set_focal_point}
-				<ImageFocusPicker src={url!} point={focal_point} expanded={inline_focus} onchange={set_focal_point} />
-			{:else if url}
-				<button type="button" class="image-upload has-image" aria-label="Replace image" title="Replace image" onclick={() => file_input?.click()}><img src={url} alt="Preview" /></button>
-			{:else}
-				<button type="button" class="image-upload" onclick={() => file_input?.click()}>
-					<Icon icon="uil:image-upload" />
-					<span>Upload image</span>
-				</button>
-			{/if}
-			{#if !inline_focus && entry.value.width && entry.value.height}
-				<span class="field-dimensions">{entry.value.width} × {entry.value.height}</span>
-			{/if}
+	{#if inline_focus && editing_focus && can_set_focal_point}
+		<ImageFocusPicker src={url!} point={focal_point} custom={has_custom_position} rendered_image={preview_image} expanded onchange={set_focal_point} />
+	{:else}
+		<div class="image-info">
+			<div class="image-preview" class:large={inline_focus && !!url}>
+				{#if loading}
+					<div class="spinner-container"><Spinner /></div>
+				{:else if can_set_focal_point}
+					<ImagePositionThumbnail
+						src={url!}
+						point={focal_point}
+						custom={has_custom_position}
+						crop={current_crop}
+						large={inline_focus}
+						onchange={set_focal_point}
+						onopen={() => (editing_focus = true)}
+					/>
+				{:else if url}
+					<button type="button" class="image-upload has-image" class:dialog-image={inline_focus} aria-label="Replace image" title="Replace image" onclick={() => file_input?.click()}>
+						<img src={url} alt="Preview" />
+					</button>
+				{:else}
+					<button type="button" class="image-upload" onclick={() => file_input?.click()}>
+						<Icon icon="uil:image-upload" />
+						<span>Upload image</span>
+					</button>
+				{/if}
+				{#if !inline_focus && entry.value.width && entry.value.height}
+					<span class="field-dimensions">{entry.value.width} × {entry.value.height}</span>
+				{/if}
+			</div>
+			<div class="inputs">
+				<TextInput value={entry.value.alt} label="Description" oninput={(alt) => onchange({ [field.key]: { 0: { value: { ...entry.value, alt } } } })} />
+				<TextInput
+					value={entry.value.url}
+					label="URL"
+					oninput={(value) => {
+						onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined, width: null, height: null, focal_point: undefined } } } })
+					}}
+				/>
+			</div>
 		</div>
-		<div class="inputs">
-			<TextInput value={entry.value.alt} label="Description" oninput={(alt) => onchange({ [field.key]: { 0: { value: { ...entry.value, alt } } } })} />
-			<TextInput
-				value={entry.value.url}
-				label="URL"
-				oninput={(value) => {
-					onchange({ [field.key]: { 0: { value: { ...entry.value, url: value, upload: undefined, focal_point: undefined } } } })
-				}}
-			/>
-		</div>
-	</div>
+	{/if}
 </div>
 
-<Dialog.Root bind:open={editing_focus}>
-	<Dialog.Content
-		class="sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto pt-12"
-		onCloseAutoFocus={(event) => {
-			event.preventDefault()
-			expand_button?.focus()
-		}}
-	>
-		<Dialog.Title>Adjust focus</Dialog.Title>
-		<Dialog.Description>Choose the part of the image to keep visible when it is cropped.</Dialog.Description>
-		{#if can_set_focal_point}
-			<ImageFocusPicker src={url!} point={focal_point} expanded onchange={set_focal_point} />
-		{/if}
-		<div class="flex justify-end"><Button onclick={() => (editing_focus = false)}>Done</Button></div>
-	</Dialog.Content>
-</Dialog.Root>
+{#if !inline_focus}
+	<Dialog.Root bind:open={editing_focus}>
+		<Dialog.Content
+			showCloseButton={false}
+			class="sm:max-w-[640px] max-h-[calc(100dvh-1rem)] overflow-y-auto gap-0"
+			onCloseAutoFocus={(event) => {
+				event.preventDefault()
+				position_button?.focus()
+			}}
+		>
+			<div class="position-header">
+				<Dialog.Title class="text-xs font-medium">Position image</Dialog.Title><Dialog.Close class="quiet-close" aria-label="Close position editor" title="Close"><X size={14} /></Dialog.Close>
+			</div>
+			<Dialog.Description class="sr-only">Choose the part of the image to keep visible when cropped.</Dialog.Description>
+			{#if can_set_focal_point}<ImageFocusPicker src={url!} point={focal_point} custom={has_custom_position} rendered_image={preview_image} expanded onchange={set_focal_point} />{/if}
+			<div class="flex justify-end mt-6"><Button onclick={() => (editing_focus = false)}>Done</Button></div>
+		</Dialog.Content>
+	</Dialog.Root>
+{/if}
 
 <style lang="postcss">
 	* {
@@ -297,6 +346,49 @@
 	.field-header .primo--field-label {
 		min-width: 0;
 		overflow-wrap: anywhere;
+	}
+	.field-heading {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.back-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.back-button:hover {
+		background: var(--color-gray-8);
+	}
+	.back-button:focus-visible {
+		outline: 2px solid var(--primo-primary-color);
+		outline-offset: 2px;
+	}
+	.position-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 12px;
+	}
+	.position-header :global(.quiet-close) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.position-header :global(.quiet-close:hover) {
+		background: var(--color-gray-8);
+	}
+	.position-header :global(.quiet-close:focus-visible) {
+		outline: 2px solid var(--primo-primary-color);
+		outline-offset: 2px;
 	}
 	.field-actions {
 		display: flex;
@@ -327,10 +419,6 @@
 		&:disabled {
 			opacity: 0.5;
 			cursor: default;
-		}
-		&.expand-button {
-			width: 28px;
-			padding: 6px;
 		}
 	}
 	.file-input {
@@ -395,6 +483,10 @@
 			object-fit: contain;
 		}
 	}
+	.image-upload.dialog-image {
+		position: relative;
+		height: clamp(160px, 36vh, 260px);
+	}
 	.field-dimensions {
 		position: absolute;
 		bottom: 0;
@@ -426,8 +518,10 @@
 		.field-actions button {
 			min-height: 44px;
 		}
-		.field-actions button.expand-button {
-			width: 44px;
+		.back-button,
+		:global(.quiet-close) {
+			min-width: 44px;
+			min-height: 44px;
 		}
 	}
 </style>

@@ -1,15 +1,20 @@
 <script lang="ts">
 	import { get_focal_point } from '../utils'
+	import ImageCropPreviews from './ImageCropPreviews.svelte'
 
 	let {
 		src,
 		point,
 		expanded = false,
+		custom = true,
+		rendered_image,
 		onchange
 	}: {
 		src: string
 		point: { x: number; y: number }
 		expanded?: boolean
+		custom?: boolean
+		rendered_image?: HTMLImageElement | null
 		onchange: (point?: { x: number; y: number }) => void
 	} = $props()
 
@@ -73,22 +78,13 @@
 		</button>
 	</div>
 	{#if expanded}
-		<div class="crop-examples" aria-label="Example crops">
-			<figure>
-				<img {src} alt="Square crop preview" style:object-position={position} />
-				<figcaption>Square</figcaption>
-			</figure>
-			<figure class="portrait">
-				<img {src} alt="Portrait crop preview" style:object-position={position} />
-				<figcaption>Portrait</figcaption>
-			</figure>
-		</div>
+		<ImageCropPreviews image={rendered_image} {src} {point} />
 		<div class="focus-tools">
 			<p title="Arrow keys move 1%; hold Shift to move 10%.">
 				Click or drag to choose what stays visible when cropped.
 				<span class="sr-only">Arrow keys move 1%; hold Shift to move 10%.</span>
 			</p>
-			<button type="button" disabled={point.x === 0.5 && point.y === 0.5} onclick={() => onchange()}>Reset to center</button>
+			<button type="button" disabled={!custom} onclick={() => onchange()}>Reset to center</button>
 		</div>
 	{/if}
 </div>
@@ -147,7 +143,9 @@
 			height: 4px;
 			border-radius: 50%;
 			background: var(--primo-primary-color, #5146e5);
-			box-shadow: 0 0 0 1px white, 0 0 0 2px rgba(0, 0, 0, 0.65);
+			box-shadow:
+				0 0 0 1px white,
+				0 0 0 2px rgba(0, 0, 0, 0.65);
 			transform: translate(-50%, -50%);
 		}
 	}
@@ -161,30 +159,6 @@
 		.focal-marker {
 			width: 26px;
 			height: 26px;
-		}
-	}
-	.crop-examples {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		figure {
-			margin: 0;
-			flex-shrink: 0;
-		}
-		img {
-			width: 72px;
-			height: 72px;
-			object-fit: cover;
-			border-radius: 4px;
-		}
-		.portrait img {
-			width: 54px;
-		}
-		figcaption {
-			text-align: center;
-			font-size: 11px;
-			margin-top: 4px;
-			color: var(--color-gray-4);
 		}
 	}
 	p {
