@@ -110,15 +110,23 @@ test.describe('Editor dialogs', () => {
 		await expect(dialog.getByRole('link', { name: 'UI review page', exact: true })).toBeVisible()
 	})
 
-	test('page creation retains values on duplicate slugs and server failures, then retries', async ({ page }) => {
+	test('page creation retains values on duplicate slugs and server failures, then retries', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const headers = { Authorization: `Bearer ${token}` }
+		const homepage = await (await request.get(`/api/collections/pages/records/${ids.pageId}`, { headers })).json()
+		const existing = await request.post('/api/collections/pages/records', {
+			headers,
+			data: { name: 'Duplicate fixture', slug: 'duplicate-fixture', parent: ids.pageId, site: ids.siteId, page_type: homepage.page_type, index: 99 }
+		})
+		expect(existing.ok()).toBeTruthy()
 		await loginAsDeveloper(page, ids.siteId)
 		await page.getByRole('button', { name: 'Pages', exact: true }).click()
 		const dialog = page.getByRole('dialog', { name: /^Pages/ })
 		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
-		await page.getByLabel('Page name', { exact: true }).fill('UI review page')
+		await page.getByLabel('Page name', { exact: true }).fill('Duplicate fixture')
 		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
 		await expect(dialog.getByRole('alert')).toHaveText('That URL is already in use')
-		await expect(page.getByLabel('Page name', { exact: true })).toHaveValue('UI review page')
+		await expect(page.getByLabel('Page name', { exact: true })).toHaveValue('Duplicate fixture')
 		await page.getByLabel('Page name', { exact: true }).fill('Retry creation')
 		const target = '**/api/collections/pages/records'
 		await page.route(target, (route) =>
