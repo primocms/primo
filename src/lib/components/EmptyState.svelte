@@ -4,7 +4,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-center gap-4 flex-1 px-4 py-8 {className}">
-	<div class="flex items-center justify-center size-12 rounded-lg border bg-muted/30 text-muted-foreground"><Icon class="size-6" aria-hidden="true" /></div>
+	<div class="flex items-center justify-center size-12 rounded-lg bg-muted/30 text-muted-foreground"><Icon class="size-6" aria-hidden="true" /></div>
 	<div class="space-y-2 text-center">
 		<h2 class="text-base font-medium tracking-tight">{title}</h2>
 		<p class="text-sm text-muted-foreground text-balance max-w-sm leading-relaxed">{description}</p>
