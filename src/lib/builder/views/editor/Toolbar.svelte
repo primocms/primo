@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition'
 	import { find as _find } from 'lodash-es'
 	import Icon from '@iconify/svelte'
+	import { toast } from 'svelte-sonner'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
 	import ToolbarButton from './ToolbarButton.svelte'
 	import { PrimoButton } from '$lib/builder/components/buttons'
@@ -158,7 +159,13 @@
 	let editing_pages = $state(false)
 	let pages_requested = $state(false)
 	$effect(() => {
-		if (pages_requested && Array.isArray(loaded_pages) && homepage && $current_user !== undefined) {
+		if (!pages_requested || !Array.isArray(loaded_pages) || $current_user === undefined) return
+		if (!loaded_pages.some((page) => !page.parent)) {
+			pages_requested = false
+			toast.error('This site has no home page. Restore its home page before managing pages.')
+			return
+		}
+		if (homepage) {
 			pages_requested = false
 			editing_pages = true
 		}
@@ -303,7 +310,7 @@
 					</div>
 				{:else}
 					<div class="navigation-group">
-						<ToolbarButton label="Pages" icon="iconoir:multiple-pages" on:click={() => (pages_requested = true)} />
+						<ToolbarButton label="Pages" loading={pages_requested} icon="iconoir:multiple-pages" on:click={() => (pages_requested = true)} />
 					</div>
 				{/if}
 			</div>
