@@ -18,7 +18,7 @@
     PRIMO_SUPERUSER_PASSWORD = "test1234";
     PRIMO_USER_EMAIL = "user@primo.internal";
     PRIMO_USER_PASSWORD = "test1234";
-    PRIMO_DISABLE_USAGE_STATS = "true";
+    PRIMO_ENABLE_USAGE_STATS = "false";
   };
   processes = {
     app-dev.exec = "vite --config app.config.js dev";
