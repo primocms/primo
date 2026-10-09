@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/xml"
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -68,7 +70,7 @@ func copyIfChanged(system *filesystem.System, srcKey, dstKey string) error {
 	return system.Copy(srcKey, dstKey)
 }
 
-func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record) ([]string, error) {
+func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record, prefix string) ([]string, error) {
 	collection, err := pb.FindCollectionByNameOrId("site_symbols")
 	if err != nil {
 		return nil, err
@@ -94,7 +96,7 @@ func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site 
 		}
 
 		sourceKey := collection.Id + "/" + symbol.Id + "/" + name
-		destinationKey := "sites/" + site.GetString("host") + "/_symbols/" + symbol.Id + ".js"
+		destinationKey := prefix + "/_symbols/" + symbol.Id + ".js"
 		if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 			return nil, err
 		}
@@ -105,7 +107,7 @@ func generateSymbols(pb *pocketbase.PocketBase, system *filesystem.System, site 
 	return newFiles, nil
 }
 
-func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record) ([]string, error) {
+func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record, prefix string) ([]string, error) {
 	collection, err := pb.FindCollectionByNameOrId("site_uploads")
 	if err != nil {
 		return nil, err
@@ -127,7 +129,7 @@ func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site 
 	for _, upload := range uploads {
 		name := upload.GetString("file")
 		sourceKey := collection.Id + "/" + upload.Id + "/" + name
-		destinationKey := "sites/" + site.GetString("host") + "/_uploads/" + name
+		destinationKey := prefix + "/_uploads/" + name
 		if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 			return nil, err
 		}
@@ -138,7 +140,7 @@ func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site 
 	return newFiles, nil
 }
 
-func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record) ([]string, error) {
+func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record, prefix string) ([]string, error) {
 	collection, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
 		return nil, err
@@ -166,6 +168,7 @@ func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *c
 				pages,
 				page,
 				"",
+				prefix,
 			)
 			if err != nil {
 				return nil, err
@@ -185,10 +188,16 @@ func generatePage(
 	pages []*core.Record,
 	page *core.Record,
 	path string,
+	prefix string,
 ) ([]string, error) {
+	for _, segment := range strings.FieldsFunc(path, func(r rune) bool { return r == '/' || r == '\\' }) {
+		if segment == "." || segment == ".." {
+			return nil, fmt.Errorf("page slug cannot escape the publication directory")
+		}
+	}
 	name := page.GetString("compiled_html")
 	sourceKey := collection.Id + "/" + page.Id + "/" + name
-	destinationKey := "sites/" + site.GetString("host") + path + "/index.html"
+	destinationKey := prefix + path + "/index.html"
 	if err := copyIfChanged(system, sourceKey, destinationKey); err != nil {
 		return nil, err
 	}
@@ -203,6 +212,7 @@ func generatePage(
 				pages,
 				subPage,
 				path+"/"+subPage.GetString("slug"),
+				prefix,
 			)
 			if err != nil {
 				return nil, err
@@ -227,7 +237,7 @@ type sitemap struct {
 	URLs    []sitemapURL `xml:"url"`
 }
 
-func generateSitemap(system *filesystem.System, site *core.Record, pages []*core.Record) (string, error) {
+func generateSitemap(system *filesystem.System, site *core.Record, pages []*core.Record, prefix string) (string, error) {
 	host := site.GetString("host")
 	baseURL := "https://" + host
 
@@ -271,7 +281,7 @@ func generateSitemap(system *filesystem.System, site *core.Record, pages []*core
 	// Write sitemap to filesystem, but only when it actually changed. The
 	// sitemap only differs when pages are added/removed/renamed/reparented, so
 	// a content-only edit skips this upload (and the CDN cache bust it implies).
-	destinationKey := "sites/" + host + "/sitemap.xml"
+	destinationKey := prefix + "/sitemap.xml"
 	if existingHash, ok := hashFile(system, destinationKey); !ok || existingHash != sha256.Sum256(buf.Bytes()) {
 		if err := system.Upload(buf.Bytes(), destinationKey); err != nil {
 			return "", err
@@ -283,6 +293,7 @@ func generateSitemap(system *filesystem.System, site *core.Record, pages []*core
 
 func RegisterGenerateEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
+		RegisterPublicationEndpoints(pb, serveEvent)
 		serveEvent.Router.POST("/api/primo/generate", func(requestEvent *core.RequestEvent) error {
 			body := struct {
 				SiteId string `json:"site_id"`
@@ -354,28 +365,35 @@ func DeleteSiteHostFiles(pb *pocketbase.PocketBase, host string) error {
 // host change the caller must persist the new host first; the old host's files
 // are torn down separately via DeleteSiteHostFiles.
 func GenerateSite(pb *pocketbase.PocketBase, site *core.Record) error {
+	if err := generateSiteAt(pb, site, "sites/"+site.GetString("host")); err != nil {
+		return err
+	}
+	return recordLegacyPublication(pb, site.Id)
+}
+
+func generateSiteAt(pb *pocketbase.PocketBase, site *core.Record, prefix string) error {
 	system, err := pb.NewFilesystem()
 	if err != nil {
 		return err
 	}
 	defer system.Close()
 
-	existingFiles, err := system.List("sites/" + site.GetString("host") + "/")
+	existingFiles, err := system.List(prefix + "/")
 	if err != nil {
 		return err
 	}
 
-	symbolFiles, err := generateSymbols(pb, system, site)
+	symbolFiles, err := generateSymbols(pb, system, site, prefix)
 	if err != nil {
 		return err
 	}
 
-	uploadFiles, err := generateUploads(pb, system, site)
+	uploadFiles, err := generateUploads(pb, system, site, prefix)
 	if err != nil {
 		return err
 	}
 
-	pageFiles, err := generatePages(pb, system, site)
+	pageFiles, err := generatePages(pb, system, site, prefix)
 	if err != nil {
 		return err
 	}
@@ -396,7 +414,7 @@ func GenerateSite(pb *pocketbase.PocketBase, site *core.Record) error {
 	if err != nil {
 		return err
 	}
-	sitemapFile, err := generateSitemap(system, site, pages)
+	sitemapFile, err := generateSitemap(system, site, pages, prefix)
 	if err != nil {
 		return err
 	}

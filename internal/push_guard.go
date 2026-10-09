@@ -96,7 +96,12 @@ func readPushStateAndRecords(app core.App, target string, raw map[string][]map[s
 			}
 			fields := record.FieldsData()
 			delete(fields, "updated")
+			if collection == "site_symbols" {
+				delete(fields, "compiled_js")
+				delete(fields, "compiled_js_hash")
+			}
 			if collection == "pages" {
+				delete(fields, "compiled_html_hash")
 				delete(fields, "compiled_html")
 			}
 			if collection == "sites" {
