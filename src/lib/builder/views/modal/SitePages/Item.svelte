@@ -24,6 +24,7 @@
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { revealRow } from './reveal-row'
 
 	let editing_page = $state(false)
 
@@ -38,7 +39,7 @@
 	}: {
 		parent?: ObjectOf<typeof Pages>
 		page: ObjectOf<typeof Pages>
-		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<void>
+		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<string | void>
 		page_slug: string
 		active_page_id?: string
 		hover_position?: string | null
@@ -94,7 +95,7 @@
 	}
 
 	let drag_handle_element = $state()
-	let element = $state()
+	let element = $state<HTMLElement>()
 	// Browse mode removes the drag handle from the DOM, so a registration made
 	// once on mount would keep pointing at the detached element after a
 	// CMS → Browse → CMS round trip and reordering would silently stop working.
@@ -118,7 +119,7 @@
 
 	onMount(async () => {
 		dropTargetForElements({
-			element,
+			element: element!,
 			getData({ input, element }) {
 				return attachClosestEdge(
 					{ page },
@@ -254,7 +255,7 @@
 </script>
 
 <div class="Item" bind:this={element} class:contains-child={parent} class:dragging={is_dragging}>
-	<div class="page-item-container" class:active class:expanded={showing_children && has_children}>
+	<div class="page-item-container" data-page-id={page.id} class:active class:expanded={showing_children && has_children}>
 		<div class="left">
 			{#if editing_page}
 				<div class="details">
@@ -434,9 +435,10 @@
 					} else {
 						// Pass the correct parent and site IDs
 						const site_id = site?.id || page.site
-						await oncreate({ ...new_page, parent: page.id, site: site_id })
+						const page_id = await oncreate({ ...new_page, parent: page.id, site: site_id })
 						creating_page = false
 						showing_children = true
+						if (page_id && element) await revealRow(element, page_id)
 					}
 				}}
 			/>
