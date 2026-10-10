@@ -20,136 +20,167 @@ export const usePublishSite = (site_id?: string) => {
 				throw new Error('Not loaded')
 			}
 
-			const promises: Promise<void>[] = []
-			// Homepage previews are rendered in parallel with everything else,
-			// but the sites.preview upload is deferred until after the published
-			// files have been regenerated (see below) — its filename is the
-			// thumbnail iframe's cache-buster, so uploading it early would make
-			// the dashboard reload the iframe while `sites/{host}/…` still holds
-			// the previous build, leaving the thumbnail stale.
-			const preview_uploads: (() => Promise<void>)[] = []
-			for (const { symbol, field_keys } of symbols_with_field_keys!) {
-				if (!symbol.js) {
-					// No need to compile symbol JavaScript if there's none
-					continue
-				}
-
-				const locale = 'en' as const
-				const { css } = await processors.css(symbol.css || '')
-
-				// Get symbol's default content
-				const symbol_data = symbol_content?.[symbol.id]?.[locale] ?? {}
-
-				// Use pre-computed field keys to create data object
-				// This ensures the compiled JS knows which props to destructure
-				const generic_data = Object.fromEntries(
-					field_keys.map(key => [key, symbol_data[key] ?? ''])
-				)
-
-				const promise = processors
-					.html({
-						component: {
-							html: symbol.html,
-							js: symbol.js,
-							css,
-							data: generic_data
-						},
-						buildStatic: false,
-						css: 'external',
-
-						// TODO: Svelte runtime needs to be in common bundle shared by all symbol modules.
-						runtime: ['hydrate']
-					})
-					.then(async (res) => {
-						if (res.error) {
-							console.error(`Symbol compilation error for "${symbol.name || symbol.id}":`, res.error)
-							throw new Error(`Compiling symbol "${symbol.name || symbol.id}" failed: ${res.error}`)
-						}
-						if (!res.js) {
-							console.error(`Symbol compilation failed for "${symbol.name || symbol.id}": No JavaScript output`)
-							throw new Error(`Compiling symbol "${symbol.name || symbol.id}" not successful: No JavaScript output`)
-						}
-
-						await self.instance?.collection('site_symbols').update(symbol.id, {
-							compiled_js: new File([res.js], 'symbol.js', { type: 'text/javascript' })
-						})
-					})
-					.catch((error) => {
-						console.error(`Failed to compile symbol "${symbol.name || symbol.id}":`, error)
-						throw error // Re-throw to be caught by Promise.all
-					})
-				promises.push(promise)
+			const publication_url = new URL(`/api/primo/publication/${site_id}`, self.instance?.baseURL)
+			const headers = {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${self.instance?.authStore.token}`
 			}
+			let attempt_id: string | undefined
+			let activation_sent = false
+			try {
+				// Flush pending editor changes before capturing the draft revision.
+				await self.commit()
+				const status_response = await fetch(publication_url, { headers })
+				// Older servers retain their legacy Publish endpoint. New servers
+				// serialize editor and CLI builds through the same revision checks.
+				if (status_response.status !== 404) {
+					if (!status_response.ok) throw new Error('Could not read publication status')
+					const status = await status_response.json()
+					const start = await fetch(publication_url, {
+						method: 'POST',
+						headers,
+						body: JSON.stringify({ expected_revision: status.draft_revision })
+					})
+					if (!start.ok) throw new Error((await start.json()).message || 'Could not start publication')
+					attempt_id = (await start.json()).attempt_id
+				}
+				const promises: Promise<void>[] = []
+				// Homepage previews are rendered in parallel with everything else,
+				// but the sites.preview upload is deferred until after the published
+				// files have been regenerated (see below) — its filename is the
+				// thumbnail iframe's cache-buster, so uploading it early would make
+				// the dashboard reload the iframe while `sites/{host}/…` still holds
+				// the previous build, leaving the thumbnail stale.
+				const preview_uploads: (() => Promise<void>)[] = []
+				for (const { symbol, field_keys } of symbols_with_field_keys!) {
+					if (!symbol.js) {
+						// No need to compile symbol JavaScript if there's none
+						continue
+					}
 
-			for (const page of data.pages) {
-				if (!page.parent) {
-					// Generate the homepage preview now, but only upload it to
-					// sites.preview after the published files are refreshed.
-					const promise = generate_page(page, true).then(async ({ success, html, error }) => {
-						if (!success) {
-							console.error(`Site preview generation failed for page "${page.name || page.id}":`, error || 'Unknown error')
-							throw new Error(`Generating site preview not successful for page "${page.name || page.id}": ${error || 'Unknown error'}`)
-						}
+					const locale = 'en' as const
+					const { css } = await processors.css(symbol.css || '')
 
-						preview_uploads.push(async () => {
-							if (!site) {
-								throw new Error('No site')
+					// Get symbol's default content
+					const symbol_data = symbol_content?.[symbol.id]?.[locale] ?? {}
+
+					// Use pre-computed field keys to create data object
+					// This ensures the compiled JS knows which props to destructure
+					const generic_data = Object.fromEntries(field_keys.map((key) => [key, symbol_data[key] ?? '']))
+
+					const promise = processors
+						.html({
+							component: {
+								html: symbol.html,
+								js: symbol.js,
+								css,
+								data: generic_data
+							},
+							buildStatic: false,
+							css: 'external',
+
+							// TODO: Svelte runtime needs to be in common bundle shared by all symbol modules.
+							runtime: ['hydrate']
+						})
+						.then(async (res) => {
+							if (res.error) {
+								console.error(`Symbol compilation error for "${symbol.name || symbol.id}":`, res.error)
+								throw new Error(`Compiling symbol "${symbol.name || symbol.id}" failed: ${res.error}`)
+							}
+							if (!res.js) {
+								console.error(`Symbol compilation failed for "${symbol.name || symbol.id}": No JavaScript output`)
+								throw new Error(`Compiling symbol "${symbol.name || symbol.id}" not successful: No JavaScript output`)
 							}
 
-							await self.instance?.collection('sites').update(site.id, {
-								preview: new File([html], 'index.html')
+							await self.instance?.collection('site_symbols').update(symbol.id, {
+								compiled_js: new File([res.js], 'symbol.js', { type: 'text/javascript' })
 							})
 						})
-					})
+						.catch((error) => {
+							console.error(`Failed to compile symbol "${symbol.name || symbol.id}":`, error)
+							throw error // Re-throw to be caught by Promise.all
+						})
 					promises.push(promise)
 				}
 
-				const promise = generate_page(page)
-					.then(async ({ success, html, error, page_info }) => {
-						if (!success) {
-							console.error(`Page generation failed for "${page.name || page.id}":`, {
-								page_id: page.id,
-								page_name: page.name,
-								page_slug: page.slug,
-								error: error || 'Unknown error',
-								...page_info
+				for (const page of data.pages) {
+					if (!page.parent) {
+						// Generate the homepage preview now, but only upload it to
+						// sites.preview after the published files are refreshed.
+						const promise = generate_page(page, true).then(async ({ success, html, error }) => {
+							if (!success) {
+								console.error(`Site preview generation failed for page "${page.name || page.id}":`, error || 'Unknown error')
+								throw new Error(`Generating site preview not successful for page "${page.name || page.id}": ${error || 'Unknown error'}`)
+							}
+
+							preview_uploads.push(async () => {
+								if (!site) {
+									throw new Error('No site')
+								}
+
+								await self.instance?.collection('sites').update(site.id, {
+									preview: new File([html], 'index.html')
+								})
 							})
-							throw new Error(`Generating page "${page.name || page.id}" (${page.slug || '/'}) not successful: ${error || 'Unknown error'}`)
-						}
-
-						await self.instance?.collection('pages').update(page.id, {
-							compiled_html: new File([html], 'index.html', { type: 'text/html' })
 						})
-					})
-					.catch((error) => {
-						console.error(`Page compilation error for "${page.name || page.id}":`, error)
-						throw error // Re-throw to be caught by Promise.all
-					})
-				promises.push(promise)
-			}
+						promises.push(promise)
+					}
 
-			await Promise.all(promises)
-			await fetch(new URL('/api/primo/generate', self.instance?.baseURL), {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${self.instance?.authStore.token}`
-				},
-				body: JSON.stringify({ site_id })
-			}).then((res) => {
-				if (!res.ok) {
-					throw new Error('Failed to generate site: Not OK response')
+					const promise = generate_page(page)
+						.then(async ({ success, html, error, page_info }) => {
+							if (!success) {
+								console.error(`Page generation failed for "${page.name || page.id}":`, {
+									page_id: page.id,
+									page_name: page.name,
+									page_slug: page.slug,
+									error: error || 'Unknown error',
+									...page_info
+								})
+								throw new Error(`Generating page "${page.name || page.id}" (${page.slug || '/'}) not successful: ${error || 'Unknown error'}`)
+							}
+
+							await self.instance?.collection('pages').update(page.id, {
+								compiled_html: new File([html], 'index.html', { type: 'text/html' })
+							})
+						})
+						.catch((error) => {
+							console.error(`Page compilation error for "${page.name || page.id}":`, error)
+							throw error // Re-throw to be caught by Promise.all
+						})
+					promises.push(promise)
 				}
-			})
 
-			// Only now that `sites/{host}/…` holds the fresh build, write the
-			// homepage preview. The sites.preview filename is the thumbnail
-			// iframe's cache-buster, so this update (and the iframe reload it
-			// triggers via realtime) must land after the published files —
-			// otherwise the dashboard reloads the thumbnail mid-publish and
-			// shows the previous build forever.
-			for (const upload of preview_uploads) {
-				await upload()
+				await Promise.all(promises)
+				activation_sent = true
+				const activation_url = attempt_id ? new URL(`/api/primo/publication/${site_id}/${attempt_id}/activate`, self.instance?.baseURL) : new URL('/api/primo/generate', self.instance?.baseURL)
+				const activation = await fetch(activation_url, {
+					method: 'POST',
+					headers,
+					body: JSON.stringify(attempt_id ? {} : { site_id })
+				})
+				if (!activation.ok) {
+					activation_sent = false
+					throw new Error('Failed to generate site: ' + ((await activation.json()).message || 'Not OK response'))
+				}
+
+				// Only now that `sites/{host}/…` holds the fresh build, write the
+				// homepage preview. The sites.preview filename is the thumbnail
+				// iframe's cache-buster, so this update (and the iframe reload it
+				// triggers via realtime) must land after the published files —
+				// otherwise the dashboard reloads the thumbnail mid-publish and
+				// shows the previous build forever.
+				for (const upload of preview_uploads) {
+					await upload()
+				}
+			} catch (error) {
+				if (attempt_id && !activation_sent) {
+					await fetch(new URL(`/api/primo/publication/${site_id}/${attempt_id}/fail`, self.instance?.baseURL), {
+						method: 'POST',
+						headers,
+						body: JSON.stringify({ error: error instanceof Error ? error.message : String(error) })
+					}).catch(() => {})
+				}
+				throw error
 			}
 		}
 	)
@@ -233,30 +264,31 @@ export const usePublishSite = (site_id?: string) => {
 
 			const header_result = has_header
 				? await processors.html({
-					component: await build_components(header_sections),
-					head, // Include custom head code in first zone processing
-					locale,
-					css: 'external'
-				})
+						component: await build_components(header_sections),
+						head, // Include custom head code in first zone processing
+						locale,
+						css: 'external'
+					})
 				: { body: '', head: '' }
 
 			const body_result = has_body
 				? await processors.html({
-					component: await build_components(body_sections),
-					head: has_header ? head_without_code : head, // Include head.code if no header zone
-					locale,
-					css: 'external'
-				})
+						component: await build_components(body_sections),
+						head: has_header ? head_without_code : head, // Include head.code if no header zone
+						locale,
+						css: 'external'
+					})
 				: { body: '', head: '' }
 
-			const footer_result = footer_sections && footer_sections.length > 0
-				? await processors.html({
-					component: await build_components(footer_sections),
-					head: (has_header || has_body) ? head_without_code : head, // Include head.code if no header/body zones
-					locale,
-					css: 'external'
-				})
-				: { body: '', head: '' }
+			const footer_result =
+				footer_sections && footer_sections.length > 0
+					? await processors.html({
+							component: await build_components(footer_sections),
+							head: has_header || has_body ? head_without_code : head, // Include head.code if no header/body zones
+							locale,
+							css: 'external'
+						})
+					: { body: '', head: '' }
 
 			// Check for errors in any zone
 			if (header_result.error || body_result.error || footer_result.error) {
@@ -365,49 +397,53 @@ export const usePublishSite = (site_id?: string) => {
 	const symbols_with_field_keys = $derived(
 		shouldLoad && data
 			? data.symbols.map((symbol) => ({
-				symbol,
-				field_keys: symbol.fields()?.map((f) => f.key).filter(Boolean) ?? []
-			}))
+					symbol,
+					field_keys:
+						symbol
+							.fields()
+							?.map((f) => f.key)
+							.filter((key): key is string => typeof key === 'string' && key.length > 0) ?? []
+				}))
 			: undefined
 	)
 
 	const sections = $derived(
 		shouldLoad && pages && data
 			? ([
-				...data.page_type_sections.flatMap((section) =>
-					pages
-						.filter((page) => page.page_type === section.page_type)
-						.map((page) => {
-							const content = useContent(section, { target: 'live', page })
-							if (!content) return
+					...data.page_type_sections.flatMap((section) =>
+						pages
+							.filter((page) => page.page_type === section.page_type)
+							.map((page) => {
+								const content = useContent(section, { target: 'live', page })
+								if (!content) return
 
-							return [page, section, content]
-						})
-				),
-				...data.page_sections.map((section) => {
-					const page = Pages.one(section.page)
-					if (!page) return
+								return [page, section, content]
+							})
+					),
+					...data.page_sections.map((section) => {
+						const page = Pages.one(section.page)
+						if (!page) return
 
-					const content = useContent(section, { target: 'live', page })
-					if (!content) return
+						const content = useContent(section, { target: 'live', page })
+						if (!content) return
 
-					return [page, section, content]
-				})
-			] as ([ObjectOf<typeof PageSections> | ObjectOf<typeof PageTypeSections>, ObjectOf<typeof Pages>, NonNullable<ReturnType<typeof useContent>>] | undefined)[])
+						return [page, section, content]
+					})
+				] as ([ObjectOf<typeof PageSections> | ObjectOf<typeof PageTypeSections>, ObjectOf<typeof Pages>, NonNullable<ReturnType<typeof useContent>>] | undefined)[])
 			: undefined
 	)
 	const section_content = $derived(
 		shouldLoad && sections?.every((s) => !!s)
 			? sections
-				.filter((s) => !!s)
-				.reduce(
-					(data, [page, section, content]) => {
-						if (!data[page.id]) data[page.id] = {}
-						data[page.id][section.id] = content
-						return data
-					},
-					{} as Record<string, Record<string, NonNullable<ReturnType<typeof useContent>>>>
-				)
+					.filter((s) => !!s)
+					.reduce(
+						(data, [page, section, content]) => {
+							if (!data[page.id]) data[page.id] = {}
+							data[page.id][section.id] = content
+							return data
+						},
+						{} as Record<string, Record<string, NonNullable<ReturnType<typeof useContent>>>>
+					)
 			: undefined
 	)
 
@@ -428,5 +464,5 @@ export const usePublishSite = (site_id?: string) => {
 
 const deduplicate =
 	<T>(key: keyof T) =>
-		(item: T, index: number, array: T[]) =>
-			array.findIndex((value) => value[key] === item[key]) === index
+	(item: T, index: number, array: T[]) =>
+		array.findIndex((value) => value[key] === item[key]) === index

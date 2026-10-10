@@ -417,7 +417,7 @@ test.describe('Full build flow (site creation through publish)', () => {
 		const entrySaveRes = await entrySavePromise
 		expect(entrySaveRes.ok()).toBeTruthy()
 
-		const generateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/primo/generate') && res.request().method() === 'POST', { timeout: 15000 })
+		const generateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/primo/publication/') && res.url().endsWith('/activate') && res.request().method() === 'POST', { timeout: 15000 })
 		await page.getByRole('button', { name: /^(Preview|Publish)$/ }).click()
 		const publishDialog = page.getByRole('dialog')
 		const confirmButton = publishDialog.getByRole('button', { name: /publish|preview|confirm/i }).first()
