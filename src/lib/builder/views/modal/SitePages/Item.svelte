@@ -26,7 +26,6 @@
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
-	import { revealRow } from './reveal-row'
 
 	let editing_page = $state(false)
 
@@ -44,7 +43,7 @@
 	}: {
 		parent?: ObjectOf<typeof Pages>
 		page: ObjectOf<typeof Pages>
-		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<string | void>
+		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<void>
 		page_slug: string
 		active_page_id?: string
 		creating_page_id: string | null
@@ -449,10 +448,9 @@
 						// Pass the correct parent and site IDs
 						const site_id = site?.id || page.site
 						showing_children = true
-						const page_id = await oncreate({ ...new_page, parent: page.id, site: site_id })
+						await oncreate({ ...new_page, parent: page.id, site: site_id })
 						creating_page = false
 						showing_children = true
-						if (page_id && element) await revealRow(element, page_id)
 					}
 				}}
 			/>

@@ -16,7 +16,6 @@
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
-	import { revealRow } from './reveal-row'
 
 	let { onManagePageTypes }: { onManagePageTypes?: () => void } = $props()
 
@@ -210,7 +209,7 @@
 		building_page = true
 		building_page_name = page_data.name
 		building_page_parent = page_data.parent
-		return new Promise<string>((resolve, reject) => {
+		return new Promise<void>((resolve, reject) => {
 			finish_creation = async (error) => {
 				const page_id = new_page?.id
 				new_page = undefined
@@ -238,7 +237,7 @@
 				copying_page_type_entries = 'no'
 				copying_page_type_section_entries = 'no'
 				if (error) reject(error)
-				else resolve(page_id!)
+				else resolve()
 			}
 			new_page = Pages.create({ ...page_data, index: new_index })
 			building_page_id = new_page.id
@@ -291,9 +290,8 @@
 						if (url_taken) {
 							throw new Error('That URL is already in use')
 						} else {
-							const page_id = await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
 							creating_page = false
-							if (page_id && page_list) await revealRow(page_list, page_id)
 						}
 					}}
 				/>
