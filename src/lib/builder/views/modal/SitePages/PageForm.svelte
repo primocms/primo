@@ -9,6 +9,7 @@
 	import { Sites, PageTypes, Pages } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { site_context } from '$lib/builder/stores/context'
+	import { revealRow } from './reveal-row'
 
 	let { parent, oncreate }: { parent?: ObjectOf<typeof Pages>; oncreate: (new_page: Omit<Page, 'id' | 'parent' | 'site' | 'index'>) => void | Promise<void> } = $props()
 
@@ -45,6 +46,7 @@
 <form
 	onsubmit={async (e) => {
 		e.preventDefault()
+		const form = e.currentTarget
 		if (page_creation_disabled) return
 		saving = true
 		error = ''
@@ -52,12 +54,14 @@
 			await oncreate(new_page)
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Could not create the page. Please try again.'
+			void revealRow(form)
 		} finally {
 			saving = false
 		}
 	}}
 	aria-busy={saving}
 	in:fade={{ duration: 100 }}
+	onintroend={(e) => revealRow(e.currentTarget)}
 	class:has-page-types={page_types && page_types.length > 1}
 >
 	<UI.TextInput autofocus={true} bind:value={new_page.name} id="page-label" label="Page name" disabled={saving} placeholder="About Us" />
