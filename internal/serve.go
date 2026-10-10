@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"database/sql"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -66,8 +68,31 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				reqHost = site.GetString("host")
 			}
 
+			if site == nil {
+				var lookupErr error
+				site, lookupErr = pb.FindFirstRecordByData("sites", "host", reqHost)
+				if lookupErr != nil && !errors.Is(lookupErr, sql.ErrNoRows) {
+					return lookupErr
+				}
+			}
+			prefix := "sites/" + reqHost
+			if site != nil {
+				publication, err := publicationRecord(pb, site.Id)
+				if err != nil {
+					return err
+				}
+				if active := publication.GetString("prefix"); active != "" {
+					prefix = active
+				}
+			}
 			reqPath := requestEvent.Request.PathValue("path")
-			fileKey := "sites/" + reqHost + "/" + reqPath
+			// Keep requests inside the selected immutable build directory.
+			for _, segment := range strings.Split(reqPath, "/") {
+				if segment == ".." || segment == "." {
+					return requestEvent.NotFoundError("Invalid site path", nil)
+				}
+			}
+			fileKey := prefix + "/" + reqPath
 			fileName := path.Base(fileKey)
 
 			isHome := false

@@ -16,7 +16,25 @@ export default defineConfig({
 			'/api': { target: 'http://localhost:8090', changeOrigin: true, ws: true },
 			'/apis': { target: 'http://localhost:8090', changeOrigin: true },
 			'/_': { target: 'http://localhost:8090', changeOrigin: true },
-			'/__primo_dev_ws__': { target: 'http://localhost:8090', changeOrigin: true, ws: true }
+			'/__primo_dev_ws__': { target: 'http://localhost:8090', changeOrigin: true, ws: true },
+			'/': {
+				target: 'http://localhost:8090',
+				changeOrigin: true,
+				bypass(req) {
+					const url = new URL(req.url ?? '/', 'http://localhost')
+					// Thumbnails and their assets belong to the published site server.
+					if (url.searchParams.has('_site')) return
+					if (req.headers.referer) {
+						try {
+							const referrer = new URL(req.headers.referer)
+							if (referrer.host === req.headers.host && referrer.searchParams.has('_site')) return
+						} catch {
+							// Ignore malformed referrers and let Vite handle the request.
+						}
+					}
+					return req.url
+				}
+			}
 		}
 	},
 	build: {

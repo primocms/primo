@@ -1,0 +1,45 @@
+# Isolated deployment proof for the Primo Hosted organization.
+# Primo 3.3.0 plus hosted-plan fixes and the Fly domain adapter, from clean release source.
+# This smoke image is in the organization's Fly registry, not a public release.
+app = "primo-hosted-smoke"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = 30
+
+[build]
+  image = "registry.fly.io/primo-hosted-smoke@sha256:51ccd91b16ace8e8e92ab0943d7c89aa2e34d8b9adc46f829515dbda68648e13"
+
+[env]
+  PRIMO_APP_URL = "https://fly-smoke.primo.page"
+  PRIMO_BASE_DOMAIN = "fly-smoke.primo.page"
+  PRIMO_HOSTED_MODE = "true"
+  PRIMO_SITE_CAP = "3"
+  PRIMO_EDITOR_CAP = "0"
+  # Temporary app-scoped test token is stored separately in Fly secrets.
+  PRIMO_DOMAIN_PROVIDER = "fly"
+
+[mounts]
+  source = "pb_data"
+  destination = "/app/pb_data"
+  initial_size = 1
+  snapshot_retention = 7
+  scheduled_snapshots = true
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

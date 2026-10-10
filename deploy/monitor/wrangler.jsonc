@@ -1,0 +1,9 @@
+{
+  "name": "primo-hosting-monitor",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-04",
+  "workers_dev": true,
+  "triggers": {"crons": ["*/5 * * * *"]},
+  "durable_objects": {"bindings": [{"name":"MONITOR_STATE","class_name":"MonitorState"}]},
+  "migrations": [{"tag":"v1","new_sqlite_classes":["MonitorState"]}]
+}

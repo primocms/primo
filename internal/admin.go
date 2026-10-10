@@ -3,6 +3,7 @@ package internal
 import (
 	"embed"
 	"io/fs"
+	"os"
 	"path"
 	"strings"
 
@@ -32,6 +33,11 @@ func RegisterAdminApp(pb *pocketbase.PocketBase) error {
 	}
 
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
+		if os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true" {
+			if err := checkManagedBootstrap(pb); err != nil {
+				return err
+			}
+		}
 		setupCompleted := false
 
 		serveEvent.InstallerFunc = func(app core.App, systemSuperuser *core.Record, baseURL string) error {

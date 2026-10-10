@@ -12,6 +12,7 @@ export type InstanceInfo = {
 	site_count: number
 	library_block_count: number
 	editor_cap?: number
+	owner_only?: boolean
 	// Domain provider ("railway" runs attach+poll, "manual" shows generic DNS
 	// guidance) and the configured base domain (if set, new sites get a live
 	// "<slug>.<base>" subdomain). Both drive the connect-domain flow and let the

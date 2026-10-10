@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
+	import { auth_destination } from '$lib/auth_navigation'
 	import { Users } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
 	import { Loader, User } from 'lucide-svelte'
@@ -55,7 +56,7 @@
 			case 'sign_in':
 				loading = true
 				await Users.authWithPassword(email, password)
-					.then(() => goto('/admin/site'))
+					.then(() => goto(auth_destination(page.url), { replaceState: true }))
 					.catch(({ message }) => {
 						error = message
 					})

@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Set up your Primo server</title><link rel="stylesheet" href="/assets/setup.css"><script defer src="/assets/setup.js"></script></head>
+<body><main><a class="brand" href="https://primo.build">primo</a><p class="eyebrow">Your own space to build</p><h1>Let’s set up your server.</h1><p id="intro">Checking your private setup link…</p>
+<form hidden id="setup"><label for="slug">Server name</label><div class="name"><input id="slug" name="slug" autocomplete="off" pattern="[a-z][a-z0-9-]{1,28}[a-z0-9]" minlength="3" maxlength="30" required><span id="suffix">.primo.page</span></div><p class="hint">3–30 lowercase letters, numbers, or hyphens. Start with a letter.</p>
+<label for="password">Choose a password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required><p class="hint">At least 12 characters. You’ll use your purchase email to sign in.</p><button type="submit">Create my server</button></form>
+<p id="message" role="status" aria-live="polite"></p><a hidden id="open" class="button">Open my dashboard</a><p class="support">Need a hand? <a href="mailto:hello@primo.build">Contact Primo</a></p></main></body></html>

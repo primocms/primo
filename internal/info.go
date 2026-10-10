@@ -103,16 +103,18 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled  bool   `json:"telemetry_enabled"`
 				SMTPEnabled       bool   `json:"smtp_enabled"`
 				HostedMode        bool   `json:"hosted_mode"`
+				ManagedBootstrap  bool   `json:"managed_bootstrap"`
 				BillingURL        string `json:"billing_url,omitempty"`
 				DevMode           bool   `json:"dev_mode"`
 				SiteCap           int    `json:"site_cap,omitempty"`
 				SiteCount         int64  `json:"site_count"`
 				LibraryBlockCount int64  `json:"library_block_count"`
 				EditorCap         int    `json:"editor_cap,omitempty"`
+				OwnerOnly         bool   `json:"owner_only"`
 				// Domain provider + base domain let the editor pick the
-				// connect-domain flow: "railway" runs the attach+poll flow,
-				// "manual" shows generic DNS guidance. base_domain (if set)
-				// means new sites get a live subdomain and is shown as a hint.
+				// connect-domain flow: "railway" and "fly" attach and poll,
+				// while "manual" shows generic DNS guidance. base_domain (if
+				// set) gives new sites a live subdomain and is shown as a hint.
 				DomainProvider string `json:"domain_provider"`
 				BaseDomain     string `json:"base_domain,omitempty"`
 			}{
@@ -121,12 +123,14 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled:  telemetryEnabled,
 				SMTPEnabled:       smtpEnabled,
 				HostedMode:        isHostedMode(),
+				ManagedBootstrap:  os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true",
 				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),
 				DevMode:           DevMode,
 				SiteCap:           siteCap,
 				SiteCount:         siteCount,
 				LibraryBlockCount: libraryBlockCount,
 				EditorCap:         editorCap,
+				OwnerOnly:         ownerOnly(pb),
 				DomainProvider:    getDomainProvider().Name(),
 				BaseDomain:        baseDomain(),
 			})

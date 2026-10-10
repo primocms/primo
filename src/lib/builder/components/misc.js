@@ -6,8 +6,7 @@ const preview_iframe_head = (head = '') => `
   ${head}
 `
 
-const editor_context_tag =
-	"<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
+const editor_context_tag = "<script>window.__PRIMO_CONTEXT__ = { environment: 'editor' };</script>"
 
 export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
 	return `
@@ -21,30 +20,55 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
       <script type="module">
         let mod;
         let reset;
+        let imported_source;
+        let module_import;
+        let import_request = 0;
+        let render_request = 0;
         let last_rendered_html = '';
 
         const channel = new BroadcastChannel('${broadcast_id}');
         channel.onmessage = async ({data}) => {
           const { event, payload = {} } = data
-          if (payload.componentApp) {
-            await init(payload.componentApp)
-          }
-          if (payload.data) {
-            update(payload.data)
+          if (!payload.componentApp && !payload.data) return;
+          const request = ++render_request;
+          try {
+            if (payload.componentApp) {
+              await init(payload.componentApp)
+            } else if (module_import) {
+              await module_import;
+            }
+            if (request !== render_request) return;
+            if (payload.data) {
+              update(payload.data)
+            }
+          } catch (error) {
+            if (request !== render_request) return;
+            channel.postMessage({ event: 'SET_ERROR', payload: { error: String(error) } });
           }
         }
         channel.postMessage({ event: 'INITIALIZED' });
 
         async function init(source) {
+          if (!source) return;
+          // Content updates reuse both loaded modules and in-flight imports.
+          if (source === imported_source) return module_import;
           const blob = new Blob([source], { type: 'text/javascript' })
           const url = URL.createObjectURL(blob)
-          await import(url)
+          const request = ++import_request;
+          imported_source = source;
+          module_import = import(url)
             .then((module) => {
-              mod = module
+              if (request === import_request) mod = module;
+            })
+            .catch((error) => {
+              if (request !== import_request) return;
+              imported_source = undefined;
+              throw error;
             })
             .finally(() => {
               try { URL.revokeObjectURL(url) } catch (_) {}
             });
+          return module_import;
         }
 
         function update(props) {
@@ -184,36 +208,57 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
         <script type="module">
           let mod;
           let reset;
+          let imported_source;
+          let module_import;
+          let import_request = 0;
+          let render_request = 0;
 
           window.addEventListener('message', async ({ data }) => {
             const payload = data && data.payload
             if (!payload) return
-            if (payload.js) {
-              await init(payload.js)
-            }
-            if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
-              update(payload.data)
+            if (!payload.js && !Object.prototype.hasOwnProperty.call(payload, 'data')) return;
+            const request = ++render_request;
+            try {
+              if (payload.js) {
+                await init(payload.js)
+              } else if (module_import) {
+                await module_import;
+              }
+              if (request !== render_request) return;
+              if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+                update(payload.data)
+              }
+            } catch (e) {
+              if (request !== render_request) return;
+              const target = document.querySelector('#component')
+              if (target) target.innerHTML = ''
+              console.error(e)
+              const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
+              window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
             }
           })
 
           async function init(source) {
             if (!source) return
+            // Content updates reuse both loaded modules and in-flight imports.
+            if (source === imported_source) return module_import;
             const blob = new Blob([source], { type: 'text/javascript' })
             const url = URL.createObjectURL(blob)
-            await import(url)
+            const request = ++import_request;
+            imported_source = source;
+            module_import = import(url)
               .then((module) => {
-                mod = module
+                if (request === import_request) mod = module;
               })
               .catch((e) => {
-                target.innerHTML = ''
-                console.error(e)
-                const message = typeof e === 'string' ? e : e?.stack || e?.message || e?.toString?.() || 'Unknown error'
-                window.parent.postMessage({ type: 'component-error', error: String(message).split('\\n')[0] }, '*')
+                if (request !== import_request) return;
+                imported_source = undefined;
                 throw e
               })
               .finally(() => {
                 try { URL.revokeObjectURL(url) } catch (_) {}
               })
+            return module_import;
           }
 
           function update(props) {

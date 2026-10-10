@@ -1,0 +1,42 @@
+# Live Maker/Solo billing is configured in Fly secrets; see README for cutover.
+app = "primo-hosting-control"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = 45
+
+[build]
+  dockerfile = "deploy/fly/hosting/Dockerfile"
+
+[env]
+  HOSTING_PUBLIC_URL = "https://primo-hosting-control.fly.dev"
+  HOSTING_DATABASE = "/data/private/hosting.sqlite"
+  HOSTING_DOMAIN = "primo.page"
+  HOSTING_FLY_ORG = "primo-hosted"
+  HOSTING_REGION = "iad"
+  HOSTING_DNS_RECORD_LIMIT = "200"
+  POLAR_WEBHOOK_SCHEME = "standard"
+
+[mounts]
+  source = "hosting_data"
+  destination = "/data"
+  initial_size = 1
+  scheduled_snapshots = true
+  snapshot_retention = 7
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"

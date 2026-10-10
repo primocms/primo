@@ -1,0 +1,23 @@
+{
+  "built_at_date": "2026-10-05",
+  "registry_app": "primo-hosted-smoke",
+  "customer": {
+    "image": "registry.fly.io/primo-hosted-smoke@sha256:945631b84980737d2de5356a0511abb518080b1fe16572b600a845b3b3430ebc",
+    "tag": "owner-only-20261005",
+    "version": "3.3.0-fly-smoke.4",
+    "verification": "Private Maker boot and restart after bootstrap-secret removal passed. Owner sign-in and uploaded file survived an actual encrypted R2 backup restore. Disposable test Machine and volume removed; original public smoke Machine unchanged.",
+    "maker_owner_only": "Verified on Fly: owner-only policy persists after restart; invitation API rejects additional accounts with HTTP 403."
+  },
+  "control_plane": {
+    "image": "registry.fly.io/primo-hosted-smoke@sha256:1c9ee4db21cc5ed5f33964404d267171689e6849ad72b43853677f42f1985357",
+    "tag": "hosting-purchase-notifications-20261005",
+    "verification": "Deployed as primo-hosting-control; actual sandbox purchase verification preceded live Maker/Solo activation. Actual mock purchase, signed event, setup/ready emails, root/wildcard HTTPS, restart and duplicate-event checks passed on October 4. Daily age-encrypted R2 backups enabled on October 5; actual signup-database restore recovered encrypted operator credentials. Private Maker backup restore recovered owner sign-in and uploaded file. Disposable jobs retired and resources removed. Automatic customer-domain-token redistribution and advance expiry alerts are deployed. A real private Fly test passed running-server renewal, encrypted pending-state restart recovery, stopped-server safety, certificate API access, cross-app denial and owner sign-in. Paid-period suspension is deployed and a real private Fly stop/restore test passed, including owner sign-in and retained file. Independent Cloudflare monitoring is deployed; failure and recovery emails were reported delivered by Resend, and a subsequent healthy scheduled invocation passed. Live production signing secret, product mappings, cutoff filtering and monitor health were verified on October 5. No real charge was made; first real live provider delivery remains unobserved.",
+    "app": "primo-hosting-control",
+    "deployment_mode": "polar-production-maker-solo",
+    "credential_verification": "Approved one-year Fly organization and primo.page DNS-edit tokens installed; provider access, running secret hashes after restart and HTTPS health passed. Parents remain control-plane only.",
+    "domain_credentials": "Changed parents trigger checkpointed app-only updates; stopped servers stay off; running secret hash and private health must pass before completion. Provider expiry checks pass on deployed service.",
+    "cancellation": "Deployed: paid-term access retained; terminal revocation suspends without data deletion; actual Fly retained-data restoration passed.",
+    "monitoring": "Independent Cloudflare monitor deployed; five-minute cron executed, real failure/recovery emails delivered, private aggregate checks healthy. Runtime has only read-only health and sending-only Resend access.",
+    "purchase_notifications": "Deployed; real operator email delivered, different delivery ID deduplicated, no customer job/resources allocated. Failed notices retry independently and are monitored. Old notification-only Zapier endpoint saved disabled after live activation."
+  }
+}

@@ -252,6 +252,9 @@
 
 <div class="Invitation">
 	<main>
+		{#if instance.owner_only}
+			<p>Your plan includes only your account. Upgrade to invite collaborators.</p>
+		{:else}
 		<h2>Invite site collaborator</h2>
 		<form
 			onsubmit={(e) => {
@@ -304,6 +307,7 @@
 				{/if}
 			</div>
 		</form>
+		{/if}
 		<section>
 			<h3 class="subheading">People with Access</h3>
 			{#if !server_members || !site_collborators}

@@ -66,7 +66,9 @@
 
 	const homepage = $derived(site.homepage())
 	const all_pages = $derived(site.pages() ?? [])
-	const root_pages = $derived(homepage?.children() || [])
+	// The toolbar already loads the site's pages. A separate children() query
+	// first renders only Home, then resizes the centered dialog when it resolves.
+	const root_pages = $derived(all_pages.filter((page) => page.parent === homepage?.id))
 
 	let creating_page = $state(false)
 	let building_page = $state(false)
