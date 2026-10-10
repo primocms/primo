@@ -32,7 +32,7 @@ new edit after confirmation still rejects the import.
 Revisions hash sorted records for content, fields, blocks, page types, layouts,
 pages, sections, their ordering, uploads, site metadata, and the site's group.
 Record IDs include additions/deletions. Timestamp-only updates, compiled page
-output, thumbnails, domain state, presence, analytics, and publish snapshots
+and symbol output (including compiler hashes), thumbnails, domain state, presence, analytics, and publish snapshots
 do not cause conflicts. The scope must be updated when the importer gains a
 new writable collection. All write paths are covered by reading stored state;
 there is no counter whose update can be missed by an API or background job.
@@ -77,7 +77,9 @@ workspaces pulled with an older CLI.
 Ship the server and CLI changes together: update CMS, update CLI, then pull to
 establish baselines. Older CLIs without the precondition receive 428 on existing
 production data. New CLIs reject servers without protocol support, even with
-`--force`. No database migration is needed.
+`--force`. The publication workflow also adds a private `site_publications`
+collection through an automatic migration. Pull after upgrading to refresh
+baselines with the corrected fingerprint scope.
 
 `go test ./...` covers stale/missing revisions, edits during upload, metadata
 rollback, backup failure, authenticated backup download and restoration,
@@ -93,3 +95,46 @@ PRIMO_TEST_CMS_BINARY=/path/to/freshly-built/primo node --test tests/push-cms.te
 The existing browser suite still pins the published CLI. Update that pin and
 its legacy expected-failure round-trip case when the coordinated CLI is
 published; the contract test above exercises the new pair before publication.
+
+## Hosted publication
+
+`primo push` saves draft content and prints a scoped `primo publish` command.
+`primo publish` compiles the current hosted draft without importing local files.
+`primo push --publish` waits for all selected site/library imports before
+publishing; an import failure leaves publication unattempted. `--preview` and
+`--dry-run` cannot be combined with `--publish`.
+
+Publication uses the hosted token and the site's update permission:
+
+- `GET /api/primo/publication/{siteId}` returns draft/published revisions,
+  unpublished changes, last publication, public URL, and the latest attempt.
+- `POST /api/primo/publication/{siteId}` with `expected_revision` starts a
+  tracked attempt and returns its ID. Active attempts serialize CLI/editor
+  publication. An abandoned attempt becomes unknown after 15 minutes and may
+  then be replaced by a new attempt.
+- The client compiles and uploads all page/symbol artifacts.
+- `POST /api/primo/publication/{siteId}/{attemptId}/activate` generates into
+  `published/{siteId}/{attemptId}` and rechecks the draft revision and domain
+  before atomically saving the active prefix. Site requests resolve that
+  prefix; incomplete generation never replaces the active public build.
+- `POST /api/primo/publication/{siteId}/{attemptId}/fail` records a compilation
+  failure. A delayed failure cannot undo a successful or newer attempt.
+
+Active and previous tracked builds are retained. Older builds and failed
+staging files are removed best-effort. Publications performed through legacy
+`/generate` clients cannot be attributed to a compile revision and report
+unknown freshness. The updated editor uses the same tracked protocol as CLI.
+
+A publication failure preserves successful push baselines and hosted drafts;
+the combined CLI command exits nonzero and prints a publication-only retry.
+An ambiguous network outcome is reconciled with server status, or reported as
+unknown if it cannot be confirmed. JSON reports push and publication separately,
+including failed and unattempted targets. Run `primo status --hosted --json`
+to inspect authoritative state without uploading or publishing.
+
+The real CMS contract tests cover draft-only pushes, full compilation and public
+output, failed publication, retry, and preservation of the push baseline:
+
+```sh
+PRIMO_TEST_CMS_BINARY=/path/to/primo node --test tests/push-cms.test.mjs tests/publish-cms.test.mjs
+```

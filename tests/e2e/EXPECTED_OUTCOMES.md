@@ -14,7 +14,7 @@ an isolated `pb_data` dir on a non-default port with `PRIMO_DEV_MODE=1`, so
 | 2c | Repeaters | Reorder (e.g. move C before A) | Item identity (name+content) follows the item, not the slot; only `index` values change | Assert each item's content by its parent id, not by position |
 | 2d | Repeaters | Delete one item (e.g. A) | Exactly 2 items remain (B, C), correct content, no duplicate, nothing resurrected | Count + content check |
 | 2e | Repeaters | Edit again after delete+reorder, then reload | Final state exactly matches expected mapping of {remaining items → content} | Reload, re-read, compare set |
-| 3a | Publishing | Publish fixture site (`POST /api/primo/generate`) | Served HTML at published host contains the edited content from step 1 | `fetch`/`page.goto` published URL, assert exact text in HTML |
+| 3a | Publishing | Publish fixture site (tracked publication activation) | Served HTML at published host contains the edited content from step 1 | `fetch`/`page.goto` published URL, assert exact text in HTML |
 | 3b | Publishing | Make another edit, republish | Served HTML updates to the new value (old value gone) | Same as above, before/after diff |
 | 4a | Permissions (documented) | Editor performs an allowed content edit (edit text field, per docs: "editors work within guardrails you define") | Edit succeeds, persists | Same persistence check as 1a using editor session |
 | 4b | Permissions (documented UI) | Editor opens the Pages modal, which hosts page-type management — the "Manage page types" button is gated by `serverRole/siteRole === 'developer'` (supplied by `Toolbar.svelte` into `SitePages.svelte`) | Control is hidden/inaccessible in UI for editor | UI assertion (locator not visible / not present) |
