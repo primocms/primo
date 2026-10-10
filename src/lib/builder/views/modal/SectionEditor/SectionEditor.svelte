@@ -26,6 +26,8 @@
 	import { beforeNavigate } from '$app/navigation'
 	import { setUserActivity } from '$lib/UserActivity.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { SvelteSet } from 'svelte/reactivity'
+	import { copy_new_field_entries } from './copy-field-entries'
 
 	let {
 		component,
@@ -55,6 +57,7 @@
 
 	const symbol = $derived(SiteSymbols.one(component.symbol))
 	const fields = $derived(symbol?.fields())
+	const symbol_entries = $derived(symbol?.entries())
 	const entries = $derived('page_type' in component ? component.entries() : 'page' in component ? component.entries() : undefined)
 	const data = $derived(useContent(component, { target: 'cms' }))
 	const component_data = $derived(data && (data[$locale] ?? {}))
@@ -76,7 +79,7 @@
 		}
 	})
 	let loading = $state(false)
-	let newly_created_fields = new Set()
+	const newly_created_fields = new SvelteSet<string>()
 
 	// Create completions array in field order for autocomplete
 	const completions = $derived(
@@ -143,6 +146,7 @@
 
 		// Browse mode hides the Save button; ⌘S has to match.
 		if ($read_only) return
+		if (newly_created_fields.size > 0 && (!entries || !symbol_entries)) return
 
 		if (!$has_error && symbol) {
 			loading = true
@@ -150,33 +154,16 @@
 			// Update symbol code (doing this here to prevent compilation for the symbol in the sidebar/background
 			SiteSymbols.update(symbol.id, { html, css, js })
 
-			// Copy entries for newly created fields to the symbol
-			if (newly_created_fields.size > 0 && entries) {
-				for (const fieldId of newly_created_fields) {
-					// Find entries for this field in the section (only top-level entries for now)
-					const fieldEntries = entries.filter((e) => e.field === fieldId && !e.parent)
-
-					// Copy each entry to the symbol (newly created fields won't have symbol entries yet)
-					for (const entry of fieldEntries) {
-						SiteSymbolEntries.create({
-							field: entry.field,
-							locale: entry.locale,
-							value: entry.value,
-							index: entry.index
-							// Note: not copying parent relationships for now as that would require complex mapping
-						})
-					}
+			try {
+				if (newly_created_fields.size > 0 && entries && symbol_entries) {
+					copy_new_field_entries({ entries, field_ids: newly_created_fields, symbol_entries, create_entry: SiteSymbolEntries.create })
 				}
-
-				// Clear the set after copying
+				await self.commit()
 				newly_created_fields.clear()
+				header.button.onclick()
+			} finally {
+				loading = false
 			}
-
-			SiteSymbols.update(symbol.id, { html, css, js })
-			await self.commit()
-			loading = false
-
-			header.button.onclick()
 		}
 	}
 
@@ -227,7 +214,7 @@
 				hint: '⌘S',
 				loading,
 				onclick: save_component,
-				disabled: $has_error || loading
+				disabled: $has_error || loading || (newly_created_fields.size > 0 && (!entries || !symbol_entries))
 			}}
 >
 	{#if $current_user?.siteRole === 'developer'}
