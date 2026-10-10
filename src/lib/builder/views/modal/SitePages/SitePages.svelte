@@ -15,6 +15,7 @@
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { revealRow } from './reveal-row'
 
 	let { onManagePageTypes }: { onManagePageTypes?: () => void } = $props()
 
@@ -71,6 +72,7 @@
 	const root_pages = $derived(all_pages.filter((page) => page.parent === homepage?.id))
 
 	let creating_page = $state(false)
+	let page_list = $state<HTMLUListElement>()
 	let building_page = $state(false)
 	let building_page_name = $state('')
 	let new_page = $state<ObjectOf<typeof Pages>>()
@@ -151,7 +153,7 @@
 		// Create the page with the next available index
 		building_page = true
 		building_page_name = page_data.name
-		return new Promise<void>((resolve, reject) => {
+		return new Promise<string>((resolve, reject) => {
 			finish_creation = async (error) => {
 				const page_id = new_page?.id
 				new_page = undefined
@@ -179,7 +181,7 @@
 				copying_page_type_entries = 'no'
 				copying_page_type_section_entries = 'no'
 				if (error) reject(error)
-				else resolve()
+				else resolve(page_id!)
 			}
 			new_page = Pages.create({ ...page_data, index: new_index })
 		})
@@ -194,7 +196,7 @@
 </div>
 <p class="pages-description">Open a page to edit its content, or create a new one.</p>
 {#if active_page}
-	<ul class="grid page-list">
+	<ul class="grid page-list" bind:this={page_list}>
 		{#each [homepage, ...root_pages].sort((a, b) => a.index - b.index) as page, i (page.id)}
 			<li animate:flip={{ duration: 200 }}>
 				<Item {page} {page_slug} active_page_id={!pageState.params.page_type ? active_page.id : null} oncreate={create_page_with_sections} bind:hover_position />
@@ -221,8 +223,9 @@
 						} else {
 							building_page = true
 							building_page_name = new_page.name
-							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+							const page_id = await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
 							creating_page = false
+							if (page_id && page_list) await revealRow(page_list, page_id)
 						}
 					}}
 				/>

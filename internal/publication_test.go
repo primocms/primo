@@ -208,6 +208,68 @@ func TestPublicationExcludesSymbolArtifactsFromPushBaseline(t *testing.T) {
 	}
 }
 
+func TestPublicationLegacyGeneratePreservesActiveAttempt(t *testing.T) {
+	app := newPushTestApp(t)
+	defer app.ResetBootstrapState()
+	site, _, _ := pushFixture(t, app)
+	handler, token := publicationHTTP(t, app)
+	compiledHome(t, app, site, "<h1>Legacy build</h1>")
+	revision := mustPushState(t, app, site.Id).Revision
+	attempt, err := startPublication(app, site.Id, revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	attemptID := attempt.GetString("attempt_id")
+	legacyRequest := func() *http.Request {
+		return publicationRequest("POST", "/api/primo/generate", token, `{"site_id":"`+site.Id+`"}`)
+	}
+
+	// A stale editor can generate legacy output while a tracked publication is
+	// still running. Preserve its identity and lease so it can activate later.
+	pushHTTP(t, handler, legacyRequest(), 200)
+	record, err := publicationRecord(app, site.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range []string{"attempt_id", "attempt_revision", "attempt_state", "attempt_started_at", "attempt_finished_at", "attempt_error"} {
+		if record.GetString(field) != attempt.GetString(field) {
+			t.Fatalf("legacy generation changed %s: got %q, want %q", field, record.GetString(field), attempt.GetString(field))
+		}
+	}
+	status, err := publicationStatus(app, site)
+	if err != nil || status["state"] != "publishing" {
+		t.Fatalf("active attempt status: %v %v", status, err)
+	}
+	compiledHome(t, app, site, "<h1>Tracked build</h1>")
+	url := "/api/primo/publication/" + site.Id
+	pushHTTP(t, handler, publicationRequest("POST", url+"/"+attemptID+"/activate", token, "{}"), 200)
+	if got := publishedBody(t, handler, site.GetString("host")); !strings.Contains(got, "Tracked build") {
+		t.Fatal(got)
+	}
+
+	// Legacy output still reports unknown freshness when the tracked lease has
+	// expired, and does not prevent starting a new tracked publication.
+	attempt, err = startPublication(app, site.Id, revision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	attempt.Set("attempt_started_at", time.Now().Add(-publicationLease-time.Second).UTC().Format(time.RFC3339Nano))
+	if err := app.Save(attempt); err != nil {
+		t.Fatal(err)
+	}
+	pushHTTP(t, handler, legacyRequest(), 200)
+	record, err = publicationRecord(app, site.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if record.GetString("attempt_state") != "unknown" || record.GetString("attempt_error") != "Published by a client without revision tracking." || record.GetString("published_revision") != "" || record.GetString("prefix") != "" {
+		t.Fatal("expired attempt or legacy publication metadata was retained incorrectly")
+	}
+	if _, err := startPublication(app, site.Id, revision); err != nil {
+		t.Fatal("legacy generation blocked a new publication:", err)
+	}
+}
+
 func TestPublicationLegacyStatusAndProtectedStorage(t *testing.T) {
 	app := newPushTestApp(t)
 	defer app.ResetBootstrapState()

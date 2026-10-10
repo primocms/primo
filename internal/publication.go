@@ -240,22 +240,30 @@ func activatePublication(pb *pocketbase.PocketBase, site *core.Record, attemptID
 // A legacy editor/dev build has no verified compile revision. Keep its outcome
 // visible, without claiming that its compiled artifacts match the current draft.
 func recordLegacyPublication(app core.App, siteID string) error {
-	record, err := publicationRecord(app, siteID)
+	var retired string
+	err := app.RunInTransaction(func(tx core.App) error {
+		record, err := publicationRecord(tx, siteID)
+		if err != nil {
+			return err
+		}
+		retired = record.GetString("previous_prefix")
+		if record.GetString("prefix") != "" {
+			record.Set("previous_prefix", record.GetString("prefix"))
+		} else {
+			retired = ""
+		}
+		record.Set("prefix", "")
+		record.Set("published_revision", "")
+		record.Set("published_at", time.Now().UTC().Format(time.RFC3339Nano))
+		// An older client must not invalidate a tracked publication that can
+		// still activate. Read and save under the same lock as tracked attempts.
+		if record.GetString("attempt_state") != "publishing" || attemptExpired(record) {
+			record.Set("attempt_state", "unknown")
+			record.Set("attempt_error", "Published by a client without revision tracking.")
+		}
+		return tx.Save(record)
+	})
 	if err != nil {
-		return err
-	}
-	retired := record.GetString("previous_prefix")
-	if record.GetString("prefix") != "" {
-		record.Set("previous_prefix", record.GetString("prefix"))
-	} else {
-		retired = ""
-	}
-	record.Set("prefix", "")
-	record.Set("published_revision", "")
-	record.Set("published_at", time.Now().UTC().Format(time.RFC3339Nano))
-	record.Set("attempt_state", "unknown")
-	record.Set("attempt_error", "Published by a client without revision tracking.")
-	if err := app.Save(record); err != nil {
 		return err
 	}
 	cleanupPublicationPrefix(app, retired)

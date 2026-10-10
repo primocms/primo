@@ -8,14 +8,15 @@ const POSTHOG_KEY = 'phc_BjtMaGQMikAbssG6oaMrrksEB9m5J825kJZnwR8Qx87B'
 const POSTHOG_HOST = 'https://us.i.posthog.com'
 
 export const initialized = (async () => {
-	if (!instance.telemetry_enabled) {
+	if (!instance.telemetry_enabled || instance.dev_mode) {
 		return
 	}
 
 	posthog.init(POSTHOG_KEY, {
 		api_host: POSTHOG_HOST,
 
-		// Privacy settings - disable all tracking features except events
+		// Capture explicit product events only.
+		autocapture: false,
 		disable_session_recording: true,
 		disable_surveys: true,
 		disable_compression: false,
