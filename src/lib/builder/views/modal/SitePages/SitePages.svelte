@@ -11,11 +11,11 @@
 	import type { Page } from '$lib/common/models/Page'
 	import { self } from '$lib/pocketbase/managers'
 	import { flip } from 'svelte/animate'
+	import { tick } from 'svelte'
 	import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
-	import { revealRow } from './reveal-row'
 
 	let { onManagePageTypes }: { onManagePageTypes?: () => void } = $props()
 
@@ -72,9 +72,12 @@
 	const root_pages = $derived(all_pages.filter((page) => page.parent === homepage?.id))
 
 	let creating_page = $state(false)
-	let page_list = $state<HTMLUListElement>()
 	let building_page = $state(false)
 	let building_page_name = $state('')
+	let building_page_id = $state('')
+	let building_page_parent = $state('')
+	let page_list = $state<HTMLUListElement>()
+	let page_list_height = $state<number>()
 	let new_page = $state<ObjectOf<typeof Pages>>()
 	let finish_creation: ((error?: unknown) => void) | undefined
 	let committing_page = false
@@ -83,6 +86,55 @@
 
 	const copy_page_type_entries = $derived(useCopyEntries([new_page_page_type]))
 	const copy_page_type_section_entries = $derived(useCopyEntries(new_page_page_type_sections))
+
+	function revealCreatingPage(node: HTMLElement, pending: boolean) {
+		let observer: ResizeObserver | undefined
+		let was_pending = false
+		let generation = 0
+
+		function reveal() {
+			if (!page_list || !node.isConnected || node.getClientRects().length === 0) return
+			const list_rect = page_list.getBoundingClientRect()
+			const row_rect = node.getBoundingClientRect()
+			const top = list_rect.top + page_list.clientTop + 4
+			const bottom = list_rect.top + page_list.clientTop + page_list.clientHeight - 4
+			// Scroll only the list, by the distance needed to reveal the row.
+			// scrollIntoView can also move the dialog or the document.
+			if (row_rect.bottom > bottom) page_list.scrollTop += row_rect.bottom - bottom
+			else if (row_rect.top < top) page_list.scrollTop -= top - row_rect.top
+		}
+
+		async function update(pending: boolean) {
+			const current_generation = ++generation
+			observer?.disconnect()
+			if (!pending && !was_pending) return
+			was_pending = pending
+			await tick()
+			if (current_generation !== generation) return
+			reveal()
+			const ancestors: HTMLElement[] = [node]
+			for (let parent = node.parentElement; parent && parent !== page_list; parent = parent.parentElement) ancestors.push(parent)
+			if (pending && page_list && node.isConnected) {
+				observer = new ResizeObserver(reveal)
+				observer.observe(page_list)
+				for (const element of ancestors) observer.observe(element)
+			}
+			// Expanding child lists and FLIP animations can move the row without
+			// changing its own size. Check its final position once they settle.
+			const animations = ancestors.flatMap((element) => element.getAnimations())
+			await Promise.allSettled(animations.map((animation) => animation.finished))
+			if (current_generation === generation) reveal()
+		}
+
+		void update(pending)
+		return {
+			update,
+			destroy() {
+				generation++
+				observer?.disconnect()
+			}
+		}
+	}
 
 	// Copy page type entries
 	let copying_page_type_entries: 'no' | 'working' | 'done' = $state('no')
@@ -144,6 +196,7 @@
 		// Guard the mutation, not just the trigger: a form already open when the
 		// mode flips would otherwise still submit.
 		if ($read_only) return
+		if (building_page) throw new Error('Another page is being created. Please wait for it to finish.')
 
 		// Get existing siblings and find the max index
 		const sibling_pages = all_pages.filter((page) => page.parent === page_data.parent)
@@ -151,9 +204,12 @@
 		const new_index = maxIndex + 1
 
 		// Create the page with the next available index
+		// Retain the list size while the form becomes a row, keeping the dialog in place.
+		page_list_height = page_list?.getBoundingClientRect().height
 		building_page = true
 		building_page_name = page_data.name
-		return new Promise<string>((resolve, reject) => {
+		building_page_parent = page_data.parent
+		return new Promise<void>((resolve, reject) => {
 			finish_creation = async (error) => {
 				const page_id = new_page?.id
 				new_page = undefined
@@ -181,12 +237,20 @@
 				copying_page_type_entries = 'no'
 				copying_page_type_section_entries = 'no'
 				if (error) reject(error)
-				else resolve(page_id!)
+				else resolve()
 			}
 			new_page = Pages.create({ ...page_data, index: new_index })
+			building_page_id = new_page.id
 		})
 	}
 </script>
+
+{#snippet creatingPageRow()}
+	<div class="building-page-item" role="status">
+		<Icon icon="eos-icons:three-dots-loading" />
+		<span>Creating {building_page_name}…</span>
+	</div>
+{/snippet}
 
 <div class="pages-heading">
 	<Dialog.Title class="text-base font-medium">
@@ -195,44 +259,46 @@
 	{#if onManagePageTypes}<button class="manage-types" data-testid="manage-page-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
 </div>
 <p class="pages-description">Open a page to edit its content, or create a new one.</p>
-{#if active_page}
-	<ul class="grid page-list" bind:this={page_list}>
+{#if active_page && homepage}
+	<ul class="grid page-list" bind:this={page_list} style:height={page_list_height === undefined ? undefined : `${page_list_height}px`}>
 		{#each [homepage, ...root_pages].sort((a, b) => a.index - b.index) as page, i (page.id)}
-			<li animate:flip={{ duration: 200 }}>
-				<Item {page} {page_slug} active_page_id={!pageState.params.page_type ? active_page.id : null} oncreate={create_page_with_sections} bind:hover_position />
+			<li animate:flip={{ duration: 200 }} use:revealCreatingPage={building_page && page.id === building_page_id}>
+				{#if building_page && page.id === building_page_id}
+					{@render creatingPageRow()}
+				{:else}
+					<Item
+						{page}
+						{page_slug}
+						active_page_id={!pageState.params.page_type ? active_page.id : null}
+						oncreate={create_page_with_sections}
+						creating_page_id={building_page ? building_page_id : null}
+						{creatingPageRow}
+						{revealCreatingPage}
+						bind:hover_position
+					/>
+				{/if}
 				<div class="drop-indicator-inline" class:active={hover_position === `${page.id}-bottom`}><div></div></div>
 				<div class="drop-target-gap" use:gapDropTarget={page}></div>
 			</li>
 		{/each}
-		{#if building_page}
-			<li class="building-placeholder">
-				<div class="building-page-item">
-					<Icon icon="eos-icons:three-dots-loading" />
-					<span>Building {building_page_name} Page</span>
-				</div>
-			</li>
-		{/if}
-
 		{#if creating_page && !$read_only}
-			<li>
+			<li hidden={building_page && building_page_parent === homepage.id} use:revealCreatingPage={!building_page}>
 				<PageForm
 					oncreate={async (new_page: any) => {
+						if (!homepage || $read_only) return
 						const url_taken = all_pages.some((page) => page?.slug === new_page.slug && page.parent === homepage.id)
 						if (url_taken) {
 							throw new Error('That URL is already in use')
 						} else {
-							building_page = true
-							building_page_name = new_page.name
-							const page_id = await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
 							creating_page = false
-							if (page_id && page_list) await revealRow(page_list, page_id)
 						}
 					}}
 				/>
 			</li>
 		{:else if !$read_only}
 			<li>
-				<button class="create-page-btn" onclick={() => (creating_page = true)}>
+				<button class="create-page-btn" disabled={building_page} onclick={() => (creating_page = true)}>
 					<Icon icon="akar-icons:plus" />
 					<span>Create page</span>
 				</button>
@@ -369,22 +435,35 @@
 			border-color: var(--primo-primary-color);
 			color: var(--primo-primary-color);
 		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: wait;
+		}
 	}
 
 	.building-page-item {
 		background: #252528;
 		border: 1px dashed var(--color-gray-6);
 		border-radius: var(--primo-border-radius);
-		padding: 1rem;
+		padding: calc(0.875rem - 1px) calc(1.125rem - 1px);
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
 		color: var(--color-gray-3);
 		font-size: 0.875rem;
+		line-height: 1.5rem;
+
+		span {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
 
 		:global(svg) {
 			height: 1rem;
 			width: 1rem;
+			flex-shrink: 0;
 		}
 	}
 </style>

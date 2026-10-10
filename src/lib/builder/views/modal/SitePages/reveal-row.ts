@@ -9,5 +9,5 @@ export async function revealRow(container: HTMLElement, pageId?: string) {
 	await Promise.allSettled(animations.map((animation) => animation.finished))
 
 	const row = pageId ? container.querySelector<HTMLElement>(`[data-page-id="${pageId}"]`) : container
-	if (row?.isConnected) row.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+	if (row?.isConnected && row.getClientRects().length > 0) row.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 }

@@ -2,6 +2,8 @@
 	import Item from './Item.svelte'
 	import Icon from '@iconify/svelte'
 	import { onMount, tick } from 'svelte'
+	import type { Snippet } from 'svelte'
+	import type { Action } from 'svelte/action'
 	import { get, set } from 'idb-keyval'
 	import { slide, fade } from 'svelte/transition'
 	import { flip } from 'svelte/animate'
@@ -24,7 +26,6 @@
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
-	import { revealRow } from './reveal-row'
 
 	let editing_page = $state(false)
 
@@ -35,13 +36,19 @@
 		oncreate,
 		page_slug,
 		active_page_id,
+		creating_page_id,
+		creatingPageRow,
+		revealCreatingPage,
 		hover_position = $bindable(null)
 	}: {
 		parent?: ObjectOf<typeof Pages>
 		page: ObjectOf<typeof Pages>
-		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<string | void>
+		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<void>
 		page_slug: string
 		active_page_id?: string
+		creating_page_id: string | null
+		creatingPageRow: Snippet
+		revealCreatingPage: Action<HTMLElement, boolean>
 		hover_position?: string | null
 	} = $props()
 
@@ -425,7 +432,12 @@
 	</div>
 
 	{#if creating_page && !$read_only}
-		<div style="border-left: 0.5rem solid #111;" transition:slide={{ duration: 200 }}>
+		<div
+			hidden={children.some((child) => child.id === creating_page_id)}
+			use:revealCreatingPage={creating_page_id === null}
+			style="border-left: 0.5rem solid #111;"
+			transition:slide={{ duration: 200 }}
+		>
 			<PageForm
 				parent={page}
 				oncreate={async (new_page: Omit<Page, 'id' | 'parent' | 'site' | 'index'>) => {
@@ -435,10 +447,10 @@
 					} else {
 						// Pass the correct parent and site IDs
 						const site_id = site?.id || page.site
-						const page_id = await oncreate({ ...new_page, parent: page.id, site: site_id })
+						showing_children = true
+						await oncreate({ ...new_page, parent: page.id, site: site_id })
 						creating_page = false
 						showing_children = true
-						if (page_id && element) await revealRow(element, page_id)
 					}
 				}}
 			/>
@@ -450,8 +462,25 @@
 			<div class="drop-indicator-top" class:active={children_hover_position === `${page.id}-children-top`}><div></div></div>
 			<ul class="page-list child" transition:slide={{ duration: has_toggled ? 100 : 0 }}>
 				{#each children as subpage (subpage.id)}
-					<li animate:flip={{ duration: 200 }} class="subpage-item">
-						<Item parent={page} page={subpage} active={subpage.id === active_page_id} {page_slug} {active_page_id} {oncreate} bind:hover_position={children_hover_position} on:delete on:create />
+					<li animate:flip={{ duration: 200 }} class="subpage-item" use:revealCreatingPage={subpage.id === creating_page_id}>
+						{#if subpage.id === creating_page_id}
+							{@render creatingPageRow()}
+						{:else}
+							<Item
+								parent={page}
+								page={subpage}
+								active={subpage.id === active_page_id}
+								{page_slug}
+								{active_page_id}
+								{oncreate}
+								{creating_page_id}
+								{creatingPageRow}
+								{revealCreatingPage}
+								bind:hover_position={children_hover_position}
+								on:delete
+								on:create
+							/>
+						{/if}
 						<div class="drop-indicator-inline" class:active={children_hover_position === `${subpage.id}-bottom`}><div></div></div>
 					</li>
 				{/each}
