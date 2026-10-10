@@ -28,6 +28,7 @@
 	import { read_only } from '$lib/pocketbase/author_mode'
 	import { SvelteSet } from 'svelte/reactivity'
 	import { copy_new_field_entries } from './copy-field-entries'
+	import { toast } from 'svelte-sonner'
 
 	let {
 		component,
@@ -161,6 +162,9 @@
 				await self.commit()
 				newly_created_fields.clear()
 				header.button.onclick()
+			} catch (error) {
+				console.error('Could not save section', error)
+				toast.error('Could not save this section. Your changes are still here. Please try again.')
 			} finally {
 				loading = false
 			}
