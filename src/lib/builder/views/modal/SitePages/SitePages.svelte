@@ -196,6 +196,7 @@
 		// Guard the mutation, not just the trigger: a form already open when the
 		// mode flips would otherwise still submit.
 		if ($read_only) return
+		if (building_page) throw new Error('Another page is being created. Please wait for it to finish.')
 
 		// Get existing siblings and find the max index
 		const sibling_pages = all_pages.filter((page) => page.parent === page_data.parent)

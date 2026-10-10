@@ -4,6 +4,79 @@ import { devAuth, SERVER_URL } from './helpers/server'
 import { seedFixtureSite } from './helpers/seed'
 
 test.describe('Pages creation row', () => {
+	test('rejects a second form while a subpage saves, then allows retry', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const ids = await seedFixtureSite(token, 'Concurrent Page Creation')
+		const headers = { Authorization: `Bearer ${token}` }
+		const homeResponse = await request.get(`${SERVER_URL}/api/collections/pages/records/${ids.pageId}`, { headers })
+		expect(homeResponse.ok()).toBeTruthy()
+		const home = await homeResponse.json()
+		const parentResponse = await request.post(`${SERVER_URL}/api/collections/pages/records`, {
+			headers,
+			data: { site: ids.siteId, parent: ids.pageId, page_type: home.page_type, name: 'Parent', slug: 'parent', index: 1 }
+		})
+		expect(parentResponse.ok(), await parentResponse.text()).toBeTruthy()
+		const parent = await parentResponse.json()
+
+		await loginAsDeveloper(page, ids.siteId)
+		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		const dialog = page.getByRole('dialog')
+		const pageList = dialog.locator('ul.page-list').first()
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		const rootForm = pageList.locator(':scope > li > form')
+		await rootForm.getByLabel('Page name', { exact: true }).fill('Root Page')
+		const parentRow = dialog.getByRole('link', { name: 'Parent', exact: true }).locator('xpath=ancestor::li[1]')
+		await parentRow.getByRole('button', { name: 'Options for Parent', exact: true }).click()
+		await page.getByRole('menuitem', { name: 'Create Subpage', exact: true }).click()
+		const childForm = parentRow.locator('form')
+		await childForm.getByLabel('Page name', { exact: true }).fill('Child Page')
+
+		let releaseSave!: () => void
+		let pagePosts = 0
+		const saveGate = new Promise<void>((resolve) => (releaseSave = resolve))
+		await page.route('**/api/collections/pages/records', async (route) => {
+			if (route.request().method() === 'POST') {
+				pagePosts++
+				await saveGate
+			}
+			await route.continue()
+		})
+		try {
+			const pendingSave = page.waitForRequest((req) => req.method() === 'POST' && req.url().endsWith('/api/collections/pages/records'))
+			await childForm.getByRole('button', { name: 'Create page', exact: true }).click()
+			await pendingSave
+			const loading = dialog.getByRole('status')
+			await expect(loading).toHaveText('Creating Child Page…')
+			await rootForm.getByRole('button', { name: 'Create page', exact: true }).click()
+			await expect(rootForm.getByRole('alert')).toHaveText('Another page is being created. Please wait for it to finish.')
+			await expect(rootForm.getByLabel('Page name', { exact: true })).toHaveValue('Root Page')
+			await expect(rootForm.getByRole('button', { name: 'Create page', exact: true })).toBeEnabled()
+			await expect(loading).toHaveCount(1)
+			await expect(loading).toHaveText('Creating Child Page…')
+			expect(pagePosts).toBe(1)
+
+			releaseSave()
+			await expect(loading).toHaveCount(0)
+			await expect(parentRow.getByRole('link', { name: 'Child Page', exact: true })).toHaveCount(1)
+			await rootForm.getByRole('button', { name: 'Create page', exact: true }).click()
+			await expect(dialog.getByRole('link', { name: 'Root Page', exact: true })).toHaveCount(1)
+			await expect(dialog.getByRole('alert')).toHaveCount(0)
+			expect(pagePosts).toBe(2)
+			const savedResponse = await request.get(`${SERVER_URL}/api/collections/pages/records`, {
+				headers,
+				params: { filter: `site = "${ids.siteId}" && (slug = "child-page" || slug = "root-page")` }
+			})
+			expect(savedResponse.ok()).toBeTruthy()
+			const saved = (await savedResponse.json()).items
+			expect(saved).toHaveLength(2)
+			expect(saved.find((item: { slug: string }) => item.slug === 'child-page').parent).toBe(parent.id)
+			expect(saved.find((item: { slug: string }) => item.slug === 'root-page').parent).toBe(ids.pageId)
+		} finally {
+			releaseSave()
+		}
+	})
+
 	for (const overflow of [false, true]) {
 		test(`replaces one visible loading row in a ${overflow ? 'scrolling' : 'short'} list`, async ({ page, request }) => {
 			const { token } = await devAuth(request)
