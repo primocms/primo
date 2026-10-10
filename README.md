@@ -8,7 +8,7 @@ Primo is a CMS for developers who build sites for clients who need to manage the
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
 
-![screenshot](https://cdn.primo.page/f52960e1-0bb0-4c64-9f70-5a9994ce95fc/staging/_images/1739675414227Screenshot%202025-02-15%20at%2010.10.10%E2%80%AFPM.png)
+https://github.com/user-attachments/assets/8bf836ef-65ad-4911-a45c-0159b640d9d6
 
 ## The shape of it
 
