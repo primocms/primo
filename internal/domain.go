@@ -66,21 +66,19 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			}
 
 			oldHost := site.GetString("host")
+			if host != oldHost {
+				if err := moveLegacyDomainFiles(pb, site, oldHost, host); err != nil {
+					return e.InternalServerError("Failed to move published domain files", err)
+				}
+			}
 			if err := applyDomainResult(pb, site, host, result); err != nil {
 				return e.InternalServerError("Failed to save domain", err)
 			}
 
-			// Published files live under sites/{host}/..., so a host change would
-			// otherwise 404 at the new domain until the user re-publishes.
-			// Regenerate under the new host so the site is served immediately,
-			// then tear down the old host's tree — the file server routes purely
-			// by Host header, so leaving it would keep serving the site at the
-			// old domain. Both are best-effort: a site with nothing published yet
-			// has nothing to render, so don't fail the attach if either errors.
+			// Tracked publications use immutable prefixes independent of the
+			// hostname. Legacy output was copied above without compiling drafts.
+			// Retire the old host only after the new assignment is saved.
 			if host != oldHost {
-				if genErr := GenerateSite(pb, site); genErr != nil {
-					e.App.Logger().Warn("regenerate after domain change failed", "site", site.Id, "host", host, "error", genErr)
-				}
 				if oldHost != "" && oldHost != site.Id {
 					if delErr := DeleteSiteHostFiles(pb, oldHost); delErr != nil {
 						e.App.Logger().Warn("cleanup of old host files failed", "site", site.Id, "old_host", oldHost, "error", delErr)
@@ -143,6 +141,35 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 
 		return serveEvent.Next()
 	})
+	return nil
+}
+
+func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost, newHost string) error {
+	publication, err := publicationRecord(pb, site.Id)
+	if err != nil {
+		return err
+	}
+	if publication.GetString("prefix") != "" || oldHost == "" {
+		return nil
+	}
+	system, err := pb.NewFilesystem()
+	if err != nil {
+		return err
+	}
+	defer system.Close()
+	oldPrefix := "sites/" + oldHost + "/"
+	files, err := system.List(oldPrefix)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir {
+			continue
+		}
+		if err := system.Copy(file.Key, "sites/"+newHost+"/"+strings.TrimPrefix(file.Key, oldPrefix)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

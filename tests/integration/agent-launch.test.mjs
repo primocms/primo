@@ -119,10 +119,10 @@ test(
 		await fs.mkdir(bin)
 		await fs.writeFile(
 			path.join(bin, 'railway'),
-			`#!${process.execPath}\nconst args=process.argv.slice(2);if(args[0]==='status')console.log(JSON.stringify({services:{edges:[{node:{id:'service-id',name:'workspace'}}]}}));else if(args[0]==='volume'&&args[1]==='list')console.log(JSON.stringify({volumes:[{mountPath:'/app/pb_data',serviceName:'workspace',status:'Ready'}]}));else if(args[0]==='domain')console.log(JSON.stringify({url:process.env.INSTANCE_URL}));else console.log('ok');\n`,
+			`#!${process.execPath}\nconst args=process.argv.slice(2);if(args[0]==='status')console.log(JSON.stringify({id:'project-id',environments:{edges:[{node:{id:'env-id',name:'production'}}]},services:{edges:[{node:{id:'service-id',name:'workspace'}}]}}));else if(args[0]==='volume'&&args[1]==='list')console.log(JSON.stringify({volumes:[{mountPath:'/app/pb_data',serviceName:'workspace',status:'Ready'}]}));else if(args[0]==='up')console.log('{\"deploymentId\":\"test-deployment\"}');else if(args[0]==='deployment')console.log('[{\"id\":\"test-deployment\",\"status\":\"SUCCESS\"}]');else if(args[0]==='domain')console.log(JSON.stringify({url:process.env.INSTANCE_URL}));else console.log('ok');\n`,
 			{ mode: 0o755 }
 		)
-		const deployed = JSON.parse((await cli(['deploy', '--provider', 'railway', '--json'], { PATH: bin + path.delimiter + process.env.PATH, INSTANCE_URL: server }, 1)).stdout)
+		const deployed = JSON.parse((await cli(['deploy', '--provider', 'railway', '--no-domains', '--json'], { PATH: bin + path.delimiter + process.env.PATH, INSTANCE_URL: server }, 1)).stdout)
 		assert.equal(deployed.provisioning, 'succeeded')
 		assert.equal(deployed.upload, 'not_attempted')
 		assert.equal(deployed.error_code, 'hosted_auth_required')
@@ -174,7 +174,9 @@ test(
 		const confirmed = await fetch(`${server}/api/primo/sites/${status.results[0].site_id}/domain/mark-live`, { method: 'POST', headers: { Authorization: `Bearer ${tokens[server]}` } })
 		assert.equal(confirmed.status, 200)
 		const domainStatus = JSON.parse((await cli(['domain', 'status', '--only', 'landing', '--json'])).stdout)
-		assert.equal(domainStatus.status, 'live')
+		assert.equal(domainStatus.provider_status, 'live')
+		assert.equal(domainStatus.live, false)
+		assert.equal(domainStatus.status, 'verifying')
 		const image = path.join(root, 'authorization.png')
 		await page.screenshot({ path: image, fullPage: true })
 		if (process.env.PRIMO_TEST_SCREENSHOT) await fs.copyFile(image, process.env.PRIMO_TEST_SCREENSHOT)

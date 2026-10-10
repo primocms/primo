@@ -126,3 +126,17 @@ It covers local preview, the first-deployment authentication handoff, browser
 account creation and authorization, authenticated site/library uploads, domain
 attachment/status, publication, and separate CMS/public URLs. Cloud resource
 creation and external DNS/TLS should also be smoke-tested before release.
+
+The info endpoint advertises `capabilities: ["agent_launch_v1", ...]` and
+`domain_provider_ready` (configuration presence only, not a live API credential
+check). Agent deployments reject incompatible images before browser sign-in or
+uploads. Public site responses include `X-Primo-Site` so domain checks can
+verify that HTTPS serves the selected site's published output. Domain changes
+preserve tracked immutable publications and copy existing legacy public bytes;
+they never compile or publish the current draft.
+
+Release verification must use the newly packed CLI and MCP together with the
+candidate CMS binary/image. The integration test accepts the packed CLI path in
+`PRIMO_TEST_CLI_ENTRY`. Rehearse on isolated real Fly and Railway resources, with
+an owned test hostname and authorized DNS access; check content again after a
+restart. Provider and DNS mocks do not establish live launch readiness.

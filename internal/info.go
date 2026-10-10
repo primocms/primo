@@ -115,24 +115,28 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				// connect-domain flow: "railway" and "fly" attach and poll,
 				// while "manual" shows generic DNS guidance. base_domain (if
 				// set) gives new sites a live subdomain and is shown as a hint.
-				DomainProvider string `json:"domain_provider"`
-				BaseDomain     string `json:"base_domain,omitempty"`
+				DomainProvider      string   `json:"domain_provider"`
+				DomainProviderReady bool     `json:"domain_provider_ready"`
+				Capabilities        []string `json:"capabilities"`
+				BaseDomain          string   `json:"base_domain,omitempty"`
 			}{
-				Id:                id,
-				Version:           version,
-				TelemetryEnabled:  telemetryEnabled,
-				SMTPEnabled:       smtpEnabled,
-				HostedMode:        isHostedMode(),
-				ManagedBootstrap:  os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true",
-				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),
-				DevMode:           DevMode,
-				SiteCap:           siteCap,
-				SiteCount:         siteCount,
-				LibraryBlockCount: libraryBlockCount,
-				EditorCap:         editorCap,
-				OwnerOnly:         ownerOnly(pb),
-				DomainProvider:    getDomainProvider().Name(),
-				BaseDomain:        baseDomain(),
+				Id:                  id,
+				Version:             version,
+				TelemetryEnabled:    telemetryEnabled,
+				SMTPEnabled:         smtpEnabled,
+				HostedMode:          isHostedMode(),
+				ManagedBootstrap:    os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true",
+				BillingURL:          os.Getenv("PRIMO_BILLING_URL"),
+				DevMode:             DevMode,
+				SiteCap:             siteCap,
+				SiteCount:           siteCount,
+				LibraryBlockCount:   libraryBlockCount,
+				EditorCap:           editorCap,
+				OwnerOnly:           ownerOnly(pb),
+				DomainProvider:      getDomainProvider().Name(),
+				DomainProviderReady: domainProviderReady(getDomainProvider()),
+				Capabilities:        []string{"agent_launch_v1", "cli_browser_login", "domains"},
+				BaseDomain:          baseDomain(),
 			})
 		})
 
