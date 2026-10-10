@@ -1348,13 +1348,11 @@ func buildSectionContent(
 				return fieldEntries[i].GetInt("index") < fieldEntries[j].GetInt("index")
 			})
 			for _, entry := range fieldEntries {
-				// Get children of this entry (not field)
+				// Every container is an item, even before it has child values.
+				// Export an empty object so its position survives pull/reimport.
 				childEntries := entriesByParent[entry.Id]
-				if len(childEntries) > 0 {
-					// Recursively build child content
-					item := buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
-					items = append(items, item)
-				}
+				item := buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
+				items = append(items, item)
 			}
 			if len(items) > 0 {
 				addKV(fieldKey, items)
