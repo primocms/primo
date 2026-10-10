@@ -96,3 +96,33 @@ option that saves a backup. See [safe pushes and upgrade instructions](SAFE_PUSH
 ## License
 
 [MIT](./LICENSE)
+
+### Browser authorization for agents
+
+The accompanying CLI supports `primo login --browser --json` and
+`primo login --check --json`. The first command returns a link to
+`/admin/cli-login`; account setup and sign-in preserve that destination. The
+user explicitly authorizes the CLI with their account's existing permissions.
+The second command saves the resulting account token locally, without printing
+it or asking the user to enter a password in a terminal or chat.
+
+Authorization requests last ten minutes, are consumed once, and are held in
+memory on the instance. Restarting the instance cancels pending requests.
+Requests use separate random browser codes and private polling secrets. The
+browser approval endpoint requires an authenticated `users` account; a browser
+code alone cannot retrieve a token. The public request store is bounded to 100
+pending requests. Ship the CLI, CMS, and updated MCP instructions together.
+
+The launch acceptance test uses a disposable CMS, browser account, local
+workspace, and simulated provider provisioning/DNS routing:
+
+```bash
+PRIMO_TEST_CMS_BINARY=/absolute/path/to/primo \
+PRIMO_TEST_CLI_ENTRY=/absolute/path/to/primo-cli/dist/index.js \
+node --test tests/integration/agent-launch.test.mjs
+```
+
+It covers local preview, the first-deployment authentication handoff, browser
+account creation and authorization, authenticated site/library uploads, domain
+attachment/status, publication, and separate CMS/public URLs. Cloud resource
+creation and external DNS/TLS should also be smoke-tested before release.

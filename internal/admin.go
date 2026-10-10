@@ -3,6 +3,7 @@ package internal
 import (
 	"embed"
 	"io/fs"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -70,7 +71,8 @@ func RegisterAdminApp(pb *pocketbase.PocketBase) error {
 						// the auth dead-end. Never latch setupCompleted here: a
 						// visit to /admin/setup itself must not count as "done".
 						if !isSetup && !isFile {
-							return requestEvent.Redirect(302, "/admin/setup")
+							destination := requestEvent.Request.URL.Path + "?" + requestEvent.Request.URL.RawQuery
+							return requestEvent.Redirect(302, "/admin/setup?next="+url.QueryEscape(destination))
 						}
 					} else {
 						// A real superuser exists — setup is genuinely complete.

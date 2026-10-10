@@ -58,3 +58,11 @@ test('login rejects external destinations, auth loops, and paths outside admin',
 		assert.equal(auth_destination(url), '/admin/site', next)
 	}
 })
+
+test('browser CLI authorization survives sign-in and setup with its request code', () => {
+ const url = new URL('/admin/cli-login?code=' + 'a'.repeat(64), requested.origin)
+ assert.equal(auth_destination(new URL(auth_url(url), url.origin)),url.pathname + url.search)
+ const setup = new URL('/admin/setup',url.origin)
+ setup.searchParams.set('next',url.pathname + url.search)
+ assert.equal(auth_destination(setup),url.pathname + url.search)
+})

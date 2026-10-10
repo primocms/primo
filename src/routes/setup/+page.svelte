@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
+	import { auth_destination } from '$lib/auth_navigation'
 	import { Users } from '$lib/pocketbase/collections'
 	import { Loader } from 'lucide-svelte'
 	import { self } from '$lib/pocketbase/managers'
@@ -78,7 +80,7 @@
 			}
 
 			// Go straight to site
-			goto('/admin/site', { replaceState: true })
+			goto(auth_destination(page.url), { replaceState: true })
 		} catch (err: any) {
 			console.error('User creation error:', err)
 
