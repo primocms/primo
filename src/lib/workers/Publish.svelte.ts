@@ -10,6 +10,7 @@ import { usePageData } from '../PageData.svelte'
 import { Pages, PageSections, PageTypeSections, Sites } from '../pocketbase/collections'
 import { self } from '../pocketbase/managers'
 import { useSvelteWorker } from './Worker.svelte'
+import { script_version, symbol_script_url } from './publish-assets.js'
 
 export const usePublishSite = (site_id?: string) => {
 	const worker = useSvelteWorker(
@@ -45,7 +46,8 @@ export const usePublishSite = (site_id?: string) => {
 					attempt_id = (await start.json()).attempt_id
 				}
 				const promises: Promise<void>[] = []
-				// Homepage previews are rendered in parallel with everything else,
+				const symbol_versions = new Map<string, string>()
+				// Homepage previews are rendered alongside the other pages,
 				// but the sites.preview upload is deferred until after the published
 				// files have been regenerated (see below) — its filename is the
 				// thumbnail iframe's cache-buster, so uploading it early would make
@@ -92,9 +94,11 @@ export const usePublishSite = (site_id?: string) => {
 								throw new Error(`Compiling symbol "${symbol.name || symbol.id}" not successful: No JavaScript output`)
 							}
 
+							const version = await script_version(res.js)
 							await self.instance?.collection('site_symbols').update(symbol.id, {
 								compiled_js: new File([res.js], 'symbol.js', { type: 'text/javascript' })
 							})
+							symbol_versions.set(symbol.id, version)
 						})
 						.catch((error) => {
 							console.error(`Failed to compile symbol "${symbol.name || symbol.id}":`, error)
@@ -103,11 +107,15 @@ export const usePublishSite = (site_id?: string) => {
 					promises.push(promise)
 				}
 
+				// Page imports must use the versions of successfully uploaded bundles.
+				await Promise.all(promises)
+				promises.length = 0
+
 				for (const page of data.pages) {
 					if (!page.parent) {
 						// Generate the homepage preview now, but only upload it to
 						// sites.preview after the published files are refreshed.
-						const promise = generate_page(page, true).then(async ({ success, html, error }) => {
+						const promise = generate_page(page, symbol_versions, true).then(async ({ success, html, error }) => {
 							if (!success) {
 								console.error(`Site preview generation failed for page "${page.name || page.id}":`, error || 'Unknown error')
 								throw new Error(`Generating site preview not successful for page "${page.name || page.id}": ${error || 'Unknown error'}`)
@@ -126,7 +134,7 @@ export const usePublishSite = (site_id?: string) => {
 						promises.push(promise)
 					}
 
-					const promise = generate_page(page)
+					const promise = generate_page(page, symbol_versions)
 						.then(async ({ success, html, error, page_info }) => {
 							if (!success) {
 								console.error(`Page generation failed for "${page.name || page.id}":`, {
@@ -185,7 +193,7 @@ export const usePublishSite = (site_id?: string) => {
 		}
 	)
 
-	const generate_page = async (page: Page, no_js = false) => {
+	const generate_page = async (page: Page, symbol_versions: Map<string, string>, no_js = false) => {
 		const locale = 'en' as const
 		let error_details = ''
 		let page_info: Record<string, any> = {}
@@ -320,7 +328,7 @@ export const usePublishSite = (site_id?: string) => {
 				return symbols
 					.map(
 						(symbol) =>
-							`import('/_symbols/${symbol.id}.js').then(({ default: App, hydrate }) => {` +
+							`import('${symbol_script_url(symbol.id, symbol_versions)}').then(({ default: App, hydrate }) => {` +
 							sections
 								.filter((section) => section.symbol === symbol.id)
 								.map((section) => {
