@@ -15,6 +15,9 @@
 	import { useEntries } from '$lib/Content.svelte'
 	import { mod_key_held } from '../stores/app/misc'
 	import { site_context } from '../stores/context'
+	import { is_entity_of } from '$lib/Entity'
+	import { LibraryUploads, SiteUploads } from '$lib/pocketbase/collections'
+	import { self } from '$lib/pocketbase/managers'
 
 	const dispatch = createEventDispatcher()
 
@@ -50,11 +53,11 @@
 		ondelete: (entry_id: string) => void
 	} = $props()
 
-	function get_image(subfields) {
+	function get_image_entry(subfields: Field[]) {
 		const [first_subfield] = subfields
 		if (first_subfield && first_subfield.type === 'image') {
 			const [ent] = useEntries(entity, first_subfield, entry) ?? []
-			return ent?.value?.url
+			return ent
 		} else return null
 	}
 
@@ -128,7 +131,26 @@
 	// 	})
 	// })
 	let singular_label = $derived(pluralize.singular(field.label))
-	let item_image = $derived(get_image(subfields))
+	const image_entry = $derived(get_image_entry(subfields))
+	const is_library_image = $derived(is_entity_of(entity, 'library_symbols'))
+	const image_upload = $derived(image_entry?.value?.upload ? (is_library_image ? LibraryUploads : SiteUploads).one(image_entry.value.upload) : null)
+	const image_file = $derived(image_upload?.file)
+	let local_image_url = $state<string>()
+	$effect(() => {
+		if (!image_file || typeof image_file === 'string') return
+		const url = URL.createObjectURL(image_file)
+		local_image_url = url
+		return () => {
+			URL.revokeObjectURL(url)
+			local_image_url = undefined
+		}
+	})
+	const item_image = $derived(
+		image_entry?.value?.url ||
+			(image_upload && typeof image_file === 'string'
+				? `${self.instance?.baseURL}/api/files/${is_library_image ? 'library_uploads' : 'site_uploads'}/${image_upload.id}/${image_file}`
+				: local_image_url)
+	)
 	let item_icon = $derived(get_icon(subfields))
 	let item_title = $derived(get_title(subfields))
 </script>
