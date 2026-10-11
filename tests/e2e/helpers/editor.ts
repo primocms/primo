@@ -54,8 +54,9 @@ export async function loginAsDeveloper(page: Page, siteId: string) {
 /** Same dev-auth technique as loginAsDeveloper, but lands on the site
  * dashboard (/admin/dashboard/sites) instead of a specific site's editor —
  * for flows that start before any site exists in the test's context, like
- * creating a new site from scratch. */
-export async function loginAsDeveloperAtDashboard(page: Page) {
+ * creating a new site from scratch. Pass the fixture's group when the test
+ * targets an existing site; the default group depends on other seeded groups. */
+export async function loginAsDeveloperAtDashboard(page: Page, groupId?: string) {
 	await stubExternalImages(page)
 	const res = await page.request.post(`${TEST_SERVER_URL}/api/primo/dev-auth`)
 	if (!res.ok()) throw new Error(`dev-auth failed: ${res.status()} ${await res.text()}`)
@@ -67,7 +68,8 @@ export async function loginAsDeveloperAtDashboard(page: Page) {
 		},
 		['pocketbase_auth', token, record]
 	)
-	await page.goto(`${TEST_SERVER_URL}/admin/dashboard/sites`)
+	const groupQuery = groupId ? `?group=${encodeURIComponent(groupId)}` : ''
+	await page.goto(`${TEST_SERVER_URL}/admin/dashboard/sites${groupQuery}`)
 	await expect(page).toHaveURL(/\/admin\/dashboard\/sites/, { timeout: 15000 })
 }
 

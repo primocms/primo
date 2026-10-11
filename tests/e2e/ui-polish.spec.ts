@@ -148,7 +148,7 @@ test.describe('Editor dialogs', () => {
 		const { token } = await devAuth(request)
 		const headers = { Authorization: `Bearer ${token}` }
 		const record = await (await request.get(`/api/collections/sites/records/${ids.siteId}`, { headers })).json()
-		await loginAsDeveloperAtDashboard(page)
+		await loginAsDeveloperAtDashboard(page, record.group)
 		await page.getByRole('button', { name: `Options for ${record.name}`, exact: true }).click()
 		await page.getByRole('menuitem', { name: 'Rename', exact: true }).click()
 		const dialog = page.getByRole('dialog', { name: 'Rename site', exact: true })
