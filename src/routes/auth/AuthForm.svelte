@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { track_login_succeeded } from '$lib/analytics'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { auth_destination } from '$lib/auth_navigation'
@@ -72,7 +73,10 @@
 			case 'sign_in':
 				loading = true
 				await Users.authWithPassword(email, password)
-					.then(() => goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true }))
+					.then(() => {
+						track_login_succeeded()
+						return goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true })
+					})
 					.catch(({ message }) => {
 						error = message
 					})
@@ -113,6 +117,7 @@
 						if (invitedEmail) {
 							// Auto-login invited users
 							await Users.authWithPassword(invitedEmail, password)
+							track_login_succeeded()
 
 							// Update user with name and avatar if provided
 							const userId = self.instance?.authStore.record?.id

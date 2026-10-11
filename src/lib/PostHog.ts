@@ -7,6 +7,18 @@ import { instance } from './instance'
 const POSTHOG_KEY = 'phc_BjtMaGQMikAbssG6oaMrrksEB9m5J825kJZnwR8Qx87B'
 const POSTHOG_HOST = 'https://us.i.posthog.com'
 
+// The SDK adds current, initial, and session-entry URLs to event/person
+// properties. Auth URLs can contain invitation/reset tokens or email addresses.
+// Remove these from every property bag before any capture leaves the browser.
+const strip_url_properties = (properties?: Record<string, unknown>) => {
+	if (!properties) return
+	for (const key of Object.keys(properties)) {
+		if (/^\$(?:(?:initial|session_entry|session_exit)_)?(?:current_url|url|pathname|host|referrer|referring_domain)$/.test(key)) {
+			delete properties[key]
+		}
+	}
+}
+
 export const initialized = (async () => {
 	if (!instance.telemetry_enabled || instance.dev_mode) {
 		return
@@ -27,7 +39,15 @@ export const initialized = (async () => {
 		capture_pageleave: false,
 
 		// Reduce data collection
-		property_blacklist: ['$initial_referrer', '$initial_referring_domain'],
+		before_send: (event) => {
+			if (!event) return event
+			strip_url_properties(event.properties)
+			strip_url_properties(event.$set)
+			strip_url_properties(event.$set_once)
+			strip_url_properties(event.properties.$set)
+			strip_url_properties(event.properties.$set_once)
+			return event
+		},
 
 		// Set instance ID as distinct ID
 		bootstrap: {
