@@ -19,7 +19,7 @@ test.beforeAll(async ({ request }) => {
 
 async function captureAnalytics(page: Page, enabled: boolean, dev: boolean) {
 	const events: any[] = []
-	const captured = { events, analyticsRequests: 0 }
+	const captured = { events, analyticsRequests: 0, payloads: [] as unknown[], requestUrls: [] as string[] }
 	await page.addInitScript(() => {
 		Object.defineProperty(navigator, 'webdriver', { get: () => false })
 		Object.defineProperty(navigator, 'userAgentData', { get: () => ({ brands: [{ brand: 'Chromium', version: '130' }], mobile: false, platform: 'macOS' }) })
@@ -33,12 +33,16 @@ async function captureAnalytics(page: Page, enabled: boolean, dev: boolean) {
 	await page.route(/https:\/\/[^/]*posthog\.com\//, async (route) => {
 		captured.analyticsRequests++
 		const req = route.request()
+		captured.requestUrls.push(req.url())
 		const raw = req.postDataBuffer()
-		if (raw && /\/e\/|\/capture|\/batch/.test(req.url())) {
+		if (raw) {
 			let data = raw[0] === 31 && raw[1] === 139 ? gunzipSync(raw).toString() : raw.toString()
 			if (data.startsWith('data=')) data = Buffer.from(new URLSearchParams(data).get('data') || '', 'base64').toString()
 			const parsed = JSON.parse(data)
-			events.push(...(Array.isArray(parsed) ? parsed : parsed.batch || [parsed]))
+			captured.payloads.push(parsed)
+			if (/\/e\/|\/capture|\/batch/.test(req.url())) {
+				events.push(...(Array.isArray(parsed) ? parsed : parsed.batch || [parsed]))
+			}
 		}
 		await route.fulfill({
 			status: 200,
@@ -124,9 +128,10 @@ for (const [label, enabled, dev] of [
 			}
 			expect(JSON.stringify(events)).not.toContain(editor.email)
 			expect(JSON.stringify(events)).not.toContain(editor.password)
-			expect(JSON.stringify(events)).not.toContain('private-login-query')
-			expect(JSON.stringify(events)).not.toContain('private-login-fragment')
-			expect(JSON.stringify(events)).not.toContain('/admin/')
+			expect(JSON.stringify(captured.payloads)).not.toContain('private-login-query')
+			expect(JSON.stringify(captured.payloads)).not.toContain('private-login-fragment')
+			expect(JSON.stringify(captured.payloads)).not.toContain('/admin/')
+			expect(captured.requestUrls.some((url) => /\/flags\/|\/decide\//.test(url))).toBe(false)
 			expect(events.some((event) => event.event === 'content_saved')).toBe(false)
 		}
 

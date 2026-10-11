@@ -27,6 +27,10 @@ export const initialized = (async () => {
 	posthog.init(POSTHOG_KEY, {
 		api_host: POSTHOG_HOST,
 
+		// We use explicit analytics only. Flag requests include initial URL
+		// properties outside before_send, so disable those unused requests too.
+		advanced_disable_flags: true,
+
 		// Capture explicit product events only.
 		autocapture: false,
 		disable_session_recording: true,
