@@ -72,7 +72,7 @@
 			case 'sign_in':
 				loading = true
 				await Users.authWithPassword(email, password)
-					.then(() => goto(auth_destination(page.url), { replaceState: true }))
+					.then(() => goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true }))
 					.catch(({ message }) => {
 						error = message
 					})
@@ -122,7 +122,7 @@
 								if (avatarFile) data.avatar = avatarFile
 								await self.instance?.collection('users').update(userId, data)
 							}
-							await goto('/admin/site')
+							await goto(auth_destination(page.url, self.instance?.authStore.record))
 						} else {
 							await goto('/admin/auth')
 						}
