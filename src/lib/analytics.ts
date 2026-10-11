@@ -1,9 +1,9 @@
 /**
  * Primo product analytics
  *
- * Tracks a small set of completed operations (not clicks, not keystrokes) so
- * we can answer: who activates (creates -> publishes), how long that takes,
- * who returns on a later day, and what errors block activation.
+ * Tracks authenticated CMS opens, successful logins, and completed operations
+ * (not clicks or keystrokes) so we can measure active editors, activation
+ * (creates -> publishes), return activity, and errors that block activation.
  *
  * Privacy:
  * - Only opaque ids (instance.id, current_user.id) and enumerated properties
@@ -23,6 +23,8 @@ import { instance } from './instance'
 import { self as pb_instance } from './pocketbase/instances'
 
 export const ANALYTICS_EVENTS = {
+	CMS_OPENED: 'cms_opened',
+	LOGIN_SUCCEEDED: 'login_succeeded',
 	SITE_CREATED: 'site_created',
 	CONTENT_SAVED: 'content_saved',
 	SITE_PUBLISHED: 'site_published',
@@ -119,6 +121,28 @@ const is_new_day = (event: AnalyticsEvent, key: string) => {
 		// must never break the caller — fall back to "always return activity".
 		return true
 	}
+}
+
+// Session validation also runs during internal navigation. Count each editor
+// once per loaded app document, including opens with an existing login. A fresh
+// page load gets a fresh set; login events remain separate from session refresh.
+const opened_editors = new Set<string>()
+
+/** An authenticated editor opened the CMS, even if they never change content. */
+export const track_cms_opened = () => {
+	if (!should_track()) return
+	const editor_id = current_editor_id()
+	if (!editor_id || !pb_instance.authStore.isValid || opened_editors.has(editor_id)) return
+	opened_editors.add(editor_id)
+	track(ANALYTICS_EVENTS.CMS_OPENED, {
+		is_return_activity: is_new_day(ANALYTICS_EVENTS.CMS_OPENED, editor_id)
+	})
+}
+
+/** Password authentication succeeded, including invited-account auto-login. */
+export const track_login_succeeded = () => {
+	if (!should_track() || !pb_instance.authStore.isValid || !current_editor_id()) return
+	track(ANALYTICS_EVENTS.LOGIN_SUCCEEDED)
 }
 
 /** A new site record was successfully created (server-confirmed). */

@@ -1,3 +1,4 @@
+import { track_cms_opened } from '$lib/analytics'
 import { self } from './managers'
 import type { Site } from '$lib/common/models/Site'
 import { SiteRoleAssignments, Users } from './collections'
@@ -31,6 +32,7 @@ export const check_session = async () => {
 			.collection('users')
 			.authRefresh()
 			.then(() => {
+				track_cms_opened()
 				// Clear cached data since auth was refreshed - forces refetch with valid token
 				self.lists.clear()
 				self.records.clear()
