@@ -24,6 +24,8 @@
 	let email = $state('')
 	let role = $state<SiteRoleAssignment['role']>('developer')
 
+	const normalized_email = $derived(email.trim().toLowerCase())
+
 	async function invite_collaborator() {
 		try {
 			const stillLoading = !users || !server_members || !site_collborators
@@ -35,7 +37,7 @@
 			sending = true
 			error = ''
 
-			const hasSiteAccess = [...server_members, ...site_collborators.map(({ user }) => user)].some((user) => user?.email === email)
+			const hasSiteAccess = [...server_members, ...site_collborators.map(({ user }) => user)].some((user) => user?.email.toLowerCase() === normalized_email)
 			if (hasSiteAccess) {
 				error = 'Collaborator already exists'
 				throw new Error('Collaborator already exists')
@@ -43,9 +45,9 @@
 
 			const password = nanoid(30)
 			const user =
-				users.find((user) => user.email === email) ??
+				users.find((user) => user.email.toLowerCase() === normalized_email) ??
 				Users.create({
-					email,
+					email: normalized_email,
 					password,
 					passwordConfirm: password,
 					invite: 'pending'
@@ -82,13 +84,13 @@
 			link = ''
 			link_shown = false
 
-			const hasSiteAccess = [...server_members, ...site_collborators.map(({ user }) => user)].some((user) => user?.email === email)
+			const hasSiteAccess = [...server_members, ...site_collborators.map(({ user }) => user)].some((user) => user?.email.toLowerCase() === normalized_email)
 			if (hasSiteAccess) {
 				error = 'Collaborator already exists'
 				throw new Error('Collaborator already exists')
 			}
 
-			const user = users.find((user) => user.email === email)
+			const user = users.find((user) => user.email.toLowerCase() === normalized_email)
 			if (user) {
 				SiteRoleAssignments.create({
 					site: site.id,
@@ -100,12 +102,12 @@
 				track_collaborator_added({ site_id: site.id, method: 'link' })
 				email = ''
 				role = 'developer'
-				link = location.protocol + '//' + site.host + '/admin'
+				link = new URL('/admin/dashboard/sites', self.instance?.baseURL || location.origin).href
 				link_shown = true
 			} else {
 				const password = nanoid(30)
 				const user = Users.create({
-					email,
+					email: normalized_email,
 					password,
 					passwordConfirm: password
 				})
@@ -177,6 +179,7 @@
 				} => !!collaborator.user
 			)
 	)
+	const available_users = $derived(users?.filter((user) => !user.serverRole && !site_collborators?.some(({ assignment }) => assignment.user === user.id)) ?? [])
 	let is_remove_collaborator_open = $state(false)
 
 	// Per-site editor cap: 0/undefined means unlimited. Only "editor"-role
@@ -272,7 +275,12 @@
 			<label class="subheading" for="email">Enter collaborator email</label>
 			<div>
 				<div class="input-group">
-					<input bind:value={email} type="email" placeholder="Email address" name="email" required />
+					<input bind:value={email} type="email" placeholder="Email address" name="email" list="site-invite-accounts" required />
+					<datalist id="site-invite-accounts">
+						{#each available_users as user (user.id)}
+							<option value={user.email}>{user.name || user.email}</option>
+						{/each}
+					</datalist>
 					<select bind:value={role} required>
 						<option value="developer">Developer</option>
 						<option value="editor">Content Editor</option>

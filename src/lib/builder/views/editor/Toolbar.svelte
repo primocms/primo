@@ -293,8 +293,8 @@
 <nav aria-label="toolbar" id="primo-toolbar">
 	<div class="menu-container">
 		<div class="left">
-			{#if $current_user?.serverRole}
-				<PrimoButton group={site?.group} />
+			{#if $current_user}
+				<PrimoButton group={$current_user.serverRole ? site?.group : undefined} />
 			{/if}
 			<div class="button-group">
 				<div class="navigation-group">

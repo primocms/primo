@@ -12,7 +12,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
+	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
@@ -30,9 +30,14 @@
 	import { fade } from 'svelte/transition'
 	import { prefersReducedMotion } from 'svelte/motion'
 
-	const sidebar = useSidebar()
+	import { current_user } from '$lib/pocketbase/user'
+	import Collaboration from '$lib/builder/views/modal/Collaboration.svelte'
 
-	const site_group_id = $derived(page.url.searchParams.get('group'))
+	const sidebar = useSidebar()
+	const has_server_role = $derived(!!$current_user?.serverRole)
+	let is_collaboration_open = $state(false)
+
+	const site_group_id = $derived(has_server_role ? page.url.searchParams.get('group') : null)
 
 	// Remember the most-recently selected group so revisiting the dashboard
 	// without a ?group= param (e.g. the editor's "Sites" button when the site's
@@ -75,10 +80,10 @@
 		}
 	})
 
-	const site_groups = $derived(SiteGroups.list() ?? [])
+	const site_groups = $derived(has_server_role ? (SiteGroups.list() ?? []) : [])
 	const active_site_group = $derived(site_group_id ? SiteGroups.one(site_group_id) : undefined)
 	const all_sites = $derived(Sites.list() ?? [])
-	const sites = $derived(site_group_id ? all_sites.filter((site) => site.group === site_group_id) : [])
+	const sites = $derived(has_server_role ? (site_group_id ? all_sites.filter((site) => site.group === site_group_id) : []) : all_sites)
 
 	// Plan site cap: 0/undefined means unlimited. Enforced server-side in
 	// internal/limits.go; this just disables the affordance + shows usage.
@@ -240,46 +245,63 @@
 
 <header class="flex h-14 shrink-0 items-center gap-2">
 	<div class="flex flex-1 items-center gap-2 px-3">
-		<Sidebar.Trigger />
-		<Separator orientation="vertical" class="mr-2 h-4" />
+		{#if has_server_role}
+			<Sidebar.Trigger />
+			<Separator orientation="vertical" class="mr-2 h-4" />
+		{/if}
 		<h1 class="text-xs font-medium truncate">{active_site_group?.name ?? 'Sites'}</h1>
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<button {...props} class="group-options" aria-label="Group options">
-						<ChevronDown class="h-4" />
-						<span class="sr-only">More</span>
-					</button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content class="w-56 rounded-lg" side="bottom" align={sidebar.isMobile ? 'end' : 'start'}>
-				<DropdownMenu.Item onclick={() => (is_rename_group_open = true)}>
-					<SquarePen class="text-muted-foreground" />
-					<span>Rename</span>
-				</DropdownMenu.Item>
-				{#if site_groups?.length}
-					<DropdownMenu.Item onclick={() => (is_delete_group_open = true)}>
-						<Trash2 class="text-muted-foreground" />
-						<span>Delete</span>
+		{#if has_server_role}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<button {...props} class="group-options" aria-label="Group options">
+							<ChevronDown class="h-4" />
+							<span class="sr-only">More</span>
+						</button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content class="w-56 rounded-lg" side="bottom" align={sidebar.isMobile ? 'end' : 'start'}>
+					<DropdownMenu.Item onclick={() => (is_rename_group_open = true)}>
+						<SquarePen class="text-muted-foreground" />
+						<span>Rename</span>
 					</DropdownMenu.Item>
-				{/if}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+					{#if site_groups?.length}
+						<DropdownMenu.Item onclick={() => (is_delete_group_open = true)}>
+							<Trash2 class="text-muted-foreground" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
+					{/if}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
 	</div>
 	<div class="ml-auto mr-4 flex items-center gap-3">
-		{#if instance.site_cap}
-			<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
+		{#if has_server_role}
+			{#if instance.site_cap}
+				<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
+			{/if}
+			<Button
+				size="sm"
+				class="create-site-button"
+				disabled={at_site_cap}
+				title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
+				onclick={() => (is_creating_site = true)}
+			>
+				<CirclePlus class="h-4 w-4" />
+				Create Site
+			</Button>
+		{:else}
+			<Button
+				size="sm"
+				variant="ghost"
+				onclick={async () => {
+					self.instance?.authStore.clear()
+					await goto('/admin/auth')
+				}}
+			>
+				<LogOut class="h-4 w-4" />Log out
+			</Button>
 		{/if}
-		<Button
-			size="sm"
-			class="create-site-button"
-			disabled={at_site_cap}
-			title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
-			onclick={() => (is_creating_site = true)}
-		>
-			<CirclePlus class="h-4 w-4" />
-			Create Site
-		</Button>
 	</div>
 </header>
 <div class="sites-content">
@@ -291,6 +313,8 @@
 						{@render SiteButton(site)}
 					{/each}
 				</div>
+			{:else if !has_server_role}
+				<EmptyState class="min-h-[50vh]" icon={Globe} title="No sites yet" description="Sites shared with you will appear here." />
 			{:else}
 				<EmptyState
 					class="min-h-[50vh]"
@@ -328,64 +352,84 @@
 					<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
 				{/if}
 			</div>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>
-					<EllipsisVertical size={14} />
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_rename_site_open = true
-						}}
-					>
-						<SquarePen class="h-4 w-4" />
-						<span>Rename</span>
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_assign_domain_open = true
-						}}
-					>
-						<Globe class="h-4 w-4" />
-						<span>{is_host_assigned(site) ? 'Change domain' : 'Assign domain'}</span>
-					</DropdownMenu.Item>
-					{#if site_groups.length > 1}
+			{#if has_server_role}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>
+						<EllipsisVertical size={14} />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
 						<DropdownMenu.Item
 							onclick={() => {
 								current_site = site
-								is_move_site_open = true
+								is_collaboration_open = true
 							}}
 						>
-							<ArrowLeftRight class="h-4 w-4" />
-							<span>Move</span>
+							<UsersIcon class="h-4 w-4" />
+							<span>Collaborators</span>
 						</DropdownMenu.Item>
-					{/if}
-					<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={!!download_site_id}>
-						{#if downloading && download_site_id === site.id}
-							<Loader class="h-4 w-4 animate-spin" />
-							<span>Downloading...</span>
-						{:else}
-							<Download class="h-4 w-4" />
-							<span>Download</span>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_rename_site_open = true
+							}}
+						>
+							<SquarePen class="h-4 w-4" />
+							<span>Rename</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_assign_domain_open = true
+							}}
+						>
+							<Globe class="h-4 w-4" />
+							<span>{is_host_assigned(site) ? 'Change domain' : 'Assign domain'}</span>
+						</DropdownMenu.Item>
+						{#if site_groups.length > 1}
+							<DropdownMenu.Item
+								onclick={() => {
+									current_site = site
+									is_move_site_open = true
+								}}
+							>
+								<ArrowLeftRight class="h-4 w-4" />
+								<span>Move</span>
+							</DropdownMenu.Item>
 						{/if}
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_delete_site_open = true
-						}}
-						class="text-red-500 hover:text-red-600 focus:text-red-600"
-					>
-						<Trash2 class="h-4 w-4" />
-						<span>Delete</span>
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+						<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={!!download_site_id}>
+							{#if downloading && download_site_id === site.id}
+								<Loader class="h-4 w-4 animate-spin" />
+								<span>Downloading...</span>
+							{:else}
+								<Download class="h-4 w-4" />
+								<span>Download</span>
+							{/if}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_delete_site_open = true
+							}}
+							class="text-red-500 hover:text-red-600 focus:text-red-600"
+						>
+							<Trash2 class="h-4 w-4" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
 		</div>
 	</div>
 {/snippet}
+
+<Dialog.Root bind:open={is_collaboration_open}>
+	<Dialog.Content class="max-w-[600px] flex flex-col p-4">
+		{#if current_site}
+			{@const collaboration_site = Sites.one(current_site.id)}
+			{#if collaboration_site}<Collaboration site={collaboration_site} />{/if}
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
 
 <Dialog.Root bind:open={is_rename_group_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
