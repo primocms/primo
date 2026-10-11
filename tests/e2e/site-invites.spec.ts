@@ -50,7 +50,6 @@ test('an existing collaborator invited to another site gets a simple grid of ass
 	expect(assignmentsRes.ok()).toBeTruthy()
 	expect((await assignmentsRes.json()).items).toHaveLength(1)
 	expect(createdUsers).toHaveLength(0)
-	await page.screenshot({ path: test.info().outputPath('site-invites-admin.png') })
 
 	const context = await browser.newContext()
 	try {
@@ -67,7 +66,6 @@ test('an existing collaborator invited to another site gets a simple grid of ass
 		await expect(collaboratorPage.getByRole('button', { name: /Create Site|Group options|Options for|Toggle Sidebar/ })).toHaveCount(0)
 		await expect(collaboratorPage.getByRole('button', { name: 'Log out' })).toBeVisible()
 		await expect(collaboratorPage.locator('.sites-list')).toHaveCSS('opacity', '1')
-		await collaboratorPage.screenshot({ path: test.info().outputPath('site-invites-collaborator.png') })
 
 		// Group links from older editor sessions must still show every shared site.
 		await collaboratorPage.goto(`/admin/dashboard/sites?group=${group.id}`)
