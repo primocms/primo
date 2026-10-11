@@ -20,6 +20,7 @@ test('a dashboard without a session returns to its selected group after dev logi
 	await mountCallback('auth/+layout.svelte', {
 		page: { url: new URL(navigations[0].url, requested.origin) },
 		auth_destination,
+		self: {},
 		check_session: async () => false,
 		isLocalhost: () => true,
 		tryDevAuth: async () => true,
@@ -33,6 +34,7 @@ test('existing login sessions also honor the requested dashboard', async () => {
 	await mountCallback('auth/+layout.svelte', {
 		page: { url: new URL(auth_url(requested), requested.origin) },
 		auth_destination,
+		self: {},
 		check_session: async () => true,
 		goto: async (url) => {
 			destination = url
@@ -74,4 +76,19 @@ test('login rejects external destinations, auth loops, and paths outside admin',
 		url.searchParams.set('next', next)
 		assert.equal(auth_destination(url), '/admin/site', next)
 	}
+})
+
+test('site-only accounts default to the sites grid while server users retain the editor', () => {
+	const url = new URL('/admin/auth', requested.origin)
+	assert.equal(auth_destination(url, { serverRole: '' }), '/admin/dashboard/sites')
+	assert.equal(auth_destination(url, {}), '/admin/dashboard/sites')
+	assert.equal(auth_destination(url, { serverRole: 'developer' }), '/admin/site')
+	assert.equal(auth_destination(url, { serverRole: 'editor' }), '/admin/site')
+})
+
+test('site-only accounts keep explicit site destinations and reject unsafe continuations', () => {
+	const url = new URL('/admin/auth?next=/admin/sites/site-id/about', requested.origin)
+	assert.equal(auth_destination(url, { serverRole: '' }), '/admin/sites/site-id/about')
+	url.searchParams.set('next', 'https://example.com/admin/site')
+	assert.equal(auth_destination(url, { serverRole: '' }), '/admin/dashboard/sites')
 })
