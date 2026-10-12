@@ -121,8 +121,15 @@
 			}
 			// Expanding child lists and FLIP animations can move the row without
 			// changing its own size. Check its final position once they settle.
-			const animations = ancestors.flatMap((element) => element.getAnimations())
-			await Promise.allSettled(animations.map((animation) => animation.finished))
+			// Svelte replaces its setup animation with the actual slide/FLIP
+			// animation in onfinish. Re-read after a frame so finishing the setup
+			// animation does not leave the row clipped when the real one ends.
+			while (current_generation === generation) {
+				const animations = ancestors.flatMap((element) => element.getAnimations())
+				if (animations.length === 0) break
+				await Promise.allSettled(animations.map((animation) => animation.finished))
+				await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+			}
 			if (current_generation === generation) reveal()
 		}
 
