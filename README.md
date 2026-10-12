@@ -1,11 +1,10 @@
 <br />
 
-<h1 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./static/primo-wordmark-inverse.svg" />
-    <img src="./static/primo-wordmark.svg" alt="Primo" width="260" height="58" />
-  </picture>
-</h1>
+<p align="center">
+  <img src="./static/primo-symbol-badge.svg" alt="Primo symbol" width="64" height="64" />
+</p>
+
+<h1 align="center">Primo</h1>
 
 <p align="center">
   <strong>The open-source CMS for developers and their clients.</strong><br />
@@ -24,32 +23,7 @@
   <a href="./LICENSE">MIT licensed</a> · Self-hosted · In active development since 2019
 </p>
 
-https://github.com/user-attachments/assets/2ecb6ab0-9d97-43b9-94f9-acc17540bf6a
-
-## Overview
-
-Primo gives developers control over their sites and clients a visual editor for managing content. Build pages from reusable Svelte blocks, define what can be edited, and manage multiple client sites from one dashboard.
-
-Your site stays in sync as both a database and a folder of structured files. Work in your code editor or with an AI agent; clients keep editing in the browser.
-
-## Features
-
-- **Visual content editing** — edit text, images, and links directly on the page, with structured fields for more complex content.
-- **Reusable blocks and page types** — define layouts, conditional fields, and repeaters that clients can work within.
-- **Multiple sites, one dashboard** — organize client sites into groups and connect a domain to each one.
-- **Static publishing** — generate fast HTML and assets, served by Primo or deployed to another static host.
-- **A workflow for code and AI** — pull a site into local files, edit it with your preferred tools, and push changes back to the CMS. Currently in beta.
-
-## The workflow
-
-```bash
-primo pull yourserver.com   # pull your site into local files
-claude                      # work with Claude Code, Cursor, or any agent
-primo push                  # save changes to the hosted draft
-primo publish               # publish the draft to the live site
-```
-
-Clients manage content in the browser throughout. Revision checks protect their edits when you push changes; an explicit overwrite saves a backup. See [safe pushes and upgrade instructions](./SAFE_PUSH.md).
+https://github.com/user-attachments/assets/6675cf96-6fdc-41fc-98f9-311060417e00
 
 ## Get started
 
@@ -98,6 +72,31 @@ Open your server's URL to create your first site. See the [quickstart](https://d
 For Railway updates, use `ghcr.io/primocms/primo:latest` to track releases. Older deployments using `:main` can switch to `:latest`; `:main` tracks rolling branch builds.
 
 </details>
+
+## Overview
+
+Primo gives developers control over their sites and clients a visual editor for managing content. Build pages from reusable Svelte blocks, define what can be edited, and manage multiple client sites from one dashboard.
+
+Your site stays in sync as both a database and a folder of structured files. Work in your code editor or with an AI agent; clients keep editing in the browser.
+
+## Features
+
+- **Visual content editing** — edit text, images, and links directly on the page, with structured fields for more complex content.
+- **Reusable blocks and page types** — define layouts, conditional fields, and repeaters that clients can work within.
+- **Multiple sites, one dashboard** — organize client sites into groups and connect a domain to each one.
+- **Static publishing** — generate fast HTML and assets, served by Primo or deployed to another static host.
+- **A workflow for code and AI** — pull your sites and shared library into local files, edit them with your preferred tools, and push changes back to the CMS. Currently in beta.
+
+## The workflow
+
+```bash
+primo pull yourserver.com   # pull sites and the shared library
+claude                      # work with Claude Code, Cursor, or any agent
+primo push                  # save changes to the hosted draft
+primo publish               # publish the draft to the live site
+```
+
+Clients manage content in the browser throughout. Revision checks protect their edits when you push changes; an explicit overwrite saves a backup. See [safe pushes and upgrade instructions](./SAFE_PUSH.md).
 
 ## Built with
 
