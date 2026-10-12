@@ -1,97 +1,119 @@
-# Primo [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev) ![](https://img.shields.io/badge/PocketBase-555555?logo=pocketbase&logoColor=white)
+<br />
 
-Primo is a CMS for developers who build sites for clients who need to manage them afterward. Your entire site stays in sync as both a database and a folder of files, so Claude Code, Cursor, and any AI agent can edit it directly. Your clients manage content visually in the browser.
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./static/primo-wordmark-inverse.svg" />
+    <img src="./static/primo-wordmark.svg" alt="Primo" width="260" height="58" />
+  </picture>
+</h1>
 
-*In active development since 2019. Self-hosted by freelancers, agencies, and small teams.*
+<p align="center">
+  <strong>The open-source CMS for developers and their clients.</strong><br />
+  Build with Claude Code, Codex, Cursor, or whatever comes next.<br />
+  Let clients edit content visually.
+</p>
 
-**One-click deploy:**
+<p align="center">
+  <a href="#get-started">Get started</a> ·
+  <a href="https://docs.primo.build">Documentation</a> ·
+  <a href="https://primo.build">Website</a> ·
+  <a href="https://primo.build/#marketplace">Marketplace</a>
+</p>
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
+<p align="center">
+  <a href="./LICENSE">MIT licensed</a> · Self-hosted · In active development since 2019
+</p>
 
-https://github.com/user-attachments/assets/2204a720-d1c8-425e-a55f-2a4737b1fef2
+https://github.com/user-attachments/assets/2ecb6ab0-9d97-43b9-94f9-acc17540bf6a
 
-## The shape of it
+## Overview
 
-One Go binary. PocketBase (SQLite) for storage. Svelte 5 for the editor UI and for the blocks you write. The same server hosts the CMS and serves your published sites — no external services, no separate frontend to wire up.
+Primo gives developers control over their sites and clients a visual editor for managing content. Build pages from reusable Svelte blocks, define what can be edited, and manage multiple client sites from one dashboard.
 
-Every site lives in two synchronized representations: a relational database (powering the visual editor and multi-site serving) and a folder of structured files (powering code editors, version control, and AI agents). Edit either side, both stay in sync.
+Your site stays in sync as both a database and a folder of structured files. Work in your code editor or with an AI agent; clients keep editing in the browser.
+
+## Features
+
+- **Visual content editing** — edit text, images, and links directly on the page, with structured fields for more complex content.
+- **Reusable blocks and page types** — define layouts, conditional fields, and repeaters that clients can work within.
+- **Multiple sites, one dashboard** — organize client sites into groups and connect a domain to each one.
+- **Static publishing** — generate fast HTML and assets, served by Primo or deployed to another static host.
+- **A workflow for code and AI** — pull a site into local files, edit it with your preferred tools, and push changes back to the CMS. Currently in beta.
 
 ## The workflow
 
 ```bash
-primo pull yourserver.com       # pull your site down as local files
-claude                          # edit with Claude Code, Cursor, or any agent
-primo push                      # push changes back — CMS updates live
+primo pull yourserver.com   # pull your site into local files
+claude                      # work with Claude Code, Cursor, or any agent
+primo push                  # save changes to the hosted draft
+primo publish               # publish the draft to the live site
 ```
 
-Your clients keep editing content in the browser the whole time. Code and content stay in sync.
+Clients manage content in the browser throughout. Revision checks protect their edits when you push changes; an explicit overwrite saves a backup. See [safe pushes and upgrade instructions](./SAFE_PUSH.md).
 
-## What's in the box
+## Get started
 
-- **Visual editor** — non-technical editors work within the guardrails you define. No more "I broke the site" texts.
-- **Block library** — reusable Svelte components, shared across all your sites.
-- **Static output** — clean, fast, SEO-friendly HTML. Deploy to any static host, or let Primo serve it.
-- **Multi-site** — one server, many sites, one dashboard. Connect a domain per site.
-- **Local-file workflow** *(beta)* — pull/edit/push with the CLI, AI-agent compatible.
+Paste this into your coding agent:
 
-## Quickstart
+```text
+Create a new Primo site for [my business or project]. Read the quickstart
+at https://docs.primo.build/getting-started/quickstart before starting.
+Install the Primo CLI, set up a local workspace, help me choose a
+marketplace starter, and open the site in the Primo editor.
+```
 
-The easiest way to get started is Railway:
+Your agent can handle local setup and help you build the site. When you're ready to share it, ask it to guide you through deploying an editable CMS with `primo deploy`.
+
+<details>
+<summary>Prefer the terminal?</summary>
+
+Install a supported Node.js LTS release, then run:
+
+```bash
+npm install -g primo-cli
+primo init my-workspace
+cd my-workspace
+primo new my-site
+```
+
+`primo init` offers to connect your agent to the Primo MCP tools. `primo new` creates a site and starts the local CMS in an interactive terminal. From a script, start the editor with `primo dev`.
+
+</details>
+
+<details>
+<summary>Start with a deployed server</summary>
+
+Deploy Primo on Railway:
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/palacms?referralCode=RCPU7k)
 
-Or run it anywhere Docker runs:
+Or run it with Docker:
 
 ```bash
 docker run -d -p 8080:8080 -v primo-data:/app/pb_data ghcr.io/primocms/primo:latest
 ```
 
-Then open your server's URL to create your first site.
+Open your server's URL to create your first site. See the [quickstart](https://docs.primo.build/getting-started/quickstart) for both local and hosted workflows.
 
-> **Auto-updates on Railway:** point your service's image at `ghcr.io/primocms/primo:latest` so "auto-update to the latest tag" tracks releases. If you deployed before this note and your source image is `:main`, switch it to `:latest` — `:main` is a rolling branch build, not a release, so it won't advance on version releases.
+For Railway updates, use `ghcr.io/primocms/primo:latest` to track releases. Older deployments using `:main` can switch to `:latest`; `:main` tracks rolling branch builds.
 
-**Next steps:**
-1. **[Quickstart](https://docs.primo.build/getting-started/quickstart)** — key concepts
-2. **[Build your first site](https://docs.primo.build/building-sites/your-first-site)**
-3. **[Write your first block](https://docs.primo.build/building-sites/writing-components)**
+</details>
 
-## Who it's for
+## Built with
 
-Freelancers, small agencies, and small teams who code their clients' sites and need the clients to manage content afterward — without breaking anything.
-
-## How Primo compares
-
-- **vs. WordPress** — same mental model (CMS + blocks + multi-site) but built on modern tooling: Svelte instead of PHP, static output instead of server rendering, one binary instead of themes + plugins + hosting.
-- **vs. Webflow / Framer** — your clients get a similar visual editor, but you write real code instead of using a proprietary builder. Self-hostable, no vendor lock-in.
-- **vs. Astro / Eleventy** — Primo is a static site generator too, but bundles the CMS, block library, and multi-site hosting with it. You get the SSG workflow *and* the client handoff.
-- **vs. Sanity / Storyblok** — structured content and component blocks, but monolithic: no separate frontend to wire up, no API tokens, no deployment glue.
-
-[Full comparison →](https://docs.primo.build/comparison)
+One Go binary, PocketBase with SQLite for storage, and Svelte 5 for the editor and your blocks. The same server runs the CMS and serves your published sites.
 
 ## Project status
 
-- **Stable:** visual CMS, block library, static output, multi-site, self-hosted deployment.
-- **Beta:** CLI + local-file workflow (`primo pull` / `primo push`), AI-agent compatibility.
+The visual CMS, block library, static output, multi-site management, and self-hosted deployment are stable. The CLI and local-file workflow are in beta.
 
-CLI pushes protect client edits with revision checks and an explicit overwrite
-option that saves a backup. See [safe pushes and upgrade instructions](SAFE_PUSH.md).
+## Learn more
 
-## Documentation
-
-- **[Installation](https://docs.primo.build/getting-started/installation)** — self-host or run locally
-- **[Quickstart](https://docs.primo.build/getting-started/quickstart)** — key concepts
-- **[Writing Blocks](https://docs.primo.build/building-sites/writing-components)** — Svelte components
-- **[Field Types](https://docs.primo.build/reference/field-types)** — content field reference
-- **[Managing Sites](https://docs.primo.build/dashboard/managing-sites)** — site groups
-- **[Page Types](https://docs.primo.build/building-sites/defining-page-types)** — custom page structures
-- **[Collaboration](https://docs.primo.build/collaboration/inviting-collaborators)** — working with editors
-- **[Keyboard Shortcuts](https://docs.primo.build/reference/keyboard-shortcuts)**
-
-## Community
-
-- **[GitHub Issues](https://github.com/primocms/primo/issues)** — bugs and feature requests
-- **[GitHub Discussions](https://github.com/primocms/primo/discussions)** — questions
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — if you want to hack on Primo itself
+- [Documentation](https://docs.primo.build) — installation, fields, page types, collaboration, and publishing.
+- [How Primo compares](https://docs.primo.build/comparison) — WordPress, Webflow, Astro, and headless CMSs.
+- [GitHub Discussions](https://github.com/primocms/primo/discussions) — questions and ideas.
+- [GitHub Issues](https://github.com/primocms/primo/issues) — bug reports.
+- [Contributing](./CONTRIBUTING.md) — help build Primo.
 
 ## License
 
