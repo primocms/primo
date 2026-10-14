@@ -1,10 +1,10 @@
-<br />
-
 <p align="center">
-  <img src="./static/primo-symbol-badge.svg" alt="Primo symbol" width="64" height="64" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./static/primo-wordmark-inverse.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="./static/primo-wordmark.svg" />
+    <img src="./static/primo-wordmark.svg" alt="Primo" width="220" height="49" />
+  </picture>
 </p>
-
-<h1 align="center">Primo</h1>
 
 <p align="center">
   <strong>The open-source CMS for developers and their clients.</strong><br />
