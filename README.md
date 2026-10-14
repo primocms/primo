@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./static/primo-wordmark-inverse.svg" />
     <source media="(prefers-color-scheme: light)" srcset="./static/primo-wordmark.svg" />
-    <img src="./static/primo-wordmark.svg" alt="Primo" width="220" height="49" />
+    <img src="./static/primo-wordmark.svg" alt="Primo" width="176" height="39.2" />
   </picture>
 </p>
 
