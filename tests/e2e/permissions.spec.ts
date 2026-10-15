@@ -1,10 +1,16 @@
 import { test, expect, type Page } from '@playwright/test'
 import { TEST_SERVER_URL } from './helpers/paths'
-import { loginAsDeveloper, loginAs, canvasFrame, replaceContentEditableText } from './helpers/editor'
-import { devAuth, ensureEditorUser, apiLoginAs } from './helpers/server'
+import { loginAsDeveloper, canvasFrame, replaceContentEditableText, stubExternalImages } from './helpers/editor'
+import { devAuth, ensureEditorUser } from './helpers/server'
 import { seedFixtureSite, type SeededSite } from './helpers/seed'
 
 let ids: SeededSite
+let editorSession: { token: string; record: Record<string, unknown> }
+async function loginAsEditor(page: Page, siteId: string) {
+	await stubExternalImages(page)
+	await page.addInitScript(session => localStorage.setItem('pocketbase_auth', JSON.stringify(session)), editorSession)
+	await page.goto(`${TEST_SERVER_URL}/admin/sites/${siteId}`)
+}
 
 // Editors can manage content and pages. Design source and role changes are
 // enforced on the server, including direct API requests.
@@ -12,13 +18,20 @@ test.describe('Client permissions', () => {
 	test.beforeAll(async ({ request }) => {
 		const { token } = await devAuth(request)
 		ids = await seedFixtureSite(token, 'Permissions Fixture')
+		const editor = await ensureEditorUser(request, token, ids.siteId)
+		// Reuse one real login across this permission matrix rather than
+		// exhausting the server's login brute-force limit from one test IP.
+		const auth = await request.post(`${TEST_SERVER_URL}/api/collections/users/auth-with-password`, {
+			data: { identity: editor.email, password: editor.password }
+		})
+		expect(auth.ok()).toBeTruthy()
+		editorSession = await auth.json()
 	})
 
 	test('editor can make an allowed content edit', async ({ page, request }) => {
 		const { token: devToken } = await devAuth(request)
-		const editor = await ensureEditorUser(request, devToken, ids.siteId)
 
-		await loginAs(page, editor.email, editor.password, ids.siteId)
+		await loginAsEditor(page, ids.siteId)
 
 		const frame = canvasFrame(page)
 		const headline = frame.locator('[data-testid="headline"]')
@@ -47,9 +60,7 @@ test.describe('Client permissions', () => {
 		expect(headlineEntry.value).toBe(editorHeadline)
 	})
 
-	test('UI hides the developer-only page-type management control from an editor', async ({ page, browser, request }) => {
-		const { token: devToken } = await devAuth(request)
-		const editor = await ensureEditorUser(request, devToken, ids.siteId)
+	test('UI hides the developer-only page-type management control from an editor', async ({ page, browser }) => {
 
 		// Page Types moved out of the toolbar's developer-only "Page options"
 		// dropdown into the Pages modal (#1250). The Pages button itself isn't
@@ -87,7 +98,7 @@ test.describe('Client permissions', () => {
 		// content-persistence.spec.ts isolates its second session.
 		const editorContext = await browser.newContext()
 		const editorPage = await editorContext.newPage()
-		await loginAs(editorPage, editor.email, editor.password, ids.siteId)
+		await loginAsEditor(editorPage, ids.siteId)
 		const editorFrame = canvasFrame(editorPage)
 		await expect(editorFrame.locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
 		// The Pages button is ordinary navigation — available to the editor.
@@ -100,8 +111,7 @@ test.describe('Client permissions', () => {
 
 	test('server rejects direct page-type and block-code writes from an editor', async ({ request }) => {
 		const { token: devToken } = await devAuth(request)
-		const editor = await ensureEditorUser(request, devToken, ids.siteId)
-		const editorToken = await apiLoginAs(request, editor.email, editor.password)
+		const editorToken = editorSession.token
 		const headers = { Authorization: `Bearer ${editorToken}` }
 		const attemptedName = `Editor-created type ${Date.now()}`
 		const create = await request.post(`${TEST_SERVER_URL}/api/collections/page_types/records`, {
@@ -141,8 +151,8 @@ test.describe('Client permissions', () => {
 		const section = await sectionRes.json()
 		const entryRes = await request.post(endpoint('page_type_section_entries'), { headers, data: { section: section.id, field: seeded.fieldIds.headline, value: 'Static template heading', locale: 'en', index: 0 } })
 		expect(entryRes.ok()).toBeTruthy()
-		const editor = await ensureEditorUser(request, token, seeded.siteId)
-		await loginAs(page, editor.email, editor.password, seeded.siteId)
+		await ensureEditorUser(request, token, seeded.siteId)
+		await loginAsEditor(page, seeded.siteId)
 		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
 		await page.getByRole('button', { name: 'Pages', exact: true }).click()
 		const dialog = page.getByRole('dialog')
