@@ -38,11 +38,6 @@ func TestPageTypeNestedFieldsRoundTrip(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, warning := range result.Warnings {
-			if warning.Kind == "unsupported_subfields" {
-				t.Fatalf("nested fields rejected: %+v", warning)
-			}
-		}
 		fields, err := app.FindRecordsByFilter("page_type_fields", "page_type.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
 		if err != nil {
 			t.Fatal(err)
@@ -62,6 +57,11 @@ func TestPageTypeNestedFieldsRoundTrip(t *testing.T) {
 		}
 		if len(got) != 7 {
 			t.Fatalf("pass %d: wrong field count: %+v", pass, got)
+		}
+		for _, warning := range result.Warnings {
+			if warning.Kind == "unsupported_subfields" {
+				t.Fatalf("nested fields rejected: %+v", warning)
+			}
 		}
 		if pass > 0 && !reflect.DeepEqual(ids, got) {
 			t.Fatalf("field IDs changed: %+v -> %+v", ids, got)
