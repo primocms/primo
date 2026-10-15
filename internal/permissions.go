@@ -145,15 +145,37 @@ func RegisterContentPermissions(pb *pocketbase.PocketBase) error {
 						return deny()
 					}
 					count, err := e.App.CountRecords("page_type_symbols", dbx.HashExp{"page_type": page.GetString("page_type")})
-					if err != nil || count == 0 {
+					if err != nil {
 						return deny()
 					}
 					if operation == "create" {
-						count, err = e.App.CountRecords("page_type_symbols", dbx.HashExp{"page_type": page.GetString("page_type"), "symbol": e.Record.GetString("symbol")})
-						if err != nil || count == 0 {
+						available, err := e.App.CountRecords("page_type_symbols", dbx.HashExp{"page_type": page.GetString("page_type"), "symbol": e.Record.GetString("symbol")})
+						if err != nil {
 							return deny()
 						}
+						if available == 0 {
+							// Page creation copies developer-defined body slots, including
+							// static types and blocks excluded from the add-block picker.
+							// Check occupancy and save together to prevent duplicate slots.
+							return e.App.RunInTransaction(func(app core.App) error {
+								matches, err := app.CountRecords("page_type_sections", dbx.HashExp{"page_type": page.GetString("page_type"), "zone": "body", "symbol": e.Record.GetString("symbol"), "index": e.Record.GetInt("index")})
+								if err != nil || matches == 0 {
+									return deny()
+								}
+								occupied, err := app.CountRecords("page_sections", dbx.HashExp{"page": page.Id, "index": e.Record.GetInt("index")})
+								if err != nil || occupied != 0 {
+									return deny()
+								}
+								previous := e.App
+								e.App = app
+								defer func() { e.App = previous }()
+								return e.Next()
+							})
+						}
+					} else if count == 0 {
+						return deny()
 					}
+
 				case "site_entries", "page_entries", "page_section_entries", "page_type_section_entries":
 					if operation == "update" && !onlyPermissionFields(e.Record, "value", "locale", "index", "parent") {
 						return deny()

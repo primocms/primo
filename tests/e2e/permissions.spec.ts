@@ -123,4 +123,46 @@ test.describe('Client permissions', () => {
 		expect(block.ok()).toBeTruthy()
 		expect((await block.json()).html).not.toContain('Forbidden source change')
 	})
+	test('editor can create a static page with its prescribed template content', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const seeded = await seedFixtureSite(token, 'Static editor creation')
+		const headers = { Authorization: `Bearer ${token}` }
+		const endpoint = (collection: string, id = '') => `${TEST_SERVER_URL}/api/collections/${collection}/records${id ? '/' + id : ''}`
+		const homeRes = await request.get(endpoint('pages', seeded.pageId), { headers })
+		expect(homeRes.ok()).toBeTruthy()
+		const home = await homeRes.json()
+		const availableRes = await request.get(endpoint('page_type_symbols'), { headers, params: { filter: `page_type = "${home.page_type}"` } })
+		expect(availableRes.ok()).toBeTruthy()
+		for (const record of (await availableRes.json()).items) {
+			expect((await request.delete(endpoint('page_type_symbols', record.id), { headers })).ok()).toBeTruthy()
+		}
+		const sectionRes = await request.post(endpoint('page_type_sections'), { headers, data: { page_type: home.page_type, symbol: seeded.symbolId, zone: 'body', index: 0 } })
+		expect(sectionRes.ok()).toBeTruthy()
+		const section = await sectionRes.json()
+		const entryRes = await request.post(endpoint('page_type_section_entries'), { headers, data: { section: section.id, field: seeded.fieldIds.headline, value: 'Static template heading', locale: 'en', index: 0 } })
+		expect(entryRes.ok()).toBeTruthy()
+		const editor = await ensureEditorUser(request, token, seeded.siteId)
+		await loginAs(page, editor.email, editor.password, seeded.siteId)
+		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		const dialog = page.getByRole('dialog')
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await dialog.getByLabel('Page name', { exact: true }).fill('Static Client Page')
+		await dialog.locator('form').getByRole('button', { name: 'Create page', exact: true }).click()
+		await expect(dialog.getByRole('link', { name: 'Static Client Page', exact: true })).toBeVisible()
+		await expect(dialog.getByRole('alert')).toHaveCount(0)
+		const pagesRes = await request.get(endpoint('pages'), { headers, params: { filter: `site = "${seeded.siteId}" && slug = "static-client-page"` } })
+		expect(pagesRes.ok()).toBeTruthy()
+		const pages = (await pagesRes.json()).items
+		expect(pages).toHaveLength(1)
+		const sectionsRes = await request.get(endpoint('page_sections'), { headers, params: { filter: `page = "${pages[0].id}"` } })
+		expect(sectionsRes.ok()).toBeTruthy()
+		const sections = (await sectionsRes.json()).items
+		expect(sections).toHaveLength(1)
+		expect(sections[0].symbol).toBe(seeded.symbolId)
+		const valuesRes = await request.get(endpoint('page_section_entries'), { headers, params: { filter: `section = "${sections[0].id}" && field = "${seeded.fieldIds.headline}"` } })
+		expect(valuesRes.ok()).toBeTruthy()
+		expect((await valuesRes.json()).items[0].value).toBe('Static template heading')
+	})
+
 })

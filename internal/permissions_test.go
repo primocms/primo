@@ -183,6 +183,27 @@ func TestContentEditorPermissions(t *testing.T) {
 		denied(t, request("PATCH", route("page_sections", section.Id), editor, map[string]any{"index": 3}))
 		denied(t, request("DELETE", route("page_sections", section.Id), editor, nil))
 	})
+	t.Run("editor creates static pages from exact template slots", func(t *testing.T) {
+		permissionRecord(t, app, "page_type_sections", map[string]any{"page_type": pageType.Id, "symbol": symbol.Id, "zone": "body", "index": 0})
+		result := request("POST", route("pages", ""), editor, map[string]any{"site": site.Id, "parent": page.Id, "page_type": pageType.Id, "name": "Static child", "slug": "static-child"})
+		if result.Code != 200 {
+			t.Fatalf("static page: %d %s", result.Code, result.Body)
+		}
+		var child map[string]any
+		json.Unmarshal(result.Body.Bytes(), &child)
+		body := map[string]any{"page": child["id"], "symbol": symbol.Id, "index": 0}
+		result = request("POST", route("page_sections", ""), editor, body)
+		if result.Code != 200 {
+			t.Fatalf("template section: %d %s", result.Code, result.Body)
+		}
+		var added map[string]any
+		json.Unmarshal(result.Body.Bytes(), &added)
+		denied(t, request("POST", route("page_sections", ""), editor, body))
+		body["index"] = 1
+		denied(t, request("POST", route("page_sections", ""), editor, body))
+		denied(t, request("DELETE", route("page_sections", added["id"].(string)), editor, nil))
+	})
+
 	t.Run("compiled output remains writable for trusted editor publishing", func(t *testing.T) {
 		for _, item := range []struct{ collection, id, field, filename, content string }{{"site_symbols", symbol.Id, "compiled_js", "block.js", "export default {}"}, {"pages", page.Id, "compiled_html", "page.html", "<h1>Client approved</h1>"}, {"sites", site.Id, "preview", "preview.html", "<h1>Preview</h1>"}} {
 			var buffer bytes.Buffer
