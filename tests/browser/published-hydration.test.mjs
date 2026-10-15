@@ -138,6 +138,7 @@ for (const reversed of [false, true]) {
 			)
 			assert.equal(await page.locator('head title').count(), 1)
 			for (const selector of ['link[rel=canonical]', 'meta[name=list-head]', 'meta[name=seo-only]']) assert.equal(await page.locator(`head ${selector}`).count(), 1)
+			assert.equal(await page.locator('h1').evaluate((el) => getComputedStyle(el).color), 'rgb(255, 0, 0)')
 			await page.locator('button').click()
 			assert.equal(await page.locator('button').textContent(), '1')
 			assert.deepEqual(errors, [])
