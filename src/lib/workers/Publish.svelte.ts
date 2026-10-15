@@ -73,6 +73,7 @@ export const usePublishSite = (site_id?: string) => {
 					const promise = processors
 						.html({
 							component: {
+								filename: `symbol-${symbol.id}.svelte`,
 								html: symbol.html,
 								js: symbol.js,
 								css,
@@ -234,6 +235,7 @@ export const usePublishSite = (site_id?: string) => {
 								const { css } = await processors.css(postcss || '')
 								return [
 									{
+										filename: `symbol-${symbol.id}.svelte`,
 										html,
 										js,
 										css,
@@ -272,6 +274,7 @@ export const usePublishSite = (site_id?: string) => {
 
 			const header_result = has_header
 				? await processors.html({
+						independent: true,
 						component: await build_components(header_sections),
 						head, // Include custom head code in first zone processing
 						locale,
@@ -281,6 +284,7 @@ export const usePublishSite = (site_id?: string) => {
 
 			const body_result = has_body
 				? await processors.html({
+						independent: true,
 						component: await build_components(body_sections),
 						head: has_header ? head_without_code : head, // Include head.code if no header zone
 						locale,
@@ -291,6 +295,7 @@ export const usePublishSite = (site_id?: string) => {
 			const footer_result =
 				footer_sections && footer_sections.length > 0
 					? await processors.html({
+							independent: true,
 							component: await build_components(footer_sections),
 							head: has_header || has_body ? head_without_code : head, // Include head.code if no header/body zones
 							locale,
