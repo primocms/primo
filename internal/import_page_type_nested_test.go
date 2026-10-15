@@ -94,3 +94,104 @@ func TestPageTypeNestedFieldsRoundTrip(t *testing.T) {
 		t.Fatal("removed branch survived")
 	}
 }
+
+func TestPageTypeNestedContentRoundTrip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	files := baseSiteFiles()
+	files["page-types/default/fields.yaml"] = "- name: title\n  type: text\n- name: cards\n  type: repeater\n  subfields:\n    - name: title\n      type: text\n    - name: details\n      type: group\n      subfields:\n        - name: title\n          type: text\n"
+	content := map[string]any{"title": "Root title", "cards": []any{map[string]any{"title": "Card one", "details": map[string]any{"title": "Deep one"}}, map[string]any{"title": "Card two", "details": map[string]any{"title": "Deep two"}}}}
+	files["pages/index.yaml"] = scopeYAML(t, map[string]any{"name": "Home", "page_type": "Default", "fields": content, "sections": []any{}})
+	for pass := 0; pass < 3; pass++ {
+		if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+			t.Fatal(err)
+		}
+		entries, err := app.FindRecordsByFilter("page_entries", "page.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Repeater items and nested groups must be entries, as in the editor,
+		// rather than one opaque JSON value that useContent cannot resolve.
+		if len(entries) != 9 {
+			t.Fatalf("pass %d: expected 9 structured entries, got %d", pass, len(entries))
+		}
+		if pass == 1 {
+			for _, entry := range entries {
+				if normalizeValue(entry.Get("value")) == "Deep one" {
+					entry.Set("value", "Client edit")
+					if err := app.Save(entry); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+			content["cards"].([]any)[0].(map[string]any)["details"].(map[string]any)["title"] = "Client edit"
+		}
+		archive, err := exportSiteToZip(app, site)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw := readZipFile(t, archive, "pages/index.yaml")
+		var page map[string]any
+		if err := yaml.Unmarshal([]byte(raw), &page); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(page["fields"], content) {
+			t.Fatalf("pass %d: nested content changed: %s", pass, raw)
+		}
+		files["pages/index.yaml"] = raw
+		files["page-types/default/fields.yaml"] = readZipFile(t, archive, "page-types/default/fields.yaml")
+	}
+	// Simulate the previous importer: one JSON value for the whole repeater.
+	entries, err := app.FindRecordsByFilter("page_entries", "page.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pageID := entries[0].GetString("page")
+	for _, entry := range entries {
+		if entry.GetString("parent") == "" {
+			if err := app.Delete(entry); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	fields, err := app.FindRecordsByFilter("page_type_fields", "page_type.site = {:site} && parent = ''", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil {
+		t.Fatal(err)
+	}
+	collection, err := app.FindCollectionByNameOrId("page_entries")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, field := range fields {
+		entry := core.NewRecord(collection)
+		entry.Set("page", pageID)
+		entry.Set("field", field.Id)
+		entry.Set("locale", "en")
+		entry.Set("value", content[field.GetString("key")])
+		if err := app.Save(entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	archive, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := readZipFile(t, archive, "pages/index.yaml")
+	var page map[string]any
+	if err := yaml.Unmarshal([]byte(raw), &page); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(page["fields"], content) {
+		t.Fatalf("legacy JSON content lost: %s", raw)
+	}
+	files["pages/index.yaml"] = raw
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	entries, err = app.FindRecordsByFilter("page_entries", "page.site = {:site}", "", 0, 0, map[string]any{"site": site.Id})
+	if err != nil || len(entries) != 9 {
+		t.Fatalf("legacy JSON did not become structured entries: %d, %v", len(entries), err)
+	}
+
+}

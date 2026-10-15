@@ -2293,20 +2293,15 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 		// Get page type fields - map field key/name -> field id
 		ptFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageTypeId})
-		fieldByKey := make(map[string]string)
-		for _, f := range ptFields {
-			key := f.GetString("key")
-			if key == "" {
-				key = f.GetString("name")
-			}
-			fieldByKey[key] = f.Id
-		}
+		fieldByKey, fieldsByParent := contentFieldScopes(ptFields)
 
 		// Get existing page entries
 		existingEntries, _ := app.FindRecordsByFilter("page_entries", "page = {:page}", "", 0, 0, dbx.Params{"page": page.Id})
 		entryByField := make(map[string]*core.Record)
 		for _, e := range existingEntries {
-			entryByField[e.GetString("field")] = e
+			if e.GetString("parent") == "" {
+				entryByField[e.GetString("field")] = e
+			}
 		}
 
 		entriesColl, err := app.FindCollectionByNameOrId("page_entries")
@@ -2315,8 +2310,8 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		}
 
 		for fieldKey, value := range pageContent {
-			fieldId := fieldByKey[fieldKey]
-			if fieldId == "" {
+			field := fieldByKey[fieldKey]
+			if field == nil {
 				if warnings != nil {
 					pageTypeName := pageData.PageType
 					if pageTypeName == "" {
@@ -2332,6 +2327,22 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 							sourceFile, fieldKey, pageTypeName, sanitizeFilename(pageTypeName),
 						),
 					})
+				}
+				continue
+			}
+
+			fieldId := field.Id
+			if field.GetString("type") == "repeater" || field.GetString("type") == "group" {
+				// Replace this field's item tree; unrelated scalar entries retain IDs.
+				for _, entry := range existingEntries {
+					if entry.GetString("field") == fieldId && entry.GetString("parent") == "" {
+						if err := app.Delete(entry); err != nil {
+							return "", nil, err
+						}
+					}
+				}
+				if err := importPageContentField(app, entriesColl, page.Id, field, value, "", 0, fieldsByParent); err != nil {
+					return "", nil, err
 				}
 				continue
 			}
@@ -2630,6 +2641,51 @@ func importPageTypeFields(app core.App, pageType *core.Record, ptFields []interf
 		}
 	}
 	return keyToId, nil
+}
+
+// importPageContentField stores the same parent/item structure used by the
+// editor and other content scopes. Containers cannot be opaque JSON values.
+func importPageContentField(app core.App, collection *core.Collection, pageID string, field *core.Record, value interface{}, parentID string, index int, children map[string][]*core.Record) error {
+	if field.GetString("type") == "repeater" {
+		items, _ := value.([]interface{})
+		for i, item := range items {
+			entry := core.NewRecord(collection)
+			entry.Set("page", pageID)
+			entry.Set("field", field.Id)
+			entry.Set("parent", parentID)
+			entry.Set("index", i)
+			entry.Set("locale", "en")
+			if err := saveContentEntry(app, entry); err != nil {
+				return err
+			}
+			values, _ := item.(map[string]interface{})
+			for _, child := range children[field.Id] {
+				if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	entry := core.NewRecord(collection)
+	entry.Set("page", pageID)
+	entry.Set("field", field.Id)
+	entry.Set("parent", parentID)
+	entry.Set("index", index)
+	entry.Set("locale", "en")
+	entry.Set("value", normalizeValueForStorage(value))
+	if err := saveContentEntry(app, entry); err != nil {
+		return err
+	}
+	if field.GetString("type") == "group" {
+		values, _ := value.(map[string]interface{})
+		for _, child := range children[field.Id] {
+			if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // resolvePageFieldRef parses a page-field config.field value and returns the
