@@ -52,7 +52,7 @@
 				{#if $current_user?.siteRole === 'developer' || (!immovable && !$read_only)}
 					<details class="more-actions">
 						<summary aria-label="More block actions" title="More block actions"><Icon icon="lucide:ellipsis" /></summary>
-						<div class="action-menu" onclick={(event) => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false }} onkeydown={(event) => { if (event.key === 'Escape') { const details = event.currentTarget.closest('details'); details.open = false; details.querySelector('summary').focus() } }} role="group" aria-label="Block actions">
+						<div class="action-menu" onclick={(event) => { if (event.target instanceof Element && event.target.closest('button, a')) { const details = event.currentTarget.closest('details'); if (details) details.open = false } }} onkeydown={(event) => { if (event.key === 'Escape') { const details = event.currentTarget.closest('details'); if (details) { details.open = false; details.querySelector('summary')?.focus() } } }} role="group" aria-label="Block actions">
 							{#if $current_user?.siteRole === 'developer'}
 								<button onclick={() => dispatch('edit-code')}><Icon icon="ph:code-bold" />{$read_only ? 'View code' : 'Edit code'}</button>
 								{#if layout_zone && page_type}<a href="{base_path}/page-type--{page_type.id}">Edit shared template</a>{/if}

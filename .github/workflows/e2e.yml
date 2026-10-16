@@ -32,6 +32,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - name: Check all TypeScript, JavaScript and Svelte sources
+        run: npm run check
       - run: npm run test:integration
 
       # Browser builds are pinned to the @playwright/test version, so key the
@@ -51,6 +53,9 @@ jobs:
       # browser download itself.
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+
+      - name: Test published section hydration
+        run: node --test tests/browser/published-hydration.test.mjs
 
       # Deliberately NOT cached. global-setup.ts fails the run if the primo
       # binary is older than the newest tracked source file, and

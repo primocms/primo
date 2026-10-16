@@ -3,7 +3,7 @@
 	 * @typedef {Object} Props
 	 * @property {string} [label]
 	 * @property {any} value
-	 * @property {() => void} oninput
+	 * @property {(value: boolean) => void} oninput
 	 */
 
 	/** @type {Props} */

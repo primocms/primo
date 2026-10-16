@@ -227,7 +227,7 @@
 		}
 	})
 
-	let consoleLog = $state()
+	let consoleLog = $state<string>('')
 
 	let iframe = <HTMLIFrameElement>$state()
 
@@ -235,7 +235,7 @@
 		var container = document.createElement('div')
 		container.innerHTML = code
 		Array.from(container.childNodes).forEach((node) => {
-			iframe.contentWindow.document.head.appendChild(node)
+			iframe.contentDocument?.head.appendChild(node)
 		})
 	}
 
@@ -283,11 +283,11 @@
 		}
 	)
 
-	let container = $state()
+	let container = $state<HTMLElement>()
 	let iframe_loaded = $state(false)
 
-	let scale = $state()
-	let height = $state()
+	let scale = $state('')
+	let height = $state('100%')
 	async function resizePreview() {
 		if (view && container && iframe) {
 			await tick()
@@ -435,7 +435,7 @@
 	$effect(() => {
 		if (iframe) {
 			// open clicked links in browser
-			iframe.contentWindow.document.querySelectorAll('a').forEach((link) => {
+			iframe.contentDocument?.querySelectorAll('a').forEach((link) => {
 				link.target = '_blank'
 			})
 			append_to_iframe(append)
@@ -477,7 +477,8 @@
 	)
 
 	$effect(() => {
-		;(previewWidth, resizePreview())
+		void previewWidth
+		resizePreview()
 	})
 	let active_dynamic_icon = $derived(getIcon(previewWidth))
 	let active_static_icon = $derived(getIcon(active_static_width))

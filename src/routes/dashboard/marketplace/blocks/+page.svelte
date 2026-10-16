@@ -66,7 +66,7 @@
 				sort: 'index'
 			})
 
-			if (marketplace_fields?.length > 0) {
+			if (marketplace_fields && marketplace_fields.length > 0) {
 				const field_map = new Map()
 
 				// Create fields in order, handling parent relationships
@@ -102,7 +102,7 @@
 							})
 						: []
 
-				if (marketplace_entries?.length > 0) {
+				if (marketplace_entries && marketplace_entries.length > 0) {
 					const entry_map = new Map()
 
 					// Create entries in order, handling parent relationships

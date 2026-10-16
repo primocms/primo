@@ -223,13 +223,13 @@
 
 	let is_new_field = $state(field.key === '')
 	let should_autofocus = $state(field.key === '')
-	let label_input = $state()
+	let label_input = $state<HTMLInputElement>()
 
 	// Focus the label input for new fields
 	$effect(() => {
 		if (should_autofocus && label_input) {
 			tick().then(() => {
-				label_input.focus()
+				label_input?.focus()
 			})
 		}
 	})
@@ -339,7 +339,6 @@
 									on_click: () => ondelete(field)
 								}
 							]}
-							placement="bottom-end"
 						/>
 					{/if}
 				</div>
@@ -415,7 +414,6 @@
 										on_click: () => ondelete(field)
 									}
 								]}
-								placement="bottom-end"
 							/>
 						{/if}
 					</div>
@@ -549,7 +547,6 @@
 										on_click: () => ondelete(field)
 									}
 								]}
-								placement="bottom-end"
 							/>
 						{/if}
 					</div>

@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const Page = z.object({
 	id: z.string().nonempty(),
 	name: z.string().nonempty(),
+	created: z.string().optional(),
 	slug: z.string(),
 	compiled_html: z.string().or(z.file()).optional(),
 	page_type: z.string().nonempty(),

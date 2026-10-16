@@ -42,7 +42,7 @@
 
 <div class="space-y-3 relative w-full bg-gray-900">
 	<div class="w-full rounded-tl rounded-tr overflow-hidden h-[10rem] aspect-[1.5]">
-		<SitePreview {preview} {head} />
+		<SitePreview />
 	</div>
 	<div class="absolute -bottom-2 rounded-bl rounded-br w-full p-3 z-20 bg-gray-900 truncate flex items-center justify-between">
 		<div class="text-sm font-medium leading-none">{symbol.name}</div>

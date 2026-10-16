@@ -1,46 +1,9 @@
 <script lang="ts" module>
-	/**
-	 * Map of field key to object keyed by index specifying value and optionally sub-values.
-	 */
-	export type FieldValueMap = Record<string, Record<number, { value: unknown; subValues?: FieldValueMap }>>
-
-	/**
-	 * Handler used when reporting change of field value.
-	 */
-	export type FieldValueHandler = (values: FieldValueMap) => void
-
-	export function setFieldEntries(options: {
-		fields?: Field[]
-		entries?: Entry[]
-		updateEntry: (id: string, data: Partial<Entry>) => Entry
-		createEntry: (data: Omit<Entry, 'id'>) => Entry
-		values: FieldValueMap
-		parent?: Entry
-	}) {
-		const { fields, entries, updateEntry, createEntry, values, parent } = options
-		for (const [key, items] of Object.entries(values)) {
-			for (const index in items) {
-				const field = fields?.find((field) => field.key === key && (parent ? field.parent === parent?.field : !field.parent))
-				if (!field) {
-					continue
-				}
-
-				let entry = entries?.find((entry) => entry.field === field?.id && (parent ? entry.parent === parent?.id : !entry.parent) && entry.index === +index)
-				if (entry) {
-					entry = updateEntry(entry.id, { value: items[index].value })
-				} else {
-					entry = createEntry({ field: field.id, parent: parent?.id, index: +index, locale: 'en', value: items[index].value })
-				}
-
-				if (items[index].subValues) {
-					setFieldEntries({ ...options, values: items[index].subValues, parent: entry })
-				}
-			}
-		}
-	}
+	export { setFieldEntries, type FieldValueMap, type FieldValueHandler } from './field-entries'
 </script>
 
 <script lang="ts">
+	import type { FieldValueHandler } from './field-entries'
 	import Icon from '@iconify/svelte'
 	import * as _ from 'lodash-es'
 	import { watch } from 'runed'
@@ -273,7 +236,7 @@
 							</span>
 						{/if}
 						<span class="tab-content">
-							<Icon icon={$fieldTypes.find((f) => f.id === field.type)?.icon} />
+							<Icon icon={$fieldTypes.find((f) => f.id === field.type)?.icon ?? 'ph:text-t'} />
 							{#if field.type === 'repeater'}
 								<span>Entries</span>
 							{:else}
