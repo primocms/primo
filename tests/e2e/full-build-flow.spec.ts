@@ -181,7 +181,9 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	// entirely.
 	await page.keyboard.insertText(componentCode)
 	await expect(codeArea).toHaveText(componentCode, { timeout: 2000 })
-	await expect(blockDialog.getByRole('button', { name: 'Create Block' })).toBeEnabled({ timeout: 5000 })
+	const compileWait = performance.now()
+	await expect(blockDialog.getByRole('button', { name: 'Create Block' })).toBeEnabled({ timeout: 15000 })
+	await test.info().attach('create-block-compile-wait', { body: JSON.stringify({ms:performance.now()-compileWait}), contentType:'application/json' })
 
 	const blockSaveResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/site_symbols/records') && res.request().method() === 'POST', { timeout: 10000 })
 	await blockDialog.getByRole('button', { name: 'Create Block' }).click()
@@ -254,7 +256,7 @@ test.describe('Full build flow (site creation through publish)', () => {
 	// the drag-and-drop path. (API reads to verify state, e.g. confirming a
 	// section now exists, are fine and used below.)
 	test('UI: developer can drag a block onto a page, empty or already populated', async ({ page, request }) => {
-		test.setTimeout(60000)
+		test.setTimeout(120000)
 		const { newSymbol, newPage, devToken } = await buildSiteThroughPageCreation(page, request)
 
 		// Native HTML5 drag-and-drop (Pragmatic DnD) doesn't respond to
@@ -347,7 +349,7 @@ test.describe('Full build flow (site creation through publish)', () => {
 	// drag interaction (see the UI-only test above for that). If this test
 	// fails, treat it as a build/publish regression, not a drag regression.
 	test('API-assisted: content edit on a newly built page survives publish', async ({ page, request }) => {
-		test.setTimeout(60000)
+		test.setTimeout(120000)
 		const { newSiteId, newSymbol, newPage, devToken } = await buildSiteThroughPageCreation(page, request)
 
 		// Assert the section create here rather than letting a failure

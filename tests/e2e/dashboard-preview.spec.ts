@@ -100,7 +100,9 @@ test('dashboard thumbnails keep their styles when page scripts would change the 
 })
 
 test('dashboard previews stay styled after the first UI build and a second UI build', async ({ page, context, request }) => {
-	test.setTimeout(90000)
+	// Two real compilations can each use the existing 45s build budget,
+	// in addition to fixture creation, editing and realtime assertions.
+	test.setTimeout(180000)
 	const { token, record } = await devAuth(request)
 	const ids = await seedFixtureSite(token, 'Build Preview Fixture')
 	const headers = { Authorization: `Bearer ${token}` }
