@@ -243,8 +243,8 @@
 	})
 </script>
 
-<header class="flex h-14 shrink-0 items-center gap-2">
-	<div class="flex flex-1 items-center gap-2 px-3">
+<header class="sites-header flex h-14 shrink-0 items-center gap-2">
+	<div class="flex min-w-0 flex-1 items-center gap-2 px-3">
 		{#if has_server_role}
 			<Sidebar.Trigger />
 			<Separator orientation="vertical" class="mr-2 h-4" />
@@ -275,7 +275,7 @@
 			</DropdownMenu.Root>
 		{/if}
 	</div>
-	<div class="ml-auto mr-4 flex items-center gap-3">
+	<div class="site-actions ml-auto mr-4 flex shrink-0 items-center gap-3">
 		{#if has_server_role}
 			{#if instance.site_cap}
 				<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
@@ -658,11 +658,19 @@
 		}
 	}
 	@media (max-width: 700px) {
+		.site-actions { gap: 6px; margin-right: 12px; }
+		:global(.create-site-button) { min-height: 44px; }
+		.group-options { width: 40px; height: 44px; flex-shrink: 0; }
 		.sites-content {
 			padding: 0 16px 16px;
 		}
 		.sites-grid {
 			gap: 16px;
 		}
+	}
+	@media (max-width: 480px) {
+		.sites-header { height: auto; flex-wrap: wrap; gap: 0; padding-bottom: 8px; }
+		.sites-header > div:first-child { flex-basis: 100%; min-height: 48px; }
+		.site-actions { width: 100%; justify-content: flex-end; padding-inline: 12px; margin: 0; }
 	}
 </style>

@@ -2,7 +2,7 @@
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
-	import { goto } from '$app/navigation'
+	import { goto, onNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { Input } from '$lib/components/ui/input'
@@ -19,6 +19,7 @@
 	import { CreditCard } from 'lucide-svelte'
 
 	const sidebar = useSidebar()
+	onNavigate(() => sidebar.setOpenMobile(false))
 
 	interface MenuItem {
 		title: string
@@ -124,7 +125,7 @@
 </Dialog.Root>
 
 <Sidebar.Root collapsible="icon" class="overflow-hidden *:data-[sidebar=sidebar]:flex-row">
-	<Sidebar.Root collapsible="none" class="w-[calc(var(--sidebar-width-icon)+1px)]! border-r">
+	<Sidebar.Root collapsible="none" class="app-rail w-[calc(var(--sidebar-width-icon)+1px)]! border-r">
 		<!-- <Sidebar.Header>
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>
@@ -144,6 +145,7 @@
 					<Sidebar.Menu>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
+								aria-label="Sites"
 								isActive={$page.url.pathname.startsWith('/admin/dashboard/sites')}
 								tooltipContentProps={{
 									hidden: false
@@ -163,6 +165,7 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
+								aria-label="Library"
 								isActive={$page.url.pathname.startsWith('/admin/dashboard/library')}
 								tooltipContentProps={{
 									hidden: false
@@ -182,6 +185,7 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
+								aria-label="Marketplace"
 								isActive={$page.url.pathname.startsWith('/admin/dashboard/marketplace')}
 								tooltipContentProps={{
 									hidden: false
@@ -362,3 +366,10 @@
 		{/if}
 	</Sidebar.Root>
 </Sidebar.Root>
+
+<style>
+	@media (max-width: 767px) {
+		:global(.app-rail [data-sidebar='menu-button'] > span) { display: none; }
+		:global(.app-rail [data-sidebar='menu-button']) { min-height: 44px; }
+	}
+</style>
