@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -2461,13 +2462,27 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 			// Import section content
 			if content, ok := sectionData["content"].(map[string]interface{}); ok {
 				// Get symbol fields
-				symbolFields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbolId})
+				symbolFields, err := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbolId})
+				if err != nil {
+					return "", nil, err
+				}
 
 				// Build lookup maps
 				fieldByKey, fieldsByParent := contentFieldScopes(symbolFields)
 
-				// Delete ALL existing entries for this section (clean slate)
-				existingEntries, _ := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, dbx.Params{"section": section.Id})
+				existingEntries, err := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, dbx.Params{"section": section.Id})
+				if err != nil {
+					return "", nil, err
+				}
+				unchanged, err := sectionContentUnchanged(existingEntries, symbolFields, content)
+				if err != nil {
+					return "", nil, err
+				}
+				if unchanged {
+					continue
+				}
+
+				// A changed tree still follows the existing replacement semantics.
 				for _, entry := range existingEntries {
 					app.Delete(entry)
 				}
@@ -2517,6 +2532,36 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	}
 
 	return page.Id, sectionIds, nil
+}
+
+// Compare authoritative exported content before replacing a section's entries.
+// Dashboard-created pages and normalized exports do not necessarily have the
+// same raw_source bytes, even when every value and nested item is unchanged.
+func sectionContentUnchanged(entries, fields []*core.Record, incoming map[string]interface{}) (bool, error) {
+	fieldByID := make(map[string]*core.Record, len(fields))
+	children := make(map[string][]*core.Record)
+	for _, field := range fields {
+		fieldByID[field.Id] = field
+		children[field.GetString("parent")] = append(children[field.GetString("parent")], field)
+	}
+	byParent := make(map[string][]*core.Record)
+	for _, entry := range entries {
+		if fieldByID[entry.GetString("field")] == nil {
+			return false, nil
+		}
+		byParent[entry.GetString("parent")] = append(byParent[entry.GetString("parent")], entry)
+	}
+	// Marshal/unmarshal uses the exact export representation, including nested
+	// ordered maps and JSON-number normalization, without reading binary assets.
+	raw, err := yaml.Marshal(buildSectionContent(byParent[""], fieldByID, children, byParent))
+	if err != nil {
+		return false, err
+	}
+	var current map[string]interface{}
+	if err := yaml.Unmarshal(raw, &current); err != nil {
+		return false, err
+	}
+	return reflect.DeepEqual(current, incoming), nil
 }
 
 func importSiteFields(app core.App, site *core.Record, data []byte) error {
