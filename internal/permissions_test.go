@@ -141,6 +141,23 @@ func TestContentEditorPermissions(t *testing.T) {
 		}
 		denied(t, request("PATCH", route("page_section_entries", entry.Id), permissionToken(t, outsider), map[string]any{"value": "Other site"}))
 	})
+	t.Run("entry parent cycles are rejected without losing content", func(t *testing.T) {
+		denied(t, request("PATCH", route("page_section_entries", entry.Id), editor, map[string]any{"parent": entry.Id}))
+		child := permissionRecord(t, app, "page_section_entries", map[string]any{"section": section.Id, "field": field.Id, "locale": "en", "index": 1, "parent": entry.Id, "value": "Nested content"})
+		denied(t, request("PATCH", route("page_section_entries", entry.Id), editor, map[string]any{"parent": child.Id}))
+		stored, err := app.FindRecordById("page_section_entries", entry.Id)
+		if err != nil || stored.GetString("parent") != "" {
+			t.Fatalf("entry hierarchy changed: %v", err)
+		}
+		var value string
+		if err := stored.UnmarshalJSONField("value", &value); err != nil || value != "Client approved" {
+			t.Fatalf("content changed: %q %v", value, err)
+		}
+		if err := app.Delete(child); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("pages and available body sections", func(t *testing.T) {
 		result := request("POST", route("pages", ""), editor, map[string]any{"site": site.Id, "parent": page.Id, "page_type": pageType.Id, "name": "Contact", "slug": "contact"})
 		if result.Code != 200 {
