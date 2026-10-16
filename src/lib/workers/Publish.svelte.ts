@@ -263,8 +263,8 @@ export const usePublishSite = (site_id?: string) => {
 				data: site_data
 			}
 
-			// Process each zone separately and collect CSS from each
-			// Pass head to all zones (needed for head.data), but only include head.code once
+			// Page metadata must also render when every section zone is empty.
+			const page_head = await processors.html({ component: [], head, locale, css: 'external' })
 			const head_without_code = { code: '', data: head.data }
 
 			console.log(`Compiling HTML for page "${page.name || page.id}"`)
@@ -276,7 +276,7 @@ export const usePublishSite = (site_id?: string) => {
 				? await processors.html({
 						independent: true,
 						component: await build_components(header_sections),
-						head, // Include custom head code in first zone processing
+						head: head_without_code,
 						locale,
 						css: 'external'
 					})
@@ -286,7 +286,7 @@ export const usePublishSite = (site_id?: string) => {
 				? await processors.html({
 						independent: true,
 						component: await build_components(body_sections),
-						head: has_header ? head_without_code : head, // Include head.code if no header zone
+						head: head_without_code,
 						locale,
 						css: 'external'
 					})
@@ -297,15 +297,15 @@ export const usePublishSite = (site_id?: string) => {
 					? await processors.html({
 							independent: true,
 							component: await build_components(footer_sections),
-							head: has_header || has_body ? head_without_code : head, // Include head.code if no header/body zones
+							head: head_without_code,
 							locale,
 							css: 'external'
 						})
 					: { body: '', head: '' }
 
 			// Check for errors in any zone
-			if (header_result.error || body_result.error || footer_result.error) {
-				const zone_error = header_result.error || body_result.error || footer_result.error
+			if (page_head.error || header_result.error || body_result.error || footer_result.error) {
+				const zone_error = page_head.error || header_result.error || body_result.error || footer_result.error
 				error_details = `HTML compilation error: ${zone_error}`
 				console.error(`HTML compilation error for page "${page.name || page.id}":`, zone_error)
 				return {
@@ -317,8 +317,8 @@ export const usePublishSite = (site_id?: string) => {
 				}
 			}
 
-			// Combine CSS from all zones (header includes custom head.code)
-			const combined_head = (header_result.head || '') + (body_result.head || '') + (footer_result.head || '')
+			// Include page metadata once, followed by each section's own head.
+			const combined_head = (page_head.head || '') + (header_result.head || '') + (body_result.head || '') + (footer_result.head || '')
 
 			const page_symbols_with_js = sections
 				.map((section) => ({ symbol_id: section.symbol }))
