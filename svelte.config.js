@@ -15,12 +15,6 @@ const config = {
 	},
 	vitePlugin: {
 		// inspector: true
-	},
-	onwarn: (warning, handler) => {
-		// console.log({ warning })
-		if (warning.code === 'css-unused-selector') return
-		// Handle all other warnings normally
-		handler(warning)
 	}
 }
 
