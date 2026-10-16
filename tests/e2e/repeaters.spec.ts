@@ -267,12 +267,12 @@ test.describe('Repeaters', () => {
 			create('page_section_entries', { section: site.sectionId, field, parent, index, value, locale: 'en' })
 		const containers: any[] = []
 		for (const [position, name] of ['Alpha', 'Bravo', 'Charlie'].entries()) {
-			const item = await makeEntry(site.fieldIds.items, undefined, [0, 2, 5][position], { original: name })
+			const item = await makeEntry(site.fieldIds.items, undefined, [0, 2, 5][position])
 			containers.push(item)
 			await makeEntry(site.fieldIds.name, item.id, 0, name)
 			await makeEntry(site.fieldIds.description, item.id, 0, `${name} description`)
 		}
-		const group = await makeEntry(details.id, containers[0].id, 0, { original: 'Group container value' })
+		const group = await makeEntry(details.id, containers[0].id)
 		const first = await makeEntry(links.id, group.id)
 		const second = await makeEntry(links.id, group.id, 1)
 		await makeEntry(label.id, first.id, 0, 'First nested link')
