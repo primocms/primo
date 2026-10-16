@@ -29,7 +29,8 @@ export type UserActivityInfo = {
 
 const user_activity_context = new Context<{ value: UserActivityValues }>('user_activity')
 
-export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
+export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => Partial<UserActivityValues>)) => {
+	const read_overrides = typeof overrides === 'function' ? overrides : () => overrides
 	// User activity is collaborator presence ("who else is editing this site").
 	// It's meaningless in local dev (single user, no collaborators) and would
 	// write churn records against the local DB, so don't track it there.
@@ -39,7 +40,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 	if (existing_context.value) {
 		// Set activity overrides through context
 		watch(
-			() => overrides,
+			read_overrides,
 			(overrides) => {
 				for (const [key, value] of Object.entries(overrides)) {
 					existing_context.value[key] = value
@@ -60,23 +61,17 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 			site: '',
 			page_type: '',
 			page: '',
-			site_symbol: ''
+			site_symbol: '',
+			page_type_section: '',
+			page_section: ''
 		}
 	})
 	user_activity_context.set(context)
 	watch(
-		() => overrides,
-		() => {
-			context.value = {
-				user: '',
-				site: '',
-				page_type: '',
-				page: '',
-				site_symbol: '',
-				page_type_section: '',
-				page_section: '',
-				...overrides
-			}
+		read_overrides,
+		(overrides) => {
+			// Parent navigation updates must not erase the activity owned by children.
+			Object.assign(context.value, overrides)
 		}
 	)
 

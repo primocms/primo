@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount, tick } from 'svelte'
+	import { onMount, tick, untrack } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import { dynamic_iframe_srcdoc } from './misc.js'
 	import { highlightedElement } from '../stores/app/misc'
@@ -420,7 +420,8 @@
 		}
 	}
 
-	let last_signature = `${code.html}--${code.js}`
+	// Comparison baselines intentionally capture the first render, then advance in the watchers.
+	let last_signature = untrack(() => `${code.html}--${code.js}`)
 	watch(
 		() => [code.html, code.js, $auto_refresh],
 		([html, js, refresh]) => {
@@ -450,10 +451,8 @@
 		}
 	)
 
-	let last_data = _.cloneDeep(data)
-	let last_data_keys = Object.keys(data || {})
-		.sort()
-		.join(',')
+	let last_data = untrack(() => _.cloneDeep(data))
+	let last_data_keys = untrack(() => Object.keys(data || {}).sort().join(','))
 	watch(
 		() => data,
 		(data) => {

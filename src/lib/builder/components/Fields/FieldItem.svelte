@@ -1,6 +1,6 @@
 <script lang="ts">
 	import FieldItem from './FieldItem.svelte'
-	import { tick } from 'svelte'
+	import { tick, untrack } from 'svelte'
 	import { cloneDeep } from 'lodash-es'
 	import autosize from 'autosize'
 	import { mod_key_held } from '../../stores/app/misc'
@@ -98,7 +98,7 @@
 	}
 
 	// Auto-fill key when setting label (only for new fields without a key yet)
-	let key_edited = $state(field.key !== '')
+	let key_edited = $state(untrack(() => field.key !== ''))
 
 	// autosize info textarea
 	let info_textarea
@@ -124,7 +124,7 @@
 	let has_subfields = $derived(field.type === 'group' || field.type === 'repeater')
 
 	let has_condition = $derived(!!field.config?.condition)
-	let show_condition_editor = $state(!!field.config?.condition)
+	let show_condition_editor = $state(untrack(() => !!field.config?.condition))
 	$effect(() => {
 		show_condition_editor = !!field.config?.condition
 	})
@@ -221,8 +221,8 @@
 
 	const child_fields = $derived(fields?.filter((f) => f.parent === field.id) || [])
 
-	let is_new_field = $state(field.key === '')
-	let should_autofocus = $state(field.key === '')
+	let is_new_field = $state(untrack(() => field.key === ''))
+	let should_autofocus = $state(untrack(() => field.key === ''))
 	let label_input = $state<HTMLInputElement>()
 
 	// Focus the label input for new fields

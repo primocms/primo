@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import Icon from '@iconify/svelte'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
@@ -26,7 +27,8 @@
 	hide_dynamic_field_types_context.set(true)
 
 	const initial_code = { head: site?.head, foot: site?.foot }
-	const initial_data = _.cloneDeep(site_data)
+	// Dirty comparison must retain the data from when this editing session opened.
+	const initial_data = untrack(() => _.cloneDeep(site_data))
 
 	let head = $state(site?.head || '')
 	let foot = $state(site?.foot || '')

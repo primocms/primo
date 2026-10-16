@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import RepeaterFieldItem from './RepeaterFieldItem.svelte'
 	import * as idb from 'idb-keyval'
 	import pluralize from 'pluralize'
@@ -77,10 +77,12 @@
 
 	let visibleRepeaters = $state<Record<string, boolean>>({})
 
-	idb.get(field.id).then((res) => {
-		if (res) {
-			visibleRepeaters = res
-		}
+	onMount(() => {
+		let active = true
+		idb.get(field.id).then((res) => {
+			if (active && res) visibleRepeaters = res
+		})
+		return () => { active = false }
 	})
 
 	onDestroy(() => {

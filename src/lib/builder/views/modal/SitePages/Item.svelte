@@ -71,11 +71,18 @@
 	// This is used to track hover position for subpages when this Item has children
 	let children_hover_position = $state<string | null>(null)
 
-	get(`page-list-toggle--${page.id}`).then((toggled) => {
-		if (toggled !== undefined) showing_children = toggled
+	let expansion_loaded = $state(false)
+	onMount(() => {
+		let active = true
+		get(`page-list-toggle--${page.id}`).then((toggled) => {
+			if (!active) return
+			if (toggled !== undefined) showing_children = toggled
+			expansion_loaded = true
+		})
+		return () => { active = false }
 	})
 	$effect(() => {
-		set(`page-list-toggle--${page.id}`, showing_children)
+		if (expansion_loaded) set(`page-list-toggle--${page.id}`, showing_children)
 	})
 
 	let creating_page = $state(false)
@@ -258,7 +265,7 @@
 
 	let is_dragging = $state(false)
 
-	let name_input_el
+	let name_input_el = $state<HTMLElement>()
 </script>
 
 <div class="Item" bind:this={element} class:contains-child={parent} class:dragging={is_dragging}>
@@ -348,7 +355,7 @@
 							on_click: () => {
 								editing_page = !editing_page
 								tick().then(() => {
-									name_input_el.focus()
+									name_input_el?.focus()
 								})
 							}
 						},
@@ -585,10 +592,6 @@
 				align-self: center;
 			}
 
-			hr {
-				border-width: 1px !important;
-				border-color: #1a1a1a !important;
-			}
 		}
 	}
 
@@ -663,17 +666,13 @@
 					text-overflow: ellipsis;
 				}
 
-				div.name,
-				div.url {
+				div.name {
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					width: 100%;
 					color: var(--primo-primary-color);
 
-					span {
-						color: var(--color-gray-5);
-					}
 
 					&:focus {
 						outline: none;

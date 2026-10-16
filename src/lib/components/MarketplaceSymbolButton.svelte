@@ -20,12 +20,6 @@
 	/** @type {Props} */
 	let { symbol, preview = null, head = '' } = $props()
 
-	if (!preview) {
-		get_preview()
-	}
-	async function get_preview() {
-		// TODO: Implement
-	}
 
 	let selected_group_id = $state(LibrarySymbolGroups.list()?.[0]?.id ?? '')
 

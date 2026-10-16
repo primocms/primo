@@ -3,6 +3,7 @@
 </script>
 
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import type { FieldValueHandler } from './field-entries'
 	import Icon from '@iconify/svelte'
 	import * as _ from 'lodash-es'
@@ -39,7 +40,7 @@
 	} = $props()
 
 	// TABS - Simple persistent approach
-	let selected_tabs = $state<Record<string, 'field' | 'entry'>>($field_tabs_by_entity?.[entity?.id] || {})
+	let selected_tabs = $state<Record<string, 'field' | 'entry'>>(untrack(() => $field_tabs_by_entity?.[entity?.id] || {}))
 
 	// Track field IDs to detect newly created fields
 	const current_field_ids = () => (fields || []).filter((f) => !f.parent || f.parent === '').map((f) => f.id)

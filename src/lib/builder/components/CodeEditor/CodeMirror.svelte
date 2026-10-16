@@ -420,7 +420,7 @@
 		}
 	})
 
-	const language = getLanguage(mode)
+	const language = untrack(() => getLanguage(mode))
 
 	const css_completions_compartment = new Compartment()
 	const svelte_completions_compartment = new Compartment()
@@ -479,7 +479,8 @@
 		{ decorations: (v) => v.decorations }
 	)
 
-	const editor_state = EditorState.create({
+	// Initial editor document/configuration is a snapshot; live permissions and completions reconfigure below.
+	const editor_state = untrack(() => EditorState.create({
 		selection: {
 			anchor: selection
 		},
@@ -607,7 +608,7 @@
 			...(mode === 'css' ? [css_completions_compartment.of(cssCompletions(css_variables))] : []),
 			...(mode !== 'javascript' ? [emmetExtension(mode === 'css' ? 'css' : 'html')] : [])
 		]
-	})
+	}))
 
 	$effect(() => {
 		Editor &&
@@ -705,8 +706,7 @@
 			</div>
 		{/if}
 		{#if tooltip_visible}
-			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-			<div class="class-tooltip" style="left: {tooltip_x}px; top: {tooltip_y}px;" transition:fade={{ duration: 100 }} onclick={(e) => e.stopPropagation()}>
+			<div role="dialog" aria-label="Class styles" tabindex="-1" class="class-tooltip" style="left: {tooltip_x}px; top: {tooltip_y}px;" transition:fade={{ duration: 100 }} onclick={(e) => e.stopPropagation()} onkeydown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); hide_tooltip() } }}>
 				<button class="tooltip-close-btn" onclick={hide_tooltip}>×</button>
 				{#if tooltip_editable}
 					<div class="tooltip-rules-container">

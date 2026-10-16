@@ -242,3 +242,42 @@ test.describe('Pages creation row', () => {
 		})
 	}
 })
+
+test('page-list child expansion survives closing, reopening and reloading', async ({ page, request }) => {
+	const { token } = await devAuth(request)
+	const ids = await seedFixtureSite(token, 'Persistent page expansion')
+	const headers = { Authorization: `Bearer ${token}` }
+	const endpoint = `${SERVER_URL}/api/collections/pages/records`
+	const homeResponse = await request.get(`${endpoint}/${ids.pageId}`, { headers })
+	expect(homeResponse.ok()).toBeTruthy()
+	const home = await homeResponse.json()
+	const parentResponse = await request.post(endpoint, {
+		headers,
+		data: { site: ids.siteId, parent: ids.pageId, page_type: home.page_type, name: 'Expansion Parent', slug: 'expansion-parent', index: 1 }
+	})
+	expect(parentResponse.ok()).toBeTruthy()
+	const parent = await parentResponse.json()
+	const childResponse = await request.post(endpoint, { headers, data: { site: ids.siteId, parent: parent.id, page_type: home.page_type, name: 'Expansion Child', slug: 'expansion-child', index: 0 } })
+	expect(childResponse.ok()).toBeTruthy()
+	await loginAsDeveloper(page, ids.siteId)
+	await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+	const openPages = async () => {
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		await expect(page.getByRole('dialog')).toBeVisible()
+	}
+	const parentRow = () => page.getByRole('dialog').locator(`[data-page-id="${parent.id}"]`)
+	await openPages()
+	await parentRow().getByRole('button', { name: 'Toggle child pages' }).click()
+	await expect(page.getByRole('link', { name: 'Expansion Child', exact: true })).toBeVisible()
+	for (let attempt = 0; attempt < 2; attempt++) {
+		await page.keyboard.press('Escape')
+		await expect(page.getByRole('dialog')).toBeHidden()
+		if (attempt === 1) {
+			await page.reload()
+			await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+		}
+		await openPages()
+		await expect(parentRow()).toHaveClass(/expanded/)
+		await expect(page.getByRole('link', { name: 'Expansion Child', exact: true })).toBeVisible()
+	}
+})

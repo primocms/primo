@@ -52,11 +52,8 @@
 	const site_symbols = $derived(site?.symbols() ?? [])
 
 	// Set context so child components can access the page type (ie page-field field in sidebar symbol)
-	const context = $state({ value: page_type })
+	const context = { get value() { return page_type } }
 	page_type_context.set(context)
-	$effect(() => {
-		context.value = page_type
-	})
 
 	hide_page_field_field_type_context.set(true)
 
