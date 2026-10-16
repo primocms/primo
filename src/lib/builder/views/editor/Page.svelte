@@ -753,7 +753,7 @@
 			}
 		}}
 	>
-		<Dialog.Content class="z-[999] max-w-none h-full max-h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+		<Dialog.Content class="z-[999] max-w-none h-full max-h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 			<SectionEditor
 				bind:has_unsaved_changes={section_has_unsaved_changes}
 				component={hovered_section}
@@ -1085,7 +1085,7 @@ stays hidden until mount with nothing else to show. -->
 		left: 0;
 		right: 0;
 		bottom: 0;
-		/* height: 100vh; */
+		/* height: 100dvh; */
 		display: flex;
 		align-items: center;
 		justify-content: center;

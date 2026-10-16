@@ -6,6 +6,8 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog'
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte'
+	const mobile = new IsMobile()
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import LargeSwitch from '../../../ui/LargeSwitch.svelte'
 	import FullCodeEditor from './FullCodeEditor.svelte'
@@ -226,8 +228,8 @@
 	{/if}
 </Dialog.Header>
 
-<main lang={$locale}>
-	<PaneGroup direction={$orientation} class="flex gap-1">
+<main class="section-editor" lang={$locale}>
+	<PaneGroup direction={mobile.current ? 'vertical' : $orientation} class="flex gap-1">
 		<Pane defaultSize={50} class="flex flex-col">
 			{#if tab === 'code'}
 				<FullCodeEditor bind:html bind:css bind:js data={component_data} {completions} storage_key={symbol?.id} on:save={save_component} on:mod-e={toggle_tab} on:mod-r={() => $refresh_preview()} />
@@ -309,6 +311,8 @@
 
 <style lang="postcss">
 	main {
+		min-height: 0;
+		min-width: 0;
 		display: flex; /* to help w/ positioning child items in code view */
 		background: var(--primo-color-black);
 		color: var(--color-gray-2);
@@ -322,5 +326,9 @@
 	:global(.PaneResizer) {
 		width: 3px;
 		background: var(--color-gray-9);
+	}
+	@media (max-width: 767px) {
+		.section-editor :global(.PaneResizer) { width: 100%; height: 10px; flex-shrink: 0; }
+		.section-editor :global(.preview-orientation) { display: none; }
 	}
 </style>

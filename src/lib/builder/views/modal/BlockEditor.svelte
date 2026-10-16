@@ -6,6 +6,8 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog'
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte'
+	const mobile = new IsMobile()
 	import LargeSwitch from '$lib/builder/ui/LargeSwitch.svelte'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import FullCodeEditor from './SectionEditor/FullCodeEditor.svelte'
@@ -191,8 +193,8 @@
 	<LargeSwitch bind:active_tab_id={tab} />
 </Dialog.Header>
 
-<main lang={$locale}>
-	<PaneGroup direction={$orientation} class="flex">
+<main class="block-editor" lang={$locale}>
+	<PaneGroup direction={mobile.current ? 'vertical' : $orientation} class="flex">
 		<Pane defaultSize={50} class="p-1">
 			{#if tab === 'code'}
 				<FullCodeEditor bind:html bind:css bind:js data={component_data} storage_key={block?.id} on:save={save_component} on:mod-e={toggle_tab} on:mod-r={() => $refresh_preview()} />
@@ -246,6 +248,8 @@
 
 <style lang="postcss">
 	main {
+		min-height: 0;
+		min-width: 0;
 		display: flex; /* to help w/ positioning child items in code view */
 		background: var(--primo-color-black);
 		color: var(--color-gray-2);
@@ -254,5 +258,9 @@
 
 		--Button-bg: var(--color-gray-8);
 		--Button-bg-hover: var(--color-gray-9);
+	}
+	@media (max-width: 767px) {
+		.block-editor :global(.PaneResizer) { width: 100%; height: 10px; flex-shrink: 0; background: var(--color-gray-9); }
+		.block-editor :global(.preview-orientation) { display: none; }
 	}
 </style>

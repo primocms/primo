@@ -16,6 +16,8 @@
 	import { self } from '$lib/pocketbase/managers'
 	import { beforeNavigate } from '$app/navigation'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte'
+	const mobile = new IsMobile()
 
 	let { onClose, has_unsaved_changes = $bindable(false) } = $props()
 
@@ -107,7 +109,7 @@
 {#if site}
 	<main class="SiteEditor">
 		{#if $current_user?.siteRole === 'developer'}
-			<PaneGroup direction="horizontal" style="display: flex;" autoSaveId="SiteEditor-horizontal">
+			<PaneGroup direction={mobile.current ? 'vertical' : 'horizontal'} style="display: flex;" autoSaveId={mobile.current ? 'SiteEditor-mobile' : 'SiteEditor-horizontal'}>
 				<Pane defaultSize={50}>
 					<Fields
 						entity={site}
@@ -201,6 +203,8 @@
 	.SiteEditor {
 	}
 	main {
+		min-height: 0;
+		min-width: 0;
 		display: flex; /* to help w/ positioning child items in code view */
 		background: var(--primo-color-black);
 		color: var(--color-gray-2);
@@ -243,9 +247,18 @@
 		}
 	}
 	.container {
+		min-height: 0;
 		padding-left: 0.75rem;
 		display: flex;
 		flex-direction: column;
 		max-height: 100%;
+	}
+	@media (max-width: 767px) {
+		.container { padding-left: 0; padding-top: 8px; }
+		:global(.SiteEditor .PaneResizer-primary) {
+			width: 100%;
+			height: 10px;
+		}
+		.icon.primary { transform: rotate(90deg); }
 	}
 </style>
