@@ -49,4 +49,5 @@ test('existing symlink parent and existing final files are never overwritten',as
 test('regular nested files, explicit directories, empty files and binary bytes round trip',async t=>{
  const bytes=Buffer.from([0,255,1,0,128]);const x=await setup(t,[{name:'blocks/',mode:0o040755},{name:'blocks/hero.svelte',body:'<h1>Client</h1>'},{name:'uploads/image.bin',body:bytes},{name:'pages/empty.yaml'}])
  await extract(x.archive,{dir:x.dir});assert.equal(await fs.readFile(path.join(x.dir,'blocks/hero.svelte'),'utf8'),'<h1>Client</h1>');assert.deepEqual(await fs.readFile(path.join(x.dir,'uploads/image.bin')),bytes);assert.equal((await fs.stat(path.join(x.dir,'pages/empty.yaml'))).size,0)
+ if(process.platform!=='win32'){assert.equal((await fs.stat(path.join(x.dir,'uploads/image.bin'))).mode&0o777,0o666&~process.umask());assert.equal((await fs.stat(path.join(x.dir,'uploads'))).mode&0o777,0o777&~process.umask())}
 })
