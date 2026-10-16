@@ -16,7 +16,7 @@ test('native candidate starts, edits content safely, survives restart and builds
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-native-'));let child,logs=''
  const stop=async()=>{if(child&&child.exitCode===null){const closed=new Promise(r=>child.once('close',r));child.kill('SIGTERM');await closed}}
  t.after(async()=>{await stop();await fs.rm(root,{recursive:true,force:true,maxRetries:30,retryDelay:100})})
- assert.match((await exec(binary,['--version'])).stdout,/v3\.3\.2-rc\.2/)
+ assert.ok((await exec(binary,['--version'])).stdout.includes(expected))
  const reserve=net.createServer();await new Promise(r=>reserve.listen(0,'127.0.0.1',r));const port=reserve.address().port;await new Promise(r=>reserve.close(r))
  const server=`http://127.0.0.1:${port}`,env={...process.env,HOME:root,USERPROFILE:root,PRIMO_DEV_MODE:'1',PRIMO_AUTHOR_MODE:'both',PRIMO_ENABLE_USAGE_STATS:'false'}
  let token
