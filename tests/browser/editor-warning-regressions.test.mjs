@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -52,6 +52,10 @@ async function fixture(source, { presence = false, extraMocks = {} } = {}) {
 					b.onResolve({ filter: /^\$app\/environment$/ }, () => ({ path: 'test:environment', namespace: 'test' }))
 					b.onResolve({ filter: /^\$lib\/components\/ui\/tooltip$/ }, () => ({ path: 'test:tooltip', namespace: 'test' }))
 					b.onResolve({ filter: /^\.\.\/\.\.\/\.\.\/ui\/index\.js$/ }, () => ({ path: 'test:ui', namespace: 'test' }))
+					if (pageData) {
+						b.onResolve({ filter: /^\.\/pocketbase\/collections$/ }, () => ({ path: 'test:page-collections', namespace: 'test' }))
+						b.onResolve({ filter: /^\.\/pocketbase\/managers$/ }, () => ({ path: 'test:managers', namespace: 'test' }))
+					}
 					if (presence) {
 						for (const [pattern, key] of [
 							[/^\.\/pocketbase\/collections$/, 'collections'],
@@ -204,6 +208,47 @@ test('presence getter follows navigation and clears old section keys without reg
 			.catch(async (error) => {
 				throw new Error(error.message + JSON.stringify({ records: await page.evaluate(() => activityRecords), errors: f.errors }))
 			})
+		assert.deepEqual(f.errors, [])
+	} finally {
+		await f.close()
+	}
+})
+
+test('worker status remains reactive through loading, success and failure', async () => {
+	const f = await fixture(
+		`<script>import {useSvelteWorker} from ${component('src/lib/workers/Worker.svelte.ts')};let loaded=$state(false);const worker=useSvelteWorker(()=>true,()=>loaded,async(value)=>{if(value==='fail')throw new Error('expected');return value+'!'});export function run(value){return worker.run(value)}export function load(){loaded=true}</script><output>{worker.status}</output>`
+	)
+	try {
+		const { page } = f
+		await page.waitForFunction(() => document.querySelector('output')?.textContent === 'standby')
+		await page.evaluate(() => {
+			window.result = subject.run('client')
+		})
+		await page.waitForFunction(() => document.querySelector('output').textContent === 'loading')
+		await page.evaluate(() => subject.load())
+		assert.equal(await page.evaluate(() => result), 'client!')
+		assert.equal(await page.locator('output').innerText(), 'standby')
+		assert.equal(await page.evaluate(() => subject.run('fail').catch((error) => error.message)), 'expected')
+		assert.equal(await page.locator('output').innerText(), 'standby')
+		assert.deepEqual(f.errors, [])
+	} finally {
+		await f.close()
+	}
+})
+
+test('page data getter retains loading and live entry updates', async () => {
+	const collections = 'export const Pages={},Sites={},PageTypes={from:()=>({one:()=>undefined})},SiteSymbols={from:()=>({one:()=>undefined})};'
+	const f = await fixture(
+		`<script>import {usePageData} from ${component('src/lib/PageData.svelte.ts')};let ready=$state(false);let value=$state('Original');const site={uploads:()=>ready?[]:undefined,fields:()=>[],entries:()=>[{id:'entry',value}]};const result=usePageData(site,[]);export function load(){ready=true}export function edit(){value='Client edit'}</script><output>{result.data ? result.data.site_entries[0].value : 'loading'}</output>`,
+		{ pageData: true, extraMocks: { 'test:page-collections': collections } }
+	)
+	try {
+		const { page } = f
+		assert.equal(await page.locator('output').innerText(), 'loading')
+		await page.evaluate(() => subject.load())
+		await page.waitForFunction(() => document.querySelector('output').textContent === 'Original')
+		await page.evaluate(() => subject.edit())
+		await page.waitForFunction(() => document.querySelector('output').textContent === 'Client edit')
 		assert.deepEqual(f.errors, [])
 	} finally {
 		await f.close()
