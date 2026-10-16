@@ -43,6 +43,8 @@ jobs:
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Resolve reserved alias only inside this disposable runner
         run: echo '127.0.0.1 primo-preview.test' | sudo tee -a /etc/hosts
+      - name: Narrow invitation layout regression
+        run: PLAYWRIGHT_JSON_OUTPUT_FILE=invitation-layout.json npx playwright test tests/e2e/ui-polish.spec.ts --grep 'new passwords' --timeout=90000 --reporter=list,json
       - run: npx playwright test --timeout=90000 --reporter=list,json
       - uses: actions/upload-artifact@v4
         if: always()
@@ -50,5 +52,6 @@ jobs:
           name: browser-${{ matrix.browser }}
           path: |
             browser-results.json
+            invitation-layout.json
             test-results
             /tmp/primo-e2e-server.log
