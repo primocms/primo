@@ -28,14 +28,11 @@
 
 	let { page }: { page: ObjectOf<typeof Pages> } = $props()
 
-	setUserActivity({ page: page.id })
+	setUserActivity(() => ({ page: page.id }))
 
 	// Set context so child components can access the page
-	const context = $state({ value: page })
+	const context = { get value() { return page } }
 	page_context.set(context)
-	$effect(() => {
-		context.value = page
-	})
 
 	const site = $derived(Sites.one(page.site))
 	const page_type = $derived(page.page_type ? PageTypes.one(page.page_type) : null)
@@ -294,13 +291,13 @@
 	}
 
 	let page_el: HTMLElement = $state()!
-	let hovered_block_el = $state()
+	let hovered_block_el = $state<HTMLElement | null>(null)
 
 	////////////////////////////
 	// BLOCK TOOLBAR ///////////
 	////////////////////////////
 
-	let block_toolbar_element = $state()
+	let block_toolbar_element = $state<HTMLElement>()
 	let showing_block_toolbar = $state(false)
 
 	// Add state variables to track hover states
@@ -343,7 +340,7 @@
 		block_toolbar_element.style.right = `${window.innerWidth - right}px`
 	}
 
-	let hide_toolbar_timeout = null
+	let hide_toolbar_timeout: ReturnType<typeof setTimeout> | null = null
 
 	// Sections render inside an iframe, which swallows pointer events once the
 	// cursor is over it — so a section's mouseleave never fires when the pointer
@@ -381,7 +378,7 @@
 	// DROP INDICATOR //////////
 	////////////////////////////
 
-	let drop_indicator_element = $state()
+	let drop_indicator_element = $state<HTMLElement>()
 	let showing_drop_indicator = $state(false)
 
 	async function show_drop_indicator() {
@@ -449,7 +446,7 @@
 	// Handle unsaved changes for section editor
 	let section_has_unsaved_changes = $state(false)
 
-	let dragging = $state({
+	let dragging = $state<{ id: string | null; position: string | null }>({
 		id: null,
 		position: null
 	})
@@ -469,7 +466,7 @@
 	}
 
 	let dragging_over_section = $state(false)
-	let drag_leave_timeout = null
+	let drag_leave_timeout: ReturnType<typeof setTimeout> | null = null
 
 	function drag_fallback(element) {
 		const cleanup = dropTargetForElements({
@@ -497,7 +494,7 @@
 				// When page is empty, use the empty state div as the drop target
 				const section_count = sections.length
 				if (section_count === 0) {
-					const empty_state_el = page_el.querySelector('.empty-state')
+					const empty_state_el = page_el.querySelector<HTMLElement>('.empty-state')
 					if (empty_state_el) {
 						hovered_block_el = empty_state_el
 					} else {
@@ -514,7 +511,7 @@
 
 				const last_section_id = sections[section_count - 1]?.id ?? page_type_body_sections[page_type_body_sections.length - 1]?.id
 				if (!last_section_id) return
-				hovered_block_el = page_el.querySelector(`[data-section="${last_section_id}"]`)
+				hovered_block_el = page_el.querySelector<HTMLElement>(`[data-section="${last_section_id}"]`)
 
 				if (!showing_drop_indicator) {
 					await show_drop_indicator()
@@ -547,12 +544,12 @@
 				if (dragging_over_section) {
 					return // prevent double-adding block
 				}
-				const block_being_dragged = source.data.block
+				const block_being_dragged = source.data.block as { id: string }
 				const new_section_id = await add_section_to_page({
 					symbol: block_being_dragged,
 					position: sections.length
 				})
-				const new_section_el = new_section_id ? page_el.querySelector(`[data-section="${new_section_id}"]`) : null
+				const new_section_el = new_section_id ? page_el.querySelector<HTMLElement>(`[data-section="${new_section_id}"]`) : null
 				if (new_section_el instanceof HTMLElement) {
 					new_section_el.scrollIntoView({
 						behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
@@ -588,14 +585,14 @@
 					drag_leave_timeout = null
 				}
 
-				hovered_block_el = self.element
+				hovered_block_el = element
 				if (!showing_drop_indicator) {
 					await show_drop_indicator()
 				}
 				position_drop_indicator()
-				if (dragging.id !== self.data.section.id || dragging.position !== extractClosestEdge(self.data)) {
+				if (dragging.id !== section.id || dragging.position !== extractClosestEdge(self.data)) {
 					dragging = {
-						id: self.data.section.id,
+						id: section.id,
 						position: extractClosestEdge(self.data)
 					}
 				}
@@ -628,8 +625,8 @@
 
 				const section_count = sections.length
 				const section_dragged_over_index =
-					section_count === 0 ? (page_type_body_sections.find((s) => s.id === self.data.section.id)?.index ?? 0) : (sections.find((s) => s.id === self.data.section.id)?.index ?? 0)
-				const block_being_dragged = source.data.block
+					section_count === 0 ? (page_type_body_sections.find((s) => s.id === section.id)?.index ?? 0) : (sections.find((s) => s.id === section.id)?.index ?? 0)
+				const block_being_dragged = source.data.block as { id: string }
 				const closestEdgeOfTarget = extractClosestEdge(self.data)
 
 				if (closestEdgeOfTarget === 'top') {

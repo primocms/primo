@@ -32,6 +32,9 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 }
 
 func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
+	if e.Auth != nil && !isSiteDeveloper(pb, e.Auth, "") {
+		return e.ForbiddenError("A server developer is required to bootstrap a workspace", nil)
+	}
 	// Cheap early rejection so a non-empty server doesn't read the upload at
 	// all. The authoritative check still runs inside the transaction below.
 	if !(DevMode && IsLocalhost(e)) {

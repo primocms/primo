@@ -25,11 +25,10 @@
 		page_type: ''
 	})
 	$effect.pre(() => {
-		new_page = {
-			name: '',
-			slug: '',
-			page_type: default_page_type_id
-		}
+		// Defaults may resolve after the user starts typing. Fill only an
+		// unset type, preserving their draft and any explicit type choice.
+		const default_type = default_page_type_id
+		if (!new_page.page_type && default_type) new_page.page_type = default_type
 	})
 
 	let saving = $state(false)

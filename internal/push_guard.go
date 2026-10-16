@@ -220,7 +220,7 @@ func authorizePushState(app core.App, e *core.RequestEvent, target string) error
 	if !pushTargetPattern.MatchString(target) {
 		return e.BadRequestError("Invalid push target", nil)
 	}
-	if DevMode && IsLocalhost(e) {
+	if DevMode && IsLocalhost(e) && (e.Auth == nil || isSiteDeveloper(app, e.Auth, target)) {
 		return nil
 	}
 	if e.Auth == nil {
@@ -256,6 +256,9 @@ func authorizePushState(app core.App, e *core.RequestEvent, target string) error
 	}
 	if err != nil {
 		return err
+	}
+	if !isSiteDeveloper(app, e.Auth, target) {
+		return e.ForbiddenError("A developer is required to import site design", nil)
 	}
 	info, err := e.RequestInfo()
 	if err != nil {

@@ -14,7 +14,7 @@
 	 */
 
 	/** @type {Props} */
-	let { active_tab_id = $bindable(tabs[0]?.id), variant = 'primary', disable_hotkeys = false, style = '' } = $props()
+	let { active_tab_id = $bindable('code'), variant = 'primary', disable_hotkeys = false, style = '' } = $props()
 
 	function toggle_switch() {
 		if (active_tab_id === 'code') {

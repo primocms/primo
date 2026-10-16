@@ -140,6 +140,10 @@ func RegisterCloneSiteEndpoint(pb *pocketbase.PocketBase) error {
 				return e.UnauthorizedError("Authentication required", nil)
 			}
 
+			if !isSiteDeveloper(pb, e.Auth, "") {
+				return e.ForbiddenError("A server developer is required to create sites", nil)
+			}
+
 			// Host is optional. When omitted:
 			//   - If a base domain is configured (PRIMO_BASE_DOMAIN), the site
 			//     is auto-assigned a live "<slug>.<base>" subdomain and is

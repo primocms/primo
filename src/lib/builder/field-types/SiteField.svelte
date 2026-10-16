@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { FieldComponent } from '../components/Fields/field-component'
 	import { fieldTypes } from '../stores/app'
 	import { SiteFields, SiteEntries } from '$lib/pocketbase/collections'
 	import type { Entry } from '$lib/common/models/Entry'
@@ -62,7 +63,7 @@
 </script>
 
 {#if site && resolvedField && fieldType}
-	{@const SvelteComponent = fieldType.component}
+	{@const SvelteComponent = fieldType.component as FieldComponent}
 	<SvelteComponent entity={site} field={{ ...resolvedField, label: field.label }} {entry} {fields} {entries} onchange={handleFieldChange} ondelete={handleDeleteEntry} {level} />
 {:else if !field.config?.field}
 	<span>Please configure this field to select a site field.</span>
