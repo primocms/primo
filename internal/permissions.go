@@ -180,18 +180,26 @@ func RegisterContentPermissions(pb *pocketbase.PocketBase) error {
 					if operation == "update" && !onlyPermissionFields(e.Record, "value", "locale", "index", "parent") {
 						return deny()
 					}
-					if parent := e.Record.GetString("parent"); parent != "" {
+					ancestors := map[string]bool{e.Record.Id: true}
+					for parent := e.Record.GetString("parent"); parent != ""; {
+						if ancestors[parent] {
+							return deny()
+						}
+						ancestors[parent] = true
 						record, err := e.App.FindRecordById(collection, parent)
 						if err != nil || permissionSite(e.App, record, relation) != site {
 							return deny()
 						}
-						// Parents must belong to the same page/section, not just the same site.
+						// Every ancestor must share the owning page/section; reject
+						// cycles before content disappears from root traversal.
 						for _, owner := range []string{"page", "section"} {
 							if record.GetString(owner) != e.Record.GetString(owner) {
 								return deny()
 							}
 						}
+						parent = record.GetString("parent")
 					}
+
 				case "site_uploads":
 					if operation == "update" && e.Record.GetString("site") != e.Record.Original().GetString("site") {
 						return deny()
