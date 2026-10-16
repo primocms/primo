@@ -24,6 +24,8 @@ jobs:
       PRIMO_TEST_BROWSER: ${{ matrix.browser }}
       PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
       PRIMO_ENABLE_USAGE_STATS: 'false'
+      PLAYWRIGHT_JSON_OUTPUT_FILE: frozen-results.json
+      DEBUG: pw:browser
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,7 +50,7 @@ jobs:
           node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./tests/staging/rc5-packages.json").cms.sha256)' >> "$GITHUB_ENV"
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Full CMS browser checks against frozen RC.5
-        run: npx playwright test --timeout=90000 --max-failures=3
+        run: npx playwright test --timeout=90000 --max-failures=0 --reporter=list,json
       - name: Verify product files remain unchanged
         if: always()
         run: node tests/staging/verify-installed.mjs
@@ -57,6 +59,7 @@ jobs:
         with:
           name: rc5-staging-${{ matrix.browser }}
           path: |
+            frozen-results.json
             playwright-report
             test-results
             /tmp/primo-e2e-server.log
