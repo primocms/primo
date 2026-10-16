@@ -169,7 +169,7 @@
 							{entries}
 							level={level + 1}
 							minimal={true}
-							onchange={(values) => onchange({ [field.key]: { [index]: { value: null, subValues: values } } })}
+							onchange={(values) => onchange({ [field.key]: { [index]: { value: entry.value, subValues: values } } })}
 							{ondelete}
 						/>
 					</div>
