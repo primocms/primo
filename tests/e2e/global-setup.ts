@@ -4,7 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { PRIMO_BINARY, PRIMOCMS_ROOT, CLI_ENTRY, TEST_DATA_DIR, SERVER_LOG, TEST_HTTP_ADDR, TEST_SERVER_URL } from './helpers/paths'
 
-const PID_FILE = '/tmp/primo-e2e-server.pid'
+const PID_FILE = process.env.PRIMO_TEST_RUN_DIR ? `${process.env.PRIMO_TEST_RUN_DIR}/server.pid` : '/tmp/primo-e2e-server.pid'
 const FRONTEND_BUILD_DIR = path.join(PRIMOCMS_ROOT, 'internal/build')
 const COMMON_BUNDLE = path.join(PRIMOCMS_ROOT, 'internal/common/index.cjs')
 

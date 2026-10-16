@@ -71,6 +71,10 @@ test.describe('Auth forms', () => {
 		const viewport = await page.evaluate(() => ({
 			scrollWidth: document.documentElement.scrollWidth,
 			innerWidth: window.innerWidth,
+			clientWidth: document.documentElement.clientWidth,
+			bodyWidth: document.body.scrollWidth,
+			rootStyle: {overflow: getComputedStyle(document.documentElement).overflow, width:getComputedStyle(document.documentElement).width},
+			actualScroll: (() => { const y=window.scrollY; window.scrollTo(1000,y); const x=window.scrollX; window.scrollTo(0,y); return x })(),
 			overflow: Array.from(document.querySelectorAll('*')).map((node) => {
 				const rect = node.getBoundingClientRect()
 				return { tag: node.tagName, className: node.className, left: rect.left, right: rect.right }

@@ -405,6 +405,13 @@ test.describe('Full build flow (site creation through publish)', () => {
 		// --- edit content (UI) and publish (UI) ---
 		const headline = canvasFrame(page).locator('[data-testid="built-headline"]')
 		await expect(headline).toHaveText('Original Headline', { timeout: 15000 })
+		await expect(headline).toHaveAttribute('contenteditable', 'true')
+		expect(await headline.evaluate((element) => {
+			for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+				if (parent.getAttribute('contenteditable') === 'true') return false
+			}
+			return true
+		})).toBe(true)
 
 		const finalHeadline = `Published from full build flow ${Date.now()}`
 		await replaceContentEditableText(page, headline, finalHeadline)

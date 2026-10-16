@@ -30,6 +30,7 @@ async function fixture(source, { presence = false, pageData = false, extraMocks 
 		...extraMocks,
 		'test:wrapper.svelte': source
 	}
+	const styles = []
 	const bundled = await build({
 		stdin: { contents: 'import {mount} from "svelte";import App from "test:wrapper.svelte";window.subject=mount(App,{target:document.body});', resolveDir: root },
 		bundle: true,
@@ -70,6 +71,7 @@ async function fixture(source, { presence = false, pageData = false, extraMocks 
 						if (filename.endsWith('.svelte')) {
 							const result = compile(contents, { filename, generate: 'client', css: 'external', dev: true })
 							assert.deepEqual(result.warnings, [], filename + ' compiler warnings')
+							if (result.css?.code) styles.push(result.css.code)
 							return { contents: result.js.code, loader: 'js', resolveDir: filename.startsWith('test:') ? root : path.dirname(filename) }
 						}
 						if (/\.svelte\.[jt]s$/.test(filename))
@@ -96,6 +98,7 @@ async function fixture(source, { presence = false, pageData = false, extraMocks 
 	const errors = []
 	page.on('pageerror', (error) => errors.push(error.message))
 	await page.setContent('<!doctype html><html><body style="padding:200px"></body></html>')
+	if (styles.length) await page.addStyleTag({ content: '* { box-sizing: border-box; }\n' + styles.join('\n') })
 	await page.addScriptTag({ content: bundled.outputFiles[0].text })
 	if (errors.length) {
 		await browser.close()
@@ -253,4 +256,23 @@ test('page data getter retains loading and live entry updates', async () => {
 	} finally {
 		await f.close()
 	}
+})
+
+// A fixed popup inside a transformed, scrolling dialog must escape clipping
+// while remaining inside the dialog's focus/outside-click DOM subtree.
+test('select options remain clickable outside a transformed scrolling dialog', async () => {
+ const f = await fixture(`<script>import Select from ${component('src/lib/builder/ui/Select.svelte')};let value=$state('a')</script><div style="position:fixed;left:100px;top:100px;transform:translate(20px,20px);overflow:auto;width:240px;height:50px"><Select options={[{label:'Alpha',value:'a'},{label:'Beta',value:'b'}]} {value} on:input={e=>value=e.detail}/></div>`)
+ try {
+  const {page}=f
+  await page.getByRole('button',{name:'Alpha',exact:true}).click()
+  const option=page.locator('.popup').getByRole('button',{name:'Beta',exact:true})
+  await option.click({timeout:3000})
+  assert.equal(await page.locator('button.primary').innerText(),'Beta')
+  await page.waitForSelector('.popup',{state:'detached'})
+  await page.getByRole('button',{name:'Beta',exact:true}).click()
+  await page.locator('.popup button').first().focus()
+  await page.keyboard.press('Escape')
+  assert.equal(await page.locator('button.primary').evaluate(el=>el===document.activeElement),true)
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
 })

@@ -11,10 +11,10 @@ export const PRIMO_BINARY = process.env.PRIMO_TEST_CMS_BINARY ? path.resolve(pro
 // silently drifts to whatever happens to be built in a sibling repo.
 export const CLI_ENTRY = path.resolve(PRIMOCMS_ROOT, 'node_modules/primo-cli/dist/index.js')
 export const FIXTURE_SITE_DIR = path.join(__dirname, '../fixtures/fixture-site')
-export const TEST_DATA_DIR = '/tmp/primo-e2e-pbdata'
-export const SERVER_LOG = '/tmp/primo-e2e-server.log'
-export const IDS_FILE = '/tmp/primo-e2e-fixture-ids.json'
+export const TEST_DATA_DIR = process.env.PRIMO_TEST_RUN_DIR ? path.join(process.env.PRIMO_TEST_RUN_DIR, 'pbdata') : '/tmp/primo-e2e-pbdata'
+export const SERVER_LOG = process.env.PRIMO_TEST_RUN_DIR ? path.join(process.env.PRIMO_TEST_RUN_DIR, 'server.log') : '/tmp/primo-e2e-server.log'
+export const IDS_FILE = process.env.PRIMO_TEST_RUN_DIR ? path.join(process.env.PRIMO_TEST_RUN_DIR, 'fixture-ids.json') : '/tmp/primo-e2e-fixture-ids.json'
 
-export const TEST_HTTP_ADDR = '127.0.0.1:8095'
+export const TEST_HTTP_ADDR = `127.0.0.1:${process.env.PRIMO_TEST_PORT || 8095}`
 export const TEST_SERVER_URL = `http://${TEST_HTTP_ADDR}`
 export const FIXTURE_SITE_ID = 'xaji0y6dpbhsahx'
