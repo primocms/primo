@@ -241,7 +241,7 @@
 	}
 </script>
 
-<div class="h-screen flex flex-col" {oninputcapture} {onkeydowncapture} {onbeforeinputcapture}>
+<div class="editor-shell flex flex-col" {oninputcapture} {onkeydowncapture} {onbeforeinputcapture}>
 	<Toolbar>
 		{@render toolbar?.()}
 	</Toolbar>
@@ -316,6 +316,11 @@
 <svelte:window onresize={reset} />
 
 <style lang="postcss">
+	.editor-shell {
+		height: 100dvh;
+		min-width: 0;
+		overflow: hidden;
+	}
 	.mobile-sidebar-bar {
 		display: none;
 	}
@@ -351,7 +356,7 @@
 		}
 		:global(.editor-panes > .editor-sidebar.mobile-open) {
 			display: block;
-			flex: 0 0 min(42vh, 320px) !important;
+			flex: 0 0 min(42dvh, 320px) !important;
 			width: 100%;
 			min-height: 0;
 			border-bottom: 1px solid #343437;

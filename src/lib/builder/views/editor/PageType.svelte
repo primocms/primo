@@ -557,7 +557,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<SectionEditor
 			component={editing_section_target}
 			tab={editing_section_tab}
@@ -939,7 +939,7 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 100vh;
+		height: 100dvh;
 		display: flex;
 		align-items: center;
 		justify-content: center;

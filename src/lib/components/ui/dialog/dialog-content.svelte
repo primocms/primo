@@ -32,7 +32,7 @@
 		{@render children?.()}
 		{#if showCloseButton}
 			<DialogPrimitive.Close
-				class="absolute top-3 left-3 flex h-7 w-7 items-center justify-center justify-self-start self-start ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none"
+				class="absolute top-2 left-2 flex h-11 w-11 sm:top-3 sm:left-3 sm:h-7 sm:w-7 items-center justify-center justify-self-start self-start ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none"
 			>
 				<X class="size-4" />
 				<span class="sr-only">Close</span>

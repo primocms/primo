@@ -178,7 +178,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			block={active_block}
 			bind:has_unsaved_changes={editing_block_has_unsaved_changes}
@@ -213,7 +213,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			bind:has_unsaved_changes={creating_block_has_unsaved_changes}
 			header={{
@@ -236,7 +236,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-4">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-4">
 		<BlockPicker
 			{site}
 			onsave={async (blocks) => {
@@ -512,7 +512,7 @@
 		z-index: 9;
 		display: flex;
 		flex-direction: column;
-		height: calc(100vh - 59px);
+		height: calc(100dvh - 59px);
 		/* height: 100%; */
 		/* gap: 1rem; */
 		z-index: 9;
