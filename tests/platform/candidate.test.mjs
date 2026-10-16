@@ -10,7 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { createHash } from 'node:crypto'
 const exec=promisify(execFile)
 const binary=path.resolve(process.env.PRIMO_TEST_CMS_BINARY)
-const expected='v3.3.2-rc.6'
+const expected='v3.3.2-rc.7'
 
 test('native candidate starts, edits content safely, survives restart and builds with the packaged CLI', {timeout:120000}, async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-native-'));let child,logs=''
