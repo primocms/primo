@@ -21,7 +21,7 @@
 </script>
 
 <div>
-	<UI.Switch label={field.label} {field} value={entry?.value ?? false} oninput={(value) => onchange({ [field.key]: { 0: { value } } })} />
+	<UI.Switch label={field.label} value={entry?.value ?? false} oninput={(value) => onchange({ [field.key]: { 0: { value } } })} />
 </div>
 
 <style lang="postcss">

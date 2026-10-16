@@ -24,6 +24,7 @@ const SVELTE_CDN = `${CDN_URL}/svelte@${SVELTE_VERSION}`
 const module_cache = new Map()
 
 registerPromiseWorker(rollup_worker)
+/** @param {{component: any, head?: {code: string, data: object}, hydrated?: boolean, buildStatic?: boolean, css?: string, format?: import('@rollup/browser').ModuleFormat, dev_mode?: boolean, runtime?: string[]}} options */
 async function rollup_worker({ component, head, hydrated, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [] }) {
 	const final = {
 		ssr: '',
@@ -236,8 +237,8 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 							try {
 								const res = await sveltePromiseWorker.postMessage({
 									code,
-										svelteOptions,
-										module: id.endsWith('.svelte.js')
+									svelteOptions: { ...svelteOptions, filename: id === './App.svelte' && !Array.isArray(component) && component.filename ? component.filename : id },
+									module: id.endsWith('.svelte.js')
 								})
 								return res.code
 

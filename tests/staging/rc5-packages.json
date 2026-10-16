@@ -1,0 +1,17 @@
+{
+  "cms": {
+    "sourceCommit": "399b9a5c4e5532ac5da6dd5e03433d3dca8d1a36",
+    "version": "v3.3.2-rc.5",
+    "sha256": "8b3a3fe9410b214339446a5d2fa4f4de9b93f7b242ac57b0378e8363fd8e71e0",
+    "runId": 38852345603,
+    "artifactName": "rc5-linux_amd64"
+  },
+  "cli": {
+    "archive": "primo-cli-0.3.0-rc.2.tgz",
+    "sha256": "4d4dea80ac9bd3a3c4bc6721bd6320d83833f4c2ac6731148c0bc1be63349483"
+  },
+  "mcp": {
+    "archive": "primo-mcp-0.1.11-rc.2.tgz",
+    "sha256": "a7c32c82bc748b18cc694782493112937aec86c86cc056b407ab1a8e8b7c0a03"
+  }
+}

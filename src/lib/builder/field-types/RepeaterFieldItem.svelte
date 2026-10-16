@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte'
-	import * as _ from 'lodash-es'
-	import { onMount } from 'svelte'
 	import Icon from '@iconify/svelte'
-	import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
-	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import pluralize from 'pluralize'
 	import { read_only } from '$lib/pocketbase/author_mode'
 	import type { Field } from '$lib/common/models/Field'
@@ -32,8 +28,9 @@
 		level,
 		is_visible,
 		autofocus,
-		hovering,
-		hover_position,
+		can_move_up,
+		can_move_down,
+		onmove,
 		onchange,
 		ondelete
 	}: {
@@ -47,10 +44,11 @@
 		level: number
 		is_visible: boolean
 		autofocus: boolean
-		hovering: boolean
-		hover_position: 'top' | 'bottom'
+		can_move_up: boolean
+		can_move_down: boolean
+		onmove: (direction: -1 | 1) => void
 		onchange: FieldValueHandler
-		ondelete: (entry_id: string) => void
+		ondelete?: (entry_id: string) => void
 	} = $props()
 
 	function get_image_entry(subfields: Field[]) {
@@ -86,50 +84,6 @@
 		}
 	}
 
-	// let drag_handle_element = $state()
-	let element = $state()
-
-	// onMount(async () => {
-	// 	draggable({
-	// 		element,
-	// 		dragHandle: drag_handle_element,
-	// 		getInitialData: () => ({})
-	// 	})
-	// 	dropTargetForElements({
-	// 		element,
-	// 		getData({ input, element }) {
-	// 			return attachClosestEdge(
-	// 				{},
-	// 				{
-	// 					element,
-	// 					input,
-	// 					allowedEdges: ['top', 'bottom']
-	// 				}
-	// 			)
-	// 		},
-	// 		onDrag({ self, source }) {
-	// 			dispatch('hover', extractClosestEdge(self.data))
-	// 		},
-	// 		onDragLeave() {
-	// 			dispatch('hover', null)
-	// 		},
-	// 		onDrop({ self, source }) {
-	// 			const item_dragged_over = self.data.item
-	// 			const item_being_dragged = source.data.item
-	// 			const closestEdgeOfTarget = extractClosestEdge(self.data)
-	// 			// if (item_dragged_over.index === 0) return // can't place above home
-
-	// 			if (closestEdgeOfTarget === 'top') {
-	// 				// actions.rearrange(item_being_dragged, item_dragged_over.index)
-	// 				dispatch('move', { item: item_being_dragged, new_index: item_dragged_over.index })
-	// 			} else if (closestEdgeOfTarget === 'bottom') {
-	// 				dispatch('move', { item: item_being_dragged, new_index: item_dragged_over.index + 1 })
-	// 				// actions.rearrange(item_being_dragged, item_dragged_over.index + 1)
-	// 			}
-	// 			dispatch('hover', null)
-	// 		}
-	// 	})
-	// })
 	let singular_label = $derived(pluralize.singular(field.label))
 	const image_entry = $derived(get_image_entry(subfields))
 	const is_library_image = $derived(is_entity_of(entity, 'library_symbols'))
@@ -155,13 +109,7 @@
 	let item_title = $derived(get_title(subfields))
 </script>
 
-<div
-	class="RepeaterFieldItem"
-	bind:this={element}
-	id="repeater-{field.key}-{index}"
-	class:hovering-above={hovering && hover_position === 'top'}
-	class:hovering-below={hovering && hover_position === 'bottom'}
->
+<div class="RepeaterFieldItem" data-entry-id={entry.id} id="repeater-{field.key}-{index}">
 	<div class="repeater-item-container">
 		<div class="item-options">
 			<button
@@ -197,10 +145,12 @@
 			</button>
 			{#if !$read_only}
 				<div class="primo-buttons">
-					<!-- disable for now -->
-					<!-- <button bind:this={drag_handle_element}>
-						<Icon icon="material-symbols:drag-handle" />
-					</button> -->
+					<button type="button" title="Move {singular_label} item up" aria-label="Move {singular_label} item up" disabled={!can_move_up} onclick={() => onmove(-1)}>
+						<Icon icon="ph:arrow-up-bold" />
+					</button>
+					<button type="button" title="Move {singular_label} item down" aria-label="Move {singular_label} item down" disabled={!can_move_down} onclick={() => onmove(1)}>
+						<Icon icon="ph:arrow-down-bold" />
+					</button>
 					<button title="Delete {singular_label} item" onclick={() => dispatch('remove')}>
 						<Icon icon="ion:trash" />
 					</button>
@@ -235,14 +185,6 @@
 		border-bottom: 1px solid transparent;
 		transition: 0.1s;
 		padding-block: 0.5rem;
-
-		&.hovering-above {
-			border-top-color: var(--primo-primary-color);
-		}
-
-		&.hovering-below {
-			border-bottom-color: var(--primo-primary-color);
-		}
 	}
 
 	.repeater-item-container {
@@ -312,7 +254,11 @@
 				&:focus {
 					/* outline: 0; */
 				}
-				&:hover {
+				&:disabled {
+					opacity: 0.35;
+					cursor: default;
+				}
+				&:hover:not(:disabled) {
 					color: var(--primo-primary-color);
 				}
 				&:last-child {

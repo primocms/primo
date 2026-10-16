@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount, tick } from 'svelte'
+	import { onMount, tick, untrack } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import { dynamic_iframe_srcdoc } from './misc.js'
 	import { highlightedElement } from '../stores/app/misc'
@@ -227,7 +227,7 @@
 		}
 	})
 
-	let consoleLog = $state()
+	let consoleLog = $state<string>('')
 
 	let iframe = <HTMLIFrameElement>$state()
 
@@ -235,7 +235,7 @@
 		var container = document.createElement('div')
 		container.innerHTML = code
 		Array.from(container.childNodes).forEach((node) => {
-			iframe.contentWindow.document.head.appendChild(node)
+			iframe.contentDocument?.head.appendChild(node)
 		})
 	}
 
@@ -283,11 +283,11 @@
 		}
 	)
 
-	let container = $state()
+	let container = $state<HTMLElement>()
 	let iframe_loaded = $state(false)
 
-	let scale = $state()
-	let height = $state()
+	let scale = $state('')
+	let height = $state('100%')
 	async function resizePreview() {
 		if (view && container && iframe) {
 			await tick()
@@ -420,7 +420,8 @@
 		}
 	}
 
-	let last_signature = `${code.html}--${code.js}`
+	// Comparison baselines intentionally capture the first render, then advance in the watchers.
+	let last_signature = untrack(() => `${code.html}--${code.js}`)
 	watch(
 		() => [code.html, code.js, $auto_refresh],
 		([html, js, refresh]) => {
@@ -435,7 +436,7 @@
 	$effect(() => {
 		if (iframe) {
 			// open clicked links in browser
-			iframe.contentWindow.document.querySelectorAll('a').forEach((link) => {
+			iframe.contentDocument?.querySelectorAll('a').forEach((link) => {
 				link.target = '_blank'
 			})
 			append_to_iframe(append)
@@ -450,10 +451,8 @@
 		}
 	)
 
-	let last_data = _.cloneDeep(data)
-	let last_data_keys = Object.keys(data || {})
-		.sort()
-		.join(',')
+	let last_data = untrack(() => _.cloneDeep(data))
+	let last_data_keys = untrack(() => Object.keys(data || {}).sort().join(','))
 	watch(
 		() => data,
 		(data) => {
@@ -477,7 +476,8 @@
 	)
 
 	$effect(() => {
-		;(previewWidth, resizePreview())
+		void previewWidth
+		resizePreview()
 	})
 	let active_dynamic_icon = $derived(getIcon(previewWidth))
 	let active_static_icon = $derived(getIcon(active_static_width))

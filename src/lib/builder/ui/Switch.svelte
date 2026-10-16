@@ -3,7 +3,7 @@
 	 * @typedef {Object} Props
 	 * @property {string} [label]
 	 * @property {any} value
-	 * @property {() => void} oninput
+	 * @property {(value: boolean) => void} oninput
 	 */
 
 	/** @type {Props} */
@@ -30,10 +30,6 @@
 			display: grid;
 			gap: 0.5rem;
 
-			.switch-label {
-				font-weight: 600;
-				margin-right: 1rem;
-			}
 
 			.switch-container {
 				position: relative;

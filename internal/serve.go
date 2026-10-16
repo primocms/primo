@@ -113,6 +113,8 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				policy += "; script-src 'none'"
 			}
 			requestEvent.Response.Header().Set("Content-Security-Policy", policy)
+			requestEvent.Response.Header().Set("X-Content-Type-Options", "nosniff")
+			requestEvent.Response.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 			if staticPreview && serveSitePreview(pb, requestEvent, fs, site) {
 				return nil
 			}
@@ -147,9 +149,13 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			// cache-busting `v` token changes only once per publish, so without
 			// this the browser would keep showing the build it cached under the
 			// new URL — making even a full dashboard refresh look stale. Real
-			// (host-based) site traffic keeps its normal caching behavior.
+			// (host-based) traffic revalidates before reusing published content.
+			// This includes stable asset paths: query-string versions alone do
+			// not invalidate HTML or unversioned references after a publish.
 			if siteId != "" {
 				requestEvent.Response.Header().Set("Cache-Control", "no-store")
+			} else {
+				requestEvent.Response.Header().Set("Cache-Control", "no-cache")
 			}
 
 			// In dev mode, inject the dev indicator into HTML files

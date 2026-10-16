@@ -5,7 +5,7 @@
 	import { Sites } from '$lib/pocketbase/collections'
 
 	const site_id = $derived(pageState.params.site_id)
-	const site = $derived(Sites.one(site_id))
+	const site = $derived(site_id ? Sites.one(site_id) : undefined)
 	const homepage = $derived(site?.homepage())
 </script>
 

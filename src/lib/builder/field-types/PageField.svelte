@@ -10,7 +10,7 @@
 	const { value: site } = site_context.getOr({ value: null })
 	const selectable_pages = $derived.by(() => {
 		const pages = site?.pages() ?? []
-		const filtered = pages.filter((p) => p.page_type === field.config.page_type)
+		const filtered = pages.filter((p) => p.page_type === field.config?.page_type)
 		return filtered
 	})
 </script>
