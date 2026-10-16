@@ -182,8 +182,13 @@ async function buildSiteThroughPageCreation(page: Page, request: APIRequestConte
 	await page.keyboard.insertText(componentCode)
 	await expect(codeArea).toHaveText(componentCode, { timeout: 2000 })
 	const compileWait = performance.now()
-	await expect(blockDialog.getByRole('button', { name: 'Create Block' })).toBeEnabled({ timeout: 15000 })
-	await test.info().attach('create-block-compile-wait', { body: JSON.stringify({ms:performance.now()-compileWait}), contentType:'application/json' })
+	try {
+		// A cold compiler resolves its pinned runtime modules over the network.
+		// Allow the same bounded build budget as the publication checks.
+		await expect(blockDialog.getByRole('button', { name: 'Create Block' })).toBeEnabled({ timeout: 45000 })
+	} finally {
+		await test.info().attach('create-block-compile-wait', { body: JSON.stringify({ms:performance.now()-compileWait,dialog:await blockDialog.innerText()}), contentType:'application/json' })
+	}
 
 	const blockSaveResponsePromise = page.waitForResponse((res) => res.url().includes('/api/collections/site_symbols/records') && res.request().method() === 'POST', { timeout: 10000 })
 	await blockDialog.getByRole('button', { name: 'Create Block' }).click()
