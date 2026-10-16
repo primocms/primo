@@ -58,7 +58,7 @@
 						{entries}
 						level={level + 1}
 						minimal={true}
-						onchange={(values) => onchange({ [field.key]: { 0: { value: group_entry?.value ?? null, subValues: values } } })}
+						onchange={(values) => onchange({ [field.key]: { 0: { value: null, subValues: values } } })}
 						{ondelete}
 					/>
 				{/each}
