@@ -59,7 +59,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.4 -X github.com/primocms/primo/internal.buildTime=2026-10-16T04:15:00Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.5 -X github.com/primocms/primo/internal.buildTime=2026-10-16T06:00:00Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
@@ -69,7 +69,7 @@ jobs:
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: rc4-${{ matrix.target }}
+          name: rc5-${{ matrix.target }}
           path: |
             primo_${{ matrix.target }}
             platform-result.json

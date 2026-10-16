@@ -1,6 +1,6 @@
 {
 	"name": "primo",
-	"version": "3.3.2-rc.4",
+	"version": "3.3.2-rc.5",
 	"private": true,
 	"type": "module",
 	"scripts": {
