@@ -17,7 +17,7 @@
 	 * @property {any} [value]
 	 * @property {any} [fallback_label]
 	 * @property {any} [dividers]
-	 * @property {string} [placement]
+	 * @property {import('@popperjs/core').Placement} [placement]
 	 * @property {string} [variant]
 	 * @property {boolean} [fullwidth]
 	 * @property {boolean} [loading]
@@ -61,6 +61,7 @@
 
 	let showing_dropdown = $state(false)
 
+	/** @type {{ title: string, options: Array<{ label: string, value: unknown, onclick?: () => void }> } | null} */
 	let active_submenu = $state(null)
 	let selected_submenu_option = null
 

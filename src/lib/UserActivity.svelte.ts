@@ -80,7 +80,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 		}
 	)
 
-	let task: number | undefined
+	let task: ReturnType<typeof setTimeout> | undefined
 	let activity: ObjectOf<typeof UserActivities> | null = null
 	const track = async () => {
 		clearTimeout(task)

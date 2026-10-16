@@ -1,6 +1,6 @@
-<script module>
+<script module lang="ts">
 	import { writable, get } from 'svelte/store'
-	const orientation = writable('horizontal')
+	const orientation = writable<'horizontal' | 'vertical'>('horizontal')
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
@@ -18,7 +18,7 @@
 	import { LibrarySymbolEntries, LibrarySymbolFields, LibrarySymbolGroups, LibrarySymbols, SiteSymbolEntries, SiteSymbolFields, SiteSymbols } from '$lib/pocketbase/collections'
 	import { page } from '$app/state'
 	import { browser } from '$app/environment'
-	import _ from 'lodash-es'
+	import * as _ from 'lodash-es'
 	import { site_context, hide_page_field_field_type_context } from '$lib/builder/stores/context'
 	import { site_html } from '$lib/builder/stores/app/page.js'
 	import { useContent } from '$lib/Content.svelte'
@@ -83,7 +83,7 @@
 	const block = $state(existing_block ?? new_block())
 
 	const fields = $derived('site' in block ? block.fields() : block.fields())
-	const entries = $derived('site' in block ? block.entries() : block.entries())
+	const entries = $derived(('site' in block ? block.entries() : block.entries()) ?? [])
 	const data = $derived(useContent(block, { target: 'cms' }))
 	const component_data = $derived(data && (data[$locale] ?? {}))
 
@@ -233,7 +233,7 @@
 		</Pane>
 		<PaneResizer class="PaneResizer" />
 		<Pane defaultSize={50}>
-			<ComponentPreview id={block.id} bind:orientation={$orientation} view="small" {loading} {code} data={component_data} {fields} head={$site_html} />
+			<ComponentPreview id={block.id} bind:orientation={$orientation} view="small" {loading} {code} data={component_data} {fields} />
 		</Pane>
 	</PaneGroup>
 </main>

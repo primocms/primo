@@ -48,7 +48,7 @@
 		can_move_down: boolean
 		onmove: (direction: -1 | 1) => void
 		onchange: FieldValueHandler
-		ondelete: (entry_id: string) => void
+		ondelete?: (entry_id: string) => void
 	} = $props()
 
 	function get_image_entry(subfields: Field[]) {

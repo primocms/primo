@@ -36,6 +36,7 @@
 	let tooltip_editable = $state(false)
 	let tooltip_rules = $state([])
 	let tooltip_editor_views = $state([]) // Array of {element, view, rule}
+	/** @type {ReturnType<typeof setTimeout> | null} */
 	let tooltip_save_timeout = $state(null)
 
 	function hide_tooltip() {
@@ -196,6 +197,7 @@
 		tooltip_rules = flat_rules
 		tooltip_editable = flat_rules.length > 0
 
+		if (!element) return
 		const editor_rect = element.getBoundingClientRect()
 		const tooltip_width = 320
 		const tooltip_height = 280
@@ -322,6 +324,7 @@
 
 	/**
 	 * @typedef {Object} Props
+	 * @property {import('@codemirror/autocomplete').Completion[]} [completions]
 	 * @property {any} [data]
 	 * @property {string} [prefix]
 	 * @property {string} [value]
@@ -654,6 +657,7 @@
 		return formatted
 	}
 
+	/** @type {HTMLElement | undefined} */
 	let editorNode = $state()
 	$effect(() => {
 		if (editorNode) {
@@ -670,14 +674,15 @@
 		dispatch('change', value)
 	}
 
+	/** @type {HTMLElement | undefined} */
 	let element = $state()
 	$effect(() => {
 		if (element) {
 			if (scrollPositions.has(value)) {
 				element.scrollTo(0, scrollPositions.get(value))
 			}
-			element.addEventListener('scroll', () => {
-				scrollPositions.set(value, element.scrollTop)
+			element.addEventListener('scroll', (event) => {
+				if (event.currentTarget instanceof HTMLElement) scrollPositions.set(value, event.currentTarget.scrollTop)
 			})
 		}
 	})

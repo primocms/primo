@@ -37,7 +37,7 @@
 
 	let { block, section }: { block: ObjectOf<typeof SiteSymbols>; section: ObjectOf<typeof PageTypeSections> | ObjectOf<typeof PageSections> } = $props()
 
-	let node = $state() as HTMLIFrameElement
+	let node = $state<HTMLIFrameElement>() as HTMLIFrameElement
 
 	const fields = $derived(block.fields())
 	const entries = $derived('page_type' in section ? section.entries() : 'page' in section ? section.entries() : undefined)
@@ -866,7 +866,7 @@
 			node.contentWindow!.postMessage({ type: 'component', payload: { js, data } }, '*')
 		} catch (e) {
 			console.error(e)
-			error = e
+			error = e instanceof Error ? e.message : String(e)
 			dispatch_mount()
 		}
 	}
@@ -1344,7 +1344,7 @@
 			<div class="bg-[var(--color-gray-8)] rounded-bl-lg rounded-br-lg p-2">
 				<Avatar.Root class="ring-background ring-2 size-8">
 					{#if user_avatar}
-						<Avatar.Image src={user_avatar} alt={user.name || user.email} class="object-cover object-center" />
+						<Avatar.Image src={user_avatar.toString()} alt={user.name || user.email} class="object-cover object-center" />
 					{/if}
 					<Avatar.Fallback>{(user.name || user.email).slice(0, 2)}</Avatar.Fallback>
 				</Avatar.Root>
