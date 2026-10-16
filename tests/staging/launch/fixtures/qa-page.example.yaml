@@ -1,0 +1,63 @@
+name: QA launch probe
+page_type: default
+sections:
+  - block: qa-probe
+    content:
+      environment: REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT
+      heading: QA section 0
+      qa_scratch: QA scratch agency-01
+      items:
+        - name: Alpha
+          links:
+            - label: First nested link
+            - label: Second nested link
+        - name: Bravo
+          links: []
+  - block: qa-probe
+    content:
+      environment: REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT
+      heading: QA section 1
+      qa_scratch: QA scratch agency-01
+      items:
+        - name: Alpha
+          links:
+            - label: First nested link
+            - label: Second nested link
+        - name: Bravo
+          links: []
+  - block: qa-probe
+    content:
+      environment: REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT
+      heading: QA section 2
+      qa_scratch: QA scratch agency-01
+      items:
+        - name: Alpha
+          links:
+            - label: First nested link
+            - label: Second nested link
+        - name: Bravo
+          links: []
+  - block: qa-probe
+    content:
+      environment: REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT
+      heading: QA section 3
+      qa_scratch: QA scratch agency-01
+      items:
+        - name: Alpha
+          links:
+            - label: First nested link
+            - label: Second nested link
+        - name: Bravo
+          links: []
+  - block: qa-probe
+    content:
+      environment: REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT
+      heading: QA section 4
+      qa_scratch: QA scratch agency-01
+      items:
+        - name: Alpha
+          links:
+            - label: First nested link
+            - label: Second nested link
+        - name: Bravo
+          links: []

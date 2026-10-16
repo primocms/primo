@@ -1,0 +1,23 @@
+- name: environment
+  label: QA environment marker
+  type: text
+- name: heading
+  label: Heading
+  type: text
+- name: items
+  label: Items
+  type: repeater
+  subfields:
+    - name: name
+      label: Name
+      type: text
+    - name: links
+      label: Links
+      type: repeater
+      subfields:
+        - name: label
+          label: Label
+          type: text
+- name: qa_scratch
+  label: Soak scratch (not rendered)
+  type: text
