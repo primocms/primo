@@ -68,6 +68,14 @@ test.describe('Auth forms', () => {
 		await page.getByRole('button', { name: 'Create account', exact: true }).click()
 		await expect(page.getByRole('alert')).toContainText('Passwords do not match')
 		expect(submissions).toBe(0)
+		// WebKit can include the transparent native file widget's anonymous
+		// contents in scroll overflow even though its own box fits the avatar.
+		const avatar = page.getByLabel('Upload profile photo')
+		await avatar.setInputFiles({name:'a-long-profile-photo-name.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="red"/></svg>')})
+		await expect(page.getByAltText('Avatar preview')).toBeVisible()
+		await page.getByRole('button', { name: 'Create account', exact: true }).click()
+		await expect(page.getByRole('alert')).toContainText('Passwords do not match')
+		expect(submissions).toBe(0)
 		const viewport = await page.evaluate(() => ({
 			scrollWidth: document.documentElement.scrollWidth,
 			innerWidth: window.innerWidth,
