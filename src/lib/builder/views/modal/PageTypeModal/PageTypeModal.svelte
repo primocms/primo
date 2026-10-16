@@ -59,7 +59,6 @@
 
 <style lang="postcss">
 	/* Match the publish dialog's surface (Deploy.svelte). */
-	.page-types-header :global(h2) { font-size: 18px; font-weight: 500; color: #f4f4f5; }
 	.pub-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 8px 13px; background: #252528; border: 1px solid #3a3a40; border-radius: 5px; color: #dedee3; cursor: pointer; font-size: 12px; font-weight: 400; }
 	.pub-btn:hover { background: #303034; }
 	.pub-btn.primary { background: #ededf0; color: #202023; border-color: #ededf0; font-weight: 500; }

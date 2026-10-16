@@ -10,7 +10,7 @@
 	import { locale, mod_key_held, dragging_symbol } from '../../stores/app/misc'
 	import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import IFrame from '../../components/IFrame.svelte'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onMount, untrack } from 'svelte'
 	import { watch } from 'runed'
 	import { block_html } from '$lib/builder/code_generators'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
@@ -46,10 +46,11 @@
 		active_page_type_id?: string | null
 	} = $props()
 
+	// Local editing state is seeded once; incoming record updates must not erase a draft.
 	let name_el = $state<HTMLElement>()
 
 	let renaming = $state(false)
-	let new_name = $state(symbol.name)
+	let new_name = $state(untrack(() => symbol.name))
 
 	const related_activities = $derived(getUserActivity({ filter: ({ site_symbol }) => site_symbol?.id === symbol.id }))
 

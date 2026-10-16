@@ -897,11 +897,12 @@
 	})
 
 	const editing = $derived(is_editing || editing_video || editing_image || editing_existing_link || editing_link || editing_markdown)
-	if ('page_type' in section) {
-		$effect(() => setUserActivity(editing ? { page_type_section: section.id } : {}))
-	} else if ('page' in section) {
-		$effect(() => setUserActivity(editing ? { page_section: section.id } : {}))
-	}
+	setUserActivity(() => {
+		if (!editing) return {}
+		if ('page_type' in section) return { page_type_section: section.id }
+		if ('page' in section) return { page_section: section.id }
+		return {}
+	})
 </script>
 
 <Dialog.Root bind:open={editing_image}>

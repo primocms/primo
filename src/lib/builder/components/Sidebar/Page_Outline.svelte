@@ -108,7 +108,6 @@
 		padding: 4px 8px 13px;
 	}
 	.heading strong { color: #e4e4e7; font-size: 13px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-	.heading > span { flex-shrink: 0; }
 	.heading-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 	.zone-divider { height: 1px; background: #343437; margin: 5px 0; }
 	.row {

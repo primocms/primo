@@ -28,14 +28,11 @@
 
 	let { page }: { page: ObjectOf<typeof Pages> } = $props()
 
-	setUserActivity({ page: page.id })
+	setUserActivity(() => ({ page: page.id }))
 
 	// Set context so child components can access the page
-	const context = $state({ value: page })
+	const context = { get value() { return page } }
 	page_context.set(context)
-	$effect(() => {
-		context.value = page
-	})
 
 	const site = $derived(Sites.one(page.site))
 	const page_type = $derived(page.page_type ? PageTypes.one(page.page_type) : null)

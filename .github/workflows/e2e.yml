@@ -55,7 +55,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Test published section hydration
-        run: node --test tests/browser/published-hydration.test.mjs
+        run: node --test tests/browser/*.test.mjs
 
       # Deliberately NOT cached. global-setup.ts fails the run if the primo
       # binary is older than the newest tracked source file, and

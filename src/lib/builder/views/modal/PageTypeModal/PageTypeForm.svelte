@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import { watch } from 'runed'
 	import UI from '../../../ui/index.js'
@@ -47,9 +47,9 @@
 	let { new_page_name: initial_name = '', new_color: initial_color = '#2B407D', new_icon: initial_icon = 'iconoir:page' } = $props()
 
 	// Local state initialized from props, won't be overwritten by parent updates
-	let new_page_name = $state(initial_name)
-	let new_color = $state(initial_color)
-	let new_icon = $state(initial_icon)
+	let new_page_name = $state(untrack(() => initial_name))
+	let new_color = $state(untrack(() => initial_color))
+	let new_icon = $state(untrack(() => initial_icon))
 
 	let page_creation_disabled = $derived(!new_page_name)
 
@@ -83,16 +83,18 @@
 	}
 
 	// Auto-select the first unused color once when creating a new page type
-	if (initial_name === '' && site) {
-		const existing_page_types = site?.page_types() || []
-		const used_colors = new Set(existing_page_types.map((pt) => pt.color))
-		const unused_color = color_options.find((color) => !used_colors.has(color))
+	untrack(() => {
+		if (initial_name === '' && site) {
+			const existing_page_types = site?.page_types() || []
+			const used_colors = new Set(existing_page_types.map((pt) => pt.color))
+			const unused_color = color_options.find((color) => !used_colors.has(color))
 
-		// Set the first unused color as default
-		if (unused_color) {
-			new_color = unused_color
+			// Set the first unused color as default
+			if (unused_color) {
+				new_color = unused_color
+			}
 		}
-	}
+	})
 </script>
 
 <form

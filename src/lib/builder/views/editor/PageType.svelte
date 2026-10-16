@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as _ from 'lodash-es'
-	import { tick } from 'svelte'
+	import { tick, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import { site_context, page_type_context } from '$lib/builder/stores/context'
 	import { flip } from 'svelte/animate'
@@ -25,14 +25,11 @@
 
 	let { page_type }: { page_type: ObjectOf<typeof PageTypes> } = $props()
 
-	setUserActivity({ page_type: page_type.id })
+	setUserActivity(() => ({ page_type: page_type.id }))
 
 	// Set context so child components can access the page type
-	const context = $state({ value: page_type })
+	const context = { get value() { return page_type } }
 	page_type_context.set(context)
-	$effect(() => {
-		context.value = page_type
-	})
 
 	const { value: site } = site_context.get()
 	const site_symbols = $derived(site?.symbols() ?? [])
@@ -45,8 +42,8 @@
 	const footer_sections = $derived(page_type_sections.filter((s) => s.zone === 'footer').sort((a, b) => a.index - b.index))
 
 	// Page type head and foot editors
-	let head = $state(page_type.head || '')
-	let foot = $state(page_type.foot || '')
+	let head = $state(untrack(() => page_type.head || ''))
+	let foot = $state(untrack(() => page_type.foot || ''))
 	let save_timeout: ReturnType<typeof setTimeout> | null = null
 
 	// Update head and foot when page type changes
@@ -56,8 +53,8 @@
 	})
 
 	// Head editor resize state
-	const storage_key = `head-editor-height-${page_type.id}`
-	let head_editor_height = $state(typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(storage_key) || '50') : 50)
+	const storage_key = $derived(`head-editor-height-${page_type.id}`)
+	let head_editor_height = $state(untrack(() => typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(storage_key) || '50') : 50))
 	let is_resizing = $state(false)
 	let resize_start_y = $state(0)
 	let resize_start_height = $state(0)
