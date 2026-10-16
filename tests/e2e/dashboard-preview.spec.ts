@@ -6,7 +6,10 @@ import { canvasFrame, replaceContentEditableText, stubExternalImages } from './h
 
 // Use a local alias to exercise the hosted dashboard's realtime subscriptions;
 // the app intentionally disables subscriptions on localhost and 127.0.0.1.
-test.use({ launchOptions: { args: ['--host-resolver-rules=MAP primo-preview.test 127.0.0.1', '--no-proxy-server'] } })
+// Other engines use the disposable runner's hosts entry for this reserved alias.
+test.use({ launchOptions: async ({ browserName }, use) => {
+	await use({ args: browserName === 'chromium' ? ['--host-resolver-rules=MAP primo-preview.test 127.0.0.1', '--no-proxy-server'] : [] })
+} })
 const browserURL = TEST_SERVER_URL.replace('127.0.0.1', 'primo-preview.test')
 
 test('dashboard thumbnails keep their styles when page scripts would change the markup', async ({ page, request }) => {
