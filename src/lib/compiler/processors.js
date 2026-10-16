@@ -14,16 +14,34 @@ const COMPILED_COMPONENTS_CACHE = new Map()
  * @async
  * @param {Object} options - The options for rendering.
  * @param {Object|Object[]} options.component - The component(s) to be rendered. Can be a single component or an array of components for a page.
- * @param {{ code: string, data: Object }} options.head
+ * @param {{ code: string, data: Object }} [options.head]
  * @param {boolean} [options.buildStatic=true] - Indicates whether to build the component statically or not.
  * @param {"injected" | "external"} [options.css] - Indicates whether to include CSS in the JavaScript bundle.
- * @param {string} [options.format='esm'] - The module format to use, such as 'esm' for ES Modules.
+ * @param {import('@rollup/browser').ModuleFormat} [options.format='esm'] - The module format to use, such as 'esm' for ES Modules.
  * @param {boolean} [options.dev_mode=false] - Whether Svelte should be compiled in dev mode (i.e. attaches LOC for inspecting) or not
+ * @param {boolean} [options.independent=false]
  * @param {string[]} [options.runtime=[]] - Svelte runtime functions to include in bundle (eg. mount, unmount, hydrate).
  * @returns {Promise<Object>} Returns a payload containing the rendered HTML, CSS, JS, and other relevant data.
  * @throws {Error} Throws an error if the compilation or rendering fails.
  */
-export async function html({ component, head, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [] }) {
+export async function html({ component, head = { code: '', data: {} }, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [], independent = false }) {
+	// Published sections are hydrated individually, so each must also be a
+	// separate SSR root. Render the page head once outside those roots.
+	if (buildStatic && independent && Array.isArray(component)) {
+		const options = { css, format, dev_mode, runtime }
+		const page_head = await html({ ...options, component: [], head })
+		if (page_head.error) return page_head
+		let body = ''
+		let rendered_head = page_head.head || ''
+		for (const section of component) {
+			const rendered = await html({ ...options, component: section })
+			if (rendered.error) return rendered
+			body += (section.wrapper_start || '') + (rendered.body || '') + (section.wrapper_end || '')
+			rendered_head += rendered.head || ''
+		}
+		return { body, head: rendered_head }
+	}
+
 	let cache_key
 	if (!buildStatic) {
 		cache_key = JSON.stringify({

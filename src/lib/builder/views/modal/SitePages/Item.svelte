@@ -71,11 +71,18 @@
 	// This is used to track hover position for subpages when this Item has children
 	let children_hover_position = $state<string | null>(null)
 
-	get(`page-list-toggle--${page.id}`).then((toggled) => {
-		if (toggled !== undefined) showing_children = toggled
+	let expansion_loaded = $state(false)
+	onMount(() => {
+		let active = true
+		get(`page-list-toggle--${page.id}`).then((toggled) => {
+			if (!active) return
+			if (toggled !== undefined) showing_children = toggled
+			expansion_loaded = true
+		})
+		return () => { active = false }
 	})
 	$effect(() => {
-		set(`page-list-toggle--${page.id}`, showing_children)
+		if (expansion_loaded) set(`page-list-toggle--${page.id}`, showing_children)
 	})
 
 	let creating_page = $state(false)
@@ -101,7 +108,7 @@
 		return descendants
 	}
 
-	let drag_handle_element = $state()
+	let drag_handle_element = $state<HTMLButtonElement>()
 	let element = $state<HTMLElement>()
 	// Browse mode removes the drag handle from the DOM, so a registration made
 	// once on mount would keep pointing at the detached element after a
@@ -258,7 +265,7 @@
 
 	let is_dragging = $state(false)
 
-	let name_input_el
+	let name_input_el = $state<HTMLElement>()
 </script>
 
 <div class="Item" bind:this={element} class:contains-child={parent} class:dragging={is_dragging}>
@@ -286,7 +293,7 @@
 			{:else}
 				<div class="details">
 					<span class="icon" style:background={page_type?.color}>
-						<Icon icon={page_type?.icon} />
+						<Icon icon={page_type?.icon ?? 'iconoir:page'} />
 					</span>
 					<a class:active href={full_url?.href} onclick={() => {}} class="name">{page.name}</a>
 					<span class="url">/{page.slug}</span>
@@ -295,7 +302,7 @@
 					{#each related_activities as [{ user, user_avatar }]}
 						<Avatar.Root class="ring-background ring-2 size-5 ml-4">
 							{#if user_avatar}
-								<Avatar.Image src={user_avatar} alt={user.name || user.email} class="object-cover object-center" />
+								<Avatar.Image src={user_avatar.toString()} alt={user.name || user.email} class="object-cover object-center" />
 							{/if}
 							<Avatar.Fallback>{(user.name || user.email).slice(0, 2).toUpperCase()}</Avatar.Fallback>
 						</Avatar.Root>
@@ -348,7 +355,7 @@
 							on_click: () => {
 								editing_page = !editing_page
 								tick().then(() => {
-									name_input_el.focus()
+									name_input_el?.focus()
 								})
 							}
 						},
@@ -385,7 +392,7 @@
 
 													// If the deleted page was the one open, navigate to homepage
 													try {
-														if (page_slug === page.slug) {
+														if (page_slug === page.slug && homepage) {
 															const home_url = build_cms_page_url(homepage, pageState.url)
 															if (home_url) await goto(home_url, { replaceState: true })
 														}
@@ -413,7 +420,7 @@
 
 												// If the deleted page was the one open, navigate to homepage
 												try {
-													if (page_slug === page.slug) {
+													if (page_slug === page.slug && homepage) {
 														const home_url = build_cms_page_url(homepage, pageState.url)
 														if (home_url) await goto(home_url, { replaceState: true })
 													}
@@ -585,10 +592,6 @@
 				align-self: center;
 			}
 
-			hr {
-				border-width: 1px !important;
-				border-color: #1a1a1a !important;
-			}
 		}
 	}
 
@@ -663,17 +666,13 @@
 					text-overflow: ellipsis;
 				}
 
-				div.name,
-				div.url {
+				div.name {
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					width: 100%;
 					color: var(--primo-primary-color);
 
-					span {
-						color: var(--color-gray-5);
-					}
 
 					&:focus {
 						outline: none;

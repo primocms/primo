@@ -1,5 +1,5 @@
 <script>
-	import { createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, untrack } from 'svelte'
 	import * as _ from 'lodash-es'
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
@@ -17,7 +17,7 @@
 	 * @property {any} [value]
 	 * @property {any} [fallback_label]
 	 * @property {any} [dividers]
-	 * @property {string} [placement]
+	 * @property {import('@popperjs/core').Placement} [placement]
 	 * @property {string} [variant]
 	 * @property {boolean} [fullwidth]
 	 * @property {boolean} [loading]
@@ -39,7 +39,8 @@
 		disable_auto_highlight = false
 	} = $props()
 
-	const [popperRef, popperContent] = createPopperActions({
+	/** @type {Partial<import('@popperjs/core').Options>} */
+	const popper_options = $derived({
 		placement,
 		strategy: 'fixed',
 		modifiers: fullwidth
@@ -59,8 +60,10 @@
 			: [offsetByFixedParents, { name: 'offset', options: { offset: [0, 3] } }]
 	})
 
+	const [popperRef, popperContent] = createPopperActions()
 	let showing_dropdown = $state(false)
 
+	/** @type {{ title: string, options: Array<{ label: string, value: unknown, onclick?: () => void }> } | null} */
 	let active_submenu = $state(null)
 	let selected_submenu_option = null
 
@@ -79,16 +82,11 @@
 		return selected
 	}
 
-	options.find((option) => {
-		const selected_suboption = option.suboptions?.find((sub) => sub.value === value)
-		return option.value === value || selected_suboption
-	})
-
 	// highlight button when passed value changes (i.e. when auto-changing field type based on name)
 	let highlighted = $state(false)
 	let disable_highlight = true // prevent highlighting on initial value set
 	let manually_selected = $state(false) // or manual set
-	let last_value = $state(value)
+	let last_value = $state(untrack(() => value))
 	function highlight_button(val) {
 		if (disable_auto_highlight) {
 			return
@@ -110,11 +108,7 @@
 	})
 </script>
 
-<div
-	class="Select {variant}"
-	use:clickOutside
-	onclick_outside={() => (showing_dropdown = false)}
-	role="group"
+<svelte:window
 	onkeydown={(event) => {
 		if (showing_dropdown && event.key === 'Escape') {
 			showing_dropdown = false
@@ -124,6 +118,13 @@
 			document.getElementById(select_id)?.focus()
 		}
 	}}
+/>
+
+<div
+	class="Select {variant}"
+	use:clickOutside
+	onclick_outside={() => (showing_dropdown = false)}
+	role="group"
 >
 	<div class="select-container">
 		{#if label}
@@ -157,7 +158,7 @@
 		</button>
 	</div>
 	{#if showing_dropdown}
-		<div class="popup" in:fade={{ duration: 100 }} use:popperContent>
+		<div class="popup" in:fade={{ duration: 100 }} use:popperContent={popper_options}>
 			{#if !active_submenu}
 				<div class="options">
 					{#each options as option, i}

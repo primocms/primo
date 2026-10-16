@@ -69,6 +69,7 @@ export function swap_array_item_index(arr, from, to) {
 	return new_array
 }
 
+/** @returns {import('svelte/action').ActionReturn<undefined, { onclick_outside?: (event: CustomEvent) => void }>} */
 export function clickOutside(node) {
 	const handleClick = (event) => {
 		if (node && !node.contains(event.target) && !event.defaultPrevented) {

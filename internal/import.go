@@ -751,7 +751,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			ptFields = parsed
-			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, false, &warnings)
+			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, true, &warnings)
 		}
 
 		// Read layout.yaml if it exists
@@ -2293,20 +2293,15 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 		// Get page type fields - map field key/name -> field id
 		ptFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageTypeId})
-		fieldByKey := make(map[string]string)
-		for _, f := range ptFields {
-			key := f.GetString("key")
-			if key == "" {
-				key = f.GetString("name")
-			}
-			fieldByKey[key] = f.Id
-		}
+		fieldByKey, fieldsByParent := contentFieldScopes(ptFields)
 
 		// Get existing page entries
 		existingEntries, _ := app.FindRecordsByFilter("page_entries", "page = {:page}", "", 0, 0, dbx.Params{"page": page.Id})
 		entryByField := make(map[string]*core.Record)
 		for _, e := range existingEntries {
-			entryByField[e.GetString("field")] = e
+			if e.GetString("parent") == "" {
+				entryByField[e.GetString("field")] = e
+			}
 		}
 
 		entriesColl, err := app.FindCollectionByNameOrId("page_entries")
@@ -2315,8 +2310,8 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		}
 
 		for fieldKey, value := range pageContent {
-			fieldId := fieldByKey[fieldKey]
-			if fieldId == "" {
+			field := fieldByKey[fieldKey]
+			if field == nil {
 				if warnings != nil {
 					pageTypeName := pageData.PageType
 					if pageTypeName == "" {
@@ -2332,6 +2327,22 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 							sourceFile, fieldKey, pageTypeName, sanitizeFilename(pageTypeName),
 						),
 					})
+				}
+				continue
+			}
+
+			fieldId := field.Id
+			if field.GetString("type") == "repeater" || field.GetString("type") == "group" {
+				// Replace this field's item tree; unrelated scalar entries retain IDs.
+				for _, entry := range existingEntries {
+					if entry.GetString("field") == fieldId && entry.GetString("parent") == "" {
+						if err := app.Delete(entry); err != nil {
+							return "", nil, err
+						}
+					}
+				}
+				if err := importPageContentField(app, entriesColl, page.Id, field, value, "", 0, fieldsByParent); err != nil {
+					return "", nil, err
 				}
 				continue
 			}
@@ -2518,6 +2529,12 @@ func importSiteFields(app core.App, site *core.Record, data []byte) error {
 // resolution in blocks. The full importPageType still runs in pass 2 and
 // re-processes these rows idempotently.
 func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []interface{}, pageTypeNameToId map[string]string) (map[string]string, error) {
+	return importPageTypeFields(app, pageType, ptFields, pageTypeNameToId, false)
+}
+
+// Both import passes match fields by full ancestry so same-named children
+// cannot overwrite one another or be deleted during the second pass.
+func importPageTypeFields(app core.App, pageType *core.Record, ptFields []interface{}, pageTypeNameToId map[string]string, prune bool) (map[string]string, error) {
 	keyToId := make(map[string]string)
 
 	fieldsColl, err := app.FindCollectionByNameOrId("page_type_fields")
@@ -2525,24 +2542,35 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		return keyToId, err
 	}
 
-	existingFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
-	existingByKey := make(map[string]*core.Record)
-	for _, f := range existingFields {
-		existingByKey[f.GetString("key")] = f
+	existingFields, err := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
+	if err != nil {
+		return keyToId, err
 	}
+	existingByID := make(map[string]*core.Record)
+	for _, field := range existingFields {
+		existingByID[field.Id] = field
+	}
+	existingByCompositeKey := make(map[string]*core.Record)
+	for _, field := range existingFields {
+		existingByCompositeKey[buildBlockFieldCompositeKey(field, existingByID)] = field
+	}
+	matched := make(map[string]bool)
+	byPath := make(map[string]*core.Record)
+	parents := make(map[string]string)
 
-	for i, fieldEntry := range ptFields {
-		fieldData, ok := fieldEntry.(map[string]interface{})
-		if !ok {
-			continue
-		}
+	for i, fieldData := range flattenSubfields(fieldListToMaps(ptFields), "") {
 		fieldKey := getString(fieldData, "name")
 		if fieldKey == "" {
 			continue
 		}
 
+		parentKey := getString(fieldData, "parent")
+		fieldPath := fieldKey
+		if parentKey != "" {
+			fieldPath = parentKey + "/" + fieldKey
+		}
 		var field *core.Record
-		if existing, ok := existingByKey[fieldKey]; ok {
+		if existing, ok := existingByCompositeKey[fieldPath]; ok {
 			field = existing
 		} else {
 			field = core.NewRecord(fieldsColl)
@@ -2554,6 +2582,9 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		ptFieldType := getString(fieldData, "type")
 		field.Set("type", ptFieldType)
 		field.Set("index", i)
+		if parentKey == "" {
+			field.Set("parent", "")
+		}
 
 		ptFieldConfig, hasPtFieldConfig := fieldData["config"]
 		if !hasPtFieldConfig {
@@ -2575,10 +2606,86 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		if err := app.Save(field); err != nil {
 			return keyToId, err
 		}
-		keyToId[fieldKey] = field.Id
+		matched[field.Id] = true
+		byPath[fieldPath] = field
+		parents[fieldPath] = parentKey
+		if parentKey == "" {
+			keyToId[fieldKey] = field.Id
+		}
 	}
 
+	for fieldPath, parentKey := range parents {
+		if parentKey == "" {
+			continue
+		}
+		parent := byPath[parentKey]
+		if parent == nil {
+			return keyToId, fmt.Errorf("page-type field %q has unknown parent %q", fieldPath, parentKey)
+		}
+		field := byPath[fieldPath]
+		field.Set("parent", parent.Id)
+		if err := app.Save(field); err != nil {
+			return keyToId, err
+		}
+	}
+	if prune {
+		for _, field := range existingFields {
+			if matched[field.Id] {
+				continue
+			}
+			if err := app.Delete(field); err != nil {
+				if _, missing := app.FindRecordById("page_type_fields", field.Id); missing == nil {
+					return keyToId, err
+				}
+			}
+		}
+	}
 	return keyToId, nil
+}
+
+// importPageContentField stores the same parent/item structure used by the
+// editor and other content scopes. Containers cannot be opaque JSON values.
+func importPageContentField(app core.App, collection *core.Collection, pageID string, field *core.Record, value interface{}, parentID string, index int, children map[string][]*core.Record) error {
+	if field.GetString("type") == "repeater" {
+		items, _ := value.([]interface{})
+		for i, item := range items {
+			entry := core.NewRecord(collection)
+			entry.Set("page", pageID)
+			entry.Set("field", field.Id)
+			entry.Set("parent", parentID)
+			entry.Set("index", i)
+			entry.Set("locale", "en")
+			if err := saveContentEntry(app, entry); err != nil {
+				return err
+			}
+			values, _ := item.(map[string]interface{})
+			for _, child := range children[field.Id] {
+				if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	entry := core.NewRecord(collection)
+	entry.Set("page", pageID)
+	entry.Set("field", field.Id)
+	entry.Set("parent", parentID)
+	entry.Set("index", index)
+	entry.Set("locale", "en")
+	entry.Set("value", normalizeValueForStorage(value))
+	if err := saveContentEntry(app, entry); err != nil {
+		return err
+	}
+	if field.GetString("type") == "group" {
+		values, _ := value.(map[string]interface{})
+		for _, child := range children[field.Id] {
+			if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // resolvePageFieldRef parses a page-field config.field value and returns the
@@ -2955,116 +3062,9 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 		return err
 	}
 
-	// Import page type fields. Always run, even when ptFields is empty,
-	// so removing all fields from the YAML actually clears the DB.
-	{
-		fieldsColl, err := app.FindCollectionByNameOrId("page_type_fields")
-		if err != nil {
-			return err
-		}
-
-		existingFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
-		existingByKey := make(map[string]*core.Record)
-		for _, f := range existingFields {
-			existingByKey[f.GetString("key")] = f
-		}
-
-		// Track which existing field records this import re-used. Anything
-		// not matched by the end is a field the user removed from the YAML.
-		matchedFieldIds := make(map[string]bool)
-
-		// Track field key -> record for parent resolution, and fields with parents
-		fieldKeyToRecord := make(map[string]*core.Record)
-		fieldsWithParent := make([]struct {
-			field     *core.Record
-			parentKey string
-		}, 0)
-
-		// First pass: Create/update all fields without parent relationships
-		for i, fieldEntry := range ptFields {
-			fieldData, ok := fieldEntry.(map[string]interface{})
-			if !ok {
-				continue
-			}
-			fieldKey := getString(fieldData, "name")
-			if fieldKey == "" {
-				continue
-			}
-
-			var field *core.Record
-			if existing, ok := existingByKey[fieldKey]; ok {
-				field = existing
-			} else {
-				field = core.NewRecord(fieldsColl)
-				field.Set("page_type", pageType.Id)
-			}
-
-			field.Set("key", fieldKey)
-			field.Set("label", getString(fieldData, "label"))
-			ptFieldType := getString(fieldData, "type")
-			field.Set("type", ptFieldType)
-			field.Set("index", i)
-
-			// Read config (preferred) or options (backwards compatibility)
-			ptFieldConfig, hasPtFieldConfig := fieldData["config"]
-			if !hasPtFieldConfig {
-				ptFieldConfig, hasPtFieldConfig = fieldData["options"]
-			}
-			if hasPtFieldConfig && ptFieldConfig != nil {
-				// For page-list and page types, convert page_type name to page_type ID
-				if ptFieldType == "page-list" || ptFieldType == "page" {
-					if configMap, ok := ptFieldConfig.(map[string]interface{}); ok {
-						if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
-							if ptId, found := pageTypeNameToId[ptName]; found {
-								configMap["page_type"] = ptId
-							}
-						}
-					}
-				}
-				field.Set("config", ptFieldConfig)
-			}
-
-			if err := app.Save(field); err != nil {
-				return err
-			}
-			matchedFieldIds[field.Id] = true
-
-			fieldKeyToRecord[fieldKey] = field
-
-			// Track fields that have a parent for second pass
-			if parentKey := getString(fieldData, "parent"); parentKey != "" {
-				fieldsWithParent = append(fieldsWithParent, struct {
-					field     *core.Record
-					parentKey string
-				}{field, parentKey})
-			}
-		}
-
-		// Second pass: Set parent relationships
-		for _, fp := range fieldsWithParent {
-			if parentRecord, ok := fieldKeyToRecord[fp.parentKey]; ok {
-				fp.field.Set("parent", parentRecord.Id)
-				if err := app.Save(fp.field); err != nil {
-					return err
-				}
-			}
-		}
-
-		// Delete fields the user removed from page-type config.yaml.
-		// Cascade rules on page_type_fields.parent and the entry tables
-		// handle subfield + content cleanup; tolerate already-cascaded
-		// records.
-		for _, existing := range existingFields {
-			if matchedFieldIds[existing.Id] {
-				continue
-			}
-			if err := app.Delete(existing); err != nil {
-				if _, notFound := app.FindRecordById("page_type_fields", existing.Id); notFound != nil {
-					continue
-				}
-				return err
-			}
-		}
+	// The second pass also removes definitions absent from the imported schema.
+	if _, err := importPageTypeFields(app, pageType, ptFields, pageTypeNameToId, true); err != nil {
+		return err
 	}
 
 	// Import page_type_symbols (allowed blocks on this page type).
