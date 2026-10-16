@@ -3,8 +3,8 @@
  let count = $state(0)
 </script>
 <section data-primo-launch-fixture={environment}>
- <h1 data-primo-qa-heading>{heading}</h1>
- <ul>{#each items as item}<li>{item.name}<ul>{#each item.links ?? [] as link}<li>{link.label}</li>{/each}</ul></li>{/each}</ul>
+ <h1 data-primo-qa-heading data-key="heading">{heading}</h1>
+ <ul>{#each items as item}<li><span data-key="name">{item.name}</span><ul>{#each item.links ?? [] as link}<li data-key="label">{link.label}</li>{/each}</ul></li>{/each}</ul>
  <button type="button" data-primo-qa-counter onclick={() => count++}>Count {count}</button>
 </section>
 <style>

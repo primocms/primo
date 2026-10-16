@@ -6,6 +6,8 @@ import path from 'node:path'
 import os from 'node:os'
 import {createHash} from 'node:crypto'
 import {spawn} from 'node:child_process'
+import {createRequire} from 'node:module'
+import {pathToFileURL} from 'node:url'
 import {compile} from 'svelte/compiler'
 import {candidate,configIssues,request,verifyTarget,privateReport,resolveEnv,identity} from '../lib.mjs'
 import {preflight} from '../preflight.mjs'
@@ -203,4 +205,30 @@ test('a design field or developer membership cannot be used for an edit soak',as
 })
 test('streamed oversized responses are bounded before entering test evidence',async t=>{
  const f=await fixture(t,{count:1});await assert.rejects(request(f.c,f.c.cmsOrigin+'/oversized'),/exceeds test evidence limit/)
+})
+
+test('complete fixture files pass the pinned packaged MCP block and page validators',async t=>{
+ const f=await fixture(t,{count:1}),site=path.join(f.root,'site')
+ const require=createRequire(import.meta.url),entry=pathToFileURL(require.resolve('primo-mcp'))
+ const {validateBlockFromDisk}=await import(new URL('./validators/block.js',entry))
+ const {validatePageFromDisk}=await import(new URL('./tools/validate_page.js',entry))
+ assert.equal(JSON.parse(await fs.readFile(new URL('../package.json',entry),'utf8')).version,'0.1.11-rc.2')
+ for(const [source,destination] of [
+  ['qa-block.svelte','blocks/qa-probe/component.svelte'],
+  ['qa-fields.yaml','blocks/qa-probe/fields.yaml'],
+  ['qa-content.example.yaml','blocks/qa-probe/content.yaml'],
+  ['qa-page.example.yaml','pages/index.yaml']
+ ]) {
+  const file=path.join(site,destination);await fs.mkdir(path.dirname(file),{recursive:true})
+  const contents=(await fs.readFile(new URL('../fixtures/'+source,import.meta.url),'utf8')).replaceAll('REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT',f.c.environmentId)
+  await fs.writeFile(file,contents)
+ }
+ await fs.writeFile(path.join(site,'blocks/qa-probe/config.yaml'),'name: QA probe\n')
+ await fs.mkdir(path.join(site,'page-types/default'),{recursive:true})
+ await fs.writeFile(path.join(site,'page-types/default/config.yaml'),'name: Default\nallowed_blocks: [qa-probe]\n')
+ const block=await validateBlockFromDisk({site_path:site,name:'qa-probe'})
+ assert.equal(block.ok,true,JSON.stringify(block))
+ assert.ok(block.errors.every(e=>e.severity==='warning' && /"environment"|"qa_scratch"/.test(e.message)),JSON.stringify(block))
+ const page=await validatePageFromDisk({site_path:site,page_path:'pages/index.yaml'})
+ assert.equal(page.ok,true,JSON.stringify(page));assert.deepEqual(page.errors,[])
 })

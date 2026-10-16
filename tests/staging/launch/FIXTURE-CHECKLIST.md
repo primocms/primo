@@ -25,11 +25,12 @@ The supplied source fixtures map to the existing Primo file layout:
 | --- | --- |
 | `fixtures/qa-block.svelte` | `blocks/qa-probe/component.svelte` |
 | `fixtures/qa-fields.yaml` | `blocks/qa-probe/fields.yaml` |
+| `fixtures/qa-content.example.yaml` | `blocks/qa-probe/content.yaml` (required defaults) |
 | A block config `name: QA probe` | `blocks/qa-probe/config.yaml` |
 | A page-type config `name: Default` and `allowed_blocks: [qa-probe]` | `page-types/default/config.yaml` |
 | `fixtures/qa-page.example.yaml` | `pages/index.yaml` |
 
-Replace every environment marker with the one unique disposable environment ID. For each site's page, replace the scratch baseline with **`QA scratch agency-NN`**. The page has five block instances with visible headings `QA section 0` through `QA section 4`, a nested list, and a click counter in each block. The `qa_scratch` field is intentionally **not rendered**. The already-published page must expose five `data-primo-launch-fixture` markers with that environment ID. Do not use a hidden admin/private page for the anonymous marker probe.
+Replace every environment marker with the one unique disposable environment ID. For each site's page, replace the scratch baseline with **`QA scratch agency-NN`**. The page has five block instances with visible headings `QA section 0` through `QA section 4`, a nested list, and a click counter in each block. The `qa_scratch` field is intentionally **not rendered**. Keep the environment marker unchanged during manual edits. The packaged MCP validator emits two intentional advisory warnings: the attribute-only environment marker has no inline `data-key`, and `qa_scratch` is unused by the rendered component. All fixture validation errors must be zero; visible heading/list text has explicit inline-edit keys. The already-published page must expose five `data-primo-launch-fixture` markers with that environment ID. Do not use a hidden admin/private page for the anonymous marker probe.
 
 Map each actor to its first block instance's root `qa_scratch` text entry. Supply the user/site/page/section/field/entry IDs in `staging.local.json`; all are PocketBase 15-character IDs. Record field key `qa_scratch`, root ancestry (empty parent), locale/index and baseline. Different actors require different users, sites and entries. The runner verifies the ownership chain and bindings before writing; it changes only `{value: ...}`.
 
