@@ -1,6 +1,6 @@
 {
 	"name": "primo",
-	"version": "3.1.0",
+	"version": "3.3.2-rc.3",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -29,14 +29,14 @@
 		"@sveltejs/kit": "^2.63.0",
 		"@tailwindcss/typography": "^0.5.20",
 		"@tailwindcss/vite": "^4.3.0",
-		"@tiptap/core": "^3.27.0",
-		"@tiptap/extension-highlight": "^3.27.0",
-		"@tiptap/extension-image": "^3.27.0",
-		"@tiptap/extension-link": "^3.27.0",
-		"@tiptap/extension-typography": "^3.27.0",
-		"@tiptap/extension-youtube": "^3.27.0",
-		"@tiptap/pm": "^3.27.0",
-		"@tiptap/starter-kit": "^3.27.0",
+		"@tiptap/core": "^3.32.0",
+		"@tiptap/extension-highlight": "^3.32.0",
+		"@tiptap/extension-image": "^3.32.0",
+		"@tiptap/extension-link": "^3.32.0",
+		"@tiptap/extension-typography": "^3.32.0",
+		"@tiptap/extension-youtube": "^3.32.0",
+		"@tiptap/pm": "^3.32.0",
+		"@tiptap/starter-kit": "^3.32.0",
 		"@types/lodash-es": "^4.17.12",
 		"@types/pluralize": "^0.0.33",
 		"autosize": "^6.0.1",
@@ -63,7 +63,8 @@
 		"posthog-js": "^1.369.3",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^3.5.1",
-		"primo-cli": "0.2.0",
+		"primo-cli": "file:release/vendor/primo-cli-0.3.0-rc.2.tgz",
+		"primo-mcp": "file:release/vendor/primo-mcp-0.1.11-rc.2.tgz",
 		"promise-worker": "^2.0.1",
 		"prosemirror-schema-basic": "^1.2.4",
 		"runed": "^0.37.1",
@@ -85,7 +86,17 @@
 		"heic2any": "^0.0.4"
 	},
 	"overrides": {
-		"vite": "^7.3.3",
-		"@sveltejs/vite-plugin-svelte": "^6.2.4"
+		"vite": {
+			".": "^7.3.3",
+			"esbuild": "^0.28.2"
+		},
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@sveltejs/kit": {
+			"cookie": "^0.7.2"
+		},
+		"@tailwindcss/typography": {
+			"postcss-selector-parser": "^7.1.6"
+		},
+		"primo-mcp": "$primo-mcp"
 	}
 }

@@ -23,7 +23,24 @@ const COMPILED_COMPONENTS_CACHE = new Map()
  * @returns {Promise<Object>} Returns a payload containing the rendered HTML, CSS, JS, and other relevant data.
  * @throws {Error} Throws an error if the compilation or rendering fails.
  */
-export async function html({ component, head, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [] }) {
+export async function html({ component, head, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [], independent = false }) {
+	// Published sections are hydrated individually, so each must also be a
+	// separate SSR root. Render the page head once outside those roots.
+	if (buildStatic && independent && Array.isArray(component)) {
+		const options = { css, format, dev_mode, runtime }
+		const page_head = await html({ ...options, component: [], head })
+		if (page_head.error) return page_head
+		let body = ''
+		let rendered_head = page_head.head || ''
+		for (const section of component) {
+			const rendered = await html({ ...options, component: section })
+			if (rendered.error) return rendered
+			body += (section.wrapper_start || '') + (rendered.body || '') + (section.wrapper_end || '')
+			rendered_head += rendered.head || ''
+		}
+		return { body, head: rendered_head }
+	}
+
 	let cache_key
 	if (!buildStatic) {
 		cache_key = JSON.stringify({

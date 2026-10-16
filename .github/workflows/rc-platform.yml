@@ -1,0 +1,75 @@
+name: Candidate native platforms
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/rc-platform.yml'
+      - 'tests/platform/**'
+      - 'package*.json'
+      - 'release/vendor/**'
+permissions:
+  contents: read
+concurrency:
+  group: rc-platform-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux_amd64
+          - runner: ubuntu-24.04-arm
+            target: linux_arm64
+          - runner: macos-15-intel
+            target: darwin_amd64
+          - runner: macos-15
+            target: darwin_arm64
+          - runner: windows-latest
+            target: windows_amd64.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.26.9
+          cache: true
+      - run: npm ci
+      - run: npm audit
+      - name: Check reachable Go vulnerabilities
+        if: matrix.target == 'linux_amd64'
+        shell: bash
+        run: |
+          GOTOOLCHAIN=go1.27.2 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          GOTOOLCHAIN=go1.26.9 govulncheck ./...
+      - name: Build embedded frontend
+        shell: bash
+        run: |
+          npx svelte-kit sync
+          npx vite --config common.config.js build
+          NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
+      - name: Build versioned native executable
+        shell: bash
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.3 -X github.com/primocms/primo/internal.buildTime=2026-10-16T03:04:00Z" -o primo_${{ matrix.target }} .
+      - name: Exercise exact native candidate and installed CLI
+        shell: bash
+        env:
+          PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PRIMO_TEST_CMS_BINARY: primo_${{ matrix.target }}
+        run: node --test tests/platform/*.test.mjs
+      - name: Retain tested bytes and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc3-${{ matrix.target }}
+          path: |
+            primo_${{ matrix.target }}
+            platform-result.json
+          if-no-files-found: error

@@ -136,7 +136,7 @@ export async function openBlockContentModal(page: Page, canvasElementLocator: Re
 	await canvasElementLocator.hover()
 	await page.getByRole('button', { name: 'Edit Block Content' }).click()
 	const dialog = page.getByRole('dialog')
-	await expect(dialog.locator('.RepeaterField')).toBeVisible({ timeout: 10000 })
+	await expect(dialog.locator('.RepeaterField').first()).toBeVisible({ timeout: 10000 })
 	return dialog
 }
 

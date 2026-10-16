@@ -60,7 +60,19 @@
 			}
 		})
 
-		visibleRepeaters[`${field.key}-${repeater_item_just_created}`] = true
+		const created = repeater_entries.find((entry) => entry.index === repeater_item_just_created)
+		if (created) visibleRepeaters[created.id] = true
+	}
+
+	function move_item(entry: Entry, direction: -1 | 1) {
+		if ($read_only || !field.key) return
+		const position = repeater_entries.findIndex((item) => item.id === entry.id)
+		const destination = position + direction
+		if (position < 0 || destination < 0 || destination >= repeater_entries.length) return
+		const reordered = [...repeater_entries]
+		reordered.splice(destination, 0, reordered.splice(position, 1)[0])
+		repeater_item_just_created = null
+		onchange({ [field.key]: Object.fromEntries(reordered.map((item, index) => [index, { entryId: item.id }])) })
 	}
 
 	let visibleRepeaters = $state<Record<string, boolean>>({})
@@ -78,9 +90,6 @@
 
 	// TODO: Handle these
 	let show_label = false
-
-	let hover_index = $state(null)
-	let hover_position = $state(null)
 </script>
 
 <div class="RepeaterField repeater-level-{level}">
@@ -88,11 +97,10 @@
 		<p class="primo--field-label">{field.label}</p>
 	{/if}
 	<ul class="fields">
-		{#each repeater_entries as entry (entry.id)}
+		{#each repeater_entries as entry, position (entry.id)}
 			{@const index = entry.index}
-			{@const subfield_id = `${field.key}-${index}`}
+			{@const subfield_id = entry.id}
 			{@const autofocus = index === repeater_item_just_created}
-			{@const hovering = hover_index === index}
 			<li>
 				<RepeaterFieldItem
 					{entity}
@@ -104,23 +112,19 @@
 					{entries}
 					{level}
 					{autofocus}
+					can_move_up={position > 0}
+					can_move_down={position < repeater_entries.length - 1}
+					onmove={(direction) => move_item(entry, direction)}
 					{onchange}
 					{ondelete}
 					is_visible={visibleRepeaters[subfield_id]}
 					on:toggle={() => (visibleRepeaters[subfield_id] = !visibleRepeaters[subfield_id])}
 					on:toggleall={() => {
-						const all_visible = repeater_entries.every((e) => visibleRepeaters[`${field.key}-${e.index}`])
+						const all_visible = repeater_entries.every((e) => visibleRepeaters[e.id])
 						repeater_entries.forEach((e) => {
-							visibleRepeaters[`${field.key}-${e.index}`] = !all_visible
+							visibleRepeaters[e.id] = !all_visible
 						})
 					}}
-					on:hover={({ detail }) => {
-						hover_index = index
-						hover_position = detail
-					}}
-					{hovering}
-					{hover_position}
-					on:move
 					on:remove={() => {
 						// Delete the repeater item entry
 						// PocketBase cascade deletion will automatically clean up all sub-entries
@@ -129,10 +133,8 @@
 						}
 
 						// Remove from visible repeaters tracking
-						delete visibleRepeaters[`${field.key}-${index}`]
+						delete visibleRepeaters[entry.id]
 					}}
-					on:keydown
-					on:add
 				/>
 			</li>
 		{/each}

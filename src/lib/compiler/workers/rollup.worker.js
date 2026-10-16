@@ -236,8 +236,8 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 							try {
 								const res = await sveltePromiseWorker.postMessage({
 									code,
-										svelteOptions,
-										module: id.endsWith('.svelte.js')
+									svelteOptions: { ...svelteOptions, filename: id === './App.svelte' && !Array.isArray(component) && component.filename ? component.filename : id },
+									module: id.endsWith('.svelte.js')
 								})
 								return res.code
 

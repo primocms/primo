@@ -161,6 +161,9 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 	if err != nil {
 		return nil, e.NotFoundError("Site not found", err)
 	}
+	if e.Auth != nil && !isSiteDeveloper(pb, e.Auth, site.Id) {
+		return nil, e.ForbiddenError("A developer is required to change domains", nil)
+	}
 	if !IsLocalhost(e) {
 		info, err := e.RequestInfo()
 		if err != nil {
