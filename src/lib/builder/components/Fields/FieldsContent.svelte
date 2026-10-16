@@ -236,7 +236,7 @@
 							</span>
 						{/if}
 						<span class="tab-content">
-							<Icon icon={$fieldTypes.find((f) => f.id === field.type)?.icon} />
+							<Icon icon={$fieldTypes.find((f) => f.id === field.type)?.icon ?? 'ph:text-t'} />
 							{#if field.type === 'repeater'}
 								<span>Entries</span>
 							{:else}

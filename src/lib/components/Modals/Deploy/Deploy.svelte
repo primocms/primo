@@ -8,6 +8,7 @@
 
 	let { stage = $bindable(), publish_fn, loading, site_host, onConnectDomain, onClose } = $props()
 
+	/** @type {string | null} */
 	let error = $state(null)
 
 	async function handle_publish() {
@@ -17,7 +18,7 @@
 			stage = 'PUBLISHED'
 		} catch (err) {
 			console.error('Publish error:', err)
-			error = err.message || err.toString() || 'Failed to publish site'
+			error = err instanceof Error ? err.message : String(err || 'Failed to publish site')
 			stage = 'ERROR'
 		}
 	}

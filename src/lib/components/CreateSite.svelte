@@ -175,6 +175,7 @@
 			if (!selected_block_ids.length) return
 
 			const site = created_site
+			if (!site) throw new Error('Site creation did not return a site')
 			const source_symbols = selected_blocks.filter((symbol) => !!symbol)
 			const source_symbol_fields = selected_block_fields.filter((field) => !!field)
 			const source_symbol_entries = selected_block_entries.filter((entry) => !!entry)

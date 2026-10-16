@@ -45,7 +45,7 @@ export function validate_site_data(data) {
 
 		return true
 	} catch (error) {
-		console.error('Site data validation failed:', error.message)
+		console.error('Site data validation failed:', error instanceof Error ? error.message : String(error))
 		return false
 	}
 }

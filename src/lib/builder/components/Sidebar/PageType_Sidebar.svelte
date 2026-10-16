@@ -45,7 +45,7 @@
 
 	const { value: site } = site_context.getOr({ value: null })
 	const page_type_id = $derived(page.params.page_type)
-	const page_type = $derived(PageTypes.one(page_type_id))
+	const page_type = $derived(page_type_id ? PageTypes.one(page_type_id) : undefined)
 	const fields = $derived(page_type?.fields() ?? [])
 	const entries = $derived(page_type?.entries() ?? [])
 	const page_type_symbols = $derived(page_type?.symbols() ?? [])
@@ -93,7 +93,7 @@
 			console.log('Import successful!')
 		} catch (error) {
 			console.error('Failed to import symbol:', error)
-			console.error('Error details:', error.message, error.stack)
+			if (error instanceof Error) console.error('Error details:', error.message, error.stack)
 			upload_file_invalid = true
 			file = undefined
 		}
@@ -128,13 +128,11 @@
 			onDragStart() {
 				$dragging_symbol = true
 			},
-			onDragEnd() {
-				$dragging_symbol = false
-			},
 			onDrop({ self, source }) {
+				$dragging_symbol = false
 				if (!site) return
 				const closestEdgeOfTarget = extractClosestEdge(self.data)
-				const block_dragged_over = self.data.block
+				const block_dragged_over = block
 				const block_being_dragged = source.data.block
 				const block_dragged_over_index = site_symbols.findIndex((symbol) => symbol.id === block_dragged_over.id)
 				const target_index = closestEdgeOfTarget === 'top' ? block_dragged_over_index : block_dragged_over_index + 1
@@ -158,7 +156,7 @@
 	let editing_block_has_unsaved_changes = $state(false)
 	let creating_block_has_unsaved_changes = $state(false)
 
-	let commit_task = $state<number>()
+	let commit_task = $state<ReturnType<typeof setTimeout>>()
 </script>
 
 <Dialog.Root
@@ -238,8 +236,8 @@
 >
 	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-4">
 		<BlockPicker
-			{site}
 			onsave={async (blocks) => {
+				if (!site) return
 				try {
 					const {
 						symbols: source_symbols,

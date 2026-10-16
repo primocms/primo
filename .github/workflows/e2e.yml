@@ -32,6 +32,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - name: Check all TypeScript, JavaScript and Svelte sources
+        run: npm run check
       - run: npm run test:integration
 
       # Browser builds are pinned to the @playwright/test version, so key the
