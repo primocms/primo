@@ -29,6 +29,6 @@
   "sanitizedEvidence": [],
   "blockedReasons": [
     "Access and device/version scope are not yet supplied.",
-    "Invitation delivery and external publication require later authorization."
+    "Invitation delivery needs supplied SMTP/inbox access; external publication remains prohibited."
   ]
 }

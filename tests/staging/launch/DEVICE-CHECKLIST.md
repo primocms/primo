@@ -28,10 +28,10 @@ The public script verifies five expected headings are visible, checks viewport o
 
 Mutating permission API regressions already live in the frozen candidate's automated tests. Do not try to change source/schema on an external server merely to test rejection under this preparation task.
 
-## Lifecycle steps blocked by current instructions
+## Lifecycle steps still unexecuted
 
-- [ ] **NOT_RUN — invite second user through actual mail**, accept it in the controlled inbox, verify correct site/role and invitation failure/resend behavior. Requires SMTP/inbox access and later explicit outbound-mail authorization.
+- [ ] **NOT_RUN — invite second user through actual mail**, accept it in the controlled inbox, verify correct site/role and invitation failure/resend behavior. Requires SMTP/inbox access, controlled recipients and a later handoff execution.
 - [ ] **NOT_RUN — publish as developer, edit as client and republish**, compare the actual public response/assets through CDN with the approved draft, then recheck counter and nested content. Requires later permission to publish on the disposable target.
 - [ ] **NOT_RUN — custom-domain attach, DNS/ACME and renewal**, including certificate chain and routing for a disposable owned domain. Requires later authority for provider/DNS mutations.
 
-Leave these statuses blocked when access or authority is missing. Passing the public probe or draft editing never clears them. All release PRs remain draft; no merge, registry publication or deployment is part of this checklist execution.
+Leave these statuses blocked when access is missing or the no-publish/no-deploy restriction prevents the action. Passing the public probe or draft editing never clears them. All release PRs remain draft; no merge, registry publication or deployment is part of this checklist execution.
