@@ -1,0 +1,63 @@
+name: Frozen RC.5 cross-browser staging
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/rc5-cross-browser.yml'
+      - 'tests/staging/**'
+      - 'tests/e2e/**'
+      - 'playwright.config.ts'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: rc5-cross-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      PRIMO_TEST_BROWSER: ${{ matrix.browser }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PRIMO_ENABLE_USAGE_STATS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc5-linux_amd64
+          path: frozen
+          run-id: 38852345603
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify frozen binary and exact installed packages
+        shell: bash
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/verify-installed.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./tests/staging/rc5-packages.json").cms.sha256)' >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Full CMS browser checks against frozen RC.5
+        run: npx playwright test --timeout=90000 --max-failures=3
+      - name: Verify product files remain unchanged
+        if: always()
+        run: node tests/staging/verify-installed.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc5-staging-${{ matrix.browser }}
+          path: |
+            playwright-report
+            test-results
+            /tmp/primo-e2e-server.log
+          if-no-files-found: warn

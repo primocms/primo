@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export const PRIMOCMS_ROOT = path.resolve(__dirname, '../../..')
-export const PRIMO_BINARY = path.join(PRIMOCMS_ROOT, 'primo')
+export const PRIMO_BINARY = process.env.PRIMO_TEST_CMS_BINARY ? path.resolve(process.env.PRIMO_TEST_CMS_BINARY) : path.join(PRIMOCMS_ROOT, 'primo')
 // Pinned via package.json's exact-version "primo-cli" devDependency (see
 // package.json) rather than a sibling ../primo-cli checkout, so the CLI
 // under test is a specific, reproducible published version and never
