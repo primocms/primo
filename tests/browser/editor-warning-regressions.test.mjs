@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -53,6 +53,11 @@ async function fixture(source, { presence = false, pageData = false, extraMocks 
 					b.onResolve({ filter: /^\$app\/environment$/ }, () => ({ path: 'test:environment', namespace: 'test' }))
 					b.onResolve({ filter: /^\$lib\/components\/ui\/tooltip$/ }, () => ({ path: 'test:tooltip', namespace: 'test' }))
 					b.onResolve({ filter: /^\.\.\/\.\.\/\.\.\/ui\/index\.js$/ }, () => ({ path: 'test:ui', namespace: 'test' }))
+					if (pageForm) {
+						b.onResolve({filter: /^\.\.\/\.\.\/\.\.\/ui$/}, () => ({path:'test:ui', namespace:'test'}))
+						b.onResolve({filter: /^\$lib\/pocketbase\/collections$/}, () => ({path:'test:collections', namespace:'test'}))
+						b.onResolve({filter: /^\$lib\/components\/ui\/button$/}, () => ({path:'test:button', namespace:'test'}))
+					}
 					if (pageData) {
 						b.onResolve({ filter: /^\.\/pocketbase\/collections$/ }, () => ({ path: 'test:page-collections', namespace: 'test' }))
 						b.onResolve({ filter: /^\.\/pocketbase\/managers$/ }, () => ({ path: 'test:managers', namespace: 'test' }))
@@ -275,4 +280,27 @@ test('select options remain clickable outside a transformed scrolling dialog', a
   assert.equal(await page.locator('button.primary').evaluate(el=>el===document.activeElement),true)
   assert.deepEqual(f.errors,[])
  } finally {await f.close()}
+})
+
+
+test('page creation keeps typed name and slug when its default page type refreshes', async () => {
+	const f = await fixture(
+		`<script>import Form from ${component('src/lib/builder/views/modal/SitePages/PageForm.svelte')};let type=$state('first');const parent={children:()=>[{page_type:type}]};let saved=$state(null);export function refresh(){type='second'}export function read(){return saved}</script><Form {parent} oncreate={(value)=>{saved={...value}}}/>`,
+		{pageForm:true, extraMocks:{
+			'test:utilities':'export const createUniqueID=()=>"form-test";export const validate_url=(v)=>v.toLowerCase().replace(/\\s+/g,"-");',
+			'test:button':'export {default as Button} from "test:button.svelte";',
+			'test:button.svelte':'<script>let {children,...props}=$props()</script><button {...props}>{@render children?.()}</button>'
+		}}
+	)
+	try {
+		const {page}=f
+		await page.getByLabel('Page name', {exact:true}).fill('Client draft')
+		await page.getByLabel('Page slug', {exact:true}).fill('custom-client-slug')
+		await page.evaluate(()=>subject.refresh())
+		assert.equal(await page.getByLabel('Page name', {exact:true}).inputValue(),'Client draft')
+		assert.equal(await page.getByLabel('Page slug', {exact:true}).inputValue(),'custom-client-slug')
+		await page.getByRole('button',{name:'Create page',exact:true}).click()
+		assert.deepEqual(await page.evaluate(()=>subject.read()),{name:'Client draft',slug:'custom-client-slug',page_type:'first'})
+		assert.deepEqual(f.errors,[])
+	} finally {await f.close()}
 })
