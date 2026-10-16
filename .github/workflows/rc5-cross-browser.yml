@@ -1,6 +1,7 @@
 name: Frozen RC.5 cross-browser staging
 on:
   pull_request:
+    branches: [release/founding-builders-rc.5]
     paths:
       - '.github/workflows/rc5-cross-browser.yml'
       - 'tests/staging/**'

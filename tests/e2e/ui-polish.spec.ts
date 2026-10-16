@@ -68,9 +68,21 @@ test.describe('Auth forms', () => {
 		await page.getByRole('button', { name: 'Create account', exact: true }).click()
 		await expect(page.getByRole('alert')).toContainText('Passwords do not match')
 		expect(submissions).toBe(0)
+		// WebKit can include the transparent native file widget's anonymous
+		// contents in scroll overflow even though its own box fits the avatar.
+		const avatar = page.getByLabel('Upload profile photo')
+		await avatar.setInputFiles({name:'a-long-profile-photo-name.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="red"/></svg>')})
+		await expect(page.getByAltText('Avatar preview')).toBeVisible()
+		await page.getByRole('button', { name: 'Create account', exact: true }).click()
+		await expect(page.getByRole('alert')).toContainText('Passwords do not match')
+		expect(submissions).toBe(0)
 		const viewport = await page.evaluate(() => ({
 			scrollWidth: document.documentElement.scrollWidth,
 			innerWidth: window.innerWidth,
+			clientWidth: document.documentElement.clientWidth,
+			bodyWidth: document.body.scrollWidth,
+			rootStyle: {overflow: getComputedStyle(document.documentElement).overflow, width:getComputedStyle(document.documentElement).width},
+			actualScroll: (() => { const y=window.scrollY; window.scrollTo(1000,y); const x=window.scrollX; window.scrollTo(0,y); return x })(),
 			overflow: Array.from(document.querySelectorAll('*')).map((node) => {
 				const rect = node.getBoundingClientRect()
 				return { tag: node.tagName, className: node.className, left: rect.left, right: rect.right }
@@ -78,6 +90,7 @@ test.describe('Auth forms', () => {
 		}))
 		await test.info().attach('invitation-viewport', { body: JSON.stringify(viewport), contentType: 'application/json' })
 		expect(viewport.scrollWidth <= viewport.innerWidth, JSON.stringify(viewport)).toBe(true)
+		expect(viewport.actualScroll, JSON.stringify(viewport)).toBe(0)
 	})
 })
 
@@ -104,8 +117,8 @@ test.describe('Editor dialogs', () => {
 
 	test('create page has an explicit action and its fields fit a narrow dialog', async ({ page }) => {
 		await stubExternalImages(page)
-		await loginAsDeveloper(page, ids.siteId)
 		await page.setViewportSize({ width: 390, height: 844 })
+		await loginAsDeveloper(page, ids.siteId)
 		await page.getByRole('button', { name: 'Pages', exact: true }).click()
 		await page.getByRole('button', { name: 'Create page', exact: true }).click()
 		const action = page.getByRole('button', { name: 'Create page', exact: true })

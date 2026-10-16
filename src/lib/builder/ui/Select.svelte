@@ -60,6 +60,15 @@
 			: [offsetByFixedParents, { name: 'offset', options: { offset: [0, 3] } }]
 	})
 
+	// Keep the popup in this DOM subtree for focus and outside-click handling,
+	// while the native top layer escapes transformed, scrolling dialogs.
+	function topLayer(node) {
+		if (typeof node.showPopover !== 'function') return
+		node.setAttribute('popover', 'manual')
+		node.showPopover()
+		return { destroy() { if (node.matches(':popover-open')) node.hidePopover() } }
+	}
+
 	const [popperRef, popperContent] = createPopperActions()
 	let showing_dropdown = $state(false)
 
@@ -158,7 +167,7 @@
 		</button>
 	</div>
 	{#if showing_dropdown}
-		<div class="popup" in:fade={{ duration: 100 }} use:popperContent={popper_options}>
+		<div class="popup" in:fade={{ duration: 100 }} use:topLayer use:popperContent={popper_options}>
 			{#if !active_submenu}
 				<div class="options">
 					{#each options as option, i}
@@ -311,6 +320,8 @@
 		border-color: var(--color-gray-8);
 	}
 	.popup {
+		margin: 0;
+		inset: auto;
 		display: grid;
 		gap: 0.375rem;
 		place-items: normal;

@@ -100,7 +100,9 @@ test('dashboard thumbnails keep their styles when page scripts would change the 
 })
 
 test('dashboard previews stay styled after the first UI build and a second UI build', async ({ page, context, request }) => {
-	test.setTimeout(90000)
+	// Two real compilations can each use the existing 45s build budget,
+	// in addition to fixture creation, editing and realtime assertions.
+	test.setTimeout(180000)
 	const { token, record } = await devAuth(request)
 	const ids = await seedFixtureSite(token, 'Build Preview Fixture')
 	const headers = { Authorization: `Bearer ${token}` }
@@ -138,7 +140,15 @@ test('dashboard previews stay styled after the first UI build and a second UI bu
 	await dashboard.goto(`${browserURL}/admin/dashboard/sites`)
 	await subscribed
 	const iframe = dashboard.locator(`iframe[src*="_site=${ids.siteId}"]`)
-	const thumbnailHeadline = iframe.contentFrame().locator('[data-testid="headline"]')
+	// Read the same-origin static DOM from its parent. Firefox's automation
+	// context can stall after repeated CSP-blocked iframe navigation even
+	// while the parent sees the freshly rendered heading and computed styles.
+	const thumbnailState = () => iframe.evaluate((node: HTMLIFrameElement) => {
+		const doc = node.contentDocument
+		const heading = doc?.querySelector('[data-testid="headline"]')
+		const style = heading && node.contentWindow?.getComputedStyle(heading)
+		return {text:heading?.textContent?.trim(),scoped:!!heading?.className.match(/svelte-/),color:style?.color,size:style?.fontSize,loaded:doc?.readyState==='complete'}
+	})
 	let previousSrc: string | null = null
 	for (const { text, color, size } of [
 		{ text: 'First UI build', color: 'rgb(12, 34, 56)', size: '32px' },
@@ -163,19 +173,13 @@ test('dashboard previews stay styled after the first UI build and a second UI bu
 		const result = dialog.getByRole('heading', { name: /Preview ready|Preview failed/ })
 		await expect(result).toBeVisible({ timeout: 45000 })
 		await expect(result, await dialog.innerText()).toHaveText('Preview ready')
-		await expect(thumbnailHeadline).toHaveText(text)
-		await expect(thumbnailHeadline).toHaveClass(/svelte-/)
-		await expect(thumbnailHeadline).toHaveCSS('color', color)
-		await expect(thumbnailHeadline).toHaveCSS('font-size', size)
-		const frame = dashboard.frames().find((frame) => frame.url().includes(`_site=${ids.siteId}`))!
-		await frame.waitForLoadState('load')
-		await expect(thumbnailHeadline).toHaveClass(/svelte-/)
+		await expect.poll(thumbnailState).toMatchObject({text,scoped:true,color,size,loaded:true})
+		await test.info().attach('dashboard-'+text.replaceAll(' ','-'), {body:JSON.stringify(await thumbnailState()),contentType:'application/json'})
 		const src = await iframe.getAttribute('src')
 		expect(src).not.toBe(previousSrc)
 		previousSrc = src
 		await dialog.getByRole('button', { name: 'Done', exact: true }).click()
 	}
 	await dashboard.reload()
-	await expect(thumbnailHeadline).toHaveText('Second UI build')
-	await expect(thumbnailHeadline).toHaveCSS('color', 'rgb(78, 90, 123)')
+	await expect.poll(thumbnailState).toMatchObject({text:'Second UI build',color:'rgb(78, 90, 123)',scoped:true,size:'36px',loaded:true})
 })

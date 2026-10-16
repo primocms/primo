@@ -179,7 +179,7 @@
 						</label>
 						<Input id="auth-name" data-test-id="name" bind:value={name} name="name" autocomplete="name" placeholder="Your name" disabled={loading} class="h-10" />
 					</div>
-					<label class="relative flex h-10 w-10 items-center justify-center rounded-md border border-input bg-muted text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
+					<label class="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-input bg-muted text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
 						{#if avatar}<img src={avatar} alt="Avatar preview" class="h-full w-full rounded-md object-cover" />{:else}<User size={18} aria-hidden="true" />{/if}
 						<input type="file" accept="image/*" aria-label="Upload profile photo" onchange={handleAvatarChange} disabled={loading} class="absolute inset-0 h-full w-full opacity-0 cursor-pointer" />
 					</label>

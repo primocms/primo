@@ -308,7 +308,10 @@
 				const text_matches = typeof value == 'string' && value.trim() === text
 
 				// All other field types are text
-				if (text_matches && text.length > 0) {
+				// An ancestor can have the same innerText as its only heading.
+				// Editing that wrapper lets select-all replace the component markup.
+				const matching_child = text_matches && valid_elements.some((candidate) => candidate !== element && element.contains(candidate) && candidate.innerText?.trim() === text)
+				if (text_matches && text.length > 0 && !matching_child) {
 					set_editable_text({ id, element })
 					return true
 				} else return false

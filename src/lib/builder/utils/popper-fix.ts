@@ -5,7 +5,7 @@ export const offsetByFixedParents: Partial<Modifier<string, Record<string, unkno
 	enabled: true,
 	phase: 'read',
 	fn: ({ state }) => {
-		if (state.options.strategy !== 'fixed') {
+		if (state.options.strategy !== 'fixed' || state.elements.popper.matches(':popover-open')) {
 			return
 		}
 
