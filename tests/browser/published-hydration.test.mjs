@@ -18,7 +18,8 @@ const processorSource = (await readFile(new URL('src/lib/compiler/processors.js'
 	.replace(/const blob = new Blob\([\s\S]*?URL.revokeObjectURL\(url\)/, 'const { default: App } = await importSSR(res.ssr)')
 	.replaceAll('export async function ', 'async function ')
 
-async function fixture() {
+async function fixture({ transformSources = [] } = {}) {
+	const filenames = []
 	const temp = await mkdtemp(new URL('.hydration-test-', root).pathname)
 	let mode = 'server',
 		serial = 0,
@@ -26,6 +27,7 @@ async function fixture() {
 	const rollup = async ({ input, plugins }) => ({
 		generate: async () => {
 			const plugin = plugins.find((p) => p.name === 'repl-plugin')
+			for (const { source, id } of transformSources) await plugin.transform(source, id)
 			const bundled = await build({
 				stdin: { contents: await plugin.load(input), resolveDir: root.pathname },
 				bundle: true,
@@ -54,7 +56,10 @@ async function fixture() {
 			return { output: [{ code: bundled.outputFiles[0].text }] }
 		}
 	})
-	const sveltePromiseWorker = { postMessage: async ({ code, svelteOptions, module }) => ({ code: (module ? compileModule(code, svelteOptions) : compile(code, svelteOptions)).js.code }) }
+	const sveltePromiseWorker = { postMessage: async ({ code, svelteOptions, module }) => {
+		filenames.push(svelteOptions.filename)
+		return { code: (module ? compileModule(code, { generate: svelteOptions.generate, dev: svelteOptions.dev }) : compile(code, svelteOptions)).js.code }
+	} }
 	Function(
 		'rollup',
 		'sveltePromiseWorker',
@@ -78,7 +83,7 @@ async function fixture() {
 		return import(file.href)
 	}
 	const html = Function('_', 'rollup_worker', 'postcss_worker', 'render', 'importSSR', processorSource + '\nreturn html;')(_, transport, {}, render, importSSR)
-	return { html, cleanup: () => rm(temp, { recursive: true, force: true }) }
+	return { html, filenames, cleanup: () => rm(temp, { recursive: true, force: true }) }
 }
 
 for (const reversed of [false, true]) {
@@ -148,3 +153,17 @@ for (const reversed of [false, true]) {
 		}
 	})
 }
+
+
+test('imported components retain their own compiler identity', async () => {
+	const dependency = 'https://components.example.test/Child.svelte'
+	const f = await fixture({ transformSources: [{ id: dependency, source: '<h2>Child</h2><style>h2 { color: blue }</style>' }] })
+	try {
+		for (const buildStatic of [true, false]) {
+			const result = await f.html({ component: { filename: 'symbol-parent.svelte', html: '<h1>Parent</h1>', js: '', css: 'h1 { color: red }', data: {} }, buildStatic })
+			assert.equal(result.error, undefined)
+		}
+		assert.ok(f.filenames.includes('symbol-parent.svelte'))
+		assert.equal(f.filenames.filter(filename => filename === dependency).length, 2, 'dependency identity must be distinct from the parent block in both builds')
+	} finally { await f.cleanup() }
+})
