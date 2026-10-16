@@ -40,10 +40,16 @@ jobs:
           cache: npm
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.25.14
+          go-version: 1.26.9
           cache: true
       - run: npm ci
       - run: npm audit
+      - name: Check reachable Go vulnerabilities
+        if: matrix.target == 'linux_amd64'
+        shell: bash
+        run: |
+          GOTOOLCHAIN=go1.27.2 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          GOTOOLCHAIN=go1.26.9 govulncheck ./...
       - name: Build embedded frontend
         shell: bash
         run: |
