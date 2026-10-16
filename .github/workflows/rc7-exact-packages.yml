@@ -1,15 +1,15 @@
-name: Frozen RC.6 exact-package handoff
+name: Frozen RC.7 exact-package handoff
 on:
   pull_request:
-    branches: [release/founding-builders-rc.6]
+    branches: [release/founding-builders-rc.7]
     paths:
-      - '.github/workflows/rc6-exact-packages.yml'
+      - '.github/workflows/rc7-exact-packages.yml'
       - 'tests/staging/**'
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: rc6-exact-${{ github.ref }}
+  group: rc7-exact-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   browser:
@@ -37,30 +37,30 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc6-linux_amd64
+          name: rc7-linux_amd64
           path: frozen
-          run-id: 38960323789
+          run-id: 38962963117
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Verify immutable native artifact, production provenance and installed archives
         run: |
           chmod 755 "$PRIMO_TEST_CMS_BINARY"
-          node tests/staging/verify-rc6.mjs
-          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./tests/staging/rc6-packages.json").cms.sha256)' >> "$GITHUB_ENV"
+          node tests/staging/verify-rc7.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./tests/staging/rc7-packages.json").cms.sha256)' >> "$GITHUB_ENV"
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Resolve reserved alias only inside this disposable runner
         run: echo '127.0.0.1 primo-preview.test' | sudo tee -a /etc/hosts
-      - name: Full browser suite against frozen RC.6 bytes
+      - name: Full browser suite against frozen RC.7 bytes
         run: npx playwright test --timeout=90000 --reporter=list,json
       - name: Complete packaged agent and client handoff
         if: ${{ !cancelled() }}
-        run: node --test tests/staging/rc6/handoff.test.mjs
+        run: node --test tests/staging/rc7/handoff.test.mjs
       - name: Reverify all product bytes after both checks
         if: always()
-        run: node tests/staging/verify-rc6.mjs
+        run: node tests/staging/verify-rc7.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc6-exact-${{ matrix.browser }}
+          name: rc7-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
             test-results

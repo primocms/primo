@@ -4,7 +4,7 @@ import path from 'node:path'
 import {createHash} from 'node:crypto'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
-const manifest=JSON.parse(await fs.readFile('tests/staging/rc6-packages.json','utf8'))
+const manifest=JSON.parse(await fs.readFile('tests/staging/rc7-packages.json','utf8'))
 for(const [key,name] of [['cli','primo-cli'],['mcp','primo-mcp']]){
  const archive=path.resolve('release/vendor',manifest[key].archive)
  assert.equal(createHash('sha256').update(await fs.readFile(archive)).digest('hex'),manifest[key].sha256)
@@ -25,4 +25,4 @@ const binary=process.env.PRIMO_TEST_CMS_BINARY
 assert.ok(binary)
 assert.equal(createHash('sha256').update(await fs.readFile(binary)).digest('hex'),manifest.cms.sha256)
 assert.ok(execFileSync(binary,['--version'],{encoding:'utf8'}).includes(manifest.cms.version))
-console.log('PASS exact RC.6 native executable hash and version')
+console.log('PASS exact RC.7 native executable hash and version')
