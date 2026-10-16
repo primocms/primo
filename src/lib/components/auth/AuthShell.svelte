@@ -12,7 +12,9 @@
 <style>
 	.auth-shell {
 		min-height: 100dvh;
+		width: 100%;
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		place-items: center;
 		padding: 32px 16px;
 		background: hsl(var(--background));
@@ -22,6 +24,7 @@
 	.auth-card {
 		width: 100%;
 		max-width: 420px;
+		min-width: 0;
 		padding: 28px;
 		border: 1px solid hsl(var(--border));
 		border-radius: 8px;

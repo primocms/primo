@@ -82,6 +82,7 @@ test.describe('Auth forms', () => {
 		}))
 		await test.info().attach('invitation-viewport', { body: JSON.stringify(viewport), contentType: 'application/json' })
 		expect(viewport.scrollWidth <= viewport.innerWidth, JSON.stringify(viewport)).toBe(true)
+		expect(viewport.actualScroll, JSON.stringify(viewport)).toBe(0)
 	})
 })
 
