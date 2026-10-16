@@ -117,8 +117,8 @@ test.describe('Editor dialogs', () => {
 
 	test('create page has an explicit action and its fields fit a narrow dialog', async ({ page }) => {
 		await stubExternalImages(page)
-		await loginAsDeveloper(page, ids.siteId)
 		await page.setViewportSize({ width: 390, height: 844 })
+		await loginAsDeveloper(page, ids.siteId)
 		await page.getByRole('button', { name: 'Pages', exact: true }).click()
 		await page.getByRole('button', { name: 'Create page', exact: true }).click()
 		const action = page.getByRole('button', { name: 'Create page', exact: true })
