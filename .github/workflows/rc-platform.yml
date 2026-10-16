@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22.13.0
@@ -51,12 +52,13 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.2 -X github.com/primocms/primo/internal.buildTime=2026-10-16T02:00:00Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.2 -X github.com/primocms/primo/internal.buildTime=2026-10-16T01:49:22Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
+          PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           PRIMO_TEST_CMS_BINARY: primo_${{ matrix.target }}
-        run: node --test tests/platform/candidate.test.mjs
+        run: node --test tests/platform/*.test.mjs
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:

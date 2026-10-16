@@ -50,6 +50,6 @@ test('native candidate starts, edits content safely, survives restart and builds
  await cli(['init','--no-mcp']);
  const unused=net.createServer();await new Promise(r=>unused.listen(0,'127.0.0.1',r));const unusedPort=unused.address().port;await new Promise(r=>unused.close(r));await fs.writeFile(path.join(cliWork,'server.yaml'),`port: ${unusedPort}\n`);
  await cli(['new','client','--skip-dev']);await cli(['build','--dir',path.join(cliWork,'sites/client'),'--output',path.join(root,'public')]);assert.match(await fs.readFile(path.join(root,'public/index.html'),'utf8'),/<html/i)
- const evidence={platform:process.platform,arch:process.arch,node:process.version,cms:expected,cli:pkg.version,sha256:createHash('sha256').update(await fs.readFile(binary)).digest('hex'),checks:['native version','migrations/startup','frontend HTTP','create page/block/field/content','client content edit','source/cycle denial','restart persistence','exact installed CLI static build']}
+ const evidence={sourceCommit:process.env.PRIMO_CANDIDATE_SHA,platform:process.platform,arch:process.arch,node:process.version,cms:expected,cli:pkg.version,sha256:createHash('sha256').update(await fs.readFile(binary)).digest('hex'),checks:['native version','migrations/startup','frontend HTTP','create page/block/field/content','client content edit','source/cycle denial','restart persistence','exact installed CLI static build']}
  await fs.writeFile('platform-result.json',JSON.stringify(evidence,null,2)+'\n');console.log(evidence)
 })
