@@ -49,6 +49,8 @@ jobs:
           node tests/staging/verify-installed.mjs
           node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./tests/staging/rc5-packages.json").cms.sha256)' >> "$GITHUB_ENV"
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Resolve reserved preview alias in this disposable runner
+        run: echo '127.0.0.1 primo-preview.test' | sudo tee -a /etc/hosts
       - name: Full CMS browser checks against frozen RC.5
         run: npx playwright test --timeout=90000 --max-failures=0 --reporter=list,json
       - name: Verify product files remain unchanged

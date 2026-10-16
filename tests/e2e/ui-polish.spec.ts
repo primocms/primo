@@ -68,7 +68,16 @@ test.describe('Auth forms', () => {
 		await page.getByRole('button', { name: 'Create account', exact: true }).click()
 		await expect(page.getByRole('alert')).toContainText('Passwords do not match')
 		expect(submissions).toBe(0)
-		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+		const viewport = await page.evaluate(() => ({
+			scrollWidth: document.documentElement.scrollWidth,
+			innerWidth: window.innerWidth,
+			overflow: Array.from(document.querySelectorAll('*')).map((node) => {
+				const rect = node.getBoundingClientRect()
+				return { tag: node.tagName, className: node.className, left: rect.left, right: rect.right }
+			}).filter((rect) => rect.left < 0 || rect.right > window.innerWidth).slice(0, 10)
+		}))
+		await test.info().attach('invitation-viewport', { body: JSON.stringify(viewport), contentType: 'application/json' })
+		expect(viewport.scrollWidth <= viewport.innerWidth, JSON.stringify(viewport)).toBe(true)
 	})
 })
 
