@@ -42,6 +42,7 @@ async function fixture(source, { presence = false, extraMocks = {} } = {}) {
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					b.onResolve({ filter: /^\$lib\/builder\/utils\/popper-fix$/ }, () => ({ path: path.join(root, 'src/lib/builder/utils/popper-fix.ts') }))
 					b.onResolve({ filter: /^test:/ }, (args) => ({ path: args.path, namespace: 'test' }))
 					b.onResolve({ filter: /^@iconify\/svelte$|IconPicker\.svelte$/ }, () => ({ path: 'test:empty.svelte', namespace: 'test' }))
 					b.onResolve({ filter: /utilities(?:\.js)?$/ }, () => ({ path: 'test:utilities', namespace: 'test' }))
