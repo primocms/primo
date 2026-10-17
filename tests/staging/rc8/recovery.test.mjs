@@ -15,7 +15,9 @@ test('production upgrade and copied recovery retain content, image and publicati
  const candidate = path.resolve(process.env.PRIMO_TEST_CMS_BINARY)
  const previous = path.resolve(process.env.PRIMO_PREVIOUS_BINARY)
  const oldManifest = JSON.parse(await fs.readFile('tests/staging/launch/candidate.json', 'utf8'))
- assert.equal(hash(await fs.readFile(previous)), oldManifest.cms.nativeSha256ByTarget[`${process.platform}_${process.arch}`])
+ const target = `${process.platform === 'win32' ? 'windows' : process.platform}_${process.arch === 'x64' ? 'amd64' : process.arch}`
+ assert.ok(oldManifest.cms.nativeSha256ByTarget[target], `Unsupported prior artifact target: ${target}`)
+ assert.equal(hash(await fs.readFile(previous)), oldManifest.cms.nativeSha256ByTarget[target])
  assert.match((await exec(previous, ['--version'])).stdout, /v3\.3\.2-rc\.7/)
  assert.match((await exec(candidate, ['--version'])).stdout, /v3\.3\.2-rc\.8/)
  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'primo-rc8-recovery-'))
