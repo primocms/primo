@@ -94,9 +94,15 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 
 	const stopTracking = async () => {
 		if (activity) {
-			// There's only one activity per user
-			UserActivities.delete(activity.id)
+			const id = activity.id
 			activity = null
+			// Hidden includes hard navigation. Starting authenticated cleanup
+			// there can outlive the JS document even with a caught promise.
+			// The server expires presence after inactivity; resume with a new
+			// record because the old one may already have expired.
+			if (document.hidden) return
+			// There's only one activity per user
+			UserActivities.delete(id)
 			await manager.commit()
 		}
 	}
