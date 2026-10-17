@@ -6,12 +6,13 @@ const client=await c.login(a.email,a.password)
 const fields=(await c.ok('/api/collections/site_symbol_fields/records?perPage=200',{token:client.token})).items
 const field=fields.find(f=>f.key==='heading'),entry=(await c.ok('/api/collections/page_section_entries/records?filter='+encodeURIComponent('section="'+a.sectionId+'" && field="'+field.id+'"'),{token:client.token})).items[0]
 const onlyIndex=process.argv.indexOf('--only-browser'),only=onlyIndex>=0?process.argv[onlyIndex+1]:null
+invariant(!only || ['Chrome','Edge','Firefox'].includes(only),'Unknown browser selector')
 const engines=await import(pathToFileURL(path.join(c.kit,'tooling/node_modules/@playwright/test/index.mjs'))),cases=[]
 for(const [label,engine,channel] of [['Chrome','chromium','chrome'],['Edge','chromium','msedge'],['Firefox','firefox',undefined]]) {
  if(only && label!==only)continue
  const result={browser:label,status:'FAIL',checks:[]},tag='QA live-update '+label+' '+randomUUID();let browser
  try {
-  browser=await engines[engine].launch({headless:true,...(channel?{channel}:{})});result.version=browser.version()
+  browser=await engines[engine].launch({headless:true,timeout:30000,...(channel?{channel}:{})});result.version=browser.version()
   const ctx=await browser.newContext({viewport:{width:1280,height:900}})
   await ctx.addInitScript(auth=>localStorage.setItem('pocketbase_auth',JSON.stringify(auth)),client)
   const first=await ctx.newPage(),second=await ctx.newPage(),errors=[]

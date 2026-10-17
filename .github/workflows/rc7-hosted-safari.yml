@@ -1,0 +1,63 @@
+name: RC7 hosted Safari public probe
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/rc7-hosted-safari.yml'
+      - 'tests/staging/hosted/safari-config.mjs'
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Public-only disposable Railway fixture JSON; no credentials'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  syntax:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+      - run: node --check tests/staging/hosted/safari-config.mjs
+  safari:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    timeout-minutes: 10
+    env:
+      PRIMO_QA_SAFARI_WEBDRIVER: http://127.0.0.1:4444
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+      - name: Prepare only the supplied public fixture
+        env:
+          PRIMO_QA_SAFARI_CONFIGURATION: ${{ inputs.configuration }}
+        run: node tests/staging/hosted/safari-config.mjs
+      - name: Enable Safari only on this disposable runner and probe the hosted fixture
+        shell: bash
+        run: |
+          sudo /usr/bin/safaridriver --enable
+          /usr/bin/safaridriver --port 4444 > safari-driver.log 2>&1 &
+          driver_pid=$!
+          trap 'kill "$driver_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4444/status > /dev/null; then break; fi
+            sleep 1
+          done
+          node tests/staging/launch/device.mjs --config safari.local.json --device ci-safari --run
+      - name: Retain public probe results only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc7-real-safari-public
+          path: safari-results/
+          if-no-files-found: warn
+          retention-days: 7

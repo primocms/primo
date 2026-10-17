@@ -264,3 +264,12 @@ test('owned-backup inventory refuses unrelated inputs and preserves an existing 
  assert.throws(()=>execFileSync('python3',[inventory,unrelated],{stdio:'pipe'}))
  assert.equal(await fs.readFile(unrelated,'utf8'),'unrelated bytes')
 })
+
+test('Safari CI configuration accepts only public same-origin fixture data, never credentials',async t=>{
+ const f=await fixture(t,{count:1}),{publicSafariConfig}=await import('../../hosted/safari-config.mjs')
+ const input={environmentId:f.c.environmentId,cmsOrigin:'https://rc7-owned-test.up.railway.app',cmsProbePath:f.c.cmsProbePath,publicPages:[{url:'https://rc7-owned-test.up.railway.app/',headings:f.c.publicPages[0].headings}]}
+ const c=await publicSafariConfig(input);assert.deepEqual(c.actors,[]);assert.equal(c.devices[0].capabilities.browserName,'safari');assert.equal(c.devices[0].physical,false)
+ await assert.rejects(publicSafariConfig({...input,password:'must never enter CI'}),/Only public fixture/)
+ await assert.rejects(publicSafariConfig({...input,publicPages:[{...input.publicPages[0],url:'https://another.up.railway.app/'}]}),/same-origin/)
+ await assert.rejects(publicSafariConfig({...input,cmsOrigin:'https://production.example.com'}),/disposable provider/)
+})
