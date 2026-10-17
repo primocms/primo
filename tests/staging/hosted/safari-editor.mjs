@@ -9,6 +9,22 @@ export function validateSafariActor(actor,c){
  invariant(typeof actor.email==='string' && /^safari-ci-[a-f0-9]+@primo-qa\.invalid$/.test(actor.email) && typeof actor.password==='string' && actor.password.length>=24,'Only a freshly generated Safari QA account is allowed')
  invariant(['siteId','sectionId','userId'].every(key=>/^[a-z0-9]{15}$/.test(actor[key] || '')),'Invalid scoped QA identity')
 }
+// Do not navigate during the intermediate /admin authentication redirect.
+export async function openScopedSafariSite(command,session,origin,{timeout=30000,interval=200}={}){
+ const end=Date.now()+timeout;let ready=false
+ while(Date.now()<end){
+  const u=new URL(await command('GET',session+'/url'));invariant(u.origin===origin,'Safari sign-in escaped the owned origin')
+  if(u.pathname==='/admin/dashboard/sites'){
+   const card=await command('POST',session+'/execute/sync',{script:"const a=document.querySelector('.site-card-footer a');return {count:document.querySelectorAll('.site-card').length,href:a?.href}",args:[]})
+   if(card.count===1 && card.href){invariant(new URL(card.href).origin===origin,'Scoped site link escaped the owned origin');ready=true;break}
+  }
+  await delay(interval)
+ }
+ invariant(ready,'Safari sign-in did not settle on the single assigned site')
+ const e=await command('POST',session+'/element',{using:'css selector',value:'.site-card-footer a'})
+ const id=e['element-6066-11e4-a52e-4f735466cecf'];invariant(id,'No assigned-site link')
+ await command('POST',session+'/element/'+encodeURIComponent(id)+'/click',{})
+}
 export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
  validateSafariActor(actor,c)
  await verifyTarget(c)
@@ -43,9 +59,9 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
   report.phase='native-sign-in';await cmd('POST',session+'/url',{url:c.cmsOrigin+'/admin/auth'})
   await wait(()=>execute("return !!document.querySelector('input[type=email]')"),'Safari sign-in form missing')
   await type(await element('input[type=email]'),actor.email);await type(await element('input[type=password]'),actor.password);await click(await element('button[type=submit]'))
-  await wait(async()=>{const url=new URL(await cmd('GET',session+'/url'));return url.pathname.startsWith('/admin')&&!url.pathname.includes('/auth')},'Safari native sign-in did not complete')
-  report.phase='editor-load';await cmd('POST',session+'/url',{url:c.cmsOrigin+'/admin/sites/'+actor.siteId})
-  await wait(()=>execute("const f=document.querySelector('main iframe[title=block]');return !!f?.contentDocument?.querySelector('h1[contenteditable=true]')"),'Safari editor blocks did not become editable')
+  await openScopedSafariSite(cmd,session,c.cmsOrigin)
+  report.phase='editor-load'
+  await wait(()=>execute("const f=[...document.querySelectorAll('main iframe[title=block]')];return f.length===5&&f.every(x=>x.contentDocument?.querySelector('h1')?.isContentEditable)"),'Safari editor blocks did not become editable')
   if(loadOnly){report.status='PASS_SAFARI_EDITOR_LOAD';report.checks.push('Fresh native Safari password sign-in and all editor blocks become editable')}else{
   report.phase='native-heading-edit';const frame=await element('main iframe[title=block]');await cmd('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':frame}})
   const h=await element('h1[data-key=heading]');await click(h);await cmd('POST',session+'/element/'+encodeURIComponent(h)+'/clear',{});await type(h,tag);await type(h,'\uE004')
@@ -106,9 +122,9 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
  invariant(process.env.GITHUB_ACTIONS==='true','Use only the disposable CI runner')
  const c=await loadConfig('safari.local.json'),actor=JSON.parse(process.env.PRIMO_QA_SAFARI_EDITOR || '{}'),loadOnly=process.env.PRIMO_QA_SAFARI_LOAD_ONLY==='true'
- for(let attempt=0;attempt<(loadOnly?3:1);attempt++){
+ for(let attempt=0;attempt<(loadOnly?3:4);attempt++){
   if(attempt)await delay(4000)
-  const result=await safariEditor(c,actor,process.env,{loadOnly});result.independentAttempt=attempt+1
+  const result=await safariEditor(c,actor,process.env,{loadOnly:loadOnly || attempt>0});result.independentAttempt=attempt+1
   const evidence=await privateReport(c,'safari-editor',result);console.log(JSON.stringify({status:result.status,evidence}));if(!result.status.startsWith('PASS_SAFARI_'))process.exitCode=1
  }
 }

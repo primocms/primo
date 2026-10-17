@@ -281,3 +281,23 @@ test('Safari editor credentials are restricted to a fresh scoped QA identity and
  validateSafariActor(actor,config)
  for(const bad of [{cmsOrigin:'https://other.up.railway.app'},{environmentId:'another'},{email:'person@example.com'},{password:'short'},{siteId:'foreign'}])assert.throws(()=>validateSafariActor({...actor,...bad},config))
 })
+
+test('Safari handoff waits through intermediate auth redirects and an empty dashboard before opening the assigned site',async()=>{
+ const {openScopedSafariSite}=await import('../../hosted/safari-editor.mjs'),origin='https://rc7-owned-test.up.railway.app'
+ let reads=0,cards=0,clicked=false
+ const command=async(method,route,body)=>{
+  if(method==='GET'){reads++;return origin+(reads===1?'/admin':'/admin/dashboard/sites')}
+  if(route.endsWith('/execute/sync'))return {count:++cards===1?0:1,href:origin+'/admin/site'}
+  if(route.endsWith('/element')){assert.ok(reads>=3);return {'element-6066-11e4-a52e-4f735466cecf':'assigned'}}
+  if(route.endsWith('/click')){clicked=true;return null}
+  assert.fail('Unexpected WebDriver command')
+ }
+ await openScopedSafariSite(command,'/session/owned',origin,{interval:1});assert.equal(clicked,true)
+ let foreignClicked=false
+ await assert.rejects(openScopedSafariSite(async(method,route)=>{
+  if(method==='GET')return origin+'/admin/dashboard/sites'
+  if(route.endsWith('/execute/sync'))return {count:1,href:'https://foreign.example/admin/site'}
+  foreignClicked=true
+ },'/session/owned',origin),/escaped/)
+ assert.equal(foreignClicked,false)
+})
