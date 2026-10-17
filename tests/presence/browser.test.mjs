@@ -6,14 +6,15 @@ test(engine+' production presence survives canceled requests, inline save, neste
  const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true});t.after(()=>browser.close())
  const context=await browser.newContext();await context.addInitScript(auth=>localStorage.setItem('pocketbase_auth',JSON.stringify(auth)),c.actors.editor.auth)
  const page=await context.newPage(),errors=[],errorStacks=[];page.on('pageerror',error=>{errors.push(error.message);errorStacks.push(error.stack)})
- let aborted=0,recovered=0
+ let canceledCreate=0,successfulCreate=0,aborted=0,recovered=0
  const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,errorStacks}
- t.after(async()=>{Object.assign(report,{canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
- await page.route('**/api/collections/user_activities/records/**',async route=>{if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
- page.on('response',response=>{if(response.url().includes('/user_activities/records/')&&response.request().method()==='PATCH'&&response.ok())recovered++})
+ t.after(async()=>{Object.assign(report,{canceledPresenceCreate:canceledCreate,subsequentSuccessfulPresenceCreates:successfulCreate,canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
+ await page.route('**/api/collections/user_activities/records**',async route=>{if(route.request().method()==='POST'&&!canceledCreate){canceledCreate++;await route.abort('failed')}else if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
+ page.on('response',response=>{if(response.url().includes('/user_activities/records')&&response.ok()){if(response.request().method()==='PATCH')recovered++;if(response.request().method()==='POST')successfulCreate++}})
  const ready=()=>page.waitForFunction(()=>{const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))},null,{timeout:90000})
  await page.goto(c.origin+'/admin/sites/'+c.site.id);await ready()
- for(let n=0;n<180&&(!aborted||!recovered);n++)await delay(100)
+ for(let n=0;n<300&&(!aborted||!recovered);n++)await delay(100)
+ assert.equal(canceledCreate,1,'An actual presence create must have been canceled');assert.ok(successfulCreate>0,'Presence creation must recover after cancellation')
  assert.equal(aborted,1,'An actual presence update must have been canceled');assert.ok(recovered>0,'Heartbeat must resume after the canceled request')
  const title=page.locator('main iframe[title=block]').first().contentFrame().locator('h1[data-key=heading]'),tag='Saved while presence recovers'
  const save=page.waitForResponse(r=>r.url().includes('/page_section_entries/records/'+c.heading.id)&&r.request().method()==='PATCH')

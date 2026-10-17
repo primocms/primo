@@ -6,7 +6,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
  assert.equal(process.env.GITHUB_ACTIONS,'true','Native Safari runs only in its disposable CI environment')
  const c=await fixture(t),endpoint=new URL(process.env.PRIMO_QA_SAFARI_WEBDRIVER)
  assert.equal(endpoint.origin,'http://127.0.0.1:4444')
- const command=async(method,route,body)=>{const response=await fetch(endpoint.origin+route,{method,signal:AbortSignal.timeout(65000),headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await response.json();assert.ok(response.ok&&!data.value?.error,'Safari WebDriver command failed: '+method+' '+route.split('/').slice(-1)[0]);return data.value}
+ const command=async(method,route,body)=>{const response=await fetch(endpoint.origin+route,{method,signal:AbortSignal.timeout(65000),headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const data=await response.json();assert.ok(response.ok&&!data.value?.error,c.redact('Safari WebDriver command failed: '+method+' '+route.split('/').slice(-1)[0]+' '+(data.value?.error||'')+' '+String(data.value?.message||'').slice(0,500)));return data.value}
  const report={...c.provenance,status:'RUNNING',sessions:[],syntheticLoopbackPublication:false,externalCredentialsUsed:false,hostedServiceModified:false}
  let session
  t.after(async()=>{if(session)await command('DELETE',session).catch(()=>{});report.status=report.sessions.length===3&&report.sessions.every(s=>s.status==='PASS')?'PASS_NATIVE_SAFARI':'FAIL';await fs.writeFile('presence-safari.json',JSON.stringify(report,null,2)+'\n')})
@@ -24,12 +24,19 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
   const ready=()=>wait(()=>execute("const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))"),'All Safari blocks must become editable')
   const observeErrors=()=>execute("if(!window.__presenceErrorObserver){window.__presenceErrorObserver=true;for(const event of ['error','unhandledrejection'])addEventListener(event,e=>{let errors=JSON.parse(sessionStorage.getItem('presence-errors')||'[]');errors.push(String(e.reason?.message||e.message||e.reason));sessionStorage.setItem('presence-errors',JSON.stringify(errors))})}return true")
   try{
-   await command('POST',session+'/url',{url:c.origin+'/admin/auth'});await execute('localStorage.clear();sessionStorage.clear();return true');await command('DELETE',session+'/cookie');await command('POST',session+'/url',{url:c.origin+'/admin/auth'})
-   await wait(()=>execute("return !!document.querySelector('input[type=email]')"),'Safari sign-in form missing')
-   await type(await element('input[type=email]'),c.actors.editor.email);await type(await element('input[type=password]'),c.actors.editor.password);await click(await element('button[type=submit]'))
+   record.phase='clear-origin-storage'
+   // Safari can retain origin storage across WebDriver sessions. Clear it on an
+   // inert same-origin document, before the app can start an auth-refresh redirect.
+   await command('POST',session+'/url',{url:c.origin+'/api/health'});await execute('localStorage.clear();sessionStorage.clear();return true');await command('DELETE',session+'/cookie');await command('POST',session+'/url',{url:c.origin+'/admin/auth'})
+   await wait(()=>execute("return ['input[type=email]','input[type=password]','button[type=submit]'].every(selector=>{const el=document.querySelector(selector);return el&&!el.disabled&&el.getClientRects().length})"),'Safari sign-in form missing')
+   record.phase='native-email-entry';await type(await element('input[type=email]'),c.actors.editor.email)
+   record.phase='native-password-entry';await type(await element('input[type=password]'),c.actors.editor.password)
+   record.phase='native-sign-in-submit';await click(await element('button[type=submit]'))
+   record.phase='scoped-editor-load'
    await openScopedSafariSite(command,session,c.origin);await ready();await observeErrors()
    record.checks.push('Fresh native password sign-in; one assigned site; all five production editor blocks editable')
    if(attempt===0){
+    record.phase='native-content-edit-reorder'
     const own=c.before.filter(e=>e.section===c.section.id),field=key=>c.fields.find(f=>f.key===key),alpha=own.find(e=>e.field===field('name').id&&e.value==='Alpha').parent
     const roots=own.filter(e=>e.field===field('items').id&&!e.parent).sort((a,b)=>a.index-b.index),links=own.filter(e=>e.field===field('links').id&&e.parent===alpha).sort((a,b)=>a.index-b.index)
     const tag='Native Safari saved content'
@@ -54,7 +61,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     }
     record.checks.push('Native keyboard edit; root/nested move controls; save and four reloads retain all content IDs, values, bindings and order; no schema creation')
     const errors=await execute("return JSON.parse(sessionStorage.getItem('presence-errors')||'[]')");assert.deepEqual(errors,[],'Safari reload must not log presence rejection');record.unhandledErrors=errors
-    await click(await button('Publish'));await delay(500)
+    record.phase='native-loopback-publication';await click(await button('Publish'));await delay(500)
     const confirmation=await execute("const d=document.querySelector('[role=dialog]');return d&&[...d.querySelectorAll('button')].find(b=>/publish|confirm/i.test(b.textContent))")
     if(confirmation)await click(confirmation['element-6066-11e4-a52e-4f735466cecf'])
     await wait(async()=>(await fetch(c.origin).then(r=>r.text())).includes(tag),'Safari synthetic local browser publication failed')
@@ -72,7 +79,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     await command('POST',session+'/refresh',{});await ready();await observeErrors();await c.verifyContent();assert.deepEqual(await execute("return JSON.parse(sessionStorage.getItem('presence-errors')||'[]')"),[])
     record.checks.push('Independent fresh sign-in/reload; all original stored content retained; zero observed unhandled errors')
    }
-   record.status='PASS'
+   record.phase='complete';record.status='PASS'
   }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);throw Error(record.failure)}
   finally{await command('DELETE',session);session=null}
  }

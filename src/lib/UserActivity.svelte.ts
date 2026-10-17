@@ -83,13 +83,13 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 			return
 		}
 
-		if (activity) {
-			activity = UserActivities.update(activity.id, context.value)
-			await manager.commit()
-		} else {
-			activity = UserActivities.create(context.value)
-			await manager.commit()
-		}
+		const nextActivity = activity
+			? UserActivities.update(activity.id, context.value)
+			: UserActivities.create(context.value)
+		await manager.commit()
+		// A canceled create has no confirmed cached record. Retry creation on the
+		// next heartbeat rather than trying to update a nonexistent activity.
+		activity = nextActivity
 	}
 
 	const stopTracking = async () => {

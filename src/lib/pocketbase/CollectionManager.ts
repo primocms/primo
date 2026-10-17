@@ -25,7 +25,10 @@ export const createCollectionManager = (
 	// any error handling for other changes in the same batch runs. Used by
 	// analytics.ts to detect content-entry saves without every manager (e.g.
 	// the marketplace or presence-activity ones) needing to know about it.
-	on_committed?: (change: { collection: string; operation: Change<ObjectWithId>['operation'] }) => void
+	on_committed?: (change: { collection: string; operation: Change<ObjectWithId>['operation'] }) => void,
+	// Presence cleanup can begin while the document is leaving. Keep those
+	// small requests alive; content managers retain the SDK's normal behavior.
+	request_options?: { keepalive: boolean }
 ) => {
 	const changes = new OrderedSvelteMap<string, Change<ObjectWithId>>()
 	const records = new OrderedSvelteMap<string, TrackedRecord | undefined | null>()
@@ -50,19 +53,19 @@ export const createCollectionManager = (
 			try {
 				switch (change.operation) {
 					case 'create': {
-						const result = await instance.collection(change.collection).create(change.data)
+						const result = await instance.collection(change.collection).create(change.data, request_options)
 						records.set(id, { data: result })
 						break
 					}
 
 					case 'update': {
-						const result = await instance.collection(change.collection).update(id, change.data)
+						const result = await instance.collection(change.collection).update(id, change.data, request_options)
 						records.set(id, { data: result })
 						break
 					}
 
 					case 'delete': {
-						await instance.collection(change.collection).delete(id)
+						await instance.collection(change.collection).delete(id, request_options)
 						records.set(id, null)
 						break
 					}

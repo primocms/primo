@@ -12,5 +12,5 @@ export const self = createCollectionManager(this_instance, ({ collection, operat
 		track_content_saved()
 	}
 })
-export const activity = createCollectionManager(this_instance)
+export const activity = createCollectionManager(this_instance, undefined, { keepalive: true })
 export const marketplace = createCollectionManager(marketplace_instance)
