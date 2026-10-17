@@ -14,7 +14,7 @@ const root = new URL('../../', import.meta.url)
 const workerSource = (await readFile(new URL('src/lib/compiler/workers/rollup.worker.js', root), 'utf8')).replace(/^import .*$/gm, '').replace(/^const sveltePromiseWorker = .*$/m, '')
 const processorSource = (await readFile(new URL('src/lib/compiler/processors.js', root), 'utf8'))
 	.replace(/^import .*$/gm, '')
-	.replace(/^const (postcss_worker|rollup_worker) = .*$/gm, '')
+	.replace(/^(?:const|let) (postcss_worker|rollup_worker)(?: = .*)?$/gm, '')
 	.replace(/const blob = new Blob\([\s\S]*?URL.revokeObjectURL\(url\)/, 'const { default: App } = await importSSR(res.ssr)')
 	.replaceAll('export async function ', 'async function ')
 
