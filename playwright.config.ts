@@ -14,7 +14,12 @@ export default defineConfig({
 	use: {
 		baseURL: TEST_SERVER_URL,
 		browserName: browserName as BrowserName,
-		trace: 'retain-on-failure',
+		// Firefox's headless capture path intermittently crashes its content
+		// process during redirects (SWGL/VideoFrame errors). Keep DOM/network
+		// traces and failure screenshots, without continuous screen capture.
+		trace: browserName === 'firefox'
+			? { mode: 'retain-on-failure', screenshots: false, snapshots: { dom: true, aria: true, screen: false }, sources: true }
+			: 'retain-on-failure',
 		screenshot: 'only-on-failure'
 	},
 	fullyParallel: false,
