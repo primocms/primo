@@ -10,6 +10,7 @@ import { get } from 'svelte/store'
 import { current_user } from './pocketbase/user'
 import { instance } from './instance'
 import type { ObjectOf } from './pocketbase/CollectionMapping.svelte'
+import { createPresenceScheduler } from './user_activity_scheduler.js'
 
 export type UserActivityValues = Omit<UserActivity, 'id'>
 
@@ -75,11 +76,8 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		}
 	)
 
-	let task: ReturnType<typeof setTimeout> | undefined
 	let activity: ObjectOf<typeof UserActivities> | null = null
 	const track = async () => {
-		clearTimeout(task)
-
 		// Skip tracking if required fields are missing
 		if (!context.value.user || !context.value.site) {
 			return
@@ -92,19 +90,9 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 			activity = UserActivities.create(context.value)
 			await manager.commit()
 		}
-
-		task = setTimeout(track, 5000)
-	}
-
-	const startTracking = async () => {
-		if (task) return
-		task = setTimeout(track, 500)
 	}
 
 	const stopTracking = async () => {
-		clearTimeout(task)
-		task = undefined
-
 		if (activity) {
 			// There's only one activity per user
 			UserActivities.delete(activity.id)
@@ -112,6 +100,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 			await manager.commit()
 		}
 	}
+	const tracker = createPresenceScheduler({ update: track, remove: stopTracking })
 
 	const visible = new IsDocumentVisible()
 	watch(
@@ -119,10 +108,10 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		({ visible }) => {
 			if (!visible) {
 				// Tab not visible
-				stopTracking()
+				void tracker.stop()
 			} else if (!activity) {
 				// Start or resume tracking user activity
-				startTracking()
+				tracker.start()
 			}
 		}
 	)
@@ -131,12 +120,12 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		() => {
 			if (activity) {
 				// Force update
-				track()
+				tracker.refresh()
 			}
 		}
 	)
 
-	onDestroy(stopTracking)
+	onDestroy(() => { void tracker.dispose() })
 }
 
 export const getUserActivity = ({ filter }: { filter?: (activity: UserActivityInfo) => unknown } = {}): UserActivityInfo[][] => {

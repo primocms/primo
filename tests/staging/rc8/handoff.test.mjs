@@ -65,7 +65,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  for(let i=0;i<200;i++){try{const r=await fetch(`${server}/api/primo/dev-auth`,{method:'POST'});if(r.ok){auth=await r.json();break}}catch{}if(dev.exitCode!==null)break;await delay(100)}
  assert.ok(auth?.token,logs)
  const api=async(route,{method='GET',data,token=auth.token}={})=>{const r=await fetch(server+route,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});assert.ok(r.ok,`${method} ${route}: ${r.status} ${await r.clone().text()}`);return r.status===204?null:r.json()}
- assert.equal((await api('/api/primo/info')).version,'v3.3.2-rc.8');console.log('PASS exact CLI, MCP and CMS candidate versions verified at runtime')
+ assert.equal((await api('/api/primo/info')).version,'v3.3.2-rc.9');console.log('PASS exact CLI, MCP and CMS candidate versions verified at runtime')
  let sites
  for(let i=0;i<100;i++){sites=await api('/api/collections/sites/records');if(sites.items.length)break;await delay(100)}
  const id=sites.items.find(s=>s.name.toLowerCase().includes('client'))?.id;assert.ok(id)
