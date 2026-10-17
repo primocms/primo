@@ -109,7 +109,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 			if (!visible) {
 				// Tab not visible
 				void tracker.stop()
-			} else if (!activity) {
+			} else {
 				// Start or resume tracking user activity
 				tracker.start()
 			}

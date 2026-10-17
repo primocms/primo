@@ -37,6 +37,11 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     const heading=await element('h1[data-key=heading]');await click(heading);await command('POST',session+'/element/'+heading+'/clear',{});await type(heading,tag);await type(heading,'\uE004')
     await wait(async()=>(await c.api('/api/collections/page_section_entries/records/'+c.heading.id,{token:c.actors.editor.auth.token})).value===tag,'Safari keyboard content save failed')
     await command('POST',session+'/frame',{id:null});await command('POST',session+'/refresh',{});await ready();await observeErrors()
+    // The block toolbar follows native pointer hover, including after reload.
+    const hoverFrame=await element('main iframe[title=block]');await command('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':hoverFrame}})
+    const hoverHeading=await element('h1[data-key=heading]')
+    await command('POST',session+'/actions',{actions:[{type:'pointer',id:'mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:100,origin:{'element-6066-11e4-a52e-4f735466cecf':hoverHeading},x:0,y:0}]}]})
+    await command('POST',session+'/frame',{id:null});await wait(()=>execute("return [...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Edit Block Content')"),'Safari block hover did not reveal its content action')
     await click(await button('Edit Block Content'))
     const row=id=>'[role=dialog] .RepeaterFieldItem[data-entry-id="'+id+'"]'
     assert.equal(await execute("return [...document.querySelectorAll('[role=dialog] button')].some(b=>b.textContent.trim()==='Create Field')"),false)
@@ -68,7 +73,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     record.checks.push('Independent fresh sign-in/reload; all original stored content retained; zero observed unhandled errors')
    }
    record.status='PASS'
-  }catch(error){record.failure=c.redact(error.message);throw Error(record.failure)}
+  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);throw Error(record.failure)}
   finally{await command('DELETE',session);session=null}
  }
  console.log({...report,status:'PASS_NATIVE_SAFARI'})

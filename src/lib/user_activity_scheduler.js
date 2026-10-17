@@ -9,14 +9,16 @@ export function createPresenceScheduler({ update, remove, reportError = (error) 
 	let running = false
 	let disposed = false
 	let generation = 0
+	let pending = Promise.resolve()
 	/** @param {() => Promise<void>} operation */
-	const safely = async (operation) => {
-		try {
-			await operation()
-		} catch (error) {
+	const safely = (operation) => {
+		// Do not replace a pending manager change with cleanup before the
+		// original request settles: its failure handler removes that change.
+		pending = pending.then(operation).catch((error) => {
 			const failure = /** @type {{isAbort?: boolean, status?: number} | null} */ (error)
 			if (!failure?.isAbort && failure?.status !== 0) reportError(error)
-		}
+		})
+		return pending
 	}
 	const clear = () => {
 		clearTimer(timer)
@@ -26,7 +28,9 @@ export function createPresenceScheduler({ update, remove, reportError = (error) 
 		if (!running || disposed) return
 		clear()
 		const current = generation
-		await safely(update)
+		await safely(async () => {
+			if (running && !disposed && current === generation) await update()
+		})
 		// A pending response must not restart tracking after hide or destruction.
 		if (running && !disposed && current === generation) timer = setTimer(tick, 5000)
 	}

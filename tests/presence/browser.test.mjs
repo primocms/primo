@@ -5,9 +5,9 @@ const engine=process.env.PRIMO_BROWSER||'firefox'
 test(engine+' production presence survives canceled requests, inline save, nested reorder and abrupt reload', {timeout:240000},async t=>{
  const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true});t.after(()=>browser.close())
  const context=await browser.newContext();await context.addInitScript(auth=>localStorage.setItem('pocketbase_auth',JSON.stringify(auth)),c.actors.editor.auth)
- const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message))
+ const page=await context.newPage(),errors=[],errorStacks=[];page.on('pageerror',error=>{errors.push(error.message);errorStacks.push(error.stack)})
  let aborted=0,recovered=0
- const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors}
+ const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,errorStacks}
  t.after(async()=>{Object.assign(report,{canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
  await page.route('**/api/collections/user_activities/records/**',async route=>{if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
  page.on('response',response=>{if(response.url().includes('/user_activities/records/')&&response.request().method()==='PATCH'&&response.ok())recovered++})

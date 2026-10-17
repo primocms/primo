@@ -29,7 +29,8 @@ test('a pending presence response cannot restart a hidden or destroyed tracker',
 	for (const action of ['stop', 'dispose']) {
 		let complete; const pending = new Promise(resolve => {complete = resolve})
 		const f = fixture({update: () => pending})
-		f.scheduler.start(); const update = f.fire(); await f.scheduler[action](); complete(); await update
+		f.scheduler.start(); const update = f.fire(); await new Promise(resolve => setImmediate(resolve))
+		const stopped = f.scheduler[action](); complete(); await update; await stopped
 		assert.equal(f.timers.size, 0)
 		if (action === 'dispose') {f.scheduler.start(); f.scheduler.refresh(); assert.equal(f.timers.size, 0)}
 	}
@@ -56,8 +57,21 @@ test('a callback queued before destruction cannot write presence afterwards', as
 test('new context changes replace older pending heartbeat schedules', async () => {
 	const completions = []
 	const f = fixture({update: () => new Promise(resolve => completions.push(resolve))})
-	f.scheduler.start(); const first = f.fire(); f.scheduler.refresh()
-	completions[1](); await new Promise(resolve => setImmediate(resolve)); assert.equal(f.timers.size, 1)
-	completions[0](); await first; assert.equal(f.timers.size, 1)
+	f.scheduler.start(); const first = f.fire(); await new Promise(resolve => setImmediate(resolve)); f.scheduler.refresh()
+	assert.equal(completions.length, 1, 'Presence writes must not overlap')
+	completions[0](); await first; await new Promise(resolve => setImmediate(resolve))
+	assert.equal(completions.length, 2); completions[1](); await new Promise(resolve => setImmediate(resolve)); assert.equal(f.timers.size, 1)
+	await f.scheduler.dispose()
+})
+
+test('hide cleanup follows a failed update and rapid resume still schedules a heartbeat', async () => {
+	const calls = []; let rejectUpdate
+	const f = fixture({update: () => {calls.push('update'); return calls.length === 1 ? new Promise((resolve,reject) => {rejectUpdate = reject}) : Promise.resolve()}, remove: async () => {calls.push('remove')}})
+	f.scheduler.start(); const updating = f.fire(); await new Promise(resolve => setImmediate(resolve))
+	const stopped = f.scheduler.stop(); f.scheduler.start()
+	assert.deepEqual(calls, ['update'])
+	rejectUpdate({status:0}); await updating; await stopped
+	assert.deepEqual(calls, ['update','remove']); assert.equal(f.timers.size,1)
+	await f.fire(); assert.deepEqual(calls,['update','remove','update']); assert.deepEqual(f.errors,[])
 	await f.scheduler.dispose()
 })
