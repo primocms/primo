@@ -1,0 +1,11 @@
+# Founding builders — consolidated RC.8
+
+This is the single current CMS integration/review target for the frozen ten-builder pilot scope. It incorporates the existing 27-draft input set without merging any historical PR. CMS is v3.3.2-rc.8; CLI remains 0.3.0-rc.2 ([#67](https://github.com/primocms/primo-cli/pull/67)); MCP remains 0.1.11-rc.2 ([#30](https://github.com/primocms/mcp/pull/30)). Their exact tarball bytes and dependency resolutions are unchanged. See [inputs](release/rc8/INPUTS.json), [scope](release/rc8/SCOPE.md), [rollout](release/rc8/ROLLOUT.md) and [recovery](release/rc8/RECOVERY.md).
+
+The product delta from RC.7 is the accepted same-origin framing policy for #1314. Existing type/warning, dependency, permission/repeater, production-validation, identity/sync and compiler/hydration fixes are retained. Same-origin previews and static-preview script blocking remain; general external embedding is outside the pilot promise. No unrelated features are introduced.
+
+`.github/workflows/rc-platform.yml` builds five native packages once at the reviewed source SHA, exercises each with production validation and the exact CLI, then downloads the tested Linux bytes for all three browser suites and actual packaged handoffs. The final local release kit records source/run/version/hash provenance and verifies every shipped CLI/MCP file. Source-build checks and packaged-byte checks remain distinct.
+
+No merge, tag/release, package/container/site publication, deployment, live mail configuration or invitation is authorized. Pushing/merging main or publishing a matching v3 release can trigger container/consumer updates; a prerelease is not a safe staging workaround. All historical PRs remain open drafts and unchanged. Any final version/source/reference/lock or package-byte change requires packaging and verification again.
+
+Agent integration review and successful tests are evidence for a maintainer decision, not a human approval. First-client device/domain/hosted checks and real invitation/reset delivery remain explicit gates. Existing RC.7 hosted/Safari/soak/restore results are historical evidence; RC.8 is not deployed by this work. Recovery always uses a restored copy with its matching older executable, never a downgrade of the upgraded data directory.

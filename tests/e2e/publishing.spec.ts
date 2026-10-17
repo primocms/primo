@@ -87,10 +87,22 @@ test.describe('Publishing', () => {
 			params: { filter: `site = "${ids.siteId}"` }
 		})
 		const pageType = (await typesRes.json()).items[0]
+		const siteRes = await request.get(`${TEST_SERVER_URL}/api/collections/sites/records/${ids.siteId}`, { headers })
+		expect(siteRes.ok()).toBeTruthy()
+		const site = await siteRes.json()
+		const headRes = await request.patch(`${TEST_SERVER_URL}/api/collections/sites/records/${ids.siteId}`, {
+			headers, data: { head: (site.head || '') + '<meta name="empty-site-head" content="kept" />' }
+		})
+		expect(headRes.ok()).toBeTruthy()
+		const typeHeadRes = await request.patch(`${TEST_SERVER_URL}/api/collections/page_types/records/${pageType.id}`, {
+			headers, data: { head: (pageType.head || '') + '<meta name="empty-type-head" content="kept" />' }
+		})
+		expect(typeHeadRes.ok()).toBeTruthy()
+		const slug = `empty-${Date.now()}`
 		expect(pageType).toBeTruthy()
 		const created = await request.post(`${TEST_SERVER_URL}/api/collections/pages/records`, {
 			headers,
-			data: { name: 'Empty Page', slug: `empty-${Date.now()}`, page_type: pageType.id, site: ids.siteId }
+			data: { name: 'Empty Page', slug, page_type: pageType.id, site: ids.siteId, parent: ids.pageId }
 		})
 		expect(created.ok()).toBeTruthy()
 
@@ -101,5 +113,12 @@ test.describe('Publishing', () => {
 		// publishViaUI asserted activation succeeded; the site stays served.
 		const homeRes = await request.get(`${TEST_SERVER_URL}/?_site=${ids.siteId}`)
 		expect(homeRes.ok()).toBeTruthy()
+		expect(await homeRes.text()).toContain('name="empty-site-head"')
+		const emptyRes = await request.get(`${TEST_SERVER_URL}/${slug}/?_site=${ids.siteId}`)
+		expect(emptyRes.ok()).toBeTruthy()
+		const emptyHTML = await emptyRes.text()
+		expect(emptyHTML).toContain('name="empty-site-head"')
+		expect(emptyHTML).toContain('name="empty-type-head"')
+		expect(emptyHTML).toContain('data-primo-baseline')
 	})
 })

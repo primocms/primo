@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -224,7 +225,7 @@
 	}
 
 	let is_move_site_open = $state(false)
-	let selected_group_id = $state(site_groups[0]?.id ?? '')
+	let selected_group_id = $state(untrack(() => site_groups[0]?.id ?? ''))
 	async function move_site() {
 		await save.run(async () => {
 			if (!current_site) return

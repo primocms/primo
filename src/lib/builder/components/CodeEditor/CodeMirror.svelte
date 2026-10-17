@@ -36,6 +36,7 @@
 	let tooltip_editable = $state(false)
 	let tooltip_rules = $state([])
 	let tooltip_editor_views = $state([]) // Array of {element, view, rule}
+	/** @type {ReturnType<typeof setTimeout> | null} */
 	let tooltip_save_timeout = $state(null)
 
 	function hide_tooltip() {
@@ -196,6 +197,7 @@
 		tooltip_rules = flat_rules
 		tooltip_editable = flat_rules.length > 0
 
+		if (!element) return
 		const editor_rect = element.getBoundingClientRect()
 		const tooltip_width = 320
 		const tooltip_height = 280
@@ -322,6 +324,7 @@
 
 	/**
 	 * @typedef {Object} Props
+	 * @property {import('@codemirror/autocomplete').Completion[]} [completions]
 	 * @property {any} [data]
 	 * @property {string} [prefix]
 	 * @property {string} [value]
@@ -417,7 +420,7 @@
 		}
 	})
 
-	const language = getLanguage(mode)
+	const language = untrack(() => getLanguage(mode))
 
 	const css_completions_compartment = new Compartment()
 	const svelte_completions_compartment = new Compartment()
@@ -476,7 +479,8 @@
 		{ decorations: (v) => v.decorations }
 	)
 
-	const editor_state = EditorState.create({
+	// Initial editor document/configuration is a snapshot; live permissions and completions reconfigure below.
+	const editor_state = untrack(() => EditorState.create({
 		selection: {
 			anchor: selection
 		},
@@ -604,7 +608,7 @@
 			...(mode === 'css' ? [css_completions_compartment.of(cssCompletions(css_variables))] : []),
 			...(mode !== 'javascript' ? [emmetExtension(mode === 'css' ? 'css' : 'html')] : [])
 		]
-	})
+	}))
 
 	$effect(() => {
 		Editor &&
@@ -654,6 +658,7 @@
 		return formatted
 	}
 
+	/** @type {HTMLElement | undefined} */
 	let editorNode = $state()
 	$effect(() => {
 		if (editorNode) {
@@ -670,14 +675,15 @@
 		dispatch('change', value)
 	}
 
+	/** @type {HTMLElement | undefined} */
 	let element = $state()
 	$effect(() => {
 		if (element) {
 			if (scrollPositions.has(value)) {
 				element.scrollTo(0, scrollPositions.get(value))
 			}
-			element.addEventListener('scroll', () => {
-				scrollPositions.set(value, element.scrollTop)
+			element.addEventListener('scroll', (event) => {
+				if (event.currentTarget instanceof HTMLElement) scrollPositions.set(value, event.currentTarget.scrollTop)
 			})
 		}
 	})
@@ -700,8 +706,7 @@
 			</div>
 		{/if}
 		{#if tooltip_visible}
-			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-			<div class="class-tooltip" style="left: {tooltip_x}px; top: {tooltip_y}px;" transition:fade={{ duration: 100 }} onclick={(e) => e.stopPropagation()}>
+			<div role="dialog" aria-label="Class styles" tabindex="-1" class="class-tooltip" style="left: {tooltip_x}px; top: {tooltip_y}px;" transition:fade={{ duration: 100 }} onclick={(e) => e.stopPropagation()} onkeydown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); hide_tooltip() } }}>
 				<button class="tooltip-close-btn" onclick={hide_tooltip}>×</button>
 				{#if tooltip_editable}
 					<div class="tooltip-rules-container">

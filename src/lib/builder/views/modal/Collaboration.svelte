@@ -468,39 +468,8 @@
 		font-weight: 400;
 		font-size: 0.75rem;
 		/* color: #3a3d45; */
-		.letter {
-			height: 26px;
-			width: 26px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: #81a6fd;
-			color: white;
-			font-weight: 700;
-			font-size: 0.875rem;
-			line-height: 0;
-			border-radius: 50%;
-		}
 		.email {
 			flex: 1;
-		}
-		.status-pill {
-			padding: 2px 8px;
-			border-radius: 12px;
-			font-size: 0.625rem;
-			font-weight: 500;
-			text-transform: uppercase;
-			letter-spacing: 0.025em;
-
-			&.pending {
-				background: rgba(251, 191, 36, 0.2);
-				color: #fbbf24;
-			}
-
-			&.sent {
-				background: rgba(129, 140, 248, 0.2);
-				color: #818cf8;
-			}
 		}
 	}
 </style>

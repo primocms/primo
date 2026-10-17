@@ -44,45 +44,48 @@ export const usePageData = (site?: ObjectOf<typeof Sites>, pages?: ObjectOf<type
 		page_type_sections?.every((section) => section.entries() !== undefined) ? page_type_sections.flatMap((section) => section.entries() ?? []).filter(deduplicate('id')) : undefined
 	)
 
-	return new (class {
-		data = $derived(
-			site &&
-				pages &&
-				page_types &&
-				page_sections &&
-				page_type_sections &&
-				page_type_symbols &&
-				symbols &&
-				site_uploads &&
-				site_fields &&
-				page_type_fields &&
-				symbol_fields &&
-				site_entries &&
-				page_type_entries &&
-				symbol_entries &&
-				page_entries &&
-				page_section_entries &&
-				page_type_section_entries && {
-					site,
-					pages,
-					page_types,
-					page_sections,
-					page_type_sections,
-					page_type_symbols,
-					symbols,
-					site_uploads,
-					site_fields,
-					page_type_fields,
-					symbol_fields,
-					site_entries,
-					page_type_entries,
-					page_entries,
-					symbol_entries,
-					page_section_entries,
-					page_type_section_entries
-				}
-		)
-	})()
+	const data = $derived(
+		site &&
+			pages &&
+			page_types &&
+			page_sections &&
+			page_type_sections &&
+			page_type_symbols &&
+			symbols &&
+			site_uploads &&
+			site_fields &&
+			page_type_fields &&
+			symbol_fields &&
+			site_entries &&
+			page_type_entries &&
+			symbol_entries &&
+			page_entries &&
+			page_section_entries &&
+			page_type_section_entries && {
+				site,
+				pages,
+				page_types,
+				page_sections,
+				page_type_sections,
+				page_type_symbols,
+				symbols,
+				site_uploads,
+				site_fields,
+				page_type_fields,
+				symbol_fields,
+				site_entries,
+				page_type_entries,
+				page_entries,
+				symbol_entries,
+				page_section_entries,
+				page_type_section_entries
+			}
+	)
+	return {
+		get data() {
+			return data
+		}
+	}
 }
 
 const deduplicate =

@@ -22,7 +22,7 @@
 	<p class="label">{field.label}</p>
 	<div class="container">
 		<p class="value">{value}</p>
-		<input oninput={({ target }) => onchange({ [field.key]: { 0: { value: target.value } } })} class="input" {value} type="range" />
+		<input oninput={({ currentTarget }) => onchange({ [field.key]: { 0: { value: currentTarget.value } } })} class="input" {value} type="range" />
 	</div>
 </div>
 

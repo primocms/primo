@@ -1,0 +1,16 @@
+# Founding-builder pilot checklist
+
+This is a prepared onboarding guide. Invitations have not been sent and the pilot is not yet launched. The maintainer will supply the approved pilot host, your assigned site, exact package kit and support contact when execution is authorized.
+
+The pilot covers new sites built on a desktop using a current supported Chrome, Edge, Firefox or Safari release. Start with draft content. Before a real client launch, arrange the device/domain/client-handoff check with the maintainer. Legacy migration and mobile editing require separate qualification.
+
+1. Accept your site invitation, set your own password and confirm sign-in and password recovery. You should see only your assigned site(s), with developer access to their design. Report any other builder's site being accessible.
+2. Use the maintainer-supplied exact consolidated RC.8 kit: CMS v3.3.2-rc.8, CLI 0.3.0-rc.2, MCP 0.1.11-rc.2. Node 22.x at 22.13.0 or later, or 24.x, is supported. Follow the kit's installation instructions and local MCP configuration; a public registry install may resolve different packages while these remain unpublished. Do not substitute unverified package versions.
+3. Create a new local workspace through the built CLI, connect the packaged MCP server and build a small new site through the agent workflow. Start local development. Create/edit pages and reusable blocks; include a nested repeater and an image.
+4. Practice the handoff using disposable draft content: pull a second copy, make a local source edit and a newer remote content edit, and confirm a stale push refuses the conflict without losing either edit. Keep a verified copy before resolving it with the maintainer.
+5. With publication authorization, publish to the approved preview/test host. Check the page's headings, styles, image and interaction after reload. Keep the exact package versions, URLs and any errors in your private pilot notes.
+6. With invitation authorization, add a separate controlled client account as a content-only editor. Confirm that account can edit content, reorder root/nested repeaters and save/reload without losing values or order. It should not be able to edit block source or escalate roles. The pilot retains trusted editor publication capability for compiled output.
+7. With publication authorization, have the client republish and check the actual public page. Pull back into the local copy and confirm all expected content, repeaters and page/block identities survived.
+8. Before a real client go-live, ask the maintainer to clear the physical iPhone/Android public-page check, actual custom-domain/HTTPS/CDN path if used, accepted framing policy, complete client handoff and operational backup/support check.
+
+If content disappears, a stale change overwrites newer work, or another site's records become accessible, stop the affected workflow and contact the maintainer. Preserve private copies and sanitized error details; keep passwords, invitation/reset links, client content and raw traces out of public issues.

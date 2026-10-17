@@ -65,7 +65,7 @@ func TestStaticSitePreview(t *testing.T) {
 			if response.Code != http.StatusOK || response.Body.String() != tc.want {
 				t.Fatalf("static preview: status %d, body %q", response.Code, response.Body.String())
 			}
-			if got := response.Header().Get("Content-Security-Policy"); got != "frame-ancestors *; script-src 'none'" {
+			if got := response.Header().Get("Content-Security-Policy"); got != "frame-ancestors 'self'; script-src 'none'" {
 				t.Fatalf("preview CSP = %q", got)
 			}
 			if got := response.Header().Get("Cache-Control"); got != "no-store" {
@@ -97,7 +97,7 @@ func TestStaticSitePreview(t *testing.T) {
 					if response.Code != http.StatusOK || response.Body.String() != "published home" {
 						t.Fatalf("live page: status %d, body %q", response.Code, response.Body.String())
 					}
-					if got := response.Header().Get("Content-Security-Policy"); got != "frame-ancestors *" {
+					if got := response.Header().Get("Content-Security-Policy"); got != "frame-ancestors 'self'" {
 						t.Fatalf("live page CSP = %q", got)
 					}
 				}

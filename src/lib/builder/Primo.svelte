@@ -35,10 +35,9 @@
 	} = $props()
 
 	// Set context so child components can access the site
-	const context = $state({ value: site })
+	const context = { get value() { return site } }
 	site_context.set(context)
 	$effect(() => {
-		context.value = site
 
 		if (!site_data) return
 		compile_component_head({ html: site.head, data: site_data }).then((generated_code) => {
@@ -50,7 +49,7 @@
 	if (!user) {
 		throw new Error('No current user')
 	} else {
-		setUserActivity({ user: user.id, site: site.id })
+		setUserActivity(() => ({ user: user.id, site: site.id }))
 	}
 
 	let showing_sidebar = $state(true)

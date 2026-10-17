@@ -28,7 +28,7 @@
 		const homepage = site?.homepage()
 		if (!homepage) return all_pages.sort((a, b) => a.index - b.index)
 
-		const result = []
+		const result: Array<{ id: string; label: string; value: string }> = []
 
 		function add_descendants(page, depth = 0) {
 			const arrows = depth > 0 ? '↳ '.repeat(depth) : ''

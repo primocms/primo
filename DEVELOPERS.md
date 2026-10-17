@@ -245,6 +245,11 @@ The container requires volume to be mounted on path `/app/pb_data` for storing f
 
 For production deployments, see the [PocketBase deployment documentation](https://pocketbase.io/docs/going-to-production/).
 
+Configure PocketBase's trusted proxy settings when a reverse proxy supplies the visitor IP. Realtime connects by GET and subscribes by POST; if those requests reach different internal proxy peers while `trustedProxy.headers` is empty, PocketBase can reject the editor's subscription with HTTP 400 (`Invalid realtime client`). Verify live edits arrive in a second editor tab through the real public hostname; loopback tests intentionally disable these subscriptions.
+
+For an edge-only Railway service with no direct public TCP ingress, the verified setting is `trustedProxy: { headers: ["X-Real-IP"], useLeftmostIP: false }`. Railway owns that header. Other providers require their own verified ingress/header configuration; do not apply this setting universally or disable the production limiter. The [hosted QA guide](tests/staging/hosted/README.md) documents successful registration, forged-header checks and visitor-identity regression tests. See [Railway's header specification](https://docs.railway.com/networking/public-networking/specs-and-limits) and [PocketBase reverse-proxy guidance](https://pocketbase.io/docs/going-to-production/#using-reverse-proxy).
+
+
 ### Hosting Options
 
 - VPS with Docker
