@@ -9,7 +9,7 @@ export function validateSafariActor(actor,c){
  invariant(typeof actor.email==='string' && /^safari-ci-[a-f0-9]+@primo-qa\.invalid$/.test(actor.email) && typeof actor.password==='string' && actor.password.length>=24,'Only a freshly generated Safari QA account is allowed')
  invariant(['siteId','sectionId','userId'].every(key=>/^[a-z0-9]{15}$/.test(actor[key] || '')),'Invalid scoped QA identity')
 }
-export async function safariEditor(c,actor,env=process.env){
+export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
  validateSafariActor(actor,c)
  await verifyTarget(c)
  const report={kind:'actual-safari-editor-handoff',status:'FAIL',checks:[],cleanup:[],physicalDevice:false,mailScope:'Separate capture-mail invitation test; this runner uses a temporary scoped account',productionChanged:false}
@@ -44,8 +44,9 @@ export async function safariEditor(c,actor,env=process.env){
   await wait(()=>execute("return !!document.querySelector('input[type=email]')"),'Safari sign-in form missing')
   await type(await element('input[type=email]'),actor.email);await type(await element('input[type=password]'),actor.password);await click(await element('button[type=submit]'))
   await wait(async()=>{const url=new URL(await cmd('GET',session+'/url'));return url.pathname.startsWith('/admin')&&!url.pathname.includes('/auth')},'Safari native sign-in did not complete')
-  await cmd('POST',session+'/url',{url:c.cmsOrigin+'/admin/sites/'+actor.siteId})
+  report.phase='editor-load';await cmd('POST',session+'/url',{url:c.cmsOrigin+'/admin/sites/'+actor.siteId})
   await wait(()=>execute("const f=document.querySelector('main iframe[title=block]');return !!f?.contentDocument?.querySelector('h1[contenteditable=true]')"),'Safari editor blocks did not become editable')
+  if(loadOnly){report.status='PASS_SAFARI_EDITOR_LOAD';report.checks.push('Fresh native Safari password sign-in and all editor blocks become editable')}else{
   report.phase='native-heading-edit';const frame=await element('main iframe[title=block]');await cmd('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':frame}})
   const h=await element('h1[data-key=heading]');await click(h);await cmd('POST',session+'/element/'+encodeURIComponent(h)+'/clear',{});await type(h,tag);await type(h,'\uE004')
   await wait(async()=>(await api('/api/collections/page_section_entries/records/'+heading.id,{token:auth.token})).value===tag,'Safari native heading edit did not persist')
@@ -77,6 +78,7 @@ export async function safariEditor(c,actor,env=process.env){
   await wait(()=>execute("return document.querySelector('[data-primo-qa-counter]')?.textContent==='Count 1'"),'Safari public counter not interactive',15000)
   report.checks.push('Actual Safari CMS browser-compiler publication reaches HTTPS; published client text and native counter interaction pass')
   report.status='PASS_SAFARI_EDITOR_HANDOFF'
+  }
  }catch(e){
   report.failure=safeError(e)
   if(session)try{
@@ -103,6 +105,10 @@ export async function safariEditor(c,actor,env=process.env){
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
  invariant(process.env.GITHUB_ACTIONS==='true','Use only the disposable CI runner')
- const c=await loadConfig('safari.local.json'),result=await safariEditor(c,JSON.parse(process.env.PRIMO_QA_SAFARI_EDITOR || '{}'))
- const evidence=await privateReport(c,'safari-editor',result);console.log(JSON.stringify({status:result.status,evidence}));process.exitCode=result.status==='PASS_SAFARI_EDITOR_HANDOFF'?0:1
+ const c=await loadConfig('safari.local.json'),actor=JSON.parse(process.env.PRIMO_QA_SAFARI_EDITOR || '{}'),loadOnly=process.env.PRIMO_QA_SAFARI_LOAD_ONLY==='true'
+ for(let attempt=0;attempt<(loadOnly?3:1);attempt++){
+  if(attempt)await delay(4000)
+  const result=await safariEditor(c,actor,process.env,{loadOnly});result.independentAttempt=attempt+1
+  const evidence=await privateReport(c,'safari-editor',result);console.log(JSON.stringify({status:result.status,evidence}));if(!result.status.startsWith('PASS_SAFARI_'))process.exitCode=1
+ }
 }

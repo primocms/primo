@@ -15,6 +15,11 @@ on:
         required: false
         default: false
         type: boolean
+      load_only:
+        description: 'Run three fresh sign-in/editor-load cases without content edits'
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 jobs:
@@ -49,6 +54,7 @@ jobs:
       - name: Enable Safari only on this disposable runner and probe the hosted fixture
         env:
           PRIMO_QA_RUN_EDITOR: ${{ inputs.editor }}
+          PRIMO_QA_SAFARI_LOAD_ONLY: ${{ inputs.load_only }}
           PRIMO_QA_SAFARI_EDITOR: ${{ inputs.editor && secrets.PRIMO_RC7_QA_CE4FC8_SAFARI || '' }}
         shell: bash
         run: |
