@@ -5,6 +5,7 @@ on:
       - '.github/workflows/rc-platform.yml'
       - 'tests/platform/**'
       - 'tests/staging/rc8/**'
+      - 'tests/security/**'
       - 'tests/staging/rc8-packages.json'
       - 'internal/**'
       - 'src/**'
@@ -181,3 +182,44 @@ jobs:
           name: rc8-copied-recovery
           path: recovery-result.json
           if-no-files-found: warn
+
+  adversarial-framing:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PLAYWRIGHT_JSON_OUTPUT_FILE: framing-security-results.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc8-linux_amd64
+          path: frozen
+      - name: Verify the exact tested native artifact
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps chromium
+      - name: Prove allowed rendering and cross-origin refusal in an isolated process
+        run: npx playwright test --config tests/security/playwright.config.ts --reporter=list,json
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc8-framing-security
+          path: |
+            framing-security-results.json
+            tests/security/test-results/

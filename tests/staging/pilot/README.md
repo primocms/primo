@@ -6,7 +6,7 @@ The accepted machine-readable policy is [pilot.defaults.json](pilot.defaults.jso
 
 ## Pilot scope and readiness
 
-- Ten invited freelancers/agencies, starting with new sites. Builders receive per-site `developer` assignments; their clients receive per-site `editor` assignments. Neither receives server-wide authority. A per-site developer can work on an assigned site; this plan does not claim unrestricted self-service site creation. Provisioning each site remains an operator step in a separately authorized pilot execution.
+- Ten invited freelancers/agencies, starting with new sites. Builders receive per-site `developer` assignments; their clients receive per-site `editor` assignments. Neither receives server-wide authority. A per-site developer can work on an assigned site; this plan does not claim unrestricted self-service site creation. Provisioning each site, new client account and client role assignment remains an operator step in a separately authorized pilot execution. Scoped builders do not have account/assignment creation authority; the maintainer sends requested client invitations.
 - Editing is supported on current stable desktop Chrome, Edge, Firefox and Safari. Record actual versions and verify any versions beyond those covered by the RC.7 evidence. Physical-phone editing, older browsers and general external embedding are outside the initial promise.
 - Content-only editors may update content/repeater order and publish through the retained trusted compiled-output capability. This does not sandbox an untrusted publisher's executable output.
 - Zero silent data loss, cross-site access or destructive conflict resolution. A reproduced failure pauses the affected workflow and prompts recovery from the last verified copy.

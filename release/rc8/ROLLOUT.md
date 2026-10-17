@@ -23,6 +23,8 @@ After deployment authorization, start the approved CMS with its own restored/cop
 
 After explicit recipient-specific invitation authorization and verified real email, onboard one builder first, then the remaining nine. Each receives the [builder checklist](../../tests/staging/pilot/BUILDER-GUIDE.md). Record receipt, successful setup/reset, correct site role and a disposable local/remote conflict exercise. Use draft/preview work initially; no real client publication occurs under the current no-publish instruction.
 
+Account and role provisioning is operator-assisted: the existing user/account and assignment creation rules require the server operator. A site-scoped developer can build and edit its assigned site's design/content, but cannot create a new client account or grant that account access. The operator must create and invite the requested client with the editor role. The disposable exact-package probe verifies rejection leaves no account behind and operator provisioning/client login succeeds. Delegated invitations would be a separate product/security capability outside the frozen pilot scope; do not grant shared-server developer authority as a workaround.
+
 Before each builder's first client launch, clear physical iPhone Safari/Android Chrome public-page checks, the actual custom-domain/HTTPS/CDN path if used, the accepted framing policy and the complete content-only client handoff plus backup/support ownership on that host. Legacy imports require their representative fixture gate. Resolve these gates while builders create drafts, rather than adding unrelated requirements to invitation readiness.
 
 ## Pause and abort criteria

@@ -14,6 +14,10 @@ This records agent code review of the frozen input set and final integration del
 
 Additional first integration-run findings: Node reports `x64` while artifact names use `amd64`; the recovery guard now normalizes the alias while retaining exact prior-binary hash rejection. The Firefox trace showed the new framing check stalled only while querying a CSP-blocked child automation context. It now uses a positive-control image request to prove allowed rendering and its absence after the blocked frame load, avoiding that unavailable context without weakening the same-origin/header assertions. An unchanged invitation-navigation test also experienced a Firefox page-process crash; retain the failed trace and check whether it recurs in the final complete run, without blanket retries or changing its assertions.
 
+The next WebKit source trace explicitly reports a network-process crash (including the clone request, status -1); the independent frozen run completed its packaged handoff but lost the collaborator dashboard during the suite. Deliberate blocked-frame probes now run in a separate Chromium job/process with their own disposable server/database. All original positive-control/header/refusal assertions remain there. The complete normal workflow suites retain all 42 existing cases plus a same-origin preview case in each engine; no adversarial fixture or broken canary image enters their shared browser/database. Normal workflow assertions and timeout budgets remain unchanged, and no retry/skip is added. Treat initial engine failures as retained evidence, not successful checks.
+
+The scoped-onboarding probe confirms that new user and role creation remains operator-only. Document operator-managed client invitations for the supervised pilot; do not weaken account rules or introduce delegated invitation capabilities in this release.
+
 ## Review boundaries
 
 - Data safety: retain canonical content comparison and original record identities, guarded stale import refusal and pre-overwrite backup behavior. No import/export/synchronization code differs from the validated frozen input.
