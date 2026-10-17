@@ -1,8 +1,8 @@
-import { abbreviationTracker, expandAbbreviation } from '@emmetio/codemirror6-plugin'
+import { abbreviationTracker, expandAbbreviation, EmmetKnownSyntax } from '@emmetio/codemirror6-plugin'
 
-export function emmetExtension(syntax: string = 'html') {
+export function emmetExtension(syntax: keyof typeof EmmetKnownSyntax = 'html') {
 	return abbreviationTracker({
-		syntax // Specify document syntax (html, css, jsx, etc.)
+		syntax: EmmetKnownSyntax[syntax] // Specify document syntax (html, css, jsx, etc.)
 	})
 }
 

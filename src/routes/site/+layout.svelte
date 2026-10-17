@@ -51,7 +51,7 @@
 						// (host === id) have no reachable vhost and must open by id at
 						// /admin/sites/{id} — otherwise the id gets used as a hostname
 						// and DNS fails. site_editor_url handles both cases.
-						window.location.href = site_editor_url(first_site)
+						window.location.href = site_editor_url({ id: first_site.id, host: first_site.host })
 						return
 					}
 				} else {

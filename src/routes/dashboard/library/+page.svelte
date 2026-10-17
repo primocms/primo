@@ -124,7 +124,7 @@
 			console.error('Failed to import symbol:', error)
 
 			// Show more detailed error message
-			if (error.response?.data) {
+			if (error instanceof Error && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
 				console.error('PocketBase error details:', error.response.data)
 			}
 
@@ -161,9 +161,9 @@
 	let upload_file_invalid = $state(false)
 
 	// Export symbol
-	let symbol_to_export = $state<ObjectOf<typeof SiteSymbols>>()
+	let symbol_to_export = $state<ObjectOf<typeof LibrarySymbols>>()
 	const exportSymbol = $derived(useExportLibrarySymbol(symbol_to_export?.id))
-	async function export_symbol(symbol: ObjectOf<typeof SiteSymbols>) {
+	async function export_symbol(symbol: ObjectOf<typeof LibrarySymbols>) {
 		symbol_to_export = symbol
 		await tick()
 		await exportSymbol.run()

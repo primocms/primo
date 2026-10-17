@@ -30,8 +30,10 @@ export const useSvelteWorker = <P extends unknown[], V extends unknown>(ready: (
 		}
 	})
 
-	return new (class {
-		status = $derived(status)
+	return {
+		get status() {
+			return status
+		},
 
 		async run(...params: P) {
 			parameters = params
@@ -52,5 +54,5 @@ export const useSvelteWorker = <P extends unknown[], V extends unknown>(ready: (
 				}
 			})
 		}
-	})()
+	}
 }

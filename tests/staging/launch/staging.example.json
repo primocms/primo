@@ -1,0 +1,198 @@
+{
+  "environmentId": "REPLACE_WITH_UNIQUE_DISPOSABLE_ENVIRONMENT",
+  "disposable": true,
+  "cmsOrigin": "https://cms.staging.example.test",
+  "cmsProbePath": "/?_site=REPLACE_WITH_QA_SITE_ID",
+  "publicPages": [
+    {
+      "url": "https://REPLACE_WITH_PUBLIC_QA_HOST/",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    }
+  ],
+  "requestTimeoutMs": 15000,
+  "outputDirectory": ".runs",
+  "soak": {
+    "durationSeconds": 3600,
+    "minimumGateSeconds": 3600,
+    "workers": 10,
+    "loginIntervalMs": 1700,
+    "intervalMs": 10000,
+    "maxRequests": 100000,
+    "criteriaConfirmed": false,
+    "p95PublicMs": 1000,
+    "p95SaveRoundtripMs": 2000,
+    "maxErrorRate": 0,
+    "exclusiveScratchRecords": false
+  },
+  "actors": [
+    {
+      "name": "agency-01",
+      "emailEnv": "PRIMO_QA_EMAIL_01",
+      "passwordEnv": "PRIMO_QA_PASSWORD_01",
+      "userId": "REPLACE_USER_01",
+      "siteId": "REPLACE_SITE_01",
+      "pageId": "REPLACE_PAGE_01",
+      "sectionId": "REPLACE_SECTION_01",
+      "fieldId": "REPLACE_FIELD_01",
+      "entryId": "REPLACE_ENTRY_01",
+      "expectedOriginalValue": "QA scratch agency-01"
+    },
+    {
+      "name": "agency-02",
+      "emailEnv": "PRIMO_QA_EMAIL_02",
+      "passwordEnv": "PRIMO_QA_PASSWORD_02",
+      "userId": "REPLACE_USER_02",
+      "siteId": "REPLACE_SITE_02",
+      "pageId": "REPLACE_PAGE_02",
+      "sectionId": "REPLACE_SECTION_02",
+      "fieldId": "REPLACE_FIELD_02",
+      "entryId": "REPLACE_ENTRY_02",
+      "expectedOriginalValue": "QA scratch agency-02"
+    },
+    {
+      "name": "agency-03",
+      "emailEnv": "PRIMO_QA_EMAIL_03",
+      "passwordEnv": "PRIMO_QA_PASSWORD_03",
+      "userId": "REPLACE_USER_03",
+      "siteId": "REPLACE_SITE_03",
+      "pageId": "REPLACE_PAGE_03",
+      "sectionId": "REPLACE_SECTION_03",
+      "fieldId": "REPLACE_FIELD_03",
+      "entryId": "REPLACE_ENTRY_03",
+      "expectedOriginalValue": "QA scratch agency-03"
+    },
+    {
+      "name": "agency-04",
+      "emailEnv": "PRIMO_QA_EMAIL_04",
+      "passwordEnv": "PRIMO_QA_PASSWORD_04",
+      "userId": "REPLACE_USER_04",
+      "siteId": "REPLACE_SITE_04",
+      "pageId": "REPLACE_PAGE_04",
+      "sectionId": "REPLACE_SECTION_04",
+      "fieldId": "REPLACE_FIELD_04",
+      "entryId": "REPLACE_ENTRY_04",
+      "expectedOriginalValue": "QA scratch agency-04"
+    },
+    {
+      "name": "agency-05",
+      "emailEnv": "PRIMO_QA_EMAIL_05",
+      "passwordEnv": "PRIMO_QA_PASSWORD_05",
+      "userId": "REPLACE_USER_05",
+      "siteId": "REPLACE_SITE_05",
+      "pageId": "REPLACE_PAGE_05",
+      "sectionId": "REPLACE_SECTION_05",
+      "fieldId": "REPLACE_FIELD_05",
+      "entryId": "REPLACE_ENTRY_05",
+      "expectedOriginalValue": "QA scratch agency-05"
+    },
+    {
+      "name": "agency-06",
+      "emailEnv": "PRIMO_QA_EMAIL_06",
+      "passwordEnv": "PRIMO_QA_PASSWORD_06",
+      "userId": "REPLACE_USER_06",
+      "siteId": "REPLACE_SITE_06",
+      "pageId": "REPLACE_PAGE_06",
+      "sectionId": "REPLACE_SECTION_06",
+      "fieldId": "REPLACE_FIELD_06",
+      "entryId": "REPLACE_ENTRY_06",
+      "expectedOriginalValue": "QA scratch agency-06"
+    },
+    {
+      "name": "agency-07",
+      "emailEnv": "PRIMO_QA_EMAIL_07",
+      "passwordEnv": "PRIMO_QA_PASSWORD_07",
+      "userId": "REPLACE_USER_07",
+      "siteId": "REPLACE_SITE_07",
+      "pageId": "REPLACE_PAGE_07",
+      "sectionId": "REPLACE_SECTION_07",
+      "fieldId": "REPLACE_FIELD_07",
+      "entryId": "REPLACE_ENTRY_07",
+      "expectedOriginalValue": "QA scratch agency-07"
+    },
+    {
+      "name": "agency-08",
+      "emailEnv": "PRIMO_QA_EMAIL_08",
+      "passwordEnv": "PRIMO_QA_PASSWORD_08",
+      "userId": "REPLACE_USER_08",
+      "siteId": "REPLACE_SITE_08",
+      "pageId": "REPLACE_PAGE_08",
+      "sectionId": "REPLACE_SECTION_08",
+      "fieldId": "REPLACE_FIELD_08",
+      "entryId": "REPLACE_ENTRY_08",
+      "expectedOriginalValue": "QA scratch agency-08"
+    },
+    {
+      "name": "agency-09",
+      "emailEnv": "PRIMO_QA_EMAIL_09",
+      "passwordEnv": "PRIMO_QA_PASSWORD_09",
+      "userId": "REPLACE_USER_09",
+      "siteId": "REPLACE_SITE_09",
+      "pageId": "REPLACE_PAGE_09",
+      "sectionId": "REPLACE_SECTION_09",
+      "fieldId": "REPLACE_FIELD_09",
+      "entryId": "REPLACE_ENTRY_09",
+      "expectedOriginalValue": "QA scratch agency-09"
+    },
+    {
+      "name": "agency-10",
+      "emailEnv": "PRIMO_QA_EMAIL_10",
+      "passwordEnv": "PRIMO_QA_PASSWORD_10",
+      "userId": "REPLACE_USER_10",
+      "siteId": "REPLACE_SITE_10",
+      "pageId": "REPLACE_PAGE_10",
+      "sectionId": "REPLACE_SECTION_10",
+      "fieldId": "REPLACE_FIELD_10",
+      "entryId": "REPLACE_ENTRY_10",
+      "expectedOriginalValue": "QA scratch agency-10"
+    }
+  ],
+  "devices": [
+    {
+      "name": "mac-safari",
+      "transportUrlEnv": "PRIMO_QA_SAFARI_WEBDRIVER_URL",
+      "physical": false,
+      "capabilities": {
+        "browserName": "safari",
+        "platformName": "mac"
+      }
+    },
+    {
+      "name": "iphone-safari",
+      "transportUrlEnv": "PRIMO_QA_IOS_WEBDRIVER_URL",
+      "usernameEnv": "PRIMO_QA_DEVICE_USERNAME",
+      "passwordEnv": "PRIMO_QA_DEVICE_ACCESS_KEY",
+      "physical": true,
+      "capabilities": {
+        "browserName": "Safari",
+        "platformName": "iOS",
+        "appium:automationName": "XCUITest",
+        "appium:deviceName": "REPLACE_WITH_TEST_DEVICE",
+        "appium:udid": {
+          "$env": "PRIMO_QA_IOS_UDID"
+        }
+      }
+    },
+    {
+      "name": "android-chrome",
+      "transportUrlEnv": "PRIMO_QA_ANDROID_WEBDRIVER_URL",
+      "usernameEnv": "PRIMO_QA_DEVICE_USERNAME",
+      "passwordEnv": "PRIMO_QA_DEVICE_ACCESS_KEY",
+      "physical": true,
+      "capabilities": {
+        "browserName": "Chrome",
+        "platformName": "Android",
+        "appium:automationName": "UiAutomator2",
+        "appium:deviceName": "REPLACE_WITH_TEST_DEVICE",
+        "appium:udid": {
+          "$env": "PRIMO_QA_ANDROID_UDID"
+        }
+      }
+    }
+  ]
+}

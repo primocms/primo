@@ -13,19 +13,21 @@
 	const preview_token = $derived(typeof site?.preview === 'string' ? site.preview : '')
 	const iframe_src = $derived(src ?? `/?_site=${site?.id}&_preview=1${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
 
-	let container = $state()
-	let scale = $state()
-	let iframeHeight = $state()
-	let iframe = $state()
+	let container = $state<HTMLElement>()
+	let scale = $state(1)
+	let iframeHeight = $state('100%')
+	let iframe = $state<HTMLIFrameElement>()
 	let iframeLoaded = $state()
-	let resize_observer = $state()
+	let resize_observer = $state<ResizeObserver>()
 
 	async function init_preview() {
 		await tick()
+		if (!container || !iframe) return
 		// if (!iframe?.contentWindow?.document?.body) return
 		if (resize_observer) resize_observer?.disconnect()
 
 		resize_observer = new ResizeObserver((entries) => {
+			if (!container || !iframe) return
 			const { offsetWidth: parentWidth } = container
 			const { offsetWidth: childWidth } = iframe
 

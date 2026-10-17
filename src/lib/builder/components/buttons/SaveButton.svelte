@@ -7,7 +7,7 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {string} [variants]
-	 * @property {string} [type]
+	 * @property {"button" | "submit" | "reset"} [type]
 	 * @property {boolean} [disabled]
 	 * @property {boolean} [loading]
 	 * @property {import('svelte').Snippet} [children]

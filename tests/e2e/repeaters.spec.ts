@@ -1,7 +1,7 @@
 import { test, expect, type Locator } from '@playwright/test'
 import { TEST_SERVER_URL } from './helpers/paths'
-import { loginAsDeveloper, canvasFrame, openBlockContentModal } from './helpers/editor'
-import { devAuth } from './helpers/server'
+import { loginAsDeveloper, canvasFrame, openBlockContentModal, loginAs } from './helpers/editor'
+import { devAuth, ensureEditorUser } from './helpers/server'
 import { seedFixtureSite, type SeededSite } from './helpers/seed'
 
 let ids: SeededSite
@@ -54,8 +54,7 @@ test.describe('Repeaters', () => {
 
 	// UI COVERAGE: every step in this test is driven through the real editor
 	// UI (create/edit/delete buttons, Save, reload) — no direct API writes.
-	// Reordering is intentionally NOT exercised here; see the backend-only
-	// test and the fixme below for why.
+	// Reordering is exercised separately with a content-only editor below.
 	test('UI: create, edit, delete, and re-edit preserve correct item identity', async ({ page, request }) => {
 		const { token } = await devAuth(request)
 		await loginAsDeveloper(page, ids.siteId)
@@ -76,10 +75,7 @@ test.describe('Repeaters', () => {
 		// explicit Save, and the dialog must be reopened for the next step.
 		async function saveAndReopen() {
 			const responsePromise = page
-				.waitForResponse(
-					(res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET',
-					{ timeout: 5000 }
-				)
+				.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET', { timeout: 5000 })
 				.catch(() => null) // a no-op save may not fire a matching request
 			await dialog.getByRole('button', { name: 'Save' }).click()
 			await responsePromise
@@ -180,14 +176,12 @@ test.describe('Repeaters', () => {
 	// @atlaskit/pragmatic-drag-and-drop) is entirely commented out, and
 	// RepeaterField.svelte never wires up any alternative (e.g. move
 	// up/down buttons). This test exercises reordering by writing directly
-	// to page_section_entries.index via the API, bypassing the (unavailable)
-	// UI entirely, to verify that the persistence-layer identity model
+	// to page_section_entries.index via the API, bypassing the UI, to verify that the persistence-layer identity model
 	// (Content.svelte.ts's resolveEntries pairing subfields to their parent
 	// by relation + index, not array position) correctly keeps content
-	// bound to the right item across a reorder. It intentionally does NOT
-	// claim to cover the UI drag interaction — see the fixme below for that
-	// gap.
-	test('backend: reordering via direct index update preserves item identity (no UI drag-reorder exists to test)', async ({ request }) => {
+	// bound to the right item across a reorder. The editor test below covers
+	// the actual controls separately.
+	test('backend: reordering via direct index update preserves item identity', async ({ request }) => {
 		const { token } = await devAuth(request)
 		// Independent fixture site (not the describe-level `ids`) so this
 		// test's item set can never collide with items left behind by the
@@ -255,12 +249,90 @@ test.describe('Repeaters', () => {
 		expect(items.find((i) => i.id === bravoId)?.description).toBe('Second created item')
 	})
 
-	// Documents the UI coverage gap explicitly (rather than leaving it only
-	// as a comment) so it shows up in the test report as a real, tracked
-	// item rather than silently missing coverage. Skipped, not failing: this
-	// is a missing feature, not a regression to chase.
-	test.fixme(
-		'UI: drag-and-drop reorder of repeater items (NOT IMPLEMENTED — RepeaterFieldItem.svelte drag handlers are commented out, no alternative reorder control exists)',
-		async () => {}
-	)
+	test('content-only editor reorders items and nested repeaters without losing identity or source permissions', async ({ page, request }) => {
+		test.setTimeout(60000)
+		const { token } = await devAuth(request)
+		const site = await seedFixtureSite(token, 'Editor Reordering')
+		const headers = { Authorization: `Bearer ${token}` }
+		const url = (collection: string, id = '') => `${TEST_SERVER_URL}/api/collections/${collection}/records${id ? '/' + id : ''}`
+		async function create(collection: string, data: any) {
+			const res = await request.post(url(collection), { headers, data })
+			expect(res.ok(), await res.text()).toBeTruthy()
+			return res.json()
+		}
+		const details = await create('site_symbol_fields', { symbol: site.symbolId, parent: site.fieldIds.items, key: 'details', label: 'Details', type: 'group', index: 2 })
+		const links = await create('site_symbol_fields', { symbol: site.symbolId, parent: details.id, key: 'links', label: 'Links', type: 'repeater', index: 0 })
+		const label = await create('site_symbol_fields', { symbol: site.symbolId, parent: links.id, key: 'label', label: 'Label', type: 'text', index: 0 })
+		const makeEntry = (field: string, parent: string | undefined, index = 0, value: any = null) =>
+			create('page_section_entries', { section: site.sectionId, field, parent, index, value, locale: 'en' })
+		const containers: any[] = []
+		for (const [position, name] of ['Alpha', 'Bravo', 'Charlie'].entries()) {
+			const item = await makeEntry(site.fieldIds.items, undefined, [0, 2, 5][position])
+			containers.push(item)
+			await makeEntry(site.fieldIds.name, item.id, 0, name)
+			await makeEntry(site.fieldIds.description, item.id, 0, `${name} description`)
+		}
+		const group = await makeEntry(details.id, containers[0].id)
+		const first = await makeEntry(links.id, group.id)
+		const second = await makeEntry(links.id, group.id, 1)
+		await makeEntry(label.id, first.id, 0, 'First nested link')
+		await makeEntry(label.id, second.id, 0, 'Second nested link')
+		const snapshot = async () => {
+			const res = await request.get(url('page_section_entries'), { headers, params: { filter: `section = "${site.sectionId}"`, perPage: 200 } })
+			expect(res.ok()).toBeTruthy()
+			return (await res.json()).items
+		}
+		// The image stub serves a 1px PNG; seed its known metadata so the image
+		// field's ordinary dimension normalization cannot obscure reorder assertions.
+		const image = (await snapshot()).find((e: any) => e.field === site.fieldIds.image)
+		if (image) {
+			const normalized = await request.patch(url('page_section_entries', image.id), { headers, data: { value: { ...image.value, width: 1, height: 1, upload: null } } })
+			expect(normalized.ok()).toBeTruthy()
+		}
+		const before = await snapshot()
+		const source = await (await request.get(url('site_symbols', site.symbolId), { headers })).json()
+		const editor = await ensureEditorUser(request, token, site.siteId)
+		await loginAs(page, editor.email, editor.password, site.siteId)
+		const headline = canvasFrame(page).getByTestId('headline')
+		await expect(headline).toBeVisible({ timeout: 15000 })
+		let dialog = await openBlockContentModal(page, headline)
+		expect(await dialog.getByRole('button', { name: 'Create Field', exact: true }).count()).toBe(0)
+		const item = (id: string) => dialog.locator(`.RepeaterFieldItem[data-entry-id="${id}"]`)
+		await expect(item(containers[0].id).getByRole('button', { name: 'Move Item item up', exact: true })).toBeDisabled()
+		await expect(item(containers[2].id).getByRole('button', { name: 'Move Item item down', exact: true })).toBeDisabled()
+		// Keyboard activation and consecutive moves before Save exercise colliding old slots.
+		await expandItem(item(containers[2].id))
+		await item(containers[2].id).getByRole('button', { name: 'Move Item item up', exact: true }).focus()
+		await page.keyboard.press('Enter')
+		await item(containers[2].id).getByRole('button', { name: 'Move Item item down', exact: true }).click()
+		await item(containers[2].id).getByRole('button', { name: 'Move Item item up', exact: true }).click()
+		await item(containers[2].id).getByRole('button', { name: 'Move Item item up', exact: true }).click()
+		await expandItem(item(containers[2].id))
+		await item(containers[2].id).locator('[id$="-description"] textarea').fill('Charlie edited after moving')
+		await item(containers[2].id).locator('[id$="-description"] textarea').blur()
+		await expandItem(item(containers[0].id))
+		await item(second.id).getByRole('button', { name: 'Move Link item up', exact: true }).click()
+		await dialog.getByRole('button', { name: 'Save', exact: true }).click()
+		await expect(dialog).toBeHidden()
+		await page.reload()
+		await expect(canvasFrame(page).getByTestId('headline')).toBeVisible({ timeout: 15000 })
+		dialog = await openBlockContentModal(page, canvasFrame(page).getByTestId('headline'))
+		const order = await dialog.locator('.repeater-level-0 > ul > li > .RepeaterFieldItem').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-entry-id')))
+		expect(order).toEqual([containers[2].id, containers[0].id, containers[1].id])
+		const after = await snapshot()
+		expect(after.map((e: any) => e.id).sort()).toEqual(before.map((e: any) => e.id).sort())
+		for (const original of before) {
+			const current = after.find((e: any) => e.id === original.id)
+			expect({ field: current.field, parent: current.parent, locale: current.locale }).toEqual({ field: original.field, parent: original.parent, locale: original.locale })
+			expect(current.value).toEqual(original.parent === containers[2].id && original.field === site.fieldIds.description ? 'Charlie edited after moving' : original.value)
+		}
+		expect(after.find((e: any) => e.id === second.id).index).toBe(0)
+		expect(after.find((e: any) => e.id === first.id).index).toBe(1)
+		await expect(canvasFrame(page).getByTestId('items').locator('.item-name')).toHaveText(['Charlie', 'Alpha', 'Bravo'])
+		const persistedSource = await (await request.get(url('site_symbols', site.symbolId), { headers })).json()
+		for (const key of ['html', 'css', 'js']) expect(persistedSource[key]).toEqual(source[key])
+		const auth = JSON.parse(await page.evaluate(() => localStorage.getItem('pocketbase_auth') || '{}'))
+		const denied = await request.patch(url('site_symbols', site.symbolId), { headers: { Authorization: `Bearer ${auth.token}` }, data: { html: '<p>Forbidden</p>' } })
+		expect(denied.status()).toBe(403)
+	})
 })
