@@ -4,6 +4,7 @@ import { customAlphabet } from 'nanoid'
 import { untrack } from 'svelte'
 import type { ObjectWithId } from './Object'
 import type { CollectionManager } from './CollectionManager'
+import { observeSubscription } from './subscription.js'
 
 export type ObjectOf<T> = T extends CollectionMapping<infer Object, infer Options> ? MappedObject<Object, Options> : never
 
@@ -84,7 +85,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 	const collection = instance?.collection(name)
 
 	if (collection && options?.subscribe) {
-		collection.subscribe('*', (data) => {
+		void observeSubscription(collection.subscribe('*', (data) => {
 			const operation = data.action as 'create' | 'update' | 'delete'
 			const values = data.record
 			const id = values.id
@@ -106,7 +107,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			// Reset position of the change to place it the last
 			changes.delete(id)
 			changes.set(id, { collection: name, operation, committed: true, data: values })
-		})
+		}))
 	}
 
 	const mapObject = (record: unknown): MappedObject<T, Options> => {

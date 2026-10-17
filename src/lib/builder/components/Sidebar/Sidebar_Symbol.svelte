@@ -10,9 +10,10 @@
 	import { locale, mod_key_held, dragging_symbol } from '../../stores/app/misc'
 	import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import IFrame from '../../components/IFrame.svelte'
-	import { createEventDispatcher, onMount, untrack } from 'svelte'
+	import { createEventDispatcher, onMount, onDestroy, untrack } from 'svelte'
 	import { watch } from 'runed'
 	import { block_html } from '$lib/builder/code_generators'
+	import { startPreviewTask } from '$lib/builder/preview_task.js'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { SiteSymbols } from '$lib/pocketbase/collections'
 	import { useExportSiteSymbol } from '$lib/workers/ExportSymbol.svelte'
@@ -115,28 +116,36 @@
 
 	// Rebuild preview whenever code or data meaningfully change
 	let last_signature = $state<any>()
+	let cancel_preview: (() => void) | undefined
+	onDestroy(() => cancel_preview?.())
+	onMount(() => {
+		const cancel = () => cancel_preview?.()
+		window.addEventListener('pagehide', cancel)
+		return () => window.removeEventListener('pagehide', cancel)
+	})
 	watch(
 		() => ({ html: symbol.html, css: symbol.css, js: symbol.js, data }),
 		({ html, css, js, data }) => {
 			const signature = { html, css, js, data }
 			if (_.isEqual(last_signature, signature) || !data) return
 			last_signature = _.cloneDeep(signature)
+			cancel_preview?.()
 
 			is_loading = true
 			component_error = undefined
-			try {
-				const blockData = data || {}
-				block_html({ code: { html, css, js }, data: blockData }).then((res) => {
-					if (res && res.body) {
-						componentCode = res
-					}
-				})
-			} catch (error) {
-				console.error('Sidebar symbol error for', symbol.name, ':', error)
-				component_error = error
-			} finally {
-				is_loading = false
-			}
+			const task = startPreviewTask({
+				run: () => block_html({ code: { html, css, js }, data: data || {} }),
+				onResult: (res) => {
+					if (res?.body) componentCode = res
+					component_error = res?.error
+				},
+				onError: (error) => {
+					console.error('Sidebar symbol error for', symbol.name, ':', error)
+					component_error = error
+				},
+				onSettled: () => { is_loading = false }
+			})
+			cancel_preview = task.cancel
 		}
 	)
 

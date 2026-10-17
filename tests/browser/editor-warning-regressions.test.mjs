@@ -222,6 +222,30 @@ test('presence getter follows navigation and clears old section keys without reg
 	}
 })
 
+test('hidden presence expires server-side, resumes with a fresh record and still cleans up visible navigation', async () => {
+ const activity=component('src/lib/UserActivity.svelte.ts')
+ const f=await fixture(
+  `<script>import Child from 'test:presence-lifetime.svelte';let showing=$state(true);export function leave(){showing=false}</script>{#if showing}<Child/>{/if}`,
+  {presence:true,extraMocks:{
+   'test:presence-lifetime.svelte':`<script>import {setUserActivity} from ${activity};setUserActivity({user:'user',site:'site'})</script><span>Active editor</span>`,
+   'test:collections':`globalThis.presenceEvents=[];let next=0;export const UserActivities={create(value){const record={id:String(++next),...value};presenceEvents.push({operation:'create',id:record.id});return record},update(id,value){presenceEvents.push({operation:'update',id});return {id,...value}},delete(id){presenceEvents.push({operation:'delete',id})}};export const Collaborators={},Pages={},PageSections={},PageTypes={},PageTypeSections={},Sites={},SiteSymbols={};`
+  }}
+ )
+ try {
+  const {page}=f
+  await page.waitForFunction(()=>presenceEvents.some(e=>e.operation==='create'))
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))})
+  await page.waitForTimeout(50)
+  assert.equal(await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='delete').length),0,'Do not start a network delete in a departing document')
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))})
+  await page.waitForFunction(()=>presenceEvents.filter(e=>e.operation==='create').length===2)
+  const created=await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='create').map(e=>e.id));assert.notEqual(created[0],created[1])
+  await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>presenceEvents.some(e=>e.operation==='delete'))
+  assert.deepEqual(await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='delete').map(e=>e.id)),[created[1]])
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
 test('worker status remains reactive through loading, success and failure', async () => {
 	const f = await fixture(
 		`<script>import {useSvelteWorker} from ${component('src/lib/workers/Worker.svelte.ts')};let loaded=$state(false);const worker=useSvelteWorker(()=>true,()=>loaded,async(value)=>{if(value==='fail')throw new Error('expected');return value+'!'});export function run(value){return worker.run(value)}export function load(){loaded=true}</script><output>{worker.status}</output>`
