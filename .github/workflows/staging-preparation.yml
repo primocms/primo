@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/staging-preparation.yml'
       - 'tests/staging/launch/**'
+      - 'tests/staging/hosted/**'
       - 'tests/staging/rc7-packages.json'
       - 'package*.json'
 permissions:
@@ -30,6 +31,10 @@ jobs:
       - run: npm ci
       - name: Rehearse tool entry points and recovery against loopback mocks only
         run: node --test tests/staging/launch/test/*.test.mjs
+      - name: Check hosted helper syntax without network or credentials
+        run: |
+          for script in tests/staging/hosted/*.mjs; do node --check "$script"; done
+          python3 -c 'import ast,pathlib; ast.parse(pathlib.Path("tests/staging/hosted/backup-inventory.py").read_text())'
       - name: Examples must remain blocked with no access or service secrets
         shell: bash
         run: |

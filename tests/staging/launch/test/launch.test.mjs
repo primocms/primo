@@ -23,12 +23,12 @@ async function fixture(t,{count=10}={}) {
   const i=n+1,name='agency-'+String(i).padStart(2,'0');env['QA_EMAIL_'+i]='actor'+i+'@qa.test';env['QA_PASSWORD_'+i]='Test-only-password-'+i
   return {name,emailEnv:'QA_EMAIL_'+i,passwordEnv:'QA_PASSWORD_'+i,userId:id('u',i),siteId:id('s',i),pageId:id('p',i),sectionId:id('c',i),fieldId:id('f',i),entryId:id('e',i),expectedOriginalValue:'QA scratch '+name}
  })
- const state={requests:[],entries:new Map(actors.map(a=>[a.entryId,{id:a.entryId,section:a.sectionId,field:a.fieldId,parent:'',locale:'en',index:0,value:a.expectedOriginalValue}])),badMarker:false,devMode:false,crossReadAllowed:false,onPatch:null,failPatchOnce:false,deviceBadHeadings:false,deviceBadPlatform:false,scratchKey:'qa_scratch',siteRole:'editor',sessionOpened:0,sessionClosed:0,counter:0,pageUrl:null}
+ const state={requests:[],entries:new Map(actors.map(a=>[a.entryId,{id:a.entryId,section:a.sectionId,field:a.fieldId,parent:'',locale:'en',index:0,value:a.expectedOriginalValue}])),badMarker:false,badPreviewCache:false,devMode:false,crossReadAllowed:false,onPatch:null,failPatchOnce:false,deviceBadHeadings:false,deviceBadPlatform:false,scratchKey:'qa_scratch',siteRole:'editor',sessionOpened:0,sessionClosed:0,counter:0,pageUrl:null}
  let base
  const server=http.createServer(async(req,res)=>{
   try {
    const url=new URL(req.url,base);let raw='';for await(const chunk of req)raw+=chunk
-   const body=raw?JSON.parse(raw):null;state.requests.push({method:req.method,path:url.pathname,body,authorization:req.headers.authorization})
+   const body=raw?JSON.parse(raw):null;state.requests.push({at:performance.now(),method:req.method,path:url.pathname,body,authorization:req.headers.authorization})
    const json=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(value))}
    if(url.pathname.startsWith('/wd/')) {
     if(req.method==='POST' && url.pathname==='/wd/session'){state.sessionOpened++;return json(200,{value:{sessionId:'test-session',capabilities:{browserName:'safari',browserVersion:'mock-only',platformName:state.deviceBadPlatform?'Android':'mac'}}})}
@@ -48,7 +48,7 @@ async function fixture(t,{count=10}={}) {
    if(url.pathname==='/escaped')return json(200,{stolen:true})
    if(url.pathname==='/api/primo/info')return json(200,{version:candidate.cms.version,dev_mode:state.devMode})
    if(url.pathname==='/') {
-    const preview=url.searchParams.has('_preview'),modified='Fri, 16 Oct 2026 20:00:00 GMT'
+    const preview=url.searchParams.has('_site') && !state.badPreviewCache,modified='Fri, 16 Oct 2026 20:00:00 GMT'
     if(req.headers['if-modified-since']===modified){res.writeHead(304);return res.end()}
     res.writeHead(200,{'Content-Type':'text/html','Cache-Control':preview?'no-store':'no-cache','Last-Modified':modified,'X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin'})
     return res.end('<section data-primo-launch-fixture="'+(state.badMarker?'wrong':c.environmentId)+'">QA</section>')
@@ -82,7 +82,7 @@ async function fixture(t,{count=10}={}) {
   }catch{res.writeHead(500);res.end('{}')}
  })
  await new Promise(r=>server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+server.address().port
- const c={baseDirectory:root,outputDirectory:'.runs',environmentId:'primo-rc7-disposable-test',disposable:true,cmsOrigin:base,cmsProbePath:'/?_site='+id('s',1),publicPages:[{url:base+'/?_site='+id('s',1),headings:Array.from({length:5},(_,i)=>'QA section '+i)}],requestTimeoutMs:2000,soak:{durationSeconds:1,minimumGateSeconds:3600,workers:count,intervalMs:1000,maxRequests:1000,criteriaConfirmed:true,exclusiveScratchRecords:true,p95PublicMs:10000,p95SaveRoundtripMs:10000,maxErrorRate:0},actors,devices:[{name:'mock-safari',transportUrlEnv:'QA_WD_URL',physical:false,capabilities:{browserName:'safari',platformName:'mac'}}]}
+ const c={baseDirectory:root,outputDirectory:'.runs',environmentId:'primo-rc7-disposable-test',disposable:true,cmsOrigin:base,cmsProbePath:'/?_site='+id('s',1),publicPages:[{url:base+'/',headings:Array.from({length:5},(_,i)=>'QA section '+i)}],requestTimeoutMs:2000,soak:{durationSeconds:1,minimumGateSeconds:3600,workers:count,loginIntervalMs:0,intervalMs:1000,maxRequests:1000,criteriaConfirmed:true,exclusiveScratchRecords:true,p95PublicMs:10000,p95SaveRoundtripMs:10000,maxErrorRate:0},actors,devices:[{name:'mock-safari',transportUrlEnv:'QA_WD_URL',physical:false,capabilities:{browserName:'safari',platformName:'mac'}}]}
  env.QA_WD_URL=base+'/wd'
  t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));await fs.rm(root,{recursive:true,force:true})})
  return {c,env,state,root,actors}
@@ -231,4 +231,73 @@ test('complete fixture files pass the pinned packaged MCP block and page validat
  assert.ok(block.errors.every(e=>e.severity==='warning' && /"environment"|"qa_scratch"/.test(e.message)),JSON.stringify(block))
  const page=await validatePageFromDisk({site_path:site,page_path:'pages/index.yaml'})
  assert.equal(page.ok,true,JSON.stringify(page));assert.deepEqual(page.errors,[])
+})
+
+test('edit setup paces authentication and still validates every actor before the first write',async t=>{
+ const f=await fixture(t,{count:2});f.c.soak.loginIntervalMs=40
+ const r=await soak(f.c,{profile:'edit',env:f.env});assert.equal(r.status,'PASS_REHEARSAL_ONLY')
+ const auth=f.state.requests.filter(r=>r.path.endsWith('/auth-with-password'))
+ assert.equal(auth.length,2);assert.ok(auth[1].at-auth[0].at>=35)
+ const firstPatch=f.state.requests.findIndex(r=>r.method==='PATCH')
+ assert.ok(firstPatch>f.state.requests.indexOf(auth[1]));baseline(f)
+ f.c.cmsOrigin='https://cms.disposable-rc7.invalid';f.c.soak.loginIntervalMs=0
+ assert.ok(configIssues(f.c,{profile:'edit',env:f.env}).some(x=>x.includes('auth throttling')))
+})
+
+test('preflight uses the actual _site preview contract and rejects cacheable previews',async t=>{
+ const f=await fixture(t,{count:1});assert.equal((await preflight(f.c)).status,'PASS_READ_ONLY_PREFLIGHT')
+ assert.ok(f.state.requests.some(r=>r.path==='/'));f.state.badPreviewCache=true
+ const r=await preflight(f.c);assert.equal(r.status,'FAIL');assert.match(r.failure,/Preview cache policy/)
+ f.c.cmsProbePath='/';assert.ok(configIssues(f.c).some(x=>x.includes('_site preview')))
+})
+
+test('owned-backup inventory refuses unrelated inputs and preserves an existing neighboring database',async t=>{
+ const f=await fixture(t,{count:1}),privateDir=path.join(f.root,'private');await fs.mkdir(privateDir)
+ const archive=path.join(privateDir,'rc7-owned-safety.zip'),neighbor=path.join(privateDir,'rc7-owned-safety.db')
+ await fs.writeFile(neighbor,'existing database must survive')
+ const {execFileSync}=await import('node:child_process')
+ execFileSync('python3',['-c','import sys,zipfile; z=zipfile.ZipFile(sys.argv[1],"w"); z.writestr("data.db",b"fake owned fixture"); z.close()',archive])
+ const inventory=new URL('../../hosted/backup-inventory.py',import.meta.url).pathname
+ assert.throws(()=>execFileSync('python3',[inventory,archive],{stdio:'pipe'}))
+ assert.equal(await fs.readFile(neighbor,'utf8'),'existing database must survive')
+ const unrelated=path.join(privateDir,'customer.zip');await fs.writeFile(unrelated,'unrelated bytes')
+ assert.throws(()=>execFileSync('python3',[inventory,unrelated],{stdio:'pipe'}))
+ assert.equal(await fs.readFile(unrelated,'utf8'),'unrelated bytes')
+})
+
+test('Safari CI configuration accepts only public same-origin fixture data, never credentials',async t=>{
+ const f=await fixture(t,{count:1}),{publicSafariConfig}=await import('../../hosted/safari-config.mjs')
+ const input={environmentId:f.c.environmentId,cmsOrigin:'https://rc7-owned-test.up.railway.app',cmsProbePath:f.c.cmsProbePath,publicPages:[{url:'https://rc7-owned-test.up.railway.app/',headings:f.c.publicPages[0].headings}]}
+ const c=await publicSafariConfig(input);assert.deepEqual(c.actors,[]);assert.equal(c.devices[0].capabilities.browserName,'safari');assert.equal(c.devices[0].physical,false)
+ await assert.rejects(publicSafariConfig({...input,password:'must never enter CI'}),/Only public fixture/)
+ await assert.rejects(publicSafariConfig({...input,publicPages:[{...input.publicPages[0],url:'https://another.up.railway.app/'}]}),/same-origin/)
+ await assert.rejects(publicSafariConfig({...input,cmsOrigin:'https://production.example.com'}),/disposable provider/)
+})
+
+test('Safari editor credentials are restricted to a fresh scoped QA identity and its exact marked origin',async()=>{
+ const {validateSafariActor}=await import('../../hosted/safari-editor.mjs')
+ const config={cmsOrigin:'https://rc7-owned-test.up.railway.app',environmentId:'only-this-qa-marker'}
+ const actor={...config,email:'safari-ci-aabbcc@primo-qa.invalid',password:'Generated-unique-password-for-QA-only',siteId:id('s',1),sectionId:id('c',1),userId:id('u',1)}
+ validateSafariActor(actor,config)
+ for(const bad of [{cmsOrigin:'https://other.up.railway.app'},{environmentId:'another'},{email:'person@example.com'},{password:'short'},{siteId:'foreign'}])assert.throws(()=>validateSafariActor({...actor,...bad},config))
+})
+
+test('Safari handoff waits through intermediate auth redirects and an empty dashboard before opening the assigned site',async()=>{
+ const {openScopedSafariSite}=await import('../../hosted/safari-editor.mjs'),origin='https://rc7-owned-test.up.railway.app'
+ let reads=0,cards=0,clicked=false
+ const command=async(method,route,body)=>{
+  if(method==='GET'){reads++;return origin+(reads===1?'/admin':'/admin/dashboard/sites')}
+  if(route.endsWith('/execute/sync'))return {count:++cards===1?0:1,href:origin+'/admin/site'}
+  if(route.endsWith('/element')){assert.ok(reads>=3);return {'element-6066-11e4-a52e-4f735466cecf':'assigned'}}
+  if(route.endsWith('/click')){clicked=true;return null}
+  assert.fail('Unexpected WebDriver command')
+ }
+ await openScopedSafariSite(command,'/session/owned',origin,{interval:1});assert.equal(clicked,true)
+ let foreignClicked=false
+ await assert.rejects(openScopedSafariSite(async(method,route)=>{
+  if(method==='GET')return origin+'/admin/dashboard/sites'
+  if(route.endsWith('/execute/sync'))return {count:1,href:'https://foreign.example/admin/site'}
+  foreignClicked=true
+ },'/session/owned',origin),/escaped/)
+ assert.equal(foreignClicked,false)
 })

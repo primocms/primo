@@ -16,6 +16,7 @@ export async function soak(c,{profile='read',env=process.env,signal}={}) {
   if(profile==='edit') {
    // Validate every account and the entire controlled fixture before the first write.
    for(const config of c.actors) {
+    if(actors.length)await delay(c.soak.loginIntervalMs ?? 1700,undefined,signal?{signal}:{})
     const token=await login(c,config,env),original=await inspectActor(c,config,token)
     actors.push({config,token,original,attempted:new Set()})
    }

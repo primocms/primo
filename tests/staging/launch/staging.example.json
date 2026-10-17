@@ -5,7 +5,7 @@
   "cmsProbePath": "/?_site=REPLACE_WITH_QA_SITE_ID",
   "publicPages": [
     {
-      "url": "https://cms.staging.example.test/?_site=REPLACE_WITH_QA_SITE_ID",
+      "url": "https://REPLACE_WITH_PUBLIC_QA_HOST/",
       "headings": [
         "QA section 0",
         "QA section 1",
@@ -21,6 +21,7 @@
     "durationSeconds": 3600,
     "minimumGateSeconds": 3600,
     "workers": 10,
+    "loginIntervalMs": 1700,
     "intervalMs": 10000,
     "maxRequests": 100000,
     "criteriaConfirmed": false,
