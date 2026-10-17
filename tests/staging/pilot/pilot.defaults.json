@@ -1,0 +1,53 @@
+{
+  "pilot": "founding-builders-10",
+  "preparationOnly": true,
+  "maximumBuilders": 10,
+  "newSitesOnly": true,
+  "editing": "desktop",
+  "desktopBrowsers": ["Chrome", "Edge", "Firefox", "Safari"],
+  "browserVersionPolicy": "Current stable releases; verify actual versions before claiming support. Older releases are outside the initial pilot promise.",
+  "nodeSupport": "22.x >=22.13.0 or 24.x",
+  "builderRole": {"siteRole": "developer", "serverRole": ""},
+  "clientRole": {"siteRole": "editor", "serverRole": ""},
+  "trustedEditorPublication": true,
+  "criteria": {
+    "acceptedByUser": true,
+    "minimumSeconds": 3600,
+    "workers": 10,
+    "intervalMs": 10000,
+    "p95PublicMs": 1000,
+    "p95SaveRoundtripMs": 2000,
+    "maxErrorRate": 0,
+    "silentDataLossAllowed": false,
+    "crossSiteAccessAllowed": false,
+    "destructiveConflictResolutionAllowed": false,
+    "scope": "Tested ten-editor API/content workload; not visual page-load time, concurrent browser compilation or a production SLA"
+  },
+  "framing": {
+    "acceptedPolicy": "frame-ancestors 'self'",
+    "exceptions": "Only explicitly approved origins; general cross-origin embedding is outside the pilot promise",
+    "frozenRc7Policy": "frame-ancestors *",
+    "enforcedByThisPreparation": false,
+    "requiredBeforeClientLaunch": "Prepare and regression-test the policy in a future candidate or approved ingress configuration; authorize deployment separately"
+  },
+  "beforeInvitations": [
+    "Real approved sender/inbox: invitation receipt, account setup, password reset and sign-in verified",
+    "Choose the pilot host and support contact, record actual supported browser versions, and verify site-scoped developer assignments for each builder",
+    "Pilot operation and recipient-specific invitation authorization supplied separately"
+  ],
+  "beforeFirstClientLaunch": [
+    "Published-page smoke on physical iPhone Safari and Android Chrome",
+    "If used: full custom-domain HTTPS and applicable CDN lifecycle for the actual hosting path",
+    "Accepted framing policy enforced and verified",
+    "First client handoff reviewed; backup/restore and support ownership confirmed for the chosen pilot host"
+  ],
+  "beforeLegacyImportOrUpgrade": ["Representative sanitized backup, associated files, expected data and migration history verified on disposable copies"],
+  "currentAuthorization": {
+    "keepAllPrsDraft": true,
+    "merge": false,
+    "publishPackagesOrSites": false,
+    "deploy": false,
+    "changeRunningMailSettings": false,
+    "sendMailOrInvitations": false
+  }
+}
