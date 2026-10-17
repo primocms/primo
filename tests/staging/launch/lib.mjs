@@ -44,7 +44,7 @@ export function configIssues(c, {profile='read', device=null, env=process.env}={
  check(c.disposable===true,'disposable must be true')
  check(!placeholder(c.environmentId) && /^[a-zA-Z0-9_-]{12,100}$/.test(c.environmentId),'environmentId: supply a unique disposable-environment marker')
  try {check(!placeholder(c.cmsOrigin) && origin(c.cmsOrigin)===c.cmsOrigin,'cmsOrigin: supply an exact origin without path')} catch {issues.push('cmsOrigin: invalid or insecure origin')}
- try {check(c.cmsProbePath?.startsWith('/') && !c.cmsProbePath.startsWith('//') && new URL(c.cmsProbePath,c.cmsOrigin).origin===c.cmsOrigin && !placeholder(c.cmsProbePath),'cmsProbePath: supply the published QA fixture on the CMS origin')} catch {issues.push('cmsProbePath: invalid')}
+ try {check(c.cmsProbePath?.startsWith('/') && !c.cmsProbePath.startsWith('//') && new URL(c.cmsProbePath,c.cmsOrigin).origin===c.cmsOrigin && !placeholder(c.cmsProbePath) && /^[a-z0-9]{15}$/.test(new URL(c.cmsProbePath,c.cmsOrigin).searchParams.get('_site') || ''),'cmsProbePath: supply the marked QA _site preview on the CMS origin')} catch {issues.push('cmsProbePath: invalid')}
  check(Array.isArray(c.publicPages) && c.publicPages.length>0 && c.publicPages.length<=20,'publicPages: 1–20 explicit QA URLs required')
  for(const p of c.publicPages || []) {
   try {check(!placeholder(p.url) && !!publicUrl(p.url),'publicPages: replace URL placeholders')} catch {issues.push('publicPages: invalid URL')}
@@ -61,6 +61,10 @@ export function configIssues(c, {profile='read', device=null, env=process.env}={
  check(Number.isFinite(s.maxErrorRate) && s.maxErrorRate>=0 && s.maxErrorRate<=1,'soak.maxErrorRate: 0–1 required')
  check(Number.isInteger(s.minimumGateSeconds) && s.minimumGateSeconds>=3600 && s.minimumGateSeconds<=86400,'soak.minimumGateSeconds: at least 3600 required')
  if(profile==='edit') {
+  const loginMs=s.loginIntervalMs ?? 1700
+  check(Number.isInteger(loginMs) && loginMs>=0 && loginMs<=60000,'soak.loginIntervalMs: 0–60000 required')
+  let local=false;try{local=['127.0.0.1','localhost','[::1]'].includes(new URL(c.cmsOrigin).hostname)}catch{}
+  check(local || loginMs>=1600,'soak.loginIntervalMs: remote setup must respect production auth throttling (at least 1600 ms)')
   check(s.exclusiveScratchRecords===true,'soak.exclusiveScratchRecords: reserve the synthetic records exclusively for this run')
   check(Array.isArray(c.actors) && c.actors.length===s.workers && c.actors.length<=20,'actors: exactly one per edit worker required')
   for(const key of ['name','siteId','userId','entryId'])check(new Set((c.actors || []).map(a=>a[key])).size===(c.actors || []).length,'actors: unique '+key+' required')

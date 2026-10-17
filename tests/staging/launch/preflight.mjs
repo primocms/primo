@@ -10,11 +10,11 @@ export async function preflight(c) {
    invariant(r.headers.get('cache-control')?.includes('no-cache') && r.headers.get('x-content-type-options')==='nosniff' && r.headers.get('referrer-policy')==='strict-origin-when-cross-origin','Public cache/security header mismatch')
    const modified=r.headers.get('last-modified');invariant(!!modified,'Last-Modified missing')
    invariant((await request(c,page.url,{headers:{'If-Modified-Since':modified}})).status===304,'Conditional revalidation failed')
-   const preview=new URL(page.url);preview.searchParams.set('_preview','1')
-   const pr=await request(c,preview.href)
-   invariant(pr.status===200 && pr.headers.get('cache-control')?.includes('no-store'),'Preview cache policy failed')
-   result.checks.push('page '+i+': marker, configured-origin transport, security/cache headers, 304, preview no-store')
+   result.checks.push('page '+i+': marker, configured-origin transport, security/cache headers, 304')
   }
+  const preview=await request(c,new URL(c.cmsProbePath,c.cmsOrigin).href)
+  invariant(preview.status===200 && preview.text.includes(marker(c)) && preview.headers.get('cache-control')?.includes('no-store'),'Preview cache policy failed')
+  result.checks.push('CMS marked _site preview: no-store')
   result.status='PASS_READ_ONLY_PREFLIGHT'
   result.remaining=['server artifact hash attestation','SMTP AUTH/TLS and actual inbox delivery','DNS/ACME lifecycle and publication-driven CDN refresh','device editor/publication checklist','representative migration/restore','capacity acceptance']
  } catch(e) {result.failure=safeError(e)}

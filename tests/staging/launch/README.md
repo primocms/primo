@@ -1,6 +1,6 @@
 # RC.7 staging preparation
 
-This is a QA preparation layer for the frozen RC.7 packages. It creates no server, sends no mail, installs no apps, and cannot publish, merge or deploy. External checks have **not** been run. Keep the release PRs in draft.
+This is a QA preparation layer for the frozen RC.7 packages. It creates no server, sends no mail, installs no apps, and cannot publish, merge or deploy. These tools perform only the checks named below. Hosted execution after explicit staging authorization is documented in [the hosted runbook](../hosted/README.md); it uses the same frozen product packages. Keep the release PRs in draft.
 
 Start with [ACCESS-CHECKLIST.md](ACCESS-CHECKLIST.md). Use [FIXTURE-CHECKLIST.md](FIXTURE-CHECKLIST.md), [DEVICE-CHECKLIST.md](DEVICE-CHECKLIST.md) and [SOAK-RUNBOOK.md](SOAK-RUNBOOK.md) to supply and record the missing evidence. A script result clears only the checks named in that result.
 
@@ -25,7 +25,7 @@ chmod 600 staging.local.json fixture.local.json secrets.local.env
 
 Keep local files and `.runs/` outside the frozen RC kit; they are ignored by Git in this directory. Obtain secrets through a private channel or your local secret manager, never in a PR or chat. The programs read environment variables and do **not** load `.env` files. Export the named variables using your normal secret-loading mechanism, or ask Node to load the reviewed local file, for example `node --env-file=secrets.local.env soak.mjs --config staging.local.json --profile edit` (still a plan unless `--run` is added). Never print their values. If sourcing a local env file, review its shell syntax first and export its assignments.
 
-Fill `environmentId` with a fresh 12–100 character identifier, `cmsOrigin` with the exact HTTPS origin, and `cmsProbePath` with the public fixture path on that origin. `publicPages` must list only QA pages (five expected headings per page). No URL may contain credentials. Plain HTTP is accepted only on loopback for local rehearsal. Set `.physical` true only when the selected session actually uses the attested physical device. Resolve capability placeholders and `$env` references locally.
+Fill `environmentId` with a fresh 12–100 character identifier, `cmsOrigin` with the exact HTTPS origin, and `cmsProbePath` with the marked `/?_site=<15-character-QA-site-ID>` preview path on that origin. Public URLs must be real host-routed pages without `_site`; preview responses intentionally use `no-store`. `publicPages` must list only QA pages (five expected headings per page). No URL may contain credentials. Plain HTTP is accepted only on loopback for local rehearsal. Set `.physical` true only when the selected session actually uses the attested physical device. Resolve capability placeholders and `$env` references locally.
 
 All these commands default to **zero network requests**, even with otherwise valid inputs:
 
