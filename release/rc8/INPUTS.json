@@ -166,7 +166,8 @@
   "cliArchiveSha256": "4d4dea80ac9bd3a3c4bc6721bd6320d83833f4c2ac6731148c0bc1be63349483",
   "mcpArchiveSha256": "a7c32c82bc748b18cc694782493112937aec86c86cc056b407ab1a8e8b7c0a03",
   "newProductDelta": [
-    "accepted same-origin framing policy"
+    "accepted same-origin framing policy",
+    "lazy compiler worker startup to remove idle-worker creation/teardown on authentication and dashboard redirects"
   ],
   "allPriorDraftsRetained": true
 }

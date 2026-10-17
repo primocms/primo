@@ -6,6 +6,7 @@ This candidate consolidates the existing draft work for a supervised ten-builder
 
 - Existing guarded synchronization, nested-field data preservation, identity retention, publication/hydration/cache behavior, editor permissions and repeater controls.
 - Existing compiler/runtime/dependency security fixes, supported Node checks, production validation, type checks, Svelte warning fixes and browser/draft-safety regressions.
+- Lazy compiler-worker startup for the reproduced Firefox navigation integration failure, retaining actual editor compilation, worker reuse/caches and startup-error reporting.
 - The accepted same-origin framing default, preserving same-origin dashboard/preview frames and static-preview script restrictions. General external embedding and per-site framing settings are outside the pilot promise.
 - Existing exact-package/native/browser/handoff/staging tools, accepted pilot criteria, private SMTP worksheet and ten-slot onboarding plan.
 - One manifest for CMS v3.3.2-rc.8, unchanged CLI 0.3.0-rc.2 and unchanged MCP 0.1.11-rc.2; one primary consolidated CMS review point and the existing CLI/MCP package drafts.
@@ -17,7 +18,7 @@ New features, performance polish, mobile editing, general old-browser support, l
 
 ## Review contract
 
-The consolidated CMS tree initially matched `e9edab65ba4bfab2d35988b34c41e6642cd98f7f` exactly. It is applied as one candidate change on upstream `24a39f045ab5bdcc935af9d2fbbf0cc7887d7f5a`, without merging the historical branch chain. Inspect the final delta from that input separately: framing policy/regressions, version stamp, verification orchestration and these release documents. CLI and MCP package source/bytes are unchanged.
+The consolidated CMS tree initially matched `e9edab65ba4bfab2d35988b34c41e6642cd98f7f` exactly. It is applied as one candidate change on upstream `24a39f045ab5bdcc935af9d2fbbf0cc7887d7f5a`, without merging the historical branch chain. Inspect the final delta from that input separately: framing policy/regressions, compiler-worker lifecycle/regressions, version stamp, verification orchestration and these release documents. CLI and MCP package source/bytes are unchanged.
 
 Review data safety/permissions first, then compiler/publishing, runtime/dependencies/browser behavior, then rollout/recovery. Existing before/after evidence remains valid for unchanged product paths; final exact-package tests verify the integrated result. Agent review and green checks do not constitute maintainer approval. No submitted human reviews were present at the frozen-input snapshot.
 
