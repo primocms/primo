@@ -1,0 +1,20 @@
+{
+  "provider": "",
+  "smtp": {
+    "host": "",
+    "port": 465,
+    "security": "implicit_tls",
+    "username": "",
+    "password": "",
+    "authMethod": "PLAIN",
+    "localName": ""
+  },
+  "sender": {
+    "name": "Primo Founding Builders",
+    "address": ""
+  },
+  "testRecipient": "",
+  "senderVerifiedByProvider": false,
+  "deliveryEvidence": "Operator checks the controlled inbox and supplies redacted message headers; mailbox login credentials are unnecessary",
+  "executionAuthorized": false
+}
