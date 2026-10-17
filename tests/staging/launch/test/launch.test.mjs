@@ -273,3 +273,11 @@ test('Safari CI configuration accepts only public same-origin fixture data, neve
  await assert.rejects(publicSafariConfig({...input,publicPages:[{...input.publicPages[0],url:'https://another.up.railway.app/'}]}),/same-origin/)
  await assert.rejects(publicSafariConfig({...input,cmsOrigin:'https://production.example.com'}),/disposable provider/)
 })
+
+test('Safari editor credentials are restricted to a fresh scoped QA identity and its exact marked origin',async()=>{
+ const {validateSafariActor}=await import('../../hosted/safari-editor.mjs')
+ const config={cmsOrigin:'https://rc7-owned-test.up.railway.app',environmentId:'only-this-qa-marker'}
+ const actor={...config,email:'safari-ci-aabbcc@primo-qa.invalid',password:'Generated-unique-password-for-QA-only',siteId:id('s',1),sectionId:id('c',1),userId:id('u',1)}
+ validateSafariActor(actor,config)
+ for(const bad of [{cmsOrigin:'https://other.up.railway.app'},{environmentId:'another'},{email:'person@example.com'},{password:'short'},{siteId:'foreign'}])assert.throws(()=>validateSafariActor({...actor,...bad},config))
+})

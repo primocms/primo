@@ -10,6 +10,11 @@ on:
         description: 'Public-only disposable Railway fixture JSON; no credentials'
         required: true
         type: string
+      editor:
+        description: 'Also exercise the temporary scoped editor after the source soak has ended'
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 jobs:
@@ -42,6 +47,9 @@ jobs:
           PRIMO_QA_SAFARI_CONFIGURATION: ${{ inputs.configuration }}
         run: node tests/staging/hosted/safari-config.mjs
       - name: Enable Safari only on this disposable runner and probe the hosted fixture
+        env:
+          PRIMO_QA_RUN_EDITOR: ${{ inputs.editor }}
+          PRIMO_QA_SAFARI_EDITOR: ${{ inputs.editor && secrets.PRIMO_RC7_QA_CE4FC8_SAFARI || '' }}
         shell: bash
         run: |
           sudo /usr/bin/safaridriver --enable
@@ -53,6 +61,9 @@ jobs:
             sleep 1
           done
           node tests/staging/launch/device.mjs --config safari.local.json --device ci-safari --run
+          if [ "$PRIMO_QA_RUN_EDITOR" = "true" ]; then
+            node tests/staging/hosted/safari-editor.mjs
+          fi
       - name: Retain public probe results only
         if: always()
         uses: actions/upload-artifact@v4
