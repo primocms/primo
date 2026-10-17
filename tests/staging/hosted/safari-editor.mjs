@@ -77,7 +77,16 @@ export async function safariEditor(c,actor,env=process.env){
   await wait(()=>execute("return document.querySelector('[data-primo-qa-counter]')?.textContent==='Count 1'"),'Safari public counter not interactive',15000)
   report.checks.push('Actual Safari CMS browser-compiler publication reaches HTTPS; published client text and native counter interaction pass')
   report.status='PASS_SAFARI_EDITOR_HANDOFF'
- }catch(e){report.failure=safeError(e)}
+ }catch(e){
+  report.failure=safeError(e)
+  if(session)try{
+   await cmd('POST',session+'/frame',{id:null})
+   report.diagnostic=await execute("const a=JSON.parse(localStorage.getItem('pocketbase_auth')||'null');return {path:location.pathname,ready:document.readyState,text:document.body.innerText.slice(0,1600),auth:{present:!!a?.token,userId:a?.record?.id,serverRole:a?.record?.serverRole},frames:[...document.querySelectorAll('iframe')].map(f=>({title:f.title,src:f.getAttribute('src'),hasDocument:!!f.contentDocument,text:f.contentDocument?.body?.innerText?.slice(0,300),heading:f.contentDocument?.querySelector('h1')?.outerHTML?.slice(0,600)}))}")
+   report.diagnostic.text=report.diagnostic.text.replaceAll(actor.email,'[QA account]')
+   await fs.mkdir('safari-results',{recursive:true})
+   await fs.writeFile('safari-results/safari-editor-failure.png',Buffer.from(await cmd('GET',session+'/screenshot'),'base64'))
+  }catch{report.diagnosticUnavailable=true}
+ }
  finally{
   try{
    const current=await entries(),h=current.find(e=>e.id===heading.id)

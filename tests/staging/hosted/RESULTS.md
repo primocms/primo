@@ -22,7 +22,8 @@ Primary service: one replica, 1 vCPU / 0.5 GB RAM, US East; separate persistent 
 | Ingress and warm cache | HTTPS, configured security headers, public Last-Modified/304, actual `_site` preview no-store pass. Same browser retains cache across a client republish, receives changed CSS and asset version, revalidates old Last-Modified with 200 and remains interactive; source is restored and republished. |
 | Synthetic native restore | Native backup restored into a distinct fresh RC.7 service without interrupting source workers. Ten tables match, including 11 sites/pages/page types, 55 sections, 77 fields, 605 entries, 12 role assignments, 13 users and zero uploads. All 144 stored files/metadata match; 36 compiled-file downloads match. Client auth and restored active publication pass. This snapshot predates a later additional invitation-only client. |
 | Automated regressions | 28/28 staging tools on Node 22.13.0 and 24.0.0; complete Go suite passes, including four reverse-proxy identity cases; Svelte check has zero errors and zero warnings. |
-| One-hour ten-editor workload | RUNNING. Scratch records are exclusive; final result, latency, errors and restoration will be appended only when the complete hour finishes. Owner criteria remain unconfirmed. |
+| One-hour ten-editor workload | 3,760.58 measured seconds, 3,291 cycles, 16,455 workload requests, zero errors, all ten original scratch identities/values restored. p95 public 108.08 ms; save/readback 770.90 ms. Provisional limits met; status remains PASS_REHEARSAL_ONLY because owner criteria are unconfirmed. This is API/content capacity, not ten concurrent GUI compilers. |
+| Uploaded image lifecycle | Content-only PNG upload and exact-CLI publication, same-record replacement with a new filename and verified new bytes, retired-file 404, then owned-image deletion and cleanup publication all pass. |
 
 ## Finding fixed in staging configuration
 
@@ -32,7 +33,7 @@ The harness was corrected to pace ten account logins within the production limit
 
 ## Remaining launch gates
 
-- Complete actual Safari editor handoff and physical iPhone/Android. Safari public checks pass via CI; the editor step is prepared but automatic approval review blocked transferring a temporary synthetic account password to an encrypted Actions secret without explicit user authorization. The local Mac is locked, and its Playwright WebKit runtime cannot create even a blank page (40-second isolated probe, no Primo URL visited). No physical-device access is available. Frozen Linux WebKit and virtual macOS Safari are separate evidence scopes.
+- Complete actual Safari editor handoff and physical iPhone/Android. Safari public checks pass via CI; the user explicitly approved the temporary synthetic CI credential. Its first editor attempt did not observe editable blocks; all content was verified restored. Diagnosis and rerun are in progress. The local Mac is locked, and its Playwright WebKit runtime cannot create even a blank page (40-second isolated probe, no Primo URL visited). No physical-device access is available. Frozen Linux WebKit and virtual macOS Safari are separate evidence scopes.
 - Representative sanitized legacy/customer backup and expected values/history. Synthetic snapshot and earlier synthetic upgrade evidence are insufficient for this gate.
 - Ordinary external SMTP AUTH/TLS, sender configuration and actual inbox delivery. Private capture proves application mail and invitation acceptance only.
 - Custom-domain DNS/ACME lifecycle and external CDN behavior, if included in the release promise. Only provider-domain TLS and same-origin cache behavior have been exercised.

@@ -54,6 +54,8 @@ node tests/staging/hosted/workflow.mjs --run-directory /private/run --run
 node tests/staging/hosted/permissions.mjs --run-directory /private/run --run
 node tests/staging/hosted/browsers.mjs --run-directory /private/run --run
 node tests/staging/hosted/cache.mjs --run-directory /private/run --run
+# After the source soak has completed and restored its canaries:
+node tests/staging/hosted/uploads.mjs --run-directory /private/run --run
 ```
 
 - **Seed:** actual CLI init/new and actual MCP scaffolding/validation; ten synthetic agency sites with five block instances each, nested repeaters, scoped editors and non-rendered `qa_scratch` fields. The first site uses the public provider hostname; others use explicit site-preview routes. Initial guarded overwrite is used only after proving the new synthetic target has no pages. Completed seeding refuses to replace existing private configuration.
@@ -62,6 +64,7 @@ node tests/staging/hosted/cache.mjs --run-directory /private/run --run
 - **Workflow:** separate non-soak site for two scoped pulls, unmanaged-note preservation, source-only push with stable IDs, stale-push rejection preserving both remote content and local code, then publication from authoritative server data. This never imports over a reserved soak canary.
 - **Permissions:** source/schema/role escalation and cross-tenant writes must fail while records remain unchanged. Negative writes target non-canary fields; unexpected accepted writes are conditionally restored on these synthetic records and fail the test.
 - **Browsers:** installed Chrome/Edge plus pinned Playwright Firefox; two editor tabs receive edit/restoration by realtime without reload, plus public interaction and original SSR nodes at 390/768/1280px. These viewport cases do not replace physical mobile hardware. An isolated Firefox runtime can be downloaded into the run folder; no user browser profile is used. Use `--only-browser Firefox` for a runtime-only retry; the report retains previous browser results.
+- **Uploaded images (after the soak):** client PNG upload, byte-verified publication, replacement with stable upload ID/new filename, retired-file 404, then delete only the owned fixture and republish to verify cleanup. Active editor writes may legitimately reject publication; do not force over that guard.
 - **Warm cache:** temporarily change only the synthetic block's source CSS as its developer, publish as its trusted editor, reload the same browser cache, verify new asset version/style and HTTP revalidation, then conditionally restore source and republish. Content/soak canaries are not imported or overwritten.
 
 Start the long workload **after** the handoff has updated any test-user credentials and the proxy/deployment configuration is final:
