@@ -1,7 +1,23 @@
-import type { HandleClientError } from '@sveltejs/kit'
+import type { HandleClientError, ClientInit } from '@sveltejs/kit'
 import { initialized } from '$lib/PostHog'
-import { instance } from '$lib/instance'
+import { instance, instance_ready } from '$lib/instance'
 import { track_uncaught_error } from '$lib/analytics'
+
+export const init: ClientInit = async () => {
+	try {
+		await instance_ready
+	} catch (error) {
+		const loader = document.getElementById('app-boot-loader')
+		if (loader) {
+			loader.setAttribute('role', 'alert')
+			loader.style.color = '#e5e5e5'
+			loader.style.textAlign = 'center'
+			loader.style.padding = '24px'
+			loader.textContent = 'Primo could not connect to this server. Reload to try again.'
+		}
+		throw error
+	}
+}
 
 export const handleError: HandleClientError = ({ error, status, message }) => {
 	if (status !== 404) {
