@@ -124,6 +124,9 @@ jobs:
           node tests/staging/rc8/verify.mjs
           node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify the fixed WebKit networking library and actual process mapping
+        if: matrix.browser == 'webkit'
+        run: node tests/platform/webkit-runtime.mjs
       - name: Resolve reserved preview alias only inside this disposable runner
         run: echo '127.0.0.1 primo-preview.test primo-presence.test' | sudo tee -a /etc/hosts
       - name: Run the complete suite against the exact native package
@@ -149,6 +152,7 @@ jobs:
           name: rc9-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
+            webkit-runtime.json
             test-results
             /tmp/primo-e2e-server.log
             presence-${{ matrix.browser }}.json

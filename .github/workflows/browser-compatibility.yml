@@ -23,6 +23,7 @@ jobs:
         browser: [chromium, firefox, webkit]
     env:
       PRIMO_TEST_BROWSER: ${{ matrix.browser }}
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
       PLAYWRIGHT_JSON_OUTPUT_FILE: browser-results.json
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +42,9 @@ jobs:
       - run: npm run check
       - run: npm run test:e2e:build
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify the fixed WebKit networking library and actual process mapping
+        if: matrix.browser == 'webkit'
+        run: node tests/platform/webkit-runtime.mjs
       - name: Resolve reserved alias only inside this disposable runner
         run: echo '127.0.0.1 primo-preview.test' | sudo tee -a /etc/hosts
       - name: Narrow invitation layout regression
@@ -52,6 +56,7 @@ jobs:
           name: browser-${{ matrix.browser }}
           path: |
             browser-results.json
+            webkit-runtime.json
             invitation-layout.json
             test-results
             /tmp/primo-e2e-server.log
