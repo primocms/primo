@@ -94,7 +94,16 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     record.checks.push('Independent fresh sign-in/reload; all original stored content retained; zero observed unhandled errors')
    }
    record.phase='complete';record.status='PASS'
-  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,errorDetails:JSON.parse(sessionStorage.getItem('presence-error-details')||'[]'),ready:document.readyState,text:document.body.innerText.slice(0,1800),loader:document.querySelector('#app-boot-loader')?.outerHTML,scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),resources:performance.getEntriesByType('resource').map(r=>({path:new URL(r.name).pathname,status:r.responseStatus,duration:r.duration,bytes:r.transferSize})),buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);throw Error(record.failure)}
+  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,errorDetails:JSON.parse(sessionStorage.getItem('presence-error-details')||'[]'),ready:document.readyState,text:document.body.innerText.slice(0,1800),loader:document.querySelector('#app-boot-loader')?.outerHTML,scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),resources:performance.getEntriesByType('resource').map(r=>({path:new URL(r.name).pathname,status:r.responseStatus,duration:r.duration,bytes:r.transferSize})),buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);
+   if(record.phase==='clear-origin-storage'&&record.diagnostic){
+    // Diagnose already requested application modules only after a failed native
+    // navigation. Re-importing a failed ESM exposes its cached rejection; this
+    // never converts the failed session into a qualification pass.
+    record.diagnostic.moduleProbe=await command('POST',session+'/execute/async',{script: `const done=arguments[arguments.length-1];const urls=[...new Set(performance.getEntriesByType('resource').map(r=>r.name).filter(name=>{const u=new URL(name);return u.origin===location.origin&&['chunks','nodes','entry'].some(dir=>u.pathname.startsWith('/admin/_app/immutable/'+dir+'/'))&&u.pathname.endsWith('.js')}))];Promise.all(urls.map(url=>Promise.race([import(url).then(()=>({path:new URL(url).pathname,status:'loaded'}),error=>({path:new URL(url).pathname,status:'error',message:String(error?.message||error),stack:error?.stack})),new Promise(resolve=>setTimeout(()=>resolve({path:new URL(url).pathname,status:'pending'}),2000))]))).then(done,error=>done({error:String(error)}))`,args:[]}).catch(error=>({diagnosticFailure:c.redact(error.message)}))
+    record.diagnostic.bodyHTML=await execute('return document.body.innerHTML.slice(0,5000)').catch(()=>null)
+   }
+   throw Error(record.failure)
+  }
   finally{await command('DELETE',session);session=null}
  }
  console.log({...report,status:'PASS_NATIVE_SAFARI'})
