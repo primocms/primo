@@ -28,13 +28,15 @@ export const createCollectionManager = (
 	on_committed?: (change: { collection: string; operation: Change<ObjectWithId>['operation'] }) => void,
 	// Presence cleanup can begin while the document is leaving. Keep those
 	// small requests alive; content managers retain the SDK's normal behavior.
-	request_options?: { keepalive: boolean }
+	options?: { request?: { keepalive: boolean }; retain_failed_change?: (change: Change<ObjectWithId>) => boolean }
 ) => {
 	const changes = new OrderedSvelteMap<string, Change<ObjectWithId>>()
 	const records = new OrderedSvelteMap<string, TrackedRecord | undefined | null>()
 	const lists = new OrderedSvelteMap<string, TrackedList | undefined | null>()
 
 	let promise = Promise.resolve()
+	const pending_commits = new OrderedSvelteMap<number, true>()
+	let next_commit = 0
 
 	const commitChanges = async () => {
 		if (!instance) {
@@ -53,27 +55,30 @@ export const createCollectionManager = (
 			try {
 				switch (change.operation) {
 					case 'create': {
-						const result = await instance.collection(change.collection).create(change.data, request_options)
+						const result = await instance.collection(change.collection).create(change.data, options?.request)
 						records.set(id, { data: result })
 						break
 					}
 
 					case 'update': {
-						const result = await instance.collection(change.collection).update(id, change.data, request_options)
+						const result = await instance.collection(change.collection).update(id, change.data, options?.request)
 						records.set(id, { data: result })
 						break
 					}
 
 					case 'delete': {
-						await instance.collection(change.collection).delete(id, request_options)
+						await instance.collection(change.collection).delete(id, options?.request)
 						records.set(id, null)
 						break
 					}
 				}
 				on_committed?.({ collection: change.collection, operation: change.operation })
 			} catch (error) {
-				// Undo change on failure
-				changes.delete(id)
+				// A failed older request must not erase a newer queued edit.
+				if (changes.get(id) === change) {
+					if (options?.retain_failed_change?.(change)) change.committed = false
+					else changes.delete(id)
+				}
 				throw error
 			}
 		}
@@ -84,6 +89,8 @@ export const createCollectionManager = (
 		changes,
 		records,
 		lists,
+		has_pending_changes: () => pending_commits.size > 0 || [...changes.values()].some(change => !change.committed),
+		is_saving: () => pending_commits.size > 0,
 		// Mark all cached lists as invalidated so the next read re-fetches from
 		// the server. Use after out-of-band DB writes (e.g. CLI import in local
 		// dev where realtime subscriptions are off) to avoid serving stale ids.
@@ -129,8 +136,14 @@ export const createCollectionManager = (
 				}
 				return
 			}
-			promise = promise.then(commitChanges, commitChanges)
-			return promise
+			const commit_id = ++next_commit
+			pending_commits.set(commit_id, true)
+			try {
+				promise = promise.then(commitChanges, commitChanges)
+				return await promise
+			} finally {
+				pending_commits.delete(commit_id)
+			}
 		},
 		discard: () => {
 			for (const [id, change] of [...changes]) {

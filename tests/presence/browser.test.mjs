@@ -21,15 +21,37 @@ test(engine+' production presence survives canceled requests, inline save, neste
  assert.equal(canceledCreate,1,'An actual presence create must have been canceled');assert.ok(successfulCreate>0,'Presence creation must recover after cancellation')
  assert.equal(aborted,1,'An actual presence update must have been canceled');assert.ok(recovered>0,'Heartbeat must resume after the canceled request')
  const title=page.locator('main iframe[title=block]').first().contentFrame().locator('h1[data-key=heading]'),tag='Saved while presence recovers'
- const save=page.waitForResponse(r=>r.url().includes('/page_section_entries/records/'+c.heading.id)&&r.request().method()==='PATCH')
- phase='inline save and first reload';await title.fill(tag);await title.blur();assert.ok((await save).ok());await page.reload();await ready();await c.verifyContent(tag)
+ let contentPatchCount=0
+ await page.route('**/api/collections/page_section_entries/records/'+c.heading.id,async route=>{
+  if(route.request().method()==='PATCH'&&++contentPatchCount===1)await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Disposable autosave failure'})})
+  else await route.continue()
+ })
+ phase='failed inline autosave';await title.click();await title.fill(tag);await title.blur()
+ await page.getByText('Changes could not be saved. Keep this page open and retry.',{exact:true}).waitFor()
+ assert.equal(await title.innerText(),tag,'A failed save must retain the edited content in the editor')
+ await c.verifyContent()
+ phase='blocked unsaved logout'
+ await page.getByRole('button',{name:'More options',exact:true}).click()
+ await page.getByRole('menuitem',{name:'Log out',exact:true}).click()
+ await page.getByText('Save or retry your changes before logging out.',{exact:true}).waitFor()
+ assert.ok(page.url().includes('/admin/sites/'+c.site.id),'Unsaved content must not cross a logout/account boundary')
+ phase='blocked unsaved reload'
+ const warning=page.waitForEvent('dialog'),blocked=page.reload().catch(()=>null)
+ const dialogWarning=await warning;assert.equal(dialogWarning.type(),'beforeunload');await dialogWarning.dismiss();await blocked
+ await ready();assert.equal(await title.innerText(),tag,'Dismissing the reload must preserve the unsaved draft')
+ phase='retry inline autosave'
+ const save=page.waitForResponse(r=>r.url().includes('/page_section_entries/records/'+c.heading.id)&&r.request().method()==='PATCH'&&r.ok())
+ await page.getByRole('button',{name:'Retry',exact:true}).click();await save
+ await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
+ phase='confirmed save and first reload';await page.reload();await ready();await c.verifyContent(tag)
+ assert.equal(contentPatchCount,2,'Reload/blur must not write an unchanged value again')
  const own=c.before.filter(e=>e.section===c.section.id),field=key=>c.fields.find(f=>f.key===key),alpha=own.find(e=>e.field===field('name').id&&e.value==='Alpha').parent
  const roots=own.filter(e=>e.field===field('items').id&&!e.parent).sort((a,b)=>a.index-b.index),links=own.filter(e=>e.field===field('links').id&&e.parent===alpha).sort((a,b)=>a.index-b.index)
  await title.hover();await page.getByRole('button',{name:'Edit Block Content'}).click();const dialog=page.getByRole('dialog'),row=id=>dialog.locator('.RepeaterFieldItem[data-entry-id="'+id+'"]')
  assert.equal(await dialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
  await row(roots[1].id).getByRole('button',{name:'Move Item item up',exact:true}).click()
  if(!await row(alpha).locator('[id$="-name"] textarea').isVisible())await row(alpha).locator('button.title').first().click()
- await row(links[1].id).getByRole('button',{name:'Move Link item up',exact:true}).click();await dialog.getByRole('button',{name:'Save',exact:true}).click();await dialog.waitFor({state:'hidden'})
+ await row(links[1].id).getByRole('button',{name:'Move Link item up',exact:true}).click();await dialog.getByRole('button',{name:'Save',exact:true}).click();await dialog.waitFor({state:'hidden'});await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
  for(let n=0;n<3;n++){phase='post-reorder reload '+(n+1);await page.reload();await ready();const after=await c.verifyContent(tag);assert.equal(after.find(e=>e.id===roots[1].id).index,0);assert.equal(after.find(e=>e.id===links[1].id).index,0)}
  // Navigation cleanup is another detached presence task, separate from content.
  let cleanupAborted=false
@@ -37,6 +59,6 @@ test(engine+' production presence survives canceled requests, inline save, neste
  phase='leave editor for dashboard';await page.goto(c.origin+'/admin/dashboard/sites');await page.waitForSelector('.site-card-footer a');await delay(500)
  await c.verifyContent(tag);assert.equal(errors.length,0,c.redact(errors.join('\n')))
  assert.equal((await c.list('sites')).length,1,'Editor must not see the foreign site')
- Object.assign(report,{status:'PASS_PRESENCE_BROWSER',canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered,cleanupAbortObserved:cleanupAborted,contentAndAllIdsRetained:true,rootAndNestedReorderRetained:true,abruptReloads:4})
+ Object.assign(report,{status:'PASS_PRESENCE_BROWSER',canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered,cleanupAbortObserved:cleanupAborted,contentAndAllIdsRetained:true,rootAndNestedReorderRetained:true,autosaveFailureRetainsDraft:true,unsavedReloadPrevented:true,unsavedLogoutPrevented:true,autosaveRetrySaved:true,unchangedAutosaveSkipped:true,abruptReloads:4})
  await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n');console.log(report)
 })

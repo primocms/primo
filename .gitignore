@@ -19,6 +19,7 @@ scratchpad.md
 pnpm-lock.yaml
 /playwright/.auth
 /presence-*.json
+/cache-*.json
 
 # Devenv
 .devenv*

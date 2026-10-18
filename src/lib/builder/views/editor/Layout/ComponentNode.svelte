@@ -20,6 +20,8 @@
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { SiteSymbols, type PageSections, type PageTypeSections, PageSectionEntries, PageTypeSectionEntries, Sites, SiteUploads, LibraryUploads, Pages } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
+	import { toast } from 'svelte-sonner'
+	import { observeContentCommit } from '$lib/builder/content_commit.js'
 	import { site_context } from '$lib/builder/stores/context'
 	import { Editor, Extension } from '@tiptap/core'
 	import { rich_text_extensions } from '$lib/builder/rich-text/extensions'
@@ -126,6 +128,7 @@
 	let is_editing = $state(false)
 
 	let field_save_timeout: ReturnType<typeof setTimeout>
+	let pending_field_save = false
 
 	function update_formatting_state() {
 		if (active_editor) {
@@ -364,6 +367,7 @@
 						},
 						onBlur: async () => {
 							clearTimeout(field_save_timeout)
+							pending_field_save = false
 							// Save the final edit before unlocking the renderer. Blurring
 							// within the debounce window must not discard that edit.
 							if (pending_save) {
@@ -382,9 +386,11 @@
 						onUpdate: async ({ editor }) => {
 							// Debounce saves to avoid constant re-renders while editing
 							pending_save = true
+							pending_field_save = true
 							clearTimeout(field_save_timeout)
 							field_save_timeout = setTimeout(async () => {
 								pending_save = false
+								pending_field_save = false
 								const json = editor.getJSON()
 								save_edited_value({ id, value: json })
 							}, 200)
@@ -537,9 +543,11 @@
 			}
 
 			const input_handler = (e: Event) => {
+				pending_field_save = true
 				// Debounce saves to avoid constant re-renders while editing
 				clearTimeout(field_save_timeout)
 				field_save_timeout = setTimeout(() => {
+					pending_field_save = false
 					const target = e.target as HTMLElement
 					if (target) save_edited_value({ id, value: target.innerText })
 				}, 200)
@@ -549,6 +557,7 @@
 				is_editing = false
 				// Final save on blur
 				clearTimeout(field_save_timeout)
+				pending_field_save = false
 				const target = e.target as HTMLElement
 				if (target) {
 					const value = target.innerText
@@ -586,13 +595,17 @@
 		editing_markdown = false
 	}
 
-	async function save_edited_value({ id, value }) {
+	function save_edited_value({ id, value }) {
 		// Find the entry by ID
 		const entry = entries?.find((entry) => entry.id === id)
 		if (!entry) {
 			console.error('Entry not found for ID:', id)
 			return
 		}
+
+		// Blur/re-render can repeat a value already queued or confirmed. Do not
+		// create a second autosave that races a reload of the saved content.
+		if (_.isEqual(entry.value, value)) return
 
 		// Update the entry based on section type
 		if ('page_type' in section) {
@@ -603,10 +616,21 @@
 
 		// Commit changes with a delay to batch multiple edits
 		clearTimeout(commit_task)
-		commit_task = setTimeout(() => self.commit(), 500)
+		commit_task = setTimeout(() => { commit_task = undefined; void commit_edited_values() }, 500)
 	}
 
-	let commit_task: ReturnType<typeof setTimeout>
+	let commit_task: ReturnType<typeof setTimeout> | undefined
+	function commit_edited_values() {
+		return observeContentCommit(self.commit(), {
+			onSaved: () => { if (!self.has_pending_changes()) toast.dismiss('inline-content-save-error') },
+			onError: () => {
+				toast.error('Changes could not be saved. Keep this page open and retry.', {
+					id: 'inline-content-save-error', duration: Infinity,
+					action: { label: 'Retry', onClick: () => { void commit_edited_values() } }
+				})
+			}
+		})
+	}
 
 	let mounted = false
 	function dispatch_mount() {
@@ -673,7 +697,7 @@
 
 			// Clear timeouts
 			if (field_save_timeout) clearTimeout(field_save_timeout)
-			if (commit_task) clearTimeout(commit_task)
+			if (commit_task) { clearTimeout(commit_task); commit_task = undefined; void commit_edited_values() }
 			if (suppress_timer) clearTimeout(suppress_timer)
 
 			document.querySelector('#Page')?.removeEventListener('scroll', on_page_scroll)
@@ -907,6 +931,10 @@
 		return {}
 	})
 </script>
+
+<svelte:window onbeforeunload={(event) => {
+	if (pending_field_save) { event.preventDefault(); event.returnValue = '' }
+}} />
 
 <Dialog.Root bind:open={editing_image}>
 	<Dialog.Content

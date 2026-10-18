@@ -152,6 +152,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  }
  const save=clientPage.waitForResponse(r=>r.url().includes(`/page_section_entries/records/${entry.id}`)&&r.request().method()==='PATCH',{timeout:10000})
  await clientHeading.blur();assert.equal((await save).ok(),true)
+ await clientPage.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
  assert.equal((await api(`/api/collections/page_section_entries/records/${entry.id}`)).value,'Client approved headline')
 
  // Reorder as the invited editor through the exact packaged CMS, then save/reload.
@@ -172,6 +173,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  await itemLocator(nestedSecond).getByRole('button',{name:'Move Link item up',exact:true}).click()
  await contentDialog.getByRole('button',{name:'Save',exact:true}).click()
  await contentDialog.waitFor({state:'hidden'})
+ await clientPage.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
  await clientPage.reload()
  await clientPage.waitForFunction(()=>document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1'),{},{timeout:90000})
  const repeaterAfter=(await api('/api/collections/page_section_entries/records?perPage=200')).items

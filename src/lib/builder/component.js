@@ -1,53 +1,23 @@
 const compilers = {}
 
-let checked = 0
+// Keep registration polling in the returned promise. An async timer callback
+// inside a resolve-only Promise loses compiler rejections and leaves the caller
+// loading forever. Each request also needs its own registration budget.
+async function runProcessor(language, raw) {
+ for (let attempt = 0; attempt < 100; attempt++) {
+  const compiler = compilers[language]
+  if (compiler) return await compiler(raw)
+  await new Promise(resolve => setTimeout(resolve, 100))
+ }
+ throw new Error(`${language.toUpperCase()} compiler did not register`)
+}
 
 export const processors = {
-	html: async (raw, data) => {
-		return await new Promise((resolve) => {
-			checkIfRegistered()
-			async function checkIfRegistered() {
-				const compiler = compilers['html']
-				if (compiler) {
-					const res = await compiler(raw)
-					resolve(res)
-				} else {
-					checked++
-					if (checked < 100) {
-						setTimeout(checkIfRegistered, 100)
-					}
-				}
-			}
-		})
-	},
-	css: async (raw, data) => {
-		return await new Promise((resolve) => {
-			checkIfRegistered()
-			async function checkIfRegistered() {
-				const compiler = compilers['css']
-
-				if (compiler) {
-					const res = await compiler(raw)
-
-					resolve(res)
-				} else {
-					checked++
-					if (checked < 100) {
-						setTimeout(checkIfRegistered, 100)
-					}
-				}
-			}
-		})
-	},
-	js: async (raw, options) => {
-		const final = raw
-		return final
-	}
+ html: (raw, data) => runProcessor('html', raw),
+ css: (raw, data) => runProcessor('css', raw),
+ js: async (raw, options) => raw
 }
 
 export function registerProcessors(fns) {
-	for (const [lang, processor] of Object.entries(fns)) {
-		compilers[lang] = processor
-		// processors[lang] = processor
-	}
+ for (const [language, processor] of Object.entries(fns)) compilers[language] = processor
 }

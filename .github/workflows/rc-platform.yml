@@ -134,6 +134,9 @@ jobs:
       - name: Verify production presence cancellation, reload and content retention
         if: ${{ !cancelled() }}
         run: node --test tests/presence/browser.test.mjs
+      - name: Verify canceled scoped-user and site-list caches recover without reload
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/cache.test.mjs
       - name: Reverify all product bytes
         if: always()
         run: node tests/staging/rc8/verify.mjs
@@ -146,6 +149,7 @@ jobs:
             test-results
             /tmp/primo-e2e-server.log
             presence-${{ matrix.browser }}.json
+            cache-${{ matrix.browser }}.json
 
   native-safari:
     needs: native

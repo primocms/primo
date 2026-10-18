@@ -3,7 +3,9 @@
 	import { browser } from '$app/environment'
 	import { compilers_registered } from '$lib/stores'
 	import { registerProcessors } from '$lib/builder/component'
+	import { toast } from 'svelte-sonner'
 	import { Toaster } from '$lib/components/ui/sonner'
+	import { self } from '$lib/pocketbase/managers'
 
 	let { children } = $props()
 
@@ -18,8 +20,22 @@
 			$compilers_registered = true
 		})
 	}
+	$effect(() => {
+		if (!self.has_pending_changes()) toast.dismiss('inline-content-save-error')
+	})
 </script>
 
+<svelte:window onbeforeunload={(event) => {
+	if (self.has_pending_changes()) {
+		event.preventDefault()
+		event.returnValue = ''
+	}
+}} />
+{#if self.has_pending_changes()}
+	<div role="status" aria-label="Content save status" class="fixed bottom-4 right-4 z-40 rounded-md border border-input bg-background px-3 py-2 text-xs text-muted-foreground">
+		{self.is_saving() ? 'Saving changes…' : 'Unsaved changes'}
+	</div>
+{/if}
 <Toaster />
 {@render children?.()}
 

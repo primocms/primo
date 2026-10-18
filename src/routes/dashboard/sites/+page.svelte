@@ -296,6 +296,10 @@
 				size="sm"
 				variant="ghost"
 				onclick={async () => {
+					if (self.has_pending_changes()) {
+						toast.error('Save or retry your changes before logging out.')
+						return
+					}
 					self.instance?.authStore.clear()
 					await goto('/admin/auth')
 				}}

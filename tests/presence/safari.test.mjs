@@ -22,6 +22,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
   const type=(id,text)=>command('POST',session+'/element/'+encodeURIComponent(id)+'/value',{text})
   const button=async label=>{const value=await execute("return [...document.querySelectorAll('button')].find(b=>b.textContent.trim()===arguments[0]||b.getAttribute('aria-label')===arguments[0])",[label]);assert.ok(value,'Missing Safari action: '+label);return value['element-6066-11e4-a52e-4f735466cecf']}
   const ready=()=>wait(()=>execute("const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))"),'All Safari blocks must become editable')
+  const saved=()=>wait(()=>execute(`return !document.querySelector('[role="status"][aria-label="Content save status"]')`),'Safari must finish saving before reload')
   const observeErrors=()=>execute("if(!window.__presenceErrorObserver){window.__presenceErrorObserver=true;for(const event of ['error','unhandledrejection'])addEventListener(event,e=>{let errors=JSON.parse(sessionStorage.getItem('presence-errors')||'[]');errors.push(String(e.reason?.message||e.message||e.reason));sessionStorage.setItem('presence-errors',JSON.stringify(errors))})}return true")
   try{
    record.phase='clear-origin-storage'
@@ -43,7 +44,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     const frame=await element('main iframe[title=block]');await command('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':frame}})
     const heading=await element('h1[data-key=heading]');await click(heading);await command('POST',session+'/element/'+heading+'/clear',{});await type(heading,tag);await type(heading,'\uE004')
     await wait(async()=>(await c.api('/api/collections/page_section_entries/records/'+c.heading.id,{token:c.actors.editor.auth.token})).value===tag,'Safari keyboard content save failed')
-    await command('POST',session+'/frame',{id:null});await command('POST',session+'/refresh',{});await ready();await observeErrors()
+    await command('POST',session+'/frame',{id:null});await saved();await command('POST',session+'/refresh',{});await ready();await observeErrors()
     // The block toolbar follows native pointer hover, including after reload.
     const hoverFrame=await element('main iframe[title=block]');await command('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':hoverFrame}})
     const hoverHeading=await element('h1[data-key=heading]')
@@ -56,7 +57,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     if(!await execute("return !!document.querySelector(arguments[0]+' textarea')?.getClientRects().length",[row(alpha)]))await click(await element(row(alpha)+' button.title'))
     await click(await element(row(links[1].id)+' button[aria-label="Move Link item up"]'));await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content dialog did not save')
     for(let n=0;n<3;n++){
-     await command('POST',session+'/refresh',{});await ready();await observeErrors();const after=await c.verifyContent(tag)
+     await saved();await command('POST',session+'/refresh',{});await ready();await observeErrors();const after=await c.verifyContent(tag)
      assert.equal(after.find(e=>e.id===roots[1].id).index,0);assert.equal(after.find(e=>e.id===links[1].id).index,0)
     }
     record.checks.push('Native keyboard edit; root/nested move controls; save and four reloads retain all content IDs, values, bindings and order; no schema creation')
