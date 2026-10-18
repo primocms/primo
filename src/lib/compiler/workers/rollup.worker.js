@@ -11,6 +11,7 @@ import json from './plugins/json'
 import glsl from './plugins/glsl'
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
 import preview_runtime from '../preview-runtime.svelte.js?raw'
+import { createModuleLoader } from './module_loader.js'
 
 const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 
@@ -21,7 +22,7 @@ const CDN_URL = 'https://esm.sh'
 const SVELTE_CDN = `${CDN_URL}/svelte@${SVELTE_VERSION}`
 
 // In-memory cache for external modules (persists for worker lifetime)
-const module_cache = new Map()
+const loadModule = createModuleLoader()
 
 registerPromiseWorker(rollup_worker)
 /** @param {{component: any, head?: {code: string, data: object}, hydrated?: boolean, buildStatic?: boolean, css?: string, format?: import('@rollup/browser').ModuleFormat, dev_mode?: boolean, runtime?: string[]}} options */
@@ -206,21 +207,8 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 
 							// Fetch external modules with caching
 							if (/^https?:/.test(id)) {
-								// Check cache first
-								if (module_cache.has(id)) {
-									return module_cache.get(id)
-								}
-
 								try {
-									const response = await fetch(id)
-									if (!response.ok) {
-										throw new Error(`Failed to fetch ${id}: ${response.status} ${response.statusText}`)
-									}
-									const code = await response.text()
-
-									// Cache the result
-									module_cache.set(id, code)
-									return code
+									return await loadModule(id)
 								} catch (error) {
 									console.error(`Error loading external module: ${id}`, error)
 									throw error

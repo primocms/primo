@@ -140,7 +140,7 @@ export async function html({ component, head = { code: '', data: {} }, buildStat
 		}
 	}
 
-	if (!buildStatic) {
+	if (!buildStatic && !payload.error) {
 		COMPILED_COMPONENTS_CACHE.set(cache_key, payload)
 	}
 
