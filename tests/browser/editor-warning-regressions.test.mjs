@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -43,6 +43,11 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					if (repeater) {
+						b.onResolve({filter:/^\.\/RepeaterFieldItem\.svelte$/},()=>({path:'test:repeater-item.svelte',namespace:'test'}))
+						b.onResolve({filter:/^idb-keyval$/},()=>({path:'test:repeater-storage',namespace:'test'}))
+						b.onResolve({filter:/^\.\.\/utils$/},()=>({path:'test:repeater-utils',namespace:'test'}))
+					}
 					if (rootSave) {
 						b.onResolve({filter:/^\$lib\/app\.css$/},()=>({path:'test:empty',namespace:'test'}))
 						b.onResolve({filter:/^\$lib\/stores$/},()=>({path:'test:root-stores',namespace:'test'}))
@@ -363,6 +368,27 @@ test('root renders authentication while persistence loads, then protects pending
   assert.equal(await blocked(),true)
   await page.evaluate(()=>subject.update(true,false));await page.waitForFunction(()=>document.querySelector('[aria-label="Content save status"]').textContent.trim()==='Unsaved changes')
   await page.evaluate(()=>subject.update(false,false));await status.waitFor({state:'hidden'});assert.equal(await blocked(),false)
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
+test('delayed repeater preferences preserve newer explicit open and close choices', async()=>{
+ const f=await fixture(`<script>import Repeater from ${component('src/lib/builder/field-types/RepeaterField.svelte')};let show=$state(true);export function leave(){show=false}</script>{#if show}<Repeater entity={{type:'page_sections',id:'section'}} field={{id:'items',key:'items',label:'Items'}} fields={[]} entries={[{id:'alpha',field:'items',index:0},{id:'bravo',field:'items',index:1}]} level={0} onchange={()=>{}}/>{/if}`,{repeater:true,extraMocks:{
+  'test:repeater-item.svelte':`<script>import {createEventDispatcher} from 'svelte';let {entry,is_visible}=$props();const dispatch=createEventDispatcher()</script><button onclick={()=>dispatch('toggle')}>{entry.id}</button>{#if is_visible}<output data-testid={entry.id}>Open</output>{/if}`,
+  'test:repeater-storage':`export const get=()=>new Promise(resolve=>{window.restoreRepeaters=resolve});export const set=(id,value)=>{window.savedRepeaters={id,value};return Promise.resolve()}`,
+  'test:repeater-utils':'export const get_empty_value=()=>null;'
+ }})
+ try{
+  const {page}=f
+  await page.getByRole('button',{name:'alpha',exact:true}).click()
+  await page.getByRole('button',{name:'bravo',exact:true}).click()
+  await page.getByRole('button',{name:'bravo',exact:true}).click()
+  await page.evaluate(()=>restoreRepeaters({alpha:false,bravo:true,untouched:true}))
+  await page.waitForTimeout(30)
+  assert.equal(await page.getByTestId('alpha').count(),1,'Late stored collapse must not hide fields opened by the editor')
+  assert.equal(await page.getByTestId('bravo').count(),0,'Late stored expansion must not undo an explicit close')
+  await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>!!window.savedRepeaters)
+  assert.deepEqual(await page.evaluate(()=>savedRepeaters),{id:'items',value:{alpha:true,bravo:false,untouched:true}})
   assert.deepEqual(f.errors,[])
  }finally{await f.close()}
 })

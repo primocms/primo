@@ -18,7 +18,17 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
   const execute=(script,args=[])=>command('POST',session+'/execute/sync',{script,args})
   const wait=async(check,label,timeout=90000)=>{const end=Date.now()+timeout;do{if(await check())return;await delay(200)}while(Date.now()<end);assert.fail(label)}
   const element=async selector=>{const result=await command('POST',session+'/element',{using:'css selector',value:selector});return result['element-6066-11e4-a52e-4f735466cecf']}
-  const click=id=>command('POST',session+'/element/'+encodeURIComponent(id)+'/click',{})
+  const click=async id=>{
+   const reference={'element-6066-11e4-a52e-4f735466cecf':id}
+   let previous
+   // Native Safari does not auto-wait for dialog/repeater layout updates.
+   // Observe stable, exposed geometry before issuing one native click.
+   await wait(async()=>{
+    const rect=await execute("const el=arguments[0];el.scrollIntoView({block:'center',inline:'nearest'});const r=el.getBoundingClientRect();const x=r.left+r.width/2,y=r.top+r.height/2;const hit=document.elementFromPoint(x,y);return !el.disabled&&r.width>0&&r.height>0&&getComputedStyle(el).visibility==='visible'&&(hit===el||el.contains(hit))?[r.left,r.top,r.width,r.height]:null",[reference])
+    const stable=rect&&JSON.stringify(rect)===JSON.stringify(previous);previous=rect;return stable
+   },'Safari control must be exposed and stable before native click',15000)
+   return command('POST',session+'/element/'+encodeURIComponent(id)+'/click',{})
+  }
   const type=(id,text)=>command('POST',session+'/element/'+encodeURIComponent(id)+'/value',{text})
   const button=async label=>{const value=await execute("return [...document.querySelectorAll('button')].find(b=>b.textContent.trim()===arguments[0]||b.getAttribute('aria-label')===arguments[0])",[label]);assert.ok(value,'Missing Safari action: '+label);return value['element-6066-11e4-a52e-4f735466cecf']}
   const ready=()=>wait(()=>execute("const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))"),'All Safari blocks must become editable')
@@ -50,12 +60,15 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     const hoverHeading=await element('h1[data-key=heading]')
     await command('POST',session+'/actions',{actions:[{type:'pointer',id:'mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:100,origin:{'element-6066-11e4-a52e-4f735466cecf':hoverHeading},x:0,y:0}]}]})
     await command('POST',session+'/frame',{id:null});await wait(()=>execute("return [...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Edit Block Content')"),'Safari block hover did not reveal its content action')
-    await click(await button('Edit Block Content'))
+    record.phase='open-block-content';await click(await button('Edit Block Content'))
     const row=id=>'[role=dialog] .RepeaterFieldItem[data-entry-id="'+id+'"]'
     assert.equal(await execute("return [...document.querySelectorAll('[role=dialog] button')].some(b=>b.textContent.trim()==='Create Field')"),false)
-    await click(await element(row(roots[1].id)+' button[aria-label="Move Item item up"]'))
+    record.phase='move-root-repeater';await click(await element(row(roots[1].id)+' button[aria-label="Move Item item up"]'))
+    record.phase='expand-root-repeater'
     if(!await execute("return !!document.querySelector(arguments[0]+' textarea')?.getClientRects().length",[row(alpha)]))await click(await element(row(alpha)+' button.title'))
-    await click(await element(row(links[1].id)+' button[aria-label="Move Link item up"]'));await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content dialog did not save')
+    await wait(()=>execute("return !!document.querySelector(arguments[0]+' textarea')?.getClientRects().length",[row(alpha)]),'Safari root item must remain expanded')
+    record.phase='move-nested-repeater';await click(await element(row(links[1].id)+' button[aria-label="Move Link item up"]'))
+    record.phase='save-repeater-dialog';await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content dialog did not save')
     for(let n=0;n<3;n++){
      await saved();await command('POST',session+'/refresh',{});await ready();await observeErrors();const after=await c.verifyContent(tag)
      assert.equal(after.find(e=>e.id===roots[1].id).index,0);assert.equal(after.find(e=>e.id===links[1].id).index,0)

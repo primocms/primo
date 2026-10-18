@@ -20,7 +20,13 @@ test(engine+' production presence survives canceled requests, inline save, neste
  t.after(async()=>{Object.assign(report,{canceledPresenceCreate:canceledCreate,subsequentSuccessfulPresenceCreates:successfulCreate,canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
  await page.route('**/api/collections/user_activities/records**',async route=>{if(route.request().method()==='POST'&&!canceledCreate){canceledCreate++;await route.abort('failed')}else if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
  page.on('response',response=>{if(response.url().includes('/user_activities/records')&&response.ok()){if(response.request().method()==='PATCH')recovered++;if(response.request().method()==='POST')successfulCreate++}})
- const ready=()=>page.waitForFunction(()=>{const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))},null,{timeout:90000})
+ const ready=async()=>{
+  try { await page.waitForFunction(()=>{const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))},null,{timeout:90000}) }
+  catch(error) {
+   report.failedReadiness=await page.evaluate(phase=>({phase,body:document.body.innerText,frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({body:f.contentDocument?.body?.innerText,readyState:f.contentDocument?.readyState,html:f.contentDocument?.body?.innerHTML?.slice(0,1500)}))}),phase)
+   throw error
+  }
+ }
  await page.goto(c.origin+'/admin/sites/'+c.site.id);await ready()
  for(let n=0;n<300&&(!aborted||!recovered);n++)await delay(100)
  assert.equal(canceledCreate,1,'An actual presence create must have been canceled');assert.ok(successfulCreate>0,'Presence creation must recover after cancellation')
@@ -62,7 +68,7 @@ test(engine+' production presence survives canceled requests, inline save, neste
  let cleanupAborted=false
  await page.route('**/api/collections/user_activities/records/*',async route=>{if(route.request().method()==='DELETE'){cleanupAborted=true;await route.abort('failed')}else await route.fallback()})
  phase='leave editor for dashboard';await page.goto(c.origin+'/admin/dashboard/sites');await page.waitForSelector('.site-card-footer a');await delay(500)
- await c.verifyContent(tag);assert.equal(errors.length,0,c.redact(errors.join('\n')))
+ await c.verifyContent(tag);assert.equal(errors.length,0,c.redact(errors.join('\n')));assert.deepEqual(compilerErrors,[],'Caught compiler failures must also fail qualification')
  assert.equal((await c.list('sites')).length,1,'Editor must not see the foreign site')
  Object.assign(report,{status:'PASS_PRESENCE_BROWSER',canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered,cleanupAbortObserved:cleanupAborted,contentAndAllIdsRetained:true,rootAndNestedReorderRetained:true,autosaveFailureRetainsDraft:true,unsavedReloadPrevented:true,unsavedLogoutPrevented:true,autosaveRetrySaved:true,unchangedAutosaveSkipped:true,abruptReloads:4})
  await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n');console.log(report)

@@ -80,7 +80,9 @@
 	onMount(() => {
 		let active = true
 		idb.get(field.id).then((res) => {
-			if (active && res) visibleRepeaters = res
+			// Storage can settle after a toggle or a newly created item. Preserve
+			// those explicit choices while restoring untouched saved preferences.
+			if (active && res) visibleRepeaters = { ...res, ...visibleRepeaters }
 		})
 		return () => { active = false }
 	})

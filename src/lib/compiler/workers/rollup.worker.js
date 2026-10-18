@@ -278,7 +278,9 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 
 	function noteBuildError(error, id) {
 		const error_message = error instanceof Error ? error.message : String(error)
-		console.error('Build error:', error_message, error)
+		// Include plain strings as well as the Error object: browser traces and
+		// remote console collectors cannot always serialize worker Error handles.
+		console.error('Build error:', error_message, error?.stack || '', error?.id || id || '', error)
 
 		if (final.error) return
 		final.error = formatRollupError(error, id)
