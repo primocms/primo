@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createResizeTask } from '$lib/resize_task.js'
 	import { onMount } from 'svelte'
 	import { X } from 'lucide-svelte'
 	import { fade } from 'svelte/transition'
@@ -658,6 +659,7 @@
 
 	let mutation_observer: MutationObserver
 	let iframe_resize_observer: ResizeObserver
+	let iframe_resize_task: ReturnType<typeof createResizeTask> | undefined
 
 	onMount(() => {
 		mutation_observer = new MutationObserver(() => {
@@ -684,6 +686,7 @@
 		return () => {
 			mutation_observer?.disconnect()
 			iframe_resize_observer?.disconnect()
+			iframe_resize_task?.dispose()
 
 			// Clean up window message listener
 			if (window_message_handler) {
@@ -821,8 +824,10 @@
 
 			// Disconnect previous observer if it exists
 			iframe_resize_observer?.disconnect()
+			iframe_resize_task?.dispose()
 
 			const update_height = () => {
+				if (!node || node.contentDocument !== doc) return
 				const height = doc.body.clientHeight
 				if (node) {
 					node.style.height = height + 'px'
@@ -830,7 +835,8 @@
 				dispatch('resize')
 			}
 
-			iframe_resize_observer = new ResizeObserver(update_height)
+			iframe_resize_task = createResizeTask(update_height)
+			iframe_resize_observer = new ResizeObserver(iframe_resize_task.schedule)
 			iframe_resize_observer.observe(doc.body)
 
 			// Add mutation observer for DOM changes

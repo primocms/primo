@@ -2,6 +2,7 @@
 	import { onDestroy } from 'svelte'
 	import Spinner from '../ui/Spinner.svelte'
 	import { tick } from 'svelte'
+	import { createResizeTask } from '../../resize_task.js'
 	import { static_iframe_srcdoc } from './misc'
 	import * as _ from 'lodash-es'
 	import { watch, useResizeObserver } from 'runed'
@@ -36,7 +37,7 @@
 		if (!container || !iframe) return
 		const { clientWidth: parentWidth } = container
 		const { clientWidth: childWidth } = iframe
-		scaleRatio = parentWidth / childWidth
+		if (parentWidth > 0 && childWidth > 0) scaleRatio = parentWidth / childWidth
 	}
 
 	let scaleRatio = $state(1)
@@ -53,9 +54,11 @@
 		set_height()
 	}
 
+	const resize_task = createResizeTask(sync_iframe_size)
+
 	// observe changes in component height to sync scaled height/ratio
 	// mostly useful to updating in response to images loading in
-	useResizeObserver(() => iframe_body, sync_iframe_size)
+	useResizeObserver(() => iframe_body, resize_task.schedule)
 
 	// Set srcdoc from component code
 	let generated_srcdoc = $state('')
@@ -84,7 +87,7 @@
 			if (!loaded) return
 			iframe_body = iframe?.contentDocument?.body ?? null
 			if (!iframe_body) return
-			tick().then(sync_iframe_size)
+			tick().then(resize_task.schedule)
 		}
 	)
 
@@ -112,12 +115,12 @@
 			if (resize_observer) resize_observer.disconnect()
 			const sidebar = container.closest('.sidebar')
 			if (sidebar) {
-				resize_observer = new ResizeObserver(set_scale_ratio)
+				resize_observer = new ResizeObserver(resize_task.schedule)
 				resize_observer.observe(sidebar)
 				load_observer = new ResizeObserver(() => {
 					// workaround for on:load not working reliably
 					if (iframe?.contentWindow?.document?.body?.childNodes) {
-						set_scale_ratio()
+						resize_task.schedule()
 					}
 				})
 				load_observer.observe(iframe)
@@ -126,6 +129,7 @@
 	)
 
 	onDestroy(() => {
+		resize_task.dispose()
 		if (load_observer) load_observer.disconnect()
 		if (resize_observer) resize_observer.disconnect()
 	})
@@ -149,6 +153,8 @@
 				title="Preview HTML"
 				onload={() => {
 					iframe_loaded = true
+					iframe_body = iframe?.contentDocument?.body ?? null
+					resize_task.schedule()
 				}}
 				srcdoc={generated_srcdoc || srcdoc}
 				bind:this={iframe}

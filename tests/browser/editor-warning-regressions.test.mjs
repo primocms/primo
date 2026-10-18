@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, iframe = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, iframe = false, beforeMount = '', extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -120,6 +120,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 	page.on('pageerror', (error) => errors.push(error.message))
 	await page.setContent('<!doctype html><html><body style="padding:200px"></body></html>')
 	if (styles.length) await page.addStyleTag({ content: '* { box-sizing: border-box; }\n' + styles.join('\n') })
+	if(beforeMount)await page.addScriptTag({content:beforeMount})
 	let managerRoute
 	const routeReady = rootSave && new Promise(resolve => { managerRoute = resolve })
 	if (rootSave) {
@@ -441,6 +442,27 @@ test('the error view remains visible when the router has no error message', asyn
  const f=await fixture(`<script>import ErrorView from ${component('src/routes/+error.svelte')};</script><ErrorView />`)
  try {
   assert.equal(await f.page.getByRole('alert').innerText(),'Something went wrong. Reload and try again.')
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
+
+
+test('preview body resize delivery defers layout writes and still applies the latest height', async () => {
+ const markup='<html><body style="margin:0;height:120px">Preview</body></html>'
+ const f=await fixture(`<script>import IFrame from ${component('src/lib/builder/components/IFrame.svelte')};</script><aside class="sidebar" style="width:300px"><IFrame srcdoc={${JSON.stringify(markup)}} /></aside>`,{iframe:true,extraMocks:{'test:iframe-misc':'export const static_iframe_srcdoc=()=>"";'},beforeMount:`window.resizeObservers=[];window.ResizeObserver=class {constructor(callback){this.callback=callback;this.targets=new Set;resizeObservers.push(this)}observe(node){this.targets.add(node)}unobserve(node){this.targets.delete(node)}disconnect(){this.targets.clear()}}`})
+ try {
+  await f.page.waitForFunction(()=>parseFloat(document.querySelector('.iframe-container')?.style.height)>0)
+  const sizes=await f.page.evaluate(async()=>{
+   const frame=document.querySelector('iframe'),container=document.querySelector('.iframe-container'),body=frame.contentDocument.body
+   const before=container.style.height;body.style.height='300px'
+   const observers=resizeObservers.filter(observer=>observer.targets.has(body));if(!observers.length)throw Error('Real preview did not observe its body')
+   for(const observer of observers)observer.callback([{target:body}],observer)
+   await Promise.resolve();await Promise.resolve()
+   return{before,during:container.style.height}
+  })
+  assert.equal(sizes.during,sizes.before,'ResizeObserver delivery must not write ancestor layout in the same rendering cycle')
+  await f.page.waitForFunction(before=>document.querySelector('.iframe-container').style.height!==before,sizes.before)
+  assert.ok(await f.page.locator('.iframe-container').evaluate(el=>parseFloat(el.style.height)>0))
   assert.deepEqual(f.errors,[])
  } finally {await f.close()}
 })
