@@ -81,7 +81,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     record.checks.push('Independent fresh sign-in/reload; all original stored content retained; zero observed unhandled errors')
    }
    record.phase='complete';record.status='PASS'
-  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);throw Error(record.failure)}
+  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,ready:document.readyState,text:document.body.innerText.slice(0,1800),loader:document.querySelector('#app-boot-loader')?.outerHTML,scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),resources:performance.getEntriesByType('resource').map(r=>({path:new URL(r.name).pathname,status:r.responseStatus,duration:r.duration,bytes:r.transferSize})),buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);throw Error(record.failure)}
   finally{await command('DELETE',session);session=null}
  }
  console.log({...report,status:'PASS_NATIVE_SAFARI'})

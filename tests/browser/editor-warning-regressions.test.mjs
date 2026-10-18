@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -35,7 +35,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 		stdin: { contents: 'import {mount} from "svelte";import App from "test:wrapper.svelte";window.subject=mount(App,{target:document.body});', resolveDir: root },
 		bundle: true,
 		write: false,
-		format: 'iife',
+		format: rootSave ? 'esm' : 'iife',
 		platform: 'browser',
 		conditions: ['browser'],
 		logLevel: 'silent',
@@ -43,6 +43,15 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					if (rootSave) {
+						b.onResolve({filter:/^\$lib\/app\.css$/},()=>({path:'test:empty',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/stores$/},()=>({path:'test:root-stores',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/builder\/component$/},()=>({path:path.join(root,'src/lib/builder/component.js')}))
+						b.onResolve({filter:/^\$lib\/compiler\/processors$/},()=>({path:'test:root-processors',namespace:'test'}))
+						b.onResolve({filter:/^svelte-sonner$/},()=>({path:'test:root-toast',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/components\/ui\/sonner$/},()=>({path:'test:root-toaster',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/pocketbase\/managers$/},()=>({path:'http://root-save-manager.test/manager.js',external:true}))
+					}
 					b.onResolve({ filter: /^\$lib\/builder\/utils\/popper-fix$/ }, () => ({ path: path.join(root, 'src/lib/builder/utils/popper-fix.ts') }))
 					b.onResolve({ filter: /^test:/ }, (args) => ({ path: args.path, namespace: 'test' }))
 					b.onResolve({ filter: /^@iconify\/svelte$|IconPicker\.svelte$/ }, () => ({ path: 'test:empty.svelte', namespace: 'test' }))
@@ -104,12 +113,17 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 	page.on('pageerror', (error) => errors.push(error.message))
 	await page.setContent('<!doctype html><html><body style="padding:200px"></body></html>')
 	if (styles.length) await page.addStyleTag({ content: '* { box-sizing: border-box; }\n' + styles.join('\n') })
-	await page.addScriptTag({ content: bundled.outputFiles[0].text })
+	let managerRoute
+	const routeReady = rootSave && new Promise(resolve => { managerRoute = resolve })
+	if (rootSave) {
+		await page.route('http://root-save-manager.test/manager.js', route => managerRoute(route))
+		await page.evaluate(code => { const script=document.createElement('script');script.type='module';script.textContent=code;document.body.appendChild(script) }, bundled.outputFiles[0].text)
+	} else await page.addScriptTag({ content: bundled.outputFiles[0].text })
 	if (errors.length) {
 		await browser.close()
 		assert.deepEqual(errors, [])
 	}
-	return { page, errors, close: () => browser.close() }
+	return { page, errors, close: () => browser.close(), resolveManager: async () => (await routeReady).fulfill({status:200,contentType:'text/javascript',headers:{'access-control-allow-origin':'*'},body:'export const self = window.testSaveManager'}) }
 }
 const component = (relative) => JSON.stringify(path.join(root, relative))
 
@@ -327,4 +341,28 @@ test('page creation keeps typed name and slug when its default page type refresh
 		assert.deepEqual(await page.evaluate(()=>subject.read()),{name:'Client draft',slug:'custom-client-slug',page_type:'first'})
 		assert.deepEqual(f.errors,[])
 	} finally {await f.close()}
+})
+
+
+test('root renders authentication while persistence loads, then protects pending saves', {timeout:20000}, async()=>{
+ const f=await fixture(`<script>import Root from ${component('src/routes/+layout.svelte')};let pending=$state(false),saving=$state(false);window.testSaveManager={has_pending_changes:()=>pending,is_saving:()=>saving};export function update(p,s){pending=p;saving=s}</script><Root><p data-testid="auth-child">Sign in fixture</p></Root>`,{rootSave:true,extraMocks:{
+  'test:empty':'export {}',
+  'test:root-stores':"import {writable}from'svelte/store';export const compilers_registered=writable(false)",
+  'test:root-processors':'export const html=()=>{},css=()=>{}',
+  'test:root-toast':'export const toast={dismiss:()=>{},error:()=>{}}',
+  'test:root-toaster':'export {default as Toaster}from"test:empty.svelte"'
+ }})
+ try{
+  const {page}=f
+  await page.getByTestId('auth-child').waitFor()
+  assert.equal(await page.getByRole('status',{name:'Content save status'}).count(),0)
+  await f.resolveManager()
+  await page.evaluate(()=>subject.update(true,true))
+  const status=page.getByRole('status',{name:'Content save status'});await status.waitFor();assert.equal(await status.innerText(),'Saving changes…')
+  const blocked=()=>page.evaluate(()=>!window.dispatchEvent(new Event('beforeunload',{cancelable:true})))
+  assert.equal(await blocked(),true)
+  await page.evaluate(()=>subject.update(true,false));await page.waitForFunction(()=>document.querySelector('[aria-label="Content save status"]').textContent.trim()==='Unsaved changes')
+  await page.evaluate(()=>subject.update(false,false));await status.waitFor({state:'hidden'});assert.equal(await blocked(),false)
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
 })

@@ -131,6 +131,9 @@ jobs:
       - name: Run the actual packaged agent and client handoff
         if: ${{ !cancelled() }}
         run: node --test tests/staging/rc8/handoff.test.mjs
+      - name: Verify fresh production password sign-in and scoped dashboard
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/auth.test.mjs
       - name: Verify production presence cancellation, reload and content retention
         if: ${{ !cancelled() }}
         run: node --test tests/presence/browser.test.mjs
@@ -150,6 +153,7 @@ jobs:
             /tmp/primo-e2e-server.log
             presence-${{ matrix.browser }}.json
             cache-${{ matrix.browser }}.json
+            auth-${{ matrix.browser }}.json
 
   native-safari:
     needs: native
