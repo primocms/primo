@@ -18,6 +18,11 @@ test.beforeAll(async ({ request }) => {
 })
 
 async function captureAnalytics(page: Page, enabled: boolean, dev: boolean) {
+	page.on('console', async message => {
+		if (message.type() !== 'error' || !message.text().startsWith('Build error:')) return
+		const details = await Promise.all(message.args().map(arg => arg.evaluate(e => ({ message: e?.message, stack: e?.stack, id: e?.id, plugin: e?.plugin, hook: e?.hook })).catch(() => null)))
+		console.error('COMPILER_DIAGNOSTIC ' + JSON.stringify({ message: message.text(), details }))
+	})
 	const events: any[] = []
 	const captured = { events, analyticsRequests: 0, payloads: [] as unknown[], requestUrls: [] as string[] }
 	await page.addInitScript(() => {

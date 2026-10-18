@@ -6,12 +6,17 @@ test(engine+' production presence survives canceled requests, inline save, neste
  const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true});t.after(()=>browser.close())
  const context=await browser.newContext();await context.addInitScript(auth=>localStorage.setItem('pocketbase_auth',JSON.stringify(auth)),c.actors.editor.auth)
  let phase='initial load'
- const page=await context.newPage(),errors=[],errorStacks=[],unhandledRejections=[],errorPhases=[]
+ const page=await context.newPage(),errors=[],errorStacks=[],unhandledRejections=[],errorPhases=[],compilerErrors=[]
  page.on('pageerror',error=>{errors.push(error.message);errorStacks.push(error.stack);errorPhases.push(phase)})
  page.on('console',message=>{if(message.type()==='debug'&&message.text().startsWith('PRIMO_UNHANDLED '))unhandledRejections.push(JSON.parse(message.text().slice(16)))})
+ page.on('console',async message=>{if(message.type()==='error'&&message.text().startsWith('Build error:')){
+  const during=phase
+  const details=await Promise.all(message.args().map(arg=>arg.evaluate(e=>({message:e?.message,stack:e?.stack,id:e?.id,plugin:e?.plugin,hook:e?.hook})).catch(()=>null)))
+  const diagnostic={phase:during,message:message.text(),details};compilerErrors.push(diagnostic);console.error('COMPILER_DIAGNOSTIC '+JSON.stringify(diagnostic))
+ }})
  await context.addInitScript(()=>addEventListener('unhandledrejection',event=>{const e=event.reason;console.debug('PRIMO_UNHANDLED '+JSON.stringify({message:e?.message,status:e?.status,isAbort:e?.isAbort,url:e?.url?.split('?')[0],stack:e?.stack,originalMessage:e?.originalError?.message,originalStack:e?.originalError?.stack}))}))
  let canceledCreate=0,successfulCreate=0,aborted=0,recovered=0
- const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,errorStacks,unhandledRejections,errorPhases}
+ const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,errorStacks,unhandledRejections,errorPhases,compilerErrors}
  t.after(async()=>{Object.assign(report,{canceledPresenceCreate:canceledCreate,subsequentSuccessfulPresenceCreates:successfulCreate,canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
  await page.route('**/api/collections/user_activities/records**',async route=>{if(route.request().method()==='POST'&&!canceledCreate){canceledCreate++;await route.abort('failed')}else if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
  page.on('response',response=>{if(response.url().includes('/user_activities/records')&&response.ok()){if(response.request().method()==='PATCH')recovered++;if(response.request().method()==='POST')successfulCreate++}})
