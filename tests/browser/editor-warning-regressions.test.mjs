@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -43,6 +43,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					if(toolbar)b.onResolve({filter:/^\.\.\/\.\.\/ui$/},()=>({path:'test:toolbar-ui',namespace:'test'}))
 					if (repeater) {
 						b.onResolve({filter:/^\.\/RepeaterFieldItem\.svelte$/},()=>({path:'test:repeater-item.svelte',namespace:'test'}))
 						b.onResolve({filter:/^idb-keyval$/},()=>({path:'test:repeater-storage',namespace:'test'}))
@@ -389,6 +390,25 @@ test('delayed repeater preferences preserve newer explicit open and close choice
   assert.equal(await page.getByTestId('bravo').count(),0,'Late stored expansion must not undo an explicit close')
   await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>!!window.savedRepeaters)
   assert.deepEqual(await page.evaluate(()=>savedRepeaters),{id:'items',value:{alpha:true,bravo:false,untouched:true}})
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
+test('narrow toolbar keeps a pointer action targeted while delayed icons arrive',async()=>{
+ const f=await fixture(`<script>import Button from ${component('src/lib/builder/views/editor/ToolbarButton.svelte')};let clicked=$state('None')</script><div class="narrow" data-testid="toolbar"><Button label="Site content" icon="site" on:click={()=>clicked='Site content'}/><Button label="Pages" icon="pages" on:click={()=>clicked='Pages'}/><Button label="Publish" icon="publish" on:click={()=>clicked='Publish'}/></div><output>{clicked}</output><style>.narrow{display:flex;gap:5px;width:390px}.narrow :global(.primo-button .label){display:none}.narrow :global(.primo-button){padding-inline:8px}</style>`,{toolbar:true,extraMocks:{
+  'test:toolbar-ui':'export default {Spinner:null};',
+  'test:empty.svelte':`<script>import {ready} from 'test:delayed-icons';let {icon,...props}=$props()</script>{#if $ready}<svg {...props} viewBox="0 0 14 14"><title>{icon}</title><path d="M1 1h12v12H1z"/></svg>{/if}`,
+  'test:delayed-icons':`import {writable} from 'svelte/store';export const ready=writable(false);window.finishIcons=()=>ready.set(true);`
+ }})
+ try{
+  const {page}=f,buttons=page.getByTestId('toolbar').locator('button'),target=page.getByRole('button',{name:'Pages',exact:true})
+  const geometry=()=>buttons.evaluateAll(buttons=>buttons.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width}}))
+  const before=await geometry(),rect=await target.boundingBox();assert.ok(rect)
+  await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down()
+  await page.evaluate(()=>finishIcons());await page.waitForFunction(()=>document.querySelectorAll('[data-testid=toolbar] svg').length===3)
+  const after=await geometry();await page.mouse.up()
+  assert.equal(await page.locator('output').innerText(),'Pages','Icon loading must not move a pressed action away from the pointer: '+JSON.stringify({before,after}))
+  assert.deepEqual(after,before,'Toolbar hit targets must reserve their icon geometry before the SVG loads')
   assert.deepEqual(f.errors,[])
  }finally{await f.close()}
 })
