@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy } from 'svelte'
-	import Icon from '@iconify/svelte'
+	import Spinner from '../ui/Spinner.svelte'
 	import { tick } from 'svelte'
 	import { static_iframe_srcdoc } from './misc'
 	import * as _ from 'lodash-es'
@@ -136,7 +136,7 @@
 <div class="IFrame">
 	{#if !iframe_loaded}
 		<div class="spinner-container">
-			<Icon icon="eos-icons:three-dots-loading" />
+			<Spinner />
 		</div>
 	{/if}
 	<div bind:this={container} class="iframe-container" style:height="{container_height * scaleRatio}px">

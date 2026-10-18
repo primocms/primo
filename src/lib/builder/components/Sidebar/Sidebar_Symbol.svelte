@@ -2,6 +2,7 @@
 	import * as _ from 'lodash-es'
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
+	import Spinner from '../../ui/Spinner.svelte'
 	import Toggle from 'svelte-toggle'
 	import { Button } from '$lib/components/ui/button'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -352,7 +353,7 @@
 			</div>
 		{:else if is_loading}
 			<div class="loading">
-				<Icon icon="eos-icons:three-dots-loading" />
+				<Spinner />
 			</div>
 		{:else if componentCode}
 			{#each related_activities as [activity]}

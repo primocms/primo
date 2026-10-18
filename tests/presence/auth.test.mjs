@@ -19,7 +19,11 @@ test(engine+' fresh production sign-in renders and opens only the assigned site'
   Storage.prototype.setItem=function(key,value){if(this===localStorage&&key==='pocketbase_auth'&&!JSON.parse(value||'{}').token)sessionStorage.setItem('qa-session-cleared','true');return set.call(this,key,value)}
   Storage.prototype.removeItem=function(key){if(this===localStorage&&key==='pocketbase_auth')sessionStorage.setItem('qa-session-cleared','true');return remove.call(this,key)}
  })
+ // Dashboard data can render while the bounded verification retry is pending.
+ // Wait for that actual server response before judging recovery.
+ const refreshed=page.waitForResponse(response=>response.url().includes('/users/auth-refresh')&&response.ok())
  await page.locator('button[type=submit]').click()
+ await (await refreshed).finished()
  await page.waitForURL('**/admin/dashboard/sites');await page.locator('.site-card-footer a').waitFor()
  assert.equal(await page.locator('.site-card').count(),1)
  assert.equal(canceledRefresh,1);assert.ok(recoveredRefresh>0,'A canceled refresh must recover using the valid stored session')

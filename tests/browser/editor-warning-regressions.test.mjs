@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, iframe = false, extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -43,6 +43,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					if(iframe)b.onResolve({filter:/^\.\/misc$/},()=>({path:'test:iframe-misc',namespace:'test'}))
 					if(toolbar)b.onResolve({filter:/^\.\.\/\.\.\/ui$/},()=>({path:'test:toolbar-ui',namespace:'test'}))
 					if (repeater) {
 						b.onResolve({filter:/^\.\/RepeaterFieldItem\.svelte$/},()=>({path:'test:repeater-item.svelte',namespace:'test'}))
@@ -411,4 +412,16 @@ test('narrow toolbar keeps a pointer action targeted while delayed icons arrive'
   assert.deepEqual(after,before,'Toolbar hit targets must reserve their icon geometry before the SVG loads')
   assert.deepEqual(f.errors,[])
  }finally{await f.close()}
+})
+
+
+test('an unloaded preview shows an animated local spinner without a remote icon request', async () => {
+ const f=await fixture(`<script>import IFrame from ${component('src/lib/builder/components/IFrame.svelte')};</script><IFrame />`,{iframe:true,extraMocks:{'test:iframe-misc':'export const static_iframe_srcdoc=()=>"";'}})
+ try {
+  await f.page.getByRole('status',{name:'Loading',exact:true}).waitFor()
+  assert.equal(await f.page.locator('.Spinner.dots span').count(),3)
+  assert.match(await f.page.locator('.Spinner.dots span').first().evaluate(el=>getComputedStyle(el).animationName),/spinner-dot/)
+  assert.deepEqual(await f.page.evaluate(()=>performance.getEntriesByType('resource').filter(r=>/iconify|simplesvg|unisvg/.test(r.name)).map(r=>r.name)),[])
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
 })

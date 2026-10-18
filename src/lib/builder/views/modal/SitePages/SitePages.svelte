@@ -4,6 +4,7 @@
 	import Item from './Item.svelte'
 	import PageForm from './PageForm.svelte'
 	import Icon from '@iconify/svelte'
+	import Spinner from '../../../ui/Spinner.svelte'
 	import { Pages, PageTypes, PageSections, PageSectionEntries, PageEntries } from '$lib/pocketbase/collections'
 	import { resolve_page } from '$lib/pages'
 	import { site_context } from '$lib/builder/stores/context'
@@ -254,7 +255,7 @@
 
 {#snippet creatingPageRow()}
 	<div class="building-page-item" role="status">
-		<Icon icon="eos-icons:three-dots-loading" />
+		<Spinner />
 		<span>Creating {building_page_name}…</span>
 	</div>
 {/snippet}
