@@ -32,6 +32,8 @@
 		import('$lib/compiler/processors').then(({ html, css }) => {
 			registerProcessors({ html, css })
 			$compilers_registered = true
+		}, () => {
+			if (document.visibilityState !== 'hidden') toast.error('Compiler could not load. Reload to retry.')
 		})
 	}
 	$effect(() => {
