@@ -2,16 +2,17 @@
 	/**
 	 * @typedef {Object} Props
 	 * @property {'dots' | 'loop'} [variant]
+	 * @property {boolean} [decorative]
 	 */
 
 	/** @type {Props} */
-	let { variant = 'dots' } = $props()
+	let { variant = 'dots', decorative = false } = $props()
 </script>
 
 {#if variant === 'loop'}
-	<div class="Spinner loop" role="status" aria-label="Loading"></div>
+	<div class="Spinner loop" role={decorative ? undefined : 'status'} aria-label={decorative ? undefined : 'Loading'} aria-hidden={decorative || undefined}></div>
 {:else}
-	<div class="Spinner dots" role="status" aria-label="Loading">
+	<div class="Spinner dots" role={decorative ? undefined : 'status'} aria-label={decorative ? undefined : 'Loading'} aria-hidden={decorative || undefined}>
 		<span></span>
 		<span></span>
 		<span></span>

@@ -255,7 +255,7 @@
 
 {#snippet creatingPageRow()}
 	<div class="building-page-item" role="status">
-		<Spinner />
+		<Spinner decorative />
 		<span>Creating {building_page_name}…</span>
 	</div>
 {/snippet}

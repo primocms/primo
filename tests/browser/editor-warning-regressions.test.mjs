@@ -425,3 +425,13 @@ test('an unloaded preview shows an animated local spinner without a remote icon 
   assert.deepEqual(f.errors,[])
  } finally {await f.close()}
 })
+
+test('a decorative loading spinner does not duplicate its parent status announcement', async () => {
+ const f=await fixture(`<script>import Spinner from ${component('src/lib/builder/ui/Spinner.svelte')};</script><div role="status">Creating page…<Spinner decorative /></div>`)
+ try {
+  assert.equal(await f.page.getByRole('status').count(),1)
+  assert.equal(await f.page.getByRole('status').innerText(),'Creating page…')
+  assert.equal(await f.page.locator('.Spinner[aria-hidden="true"] span').count(),3)
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
