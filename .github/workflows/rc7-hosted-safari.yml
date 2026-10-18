@@ -1,11 +1,17 @@
-name: RC7 hosted Safari public probe
+name: Hosted Safari checks
 on:
   pull_request:
     paths:
       - '.github/workflows/rc7-hosted-safari.yml'
       - 'tests/staging/hosted/safari-config.mjs'
+      - 'tests/staging/pilot/rc9-*.mjs'
   workflow_dispatch:
     inputs:
+      rc9_canary:
+        description: 'Run only the authorized RC.9 synthetic draft editor; no publication'
+        required: false
+        default: false
+        type: boolean
       configuration:
         description: 'Public-only disposable Railway fixture JSON; no credentials'
         required: true
@@ -33,7 +39,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.13.0
-      - run: node --check tests/staging/hosted/safari-config.mjs
+      - run: |
+          node --check tests/staging/hosted/safari-config.mjs
+          node --check tests/staging/pilot/rc9-context.mjs
+          node --check tests/staging/pilot/rc9-safari.test.mjs
+          node --test tests/staging/pilot/rc9-context.test.mjs
   safari:
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-15
@@ -48,10 +58,12 @@ jobs:
         with:
           node-version: 22.13.0
       - name: Prepare only the supplied public fixture
+        if: ${{ !inputs.rc9_canary }}
         env:
           PRIMO_QA_SAFARI_CONFIGURATION: ${{ inputs.configuration }}
         run: node tests/staging/hosted/safari-config.mjs
       - name: Enable Safari only on this disposable runner and probe the hosted fixture
+        if: ${{ !inputs.rc9_canary }}
         env:
           PRIMO_QA_RUN_EDITOR: ${{ inputs.editor }}
           PRIMO_QA_SAFARI_LOAD_ONLY: ${{ inputs.load_only }}
@@ -70,11 +82,28 @@ jobs:
           if [ "$PRIMO_QA_RUN_EDITOR" = "true" ]; then
             node tests/staging/hosted/safari-editor.mjs
           fi
+      - name: Native Safari RC.9 canary; synthetic drafts only
+        if: ${{ inputs.rc9_canary }}
+        env:
+          PRIMO_RC9_CANARY_EDITOR: ${{ secrets.PRIMO_RC9_CANARY_EDITOR }}
+        shell: bash
+        run: |
+          sudo /usr/bin/safaridriver --enable
+          /usr/bin/safaridriver --port 4444 > "$RUNNER_TEMP/safari-driver.log" 2>&1 &
+          driver_pid=$!
+          trap 'kill "$driver_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4444/status > /dev/null; then break; fi
+            sleep 1
+          done
+          node --test tests/staging/pilot/rc9-safari.test.mjs
       - name: Retain public probe results only
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rc7-real-safari-public
-          path: safari-results/
+          path: |
+            safari-results/
+            hosted-safari.json
           if-no-files-found: warn
           retention-days: 7
