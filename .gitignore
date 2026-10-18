@@ -18,6 +18,8 @@ scratchpad.md
 /playwright/.cache/
 pnpm-lock.yaml
 /playwright/.auth
+/presence-*.json
+/cache-*.json
 
 # Devenv
 .devenv*
@@ -62,3 +64,5 @@ bugs.md
 
 # Local-only internal design specs (kept out of version control)
 internal/SPEC-*.md
+
+/auth-*.json

@@ -7,6 +7,7 @@ on:
       - 'tests/staging/rc8/**'
       - 'tests/security/**'
       - 'tests/staging/rc8-packages.json'
+      - 'tests/presence/**'
       - 'internal/**'
       - 'src/**'
       - 'static/**'
@@ -70,7 +71,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.8 -X github.com/primocms/primo/internal.buildTime=2026-10-17T02:40:26Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.9 -X github.com/primocms/primo/internal.buildTime=2026-10-17T05:30:07Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
@@ -80,7 +81,7 @@ jobs:
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: rc8-${{ matrix.target }}
+          name: rc9-${{ matrix.target }}
           path: |
             primo_${{ matrix.target }}
             platform-result.json
@@ -99,6 +100,7 @@ jobs:
       PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
       PRIMO_TEST_BROWSER: ${{ matrix.browser }}
       PRIMO_BROWSER: ${{ matrix.browser }}
+      PRIMO_PRESENCE_HOST: primo-presence.test
       PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
       RC_INSTALL: ${{ github.workspace }}
       PLAYWRIGHT_JSON_OUTPUT_FILE: frozen-results.json
@@ -114,7 +116,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc8-linux_amd64
+          name: rc9-linux_amd64
           path: frozen
       - name: Verify exact installed archives and tested native provenance
         run: |
@@ -122,24 +124,90 @@ jobs:
           node tests/staging/rc8/verify.mjs
           node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
       - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify the fixed WebKit networking library and actual process mapping
+        if: matrix.browser == 'webkit'
+        run: node tests/platform/webkit-runtime.mjs
       - name: Resolve reserved preview alias only inside this disposable runner
-        run: echo '127.0.0.1 primo-preview.test' | sudo tee -a /etc/hosts
+        run: echo '127.0.0.1 primo-preview.test primo-presence.test' | sudo tee -a /etc/hosts
       - name: Run the complete suite against the exact native package
         run: npx playwright test --timeout=90000 --reporter=list,json
       - name: Run the actual packaged agent and client handoff
         if: ${{ !cancelled() }}
         run: node --test tests/staging/rc8/handoff.test.mjs
+      - name: Verify fresh production password sign-in and scoped dashboard
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/auth.test.mjs
+      - name: Verify production presence cancellation, reload and content retention
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/browser.test.mjs
+      - name: Verify canceled scoped-user and site-list caches recover without reload
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/cache.test.mjs
       - name: Reverify all product bytes
         if: always()
         run: node tests/staging/rc8/verify.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc8-exact-${{ matrix.browser }}
+          name: rc9-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
+            webkit-runtime.json
             test-results
             /tmp/primo-e2e-server.log
+            presence-${{ matrix.browser }}.json
+            cache-${{ matrix.browser }}.json
+            auth-${{ matrix.browser }}.json
+
+  native-safari:
+    needs: native
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_darwin_arm64
+      PRIMO_QA_SAFARI_WEBDRIVER: http://127.0.0.1:4444
+      PRIMO_PRESENCE_HOST: primo-presence.test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc9-darwin_arm64
+          path: frozen
+      - name: Verify the exact Mac candidate and unchanged built CLI/MCP packages
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+      - name: Run actual Safari with local generated accounts only
+        shell: bash
+        run: |
+          sudo /usr/bin/safaridriver --enable
+          echo '127.0.0.1 primo-presence.test' | sudo tee -a /etc/hosts
+          /usr/bin/safaridriver --port 4444 > "$RUNNER_TEMP/safari-driver.log" 2>&1 &
+          driver_pid=$!
+          trap 'kill "$driver_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4444/status > /dev/null; then break; fi
+            sleep 1
+          done
+          node --test tests/presence/safari.test.mjs
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc9-native-safari
+          path: presence-safari.json
+          if-no-files-found: error
 
   copied-recovery:
     needs: native
@@ -162,7 +230,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc8-linux_amd64
+          name: rc9-linux_amd64
           path: frozen
       - uses: actions/download-artifact@v4
         with:
@@ -179,7 +247,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc8-copied-recovery
+          name: rc9-copied-recovery
           path: recovery-result.json
           if-no-files-found: warn
 
@@ -203,7 +271,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc8-linux_amd64
+          name: rc9-linux_amd64
           path: frozen
       - name: Verify the exact tested native artifact
         run: |
@@ -219,7 +287,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc8-framing-security
+          name: rc9-framing-security
           path: |
             framing-security-results.json
             tests/security/test-results/

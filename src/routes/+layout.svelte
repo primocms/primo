@@ -3,7 +3,23 @@
 	import { browser } from '$app/environment'
 	import { compilers_registered } from '$lib/stores'
 	import { registerProcessors } from '$lib/builder/component'
+	import { toast } from 'svelte-sonner'
 	import { Toaster } from '$lib/components/ui/sonner'
+	import { onMount } from 'svelte'
+
+	/** @type {import('$lib/pocketbase/CollectionManager').CollectionManager | undefined} */
+	let content_manager = $state()
+	// Authentication must be able to mount before editor persistence finishes
+	// loading. Keep that dependency out of the root module's startup graph.
+	onMount(() => {
+		let active = true
+		void import('$lib/pocketbase/managers').then(({ self }) => {
+			if (active) content_manager = self
+		}, () => {
+			if (active) toast.error('Save protection could not load. Reload before editing.')
+		})
+		return () => { active = false }
+	})
 
 	let { children } = $props()
 
@@ -16,10 +32,26 @@
 		import('$lib/compiler/processors').then(({ html, css }) => {
 			registerProcessors({ html, css })
 			$compilers_registered = true
+		}, () => {
+			if (document.visibilityState !== 'hidden') toast.error('Compiler could not load. Reload to retry.')
 		})
 	}
+	$effect(() => {
+		if (!content_manager?.has_pending_changes()) toast.dismiss('inline-content-save-error')
+	})
 </script>
 
+<svelte:window onbeforeunload={(event) => {
+	if (content_manager?.has_pending_changes()) {
+		event.preventDefault()
+		event.returnValue = ''
+	}
+}} />
+{#if content_manager?.has_pending_changes()}
+	<div role="status" aria-label="Content save status" class="fixed bottom-4 right-4 z-40 rounded-md border border-input bg-background px-3 py-2 text-xs text-muted-foreground">
+		{content_manager?.is_saving() ? 'Saving changes…' : 'Unsaved changes'}
+	</div>
+{/if}
 <Toaster />
 {@render children?.()}
 

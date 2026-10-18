@@ -3,6 +3,7 @@
 	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { goto } from '$app/navigation'
+	import { toast } from 'svelte-sonner'
 	import { page } from '$app/stores'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { Input } from '$lib/components/ui/input'
@@ -251,6 +252,10 @@
 							{/if}
 							<DropdownMenu.Item
 								onclick={async () => {
+									if (self.has_pending_changes()) {
+										toast.error('Save or retry your changes before logging out.')
+										return
+									}
 									self.instance?.authStore.clear()
 									await goto('/admin/auth')
 								}}

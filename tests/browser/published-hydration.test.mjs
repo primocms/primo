@@ -6,6 +6,7 @@ import { compile, compileModule } from 'svelte/compiler'
 import { render } from 'svelte/server'
 import * as _ from 'lodash-es'
 import { chromium } from '@playwright/test'
+import { createModuleLoader } from '../../src/lib/compiler/workers/module_loader.js'
 
 // Run the real worker's virtual sources, transform and options through a local
 // bundler adapter. Only CDN resolution and worker transport are replaced: the
@@ -69,8 +70,9 @@ async function fixture({ transformSources = [] } = {}) {
 		'commonjs',
 		'json',
 		'glsl',
+		'createModuleLoader',
 		workerSource
-	)(rollup, sveltePromiseWorker, (fn) => (worker = fn), 'test', '', {}, {}, {})
+	)(rollup, sveltePromiseWorker, (fn) => (worker = fn), 'test', '', {}, {}, {}, createModuleLoader)
 	const transport = {
 		postMessage: async (options) => {
 			mode = options.buildStatic ? 'server' : 'client'

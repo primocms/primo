@@ -12,7 +12,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 // Exercise real Svelte components and runtime in Chromium. Icons, unrelated
 // pickers and persistence transport are substituted; control/event/state logic
 // remains the production implementation.
-async function fixture(source, { presence = false, pageData = false, pageForm = false, extraMocks = {} } = {}) {
+async function fixture(source, { presence = false, pageData = false, pageForm = false, rootSave = false, repeater = false, toolbar = false, iframe = false, beforeMount = '', extraMocks = {} } = {}) {
 	const mocks = {
 		'test:empty.svelte': '<span></span>',
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
@@ -35,7 +35,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 		stdin: { contents: 'import {mount} from "svelte";import App from "test:wrapper.svelte";window.subject=mount(App,{target:document.body});', resolveDir: root },
 		bundle: true,
 		write: false,
-		format: 'iife',
+		format: rootSave ? 'esm' : 'iife',
 		platform: 'browser',
 		conditions: ['browser'],
 		logLevel: 'silent',
@@ -43,6 +43,22 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 			{
 				name: 'real-svelte-controls',
 				setup(b) {
+					if(iframe)b.onResolve({filter:/^\.\/misc$/},()=>({path:'test:iframe-misc',namespace:'test'}))
+					if(toolbar)b.onResolve({filter:/^\.\.\/\.\.\/ui$/},()=>({path:'test:toolbar-ui',namespace:'test'}))
+					if (repeater) {
+						b.onResolve({filter:/^\.\/RepeaterFieldItem\.svelte$/},()=>({path:'test:repeater-item.svelte',namespace:'test'}))
+						b.onResolve({filter:/^idb-keyval$/},()=>({path:'test:repeater-storage',namespace:'test'}))
+						b.onResolve({filter:/^\.\.\/utils$/},()=>({path:'test:repeater-utils',namespace:'test'}))
+					}
+					if (rootSave) {
+						b.onResolve({filter:/^\$lib\/app\.css$/},()=>({path:'test:empty',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/stores$/},()=>({path:'test:root-stores',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/builder\/component$/},()=>({path:path.join(root,'src/lib/builder/component.js')}))
+						b.onResolve({filter:/^\$lib\/compiler\/processors$/},()=>({path:'test:root-processors',namespace:'test'}))
+						b.onResolve({filter:/^svelte-sonner$/},()=>({path:'test:root-toast',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/components\/ui\/sonner$/},()=>({path:'test:root-toaster',namespace:'test'}))
+						b.onResolve({filter:/^\$lib\/pocketbase\/managers$/},()=>({path:'http://root-save-manager.test/manager.js',external:true}))
+					}
 					b.onResolve({ filter: /^\$lib\/builder\/utils\/popper-fix$/ }, () => ({ path: path.join(root, 'src/lib/builder/utils/popper-fix.ts') }))
 					b.onResolve({ filter: /^test:/ }, (args) => ({ path: args.path, namespace: 'test' }))
 					b.onResolve({ filter: /^@iconify\/svelte$|IconPicker\.svelte$/ }, () => ({ path: 'test:empty.svelte', namespace: 'test' }))
@@ -104,12 +120,18 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 	page.on('pageerror', (error) => errors.push(error.message))
 	await page.setContent('<!doctype html><html><body style="padding:200px"></body></html>')
 	if (styles.length) await page.addStyleTag({ content: '* { box-sizing: border-box; }\n' + styles.join('\n') })
-	await page.addScriptTag({ content: bundled.outputFiles[0].text })
+	if(beforeMount)await page.addScriptTag({content:beforeMount})
+	let managerRoute
+	const routeReady = rootSave && new Promise(resolve => { managerRoute = resolve })
+	if (rootSave) {
+		await page.route('http://root-save-manager.test/manager.js', route => managerRoute(route))
+		await page.evaluate(code => { const script=document.createElement('script');script.type='module';script.textContent=code;document.body.appendChild(script) }, bundled.outputFiles[0].text)
+	} else await page.addScriptTag({ content: bundled.outputFiles[0].text })
 	if (errors.length) {
 		await browser.close()
 		assert.deepEqual(errors, [])
 	}
-	return { page, errors, close: () => browser.close() }
+	return { page, errors, close: () => browser.close(), resolveManager: async () => (await routeReady).fulfill({status:200,contentType:'text/javascript',headers:{'access-control-allow-origin':'*'},body:'export const self = window.testSaveManager'}) }
 }
 const component = (relative) => JSON.stringify(path.join(root, relative))
 
@@ -222,6 +244,30 @@ test('presence getter follows navigation and clears old section keys without reg
 	}
 })
 
+test('hidden presence expires server-side, resumes with a fresh record and still cleans up visible navigation', async () => {
+ const activity=component('src/lib/UserActivity.svelte.ts')
+ const f=await fixture(
+  `<script>import Child from 'test:presence-lifetime.svelte';let showing=$state(true);export function leave(){showing=false}</script>{#if showing}<Child/>{/if}`,
+  {presence:true,extraMocks:{
+   'test:presence-lifetime.svelte':`<script>import {setUserActivity} from ${activity};setUserActivity({user:'user',site:'site'})</script><span>Active editor</span>`,
+   'test:collections':`globalThis.presenceEvents=[];let next=0;export const UserActivities={create(value){const record={id:String(++next),...value};presenceEvents.push({operation:'create',id:record.id});return record},update(id,value){presenceEvents.push({operation:'update',id});return {id,...value}},delete(id){presenceEvents.push({operation:'delete',id})}};export const Collaborators={},Pages={},PageSections={},PageTypes={},PageTypeSections={},Sites={},SiteSymbols={};`
+  }}
+ )
+ try {
+  const {page}=f
+  await page.waitForFunction(()=>presenceEvents.some(e=>e.operation==='create'))
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))})
+  await page.waitForTimeout(50)
+  assert.equal(await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='delete').length),0,'Do not start a network delete in a departing document')
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))})
+  await page.waitForFunction(()=>presenceEvents.filter(e=>e.operation==='create').length===2)
+  const created=await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='create').map(e=>e.id));assert.notEqual(created[0],created[1])
+  await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>presenceEvents.some(e=>e.operation==='delete'))
+  assert.deepEqual(await page.evaluate(()=>presenceEvents.filter(e=>e.operation==='delete').map(e=>e.id)),[created[1]])
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
 test('worker status remains reactive through loading, success and failure', async () => {
 	const f = await fixture(
 		`<script>import {useSvelteWorker} from ${component('src/lib/workers/Worker.svelte.ts')};let loaded=$state(false);const worker=useSvelteWorker(()=>true,()=>loaded,async(value)=>{if(value==='fail')throw new Error('expected');return value+'!'});export function run(value){return worker.run(value)}export function load(){loaded=true}</script><output>{worker.status}</output>`
@@ -303,4 +349,120 @@ test('page creation keeps typed name and slug when its default page type refresh
 		assert.deepEqual(await page.evaluate(()=>subject.read()),{name:'Client draft',slug:'custom-client-slug',page_type:'first'})
 		assert.deepEqual(f.errors,[])
 	} finally {await f.close()}
+})
+
+
+test('root renders authentication while persistence loads, then protects pending saves', {timeout:20000}, async()=>{
+ const f=await fixture(`<script>import Root from ${component('src/routes/+layout.svelte')};let pending=$state(false),saving=$state(false);window.testSaveManager={has_pending_changes:()=>pending,is_saving:()=>saving};export function update(p,s){pending=p;saving=s}</script><Root><p data-testid="auth-child">Sign in fixture</p></Root>`,{rootSave:true,extraMocks:{
+  'test:empty':'export {}',
+  'test:root-stores':"import {writable}from'svelte/store';export const compilers_registered=writable(false)",
+  'test:root-processors':'export const html=()=>{},css=()=>{}',
+  'test:root-toast':'export const toast={dismiss:()=>{},error:()=>{}}',
+  'test:root-toaster':'export {default as Toaster}from"test:empty.svelte"'
+ }})
+ try{
+  const {page}=f
+  await page.getByTestId('auth-child').waitFor()
+  assert.equal(await page.getByRole('status',{name:'Content save status'}).count(),0)
+  await f.resolveManager()
+  await page.evaluate(()=>subject.update(true,true))
+  const status=page.getByRole('status',{name:'Content save status'});await status.waitFor();assert.equal(await status.innerText(),'Saving changes…')
+  const blocked=()=>page.evaluate(()=>!window.dispatchEvent(new Event('beforeunload',{cancelable:true})))
+  assert.equal(await blocked(),true)
+  await page.evaluate(()=>subject.update(true,false));await page.waitForFunction(()=>document.querySelector('[aria-label="Content save status"]').textContent.trim()==='Unsaved changes')
+  await page.evaluate(()=>subject.update(false,false));await status.waitFor({state:'hidden'});assert.equal(await blocked(),false)
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
+test('delayed repeater preferences preserve newer explicit open and close choices', async()=>{
+ const f=await fixture(`<script>import Repeater from ${component('src/lib/builder/field-types/RepeaterField.svelte')};let show=$state(true);export function leave(){show=false}</script>{#if show}<Repeater entity={{type:'page_sections',id:'section'}} field={{id:'items',key:'items',label:'Items'}} fields={[]} entries={[{id:'alpha',field:'items',index:0},{id:'bravo',field:'items',index:1}]} level={0} onchange={()=>{}}/>{/if}`,{repeater:true,extraMocks:{
+  'test:repeater-item.svelte':`<script>import {createEventDispatcher} from 'svelte';let {entry,is_visible}=$props();const dispatch=createEventDispatcher()</script><button onclick={()=>dispatch('toggle')}>{entry.id}</button>{#if is_visible}<output data-testid={entry.id}>Open</output>{/if}`,
+  'test:repeater-storage':`export const get=()=>new Promise(resolve=>{window.restoreRepeaters=resolve});export const set=(id,value)=>{window.savedRepeaters={id,value};return Promise.resolve()}`,
+  'test:repeater-utils':'export const get_empty_value=()=>null;'
+ }})
+ try{
+  const {page}=f
+  await page.getByRole('button',{name:'alpha',exact:true}).click()
+  await page.getByRole('button',{name:'bravo',exact:true}).click()
+  await page.getByRole('button',{name:'bravo',exact:true}).click()
+  await page.evaluate(()=>restoreRepeaters({alpha:false,bravo:true,untouched:true}))
+  await page.waitForTimeout(30)
+  assert.equal(await page.getByTestId('alpha').count(),1,'Late stored collapse must not hide fields opened by the editor')
+  assert.equal(await page.getByTestId('bravo').count(),0,'Late stored expansion must not undo an explicit close')
+  await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>!!window.savedRepeaters)
+  assert.deepEqual(await page.evaluate(()=>savedRepeaters),{id:'items',value:{alpha:true,bravo:false,untouched:true}})
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
+test('narrow toolbar keeps a pointer action targeted while delayed icons arrive',async()=>{
+ const f=await fixture(`<script>import Button from ${component('src/lib/builder/views/editor/ToolbarButton.svelte')};let clicked=$state('None')</script><div class="narrow" data-testid="toolbar"><Button label="Site content" icon="site" on:click={()=>clicked='Site content'}/><Button label="Pages" icon="pages" on:click={()=>clicked='Pages'}/><Button label="Publish" icon="publish" on:click={()=>clicked='Publish'}/></div><output>{clicked}</output><style>.narrow{display:flex;gap:5px;width:390px}.narrow :global(.primo-button .label){display:none}.narrow :global(.primo-button){padding-inline:8px}</style>`,{toolbar:true,extraMocks:{
+  'test:toolbar-ui':'export default {Spinner:null};',
+  'test:empty.svelte':`<script>import {ready} from 'test:delayed-icons';let {icon,...props}=$props()</script>{#if $ready}<svg {...props} viewBox="0 0 14 14"><title>{icon}</title><path d="M1 1h12v12H1z"/></svg>{/if}`,
+  'test:delayed-icons':`import {writable} from 'svelte/store';export const ready=writable(false);window.finishIcons=()=>ready.set(true);`
+ }})
+ try{
+  const {page}=f,buttons=page.getByTestId('toolbar').locator('button'),target=page.getByRole('button',{name:'Pages',exact:true})
+  const geometry=()=>buttons.evaluateAll(buttons=>buttons.map(b=>{const r=b.getBoundingClientRect();return {x:r.x,width:r.width}}))
+  const before=await geometry(),rect=await target.boundingBox();assert.ok(rect)
+  await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down()
+  await page.evaluate(()=>finishIcons());await page.waitForFunction(()=>document.querySelectorAll('[data-testid=toolbar] svg').length===3)
+  const after=await geometry();await page.mouse.up()
+  assert.equal(await page.locator('output').innerText(),'Pages','Icon loading must not move a pressed action away from the pointer: '+JSON.stringify({before,after}))
+  assert.deepEqual(after,before,'Toolbar hit targets must reserve their icon geometry before the SVG loads')
+  assert.deepEqual(f.errors,[])
+ }finally{await f.close()}
+})
+
+
+test('an unloaded preview shows an animated local spinner without a remote icon request', async () => {
+ const f=await fixture(`<script>import IFrame from ${component('src/lib/builder/components/IFrame.svelte')};</script><IFrame />`,{iframe:true,extraMocks:{'test:iframe-misc':'export const static_iframe_srcdoc=()=>"";'}})
+ try {
+  await f.page.getByRole('status',{name:'Loading',exact:true}).waitFor()
+  assert.equal(await f.page.locator('.Spinner.dots span').count(),3)
+  assert.match(await f.page.locator('.Spinner.dots span').first().evaluate(el=>getComputedStyle(el).animationName),/spinner-dot/)
+  assert.deepEqual(await f.page.evaluate(()=>performance.getEntriesByType('resource').filter(r=>/iconify|simplesvg|unisvg/.test(r.name)).map(r=>r.name)),[])
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
+
+test('a decorative loading spinner does not duplicate its parent status announcement', async () => {
+ const f=await fixture(`<script>import Spinner from ${component('src/lib/builder/ui/Spinner.svelte')};</script><div role="status">Creating page…<Spinner decorative /></div>`)
+ try {
+  assert.equal(await f.page.getByRole('status').count(),1)
+  assert.equal(await f.page.getByRole('status').innerText(),'Creating page…')
+  assert.equal(await f.page.locator('.Spinner[aria-hidden="true"] span').count(),3)
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
+
+
+test('the error view remains visible when the router has no error message', async () => {
+ const f=await fixture(`<script>import ErrorView from ${component('src/routes/+error.svelte')};</script><ErrorView />`)
+ try {
+  assert.equal(await f.page.getByRole('alert').innerText(),'Something went wrong. Reload and try again.')
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
+
+
+test('preview body resize delivery defers layout writes and still applies the latest height', async () => {
+ const markup='<html><body style="margin:0;height:120px">Preview</body></html>'
+ const f=await fixture(`<script>import IFrame from ${component('src/lib/builder/components/IFrame.svelte')};</script><aside class="sidebar" style="width:300px"><IFrame srcdoc={${JSON.stringify(markup)}} /></aside>`,{iframe:true,extraMocks:{'test:iframe-misc':'export const static_iframe_srcdoc=()=>"";'},beforeMount:`window.resizeObservers=[];window.ResizeObserver=class {constructor(callback){this.callback=callback;this.targets=new Set;resizeObservers.push(this)}observe(node){this.targets.add(node)}unobserve(node){this.targets.delete(node)}disconnect(){this.targets.clear()}}`})
+ try {
+  await f.page.waitForFunction(()=>parseFloat(document.querySelector('.iframe-container')?.style.height)>0)
+  const sizes=await f.page.evaluate(async()=>{
+   const frame=document.querySelector('iframe'),container=document.querySelector('.iframe-container'),body=frame.contentDocument.body
+   const before=container.style.height;body.style.height='300px'
+   const observers=resizeObservers.filter(observer=>observer.targets.has(body));if(!observers.length)throw Error('Real preview did not observe its body')
+   for(const observer of observers)observer.callback([{target:body}],observer)
+   await Promise.resolve();await Promise.resolve()
+   return{before,during:container.style.height}
+  })
+  assert.equal(sizes.during,sizes.before,'ResizeObserver delivery must not write ancestor layout in the same rendering cycle')
+  await f.page.waitForFunction(before=>document.querySelector('.iframe-container').style.height!==before,sizes.before)
+  assert.ok(await f.page.locator('.iframe-container').evaluate(el=>parseFloat(el.style.height)>0))
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
 })

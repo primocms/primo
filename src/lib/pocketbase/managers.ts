@@ -11,6 +11,8 @@ export const self = createCollectionManager(this_instance, ({ collection, operat
 	if ((operation === 'update' || operation === 'create') && CONTENT_ENTRY_COLLECTIONS.has(collection)) {
 		track_content_saved()
 	}
+}, {
+	retain_failed_change: change => change.operation === 'update' && CONTENT_ENTRY_COLLECTIONS.has(change.collection)
 })
-export const activity = createCollectionManager(this_instance)
+export const activity = createCollectionManager(this_instance, undefined, { request: { keepalive: true } })
 export const marketplace = createCollectionManager(marketplace_instance)

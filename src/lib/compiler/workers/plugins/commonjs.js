@@ -13,11 +13,11 @@ export default {
 	transform: (code, id) => {
 		// console.log('commonjs', code, id)
 		let transformed_code = code
-		if (/\b(require|module|exports)\b/.test(code)) {
+		if (has_commonjs_identifier(code)) {
 			transformed_code = fix_imports_and_exports(transformed_code)
 		}
 
-		if (/process\.env\.NODE_ENV/.test(code)) {
+		if (code.includes('process.env.NODE_ENV')) {
 			transformed_code = replace_env(transformed_code)
 		}
 
@@ -25,9 +25,22 @@ export default {
 	}
 }
 
+// Firefox can throw InternalError from the RegExp pre-check even for a tiny
+// ESM runtime module. Keep this fast path independent of the regexp engine,
+// preserving the previous ASCII \b boundaries before attempting conversion.
+function has_commonjs_identifier(code) {
+	const word_character = (char) => char === 95 || (char >= 48 && char <= 57) || (char >= 65 && char <= 90) || (char >= 97 && char <= 122)
+	for (const word of ['require', 'module', 'exports']) {
+		for (let index = code.indexOf(word); index !== -1; index = code.indexOf(word, index + word.length)) {
+			if (!word_character(code.charCodeAt(index - 1)) && !word_character(code.charCodeAt(index + word.length))) return true
+		}
+	}
+	return false
+}
+
 function replace_env(code) {
 	try {
-		const replaced = code.replace(/process\.env\.NODE_ENV/g, JSON.stringify('production'))
+		const replaced = code.replaceAll('process.env.NODE_ENV', JSON.stringify('production'))
 		return replaced
 	} catch (e) {
 		console.log('error replacing env', e, code)

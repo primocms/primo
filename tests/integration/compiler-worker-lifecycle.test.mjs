@@ -14,7 +14,7 @@ async function processors(failingWorker = '') {
  class rollupWorker { constructor() { started.rollup++; if (${JSON.stringify(failingWorker)} === 'rollup') throw new Error('rollup worker unavailable'); this.kind = 'rollup'; } }
  class PromiseWorker {
   constructor(worker) { this.worker = worker; }
-  async postMessage(value) { const kind = this.worker.kind; posts[kind]++; return kind === 'css' ? { css: value.css } : { dom: value.component.html }; }
+  async postMessage(value) { const kind = this.worker.kind; posts[kind]++; if (${JSON.stringify(failingWorker)} === 'transient' && kind === 'rollup' && posts.rollup === 1) return {error:'Temporary module download failure'}; return kind === 'css' ? { css: value.css } : { dom: value.component.html }; }
  }
  const _ = { isEmpty: value => !value || Object.keys(value).length === 0 };
  const render = () => { throw new Error('Unexpected SSR in transport test'); };
@@ -49,4 +49,12 @@ test('a worker startup failure is a compile error and does not prevent the other
  const result = await module.html({ component: { html: '<h1>Heading</h1>' }, buildStatic: false })
  assert.equal(result.error, 'rollup worker unavailable')
  assert.deepEqual(await module.css('h1 {}'), { css: 'h1 {}' })
+})
+
+test('a temporary compiler failure is reported but cannot poison later retries with identical input', async()=>{
+ const module=await processors('transient'),options={component:{html:'<h1>Retained content</h1>'},buildStatic:false}
+ assert.equal((await module.html(options)).error,'Temporary module download failure')
+ assert.deepEqual(await module.html(options),{js:'<h1>Retained content</h1>'})
+ assert.equal(module.posts.rollup,2)
+ await module.html(options);assert.equal(module.posts.rollup,2,'Successful retries still populate the preview cache')
 })

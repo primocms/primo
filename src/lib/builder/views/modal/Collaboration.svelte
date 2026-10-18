@@ -10,6 +10,7 @@
 	import { Collaborators, SiteRoleAssignments, Users, type Sites } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
 	import Icon from '@iconify/svelte'
+	import Spinner from '../../ui/Spinner.svelte'
 	import { Loader } from 'lucide-svelte'
 	import { nanoid } from 'nanoid'
 	import { track_collaborator_added, track_operation_error, categorize_error } from '$lib/analytics'
@@ -291,7 +292,7 @@
 				{#if instance.smtp_enabled}
 					<button type="submit" value="email" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
 						{#if sending}
-							<Icon icon="eos-icons:three-dots-loading" />
+							<Spinner />
 						{:else}
 							Send invite
 						{/if}
@@ -300,7 +301,7 @@
 				{/if}
 				<button type="submit" value="link" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
 					{#if generating}
-						<Icon icon="eos-icons:three-dots-loading" />
+						<Spinner />
 					{:else}
 						Generate link
 					{/if}
