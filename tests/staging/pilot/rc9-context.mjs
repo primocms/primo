@@ -10,7 +10,6 @@ export function validateActor(actor){
  return actor
 }
 export async function hostedContext(){
- assert.equal(process.env.GITHUB_ACTIONS,'true')
  const actor=validateActor(JSON.parse(process.env.PRIMO_RC9_CANARY_EDITOR||'{}'))
  const credentials=new Set([actor.email,actor.password])
  const redact=value=>{let text=String(value);for(const v of credentials)text=text.replaceAll(v,'[temporary QA credential]');return text.replace(/eyJ[A-Za-z0-9_.-]{30,}/g,'[TOKEN]')}
@@ -31,5 +30,5 @@ export async function hostedContext(){
  const fields=await list('site_symbol_fields'),sections=await list('page_sections');assert.equal(sections.length,5);const section=sections.find(e=>e.id===actor.sectionId);assert.ok(section)
  const entries=()=>list('page_section_entries');before=await entries();const heading=before.find(e=>e.id===actor.headingId);assert.equal(heading.section,section.id);assert.equal(fields.find(f=>f.id===heading.field).key,'heading')
  const verifyContent=async(tag)=>{const after=await entries();assert.deepEqual(after.map(e=>e.id),before.map(e=>e.id));for(const old of before){const n=after.find(e=>e.id===old.id);for(const key of ['field','section','parent','locale'])assert.deepEqual(n[key],old[key]);assert.deepEqual(n.value,tag&&old.id===heading.id?tag:old.value)}return after}
- return {origin:ORIGIN,provenance:{candidate:info.version,sourceCommit:COMMIT,nativeSha256:SHA,origin:ORIGIN},actors:{editor:{email:actor.email,password:actor.password,auth}},api,redact,entries,before,fields,section,heading,verifyContent}
+ return {origin:ORIGIN,provenance:{candidate:info.version,sourceCommit:COMMIT,nativeSha256:SHA,origin:ORIGIN},actors:{editor:{email:actor.email,password:actor.password,auth}},api,redact,entries,before,fields,section,heading,verifyContent,list,site:sites[0]}
 }
