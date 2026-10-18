@@ -435,3 +435,12 @@ test('a decorative loading spinner does not duplicate its parent status announce
   assert.deepEqual(f.errors,[])
  } finally {await f.close()}
 })
+
+
+test('the error view remains visible when the router has no error message', async () => {
+ const f=await fixture(`<script>import ErrorView from ${component('src/routes/+error.svelte')};</script><ErrorView />`)
+ try {
+  assert.equal(await f.page.getByRole('alert').innerText(),'Something went wrong. Reload and try again.')
+  assert.deepEqual(f.errors,[])
+ } finally {await f.close()}
+})
