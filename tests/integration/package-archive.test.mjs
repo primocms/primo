@@ -3,7 +3,14 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
-import {archiveFiles,archiveFile} from '../staging/rc8/archive.mjs'
+import {archiveFiles,archiveFile,archiveEntries} from '../staging/rc8/archive.mjs'
+
+test('archive membership is identical for GNU and Windows native tar line endings',()=>{
+ const entries=['package/','package/dist/add.js','package/a file.json']
+ assert.deepEqual(archiveEntries(entries.join('\n')+'\n'),entries.slice(1))
+ assert.deepEqual(archiveEntries(entries.join('\r\n')+'\r\n'),entries.slice(1))
+ assert.deepEqual(archiveEntries(''),[])
+})
 
 test('exact-package verification can list and extract a real archive under drive-like and spaced paths',async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-archive-'))
