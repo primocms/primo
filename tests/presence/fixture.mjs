@@ -9,6 +9,7 @@ import {promisify} from 'node:util'
 import {createRequire} from 'node:module'
 import {setTimeout as delay} from 'node:timers/promises'
 import {lookup} from 'node:dns/promises'
+import {createAuthWindow,authWindowMs} from './auth-window.mjs'
 export {assert,fs,path,delay}
 const exec=promisify(execFile),require=createRequire(import.meta.url)
 export async function fixture(t) {
@@ -25,9 +26,12 @@ export async function fixture(t) {
  const origin='http://'+hostname+':'+port,env={...process.env,HOME:root,USERPROFILE:root,PRIMO_DEV_MODE:'0',PRIMO_ENABLE_USAGE_STATS:'false',PRIMO_AUTHOR_MODE:'both',PRIMO_SUPERUSER_EMAIL:'operator@presence.example.test',PRIMO_SUPERUSER_PASSWORD:password,PRIMO_USER_EMAIL:'',PRIMO_USER_PASSWORD:''}
  child=spawn(binary,['serve','--http=127.0.0.1:'+port,'--dir='+path.join(root,'pb_data')],{env,stdio:['ignore','pipe','pipe']});child.stdout.on('data',b=>logs+=b);child.stderr.on('data',b=>logs+=b)
  let ready=false;for(let n=0;n<250;n++){try{if((await fetch(origin+'/api/health')).ok){ready=true;break}}catch{}if(child.exitCode!==null)break;await delay(100)}assert.ok(ready,'Disposable production-mode server did not start')
- const api=async(route,{method='GET',body,token}={})=>{assert.ok(route.startsWith('/')&&!route.startsWith('//'));const response=await fetch(origin+route,{method,redirect:'error',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body)});assert.ok(response.ok,method+' '+route.split('?')[0]+' HTTP '+response.status);return response.status===204?null:response.json()}
- const login=async(email,userPassword,superuser=false)=>{await delay(1700);const auth=await api('/api/collections/'+(superuser?'_superusers':'users')+'/auth-with-password',{method:'POST',body:{identity:email,password:userPassword}});secrets.push(auth.token,userPassword);return auth}
+ let authWindow
+ const api=async(route,{method='GET',body,token}={})=>{assert.ok(route.startsWith('/')&&!route.startsWith('//'));const response=await fetch(origin+route,{method,redirect:'error',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body)});if(/\/auth-(?:with-password|refresh)(?:\?|$)/.test(route))authWindow?.mark();assert.ok(response.ok,method+' '+route.split('?')[0]+' HTTP '+response.status);return response.status===204?null:response.json()}
+ const login=async(email,userPassword,superuser=false)=>{if(authWindow)await authWindow.wait();const auth=await api('/api/collections/'+(superuser?'_superusers':'users')+'/auth-with-password',{method:'POST',body:{identity:email,password:userPassword}});secrets.push(auth.token,userPassword);return auth}
  const admin=await login('operator@presence.example.test',password,true)
+ const authLimits=(await api('/api/settings',{token:admin.token})).rateLimits
+ authWindow=createAuthWindow({windowMs:authWindowMs(authLimits)});authWindow.mark()
  const info=await api('/api/primo/info');assert.equal(info.version,version);assert.equal(info.dev_mode,false);assert.equal(info.smtp_enabled,false);assert.equal((await fetch(origin+'/api/primo/dev-auth',{method:'POST'})).status,404)
  const create=(name,body)=>api('/api/collections/'+name+'/records',{method:'POST',body,token:admin.token})
  const group=await create('site_groups',{name:'Disposable browser checks',index:0}),site=await create('sites',{name:'Presence QA',host:new URL(origin).host,group:group.id}),foreign=await create('sites',{name:'Foreign site',host:'foreign.presence.example.test',group:group.id})
@@ -55,6 +59,6 @@ export async function fixture(t) {
  const fields=await list('site_symbol_fields'),sections=(await list('page_sections')).sort((a,b)=>a.index-b.index),entries=()=>list('page_section_entries')
  assert.equal(sections.length,5);const section=sections[0],before=await entries(),heading=before.find(e=>e.section===section.id&&e.field===fields.find(f=>f.key==='heading').id)
  const verifyContent=async(expectedHeading=heading.value)=>{const after=await entries();assert.deepEqual(after.map(e=>e.id),before.map(e=>e.id));for(const old of before){const now=after.find(e=>e.id===old.id);for(const key of ['field','section','parent','locale','value'])assert.deepEqual(now[key],old.id===heading.id&&key==='value'?expectedHeading:old[key])}return after}
- const provenance={sourceCommit:process.env.PRIMO_CANDIDATE_SHA||null,version,binarySha256:createHash('sha256').update(await fs.readFile(binary)).digest('hex'),productionMode:true,cli:'0.3.0-rc.2',mcp:'0.1.11-rc.2',loopbackOnly:true,realUserData:false,emailSent:false,clientSitePublication:false}
- return {root,origin,api,actors,admin,site,foreign,fields,section,heading,before,entries,list,command,verifyContent,redact,provenance}
+ const provenance={sourceCommit:process.env.PRIMO_CANDIDATE_SHA||null,qaSourceCommit:process.env.PRIMO_QA_SOURCE_SHA||null,version,binarySha256:createHash('sha256').update(await fs.readFile(binary)).digest('hex'),productionMode:true,cli:'0.3.0-rc.2',mcp:'0.1.11-rc.2',loopbackOnly:true,realUserData:false,emailSent:false,clientSitePublication:false}
+ return {root,origin,api,actors,admin,site,foreign,fields,section,heading,before,entries,list,command,verifyContent,redact,provenance,authLimits,waitForAuthWindow:()=>authWindow.wait(),noteAuthResponse:()=>authWindow.mark()}
 }

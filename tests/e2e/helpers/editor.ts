@@ -157,3 +157,13 @@ export async function openBlockContentModal(page: Page, canvasElementLocator: Re
 // Use the real "Preview"/"Publish" toolbar button (see publishing.spec.ts's
 // publishViaUI) to exercise the actual flow instead of half-reimplementing
 // client-side compilation here.
+
+/** The real compiler permits two 10s download attempts, plus worker startup
+ * and module-graph compilation. A 10s assertion can expire before its recovery.
+ * Keep the bound on the actual editable element; never replace it with a sleep.
+ */
+export async function editableHeadline(page: Page) {
+ const headline = canvasFrame(page).locator('[data-testid="headline"]')
+ await expect(headline).toHaveAttribute('contenteditable', 'true', {timeout:45000})
+ return headline
+}
