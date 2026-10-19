@@ -63,6 +63,7 @@ jobs:
           git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
           node tests/timing/verify-product-tree.mjs
       - name: Recheck exact native production and managed startup contracts
+        shell: bash
         run: node --test tests/platform/*.test.mjs
       - name: Reverify original bytes
         run: node tests/staging/rc8/verify.mjs
