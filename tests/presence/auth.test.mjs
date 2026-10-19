@@ -1,34 +1,70 @@
 import {test} from 'node:test'
-import {chromium,firefox,webkit} from '@playwright/test'
-import {fixture,assert,fs} from './fixture.mjs'
+import {chromium,firefox,webkit,expect} from '@playwright/test'
+import {fixture,assert,fs,path} from './fixture.mjs'
+import {submitPassword} from './auth-window.mjs'
 const engine=process.env.PRIMO_BROWSER||'chromium'
-test(engine+' fresh production sign-in renders and opens only the assigned site',{timeout:120000},async t=>{
- const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true});t.after(()=>browser.close())
- const context=await browser.newContext(),page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(c.redact(error.message)))
- let canceledRefresh=0,recoveredRefresh=0
- const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors}
- t.after(()=>{Object.assign(report,{canceledAuthRefresh:canceledRefresh,recoveredAuthRefresh:recoveredRefresh});return fs.writeFile('auth-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
- await page.goto(c.origin+'/admin/auth')
- await page.locator('input[type=email]').fill(c.actors.editor.email)
- await page.locator('input[type=password]').fill(c.actors.editor.password)
- await page.route('**/api/collections/users/auth-refresh',async route=>{if(!canceledRefresh){canceledRefresh++;await route.abort('failed')}else await route.continue()})
- page.on('response',response=>{if(response.url().includes('/users/auth-refresh')&&response.ok())recoveredRefresh++})
- // Observe only whether a credential was cleared, never its secret value.
- await page.evaluate(()=>{
-  const set=Storage.prototype.setItem,remove=Storage.prototype.removeItem
-  Storage.prototype.setItem=function(key,value){if(this===localStorage&&key==='pocketbase_auth'&&!JSON.parse(value||'{}').token)sessionStorage.setItem('qa-session-cleared','true');return set.call(this,key,value)}
-  Storage.prototype.removeItem=function(key){if(this===localStorage&&key==='pocketbase_auth')sessionStorage.setItem('qa-session-cleared','true');return remove.call(this,key)}
- })
- // Dashboard data can render while the bounded verification retry is pending.
- // Wait for that actual server response before judging recovery.
- const refreshed=page.waitForResponse(response=>response.url().includes('/users/auth-refresh')&&response.ok())
- await page.locator('button[type=submit]').click()
- await (await refreshed).finished()
- await page.waitForURL('**/admin/dashboard/sites');await page.locator('.site-card-footer a').waitFor()
- assert.equal(await page.locator('.site-card').count(),1)
- assert.equal(canceledRefresh,1);assert.ok(recoveredRefresh>0,'A canceled refresh must recover using the valid stored session')
- assert.equal(await page.evaluate(()=>sessionStorage.getItem('qa-session-cleared')),null,'Transport failures must not discard a valid session')
- assert.deepEqual(errors,[]);await c.verifyContent()
- Object.assign(report,{status:'PASS_FRESH_SCOPED_SIGN_IN',freshPasswordSignIn:true,assignedSites:1,contentAndAllIdsRetained:true,canceledAuthRefresh:canceledRefresh,recoveredAuthRefresh:recoveredRefresh,validSessionPreserved:true})
+test(engine+' fresh production sign-in renders and opens only the assigned site',{timeout:240000},async t=>{
+ const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true})
+ const repeats=Number(process.env.PRIMO_AUTH_REPEATS||1);assert.ok(Number.isInteger(repeats)&&repeats>=1&&repeats<=5)
+ const errors=[],sessions=[]
+ const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,sessions}
+ try {
+  for(let attempt=0;attempt<=repeats;attempt++){
+   const burst=attempt===repeats,record={scenario:burst?'seeded auth burst and visible 429':'fresh sign-in '+(attempt+1),status:'FAIL',phase:'load form',authResponses:[],canceledAuthRefresh:0,recoveredAuthRefresh:0}
+   sessions.push(record)
+   const context=await browser.newContext();await context.tracing.start({screenshots:true,snapshots:true})
+   const page=await context.newPage();page.on('pageerror',error=>errors.push(c.redact(error.message)))
+   page.on('response',response=>{
+    const pathname=new URL(response.url()).pathname
+    if(!/\/users\/auth-(with-password|refresh)$/.test(pathname))return
+    c.noteAuthResponse();record.authResponses.push({path:pathname,status:response.status()})
+    if(pathname.endsWith('/auth-refresh')&&response.ok())record.recoveredAuthRefresh++
+   })
+   page.on('requestfailed',request=>{
+    const pathname=new URL(request.url()).pathname
+    if(/\/users\/auth-(with-password|refresh)$/.test(pathname))record.authResponses.push({path:pathname,transportFailure:true})
+   })
+   await page.route('**/api/collections/users/auth-refresh',async route=>{if(!record.canceledAuthRefresh){record.canceledAuthRefresh++;await route.abort('failed')}else await route.continue()})
+   try {
+    await page.goto(c.origin+'/admin/auth')
+    await page.evaluate(()=>{
+     const set=Storage.prototype.setItem,remove=Storage.prototype.removeItem
+     Storage.prototype.setItem=function(key,value){if(this===localStorage&&key==='pocketbase_auth'&&!JSON.parse(value||'{}').token)sessionStorage.setItem('qa-session-cleared','true');return set.call(this,key,value)}
+     Storage.prototype.removeItem=function(key){if(this===localStorage&&key==='pocketbase_auth')sessionStorage.setItem('qa-session-cleared','true');return remove.call(this,key)}
+    })
+    if(burst){
+     record.phase='exhaust fixture login budget';await c.waitForAuthWindow()
+     for(let n=0;n<2;n++)await c.api('/api/collections/users/auth-with-password',{method:'POST',body:{identity:c.actors.editor.email,password:c.actors.editor.password}})
+     record.phase='observe real password rejection before refresh'
+     await assert.rejects(submitPassword(page,c.actors.editor),/Password sign-in returned HTTP 429; refresh verification has not started/)
+     await page.getByRole('alert').waitFor();assert.equal(record.canceledAuthRefresh,0);assert.equal(record.recoveredAuthRefresh,0)
+     record.rateLimitRejectionVisible=true
+    }
+    record.phase='wait for seeded auth budget';record.authWindowWaitMs=await c.waitForAuthWindow()
+    if(burst)assert.ok(record.authWindowWaitMs>0,'The regression must exercise the real rate-limit quiet period')
+    record.phase='password response';await submitPassword(page,c.actors.editor)
+    record.phase='refresh recovery'
+    await expect.poll(()=>record.recoveredAuthRefresh,{timeout:10000}).toBeGreaterThan(0)
+    await page.waitForURL('**/admin/dashboard/sites');await page.locator('.site-card-footer a').waitFor()
+    assert.equal(await page.locator('.site-card').count(),1)
+    assert.equal(record.canceledAuthRefresh,1)
+    assert.equal(await page.evaluate(()=>sessionStorage.getItem('qa-session-cleared')),null,'Transport failures must not discard a valid session')
+    assert.deepEqual(errors,[]);await c.verifyContent()
+    record.status='PASS';record.phase='complete'
+    await context.tracing.stop()
+   }catch(error){
+    record.failure=c.redact(String(error.message))
+    record.ui=await page.evaluate(()=>({pathname:location.pathname,alert:document.querySelector('[role=alert]')?.textContent,submitDisabled:document.querySelector('button[type=submit]')?.disabled,formValid:document.querySelector('form')?.checkValidity(),sessionPresent:!!JSON.parse(localStorage.getItem('pocketbase_auth')||'{}').token})).catch(()=>null)
+    if(record.ui?.alert)record.ui.alert=c.redact(record.ui.alert)
+    const trace=path.resolve(process.env.PRIMO_AUTH_TRACE_DIR||'.','auth-'+engine+'-'+attempt+'-trace.zip')
+    await fs.mkdir(path.dirname(trace),{recursive:true});await context.tracing.stop({path:trace}).catch(()=>{})
+    throw error
+   }finally{await context.close()}
+  }
+  assert.deepEqual((await c.api('/api/settings',{token:c.admin.token})).rateLimits,c.authLimits,'Qualification must not weaken the production rate limits')
+  Object.assign(report,{status:'PASS_FRESH_SCOPED_SIGN_IN',freshPasswordSignIn:true,assignedSites:1,contentAndAllIdsRetained:true,canceledAuthRefresh:sessions.reduce((n,s)=>n+s.canceledAuthRefresh,0),recoveredAuthRefresh:sessions.reduce((n,s)=>n+s.recoveredAuthRefresh,0),validSessionPreserved:true,rateLimitPolicyUnchanged:true,seededBurstRecovered:true})
+ }finally{
+  await fs.writeFile('auth-'+engine+'.json',JSON.stringify(report,null,2)+'\n');await browser.close()
+ }
  console.log(report)
 })

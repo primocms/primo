@@ -4,12 +4,13 @@ import path from 'node:path'
 import {createHash} from 'node:crypto'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
+import {archiveFiles,archiveFile} from './archive.mjs'
 const manifest=JSON.parse(await fs.readFile('tests/staging/rc8-packages.json','utf8'))
 for(const [key,name] of [['cli','primo-cli'],['mcp','primo-mcp']]){
  const archive=path.resolve('release/vendor',manifest[key].archive)
  assert.equal(createHash('sha256').update(await fs.readFile(archive)).digest('hex'),manifest[key].sha256)
- const files=execFileSync('tar',['-tzf',archive],{encoding:'utf8'}).trim().split('\n').filter(f=>!f.endsWith('/'))
- for(const file of files){assert.ok(file.startsWith('package/'));const original=execFileSync('tar',['-xOzf',archive,file],{maxBuffer:16*1024*1024});assert.deepEqual(await fs.readFile(path.join('node_modules',name,file.slice(8))),original,key+'/'+file)}
+ const files=archiveFiles(archive)
+ for(const file of files){assert.ok(file.startsWith('package/'));const original=archiveFile(archive,file);assert.deepEqual(await fs.readFile(path.join('node_modules',name,file.slice(8))),original,key+'/'+file)}
  console.log('PASS every installed '+name+' file matches the exact tarball')
 }
 const fromCLI=createRequire(path.resolve('node_modules/primo-cli/package.json'))
