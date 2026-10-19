@@ -7,6 +7,7 @@ import { render } from 'svelte/server'
 import * as _ from 'lodash-es'
 import { chromium } from '@playwright/test'
 import { createModuleLoader } from '../../src/lib/compiler/workers/module_loader.js'
+import { createCompilerClient } from '../../src/lib/compiler/worker-client.js'
 
 // Run the real worker's virtual sources, transform and options through a local
 // bundler adapter. Only CDN resolution and worker transport are replaced: the
@@ -84,7 +85,9 @@ async function fixture({ transformSources = [] } = {}) {
 		await writeFile(file, source)
 		return import(file.href)
 	}
-	const html = Function('_', 'rollup_worker', 'postcss_worker', 'render', 'importSSR', processorSource + '\nreturn html;')(_, transport, {}, render, importSSR)
+	class LocalWorker { terminate() {} }
+	class LocalTransport { constructor() { return transport } }
+	const html = Function('_', 'createCompilerClient', 'rollupWorker', 'PromiseWorker', 'render', 'importSSR', processorSource + '\nreturn html;')(_, createCompilerClient, LocalWorker, LocalTransport, render, importSSR)
 	return { html, filenames, cleanup: () => rm(temp, { recursive: true, force: true }) }
 }
 

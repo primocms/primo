@@ -20,7 +20,7 @@ test('native production validation supports page create/update and exact CLI pub
  let ready=false;for(let i=0;i<300;i++){try{if((await fetch(server+'/api/health')).ok){ready=true;break}}catch{}if(child.exitCode!==null)break;await delay(100)}assert.ok(ready,logs)
  let token
  const api=async(route,body,method=body===undefined?'GET':'POST')=>{const r=await fetch(server+route,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});assert.ok(r.ok,`${method} ${route}: ${r.status} ${await r.clone().text()}`);return r.status===204?null:r.json()}
- const info=await api('/api/primo/info');assert.equal(info.dev_mode,false);assert.equal(info.version,'v3.3.2-rc.10');assert.equal((await fetch(server+'/api/primo/dev-auth',{method:'POST'})).status,404)
+ const info=await api('/api/primo/info');assert.equal(info.dev_mode,false);assert.equal(info.version,'v3.3.2-rc.11');assert.equal((await fetch(server+'/api/primo/dev-auth',{method:'POST'})).status,404)
  token=(await api('/api/collections/users/auth-with-password',{identity:'admin@qa.example.test',password})).token
  const group=await api('/api/collections/site_groups/records',{name:'Production',index:0})
  const site=await api('/api/collections/sites/records',{name:'Production',group:group.id,host:`127.0.0.1:${port}`})

@@ -8,13 +8,14 @@ async function processors(failingWorker = '') {
  const source = await readFile(new URL('../../src/lib/compiler/processors.js', import.meta.url), 'utf8')
  const body = source.replace(/^import .*\n/gm, '')
  const mocks = `
+ import { createCompilerClient } from ${JSON.stringify(new URL('../../src/lib/compiler/worker-client.js', import.meta.url).href)};
  const started = { css: 0, rollup: 0 };
  const posts = { css: 0, rollup: 0 };
  class postCSSWorker { constructor() { started.css++; if (${JSON.stringify(failingWorker)} === 'css') throw new Error('css worker unavailable'); this.kind = 'css'; } }
- class rollupWorker { constructor() { started.rollup++; if (${JSON.stringify(failingWorker)} === 'rollup') throw new Error('rollup worker unavailable'); this.kind = 'rollup'; } }
+ class rollupWorker { constructor() { started.rollup++; if (${JSON.stringify(failingWorker)} === 'rollup') throw new Error('rollup worker unavailable'); this.kind = 'rollup'; } terminate() {} }
  class PromiseWorker {
   constructor(worker) { this.worker = worker; }
-  async postMessage(value) { const kind = this.worker.kind; posts[kind]++; if (${JSON.stringify(failingWorker)} === 'transient' && kind === 'rollup' && posts.rollup === 1) return {error:'Temporary module download failure'}; return kind === 'css' ? { css: value.css } : { dom: value.component.html }; }
+  async postMessage(value) { const kind = this.worker.kind; posts[kind]++; if (${JSON.stringify(failingWorker)} === 'engine' && kind === 'rollup' && started.rollup === 1) return {error:'InternalError: too much recursion',failureKind:'engine-recursion'}; if (${JSON.stringify(failingWorker)} === 'transient' && kind === 'rollup' && posts.rollup === 1) return {error:'Temporary module download failure'}; return kind === 'css' ? { css: value.css } : { dom: value.component.html }; }
  }
  const _ = { isEmpty: value => !value || Object.keys(value).length === 0 };
  const render = () => { throw new Error('Unexpected SSR in transport test'); };
@@ -57,4 +58,13 @@ test('a temporary compiler failure is reported but cannot poison later retries w
  assert.deepEqual(await module.html(options),{js:'<h1>Retained content</h1>'})
  assert.equal(module.posts.rollup,2)
  await module.html(options);assert.equal(module.posts.rollup,2,'Successful retries still populate the preview cache')
+})
+
+test('a recovered engine failure caches only the successful compilation', async () => {
+ const module = await processors('engine'), options = {component:{html:'<h1>Retained content</h1>'},buildStatic:false}
+ assert.deepEqual(await module.html(options), {js:'<h1>Retained content</h1>'})
+ assert.equal(module.started.rollup, 2)
+ assert.equal(module.posts.rollup, 2)
+ await module.html(options)
+ assert.equal(module.posts.rollup, 2)
 })

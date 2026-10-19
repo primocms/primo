@@ -71,7 +71,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.10 -X github.com/primocms/primo/internal.buildTime=2026-10-19T01:00:11Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.11 -X github.com/primocms/primo/internal.buildTime=2026-10-19T02:06:25Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
@@ -81,7 +81,7 @@ jobs:
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: rc10-${{ matrix.target }}
+          name: rc11-${{ matrix.target }}
           path: |
             primo_${{ matrix.target }}
             platform-result.json
@@ -117,7 +117,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc10-linux_amd64
+          name: rc11-linux_amd64
           path: frozen
       - name: Verify exact installed archives and tested native provenance
         run: |
@@ -132,6 +132,11 @@ jobs:
         run: echo '127.0.0.1 primo-preview.test primo-presence.test' | sudo tee -a /etc/hosts
       - name: Run the complete suite against the exact native package
         run: npx playwright test --timeout=90000 --reporter=list,json
+      - name: Repeat Firefox worker recovery and the original scrolling scenario
+        if: matrix.browser == 'firefox'
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: firefox-compiler-repeats.json
+        run: npx playwright test tests/e2e/compiler-lifecycle.spec.ts tests/e2e/page-creation.spec.ts --grep 'Firefox engine regexp|replaces one visible loading row' --repeat-each=10 --timeout=90000 --reporter=list,json
       - name: Run the actual packaged agent and client handoff
         if: ${{ !cancelled() }}
         run: node --test tests/staging/rc8/handoff.test.mjs
@@ -150,9 +155,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc10-exact-${{ matrix.browser }}
+          name: rc11-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
+            firefox-compiler-repeats.json
             webkit-runtime.json
             test-results
             /tmp/primo-e2e-server.log
@@ -181,7 +187,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc10-darwin_arm64
+          name: rc11-darwin_arm64
           path: frozen
       - name: Verify the exact Mac candidate and unchanged built CLI/MCP packages
         run: |
@@ -206,7 +212,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc10-native-safari
+          name: rc11-native-safari
           path: presence-safari.json
           if-no-files-found: error
 
@@ -231,7 +237,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc10-linux_amd64
+          name: rc11-linux_amd64
           path: frozen
       - uses: actions/download-artifact@v4
         with:
@@ -248,7 +254,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc10-copied-recovery
+          name: rc11-copied-recovery
           path: recovery-result.json
           if-no-files-found: warn
 
@@ -272,7 +278,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc10-linux_amd64
+          name: rc11-linux_amd64
           path: frozen
       - name: Verify the exact tested native artifact
         run: |
@@ -288,7 +294,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc10-framing-security
+          name: rc11-framing-security
           path: |
             framing-security-results.json
             tests/security/test-results/

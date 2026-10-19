@@ -3,12 +3,17 @@ import PromiseWorker from 'promise-worker'
 import rollupWorker from './workers/rollup.worker.js?worker'
 import postCSSWorker from './workers/postcss.worker.js?worker'
 import { render } from 'svelte/server'
+import { createCompilerClient } from './worker-client.js'
 
 // Authentication and dashboards register processors without compiling. Start
 // workers only when needed, so redirects do not create and immediately tear
 // down idle compiler processes during navigation.
 let postcss_worker
-let rollup_worker
+const compile = createCompilerClient(() => {
+	const worker = new rollupWorker()
+	const client = new PromiseWorker(worker)
+	return { postMessage: (value) => client.postMessage(value), terminate: () => worker.terminate() }
+})
 
 const COMPILED_COMPONENTS_CACHE = new Map()
 
@@ -62,8 +67,7 @@ export async function html({ component, head = { code: '', data: {} }, buildStat
 	let res
 	try {
 		const has_js = compile_page ? component.some((s) => !!s.js) : !!component.js
-		rollup_worker ||= new PromiseWorker(new rollupWorker())
-		res = await rollup_worker.postMessage({
+		res = await compile({
 			component,
 			head,
 			hydrated: buildStatic && has_js,
@@ -90,7 +94,7 @@ export async function html({ component, head = { code: '', data: {} }, buildStat
 		}
 		res = {}
 	} else if (res.error) {
-		console.error('Compilation error from rollup worker:', res.error)
+		console.error('Compilation error from rollup worker:', res.error, res.errorStack || '')
 		payload = {
 			error: escapeHtml(res.error)
 		}
