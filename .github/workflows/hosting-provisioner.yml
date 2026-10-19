@@ -1,0 +1,24 @@
+name: Hosting provisioner regressions
+on:
+  pull_request:
+    paths:
+      - 'hosting/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/hosting-provisioner.yml'
+permissions:
+  contents: read
+jobs:
+  hosting:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.26.9
+          cache: true
+      - run: go test -race ./hosting -count=1

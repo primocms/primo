@@ -7,6 +7,9 @@ name: E2E tests
 # library could land on main without anything having exercised it.
 on:
   pull_request:
+    paths-ignore:
+      - 'hosting/**'
+      - '.github/workflows/hosting-provisioner.yml'
   workflow_dispatch:
 
 # Only the newest commit on a PR is worth testing; cancel superseded runs.

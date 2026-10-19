@@ -503,6 +503,29 @@ func (p *FlyProvisioner) Step(ctx context.Context, j *Job, c *Credentials) error
 		}
 		j.State = "verify"
 	case "verify", "final_check":
+		if j.State == "final_check" {
+			// Updating a Machine is asynchronous: HTTP can still reach the old
+			// process after the update returns. Check the running environment
+			// before calling it ready, without returning any secret values.
+			if c.DomainToken == "" {
+				return errors.New("customer domain credential missing")
+			}
+			var loaded struct {
+				ExitCode int    `json:"exit_code"`
+				Stdout   string `json:"stdout"`
+			}
+			command := []string{"sh", "-c", `test -z "$PRIMO_USER_EMAIL$PRIMO_USER_PASSWORD$PRIMO_SUPERUSER_EMAIL$PRIMO_SUPERUSER_PASSWORD" && printf %s "$PRIMO_FLY_TOKEN" | sha256sum`}
+			if err := p.fly(ctx, "POST", path+"/machines/"+j.Machine+"/exec", map[string]any{"command": command, "timeout": 10}, &loaded); err != nil {
+				if errors.Is(err, apiStatus(409)) || errors.Is(err, apiStatus(423)) || errors.Is(err, apiStatus(503)) {
+					return errNotReady
+				}
+				return err
+			}
+			fields := strings.Fields(loaded.Stdout)
+			if loaded.ExitCode != 0 || len(fields) != 2 || fields[0] != hashToken(c.DomainToken) {
+				return errNotReady
+			}
+		}
 		for _, base := range []string{"https://" + host, "https://provision-check." + host} {
 			if err := request(ctx, p.Client, "GET", base+"/api/health", "", nil, nil); err != nil {
 				return err
