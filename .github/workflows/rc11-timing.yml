@@ -216,3 +216,91 @@ jobs:
           path: presence-safari.json
           if-no-files-found: error
 
+  copied-recovery:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PRIMO_CANDIDATE_SHA: 5642f312bd29b83dea7ed3c86c68581ad52c5db3
+      PRIMO_QA_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PRIMO_PREVIOUS_BINARY: ${{ github.workspace }}/previous/primo_linux_amd64
+      PRIMO_RECOVERY_RESULT: ${{ github.workspace }}/recovery-result.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc11-linux_amd64
+          path: frozen
+          run-id: 39188774819
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc7-linux_amd64
+          path: previous
+          run-id: 38962963117
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify candidate provenance and rehearse production copied recovery
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY" "$PRIMO_PREVIOUS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node --test tests/staging/rc8/recovery.test.mjs
+          node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: timing-copied-recovery
+          path: recovery-result.json
+          if-no-files-found: warn
+
+  adversarial-framing:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PRIMO_CANDIDATE_SHA: 5642f312bd29b83dea7ed3c86c68581ad52c5db3
+      PRIMO_QA_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PLAYWRIGHT_JSON_OUTPUT_FILE: framing-security-results.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc11-linux_amd64
+          path: frozen
+          run-id: 39188774819
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify the exact tested native artifact
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps chromium
+      - name: Prove allowed rendering and cross-origin refusal in an isolated process
+        run: npx playwright test --config tests/security/playwright.config.ts --reporter=list,json
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: timing-framing-security
+          path: |
+            framing-security-results.json
+            tests/security/test-results/
