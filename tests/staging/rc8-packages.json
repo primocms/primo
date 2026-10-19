@@ -1,8 +1,8 @@
 {
   "cms": {
-    "version": "v3.3.2-rc.9",
-    "previousFrozenSource": "af0f4aa73cb55e3565b53792bab91916d99a41b5",
-    "buildTime": "2026-10-17T05:30:07Z",
+    "version": "v3.3.2-rc.10",
+    "previousFrozenSource": "15085e33013584ba47c581052997e93e7131a37d",
+    "buildTime": "2026-10-19T01:00:11Z",
     "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
   },
   "cli": {

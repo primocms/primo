@@ -30,4 +30,4 @@ const binary=process.env.PRIMO_TEST_CMS_BINARY
 assert.ok(binary)
 assert.equal(createHash('sha256').update(await fs.readFile(binary)).digest('hex'),provenance.sha256)
 assert.ok(execFileSync(binary,['--version'],{encoding:'utf8'}).includes(manifest.cms.version))
-console.log('PASS exact RC.9 native executable hash, source provenance, production checks and version')
+console.log('PASS exact RC.10 native executable hash, source provenance, production checks and version')

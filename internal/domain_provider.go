@@ -55,6 +55,8 @@ func getDomainProvider() DomainProvider {
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("PRIMO_DOMAIN_PROVIDER"))) {
 	case "railway":
 		return newRailwayProvider()
+	case "fly":
+		return newFlyProvider()
 	default:
 		return manualProvider{}
 	}
