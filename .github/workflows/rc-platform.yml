@@ -71,7 +71,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.9 -X github.com/primocms/primo/internal.buildTime=2026-10-17T05:30:07Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.10 -X github.com/primocms/primo/internal.buildTime=2026-10-19T01:00:11Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
@@ -81,11 +81,12 @@ jobs:
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: rc9-${{ matrix.target }}
+          name: rc10-${{ matrix.target }}
           path: |
             primo_${{ matrix.target }}
             platform-result.json
             production-result.json
+            hosted-native-result.json
           if-no-files-found: error
 
   exact-browser:
@@ -116,7 +117,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc9-linux_amd64
+          name: rc10-linux_amd64
           path: frozen
       - name: Verify exact installed archives and tested native provenance
         run: |
@@ -149,7 +150,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc9-exact-${{ matrix.browser }}
+          name: rc10-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
             webkit-runtime.json
@@ -180,7 +181,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc9-darwin_arm64
+          name: rc10-darwin_arm64
           path: frozen
       - name: Verify the exact Mac candidate and unchanged built CLI/MCP packages
         run: |
@@ -205,7 +206,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc9-native-safari
+          name: rc10-native-safari
           path: presence-safari.json
           if-no-files-found: error
 
@@ -230,7 +231,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc9-linux_amd64
+          name: rc10-linux_amd64
           path: frozen
       - uses: actions/download-artifact@v4
         with:
@@ -247,7 +248,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc9-copied-recovery
+          name: rc10-copied-recovery
           path: recovery-result.json
           if-no-files-found: warn
 
@@ -271,7 +272,7 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc9-linux_amd64
+          name: rc10-linux_amd64
           path: frozen
       - name: Verify the exact tested native artifact
         run: |
@@ -287,7 +288,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc9-framing-security
+          name: rc10-framing-security
           path: |
             framing-security-results.json
             tests/security/test-results/
