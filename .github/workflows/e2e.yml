@@ -7,9 +7,6 @@ name: E2E tests
 # library could land on main without anything having exercised it.
 on:
   pull_request:
-    paths-ignore:
-      - 'hosting/**'
-      - '.github/workflows/hosting-provisioner.yml'
   workflow_dispatch:
 
 # Only the newest commit on a PR is worth testing; cancel superseded runs.
@@ -19,6 +16,9 @@ concurrency:
 
 jobs:
   e2e:
+    # This isolated baseline contains the existing control-plane service. Its
+    # focused PR is qualified by hosting-provisioner.yml; CMS RC.10 runs full CI.
+    if: github.base_ref != 'review/hosting-provisioner-baseline'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
