@@ -68,6 +68,22 @@ test('ordinary syntax and transport errors remain visible without automatic retr
  assert.equal(terminated, 0)
 })
 
+test('an in-flight success from a retired worker is replayed without abandoning its caller', async () => {
+ const old = [deferred(), deferred()]
+ let workers = 0, posts = 0, stopped = 0
+ const compile = createCompilerClient(() => {
+  const generation = ++workers
+  return {terminate() {stopped++}, postMessage(value) {return generation === 1 ? old[posts++].promise : Promise.resolve({dom:`fresh:${value}`})}}
+ })
+ const a = compile('a'), b = compile('b')
+ old[0].resolve(engineError)
+ assert.deepEqual(await a, {dom:'fresh:a'})
+ old[1].resolve({dom:'old:b'})
+ assert.deepEqual(await b, {dom:'fresh:b'})
+ assert.equal(workers, 2)
+ assert.equal(stopped, 1)
+})
+
 test('the actual Rollup worker classifies only the captured native error and retains its stack', async () => {
  const source = (await readFile(new URL('../../src/lib/compiler/workers/rollup.worker.js', import.meta.url), 'utf8')).replace(/^import .*\n/gm, '')
  const mocks = `
