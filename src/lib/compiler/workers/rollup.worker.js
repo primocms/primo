@@ -30,7 +30,9 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 	const final = {
 		ssr: '',
 		dom: '',
-		error: ''
+		error: '',
+		failureKind: '',
+		errorStack: ''
 	}
 
 	const head_validation_error = validateHeadCode(head?.code || '')
@@ -265,12 +267,16 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 	return final
 
 	function noteBuildError(error, id) {
-		const error_message = error instanceof Error ? error.message : String(error)
-		// Include plain strings as well as the Error object: browser traces and
-		// remote console collectors cannot always serialize worker Error handles.
-		console.error('Build error:', error_message, error?.stack || '', error?.id || id || '', error)
-
 		if (final.error) return
+		const error_message = error instanceof Error ? error.message : String(error)
+		if (error?.name === 'InternalError' && error_message === 'too much recursion') {
+			final.failureKind = 'engine-recursion'
+			final.errorStack = error.stack || ''
+		} else {
+			// Include plain strings as well as the Error object: browser traces and
+			// remote console collectors cannot always serialize worker Error handles.
+			console.error('Build error:', error_message, error?.stack || '', error?.id || id || '', error)
+		}
 		final.error = formatRollupError(error, id)
 	}
 }

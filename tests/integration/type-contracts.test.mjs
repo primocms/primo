@@ -117,6 +117,7 @@ test('page compilation without an explicit head supplies empty head props and re
 		}
 	}
 	const scope = {
+		createCompilerClient: (await import('../../src/lib/compiler/worker-client.js')).createCompilerClient,
 		PromiseWorker,
 		rollupWorker: class {},
 		postCSSWorker: class {},
