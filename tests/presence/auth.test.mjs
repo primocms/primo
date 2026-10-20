@@ -2,29 +2,36 @@ import {test} from 'node:test'
 import {chromium,firefox,webkit,expect} from '@playwright/test'
 import {fixture,assert,fs,path} from './fixture.mjs'
 import {submitPassword} from './auth-window.mjs'
-const engine=process.env.PRIMO_BROWSER||'chromium'
-test(engine+' fresh production sign-in renders and opens only the assigned site',{timeout:240000},async t=>{
+import {authPlan} from './auth-plan.mjs'
+const engine=process.env.PRIMO_BROWSER||'chromium',plan=authPlan()
+test(engine+' fresh production sign-in renders and opens only the assigned site',{timeout:plan.timeout},async t=>{
  const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true})
- const repeats=Number(process.env.PRIMO_AUTH_REPEATS||1);assert.ok(Number.isInteger(repeats)&&repeats>=1&&repeats<=5)
  const errors=[],sessions=[]
- const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,sessions}
+ const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),platform:process.platform,node:process.version,pageErrors:errors,sessions}
  try {
-  for(let attempt=0;attempt<=repeats;attempt++){
-   const burst=attempt===repeats,record={scenario:burst?'seeded auth burst and visible 429':'fresh sign-in '+(attempt+1),status:'FAIL',phase:'load form',authResponses:[],canceledAuthRefresh:0,recoveredAuthRefresh:0}
+  for(const [attempt,session] of plan.sessions.entries()){
+   const {burst,profile,scenario}=session,started=performance.now(),record={scenario,profile,status:'FAIL',phase:'load form',authResponses:[],canceledAuthRefresh:0,recoveredAuthRefresh:0}
    sessions.push(record)
    const context=await browser.newContext();await context.tracing.start({screenshots:true,snapshots:true})
    const page=await context.newPage();page.on('pageerror',error=>errors.push(c.redact(error.message)))
    page.on('response',response=>{
     const pathname=new URL(response.url()).pathname
     if(!/\/users\/auth-(with-password|refresh)$/.test(pathname))return
-    c.noteAuthResponse();record.authResponses.push({path:pathname,status:response.status()})
+    c.noteAuthResponse();record.authResponses.push({path:pathname,status:response.status(),elapsedMs:Math.round(performance.now()-started)})
     if(pathname.endsWith('/auth-refresh')&&response.ok())record.recoveredAuthRefresh++
    })
    page.on('requestfailed',request=>{
     const pathname=new URL(request.url()).pathname
-    if(/\/users\/auth-(with-password|refresh)$/.test(pathname))record.authResponses.push({path:pathname,transportFailure:true})
+    if(/\/users\/auth-(with-password|refresh)$/.test(pathname))record.authResponses.push({path:pathname,transportFailure:true,elapsedMs:Math.round(performance.now()-started)})
    })
-   await page.route('**/api/collections/users/auth-refresh',async route=>{if(!record.canceledAuthRefresh){record.canceledAuthRefresh++;await route.abort('failed')}else await route.continue()})
+   if(profile==='delayed-canceled'){
+    record.delayedPasswordRequests=0;record.delayedRefreshRequests=0
+    await page.route('**/api/collections/users/auth-with-password',async route=>{record.delayedPasswordRequests++;await new Promise(resolve=>setTimeout(resolve,250));await route.continue()})
+   }
+   if(profile!=='normal')await page.route('**/api/collections/users/auth-refresh',async route=>{
+    if(!record.canceledAuthRefresh){record.canceledAuthRefresh++;await route.abort('failed')}
+    else {if(profile==='delayed-canceled'){record.delayedRefreshRequests++;await new Promise(resolve=>setTimeout(resolve,500))};await route.continue()}
+   })
    try {
     await page.goto(c.origin+'/admin/auth')
     await page.evaluate(()=>{
@@ -47,12 +54,15 @@ test(engine+' fresh production sign-in renders and opens only the assigned site'
     await expect.poll(()=>record.recoveredAuthRefresh,{timeout:10000}).toBeGreaterThan(0)
     await page.waitForURL('**/admin/dashboard/sites');await page.locator('.site-card-footer a').waitFor()
     assert.equal(await page.locator('.site-card').count(),1)
-    assert.equal(record.canceledAuthRefresh,1)
+    assert.equal(record.canceledAuthRefresh,profile==='normal'?0:1)
+    if(profile==='delayed-canceled'){assert.equal(record.delayedPasswordRequests,1);assert.ok(record.delayedRefreshRequests>=1)}
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('qa-session-cleared')),null,'Transport failures must not discard a valid session')
     assert.deepEqual(errors,[]);await c.verifyContent()
-    record.status='PASS';record.phase='complete'
+    record.status='PASS';record.phase='complete';record.durationMs=Math.round(performance.now()-started)
+    console.log(`${engine} sign-in ${attempt+1}/${plan.sessions.length}: ${scenario} PASS (${record.durationMs}ms)`)
     await context.tracing.stop()
    }catch(error){
+    record.durationMs=Math.round(performance.now()-started)
     record.failure=c.redact(String(error.message))
     record.ui=await page.evaluate(()=>({pathname:location.pathname,alert:document.querySelector('[role=alert]')?.textContent,submitDisabled:document.querySelector('button[type=submit]')?.disabled,formValid:document.querySelector('form')?.checkValidity(),sessionPresent:!!JSON.parse(localStorage.getItem('pocketbase_auth')||'{}').token})).catch(()=>null)
     if(record.ui?.alert)record.ui.alert=c.redact(record.ui.alert)
