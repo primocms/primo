@@ -8,6 +8,7 @@ on:
       - 'tests/e2e/analytics.spec.ts'
       - 'tests/e2e/helpers/editor.ts'
       - 'tests/integration/auth-window.test.mjs'
+      - 'tests/integration/auth-plan.test.mjs'
 permissions:
   contents: read
   actions: read
@@ -304,3 +305,60 @@ jobs:
           path: |
             framing-security-results.json
             tests/security/test-results/
+
+  firefox-signin-stress:
+    needs: native
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux_amd64
+          - runner: macos-15
+            target: darwin_arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      PRIMO_CANDIDATE_SHA: 5642f312bd29b83dea7ed3c86c68581ad52c5db3
+      PRIMO_QA_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_${{ matrix.target }}
+      PRIMO_BROWSER: firefox
+      PRIMO_AUTH_REPEATS: 20
+      PRIMO_AUTH_STRESS: 1
+      PRIMO_PRESENCE_HOST: primo-presence.test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc11-${{ matrix.target }}
+          path: frozen
+          run-id: 39188774819
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify original sealed CMS and every installed CLI/MCP file
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+      - run: npx playwright install --with-deps firefox
+      - name: Resolve the disposable loopback hostname
+        run: echo '127.0.0.1 primo-presence.test' | sudo tee -a /etc/hosts
+      - name: Stress fresh production Firefox sessions with stage diagnostics
+        run: node --test tests/presence/auth.test.mjs
+      - name: Reverify unchanged packages after stress
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: timing-firefox-signin-stress-${{ matrix.target }}
+          path: |
+            auth-firefox.json
+            auth-firefox-*-trace.zip
+          if-no-files-found: error
