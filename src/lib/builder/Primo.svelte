@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, untrack, type Snippet } from 'svelte'
+	import { MediaQuery } from 'svelte/reactivity'
 	import * as _ from 'lodash-es'
 	import Icon, { loadIcons } from '@iconify/svelte'
 	import IconButton from './ui/IconButton.svelte'
@@ -55,6 +56,7 @@
 
 	let showing_sidebar = $state(true)
 	let mobile_sidebar_open = $state(false)
+	const mobile_layout = new MediaQuery('(max-width: 640px)')
 
 	$effect(() => {
 		const request = $sidebarReveal
@@ -65,11 +67,6 @@
 				if (window.matchMedia('(min-width: 641px)').matches) sidebar_pane?.resize(30)
 			})
 	})
-
-	function reset() {
-		showing_sidebar = true
-		// sidebar_pane?.resize(20)
-	}
 
 	// Preload icons
 	loadIcons([
@@ -255,17 +252,12 @@
 			class={mobile_sidebar_open ? 'editor-sidebar mobile-open' : 'editor-sidebar'}
 			bind:this={sidebar_pane}
 			defaultSize={20}
-			minSize={2}
-			onResize={(size) => {
-				if (size < 10) {
-					showing_sidebar = false
-					sidebar_pane?.resize(2)
-				} else {
-					showing_sidebar = true
-				}
-			}}
+			collapsible
+			collapsedSize={2}
+			minSize={10}
+			onResize={(size) => (showing_sidebar = size >= 10)}
 		>
-			{#if showing_sidebar || mobile_sidebar_open}
+			{#if showing_sidebar || (mobile_layout.current && mobile_sidebar_open)}
 				{#if page.params.page_type}
 					<PageType_Sidebar />
 				{:else}
@@ -275,7 +267,6 @@
 				<div class="expand">
 					<IconButton
 						onclick={() => {
-							reset()
 							sidebar_pane?.resize(20)
 						}}
 						icon="tabler:layout-sidebar-left-expand"
@@ -312,8 +303,6 @@
 		</Pane>
 	</PaneGroup>
 </div>
-
-<svelte:window onresize={reset} />
 
 <style lang="postcss">
 	.mobile-sidebar-bar {

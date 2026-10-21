@@ -329,6 +329,7 @@
 	}
 	.page-list {
 		min-height: 0;
+		grid-template-columns: minmax(0, 1fr);
 		padding: 4px;
 		border: 1px solid #343437;
 		border-radius: 7px;
@@ -377,6 +378,7 @@
 
 		> li {
 			position: relative;
+			min-width: 0;
 		}
 
 		.drop-target-gap {
