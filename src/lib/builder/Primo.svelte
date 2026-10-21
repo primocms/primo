@@ -1,25 +1,21 @@
 <script lang="ts">
-	import { onDestroy, untrack, type Snippet } from 'svelte'
+	import { untrack, type Snippet } from 'svelte'
 	import { MediaQuery } from 'svelte/reactivity'
-	import * as _ from 'lodash-es'
 	import Icon, { loadIcons } from '@iconify/svelte'
 	import IconButton from './ui/IconButton.svelte'
 	import Toolbar from './views/editor/Toolbar.svelte'
 	import { PressedKeys } from 'runed'
 	import { isModKeyPressed } from './utils/keyboard'
-	import { onMobile, mod_key_held, locale } from './stores/app/misc'
+	import { onMobile, mod_key_held } from './stores/app/misc'
 	import Page_Sidebar from './components/Sidebar/Page_Sidebar.svelte'
 	import PageType_Sidebar from './components/Sidebar/PageType_Sidebar.svelte'
 	import { sidebarReveal } from './stores/app/outline'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
-	import { site_html } from '$lib/builder/stores/app/page'
-	import { processCode } from '$lib/builder/utils'
-	import { createSiteHeadPreview } from '$lib/builder/site_head.js'
+	import PreviewHead from './components/PreviewHead.svelte'
 	import { page } from '$app/state'
 	import type { Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { site_context } from './stores/context'
-	import { useContent } from '$lib/Content.svelte'
 	import { fromStore } from 'svelte/store'
 	import { current_user } from '$lib/pocketbase/user'
 	import { read_only } from '$lib/pocketbase/author_mode'
@@ -142,40 +138,6 @@
 		}
 	}
 
-	// reset site html to avoid issues when navigating to new site
-	onDestroy(() => {
-		head_preview.cancel()
-		$site_html = null
-	})
-
-	const data = $derived(useContent(site, { target: 'cms' }))
-	const site_data = $derived(data && (data[$locale] ?? {}))
-	async function compile_component_head({ html, data }) {
-		const compiled = await processCode({
-			component: {
-				html: `<svelte:head>${html}</svelte:head>`,
-				css: '',
-				js: '',
-				data: data ?? {}
-			}
-		})
-		if (!compiled.error) {
-			return compiled.head
-		} else throw new Error(compiled.error)
-	}
-
-	const head_preview = createSiteHeadPreview({
-		compile: compile_component_head,
-		onResult: (head) => { $site_html = head; toast.dismiss('site-head-compile-error') },
-		onError: (error) => {
-			console.error('Site head compilation failed:', error)
-			toast.error('Site head could not be compiled. Reload to retry.', { id: 'site-head-compile-error' })
-		}
-	})
-	$effect(() => {
-		head_preview.update({ html: site.head, data: site_data })
-	})
-
 	// --- Browse mode safety net ---------------------------------------------
 	// Fields and controls are rendered read-only at the source in files mode.
 	// This capture-phase interceptor exists only to catch edit paths that slip
@@ -229,6 +191,8 @@
 		warn_read_only()
 	}
 </script>
+
+<PreviewHead {site} />
 
 <div class="editor-shell flex flex-col" {oninputcapture} {onkeydowncapture} {onbeforeinputcapture}>
 	<Toolbar>
@@ -296,7 +260,6 @@
 	</PaneGroup>
 </div>
 
-<svelte:window onpagehide={() => head_preview.cancel()} onpageshow={(event) => { if (event.persisted) head_preview.update({ html: site.head, data: site_data }) }} />
 
 <style lang="postcss">
 	.editor-shell {
