@@ -57,6 +57,11 @@ test('login continuation preserves a specific site and page', () => {
 	assert.equal(auth_destination(new URL(auth_url(url), url.origin)), url.pathname + url.search + url.hash)
 })
 
+test('browser sign-in returns to the pending CLI approval without losing its code', () => {
+	const url = new URL('/admin/cli-login?code=ABCD-1234-EF01-5678', requested.origin)
+	assert.equal(auth_destination(new URL(auth_url(url), url.origin)), url.pathname + url.search)
+})
+
 test('login without a continuation retains the default editor destination', () => {
 	assert.equal(auth_destination(new URL('/admin/auth', requested.origin)), '/admin/site')
 })
