@@ -5,6 +5,7 @@ export const Page = z.object({
 	name: z.string().nonempty(),
 	slug: z.string(),
 	compiled_html: z.string().or(z.file()).optional(),
+	compiled_html_hash: z.string().optional(),
 	page_type: z.string().nonempty(),
 	parent: z.string(),
 	site: z.string().nonempty(),

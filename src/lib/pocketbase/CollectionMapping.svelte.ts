@@ -51,8 +51,8 @@ const generateId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 15)
 // sites.preview must stay reactive: its filename is the dashboard thumbnail's
 // reload token, updated once after the published files have been generated.
 const PUBLISH_ARTIFACT_FIELDS: Record<string, string[]> = {
-	pages: ['compiled_html'],
-	site_symbols: ['compiled_js']
+	pages: ['compiled_html', 'compiled_html_hash'],
+	site_symbols: ['compiled_js', 'compiled_js_hash']
 }
 
 const ECHO_IGNORED_KEYS = ['updated', 'id', 'collectionId', 'collectionName']
