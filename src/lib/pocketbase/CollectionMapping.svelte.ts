@@ -56,11 +56,7 @@ const PUBLISH_ARTIFACT_FIELDS: Record<string, string[]> = {
 
 const ECHO_IGNORED_KEYS = ['updated', 'id', 'collectionId', 'collectionName']
 
-const isPublishArtifactEcho = (
-	collectionName: string,
-	before: Record<string, unknown> | undefined,
-	after: Record<string, unknown>
-): boolean => {
+const isPublishArtifactEcho = (collectionName: string, before: Record<string, unknown> | undefined, after: Record<string, unknown>): boolean => {
 	const artifactFields = PUBLISH_ARTIFACT_FIELDS[collectionName]
 	if (!artifactFields || !before) return false
 
@@ -109,7 +105,9 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 	}
 
 	const mapObject = (record: unknown): MappedObject<T, Options> => {
-		const object = model.parse(record)
+		let object = model.parse(record)
+		const index = manager.entry_reordering.indices.get(object.id)
+		if (index !== undefined) object = { ...object, index }
 		const links = Object.fromEntries(
 			Object.entries(options?.links ?? {}).map(([property, factory]) => [property, factory.bind({ ...object, collection: collectionMapping, values: () => ({ ...object }) })])
 		)
@@ -272,7 +270,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 		},
 		create: (values) => {
 			const id = values.id ?? generateId()
-			const data = { ...values, id }
+			const data = manager.entry_reordering.created(name, { ...values, id })
 			changes.set(id, { collection: name, operation: 'create', committed: false, data })
 			return mapObject(data)
 		},
@@ -316,6 +314,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			return mapObject(data)
 		},
 		delete: (id) => {
+			manager.entry_reordering.deleted(id)
 			const change = changes.get(id)
 			if (change?.operation === 'create' && !change.committed) {
 				changes.delete(id)

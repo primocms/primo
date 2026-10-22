@@ -173,8 +173,14 @@
 			}
 
 			SiteSymbols.update(symbol.id, { html, css, js })
-			await self.commit()
-			loading = false
+			try {
+				await self.commit()
+			} catch (error) {
+				console.error('Failed to save content', error)
+				return
+			} finally {
+				loading = false
+			}
 
 			header.button.onclick()
 		}

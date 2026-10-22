@@ -118,12 +118,18 @@
 				css,
 				js
 			})
-			await self.commit()
+			try {
+				await self.commit()
+			} catch (error) {
+				console.error('Failed to save content', error)
+				return
+			} finally {
+				loading = false
+			}
 			// Reset baselines after successful save
 			initial_code = { html, css, js }
 			initial_data = _.cloneDeep(component_data)
 			has_unsaved_changes = false
-			loading = false
 			header.button.onclick(block)
 		}
 	}

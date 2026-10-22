@@ -54,8 +54,7 @@ test.describe('Repeaters', () => {
 
 	// UI COVERAGE: every step in this test is driven through the real editor
 	// UI (create/edit/delete buttons, Save, reload) — no direct API writes.
-	// Reordering is intentionally NOT exercised here; see the backend-only
-	// test and the fixme below for why.
+	// Reordering is exercised through the UI in repeater-reordering.spec.ts.
 	test('UI: create, edit, delete, and re-edit preserve correct item identity', async ({ page, request }) => {
 		const { token } = await devAuth(request)
 		await loginAsDeveloper(page, ids.siteId)
@@ -76,10 +75,7 @@ test.describe('Repeaters', () => {
 		// explicit Save, and the dialog must be reopened for the next step.
 		async function saveAndReopen() {
 			const responsePromise = page
-				.waitForResponse(
-					(res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET',
-					{ timeout: 5000 }
-				)
+				.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records') && res.request().method() !== 'GET', { timeout: 5000 })
 				.catch(() => null) // a no-op save may not fire a matching request
 			await dialog.getByRole('button', { name: 'Save' }).click()
 			await responsePromise
@@ -173,21 +169,9 @@ test.describe('Repeaters', () => {
 		expect(itemTexts.length).toBe(2)
 	})
 
-	// BACKEND-ONLY COVERAGE — explicitly not UI coverage. There is currently
-	// no way to reorder repeater items through the editor UI at all: the
-	// drag-and-drop handling in RepeaterFieldItem.svelte's onMount
-	// (draggable()/dropTargetForElements() from
-	// @atlaskit/pragmatic-drag-and-drop) is entirely commented out, and
-	// RepeaterField.svelte never wires up any alternative (e.g. move
-	// up/down buttons). This test exercises reordering by writing directly
-	// to page_section_entries.index via the API, bypassing the (unavailable)
-	// UI entirely, to verify that the persistence-layer identity model
-	// (Content.svelte.ts's resolveEntries pairing subfields to their parent
-	// by relation + index, not array position) correctly keeps content
-	// bound to the right item across a reorder. It intentionally does NOT
-	// claim to cover the UI drag interaction — see the fixme below for that
-	// gap.
-	test('backend: reordering via direct index update preserves item identity (no UI drag-reorder exists to test)', async ({ request }) => {
+	// Storage-only regression coverage. Real drag/menu/save coverage lives in
+	// repeater-reordering.spec.ts.
+	test('backend: reordering via direct index update preserves item identity', async ({ request }) => {
 		const { token } = await devAuth(request)
 		// Independent fixture site (not the describe-level `ids`) so this
 		// test's item set can never collide with items left behind by the
@@ -254,13 +238,4 @@ test.describe('Repeaters', () => {
 		expect(items.find((i) => i.id === alphaId)?.description).toBe('First created item')
 		expect(items.find((i) => i.id === bravoId)?.description).toBe('Second created item')
 	})
-
-	// Documents the UI coverage gap explicitly (rather than leaving it only
-	// as a comment) so it shows up in the test report as a real, tracked
-	// item rather than silently missing coverage. Skipped, not failing: this
-	// is a missing feature, not a regression to chase.
-	test.fixme(
-		'UI: drag-and-drop reorder of repeater items (NOT IMPLEMENTED — RepeaterFieldItem.svelte drag handlers are commented out, no alternative reorder control exists)',
-		async () => {}
-	)
 })
