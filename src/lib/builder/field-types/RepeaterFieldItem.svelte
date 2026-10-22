@@ -261,7 +261,7 @@
 							{entries}
 							level={level + 1}
 							minimal={true}
-							onchange={(values) => onchange({ [field.key ?? '']: { [index]: { value: null, subValues: values } } })}
+							onchange={(values) => onchange(Object.keys(values).length ? { [field.key ?? '']: { [index]: { value: null, subValues: values } } } : {})}
 							{ondelete}
 						/>
 					</div>

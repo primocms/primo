@@ -133,17 +133,20 @@ test('nested drag stays within its parent list and Browse mode removes movement 
 		expect(response.ok(), await response.text()).toBe(true)
 		return (await response.json()).id as string
 	}
-	const nestedField = await create('site_symbol_fields', { symbol: site.symbolId, parent: site.fieldIds.items, key: 'nested', label: 'Subitems', type: 'repeater', index: 2 })
+	const groupField = await create('site_symbol_fields', { symbol: site.symbolId, parent: site.fieldIds.items, key: 'details', label: 'Details', type: 'group', index: 2 })
+	const nestedField = await create('site_symbol_fields', { symbol: site.symbolId, parent: groupField, key: 'nested', label: 'Subitems', type: 'repeater', index: 2 })
 	const nestedName = await create('site_symbol_fields', { symbol: site.symbolId, parent: nestedField, key: 'subname', label: 'Subname', type: 'text', index: 0 })
 	const parents: string[] = []
+	const groups: string[] = []
 	const children: string[][] = []
 	for (let index = 0; index < 2; index++) {
-		const parent = await create('page_section_entries', { section: site.sectionId, field: site.fieldIds.items, locale: 'en', index })
+		const parent = await create('page_section_entries', { section: site.sectionId, field: site.fieldIds.items, locale: 'en', index, value: { metadata: `Parent ${index + 1}` } })
 		parents.push(parent)
 		await create('page_section_entries', { section: site.sectionId, field: site.fieldIds.name, locale: 'en', parent, index: 0, value: `Parent ${index + 1}` })
+		groups[index] = await create('page_section_entries', { section: site.sectionId, field: groupField, parent, locale: 'en', index: 0, value: { metadata: `Group ${index + 1}` } })
 		children[index] = []
 		for (let childIndex = 0; childIndex < 2; childIndex++) {
-			const child = await create('page_section_entries', { section: site.sectionId, field: nestedField, parent, locale: 'en', index: childIndex })
+			const child = await create('page_section_entries', { section: site.sectionId, field: nestedField, parent: groups[index], locale: 'en', index: childIndex })
 			children[index].push(child)
 			await create('page_section_entries', { section: site.sectionId, field: nestedName, parent: child, locale: 'en', index: 0, value: `Child ${index + 1}.${childIndex + 1}` })
 		}
@@ -166,15 +169,19 @@ test('nested drag stays within its parent list and Browse mode removes movement 
 	await expect(dialog).toBeHidden()
 	const response = await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, { headers, params: { filter: `section = "${site.sectionId}"`, perPage: 200 } })
 	const entries = (await response.json()).items as any[]
+	for (let index = 0; index < parents.length; index++) {
+		expect(entries.find((entry) => entry.id === parents[index]).value).toEqual({ metadata: `Parent ${index + 1}` })
+		expect(entries.find((entry) => entry.id === groups[index]).value).toEqual({ metadata: `Group ${index + 1}` })
+	}
 	expect(
 		entries
-			.filter((entry) => entry.field === nestedField && entry.parent === parents[0])
+			.filter((entry) => entry.field === nestedField && entry.parent === groups[0])
 			.sort((a, b) => a.index - b.index)
 			.map((entry) => entry.id)
 	).toEqual([children[0][1], children[0][0]])
 	expect(
 		entries
-			.filter((entry) => entry.field === nestedField && entry.parent === parents[1])
+			.filter((entry) => entry.field === nestedField && entry.parent === groups[1])
 			.sort((a, b) => a.index - b.index)
 			.map((entry) => entry.id)
 	).toEqual(children[1])
