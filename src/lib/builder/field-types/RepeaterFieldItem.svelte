@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte'
-	import * as _ from 'lodash-es'
-	import { onMount } from 'svelte'
+	import { createEventDispatcher, tick } from 'svelte'
+	import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine'
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js'
 	import Icon from '@iconify/svelte'
 	import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
@@ -32,8 +32,11 @@
 		level,
 		is_visible,
 		autofocus,
-		hovering,
-		hover_position,
+		position,
+		count,
+		scope_key,
+		onmove,
+		onmove_position,
 		onchange,
 		ondelete
 	}: {
@@ -47,8 +50,11 @@
 		level: number
 		is_visible: boolean
 		autofocus: boolean
-		hovering: boolean
-		hover_position: 'top' | 'bottom'
+		position: number
+		count: number
+		scope_key: string
+		onmove: (moved_id: string, target_id: string, edge: 'top' | 'bottom') => void
+		onmove_position: (position: number) => void
 		onchange: FieldValueHandler
 		ondelete: (entry_id: string) => void
 	} = $props()
@@ -86,51 +92,62 @@
 		}
 	}
 
-	// let drag_handle_element = $state()
-	let element = $state()
+	let element = $state<HTMLDivElement>()
+	let drag_handle_element = $state<HTMLButtonElement>()
+	let header_element = $state<HTMLDivElement>()
+	let hover_position = $state<'top' | 'bottom' | null>(null)
+	let dragging = $state(false)
+	let menu_open = $state(false)
 
-	// onMount(async () => {
-	// 	draggable({
-	// 		element,
-	// 		dragHandle: drag_handle_element,
-	// 		getInitialData: () => ({})
-	// 	})
-	// 	dropTargetForElements({
-	// 		element,
-	// 		getData({ input, element }) {
-	// 			return attachClosestEdge(
-	// 				{},
-	// 				{
-	// 					element,
-	// 					input,
-	// 					allowedEdges: ['top', 'bottom']
-	// 				}
-	// 			)
-	// 		},
-	// 		onDrag({ self, source }) {
-	// 			dispatch('hover', extractClosestEdge(self.data))
-	// 		},
-	// 		onDragLeave() {
-	// 			dispatch('hover', null)
-	// 		},
-	// 		onDrop({ self, source }) {
-	// 			const item_dragged_over = self.data.item
-	// 			const item_being_dragged = source.data.item
-	// 			const closestEdgeOfTarget = extractClosestEdge(self.data)
-	// 			// if (item_dragged_over.index === 0) return // can't place above home
+	$effect(() => {
+		if ($read_only || !element || !drag_handle_element || !header_element) return
+		const row = element
+		const header = header_element
+		const cleanup = combine(
+			draggable({
+				element: row,
+				dragHandle: drag_handle_element,
+				getInitialData: () => ({ type: 'repeater-item', scope: scope_key, id: entry.id }),
+				onDragStart: () => {
+					dragging = true
+					menu_open = false
+				},
+				onDrop: () => {
+					dragging = false
+					hover_position = null
+				}
+			}),
+			dropTargetForElements({
+				element: row,
+				canDrop: ({ source }) => !$read_only && source.data.type === 'repeater-item' && source.data.scope === scope_key && source.data.id !== entry.id,
+				getData: ({ input }) => attachClosestEdge({ id: entry.id }, { element: header, input, allowedEdges: ['top', 'bottom'] }),
+				onDrag: ({ self }) => {
+					hover_position = extractClosestEdge(self.data) as 'top' | 'bottom' | null
+				},
+				onDragLeave: () => {
+					hover_position = null
+				},
+				onDrop: ({ self, source, location }) => {
+					const edge = extractClosestEdge(self.data)
+					hover_position = null
+					if (location.current.dropTargets[0]?.element === row && (edge === 'top' || edge === 'bottom')) onmove(source.data.id as string, entry.id, edge)
+				}
+			})
+		)
+		return () => {
+			cleanup()
+			hover_position = null
+			dragging = false
+			menu_open = false
+		}
+	})
 
-	// 			if (closestEdgeOfTarget === 'top') {
-	// 				// actions.rearrange(item_being_dragged, item_dragged_over.index)
-	// 				dispatch('move', { item: item_being_dragged, new_index: item_dragged_over.index })
-	// 			} else if (closestEdgeOfTarget === 'bottom') {
-	// 				dispatch('move', { item: item_being_dragged, new_index: item_dragged_over.index + 1 })
-	// 				// actions.rearrange(item_being_dragged, item_dragged_over.index + 1)
-	// 			}
-	// 			dispatch('hover', null)
-	// 		}
-	// 	})
-	// })
-	let singular_label = $derived(pluralize.singular(field.label))
+	async function move_to(position: number) {
+		onmove_position(position)
+		await tick()
+		drag_handle_element?.focus()
+	}
+	let singular_label = $derived(pluralize.singular(field.label || 'Items'))
 	const image_entry = $derived(get_image_entry(subfields))
 	const is_library_image = $derived(is_entity_of(entity, 'library_symbols'))
 	const image_upload = $derived(image_entry?.value?.upload ? (is_library_image ? LibraryUploads : SiteUploads).one(image_entry.value.upload) : null)
@@ -158,12 +175,14 @@
 <div
 	class="RepeaterFieldItem"
 	bind:this={element}
-	id="repeater-{field.key}-{index}"
-	class:hovering-above={hovering && hover_position === 'top'}
-	class:hovering-below={hovering && hover_position === 'bottom'}
+	id="repeater-{entry.id}"
+	data-entry-id={entry.id}
+	class:dragging
+	class:hovering-above={hover_position === 'top'}
+	class:hovering-below={hover_position === 'bottom'}
 >
 	<div class="repeater-item-container">
-		<div class="item-options">
+		<div class="item-options" bind:this={header_element}>
 			<button
 				class="title"
 				data-browse-allowed
@@ -197,10 +216,33 @@
 			</button>
 			{#if !$read_only}
 				<div class="primo-buttons">
-					<!-- disable for now -->
-					<!-- <button bind:this={drag_handle_element}>
-						<Icon icon="material-symbols:drag-handle" />
-					</button> -->
+					<DropdownMenu.Root bind:open={menu_open}>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<button
+									{...props}
+									bind:this={drag_handle_element}
+									class="repeater-move"
+									title="Rearrange {singular_label}"
+									aria-label="Rearrange {item_title || singular_label}"
+									onpointerdown={undefined}
+									onpointerup={undefined}
+									onclick={() => {
+										menu_open = !menu_open
+									}}
+								>
+									<Icon icon="material-symbols:drag-handle" />
+								</button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content class="z-[999999999] bg-[#171717] text-[#e4e4e7] border-[#292929]">
+							<DropdownMenu.Item disabled={position === 0} onSelect={() => move_to(position - 1)}>Move earlier</DropdownMenu.Item>
+							<DropdownMenu.Item disabled={position === count - 1} onSelect={() => move_to(position + 1)}>Move later</DropdownMenu.Item>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item disabled={position === 0} onSelect={() => move_to(0)}>Move to first</DropdownMenu.Item>
+							<DropdownMenu.Item disabled={position === count - 1} onSelect={() => move_to(count - 1)}>Move to last</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 					<button title="Delete {singular_label} item" onclick={() => dispatch('remove')}>
 						<Icon icon="ion:trash" />
 					</button>
@@ -219,7 +261,7 @@
 							{entries}
 							level={level + 1}
 							minimal={true}
-							onchange={(values) => onchange({ [field.key]: { [index]: { value: null, subValues: values } } })}
+							onchange={(values) => onchange(Object.keys(values).length ? { [field.key ?? '']: { [index]: { value: null, subValues: values } } } : {})}
 							{ondelete}
 						/>
 					</div>
@@ -230,6 +272,18 @@
 </div>
 
 <style lang="postcss">
+	.RepeaterFieldItem.dragging {
+		opacity: 0.5;
+	}
+	:global(.repeater-move) {
+		cursor: grab;
+		touch-action: manipulation;
+		padding: 0.25rem;
+	}
+	:global(.repeater-move:focus-visible) {
+		outline: 2px solid var(--primo-primary-color);
+		outline-offset: 2px;
+	}
 	.RepeaterFieldItem {
 		border-top: 1px solid transparent;
 		border-bottom: 1px solid transparent;

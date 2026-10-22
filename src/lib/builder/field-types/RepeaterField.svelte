@@ -1,6 +1,9 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte'
-	import { onDestroy } from 'svelte'
+	import { tick, untrack } from 'svelte'
+	import { locale } from '../stores/app/misc'
+	import { reorderRepeater, repeaterScope, orderKey } from './repeater-order'
+	import { repeaterAutoScroll } from './repeater-drag'
 	import RepeaterFieldItem from './RepeaterFieldItem.svelte'
 	import * as idb from 'idb-keyval'
 	import pluralize from 'pluralize'
@@ -17,7 +20,7 @@
 		fields,
 		entries,
 		onchange,
-		ondelete,
+		ondelete = () => {},
 		level,
 		parent
 	}: {
@@ -32,10 +35,11 @@
 		parent?: Entry
 	} = $props()
 
-	let repeater_entries = $derived(entries?.filter((r) => r.field === field.id && (parent ? r.parent === parent.id : !r.parent)).sort((a, b) => a.index - b.index))
+	let repeater_entries = $derived(entries?.filter((r) => r.field === field.id && r.locale === $locale && (parent ? r.parent === parent.id : !r.parent)).sort((a, b) => a.index - b.index))
 	let subfields = $derived(fields?.filter((f) => f.parent === field.id).sort((a, b) => a.index - b.index))
 
-	let repeater_item_just_created = $state<number | null>(null) // to autofocus on creation
+	let repeater_item_just_created = $state<number | null>(null)
+	let created_id = $state<string | null>(null) // to autofocus on creation
 	function add_item() {
 		repeater_item_just_created = 0
 		for (const entry of repeater_entries) {
@@ -45,7 +49,7 @@
 		}
 
 		onchange({
-			[field.key]: {
+			[field.key ?? '']: {
 				[repeater_item_just_created]: {
 					value: null,
 					subValues: Object.fromEntries(
@@ -59,46 +63,105 @@
 				}
 			}
 		})
-
-		visibleRepeaters[`${field.key}-${repeater_item_just_created}`] = true
 	}
 
 	let visibleRepeaters = $state<Record<string, boolean>>({})
+	const scope = $derived(repeaterScope(entity, field, parent, $locale))
+	const scope_key = $derived(orderKey(scope))
+	const storage_key = $derived(`repeater-visible-v2:${scope_key}`)
+	const save_error = $derived(entity.collection.manager.entry_reordering.errors.get(scope_key))
+	let retrying = $state(false)
+	let announcement = $state('')
 
-	idb.get(field.id).then((res) => {
-		if (res) {
-			visibleRepeaters = res
+	$effect(() => {
+		const key = storage_key
+		visibleRepeaters = {}
+		let disposed = false
+		const state = untrack(() => visibleRepeaters)
+		idb
+			.get<Record<string, boolean>>(key)
+			.then((saved) => {
+				if (!disposed && saved) {
+					// Toggles made before hydration win over the stored state.
+					visibleRepeaters = { ...saved, ...state }
+				}
+			})
+			.catch(() => {})
+		return () => {
+			disposed = true
 		}
 	})
 
-	onDestroy(() => {
-		// save visible repeaters
-		idb.set(field.id, { ...visibleRepeaters })
+	$effect(() => {
+		if (repeater_item_just_created === null) return
+		const item = repeater_entries.find((entry) => entry.index === repeater_item_just_created)
+		if (!item) return
+		created_id = item.id
+		visibleRepeaters[item.id] = true
+		repeater_item_just_created = null
 	})
 
-	// TODO: Handle these
-	let show_label = false
+	function persist_visibility() {
+		idb.set(storage_key, { ...visibleRepeaters }).catch(() => {})
+	}
 
-	let hover_index = $state(null)
-	let hover_position = $state(null)
+	async function move_item(moved_id: string, target_id: string, edge: 'top' | 'bottom') {
+		if ($read_only) return
+		if (!reorderRepeater(entity, field, parent, repeater_entries, moved_id, target_id, edge)) return
+		// Empty input signals the owning editor's usual Save/autosave path.
+		onchange({})
+		await tick()
+		const position = repeater_entries.findIndex((entry) => entry.id === moved_id)
+		announcement = `${pluralize.singular(field.label || 'Items')} moved to position ${position + 1} of ${repeater_entries.length}.`
+	}
+
+	let show_label = false
 </script>
 
-<div class="RepeaterField repeater-level-{level}">
+<div class="RepeaterField repeater-level-{level}" use:repeaterAutoScroll={scope_key}>
+	<span class="sr-only" role="status" aria-live="polite">{announcement}</span>
+	{#if save_error}
+		<div class="order-error">
+			<p role="alert">{save_error}</p>
+			{#if !save_error.includes('changed elsewhere') && !$read_only}
+				<button
+					disabled={retrying}
+					onclick={async () => {
+						retrying = true
+						try {
+							await entity.collection.manager.commit()
+						} catch {
+						} finally {
+							retrying = false
+						}
+					}}
+				>
+					Retry saving order
+				</button>
+			{/if}
+		</div>
+	{/if}
 	{#if show_label}
 		<p class="primo--field-label">{field.label}</p>
 	{/if}
 	<ul class="fields">
-		{#each repeater_entries as entry (entry.id)}
+		{#each repeater_entries as entry, position (entry.id)}
 			{@const index = entry.index}
-			{@const subfield_id = `${field.key}-${index}`}
-			{@const autofocus = index === repeater_item_just_created}
-			{@const hovering = hover_index === index}
+			{@const autofocus = entry.id === created_id}
 			<li>
 				<RepeaterFieldItem
 					{entity}
 					{field}
 					{entry}
 					{index}
+					{position}
+					count={repeater_entries.length}
+					{scope_key}
+					onmove={move_item}
+					onmove_position={(destination) => {
+						const target = repeater_entries[destination]
+						if (target) move_item(entry.id, target.id, destination < position ? 'top' : 'bottom')
+					}}
 					{fields}
 					{subfields}
 					{entries}
@@ -106,21 +169,18 @@
 					{autofocus}
 					{onchange}
 					{ondelete}
-					is_visible={visibleRepeaters[subfield_id]}
-					on:toggle={() => (visibleRepeaters[subfield_id] = !visibleRepeaters[subfield_id])}
+					is_visible={!!visibleRepeaters[entry.id]}
+					on:toggle={() => {
+						visibleRepeaters[entry.id] = !visibleRepeaters[entry.id]
+						persist_visibility()
+					}}
 					on:toggleall={() => {
-						const all_visible = repeater_entries.every((e) => visibleRepeaters[`${field.key}-${e.index}`])
+						const all_visible = repeater_entries.every((e) => visibleRepeaters[e.id])
 						repeater_entries.forEach((e) => {
-							visibleRepeaters[`${field.key}-${e.index}`] = !all_visible
+							visibleRepeaters[e.id] = !all_visible
 						})
+						persist_visibility()
 					}}
-					on:hover={({ detail }) => {
-						hover_index = index
-						hover_position = detail
-					}}
-					{hovering}
-					{hover_position}
-					on:move
 					on:remove={() => {
 						// Delete the repeater item entry
 						// PocketBase cascade deletion will automatically clean up all sub-entries
@@ -129,7 +189,8 @@
 						}
 
 						// Remove from visible repeaters tracking
-						delete visibleRepeaters[`${field.key}-${index}`]
+						delete visibleRepeaters[entry.id]
+						persist_visibility()
 					}}
 					on:keydown
 					on:add
@@ -140,12 +201,17 @@
 	{#if !$read_only}
 		<button class="field-button" onclick={add_item}>
 			<Icon icon="akar-icons:plus" />
-			<span>Create {pluralize.singular(field.label)}</span>
+			<span>Create {pluralize.singular(field.label || 'Items')}</span>
 		</button>
 	{/if}
 </div>
 
 <style lang="postcss">
+	.order-error {
+		color: #f6b1a2;
+		font-size: 0.8rem;
+		padding: 0.5rem;
+	}
 	.RepeaterField {
 		width: 100%;
 	}

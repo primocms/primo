@@ -84,7 +84,6 @@
 			if (onClose) onClose()
 		} catch (error) {
 			console.error('Error saving site:', error)
-			throw error
 		} finally {
 			disableSave = false
 		}

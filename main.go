@@ -86,6 +86,10 @@ func setup(pb *pocketbase.PocketBase) error {
 		return err
 	}
 
+	if err := internal.RegisterRepeaterOrderEndpoint(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterImportEndpoint(pb); err != nil {
 		return err
 	}

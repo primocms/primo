@@ -2,6 +2,7 @@ import type { ObjectWithId } from './Object'
 import { OrderedSvelteMap } from './OrderedSvelteMap'
 import { is_files_mode } from './author_mode'
 import type Client from 'pocketbase'
+import { createEntryReordering } from './entry-reordering.js'
 
 export type Change<T extends ObjectWithId> =
 	| { collection: string; operation: 'create'; committed: boolean; data: Omit<T, 'id'> }
@@ -31,6 +32,11 @@ export const createCollectionManager = (
 	const records = new OrderedSvelteMap<string, TrackedRecord | undefined | null>()
 	const lists = new OrderedSvelteMap<string, TrackedList | undefined | null>()
 
+	const entry_reordering = createEntryReordering({
+		pending: new OrderedSvelteMap<string, any>(),
+		indices: new OrderedSvelteMap<string, number>(),
+		errors: new OrderedSvelteMap<string, string>()
+	})
 	let promise = Promise.resolve()
 
 	const commitChanges = async () => {
@@ -69,15 +75,21 @@ export const createCollectionManager = (
 				}
 				on_committed?.({ collection: change.collection, operation: change.operation })
 			} catch (error) {
-				// Undo change on failure
-				changes.delete(id)
+				// Keep the draft retryable, including items created before a reorder.
+				// A newer edit queued during this request must remain untouched.
+				if (changes.get(id) === change) changes.set(id, { ...change, committed: false })
 				throw error
 			}
 		}
+		await entry_reordering.commit(instance, records, changes, on_committed)
+		// Finish moves queued while an order request was in flight, including
+		// creating/deleting their dependencies, before reporting Save complete.
+		if (entry_reordering.pending.size > 0) await commitChanges()
 	}
 
 	return {
 		instance,
+		entry_reordering,
 		changes,
 		records,
 		lists,
@@ -119,6 +131,7 @@ export const createCollectionManager = (
 			// the next pull, so committing here would create user-visible
 			// edits that vanish. Drop pending changes instead.
 			if (is_files_mode()) {
+				entry_reordering.discard()
 				for (const [id, change] of [...changes]) {
 					if (!change.committed) {
 						changes.delete(id)
@@ -130,6 +143,7 @@ export const createCollectionManager = (
 			return promise
 		},
 		discard: () => {
+			entry_reordering.discard()
 			for (const [id, change] of [...changes]) {
 				if (!change.committed) {
 					changes.delete(id)
