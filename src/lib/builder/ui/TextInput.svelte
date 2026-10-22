@@ -135,6 +135,7 @@
 		display: flex;
 		/* width: 100%; */
 		flex: 1;
+		min-width: 0;
 		flex-wrap: wrap;
 		justify-content: flex-start;
 		/* gap: 0.5rem; */
@@ -180,17 +181,19 @@
 		align-items: center;
 		gap: 0.25rem;
 		width: 100%;
-		background: var(--primo-color-codeblack);
-		border: 1px solid var(--color-gray-8);
+		background: hsl(var(--muted) / 0.2);
+		border: 1px solid hsl(var(--input));
 		color: var(--color-gray-2);
 		font-weight: 400;
-		border-radius: var(--input-border-radius);
+		border-radius: 6px;
+		min-height: 36px;
 		padding: 6px 8px;
 		flex: 1;
 		transition: 0.1s;
 
-		&:has(input:focus) {
-			border-color: var(--color-gray-7);
+		&:has(input:focus-visible, textarea:focus-visible) {
+			outline: 2px solid hsl(var(--ring));
+			outline-offset: 1px;
 		}
 
 		span.prefix {
@@ -211,7 +214,7 @@
 			}
 
 			&::placeholder {
-				color: var(--color-gray-7);
+				color: hsl(var(--muted-foreground));
 			}
 		}
 

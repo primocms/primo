@@ -479,6 +479,7 @@
 <!-- Link Dialog -->
 <Dialog.Root bind:open={editing_link}>
 	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12 overflow-visible">
+		<Dialog.Title>Edit link</Dialog.Title>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault()
@@ -548,9 +549,10 @@
 					current_link_value = newValue
 				}}
 			/>
-			<div class="flex justify-end gap-2 mt-2">
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (editing_link = false)}>Cancel</Button>
 				<Button type="submit">Done</Button>
-			</div>
+			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
@@ -558,6 +560,7 @@
 <!-- Image Dialog -->
 <Dialog.Root bind:open={editing_image}>
 	<Dialog.Content class="z-[999] sm:max-w-[500px] pt-12 overflow-visible">
+		<Dialog.Title>Edit image</Dialog.Title>
 		<form
 			onsubmit={(e) => {
 				e.preventDefault()
@@ -605,15 +608,17 @@
 			<ImageField
 				field={{ id: 'temp-image', label: 'Image', key: 'image', type: 'image', config: {}, index: 0 }}
 				entry={{ id: 'temp-entry', locale: 'en', value: current_image_value, field: 'temp-image', index: 0 } as any}
+				show_focal_point={false}
 				onchange={(changeData) => {
 					const fieldKey = Object.keys(changeData)[0]
 					const newValue = changeData[fieldKey][0].value as { url: string; alt: string }
 					current_image_value = newValue
 				}}
 			/>
-			<div class="flex justify-end gap-2 mt-2">
+			<Dialog.Footer>
+				<Button type="button" variant="outline" onclick={() => (editing_image = false)}>Cancel</Button>
 				<Button type="submit">Done</Button>
-			</div>
+			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>

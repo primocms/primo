@@ -16,8 +16,8 @@
  * - Site content, URLs, or custom code
  * - Any personally identifiable information
  *
- * Self-hosted instances: OFF by default. Opt in with PRIMO_ENABLE_USAGE_STATS=true.
- * Hosted mode (PRIMO_HOSTED_MODE=true): ON by default. Opt out with PRIMO_ENABLE_USAGE_STATS=false.
+ * Hosted and self-hosted instances: ON by default.
+ * Opt out with PRIMO_ENABLE_USAGE_STATS=false. Development mode never reports.
  */
 
 package internal
@@ -52,15 +52,19 @@ type event struct {
 const usageStatsKey = "phc_uh5ILOgLhZ4Pg5KLdrzTmiuZNLwsQeihA1Af1rTqNK1"
 const usageStatsHost = "https://us.i.posthog.com"
 
-// Check if usage statistics are enabled.
-// Self-hosted: opt-in only (PRIMO_ENABLE_USAGE_STATS=true).
-// Hosted mode: opt-out (PRIMO_ENABLE_USAGE_STATS=false to disable).
+var usageStatsClient = &http.Client{Timeout: 5 * time.Second}
+
+// Usage statistics default on outside development mode.
+// PRIMO_ENABLE_USAGE_STATS=false disables both server and client analytics.
 func isUsageStateEnabled() bool {
+	if os.Getenv("PRIMO_DEV_MODE") == "1" {
+		return false
+	}
 	override := os.Getenv("PRIMO_ENABLE_USAGE_STATS")
 	if override != "" {
 		return override == "true"
 	}
-	return isHostedMode()
+	return true
 }
 
 // Send usage statistics
@@ -99,10 +103,12 @@ func sendUsageStats(pb *pocketbase.PocketBase) error {
 		return err
 	}
 
-	response, err := http.DefaultClient.Do(request)
+	response, err := usageStatsClient.Do(request)
 	if err != nil {
 		return err
 	}
+
+	defer response.Body.Close()
 
 	ok := response.StatusCode >= 200 && response.StatusCode <= 299
 	if !ok {
@@ -141,16 +147,25 @@ func RegisterUsageStats(pb *pocketbase.PocketBase) error {
 	}
 
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
-		// Send initial stats
-		if err := sendUsageStats(pb); err != nil {
-			return err
+		// Analytics delivery must not prevent the server from starting.
+		send := func() {
+			if err := sendUsageStats(pb); err != nil {
+				pb.Logger().Warn("Usage statistics delivery failed", "error", err)
+			}
+		}
+		// Initialize identity before accepting requests so the background send
+		// cannot race the info endpoint while creating the instance ID.
+		if _, err := getInstanceId(pb); err != nil {
+			pb.Logger().Warn("Usage statistics identity initialization failed", "error", err)
+		} else {
+			go send()
 		}
 
 		// Set up daily heartbeat
 		if err := pb.Cron().Add(
 			"send_primo_usage_stats",
 			"@daily",
-			func() { sendUsageStats(pb) },
+			send,
 		); err != nil {
 			return err
 		}

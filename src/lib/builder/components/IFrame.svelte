@@ -112,13 +112,15 @@
 			if (resize_observer) resize_observer.disconnect()
 			const sidebar = container.closest('.sidebar')
 			if (sidebar) {
-				resize_observer = new ResizeObserver(set_scale_ratio).observe(sidebar)
+				resize_observer = new ResizeObserver(set_scale_ratio)
+				resize_observer.observe(sidebar)
 				load_observer = new ResizeObserver(() => {
 					// workaround for on:load not working reliably
 					if (iframe?.contentWindow?.document?.body?.childNodes) {
 						set_scale_ratio()
 					}
-				}).observe(iframe)
+				})
+				load_observer.observe(iframe)
 			}
 		}
 	)

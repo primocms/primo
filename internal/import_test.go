@@ -17,6 +17,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func TestResolvePageFieldRefEscapesCompoundSuggestion(t *testing.T) {
+	ref := `heading"quoted`
+	fields := map[string]map[string]string{"default": {ref: "field-id"}}
+	id, warning := resolvePageFieldRef(ref, fields, "blocks/hero/fields.yaml", "heading", ref, "hero")
+	if id != "field-id" || warning == nil {
+		t.Fatalf("expected a resolved bare key with a warning, got %q, %#v", id, warning)
+	}
+	if !strings.Contains(warning.Message, `Prefer compound form "<page-type>--heading\"quoted"`) {
+		t.Fatalf("compound suggestion contains an unescaped quote: %s", warning.Message)
+	}
+}
+
 func TestImportReimportsBlockFieldsBeforePageContent(t *testing.T) {
 	app := newImportTestApp(t)
 	defer app.ResetBootstrapState()
@@ -906,6 +918,62 @@ func TestImportUploadsResolvesSymbolicPathAndRoundTrips(t *testing.T) {
 	}
 	if len(uploadsAfter) != uploadsBeforeReimport {
 		t.Fatalf("re-import created duplicate uploads: before=%d after=%d", uploadsBeforeReimport, len(uploadsAfter))
+	}
+}
+
+// Image values carry an optional focal_point that must survive push/pull
+// untouched, so blocks keep cropping around the editor's chosen point.
+func TestImportExportImageFocalPointRoundTrip(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+
+	site := createImportTestSite(t, app)
+	files := map[string]string{
+		"blocks/hero/config.yaml":        "name: hero\n",
+		"blocks/hero/component.svelte":   "<img src={image.url} alt={image.alt} style:object-position={image.position} />\n",
+		"blocks/hero/fields.yaml":        "- name: image\n  label: Image\n  type: image\n",
+		"blocks/hero/content.yaml":       "{}\n",
+		"page-types/default/config.yaml": "name: Default\nallowed_blocks:\n  - hero\n",
+		"page-types/default/fields.yaml": "[]\n",
+		"page-types/default/layout.yaml": "{}\n",
+		"pages/index.yaml": "" +
+			"name: Home\n" +
+			"page_type: Default\n" +
+			"sections:\n" +
+			"  - block: hero\n" +
+			"    content:\n" +
+			"      image:\n" +
+			"        url: https://example.com/hero.jpg\n" +
+			"        alt: A hero image\n" +
+			"        focal_point:\n" +
+			"          x: 0.25\n" +
+			"          y: 0.8\n",
+		"site/fields.yaml":  "[]\n",
+		"site/content.yaml": "{}\n",
+	}
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatalf("import: %v", err)
+	}
+
+	exportedZip, err := exportSiteToZip(app, site)
+	if err != nil {
+		t.Fatalf("export site: %v", err)
+	}
+	var page struct {
+		Sections []struct {
+			Content map[string]struct {
+				FocalPoint map[string]float64 `yaml:"focal_point"`
+			} `yaml:"content"`
+		} `yaml:"sections"`
+	}
+	if err := yaml.Unmarshal([]byte(readZipFile(t, exportedZip, "pages/index.yaml")), &page); err != nil {
+		t.Fatalf("parse exported page: %v", err)
+	}
+	if len(page.Sections) != 1 {
+		t.Fatalf("expected 1 exported section, got %d", len(page.Sections))
+	}
+	if got := page.Sections[0].Content["image"].FocalPoint; got["x"] != 0.25 || got["y"] != 0.8 {
+		t.Fatalf("expected focal_point {x: 0.25, y: 0.8} to round-trip, got %#v", got)
 	}
 }
 
@@ -2041,6 +2109,46 @@ func TestWarnFieldDefinitionIssues(t *testing.T) {
 	warnFieldDefinitionIssues(clean, file, "Feature", true, &quiet)
 	if len(quiet) != 0 {
 		t.Errorf("well-formed fields.yaml should produce no warnings, got %+v", quiet)
+	}
+}
+
+func TestWarnFieldDefinitionIssuesAcceptsSystemIDs(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		nested bool
+		input  string
+	}{
+		{"block_and_site", true, `
+- _id: systemparent001
+  name: items
+  type: repeater
+  subfields:
+    - _id: systemchild0001
+      name: title
+      type: text
+      lable: Title
+`},
+		{"page_type", false, `
+- _id: systemfield001
+  name: title
+  type: text
+  lable: Title
+`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			parsed, err := parseBareFieldList([]byte(tc.input), "fields.yaml")
+			if err != nil {
+				t.Fatalf("parse: %v", err)
+			}
+			var warnings []ImportWarning
+			warnFieldDefinitionIssues(parsed, "fields.yaml", "Example", tc.nested, &warnings)
+			// Exported system IDs must be quiet without hiding an actual typo,
+			// including in a nested field definition.
+			if len(warnings) != 1 || warnings[0].Kind != "unknown_field_key" ||
+				!strings.Contains(warnings[0].Message, "`lable:`") {
+				t.Fatalf("expected only the typo warning, got %+v", warnings)
+			}
+		})
 	}
 }
 

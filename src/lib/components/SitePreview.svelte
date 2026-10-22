@@ -5,16 +5,13 @@
 
 	let { site, style, src }: { site?: Site; style?: string; src?: string } = $props()
 
-	// The default preview iframe serves the site's published files at
-	// `/?_site=ID`. That URL never changes, so after a re-publish the already
-	// loaded iframe keeps showing the old build. The publish worker writes the
-	// fresh home HTML to `site.preview` (a file field whose stored filename gets
-	// a new random suffix each publish), so fold it into the src as a
-	// cache-buster: when a publish lands, the src changes and the iframe reloads.
-	// Only applies to the default src — callers passing an explicit `src`
-	// (marketplace, starters) are left untouched.
+	// Dashboard thumbnails use the stored homepage preview, with scripts
+	// blocked by the server so hydration can't change its markup or styles.
+	// Keep the site ID in the URL so relative assets resolve to this site.
+	// The preview filename changes after publishing and reloads the iframe.
+	// Explicit src URLs (marketplace, starters) still load their live previews.
 	const preview_token = $derived(typeof site?.preview === 'string' ? site.preview : '')
-	const iframe_src = $derived(src ?? `/?_site=${site?.id}${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
+	const iframe_src = $derived(src ?? `/?_site=${site?.id}&_preview=1${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
 
 	let container = $state()
 	let scale = $state()

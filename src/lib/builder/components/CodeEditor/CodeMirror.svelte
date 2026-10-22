@@ -3,14 +3,15 @@
 </script>
 
 <script>
-	import { createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import { createDebouncer } from '../../utils'
 	import { highlightedElement, mod_key_held } from '../../stores/app/misc'
 	import { basicSetup } from 'codemirror'
 	import { EditorView, keymap, ViewPlugin, Decoration } from '@codemirror/view'
 	import { standardKeymap, indentWithTab } from '@codemirror/commands'
-	import { EditorState, Compartment } from '@codemirror/state'
+	import { EditorState, Compartment, Annotation, Transaction } from '@codemirror/state'
+	import { author_mode } from '$lib/pocketbase/author_mode'
 	import { autocompletion } from '@codemirror/autocomplete'
 	import { vsCodeDark } from './theme'
 	import Icon from '@iconify/svelte'
@@ -338,6 +339,9 @@
 
 	let Editor = $state()
 	let is_focused = $state(false)
+	// Source synchronization and viewer formatting must never write through
+	// the bound value or emit editor change events.
+	const display_update = Annotation.define()
 
 	const detectModKey = EditorView.domEventHandlers({
 		keydown(event, view) {
@@ -383,20 +387,33 @@
 	})
 
 	$effect(() => {
-		if (Editor && value !== Editor.state.doc.toString()) {
-			const old_value = Editor.state.doc.toString()
-			Editor.dispatch({
-				changes: [
-					{
-						from: 0,
-						to: old_value.length,
-						insert: value
-					}
-				],
-				selection: {
-					anchor: 0
-				}
+		const editor = Editor
+		const source = value
+		const language_mode = mode
+		const format_viewer = disabled && $author_mode === 'files'
+		if (!editor) return
+
+		let cancelled = false
+		function show_code(code) {
+			untrack(() => {
+				if (cancelled || code === editor.state.doc.toString()) return
+				editor.dispatch({
+					changes: { from: 0, to: editor.state.doc.length, insert: code },
+					selection: { anchor: 0 },
+					annotations: [display_update.of(true), Transaction.addToHistory.of(false)]
+				})
 			})
+		}
+
+		show_code(source)
+		if (format_viewer) {
+			format_code(source, { mode: language_mode, position: 0 }).then((result) => {
+				if (result) show_code(result.formatted)
+			})
+		}
+		// Invalidate work when source/mode changes or the panel unmounts.
+		return () => {
+			cancelled = true
 		}
 	})
 
@@ -570,6 +587,7 @@
 			]),
 			detectModKey,
 			EditorView.updateListener.of((view) => {
+				if (view.transactions.some((transaction) => transaction.annotation(display_update))) return
 				if (view.docChanged) {
 					const newValue = view.state.doc.toString()
 					value = newValue.replace(prefix, '')
@@ -591,10 +609,7 @@
 	$effect(() => {
 		Editor &&
 			Editor.dispatch({
-				effects: disabled_compartment.reconfigure([
-					EditorState.readOnly.of(disabled),
-					EditorView.editable.of(!disabled)
-				])
+				effects: disabled_compartment.reconfigure([EditorState.readOnly.of(disabled), EditorView.editable.of(!disabled)])
 			})
 	})
 
@@ -627,7 +642,7 @@
 				mode = 'svelte'
 			}
 
-			formatted = prettier.formatWithCursor(code, {
+			formatted = await prettier.formatWithCursor(code, {
 				parser: mode,
 				bracketSameLine: true,
 				cursorOffset: position,
@@ -642,10 +657,12 @@
 	let editorNode = $state()
 	$effect(() => {
 		if (editorNode) {
-			Editor = new EditorView({
+			const editor = new EditorView({
 				state: editor_state,
 				parent: editorNode
 			})
+			Editor = editor
+			return () => editor.destroy()
 		}
 	})
 

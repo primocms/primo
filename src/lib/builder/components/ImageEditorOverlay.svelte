@@ -19,6 +19,10 @@
 
 	let overlay_element = $state<HTMLElement>()
 
+	export function focus() {
+		overlay_element?.querySelector<HTMLButtonElement>('.edit-button')?.focus()
+	}
+
 	// Handle mouse move detection to hide overlay when mouse leaves image_element bounds
 	function handleBodyMouseMove(event: MouseEvent) {
 		if (!visible || !image_element) return
@@ -103,11 +107,11 @@
 		role="toolbar"
 		tabindex="-1"
 	>
-		<button class="overlay-button edit-button" onclick={handleClick}>
+		<button type="button" aria-label="Edit image" class="overlay-button edit-button" onclick={handleClick}>
 			<Icon icon="uil:image-upload" style=" width: clamp(1rem, 50%, 1.5rem)" />
 		</button>
 		{#if showDelete}
-			<button class="overlay-button delete-button" onclick={handleDelete}>
+			<button type="button" aria-label="Delete image" class="overlay-button delete-button" onclick={handleDelete}>
 				<Icon icon="lucide:trash-2" style=" width: clamp(1rem, 50%, 1.5rem)" />
 			</button>
 		{/if}
@@ -128,7 +132,8 @@
 		transition: opacity 0.1s;
 		overflow: hidden;
 
-		&:hover {
+		&:hover,
+		&:focus-within {
 			opacity: 1;
 		}
 	}

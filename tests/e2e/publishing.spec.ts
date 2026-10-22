@@ -6,20 +6,13 @@ import { seedFixtureSite, type SeededSite } from './helpers/seed'
 
 let ids: SeededSite
 
-/** Publishes via the real UI flow (dev-mode toolbar button is labeled
- * "Preview" but wires to the same usePublishSite -> Pages.update(compiled_html)
- * -> POST /api/primo/generate). A direct POST to /api/primo/generate
- * without first uploading compiled_html (what the client does) 404s inside
- * GenerateSite's copyIfChanged, because the page's compiled_html field is
- * still empty — that upload step only happens client-side, so exercising
- * the button is both the faithful path and the only one that actually
- * works, matching "exercise the real UI and backend... don't mock
- * publishing" from the task brief. */
+/** Exercise the real compiler and tracked publication flow. The dev-mode
+ * toolbar calls it "Preview"; it still uploads compiled artifacts and waits
+ * for the atomic activation endpoint before serving the new output. */
 async function publishViaUI(page: import('@playwright/test').Page) {
-	const generateResponsePromise = page.waitForResponse(
-		(res) => res.url().includes('/api/primo/generate') && res.request().method() === 'POST',
-		{ timeout: 15000 }
-	)
+	const generateResponsePromise = page.waitForResponse((res) => res.url().includes('/api/primo/publication/') && res.url().endsWith('/activate') && res.request().method() === 'POST', {
+		timeout: 15000
+	})
 	await page.getByRole('button', { name: 'Preview' }).click()
 	const dialog = page.getByRole('dialog')
 	const confirmButton = dialog.getByRole('button', { name: /publish|preview|confirm/i }).first()
@@ -48,10 +41,7 @@ test.describe('Publishing', () => {
 		const firstHeadline = `Published Headline ${Date.now()}`
 		await replaceContentEditableText(page, headline, firstHeadline)
 		await headline.blur()
-		await page.waitForResponse(
-			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
-			{ timeout: 5000 }
-		)
+		await page.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH', { timeout: 5000 })
 
 		await publishViaUI(page)
 
@@ -75,10 +65,7 @@ test.describe('Publishing', () => {
 		const secondHeadline = `Republished Headline ${Date.now()}`
 		await replaceContentEditableText(page, headline2, secondHeadline)
 		await headline2.blur()
-		await page.waitForResponse(
-			(res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH',
-			{ timeout: 5000 }
-		)
+		await page.waitForResponse((res) => res.url().includes('/api/collections/page_section_entries/records/') && res.request().method() === 'PATCH', { timeout: 5000 })
 
 		await publishViaUI(page)
 
@@ -91,7 +78,7 @@ test.describe('Publishing', () => {
 	// A just-created page has no sections. Page generation used to report that
 	// as a failure with no error ("Unknown error"), which aborted publishing for
 	// the whole site until the page got a section: the client never reached
-	// /api/primo/generate, so publishViaUI's wait for it times out.
+	// the activation endpoint, so publishViaUI's wait for it times out.
 	test('a site with an empty new page still publishes', async ({ page, request }) => {
 		const { token } = await devAuth(request)
 		const headers = { Authorization: `Bearer ${token}` }
@@ -111,7 +98,7 @@ test.describe('Publishing', () => {
 		await expect(page.getByRole('button', { name: 'Preview' })).toBeVisible({ timeout: 15000 })
 		await publishViaUI(page)
 
-		// publishViaUI asserted /api/primo/generate succeeded; the site stays served.
+		// publishViaUI asserted activation succeeded; the site stays served.
 		const homeRes = await request.get(`${TEST_SERVER_URL}/?_site=${ids.siteId}`)
 		expect(homeRes.ok()).toBeTruthy()
 	})

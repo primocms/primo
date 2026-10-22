@@ -180,6 +180,21 @@ export function wrapInStyleTags(css, id) {
 	return `<style type="text/css" ${id ? `id = "${id}"` : ''}>${css}</style>`
 }
 
+/**
+ * Read an image value's focal point as fractions (0..1) of the original image.
+ * A missing or malformed point falls back to the center, so older values work.
+ */
+export function get_focal_point(value: unknown): { x: number; y: number } {
+	const point = (value as { focal_point?: { x?: unknown; y?: unknown } } | null)?.focal_point
+	const fraction = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(Math.min(1, Math.max(0, n)) * 1000) / 1000 : 0.5)
+	return { x: fraction(point?.x), y: fraction(point?.y) }
+}
+
+// CSS percentages for `object-position` / `background-position`, e.g. "37.5% 62%".
+export function get_focal_position({ x, y }: { x: number; y: number }): string {
+	return `${Math.round(x * 1000) / 10}% ${Math.round(y * 1000) / 10}%`
+}
+
 export function get_empty_value(field) {
 	if (field.type === 'repeater') return null
 	else if (field.type === 'group') return null

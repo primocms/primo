@@ -38,8 +38,6 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--primo-primary-color);
-
 		--primo-max-width-1: 30rem;
 		--primo-max-width-2: 1200px;
 		--primo-max-width-max: 1200px;
@@ -99,7 +97,6 @@
 		--padding-container: 15px;
 		--max-width-container: 1900px;
 
-		--ring: 0px 0px 0px 2px var(--primo-primary-color);
 		--primo-ring: 0px 0px 0px 2px var(--primo-primary-color, #ff6b35);
 		--primo-ring-thin: 0px 0px 0px 1px var(--primo-primary-color, #ff6b35);
 		--primo-ring-thick: 0px 0px 0px 3px var(--primo-primary-color, #ff6b35);

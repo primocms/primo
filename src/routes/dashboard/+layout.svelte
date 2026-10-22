@@ -6,11 +6,13 @@
 	import { check_session } from '$lib/pocketbase/user'
 	import { onMount } from 'svelte'
 	import { goto } from '$app/navigation'
+	import { auth_url } from '$lib/auth_navigation'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 
 	onMount(async () => {
+		const login_url = auth_url(page.url)
 		if (!(await check_session())) {
-			await goto('/admin/auth')
+			await goto(login_url, { replaceState: true })
 		}
 	})
 
@@ -50,15 +52,28 @@
 	})
 
 	$effect(() => set_current_user())
+
+	// Site collaborators can browse their assigned sites, but server tools
+	// remain available only to users with a server role.
+	const is_sites_route = $derived(page.url.pathname === '/admin/dashboard/sites')
+	$effect(() => {
+		if ($current_user && !$current_user.serverRole && !is_sites_route) {
+			goto('/admin/dashboard/sites', { replaceState: true })
+		}
+	})
 </script>
 
-{#if !$current_user?.serverRole}
-	<div style="display: flex; justify-content: center; align-items: center; height: 100vh; color: white;">Forbidden</div>
+{#if !$current_user}
+	<div class="flex min-h-svh items-center justify-center text-muted-foreground" role="status">Loading sites…</div>
 {:else}
 	<Sidebar.Provider class="dashboard-shell">
-		<AppSidebar {sidebar_menu} />
+		{#if $current_user.serverRole}
+			<AppSidebar {sidebar_menu} />
+		{/if}
 		<Sidebar.Inset class="dashboard-content">
-			{@render children?.()}
+			{#if $current_user.serverRole || is_sites_route}
+				{@render children?.()}
+			{/if}
 		</Sidebar.Inset>
 	</Sidebar.Provider>
 {/if}

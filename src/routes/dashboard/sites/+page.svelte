@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { createDialogAction } from '$lib/components/dialog-action.svelte'
+	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as AlertDialog from '$lib/components/ui/alert-dialog'
@@ -10,13 +12,14 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
+	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
 	import { Sites, SiteGroups, Pages } from '$lib/pocketbase/collections'
 	import { self as pb, self } from '$lib/pocketbase/managers'
 	import { goto } from '$app/navigation'
+	import { toast } from 'svelte-sonner'
 	import { ClientResponseError } from 'pocketbase'
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
@@ -24,10 +27,17 @@
 	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
+	import { fade } from 'svelte/transition'
+	import { prefersReducedMotion } from 'svelte/motion'
+
+	import { current_user } from '$lib/pocketbase/user'
+	import Collaboration from '$lib/builder/views/modal/Collaboration.svelte'
 
 	const sidebar = useSidebar()
+	const has_server_role = $derived(!!$current_user?.serverRole)
+	let is_collaboration_open = $state(false)
 
-	const site_group_id = $derived(page.url.searchParams.get('group'))
+	const site_group_id = $derived(has_server_role ? page.url.searchParams.get('group') : null)
 
 	// Remember the most-recently selected group so revisiting the dashboard
 	// without a ?group= param (e.g. the editor's "Sites" button when the site's
@@ -70,10 +80,10 @@
 		}
 	})
 
-	const site_groups = $derived(SiteGroups.list() ?? [])
+	const site_groups = $derived(has_server_role ? (SiteGroups.list() ?? []) : [])
 	const active_site_group = $derived(site_group_id ? SiteGroups.one(site_group_id) : undefined)
 	const all_sites = $derived(Sites.list() ?? [])
-	const sites = $derived(site_group_id ? all_sites.filter((site) => site.group === site_group_id) : [])
+	const sites = $derived(has_server_role ? (site_group_id ? all_sites.filter((site) => site.group === site_group_id) : []) : all_sites)
 
 	// Plan site cap: 0/undefined means unlimited. Enforced server-side in
 	// internal/limits.go; this just disables the affordance + shows usage.
@@ -88,10 +98,13 @@
 	})
 	async function handle_group_rename(e) {
 		e.preventDefault()
-		if (!active_site_group) return
-		SiteGroups.update(active_site_group.id, { name: new_group_name })
-		await self.commit()
-		is_rename_group_open = false
+		await save.run(async () => {
+			if (!new_group_name.trim()) return
+			if (!active_site_group) return
+			SiteGroups.update(active_site_group.id, { name: new_group_name.trim() })
+			await self.commit()
+			is_rename_group_open = false
+		})
 	}
 
 	let is_delete_group_open = $state(false)
@@ -113,29 +126,34 @@
 	$effect(() => {
 		if (download_site_id && snapshot_worker && snapshot_worker.status === 'standby' && !downloading) {
 			downloading = true
-			snapshot_worker.run().then((snapshot) => {
-				const file = Snapshot.encode(snapshot)
-				const url = URL.createObjectURL(file)
-				const a = document.createElement('a')
-				a.href = url
-				a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
-				document.body.appendChild(a)
-				a.click()
-				document.body.removeChild(a)
-				URL.revokeObjectURL(url)
-				download_site_id = null
-				download_site_name = null
-				downloading = false
-			}).catch((error) => {
-				console.error('Failed to download site:', error)
-				download_site_id = null
-				download_site_name = null
-				downloading = false
-			})
+			snapshot_worker
+				.run()
+				.then((snapshot) => {
+					const file = Snapshot.encode(snapshot)
+					const url = URL.createObjectURL(file)
+					const a = document.createElement('a')
+					a.href = url
+					a.download = `${download_site_name?.replace(/[^a-zA-Z0-9]/g, '_') ?? 'site'}.primo`
+					document.body.appendChild(a)
+					a.click()
+					document.body.removeChild(a)
+					URL.revokeObjectURL(url)
+					download_site_id = null
+					download_site_name = null
+					downloading = false
+				})
+				.catch((error) => {
+					console.error('Failed to download site:', error)
+					toast.error('Could not download this site. Please try again.')
+					download_site_id = null
+					download_site_name = null
+					downloading = false
+				})
 		}
 	})
 
 	function download_site_file(site: Site) {
+		if (download_site_id) return
 		download_site_id = site.id
 		download_site_name = site.name
 	}
@@ -150,11 +168,15 @@
 		}
 	})
 
-	async function handle_rename() {
-		if (!current_site) return
-		Sites.update(current_site.id, { name: new_site_name })
-		await self.commit()
-		is_rename_site_open = false
+	async function handle_rename(e) {
+		e.preventDefault()
+		await save.run(async () => {
+			if (!new_site_name.trim()) return
+			if (!current_site) return
+			Sites.update(current_site.id, { name: new_site_name.trim() })
+			await self.commit()
+			is_rename_site_open = false
+		})
 	}
 
 	// Connect-a-domain flow lives in the reusable ConnectDomain component; the
@@ -204,69 +226,106 @@
 	let is_move_site_open = $state(false)
 	let selected_group_id = $state(site_groups[0]?.id ?? '')
 	async function move_site() {
-		if (!current_site) return
-		Sites.update(current_site.id, { group: selected_group_id })
-		await self.commit()
-		is_move_site_open = false
+		await save.run(async () => {
+			if (!current_site) return
+			Sites.update(current_site.id, { group: selected_group_id })
+			await self.commit()
+			is_move_site_open = false
+		})
 	}
 
 	let is_creating_site = $state(false)
+	$effect(() => {
+		is_rename_group_open
+		is_rename_site_open
+		is_move_site_open
+		save.reset()
+	})
 </script>
 
 <header class="flex h-14 shrink-0 items-center gap-2">
 	<div class="flex flex-1 items-center gap-2 px-3">
-		<Sidebar.Trigger />
-		<Separator orientation="vertical" class="mr-2 h-4" />
+		{#if has_server_role}
+			<Sidebar.Trigger />
+			<Separator orientation="vertical" class="mr-2 h-4" />
+		{/if}
 		<h1 class="text-xs font-medium truncate">{active_site_group?.name ?? 'Sites'}</h1>
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
-				{#snippet child({ props })}
-					<button {...props} class="group-options" aria-label="Group options">
-						<ChevronDown class="h-4" />
-						<span class="sr-only">More</span>
-					</button>
-				{/snippet}
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content class="w-56 rounded-lg" side="bottom" align={sidebar.isMobile ? 'end' : 'start'}>
-				<DropdownMenu.Item onclick={() => (is_rename_group_open = true)}>
-					<SquarePen class="text-muted-foreground" />
-					<span>Rename</span>
-				</DropdownMenu.Item>
-				{#if site_groups?.length}
-					<DropdownMenu.Item onclick={() => (is_delete_group_open = true)}>
-						<Trash2 class="text-muted-foreground" />
-						<span>Delete</span>
+		{#if has_server_role}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<button {...props} class="group-options" aria-label="Group options">
+							<ChevronDown class="h-4" />
+							<span class="sr-only">More</span>
+						</button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content class="w-56 rounded-lg" side="bottom" align={sidebar.isMobile ? 'end' : 'start'}>
+					<DropdownMenu.Item onclick={() => (is_rename_group_open = true)}>
+						<SquarePen class="text-muted-foreground" />
+						<span>Rename</span>
 					</DropdownMenu.Item>
-				{/if}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+					{#if site_groups?.length}
+						<DropdownMenu.Item onclick={() => (is_delete_group_open = true)}>
+							<Trash2 class="text-muted-foreground" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
+					{/if}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
 	</div>
 	<div class="ml-auto mr-4 flex items-center gap-3">
-		{#if instance.site_cap}
-			<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
+		{#if has_server_role}
+			{#if instance.site_cap}
+				<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
+			{/if}
+			<Button
+				size="sm"
+				class="create-site-button"
+				disabled={at_site_cap}
+				title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
+				onclick={() => (is_creating_site = true)}
+			>
+				<CirclePlus class="h-4 w-4" />
+				Create Site
+			</Button>
+		{:else}
+			<Button
+				size="sm"
+				variant="ghost"
+				onclick={async () => {
+					self.instance?.authStore.clear()
+					await goto('/admin/auth')
+				}}
+			>
+				<LogOut class="h-4 w-4" />Log out
+			</Button>
 		{/if}
-		<Button
-			size="sm"
-			class="create-site-button"
-			disabled={at_site_cap}
-			title={at_site_cap ? 'Site limit reached for your plan. Upgrade to add more sites.' : undefined}
-			onclick={() => (is_creating_site = true)}
-		>
-			<CirclePlus class="h-4 w-4" />
-			Create Site
-		</Button>
 	</div>
 </header>
 <div class="sites-content">
-	{#if sites?.length}
-		<div class="sites-grid">
-			{#each sites as site}
-				{@render SiteButton(site)}
-			{/each}
+	{#key site_group_id}
+		<div class="sites-list" transition:fade|global={{ duration: prefersReducedMotion.current ? 0 : 160 }}>
+			{#if sites?.length}
+				<div class="sites-grid">
+					{#each sites as site (site.id)}
+						{@render SiteButton(site)}
+					{/each}
+				</div>
+			{:else if !has_server_role}
+				<EmptyState class="min-h-[50vh]" icon={Globe} title="No sites yet" description="Sites shared with you will appear here." />
+			{:else}
+				<EmptyState
+					class="min-h-[50vh]"
+					icon={Globe}
+					title={all_sites.length ? 'This group is empty' : 'Create your first site'}
+					description={all_sites.length ? 'Create a site here, or move an existing site into this group.' : 'Start with a template, import a site, or build something from scratch.'}
+					button={{ label: 'Create site', icon: CirclePlus, disabled: at_site_cap, onclick: () => (is_creating_site = true) }}
+				/>
+			{/if}
 		</div>
-	{:else}
-		<EmptyState class="h-[50vh]" icon={Globe} title="No Sites to display" description="It looks like you haven't created any websites yet." />
-	{/if}
+	{/key}
 </div>
 
 {#snippet SiteButton(site: Site)}
@@ -280,79 +339,108 @@
 			<div class="flex flex-col gap-1" style="max-width: calc(100% - 2rem)">
 				<a href={site_editor_url(site)} class="text-sm font-medium leading-none truncate">{site.name}</a>
 				{#if is_host_reachable(site)}
-					<a href={`https://${site.host}`} target="_blank" rel="noopener noreferrer" title={`Open ${site.host} in a new tab`} class="text-xs text-muted-foreground leading-tight truncate hover:underline">{site.host}</a>
+					<a
+						href={`https://${site.host}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						title={`Open ${site.host} in a new tab`}
+						class="text-xs text-muted-foreground leading-tight truncate hover:underline"
+					>
+						{site.host}
+					</a>
 				{:else}
 					<p class="text-xs text-muted-foreground leading-tight truncate">{is_host_assigned(site) ? site.host : 'No domain connected'}</p>
 				{/if}
 			</div>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>
-					<EllipsisVertical size={14} />
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_rename_site_open = true
-						}}
-					>
-						<SquarePen class="h-4 w-4" />
-						<span>Rename</span>
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_assign_domain_open = true
-						}}
-					>
-						<Globe class="h-4 w-4" />
-						<span>{is_host_assigned(site) ? 'Change domain' : 'Assign domain'}</span>
-					</DropdownMenu.Item>
-					{#if site_groups.length > 1}
+			{#if has_server_role}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger class="p-2 hover:bg-[#303034] rounded-md text-[#a5a5ad]" aria-label={`Options for ${site.name}`}>
+						<EllipsisVertical size={14} />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
 						<DropdownMenu.Item
 							onclick={() => {
 								current_site = site
-								is_move_site_open = true
+								is_collaboration_open = true
 							}}
 						>
-							<ArrowLeftRight class="h-4 w-4" />
-							<span>Move</span>
+							<UsersIcon class="h-4 w-4" />
+							<span>Collaborators</span>
 						</DropdownMenu.Item>
-					{/if}
-					<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={downloading && download_site_id === site.id}>
-						{#if downloading && download_site_id === site.id}
-							<Loader class="h-4 w-4 animate-spin" />
-							<span>Downloading...</span>
-						{:else}
-							<Download class="h-4 w-4" />
-							<span>Download</span>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_rename_site_open = true
+							}}
+						>
+							<SquarePen class="h-4 w-4" />
+							<span>Rename</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_assign_domain_open = true
+							}}
+						>
+							<Globe class="h-4 w-4" />
+							<span>{is_host_assigned(site) ? 'Change domain' : 'Assign domain'}</span>
+						</DropdownMenu.Item>
+						{#if site_groups.length > 1}
+							<DropdownMenu.Item
+								onclick={() => {
+									current_site = site
+									is_move_site_open = true
+								}}
+							>
+								<ArrowLeftRight class="h-4 w-4" />
+								<span>Move</span>
+							</DropdownMenu.Item>
 						{/if}
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						onclick={() => {
-							current_site = site
-							is_delete_site_open = true
-						}}
-						class="text-red-500 hover:text-red-600 focus:text-red-600"
-					>
-						<Trash2 class="h-4 w-4" />
-						<span>Delete</span>
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+						<DropdownMenu.Item onclick={() => download_site_file(site)} disabled={!!download_site_id}>
+							{#if downloading && download_site_id === site.id}
+								<Loader class="h-4 w-4 animate-spin" />
+								<span>Downloading...</span>
+							{:else}
+								<Download class="h-4 w-4" />
+								<span>Download</span>
+							{/if}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item
+							onclick={() => {
+								current_site = site
+								is_delete_site_open = true
+							}}
+							class="text-red-500 hover:text-red-600 focus:text-red-600"
+						>
+							<Trash2 class="h-4 w-4" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
 		</div>
 	</div>
 {/snippet}
 
+<Dialog.Root bind:open={is_collaboration_open}>
+	<Dialog.Content class="max-w-[600px] flex flex-col p-4">
+		{#if current_site}
+			{@const collaboration_site = Sites.one(current_site.id)}
+			{#if collaboration_site}<Collaboration site={collaboration_site} />{/if}
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
+
 <Dialog.Root bind:open={is_rename_group_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename group</h2>
+		<Dialog.Title>Rename group</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your group</p>
-		<form onsubmit={handle_group_rename}>
-			<Input bind:value={new_group_name} placeholder="Enter new group name" class="my-4" />
+		<form onsubmit={handle_group_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_group_name} aria-label="Enter new group name" placeholder="Enter new group name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_rename_group_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_rename_group_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_group_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -384,11 +472,18 @@
 	</AlertDialog.Content>
 </AlertDialog.Root>
 
-<Dialog.Root bind:open={is_move_site_open}>
+<Dialog.Root
+	bind:open={
+		() => is_move_site_open,
+		(open) => {
+			if (!save.busy) is_move_site_open = open
+		}
+	}
+>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<div class="grid gap-4">
 			<div class="space-y-2">
-				<h4 class="font-medium leading-none">Move to group</h4>
+				<Dialog.Title>Move to group</Dialog.Title>
 				<p class="text-muted-foreground text-sm">Select a group for this site</p>
 			</div>
 			<RadioGroup.Root bind:value={selected_group_id}>
@@ -399,22 +494,26 @@
 					</div>
 				{/each}
 			</RadioGroup.Root>
-			<div class="flex justify-end">
-				<Button onclick={move_site}>Move</Button>
-			</div>
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
+			<Dialog.Footer>
+				<Button variant="outline" disabled={save.busy} onclick={() => (is_move_site_open = false)}>Cancel</Button><Button onclick={move_site} disabled={save.busy || !selected_group_id}>
+					{save.busy ? 'Moving…' : 'Move'}
+				</Button>
+			</Dialog.Footer>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={is_rename_site_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Site</h2>
+		<Dialog.Title>Rename site</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your site</p>
-		<form onsubmit={handle_rename}>
-			<Input bind:value={new_site_name} placeholder="Enter new site name" class="my-4" />
+		<form onsubmit={handle_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_site_name} aria-label="Enter new site name" placeholder="Enter new site name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_rename_site_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_rename_site_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_site_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -474,8 +573,14 @@
 
 <style lang="postcss">
 	.sites-content {
+		display: grid;
 		flex: 1;
 		padding: 0 24px 24px;
+	}
+	.sites-list {
+		grid-area: 1 / 1;
+		align-self: start;
+		min-width: 0;
 	}
 	.sites-grid {
 		display: grid;

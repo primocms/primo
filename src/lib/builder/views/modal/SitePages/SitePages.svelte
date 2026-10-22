@@ -11,6 +11,7 @@
 	import type { Page } from '$lib/common/models/Page'
 	import { self } from '$lib/pocketbase/managers'
 	import { flip } from 'svelte/animate'
+	import { tick } from 'svelte'
 	import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
@@ -66,17 +67,81 @@
 
 	const homepage = $derived(site.homepage())
 	const all_pages = $derived(site.pages() ?? [])
-	const root_pages = $derived(homepage?.children() || [])
+	// The toolbar already loads the site's pages. A separate children() query
+	// first renders only Home, then resizes the centered dialog when it resolves.
+	const root_pages = $derived(all_pages.filter((page) => page.parent === homepage?.id))
 
 	let creating_page = $state(false)
 	let building_page = $state(false)
 	let building_page_name = $state('')
+	let building_page_id = $state('')
+	let building_page_parent = $state('')
+	let page_list = $state<HTMLUListElement>()
+	let page_list_height = $state<number>()
 	let new_page = $state<ObjectOf<typeof Pages>>()
+	let finish_creation: ((error?: unknown) => void) | undefined
+	let committing_page = false
 	let new_page_page_type = $derived(new_page && PageTypes.one(new_page.page_type))
 	let new_page_page_type_sections = $derived(new_page_page_type?.sections())
 
 	const copy_page_type_entries = $derived(useCopyEntries([new_page_page_type]))
 	const copy_page_type_section_entries = $derived(useCopyEntries(new_page_page_type_sections))
+
+	function revealCreatingPage(node: HTMLElement, pending: boolean) {
+		let observer: ResizeObserver | undefined
+		let was_pending = false
+		let generation = 0
+
+		function reveal() {
+			if (!page_list || !node.isConnected || node.getClientRects().length === 0) return
+			const list_rect = page_list.getBoundingClientRect()
+			const row_rect = node.getBoundingClientRect()
+			const top = list_rect.top + page_list.clientTop + 4
+			const bottom = list_rect.top + page_list.clientTop + page_list.clientHeight - 4
+			// Scroll only the list, by the distance needed to reveal the row.
+			// scrollIntoView can also move the dialog or the document.
+			if (row_rect.bottom > bottom) page_list.scrollTop += row_rect.bottom - bottom
+			else if (row_rect.top < top) page_list.scrollTop -= top - row_rect.top
+		}
+
+		async function update(pending: boolean) {
+			const current_generation = ++generation
+			observer?.disconnect()
+			if (!pending && !was_pending) return
+			was_pending = pending
+			await tick()
+			if (current_generation !== generation) return
+			reveal()
+			const ancestors: HTMLElement[] = [node]
+			for (let parent = node.parentElement; parent && parent !== page_list; parent = parent.parentElement) ancestors.push(parent)
+			if (pending && page_list && node.isConnected) {
+				observer = new ResizeObserver(reveal)
+				observer.observe(page_list)
+				for (const element of ancestors) observer.observe(element)
+			}
+			// Expanding child lists and FLIP animations can move the row without
+			// changing its own size. Check its final position once they settle.
+			// Svelte replaces its setup animation with the actual slide/FLIP
+			// animation in onfinish. Re-read after a frame so finishing the setup
+			// animation does not leave the row clipped when the real one ends.
+			while (current_generation === generation) {
+				const animations = ancestors.flatMap((element) => element.getAnimations())
+				if (animations.length === 0) break
+				await Promise.allSettled(animations.map((animation) => animation.finished))
+				await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+			}
+			if (current_generation === generation) reveal()
+		}
+
+		void update(pending)
+		return {
+			update,
+			destroy() {
+				generation++
+				observer?.disconnect()
+			}
+		}
+	}
 
 	// Copy page type entries
 	let copying_page_type_entries: 'no' | 'working' | 'done' = $state('no')
@@ -91,7 +156,7 @@
 			.then(() => {
 				copying_page_type_entries = 'done'
 			})
-			.catch((error) => console.error(error))
+			.catch((error) => finish_creation?.(error))
 	})
 
 	// Copy page type sections to new page
@@ -121,20 +186,16 @@
 			.then(async () => {
 				copying_page_type_section_entries = 'done'
 			})
-			.catch((error) => console.error(error))
+			.catch((error) => finish_creation?.(error))
 	})
 
 	$effect(() => {
-		if (building_page && copying_page_type_entries === 'done' && copying_page_type_section_entries === 'done') {
-			new_page = undefined
-			self
-				.commit()
-				.catch((error) => console.error(error))
-				.finally(() => {
-					building_page = false
-					copying_page_type_entries = 'no'
-					copying_page_type_section_entries = 'no'
-				})
+		if (new_page && !committing_page && copying_page_type_entries === 'done' && copying_page_type_section_entries === 'done') {
+			committing_page = true
+			self.commit().then(
+				() => finish_creation?.(),
+				(error) => finish_creation?.(error)
+			)
 		}
 	})
 
@@ -142,6 +203,7 @@
 		// Guard the mutation, not just the trigger: a form already open when the
 		// mode flips would otherwise still submit.
 		if ($read_only) return
+		if (building_page) throw new Error('Another page is being created. Please wait for it to finish.')
 
 		// Get existing siblings and find the max index
 		const sibling_pages = all_pages.filter((page) => page.parent === page_data.parent)
@@ -149,55 +211,101 @@
 		const new_index = maxIndex + 1
 
 		// Create the page with the next available index
-		new_page = Pages.create({
-			...page_data,
-			index: new_index
+		// Retain the list size while the form becomes a row, keeping the dialog in place.
+		page_list_height = page_list?.getBoundingClientRect().height
+		building_page = true
+		building_page_name = page_data.name
+		building_page_parent = page_data.parent
+		return new Promise<void>((resolve, reject) => {
+			finish_creation = async (error) => {
+				const page_id = new_page?.id
+				new_page = undefined
+				finish_creation = undefined
+				if (error && page_id) {
+					// Remove only this failed creation's changes; keep other edits intact.
+					const section_ids = new Set(
+						[...self.changes].filter(([, change]) => 'data' in change && change.collection === 'page_sections' && (change.data as Record<string, unknown>).page === page_id).map(([id]) => id)
+					)
+					for (const [id, change] of [...self.changes]) {
+						if (id === page_id || ('data' in change && ((change.data as Record<string, unknown>).page === page_id || section_ids.has((change.data as Record<string, unknown>).section as string))))
+							self.changes.delete(id)
+					}
+					if (self.records.get(page_id)?.data) {
+						try {
+							await self.instance?.collection('pages').delete(page_id)
+							self.records.set(page_id, null)
+						} catch (cleanup_error) {
+							console.error('Could not remove partially created page', cleanup_error)
+						}
+					}
+				}
+				building_page = false
+				committing_page = false
+				copying_page_type_entries = 'no'
+				copying_page_type_section_entries = 'no'
+				if (error) reject(error)
+				else resolve()
+			}
+			new_page = Pages.create({ ...page_data, index: new_index })
+			building_page_id = new_page.id
 		})
 	}
 </script>
 
+{#snippet creatingPageRow()}
+	<div class="building-page-item" role="status">
+		<Icon icon="eos-icons:three-dots-loading" />
+		<span>Creating {building_page_name}…</span>
+	</div>
+{/snippet}
+
 <div class="pages-heading">
-	<Dialog.Title class="text-base font-medium">Pages <span class="page-count">{all_pages.length}</span></Dialog.Title>
+	<Dialog.Title class="text-base font-medium">
+		Pages <span class="page-count">{all_pages.length}</span>
+	</Dialog.Title>
 	{#if onManagePageTypes}<button class="manage-types" data-testid="manage-page-types" onclick={onManagePageTypes}><Icon icon="lucide:layout-template" />Manage page types</button>{/if}
 </div>
 <p class="pages-description">Open a page to edit its content, or create a new one.</p>
-{#if active_page}
-	<ul class="grid page-list">
+{#if active_page && homepage}
+	<ul class="grid page-list" bind:this={page_list} style:height={page_list_height === undefined ? undefined : `${page_list_height}px`}>
 		{#each [homepage, ...root_pages].sort((a, b) => a.index - b.index) as page, i (page.id)}
-			<li animate:flip={{ duration: 200 }}>
-				<Item {page} {page_slug} active_page_id={!pageState.params.page_type ? active_page.id : null} oncreate={create_page_with_sections} bind:hover_position />
+			<li animate:flip={{ duration: 200 }} use:revealCreatingPage={building_page && page.id === building_page_id}>
+				{#if building_page && page.id === building_page_id}
+					{@render creatingPageRow()}
+				{:else}
+					<Item
+						{page}
+						{page_slug}
+						active_page_id={!pageState.params.page_type ? active_page.id : null}
+						oncreate={create_page_with_sections}
+						creating_page_id={building_page ? building_page_id : null}
+						{creatingPageRow}
+						{revealCreatingPage}
+						bind:hover_position
+					/>
+				{/if}
 				<div class="drop-indicator-inline" class:active={hover_position === `${page.id}-bottom`}><div></div></div>
 				<div class="drop-target-gap" use:gapDropTarget={page}></div>
 			</li>
 		{/each}
-		{#if building_page}
-			<li class="building-placeholder">
-				<div class="building-page-item">
-					<Icon icon="eos-icons:three-dots-loading" />
-					<span>Building {building_page_name} Page</span>
-				</div>
-			</li>
-		{/if}
-
 		{#if creating_page && !$read_only}
-			<li>
+			<li hidden={building_page && building_page_parent === homepage.id} use:revealCreatingPage={!building_page}>
 				<PageForm
 					oncreate={async (new_page: any) => {
-						creating_page = false
+						if (!homepage || $read_only) return
 						const url_taken = all_pages.some((page) => page?.slug === new_page.slug && page.parent === homepage.id)
 						if (url_taken) {
-							alert(`That URL is already in use`)
+							throw new Error('That URL is already in use')
 						} else {
-							building_page = true
-							building_page_name = new_page.name
 							await create_page_with_sections({ ...new_page, parent: homepage.id, site: site.id })
+							creating_page = false
 						}
 					}}
 				/>
 			</li>
 		{:else if !$read_only}
 			<li>
-				<button class="create-page-btn" onclick={() => (creating_page = true)}>
+				<button class="create-page-btn" disabled={building_page} onclick={() => (creating_page = true)}>
 					<Icon icon="akar-icons:plus" />
 					<span>Create page</span>
 				</button>
@@ -207,16 +315,62 @@
 {/if}
 
 <style lang="postcss">
-	.page-count { font-size: 12px; font-weight: 400; color: #a1a1aa; margin-left: 6px; }
-	.pages-description { font-size: 12px; line-height: 1.5; color: #a1a1aa; margin: -4px 0 0; }
-	.page-list { min-height: 0; padding: 4px; border: 1px solid #343437; border-radius: 7px; background: #19191b; align-content: start; }
-	.create-page-btn { border: 1px solid #3a3a40; margin-top: 6px; min-height: 38px; }
-	.create-page-btn:focus-visible { outline: 2px solid #956e51; outline-offset: -2px; }
+	.page-count {
+		font-size: 12px;
+		font-weight: 400;
+		color: #a1a1aa;
+		margin-left: 6px;
+	}
+	.pages-description {
+		font-size: 12px;
+		line-height: 1.5;
+		color: #a1a1aa;
+		margin: -4px 0 0;
+	}
+	.page-list {
+		min-height: 0;
+		padding: 4px;
+		border: 1px solid #343437;
+		border-radius: 7px;
+		background: #19191b;
+		align-content: start;
+	}
+	.create-page-btn {
+		border: 1px solid #3a3a40;
+		margin-top: 6px;
+		min-height: 38px;
+	}
+	.create-page-btn:focus-visible {
+		outline: 2px solid #956e51;
+		outline-offset: -2px;
+	}
 
-	.pages-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-left: 28px; }
-	.manage-types { display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid #3a3a40; border-radius: 5px; color: #c4c4cc; font-size: 12px; }
-	.manage-types:hover { background: #ffffff0a; color: white; }
-	.manage-types:focus-visible { outline: 2px solid #956e51; outline-offset: 2px; }
+	.pages-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 10px;
+		padding-left: 28px;
+	}
+	.manage-types {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 9px;
+		border: 1px solid #3a3a40;
+		border-radius: 5px;
+		color: #c4c4cc;
+		font-size: 12px;
+	}
+	.manage-types:hover {
+		background: #ffffff0a;
+		color: white;
+	}
+	.manage-types:focus-visible {
+		outline: 2px solid #956e51;
+		outline-offset: 2px;
+	}
 
 	.page-list {
 		overflow: auto;
@@ -288,22 +442,35 @@
 			border-color: var(--primo-primary-color);
 			color: var(--primo-primary-color);
 		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: wait;
+		}
 	}
 
 	.building-page-item {
 		background: #252528;
 		border: 1px dashed var(--color-gray-6);
 		border-radius: var(--primo-border-radius);
-		padding: 1rem;
+		padding: calc(0.875rem - 1px) calc(1.125rem - 1px);
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
 		color: var(--color-gray-3);
 		font-size: 0.875rem;
+		line-height: 1.5rem;
+
+		span {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
 
 		:global(svg) {
 			height: 1rem;
 			width: 1rem;
+			flex-shrink: 0;
 		}
 	}
 </style>

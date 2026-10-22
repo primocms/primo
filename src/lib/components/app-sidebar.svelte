@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { createDialogAction } from '$lib/components/dialog-action.svelte'
+	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
@@ -43,28 +45,34 @@
 	let new_site_group_name = $state('')
 	async function create_site_group(e) {
 		e.preventDefault()
-		const userId = $current_user?.id
-		if (!userId) return
-		const newGroup = SiteGroups.create({ name: new_site_group_name, index: 0 })
-		await self.commit()
-		new_site_group_name = ''
-		is_creating_site_group = false
-		// Navigate to the newly created group
-		goto(`/admin/dashboard/sites?group=${newGroup.id}`)
+		await save.run(async () => {
+			if (!new_site_group_name.trim()) return
+			const userId = $current_user?.id
+			if (!userId) return
+			const newGroup = SiteGroups.create({ name: new_site_group_name.trim(), index: 0 })
+			await self.commit()
+			new_site_group_name = ''
+			is_creating_site_group = false
+			// Navigate to the newly created group
+			goto(`/admin/dashboard/sites?group=${newGroup.id}`)
+		})
 	}
 
 	let is_creating_symbol_group = $state(false)
 	let new_symbol_group_name = $state('')
 	async function create_symbol_group(e) {
 		e.preventDefault()
-		const userId = $current_user?.id
-		if (!userId) return
-		const newGroup = LibrarySymbolGroups.create({ name: new_symbol_group_name, index: 0 })
-		await self.commit()
-		new_symbol_group_name = ''
-		is_creating_symbol_group = false
-		// Navigate to the newly created group
-		goto(`/admin/dashboard/library?group=${newGroup.id}`)
+		await save.run(async () => {
+			if (!new_symbol_group_name.trim()) return
+			const userId = $current_user?.id
+			if (!userId) return
+			const newGroup = LibrarySymbolGroups.create({ name: new_symbol_group_name.trim(), index: 0 })
+			await self.commit()
+			new_symbol_group_name = ''
+			is_creating_symbol_group = false
+			// Navigate to the newly created group
+			goto(`/admin/dashboard/library?group=${newGroup.id}`)
+		})
 	}
 
 	function get_dashboard_url() {
@@ -80,16 +88,22 @@
 	}
 
 	const path = $derived($page.url.pathname.split('/').slice(0, 4).join('/'))
+	$effect(() => {
+		is_creating_site_group
+		is_creating_symbol_group
+		save.reset()
+	})
 </script>
 
 <Dialog.Root bind:open={is_creating_site_group}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">New Site Group</h2>
-		<form onsubmit={create_site_group}>
-			<Input bind:value={new_site_group_name} placeholder="Name your site group" class="my-4" />
+		<Dialog.Title>Create site group</Dialog.Title>
+		<form onsubmit={create_site_group} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_site_group_name} aria-label="Name your site group" placeholder="Name your site group" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_creating_site_group = false)}>Cancel</Button>
-				<Button type="submit">Create Group</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_creating_site_group = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_site_group_name.trim()}>{save.busy ? 'Saving…' : 'Create Group'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -97,12 +111,13 @@
 
 <Dialog.Root bind:open={is_creating_symbol_group}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Create Group</h2>
-		<form onsubmit={create_symbol_group}>
-			<Input bind:value={new_symbol_group_name} placeholder="Enter new Group name" class="my-4" />
+		<Dialog.Title>Create block group</Dialog.Title>
+		<form onsubmit={create_symbol_group} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_symbol_group_name} aria-label="Enter new Group name" placeholder="Enter new Group name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_creating_symbol_group = false)}>Cancel</Button>
-				<Button type="submit">Create</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_creating_symbol_group = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_symbol_group_name.trim()}>{save.busy ? 'Saving…' : 'Create'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>

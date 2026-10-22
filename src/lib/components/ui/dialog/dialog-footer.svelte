@@ -6,6 +6,6 @@
 	let { ref = $bindable(null), class: className, children, ...restProps }: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props()
 </script>
 
-<div bind:this={ref} class={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...restProps}>
+<div bind:this={ref} class={cn('mt-4 flex flex-wrap justify-end gap-2 border-t pt-4', className)} {...restProps}>
 	{@render children?.()}
 </div>

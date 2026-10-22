@@ -678,7 +678,6 @@ func importLibraryBlockFields(pb core.App, symbol *core.Record, nestedFields []i
 		}
 		importedFieldIDs[field.Id] = true
 
-		fieldKeyToRecord[fieldKey] = field
 		fieldKeyToRecord[compositeKey] = field
 
 		if parentKey != "" {
@@ -736,15 +735,7 @@ func importLibraryBlockContent(pb core.App, symbol *core.Record, data []byte) er
 	}
 
 	fields, _ := pb.FindRecordsByFilter("library_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
-	fieldByKey := make(map[string]*core.Record, len(fields))
-	fieldsByParent := make(map[string][]*core.Record)
-	for _, field := range fields {
-		fieldByKey[field.GetString("key")] = field
-		parentID := field.GetString("parent")
-		if parentID != "" {
-			fieldsByParent[parentID] = append(fieldsByParent[parentID], field)
-		}
-	}
+	fieldByKey, fieldsByParent := contentFieldScopes(fields)
 
 	entriesColl, err := pb.FindCollectionByNameOrId("library_symbol_entries")
 	if err != nil {
@@ -765,13 +756,7 @@ func importLibraryBlockContent(pb core.App, symbol *core.Record, data []byte) er
 		if field == nil {
 			continue
 		}
-		parentID := field.GetString("parent")
-		if parentID != "" {
-			if _, hasParent := fieldByKey[getFieldKeyById(fields, parentID)]; hasParent {
-				continue
-			}
-		}
-		if err := importSymbolContentField(pb, entriesColl, field, value, "", 0, fieldsByParent, fieldByKey, nil); err != nil {
+		if err := importSymbolContentField(pb, entriesColl, field, value, "", 0, fieldsByParent, nil); err != nil {
 			return err
 		}
 	}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { createDialogAction } from '$lib/components/dialog-action.svelte'
+	const save = createDialogAction()
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu'
@@ -142,10 +144,13 @@
 	})
 	async function handle_rename(e) {
 		e.preventDefault()
-		if (!active_symbol_group_id) return
-		LibrarySymbolGroups.update(active_symbol_group_id, { name: new_name })
-		await self.commit()
-		is_rename_open = false
+		await save.run(async () => {
+			if (!new_name.trim()) return
+			if (!active_symbol_group_id) return
+			LibrarySymbolGroups.update(active_symbol_group_id, { name: new_name.trim() })
+			await self.commit()
+			is_rename_open = false
+		})
 	}
 
 	let is_delete_open = $state(false)
@@ -212,11 +217,14 @@
 
 	async function handle_symbol_rename(e) {
 		e.preventDefault()
-		if (!symbol_being_renamed) return
-		LibrarySymbols.update(symbol_being_renamed.id, { name: symbol_new_name })
-		await self.commit()
-		is_symbol_renamer_open = false
-		symbol_being_renamed = null
+		await save.run(async () => {
+			if (!symbol_new_name.trim()) return
+			if (!symbol_being_renamed) return
+			LibrarySymbols.update(symbol_being_renamed.id, { name: symbol_new_name.trim() })
+			await self.commit()
+			is_symbol_renamer_open = false
+			symbol_being_renamed = null
+		})
 	}
 
 	// Symbol move
@@ -232,11 +240,13 @@
 	}
 
 	async function move_symbol() {
-		if (!symbol_being_moved) return
-		LibrarySymbols.update(symbol_being_moved.id, { group: selected_group_id })
-		await self.commit()
-		is_symbol_move_open = false
-		symbol_being_moved = null
+		await save.run(async () => {
+			if (!symbol_being_moved) return
+			LibrarySymbols.update(symbol_being_moved.id, { group: selected_group_id })
+			await self.commit()
+			is_symbol_move_open = false
+			symbol_being_moved = null
+		})
 	}
 
 	// Symbol delete
@@ -260,18 +270,25 @@
 
 	let creating_block_has_unsaved_changes = $state(false)
 	let editing_block_has_unsaved_changes = $state(false)
+	$effect(() => {
+		is_rename_open
+		is_symbol_renamer_open
+		is_symbol_move_open
+		save.reset()
+	})
 </script>
 
 <!-- Symbol Group Dialogs -->
 <Dialog.Root bind:open={is_rename_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename group</h2>
+		<Dialog.Title>Rename group</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your group</p>
-		<form onsubmit={handle_rename}>
-			<Input bind:value={new_name} placeholder="Enter new group name" class="my-4" />
+		<form onsubmit={handle_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={new_name} aria-label="Enter new group name" placeholder="Enter new group name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_rename_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_rename_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !new_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -309,7 +326,7 @@
 		<Separator orientation="vertical" class="mr-2 h-4" />
 		<div class="text-sm">{active_symbol_group?.name}</div>
 		<DropdownMenu.Root>
-			<DropdownMenu.Trigger>
+			<DropdownMenu.Trigger aria-label="Group options" title="Group options">
 				{#snippet child({ props })}
 					<button {...props}>
 						<ChevronDown class="h-4" />
@@ -330,7 +347,7 @@
 		</DropdownMenu.Root>
 	</div>
 	<div class="ml-auto mr-4 flex gap-2">
-		<Button size="sm" variant="ghost" onclick={() => (is_info_dialog_open = true)}>
+		<Button size="sm" variant="ghost" aria-label="How blocks work" title="How blocks work" onclick={() => (is_info_dialog_open = true)}>
 			<Info class="h-4 w-4" />
 		</Button>
 		{#if active_symbol_group_id}
@@ -352,10 +369,10 @@
 		<EmptyState
 			class="h-[50vh]"
 			icon={Cuboid}
-			title="No Block Groups"
+			title="Build your block library"
 			description="Create your first block group to start organizing your components."
 			button={{
-				label: 'Create First Group',
+				label: 'Create group',
 				icon: CirclePlus,
 				onclick: create_first_group
 			}}
@@ -373,7 +390,7 @@
 					{#snippet children(symbol)}
 						<SymbolButton {symbol} onclick={() => begin_symbol_edit(symbol)}>
 							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
+								<DropdownMenu.Trigger aria-label={`Options for ${symbol.name}`} title={`Options for ${symbol.name}`}>
 									<EllipsisVertical size={14} />
 								</DropdownMenu.Trigger>
 								<DropdownMenu.Content>
@@ -403,36 +420,32 @@
 					{/snippet}
 				</Masonry>
 			{:else}
-				<div class="flex flex-col items-center justify-center gap-6 flex-1 h-[50vh]">
-					<div class="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full dark:bg-gray-800">
-						<Cuboid class="w-10 h-10 text-gray-500 dark:text-gray-400" />
-					</div>
-					<div class="space-y-2 text-center">
-						<h2 class="text-2xl font-bold tracking-tight">No Blocks to display</h2>
-						<p class="text-gray-500 dark:text-gray-400 text-balance max-w-[30rem]">Blocks are components you can add to any site. When you create one it'll show up here.</p>
-					</div>
-					<div class="flex gap-3">
-						<Button onclick={open_create_block} variant="outline">
-							<CirclePlus class="h-4 w-4" />
-							<span>Create Block</span>
-						</Button>
-						<Button onclick={() => goto('/admin/dashboard/marketplace/blocks')} variant="outline">
-							<Store class="h-4 w-4" />
-							<span>Browse Marketplace</span>
-						</Button>
-					</div>
-				</div>
+				<EmptyState
+					class="min-h-[50vh]"
+					icon={Cuboid}
+					title="No blocks in this group"
+					description="Create a reusable block, import one, or choose a block from the marketplace."
+					button={{ label: 'Create block', icon: CirclePlus, onclick: open_create_block }}
+					secondary={{ label: 'Browse marketplace', url: '/admin/dashboard/marketplace/blocks' }}
+				/>
 			{/if}
 		{/key}
 	{/if}
 </div>
 
 <!-- Symbol Dialogs -->
-<Dialog.Root bind:open={is_symbol_move_open}>
+<Dialog.Root
+	bind:open={
+		() => is_symbol_move_open,
+		(open) => {
+			if (!save.busy) is_symbol_move_open = open
+		}
+	}
+>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
 		<div class="grid gap-4">
 			<div class="space-y-2">
-				<h4 class="font-medium leading-none">Move to group</h4>
+				<Dialog.Title>Move to group</Dialog.Title>
 				<p class="text-muted-foreground text-sm">Select a group for this block</p>
 			</div>
 			<RadioGroup.Root bind:value={selected_group_id}>
@@ -443,9 +456,12 @@
 					</div>
 				{/each}
 			</RadioGroup.Root>
-			<div class="flex justify-end">
-				<Button onclick={move_symbol}>Move</Button>
-			</div>
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
+			<Dialog.Footer>
+				<Button variant="outline" disabled={save.busy} onclick={() => (is_symbol_move_open = false)}>Cancel</Button><Button onclick={move_symbol} disabled={save.busy || !selected_group_id}>
+					{save.busy ? 'Moving…' : 'Move'}
+				</Button>
+			</Dialog.Footer>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
@@ -524,13 +540,14 @@
 
 <Dialog.Root bind:open={is_symbol_renamer_open}>
 	<Dialog.Content class="sm:max-w-[425px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Rename Block</h2>
+		<Dialog.Title>Rename Block</Dialog.Title>
 		<p class="text-muted-foreground text-sm">Enter a new name for your Block</p>
-		<form onsubmit={handle_symbol_rename}>
-			<Input bind:value={symbol_new_name} placeholder="Enter new Block name" class="my-4" />
+		<form onsubmit={handle_symbol_rename} aria-busy={save.busy}>
+			<Input disabled={save.busy} required bind:value={symbol_new_name} aria-label="Enter new Block name" placeholder="Enter new Block name" class="my-4" />
+			{#if save.error}<p class="text-sm text-red-300 break-words" role="alert">{save.error}</p>{/if}
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (is_symbol_renamer_open = false)}>Cancel</Button>
-				<Button type="submit">Rename</Button>
+				<Button type="button" variant="outline" disabled={save.busy} onclick={() => (is_symbol_renamer_open = false)}>Cancel</Button>
+				<Button type="submit" disabled={save.busy || !symbol_new_name.trim()}>{save.busy ? 'Saving…' : 'Rename'}</Button>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -563,7 +580,7 @@
 <!-- Upload Symbol Dialog -->
 <Dialog.Root bind:open={upload_dialog_open}>
 	<Dialog.Content class="sm:max-w-[500px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Import Block</h2>
+		<Dialog.Title>Import Block</Dialog.Title>
 		<p class="text-muted-foreground text-sm mb-4">Import a block from a JSON file exported from another site.</p>
 
 		{#if is_importing}
@@ -595,7 +612,7 @@
 
 <Dialog.Root bind:open={is_info_dialog_open}>
 	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">How Blocks Work in Primo</h2>
+		<Dialog.Title>How Blocks Work in Primo</Dialog.Title>
 		<p class="text-muted-foreground text-sm mb-6">Blocks are reusable components that you can add to any page on your sites.</p>
 
 		<div class="space-y-4">

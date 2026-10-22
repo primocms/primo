@@ -2,6 +2,8 @@
 	import Item from './Item.svelte'
 	import Icon from '@iconify/svelte'
 	import { onMount, tick } from 'svelte'
+	import type { Snippet } from 'svelte'
+	import type { Action } from 'svelte/action'
 	import { get, set } from 'idb-keyval'
 	import { slide, fade } from 'svelte/transition'
 	import { flip } from 'svelte/animate'
@@ -34,6 +36,9 @@
 		oncreate,
 		page_slug,
 		active_page_id,
+		creating_page_id,
+		creatingPageRow,
+		revealCreatingPage,
 		hover_position = $bindable(null)
 	}: {
 		parent?: ObjectOf<typeof Pages>
@@ -41,6 +46,9 @@
 		oncreate: (new_page: Omit<Page, 'id' | 'index'>) => Promise<void>
 		page_slug: string
 		active_page_id?: string
+		creating_page_id: string | null
+		creatingPageRow: Snippet
+		revealCreatingPage: Action<HTMLElement, boolean>
 		hover_position?: string | null
 	} = $props()
 
@@ -94,7 +102,7 @@
 	}
 
 	let drag_handle_element = $state()
-	let element = $state()
+	let element = $state<HTMLElement>()
 	// Browse mode removes the drag handle from the DOM, so a registration made
 	// once on mount would keep pointing at the detached element after a
 	// CMS → Browse → CMS round trip and reordering would silently stop working.
@@ -118,7 +126,7 @@
 
 	onMount(async () => {
 		dropTargetForElements({
-			element,
+			element: element!,
 			getData({ input, element }) {
 				return attachClosestEdge(
 					{ page },
@@ -254,7 +262,7 @@
 </script>
 
 <div class="Item" bind:this={element} class:contains-child={parent} class:dragging={is_dragging}>
-	<div class="page-item-container" class:active class:expanded={showing_children && has_children}>
+	<div class="page-item-container" data-page-id={page.id} class:active class:expanded={showing_children && has_children}>
 		<div class="left">
 			{#if editing_page}
 				<div class="details">
@@ -320,50 +328,79 @@
 					<Icon icon="material-symbols:drag-handle" />
 				</button>
 				<MenuPopup
-				icon="carbon:overflow-menu-vertical"
-				options={[
-					...(!has_children && !creating_page && page.id !== homepage?.id
-						? [
-								{
-									label: `Create Subpage`,
-									icon: 'akar-icons:plus',
-									on_click: () => {
-										creating_page = true
+					title={`Options for ${page.name}`}
+					icon="carbon:overflow-menu-vertical"
+					options={[
+						...(!has_children && !creating_page && page.id !== homepage?.id
+							? [
+									{
+										label: `Create Subpage`,
+										icon: 'akar-icons:plus',
+										on_click: () => {
+											creating_page = true
+										}
 									}
-								}
-							]
-						: []),
-					{
-						label: 'Change Name',
-						icon: 'clarity:edit-solid',
-						on_click: () => {
-							editing_page = !editing_page
-							tick().then(() => {
-								name_input_el.focus()
-							})
-						}
-					},
-					...(!!page.parent
-						? [
-								{
-									label: 'Delete',
-									icon: 'ic:outline-delete',
-									danger: true,
-									on_click: async () => {
-										const descendants = getAllDescendants(page.id)
+								]
+							: []),
+						{
+							label: 'Change Name',
+							icon: 'clarity:edit-solid',
+							on_click: () => {
+								editing_page = !editing_page
+								tick().then(() => {
+									name_input_el.focus()
+								})
+							}
+						},
+						...(!!page.parent
+							? [
+									{
+										label: 'Delete',
+										icon: 'ic:outline-delete',
+										danger: true,
+										on_click: async () => {
+											const descendants = getAllDescendants(page.id)
 
-										if (descendants.length > 0) {
-											// Show warning dialog for pages with children
-											pages_to_delete = [page, ...descendants]
-											pending_delete = async () => {
+											if (descendants.length > 0) {
+												// Show warning dialog for pages with children
+												pages_to_delete = [page, ...descendants]
+												pending_delete = async () => {
+													const parent_id = page.parent
+
+													// Delete the page and all descendants
+													Pages.delete(page.id)
+													descendants.forEach((desc) => Pages.delete(desc.id))
+
+													// Reindex remaining sibling pages
+													const sibling_pages = allPages.filter((p) => p.parent === parent_id && p.id !== page.id && !descendants.some((d) => d.id === p.id)).sort((a, b) => a.index - b.index)
+
+													sibling_pages.forEach((sibling_page, i) => {
+														const index = parent_id === homepage?.id ? i + 1 : i
+														Pages.update(sibling_page.id, { index })
+													})
+
+													await selfManager.commit()
+
+													toast.success(descendants.length > 0 ? `Deleted "${page.name}" and ${descendants.length} child page(s)` : `Deleted "${page.name}"`)
+
+													// If the deleted page was the one open, navigate to homepage
+													try {
+														if (page_slug === page.slug) {
+															const home_url = build_cms_page_url(homepage, pageState.url)
+															if (home_url) await goto(home_url, { replaceState: true })
+														}
+													} catch (e) {
+														console.warn('Navigation after delete failed', e)
+													}
+												}
+												delete_warning_dialog = true
+											} else {
+												// Direct delete for pages without children
 												const parent_id = page.parent
-
-												// Delete the page and all descendants
 												Pages.delete(page.id)
-												descendants.forEach((desc) => Pages.delete(desc.id))
 
 												// Reindex remaining sibling pages
-												const sibling_pages = allPages.filter((p) => p.parent === parent_id && p.id !== page.id && !descendants.some((d) => d.id === p.id)).sort((a, b) => a.index - b.index)
+												const sibling_pages = allPages.filter((p) => p.parent === parent_id && p.id !== page.id).sort((a, b) => a.index - b.index)
 
 												sibling_pages.forEach((sibling_page, i) => {
 													const index = parent_id === homepage?.id ? i + 1 : i
@@ -372,7 +409,7 @@
 
 												await selfManager.commit()
 
-												toast.success(descendants.length > 0 ? `Deleted "${page.name}" and ${descendants.length} child page(s)` : `Deleted "${page.name}"`)
+												toast.success(`Deleted "${page.name}"`)
 
 												// If the deleted page was the one open, navigate to homepage
 												try {
@@ -384,38 +421,10 @@
 													console.warn('Navigation after delete failed', e)
 												}
 											}
-											delete_warning_dialog = true
-										} else {
-											// Direct delete for pages without children
-											const parent_id = page.parent
-											Pages.delete(page.id)
-
-											// Reindex remaining sibling pages
-											const sibling_pages = allPages.filter((p) => p.parent === parent_id && p.id !== page.id).sort((a, b) => a.index - b.index)
-
-											sibling_pages.forEach((sibling_page, i) => {
-												const index = parent_id === homepage?.id ? i + 1 : i
-												Pages.update(sibling_page.id, { index })
-											})
-
-											await selfManager.commit()
-
-											toast.success(`Deleted "${page.name}"`)
-
-											// If the deleted page was the one open, navigate to homepage
-											try {
-												if (page_slug === page.slug) {
-													const home_url = build_cms_page_url(homepage, pageState.url)
-													if (home_url) await goto(home_url, { replaceState: true })
-												}
-											} catch (e) {
-												console.warn('Navigation after delete failed', e)
-											}
 										}
 									}
-								}
-							]
-						: [])
+								]
+							: [])
 					]}
 				/>
 			{/if}
@@ -423,19 +432,25 @@
 	</div>
 
 	{#if creating_page && !$read_only}
-		<div style="border-left: 0.5rem solid #111;" transition:slide={{ duration: 200 }}>
+		<div
+			hidden={children.some((child) => child.id === creating_page_id)}
+			use:revealCreatingPage={creating_page_id === null}
+			style="border-left: 0.5rem solid #111;"
+			transition:slide={{ duration: 200 }}
+		>
 			<PageForm
 				parent={page}
 				oncreate={async (new_page: Omit<Page, 'id' | 'parent' | 'site' | 'index'>) => {
-					creating_page = false
-					showing_children = true
 					const url_taken = allPages.some((p) => p?.slug === new_page.slug && p.parent === page.id)
 					if (url_taken) {
-						alert(`That URL is already in use`)
+						throw new Error('That URL is already in use')
 					} else {
 						// Pass the correct parent and site IDs
 						const site_id = site?.id || page.site
+						showing_children = true
 						await oncreate({ ...new_page, parent: page.id, site: site_id })
+						creating_page = false
+						showing_children = true
 					}
 				}}
 			/>
@@ -447,8 +462,25 @@
 			<div class="drop-indicator-top" class:active={children_hover_position === `${page.id}-children-top`}><div></div></div>
 			<ul class="page-list child" transition:slide={{ duration: has_toggled ? 100 : 0 }}>
 				{#each children as subpage (subpage.id)}
-					<li animate:flip={{ duration: 200 }} class="subpage-item">
-						<Item parent={page} page={subpage} active={subpage.id === active_page_id} {page_slug} {active_page_id} {oncreate} bind:hover_position={children_hover_position} on:delete on:create />
+					<li animate:flip={{ duration: 200 }} class="subpage-item" use:revealCreatingPage={subpage.id === creating_page_id}>
+						{#if subpage.id === creating_page_id}
+							{@render creatingPageRow()}
+						{:else}
+							<Item
+								parent={page}
+								page={subpage}
+								active={subpage.id === active_page_id}
+								{page_slug}
+								{active_page_id}
+								{oncreate}
+								{creating_page_id}
+								{creatingPageRow}
+								{revealCreatingPage}
+								bind:hover_position={children_hover_position}
+								on:delete
+								on:create
+							/>
+						{/if}
 						<div class="drop-indicator-inline" class:active={children_hover_position === `${subpage.id}-bottom`}><div></div></div>
 					</li>
 				{/each}
@@ -498,12 +530,15 @@
 				variant="destructive"
 				onclick={async () => {
 					// The confirm dialog can already be open when the mode flips.
-					if (!$read_only && pending_delete) {
-						await pending_delete()
+					try {
+						if (!$read_only && pending_delete) await pending_delete()
+					} catch (error) {
+						toast.error(error instanceof Error ? error.message : 'Could not delete these pages. Please try again.')
+					} finally {
+						delete_warning_dialog = false
+						pages_to_delete = []
+						pending_delete = null
 					}
-					delete_warning_dialog = false
-					pages_to_delete = []
-					pending_delete = null
 				}}
 			>
 				<Icon icon="mdi:delete" class="w-4 h-4 mr-1" />
@@ -786,13 +821,46 @@
 			opacity: 0.6;
 		}
 	}
-	.page-item-container { align-items: center; min-height: 48px; padding: 10px 12px; background: transparent; border: 1px solid transparent; border-radius: 5px; gap: 8px; }
-	.page-item-container:hover { background: #252528; }
-	.page-item-container.active { background: #3a3027; border-color: #956e51; border-bottom-right-radius: 5px; }
-	.page-item-container.active a { color: #ece8e3; }
-	.page-item-container .left { min-width: 0; flex: 1; }
-	.page-item-container .left .details { min-width: 0; grid-template-columns: auto minmax(0, auto) minmax(0, 1fr); gap: 9px; }
-	.page-item-container .left .details .url { font-size: 12px; color: #93939e; }
-	.page-item-container .options { flex-shrink: 0; gap: 6px; }
-	@media (max-width: 480px) { .page-item-container .options .add-child-btn span { display: none; } }
+	.page-item-container {
+		align-items: center;
+		min-height: 48px;
+		padding: 10px 12px;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 5px;
+		gap: 8px;
+	}
+	.page-item-container:hover {
+		background: #252528;
+	}
+	.page-item-container.active {
+		background: #3a3027;
+		border-color: #956e51;
+		border-bottom-right-radius: 5px;
+	}
+	.page-item-container.active a {
+		color: #ece8e3;
+	}
+	.page-item-container .left {
+		min-width: 0;
+		flex: 1;
+	}
+	.page-item-container .left .details {
+		min-width: 0;
+		grid-template-columns: auto minmax(0, auto) minmax(0, 1fr);
+		gap: 9px;
+	}
+	.page-item-container .left .details .url {
+		font-size: 12px;
+		color: #93939e;
+	}
+	.page-item-container .options {
+		flex-shrink: 0;
+		gap: 6px;
+	}
+	@media (max-width: 480px) {
+		.page-item-container .options .add-child-btn span {
+			display: none;
+		}
+	}
 </style>

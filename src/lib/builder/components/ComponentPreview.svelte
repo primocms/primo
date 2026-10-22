@@ -100,7 +100,7 @@
 					data
 				},
 				buildStatic: false,
-				runtime: ['mount', 'unmount']
+				runtime: ['createPreview']
 			})
 
 			if (error) {
