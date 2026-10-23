@@ -49,6 +49,9 @@ func setup(pb *pocketbase.PocketBase) error {
 	if err := internal.RegisterInfoEndpoint(pb); err != nil {
 		return err
 	}
+	if err := internal.RegisterCLILoginEndpoints(pb); err != nil {
+		return err
+	}
 
 	if err := internal.RegisterGenerateEndpoint(pb); err != nil {
 		return err

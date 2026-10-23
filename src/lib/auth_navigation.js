@@ -8,7 +8,7 @@ export const auth_destination = (url, user) => {
 	try {
 		const destination = new URL(next, url.origin)
 		// Accept only same-origin admin routes and avoid redirecting back to auth.
-		if (destination.origin !== url.origin || !/^\/admin\/(?:dashboard|sites|site)(?:\/|$)/.test(destination.pathname)) return fallback
+		if (destination.origin !== url.origin || !/^\/admin\/(?:dashboard|sites|site|cli-login)(?:\/|$)/.test(destination.pathname)) return fallback
 		return destination.pathname + destination.search + destination.hash
 	} catch {
 		return fallback
