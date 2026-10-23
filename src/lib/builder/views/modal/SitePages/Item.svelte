@@ -288,8 +288,8 @@
 					<span class="icon" style:background={page_type?.color}>
 						<Icon icon={page_type?.icon} />
 					</span>
-					<a class:active href={full_url?.href} onclick={() => {}} class="name">{page.name}</a>
-					<span class="url">/{page.slug}</span>
+					<a class:active href={full_url?.href} onclick={() => {}} class="name" title={page.name}>{page.name}</a>
+					<span class="url" title={`/${page.slug}`}>/{page.slug}</span>
 				</div>
 				<div class="flex -space-x-4">
 					{#each related_activities as [{ user, user_avatar }]}
@@ -555,6 +555,7 @@
 	.Item {
 		display: flex;
 		flex-direction: column;
+		min-width: 0;
 		position: relative;
 		overflow: visible;
 		/* gap: 4px; */
@@ -622,13 +623,13 @@
 			.details {
 				font-weight: 400;
 				line-height: 1.5rem;
-				display: grid;
-				grid-template-columns: auto auto 1fr;
-				place-items: center;
+				display: flex;
+				align-items: center;
 				gap: 0.75rem;
 				color: var(--color-gray-1);
 
 				.icon {
+					flex-shrink: 0;
 					font-size: 0.75rem;
 					padding: 6px;
 					border-radius: 1rem;
@@ -638,6 +639,7 @@
 				}
 
 				a.name {
+					min-width: 0;
 					font-size: 0.875rem;
 					white-space: nowrap;
 					overflow: hidden;
@@ -651,16 +653,15 @@
 				}
 
 				.url {
-					display: flex;
+					min-width: 0;
+					max-width: 45%;
+					flex: 0 2 auto;
+					display: block;
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					font-weight: 400;
 					color: var(--color-gray-5);
-					display: inline-block; /* This is key for spans */
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
 				}
 
 				div.name,
@@ -682,6 +683,7 @@
 			}
 
 			.toggle {
+				flex-shrink: 0;
 				padding: 0 0.5rem;
 				transition: 0.1s color;
 				font-size: 1.5rem;
@@ -847,7 +849,7 @@
 	}
 	.page-item-container .left .details {
 		min-width: 0;
-		grid-template-columns: auto minmax(0, auto) minmax(0, 1fr);
+		flex: 0 1 auto;
 		gap: 9px;
 	}
 	.page-item-container .left .details .url {
