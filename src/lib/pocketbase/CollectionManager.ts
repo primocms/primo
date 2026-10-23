@@ -125,6 +125,13 @@ export const createCollectionManager = (
 			const existing = records.get(id)
 			if (!existing?.data) return
 			records.set(id, { data: { ...existing.data, ...fields } })
+			// Committed changes remain as overlays in CollectionMapping.one().
+			// Refresh them too, or their old artifact fields mask this update.
+			// Pending local edits must retain precedence over server responses.
+			const change = changes.get(id)
+			if (change?.committed && change.operation !== 'delete') {
+				changes.set(id, { ...change, data: { ...change.data, ...fields } })
+			}
 		},
 		commit: async () => {
 			// In files-author mode the CLI's sync layer overwrites the DB on
