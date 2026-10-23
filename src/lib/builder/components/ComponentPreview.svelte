@@ -204,6 +204,9 @@
 			const { event, payload } = data
 			if (event === 'INITIALIZED') {
 				iframe_loaded = true
+				// Updating the inherited head recreates the iframe document even
+				// when the block's code is unchanged. Mount it in each new document.
+				if (componentApp) setIframeApp()
 			} else if (event === 'BEGIN') {
 				compilation_error = null
 				error_source = null
@@ -443,7 +446,7 @@
 	})
 
 	watch(
-		() => [componentApp, iframe_loaded],
+		() => componentApp,
 		() => {
 			if (!componentApp || !iframe_loaded) return
 			setIframeApp()

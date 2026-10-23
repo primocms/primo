@@ -1,23 +1,20 @@
 <script lang="ts">
-	import { onDestroy, untrack, type Snippet } from 'svelte'
-	import * as _ from 'lodash-es'
+	import { untrack, type Snippet } from 'svelte'
 	import Icon, { loadIcons } from '@iconify/svelte'
 	import IconButton from './ui/IconButton.svelte'
 	import Toolbar from './views/editor/Toolbar.svelte'
 	import { PressedKeys } from 'runed'
 	import { isModKeyPressed } from './utils/keyboard'
-	import { onMobile, mod_key_held, locale } from './stores/app/misc'
+	import { onMobile, mod_key_held } from './stores/app/misc'
 	import Page_Sidebar from './components/Sidebar/Page_Sidebar.svelte'
 	import PageType_Sidebar from './components/Sidebar/PageType_Sidebar.svelte'
 	import { sidebarReveal } from './stores/app/outline'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
-	import { site_html } from '$lib/builder/stores/app/page'
-	import { processCode } from '$lib/builder/utils'
+	import PreviewHead from './components/PreviewHead.svelte'
 	import { page } from '$app/state'
 	import type { Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { site_context } from './stores/context'
-	import { useContent } from '$lib/Content.svelte'
 	import { fromStore } from 'svelte/store'
 	import { current_user } from '$lib/pocketbase/user'
 	import { read_only } from '$lib/pocketbase/author_mode'
@@ -39,11 +36,6 @@
 	site_context.set(context)
 	$effect(() => {
 		context.value = site
-
-		if (!site_data) return
-		compile_component_head({ html: site.head, data: site_data }).then((generated_code) => {
-			$site_html = generated_code
-		})
 	})
 
 	const user = fromStore(current_user).current
@@ -152,41 +144,6 @@
 		}
 	}
 
-	// reset site html to avoid issues when navigating to new site
-	onDestroy(() => {
-		$site_html = null
-	})
-
-	const data = $derived(useContent(site, { target: 'cms' }))
-	const site_data = $derived(data && (data[$locale] ?? {}))
-	async function compile_component_head({ html, data }) {
-		const compiled = await processCode({
-			component: {
-				html: `<svelte:head>${html}</svelte:head>`,
-				css: '',
-				js: '',
-				data: data ?? {}
-			}
-		})
-		if (!compiled.error) {
-			return compiled.head
-		} else return ''
-	}
-
-	// Generate <head> tag code – only when site data meaningfully changes
-	let last_site_data = $state<any>()
-	$effect(() => {
-		if (!site_data) return
-
-		// Skip recompilation if data is effectively unchanged
-		if (_.isEqual(last_site_data, site_data)) return
-
-		last_site_data = _.cloneDeep(site_data)
-		compile_component_head({ html: site.head, data: site_data }).then((generated_code) => {
-			$site_html = generated_code
-		})
-	})
-
 	// --- Browse mode safety net ---------------------------------------------
 	// Fields and controls are rendered read-only at the source in files mode.
 	// This capture-phase interceptor exists only to catch edit paths that slip
@@ -240,6 +197,8 @@
 		warn_read_only()
 	}
 </script>
+
+<PreviewHead {site} />
 
 <div class="h-screen flex flex-col" {oninputcapture} {onkeydowncapture} {onbeforeinputcapture}>
 	<Toolbar>
