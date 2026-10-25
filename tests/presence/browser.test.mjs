@@ -60,9 +60,17 @@ test(engine+' production presence survives canceled requests, inline save, neste
  const roots=own.filter(e=>e.field===field('items').id&&!e.parent).sort((a,b)=>a.index-b.index),links=own.filter(e=>e.field===field('links').id&&e.parent===alpha).sort((a,b)=>a.index-b.index)
  await title.hover();await page.getByRole('button',{name:'Edit Block Content'}).click();const dialog=page.getByRole('dialog'),row=id=>dialog.locator('.RepeaterFieldItem[data-entry-id="'+id+'"]')
  assert.equal(await dialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
- await row(roots[1].id).getByRole('button',{name:'Move Item item up',exact:true}).click()
+ const moveItem=async id=>{
+  const trigger=row(id).locator(':scope > .repeater-item-container > .item-options > .primo-buttons button[aria-label^="Rearrange "]')
+  await trigger.click()
+  const menuId=await trigger.getAttribute('aria-controls');assert.ok(menuId,'Move trigger must own its menu')
+  const menu=page.locator(`[role="menu"][id="${menuId}"]`)
+  await menu.getByRole('menuitem',{name:'Move earlier',exact:true}).click()
+  await menu.waitFor({state:'hidden'})
+ }
+ await moveItem(roots[1].id)
  if(!await row(alpha).locator('[id$="-name"] textarea').isVisible())await row(alpha).locator('button.title').first().click()
- await row(links[1].id).getByRole('button',{name:'Move Link item up',exact:true}).click();await dialog.getByRole('button',{name:'Save',exact:true}).click();await dialog.waitFor({state:'hidden'});await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
+ await moveItem(links[1].id);await dialog.getByRole('button',{name:'Save',exact:true}).click();await dialog.waitFor({state:'hidden'});await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
  for(let n=0;n<3;n++){phase='post-reorder reload '+(n+1);await page.reload();await ready();const after=await c.verifyContent(tag);assert.equal(after.find(e=>e.id===roots[1].id).index,0);assert.equal(after.find(e=>e.id===links[1].id).index,0)}
  // Navigation cleanup is another detached presence task, separate from content.
  let cleanupAborted=false

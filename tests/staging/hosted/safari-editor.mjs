@@ -74,9 +74,18 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
   await wait(()=>execute("return !!document.querySelector('[role=dialog] .RepeaterFieldItem')"),'Safari content dialog missing')
   invariant(await execute("return ![...document.querySelectorAll('[role=dialog] button')].some(b=>b.textContent.trim()==='Create Field')"),'Editor exposed schema creation')
   const row=id=>'[role=dialog] .RepeaterFieldItem[data-entry-id="'+id+'"]'
-  await click(await element(row(roots[1].id)+' button[aria-label="Move Item item up"]'))
+    const moveItem=async id=>{
+     const trigger=await element(row(id)+' > .repeater-item-container > .item-options > .primo-buttons button[aria-label^="Rearrange "]')
+     await click(trigger)
+     const menuId=await execute("return arguments[0].getAttribute('aria-controls')",[{'element-6066-11e4-a52e-4f735466cecf':trigger}]);invariant(menuId,'Safari move trigger must own its menu')
+     await wait(()=>execute("return !!document.getElementById(arguments[0])?.querySelector('[role=menuitem]')",[menuId]),'Safari move menu missing')
+     const action=await execute("return [...document.getElementById(arguments[0]).querySelectorAll('[role=menuitem]')].find(el=>el.textContent.trim()==='Move earlier')",[menuId]);invariant(action,'Safari Move earlier action missing')
+     await click(action['element-6066-11e4-a52e-4f735466cecf'])
+     await wait(()=>execute("return !document.getElementById(arguments[0])?.getClientRects().length",[menuId]),'Safari move menu must close')
+    }
+  await moveItem(roots[1].id)
   if(!await execute("const x=document.querySelector(arguments[0]+' textarea');return !!x&&x.getClientRects().length>0",[row(alpha)]))await click(await element(row(alpha)+' button.title'))
-  await click(await element(row(nested[1].id)+' button[aria-label="Move Link item up"]'))
+  await moveItem(nested[1].id)
   await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content save did not finish')
   await cmd('POST',session+'/refresh',{});await wait(()=>execute("return !!document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1')"),'Safari reload failed')
   const after=await entries();invariant(JSON.stringify(after.map(e=>e.id).sort())===JSON.stringify(before.map(e=>e.id).sort()),'Safari reorder changed record identities')
