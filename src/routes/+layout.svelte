@@ -1,6 +1,6 @@
 <script>
 	import '$lib/app.css'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { compilers_registered } from '$lib/stores'
 	import { registerProcessors } from '$lib/builder/component'
 	import { toast } from 'svelte-sonner'

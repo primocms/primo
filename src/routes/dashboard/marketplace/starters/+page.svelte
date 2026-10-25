@@ -24,9 +24,9 @@
 	$effect(() => {
 		const groups = SiteGroups.from(marketplace).list({ sort: 'index' }) ?? []
 		if (!group_id && groups.length > 0) {
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', groups[0].id)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 </script>

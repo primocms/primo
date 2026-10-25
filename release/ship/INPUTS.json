@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "preparedDate": "2026-10-25",
   "candidate": {
-    "cms": "3.3.2-rc.12",
-    "cli": "0.3.0-rc.2",
-    "mcp": "0.1.11-rc.2"
+    "cms": "3.3.2-rc.13",
+    "cli": "0.3.0-rc.3",
+    "mcp": "0.1.11-rc.3"
   },
   "plannedStableVersions": {
     "cms": "3.3.2",
@@ -497,5 +497,32 @@
       "decision": "deferred"
     }
   ],
-  "initialScriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6"
+  "initialScriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
+  "securityRefresh": {
+    "priorCMSHead": "14a3aeaa2c1bed9f3f057dc4bc63205c586ca395",
+    "cliHead": "36a0a1641de9623047b38f67286b8498dc30d8ea",
+    "mcpHead": "adc71bd3a00f54c49217d0adf9c0fb8c54751677",
+    "hostingHead": "1b6518e8f2aa1566f46090ce0884e75b98ada958",
+    "go": "1.26.10",
+    "svelteKit": "3.1.0",
+    "svelte": "5.57.2",
+    "minimumCMSBuildNode": "22.17.0",
+    "minimumCLIRuntimeNode": "22.13.0",
+    "archives": {
+      "cms": {
+        "version": "v3.3.2-rc.13",
+        "previousFrozenSource": "14a3aeaa2c1bed9f3f057dc4bc63205c586ca395",
+        "buildTime": "2026-10-25T00:00:00Z",
+        "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
+      },
+      "cli": {
+        "archive": "primo-cli-0.3.0-rc.3.tgz",
+        "sha256": "0f4c6a6d097331cab2e023075a47a4f722f8e9ea87195b6cd9c26c5de9dc9652"
+      },
+      "mcp": {
+        "archive": "primo-mcp-0.1.11-rc.3.tgz",
+        "sha256": "b5450aca59386f9bd3e6ec5b93c35e7d11d19c2324af81842750042c2ee24854"
+      }
+    }
+  }
 }

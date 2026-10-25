@@ -33,7 +33,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - run: npm ci
       # Keep the strict audit gate independent so a finding does not prevent
@@ -63,11 +63,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.26.9
+          go-version: 1.26.10
           cache: true
       - run: npm ci
       - run: npm run check
@@ -75,8 +75,8 @@ jobs:
         if: matrix.target == 'linux_amd64'
         shell: bash
         run: |
-          GOTOOLCHAIN=go1.27.2 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
-          GOTOOLCHAIN=go1.26.9 govulncheck ./...
+          GOTOOLCHAIN=go1.27.3 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          GOTOOLCHAIN=go1.26.10 govulncheck ./...
       - name: Build embedded frontend
         shell: bash
         run: |
@@ -85,7 +85,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.12 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.13 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
@@ -95,7 +95,7 @@ jobs:
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: rc12-${{ matrix.target }}
+          name: rc13-${{ matrix.target }}
           path: |
             primo_${{ matrix.target }}
             platform-result.json
@@ -126,12 +126,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc12-linux_amd64
+          name: rc13-linux_amd64
           path: frozen
       - name: Verify exact installed archives and tested native provenance
         run: |
@@ -169,7 +169,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc12-exact-${{ matrix.browser }}
+          name: rc13-exact-${{ matrix.browser }}
           path: |
             frozen-results.json
             firefox-compiler-repeats.json
@@ -196,12 +196,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc12-darwin_arm64
+          name: rc13-darwin_arm64
           path: frozen
       - name: Verify the exact Mac candidate and unchanged built CLI/MCP packages
         run: |
@@ -226,7 +226,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc12-native-safari
+          name: rc13-native-safari
           path: presence-safari.json
           if-no-files-found: error
 
@@ -246,12 +246,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc12-linux_amd64
+          name: rc13-linux_amd64
           path: frozen
       - uses: actions/download-artifact@v4
         with:
@@ -268,7 +268,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc12-copied-recovery
+          name: rc13-copied-recovery
           path: recovery-result.json
           if-no-files-found: warn
 
@@ -287,12 +287,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.13.0
+          node-version: 22.17.0
           cache: npm
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: rc12-linux_amd64
+          name: rc13-linux_amd64
           path: frozen
       - name: Verify the exact tested native artifact
         run: |
@@ -308,7 +308,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: rc12-framing-security
+          name: rc13-framing-security
           path: |
             framing-security-results.json
             tests/security/test-results/

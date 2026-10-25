@@ -123,7 +123,13 @@ test.describe('Publishing', () => {
 	})
 })
 
-test('browser publication preserves embedded source and hydrates interactive output', async ({ page, request, context }) => {
+test('browser publication preserves embedded source and hydrates while the runtime CDN is unavailable', async ({ page, request, context }) => {
+	const modules = new Set<string>()
+	page.on('request', request => {
+		const runtime = new URL(request.url()).searchParams.get('svelte-module')
+		if (runtime) modules.add(runtime)
+	})
+	await context.route('https://esm.sh/**', route => route.abort('failed'))
 	const { token } = await devAuth(request)
 	const fixture = await seedFixtureSite(token, 'Script Escaping Fixture')
 	const headers = { Authorization: `Bearer ${token}` }
@@ -150,6 +156,8 @@ test('browser publication preserves embedded source and hydrates interactive out
 	await loginAsDeveloper(page, fixture.siteId)
 	await expect(canvasFrame(page).getByTestId('source')).toHaveText(source, { timeout: 15000 })
 	await publishViaUI(page)
+	expect(modules.has('svelte/src/server/index.js')).toBe(true)
+	expect(modules.has('svelte/src/internal/client/index.js')).toBe(true)
 
 	const published = await context.newPage()
 	const errors: string[] = []

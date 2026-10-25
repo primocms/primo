@@ -10,7 +10,7 @@ import { createModuleLoader } from '../../src/lib/compiler/workers/module_loader
 import { createCompilerClient } from '../../src/lib/compiler/worker-client.js'
 
 // Run the real worker's virtual sources, transform and options through a local
-// bundler adapter. Only CDN resolution and worker transport are replaced: the
+// bundler adapter. Only runtime asset resolution and worker transport are replaced: the
 // test is deterministic offline and uses the installed, pinned Svelte runtime.
 const root = new URL('../../', import.meta.url)
 const workerSource = (await readFile(new URL('src/lib/compiler/workers/rollup.worker.js', root), 'utf8')).replace(/^import .*$/gm, '').replace(/^const sveltePromiseWorker = .*$/m, '')
@@ -72,8 +72,10 @@ async function fixture({ transformSources = [] } = {}) {
 		'json',
 		'glsl',
 		'createModuleLoader',
+		'resolvePinnedRuntime',
+		'pinnedRuntimeAsset',
 		workerSource
-	)(rollup, sveltePromiseWorker, (fn) => (worker = fn), 'test', '', {}, {}, {}, createModuleLoader)
+	)(rollup, sveltePromiseWorker, (fn) => (worker = fn), 'test', '', {}, {}, {}, createModuleLoader, () => null, () => null)
 	const transport = {
 		postMessage: async (options) => {
 			mode = options.buildStatic ? 'server' : 'client'

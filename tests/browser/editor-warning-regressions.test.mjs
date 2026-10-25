@@ -67,7 +67,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 					b.onResolve({ filter: /stores\/context(?:\.js)?$|^\.\/builder\/stores\/context$/ }, () => ({ path: 'test:context', namespace: 'test' }))
 					b.onResolve({ filter: /stores\/app\/misc$|pocketbase\/user$|pocketbase\/author_mode$/ }, () => ({ path: 'test:stores', namespace: 'test' }))
 					b.onResolve({ filter: /^\$app\/state$/ }, () => ({ path: 'test:page', namespace: 'test' }))
-					b.onResolve({ filter: /^\$app\/environment$/ }, () => ({ path: 'test:environment', namespace: 'test' }))
+					b.onResolve({ filter: /^\$app\/env$/ }, () => ({ path: 'test:environment', namespace: 'test' }))
 					b.onResolve({ filter: /^\$lib\/components\/ui\/tooltip$/ }, () => ({ path: 'test:tooltip', namespace: 'test' }))
 					b.onResolve({ filter: /^\.\.\/\.\.\/\.\.\/ui\/index\.js$/ }, () => ({ path: 'test:ui', namespace: 'test' }))
 					if (pageForm) {

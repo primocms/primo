@@ -66,7 +66,7 @@ test('opted-out analytics stays silent while a timed-out compiler download retri
  const before = await entries()
  let downloads = 0
  const holds: ReturnType<typeof setTimeout>[] = []
- await context.route(/^https:\/\/esm\.sh\/svelte@[^/]+\/es2022\/src\/internal\/client\/context\.mjs$/, async route => {
+ await context.route(url => url.searchParams.get('svelte-module') === 'svelte/src/internal/client/context.js', async route => {
   if (++downloads === 1) {
    // Exceed the real loader's first 10s deadline, then allow its retry.
    await new Promise<void>(resolve => holds.push(setTimeout(resolve, 12000)))

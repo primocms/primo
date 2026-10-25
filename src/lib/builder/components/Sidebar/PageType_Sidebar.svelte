@@ -2,7 +2,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as _ from 'lodash-es'
 	import { goto } from '$app/navigation'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	// Icon component removed to prevent stack overflow issues
 	import Icon from '@iconify/svelte'
@@ -60,9 +60,9 @@
 	// get the query param to set the tab when navigating from page (i.e. 'Manage Fields')
 	let active_tab = $state(page.url.searchParams.get('tab') === 'fields' ? 'CONTENT' : 'BLOCKS')
 	if (browser) {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.delete('tab')
-		goto(url, { replaceState: true })
+		goto(url, { replace: true })
 	}
 
 	async function create_block() {

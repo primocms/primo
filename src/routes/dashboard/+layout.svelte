@@ -12,7 +12,7 @@
 	onMount(async () => {
 		const login_url = auth_url(page.url)
 		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+			await goto(login_url, { replace: true })
 		}
 	})
 
@@ -58,7 +58,7 @@
 	const is_sites_route = $derived(page.url.pathname === '/admin/dashboard/sites')
 	$effect(() => {
 		if ($current_user && !$current_user.serverRole && !is_sites_route) {
-			goto('/admin/dashboard/sites', { replaceState: true })
+			goto('/admin/dashboard/sites', { replace: true })
 		}
 	})
 </script>

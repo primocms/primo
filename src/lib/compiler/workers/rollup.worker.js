@@ -12,6 +12,7 @@ import glsl from './plugins/glsl'
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
 import preview_runtime from '../preview-runtime.svelte.js?raw'
 import { createModuleLoader } from './module_loader.js'
+import { resolvePinnedRuntime, pinnedRuntimeAsset } from './pinned-runtime.js'
 
 const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 
@@ -162,7 +163,7 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 				input: './entry.js',
 				onwarn(warning, warn) {
 					// Suppress circular dependency warnings from esm.sh Svelte modules
-					if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.ids?.some((id) => id.includes('esm.sh/svelte'))) {
+					if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.ids?.some((id) => id.includes('esm.sh/svelte') || id.startsWith('primo-runtime:svelte/'))) {
 						return
 					}
 					// Use default warning handler for other warnings
@@ -175,6 +176,9 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 						async resolveId(importee, importer) {
 							// 1) Virtual esm-env
 							if (importee === 'esm-env') return 'virtual:esm-env'
+							const pinned = resolvePinnedRuntime(importee, importer, svelteOptions.generate === 'server')
+							if (pinned) return pinned
+							if (importee === 'node:async_hooks' && importer?.startsWith('primo-runtime:svelte/')) return { id: importee, external: true }
 
 							// 2) Local virtual files (in-memory Svelte sources)
 							if (component_lookup.has(importee)) return importee
@@ -194,15 +198,15 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 								if (importee.startsWith('/')) return new URL(importee, CDN_URL).href
 							}
 
-							// 6) Svelte runtime pinned
-							const serverRuntime = svelteOptions.generate === 'server' ? '?conditions=worker&bundle=false' : ''
-							if (importee === 'svelte') return SVELTE_CDN + serverRuntime
-							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice('svelte/'.length)}${serverRuntime}`
+							// 6) Non-runtime Svelte imports retain their original version pin.
+							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice(7)}`
 
 							// 7) Bare package → let esm.sh resolve
 							return `${CDN_URL}/${importee}`
 						},
 						async load(id) {
+							const asset = pinnedRuntimeAsset(id)
+							if (asset) return loadModule(asset)
 							if (id === 'virtual:esm-env') {
 								return `export const DEV = false; export const PROD = true; export const BROWSER = ${svelteOptions.generate !== 'server'};`
 							}

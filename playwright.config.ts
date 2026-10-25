@@ -1,4 +1,5 @@
-import { defineConfig, type BrowserName } from '@playwright/test'
+import { defineConfig } from '@playwright/test'
+type BrowserName = 'chromium' | 'firefox' | 'webkit'
 import { TEST_SERVER_URL } from './tests/e2e/helpers/paths'
 
 const browserName = process.env.PRIMO_TEST_BROWSER || 'chromium'

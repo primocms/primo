@@ -394,7 +394,7 @@
 													try {
 														if (page_slug === page.slug && homepage) {
 															const home_url = build_cms_page_url(homepage, pageState.url)
-															if (home_url) await goto(home_url, { replaceState: true })
+															if (home_url) await goto(home_url, { replace: true })
 														}
 													} catch (e) {
 														console.warn('Navigation after delete failed', e)
@@ -422,7 +422,7 @@
 												try {
 													if (page_slug === page.slug && homepage) {
 														const home_url = build_cms_page_url(homepage, pageState.url)
-														if (home_url) await goto(home_url, { replaceState: true })
+														if (home_url) await goto(home_url, { replace: true })
 													}
 												} catch (e) {
 													console.warn('Navigation after delete failed', e)

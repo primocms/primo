@@ -22,7 +22,7 @@
 	import { site_html } from '$lib/builder/stores/app/page.js'
 	import { onModKey } from '$lib/builder/utils/keyboard'
 	import * as _ from 'lodash-es'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { current_user } from '$lib/pocketbase/user'
 
 	/**

@@ -10,7 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { createHash } from 'node:crypto'
 const exec=promisify(execFile)
 const binary=path.resolve(process.env.PRIMO_TEST_CMS_BINARY)
-const expected='v3.3.2-rc.12'
+const expected='v3.3.2-rc.13'
 
 test('native candidate starts, edits content safely, survives restart and builds with the packaged CLI', {timeout:120000}, async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-native-'));let child,logs=''
@@ -45,7 +45,7 @@ test('native candidate starts, edits content safely, survives restart and builds
  const editor=await fetch(server+'/admin');assert.ok(editor.ok);assert.match(await editor.text(),/<html/i)
  await stop();await start();assert.equal((await api(`/api/collections/page_section_entries/records/${entry.id}`)).value,'Native client edit');assert.equal((await api(`/api/collections/site_symbols/records/${block.id}`)).html,'<h1>{heading}</h1>')
  const cliWork=path.join(root,'work');await fs.mkdir(cliWork);
- const cliRoot=path.resolve('node_modules/primo-cli'),pkg=JSON.parse(await fs.readFile(path.join(cliRoot,'package.json'),'utf8'));assert.equal(pkg.version,'0.3.0-rc.2')
+ const cliRoot=path.resolve('node_modules/primo-cli'),pkg=JSON.parse(await fs.readFile(path.join(cliRoot,'package.json'),'utf8'));assert.equal(pkg.version,'0.3.0-rc.3')
  const cli=async args=>exec(process.execPath,[path.join(cliRoot,pkg.bin.primo),...args],{cwd:cliWork,env,timeout:30000}).catch(e=>assert.fail(e.message+'\n'+e.stdout+'\n'+e.stderr))
  await cli(['init','--no-mcp']);
  const unused=net.createServer();await new Promise(r=>unused.listen(0,'127.0.0.1',r));const unusedPort=unused.address().port;await new Promise(r=>unused.close(r));await fs.writeFile(path.join(cliWork,'server.yaml'),`port: ${unusedPort}\n`);

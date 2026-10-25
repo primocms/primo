@@ -22,7 +22,7 @@ test('exact managed candidate seeds plans, preserves owner policy after secret r
  let token
  const api=async(route,body,method=body===undefined?'GET':'POST')=>{const r=await fetch(origin+route,{method,redirect:'error',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body===undefined?undefined:JSON.stringify(body)});assert.ok(r.ok,`${method} ${route}: ${r.status}`);return r.status===204?null:r.json()}
  assert.ok(await start('maker'),'Managed first boot must succeed with actual plan flags')
- const info=await api('/api/primo/info');assert.equal(info.version,'v3.3.2-rc.12');assert.equal(info.dev_mode,false);assert.equal(info.hosted_mode,true);assert.equal(info.managed_bootstrap,true);assert.equal(info.owner_only,true);assert.equal(info.site_cap,3);assert.equal(info.domain_provider,'fly')
+ const info=await api('/api/primo/info');assert.equal(info.version,'v3.3.2-rc.13');assert.equal(info.dev_mode,false);assert.equal(info.hosted_mode,true);assert.equal(info.managed_bootstrap,true);assert.equal(info.owner_only,true);assert.equal(info.site_cap,3);assert.equal(info.domain_provider,'fly')
  const auth=await api('/api/collections/users/auth-with-password',{identity:'purchaser@primo-qa.invalid',password});token=auth.token;assert.equal(auth.record.serverRole,'developer')
  const group=await api('/api/collections/site_groups/records',{name:'Owner workspace',index:0})
  for(let n=0;n<3;n++)await api('/api/collections/sites/records',{name:'Site '+n,host:'site-'+n+'.workspace.primo-qa.invalid',group:group.id})

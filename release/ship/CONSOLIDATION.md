@@ -4,7 +4,7 @@
 
 | Component | Active target | Rule |
 | --- | --- | --- |
-| CMS | New consolidation PR, RC.12 | Cumulative RC.11 product/QA, current main, #1362 |
+| CMS | New consolidation PR, RC.13 | Cumulative RC.11 product/QA, current main, #1362 |
 | MCP | primocms/mcp#30 | Already includes #29; no separate merge |
 | CLI | primocms/primo-cli#67 | Already includes #64–66; no separate merges |
 | Hosting | primocms/primo#1350 | Hosting-only against recorded baseline; never deploy its CMS tree |
@@ -17,6 +17,6 @@ INPUTS.json records every existing PR, immutable head/base and inclusion/defer d
 - Register both recovery-upload middleware and content permissions.
 - Keep main's generated-module SSR renderer alongside RC independent roots and lazy/recoverable worker client; do not restore the browser-incompatible static server renderer import.
 - Retain failed drafts and queued reorder state in pending-change detection. Presence explicitly opts out of failed-write retention; the normal manager retains failed drafts, including new entries and reorder dependencies. Test the real manager and reorder module together.
-- Restrict frozen RC.11 timing qualification to its historical base; new product tests use RC.12 artifacts. Public-release/tag/container workflows are unchanged. codex/release-consolidation does not match main/feature/**/rc/** container push triggers.
+- Restrict frozen RC.11 timing qualification to its historical base; new product tests use RC.13 artifacts. CLI #67 and MCP #30 now carry the authorized RC.3 dependency refresh; historical RC.2 source/archive heads remain provenance. Public-release/tag/container workflows are unchanged. codex/release-consolidation does not match main/feature/**/rc/** container push triggers.
 
 Review data/permissions/conflicts/recovery first, compiler/publication second, bootstrap/hosting third, dependency/artifact/rollout evidence last. Reconfirm main and active heads against INPUTS.json before merge. Green checks are evidence, not maintainer approval.

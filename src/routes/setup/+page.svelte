@@ -84,7 +84,7 @@
 			}
 
 			// Go straight to site
-			goto('/admin/site', { replaceState: true })
+			goto('/admin/site', { replace: true })
 		} catch (err: any) {
 			console.error('User creation error:', err)
 

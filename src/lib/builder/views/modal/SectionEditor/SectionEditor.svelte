@@ -15,7 +15,7 @@
 	import { site_html } from '$lib/builder/stores/app/page.js'
 	import { watch } from 'runed'
 	import { onModKey } from '$lib/builder/utils/keyboard'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { PageSectionEntries, PageSections, PageEntries, PageTypeSectionEntries, PageTypeSections, SiteSymbolFields, SiteSymbols, SiteSymbolEntries, SiteEntries, Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import type { PageTypeSection } from '$lib/common/models/PageTypeSection'

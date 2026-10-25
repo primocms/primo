@@ -4,7 +4,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import { goto } from '$app/navigation'
 	import { toast } from 'svelte-sonner'
-	import { page } from '$app/stores'
+	import { page } from '$app/state'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
@@ -38,9 +38,7 @@
 		buttons?: MenuButton[]
 	}
 
-	let { sidebar_menu = [] } = $props<{
-		sidebar_menu?: SidebarMenu
-	}>()
+	let { sidebar_menu = [] }: { sidebar_menu?: SidebarMenu[] } = $props()
 
 	let is_creating_site_group = $state(false)
 	let new_site_group_name = $state('')
@@ -88,7 +86,7 @@
 		return '/admin/dashboard'
 	}
 
-	const path = $derived($page.url.pathname.split('/').slice(0, 4).join('/'))
+	const path = $derived(page.url.pathname.split('/').slice(0, 4).join('/'))
 	$effect(() => {
 		is_creating_site_group
 		is_creating_symbol_group
@@ -145,7 +143,7 @@
 					<Sidebar.Menu>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/sites')}
+								isActive={page.url.pathname.startsWith('/admin/dashboard/sites')}
 								tooltipContentProps={{
 									hidden: false
 								}}
@@ -164,7 +162,7 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/library')}
+								isActive={page.url.pathname.startsWith('/admin/dashboard/library')}
 								tooltipContentProps={{
 									hidden: false
 								}}
@@ -183,7 +181,7 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/marketplace')}
+								isActive={page.url.pathname.startsWith('/admin/dashboard/marketplace')}
 								tooltipContentProps={{
 									hidden: false
 								}}
@@ -287,7 +285,7 @@
 					{#each SiteGroups.list() ?? [] as group}
 						{@const url = `/admin/dashboard/sites?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
+							<Sidebar.MenuButton isActive={page.url.pathname + page.url.search === url}>
 								{#snippet child({ props })}
 									<a href={url} {...props}>
 										<span>{group.name}</span>
@@ -320,7 +318,7 @@
 					{#each LibrarySymbolGroups.list() ?? [] as group}
 						{@const url = `/admin/dashboard/library?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
+							<Sidebar.MenuButton isActive={page.url.pathname + page.url.search === url}>
 								{#snippet child({ props })}
 									<a href={url} {...props}>
 										<span>{group.name}</span>
@@ -349,13 +347,13 @@
 				</div>
 			</Sidebar.Header>
 			<Sidebar.Content class="p-2">
-				{@const browsing_blocks = $page.url.pathname.endsWith('/blocks')}
+				{@const browsing_blocks = page.url.pathname.endsWith('/blocks')}
 				<Sidebar.GroupLabel>{browsing_blocks ? 'Block categories' : 'Starter categories'}</Sidebar.GroupLabel>
 				<Sidebar.Menu>
 					{#each (browsing_blocks ? LibrarySymbolGroups.from(marketplace).list({ sort: 'index' }) : SiteGroups.from(marketplace).list({ sort: 'index' })) ?? [] as group}
 						{@const url = `/admin/dashboard/marketplace/${browsing_blocks ? 'blocks' : 'starters'}?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.searchParams.get('group') === group.id}>
+							<Sidebar.MenuButton isActive={page.url.searchParams.get('group') === group.id}>
 								{#snippet child({ props })}
 									<a href={url} {...props}><span>{group.name}</span></a>
 								{/snippet}

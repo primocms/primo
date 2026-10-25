@@ -17,7 +17,7 @@
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { LibrarySymbolEntries, LibrarySymbolFields, LibrarySymbolGroups, LibrarySymbols, SiteSymbolEntries, SiteSymbolFields, SiteSymbols } from '$lib/pocketbase/collections'
 	import { page } from '$app/state'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import * as _ from 'lodash-es'
 	import { site_context, hide_page_field_field_type_context } from '$lib/builder/stores/context'
 	import { site_html } from '$lib/builder/stores/app/page.js'

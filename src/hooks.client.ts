@@ -1,4 +1,4 @@
-import type { HandleClientError, ClientInit } from '@sveltejs/kit'
+import type { HandleClientError, ClientInit } from '@sveltejs/kit/hooks'
 import { initialized } from '$lib/PostHog'
 import { instance, instance_ready } from '$lib/instance'
 import { track_uncaught_error } from '$lib/analytics'
@@ -19,7 +19,9 @@ export const init: ClientInit = async () => {
 	}
 }
 
-export const handleError: HandleClientError = ({ error, status, message }) => {
+export const handleError: HandleClientError = ({ kind, error }) => {
+	const status = kind === 'unknown' ? 500 : error.status
+	const message = kind === 'unknown' ? 'Internal Error' : error.message
 	if (status !== 404) {
 		// Retain the original error in the local browser console for diagnosis.
 		// Only the categorical event below is sent to telemetry.
@@ -32,7 +34,7 @@ export const handleError: HandleClientError = ({ error, status, message }) => {
 		})
 	}
 
-	// SvelteKit applies its fallback before awaiting the hook. An async hook
-	// resolving undefined suppresses that fallback and leaves a blank page.
+	// Return a safe body synchronously; unknown errors must never expose their
+	// private message or wait for telemetry to initialize.
 	return { message }
 }

@@ -26,7 +26,7 @@ test('a dashboard without a session returns to its selected group after dev logi
 		tryDevAuth: async () => true,
 		goto
 	})
-	assert.deepEqual(navigations[1], { url: requested.pathname + requested.search + requested.hash, options: { replaceState: true } })
+	assert.deepEqual(navigations[1], { url: requested.pathname + requested.search + requested.hash, options: { replace: true } })
 })
 
 test('existing login sessions also honor the requested dashboard', async () => {

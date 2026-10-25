@@ -212,7 +212,7 @@ test('complete fixture files pass the pinned packaged MCP block and page validat
  const require=createRequire(import.meta.url),entry=pathToFileURL(require.resolve('primo-mcp'))
  const {validateBlockFromDisk}=await import(new URL('./validators/block.js',entry))
  const {validatePageFromDisk}=await import(new URL('./tools/validate_page.js',entry))
- assert.equal(JSON.parse(await fs.readFile(new URL('../package.json',entry),'utf8')).version,'0.1.11-rc.2')
+ assert.equal(JSON.parse(await fs.readFile(new URL('../package.json',entry),'utf8')).version,'0.1.11-rc.3')
  for(const [source,destination] of [
   ['qa-block.svelte','blocks/qa-probe/component.svelte'],
   ['qa-fields.yaml','blocks/qa-probe/fields.yaml'],

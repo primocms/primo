@@ -17,8 +17,9 @@ test('exact-package verification can list and extract a real archive under drive
  t.after(()=>fs.rm(root,{recursive:true,force:true}))
  const directory=path.join(root,process.platform==='win32'?'local archive directory':'D: local archive directory')
  await fs.mkdir(directory)
- const archive=path.join(directory,'primo-cli-0.3.0-rc.2.tgz')
- await fs.copyFile(new URL('../../release/vendor/primo-cli-0.3.0-rc.2.tgz',import.meta.url),archive)
+ const manifest=JSON.parse(await fs.readFile(new URL('../staging/rc8-packages.json',import.meta.url),'utf8'))
+ const archive=path.join(directory,manifest.cli.archive)
+ await fs.copyFile(new URL('../../release/vendor/'+manifest.cli.archive,import.meta.url),archive)
  const previousDirectory=process.cwd()
  try {
   process.chdir(root)

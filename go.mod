@@ -1,6 +1,6 @@
 module github.com/primocms/primo
 
-go 1.26.9
+go 1.26.10
 
 require (
 	github.com/dop251/goja v0.0.0-20260701091749-b07b74453ea9

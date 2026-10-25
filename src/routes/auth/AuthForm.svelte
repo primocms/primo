@@ -75,7 +75,7 @@
 				await Users.authWithPassword(email, password)
 					.then(() => {
 						track_login_succeeded()
-						return goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true })
+						return goto(auth_destination(page.url, self.instance?.authStore.record), { replace: true })
 					})
 					.catch(({ message }) => {
 						error = message

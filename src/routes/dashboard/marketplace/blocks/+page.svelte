@@ -31,9 +31,9 @@
 	// Auto-select first marketplace group if none is selected
 	$effect(() => {
 		if (!group_id && marketplace_symbol_groups.length > 0) {
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', marketplace_symbol_groups[0].id)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 

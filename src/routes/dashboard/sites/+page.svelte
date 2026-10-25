@@ -68,9 +68,9 @@
 		if (!site_group_id && site_groups.length > 0) {
 			const last_group = get_last_site_group()
 			const fallback = last_group && site_groups.some((group) => group.id === last_group) ? last_group : site_groups[0].id
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', fallback)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 	$effect(() => {

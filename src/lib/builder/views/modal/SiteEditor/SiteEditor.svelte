@@ -10,7 +10,7 @@
 	import { site_context, hide_dynamic_field_types_context } from '$lib/builder/stores/context'
 	import { Sites, SiteFields, SiteEntries } from '$lib/pocketbase/collections'
 	import { current_user } from '$lib/pocketbase/user'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { useContent } from '$lib/Content.svelte'
 	import { locale } from '$lib/builder/stores/app/misc.js'
 	import { self } from '$lib/pocketbase/managers'

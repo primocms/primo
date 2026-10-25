@@ -34,7 +34,7 @@ test('concurrent editor compilation recovers a failed runtime download without a
  }
  const before=await entries(),errors:string[]=[];let downloads=0
  page.on('console',message=>{if(message.type()==='error'&&/^(Build error:|Compilation error from rollup worker:)/.test(message.text()))errors.push(message.text())})
- await context.route(/^https:\/\/esm\.sh\/svelte@[^/]+\/internal\/client(?:\?|$)/,async route=>{
+ await context.route(url => url.searchParams.get('svelte-module') === 'svelte/src/internal/client/index.js',async route=>{
   if(++downloads===1)await route.abort('failed');else await route.continue()
  })
  await loginAsDeveloper(page,ids.siteId)

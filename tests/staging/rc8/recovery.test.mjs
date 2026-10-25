@@ -84,15 +84,15 @@ test('production upgrade and copied recovery retain content, image and publicati
  const backup = path.join(root,'pristine-backup'); await fs.cp(data,backup,{recursive:true})
  const treeHash = async dir => { const h=createHash('sha256'); for(const file of (await fs.readdir(dir,{recursive:true})).sort()){const full=path.join(dir,file);if((await fs.stat(full)).isFile()){h.update(file);h.update(await fs.readFile(full))}} return h.digest('hex') }
  const backupHash = await treeHash(backup)
- data=path.join(root,'upgraded-copy'); await fs.cp(backup,data,{recursive:true});activeBinary=candidate;version='v3.3.2-rc.12';await start();await verify()
+ data=path.join(root,'upgraded-copy'); await fs.cp(backup,data,{recursive:true});activeBinary=candidate;version='v3.3.2-rc.13';await start();await verify()
  assert.equal((await fetch(origin)).headers.get('content-security-policy'),"frame-ancestors 'self'")
  await api(`/api/collections/page_section_entries/records/${entry.id}`,{value:'Post-backup candidate write'},'PATCH');await stop()
  data=path.join(root,'restored-copy');await fs.cp(backup,data,{recursive:true});activeBinary=previous;version='v3.3.2-rc.7';await start();await verify();await stop()
  assert.equal(await treeHash(backup),backupHash,'Pristine backup changed')
- data=path.join(root,'upgraded-copy');activeBinary=candidate;version='v3.3.2-rc.12';await start()
+ data=path.join(root,'upgraded-copy');activeBinary=candidate;version='v3.3.2-rc.13';await start()
  assert.equal((await api(`/api/collections/page_section_entries/records/${entry.id}`)).value,'Post-backup candidate write')
  await stop();assert.equal(await treeHash(backup),backupHash)
- const result={status:'PASS_SYNTHETIC_PRODUCTION_RECOVERY',previous:'v3.3.2-rc.7',candidate:'v3.3.2-rc.12',productionValidation:true,tablesCompared:tables.length,allRecordIdsAndValuesRetained:true,nestedValueRetained:true,imageBytesRetained:true,activePublicationRetained:true,clientAuthAndSourceDenialRetained:true,pristineBackupUnchanged:true,newerCandidateWritePreservedSeparately:true,olderExecutableNeverUsedOnUpgradedData:true,backupSha256:backupHash,liveEnvironmentChanged:false}
+ const result={status:'PASS_SYNTHETIC_PRODUCTION_RECOVERY',previous:'v3.3.2-rc.7',candidate:'v3.3.2-rc.13',productionValidation:true,tablesCompared:tables.length,allRecordIdsAndValuesRetained:true,nestedValueRetained:true,imageBytesRetained:true,activePublicationRetained:true,clientAuthAndSourceDenialRetained:true,pristineBackupUnchanged:true,newerCandidateWritePreservedSeparately:true,olderExecutableNeverUsedOnUpgradedData:true,backupSha256:backupHash,liveEnvironmentChanged:false}
  if(process.env.PRIMO_RECOVERY_RESULT)await fs.writeFile(process.env.PRIMO_RECOVERY_RESULT,JSON.stringify(result,null,2)+'\n')
  console.log(result)
 })

@@ -34,7 +34,7 @@
 		Store
 	} from 'lucide-svelte'
 	import SymbolButton from '$lib/components/SymbolButton.svelte'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { page } from '$app/state'
 	import { beforeNavigate, goto } from '$app/navigation'
 	import { useSidebar } from '$lib/components/ui/sidebar'
@@ -52,7 +52,7 @@
 	const symbol_groups = $derived(LibrarySymbolGroups.list() ?? [])
 
 	function update_library_url(search_params: Record<string, string | null | undefined>) {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		for (const [key, value] of Object.entries(search_params)) {
 			if (value) {
 				url.searchParams.set(key, value)
@@ -60,14 +60,14 @@
 				url.searchParams.delete(key)
 			}
 		}
-		goto(url, { replaceState: true, keepFocus: true, noScroll: true })
+		goto(url, { replace: true, reset: false })
 	}
 
 	beforeNavigate((navigation) => {
 		if (!browser || !active_symbol_id) return
 		if (!navigation.to || navigation.to.url.pathname === page.url.pathname) return
 
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.delete('block')
 		window.history.replaceState(window.history.state, '', url)
 	})
@@ -96,9 +96,9 @@
 	async function create_first_group() {
 		const group = LibrarySymbolGroups.create({ name: 'Default', index: 0 })
 		await self.commit()
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.set('group', group.id)
-		goto(url, { replaceState: true })
+		goto(url, { replace: true })
 	}
 
 	let file = $state<File>()

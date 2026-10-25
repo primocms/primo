@@ -148,7 +148,7 @@
 		const prev_page = pages_at_current_level.find((p) => p.index === active_page.index - 1)
 		if (!prev_page) return
 		const url = build_cms_page_url(prev_page, pageState.url)
-		if (url) goto(url, { replaceState: false })
+		if (url) goto(url, { replace: false })
 		setTimeout(() => (going_up = false), 150)
 	}
 
@@ -158,7 +158,7 @@
 		const next_page = pages_at_current_level.find((p) => p.index === active_page.index + 1)
 		if (!next_page) return
 		const url = build_cms_page_url(next_page, pageState.url)
-		if (url) goto(url, { replaceState: false })
+		if (url) goto(url, { replace: false })
 		setTimeout(() => (going_down = false), 150)
 	}
 

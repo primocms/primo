@@ -30,7 +30,7 @@
 		refresh_author_mode()
 
 		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+			await goto(login_url, { replace: true })
 			return
 		}
 
@@ -82,7 +82,7 @@
 	$effect(() => {
 		const list_loaded = sites_by_host !== undefined
 		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
-			goto('/admin/dashboard', { replaceState: true })
+			goto('/admin/dashboard', { replace: true })
 		} else if (site) {
 			creating_site = false
 		}
