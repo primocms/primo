@@ -25,7 +25,12 @@ func main() {
 	}
 }
 
+// setup registers Primo's request middleware, API routes, and record hooks.
 func setup(pb *pocketbase.PocketBase) error {
+	if err := internal.RegisterRecoverySnapshotUploads(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterCORS(pb); err != nil {
 		return err
 	}

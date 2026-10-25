@@ -7,6 +7,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
+// TestRecoverySnapshotUploadLimit covers fresh installs, default upgrades, and
+// preservation of custom limits and snapshot authorization rules.
 func TestRecoverySnapshotUploadLimit(t *testing.T) {
 	app := pocketbase.NewWithConfig(pocketbase.Config{DefaultDataDir: t.TempDir()})
 	if err := app.Bootstrap(); err != nil {

@@ -11,6 +11,8 @@ import (
 // so the default limit for a single uploaded asset is too small for backups.
 const recoverySnapshotMaxSize int64 = 256 << 20
 
+// increaseRecoverySnapshotUploadLimit upgrades only the implicit or explicit
+// PocketBase default, preserving limits deliberately configured by an operator.
 func increaseRecoverySnapshotUploadLimit(app core.App) error {
 	collection, err := app.FindCollectionByNameOrId("site_snapshots")
 	if err != nil {
@@ -28,6 +30,7 @@ func increaseRecoverySnapshotUploadLimit(app core.App) error {
 	return app.Save(collection)
 }
 
+// init registers the recovery snapshot limit migration without a destructive rollback.
 func init() {
 	m.Register(increaseRecoverySnapshotUploadLimit, func(app core.App) error {
 		// Keep uploaded recovery files usable when rolling back the application.
