@@ -1,0 +1,75 @@
+import {test} from 'node:test'
+import {chromium,firefox,webkit} from '@playwright/test'
+import {fixture,assert,fs,delay} from './fixture.mjs'
+const engine=process.env.PRIMO_BROWSER||'firefox'
+test(engine+' production presence survives canceled requests, inline save, nested reorder and abrupt reload', {timeout:240000},async t=>{
+ const c=await fixture(t),browser=await {chromium,firefox,webkit}[engine].launch({headless:true});t.after(()=>browser.close())
+ const context=await browser.newContext();await context.addInitScript(auth=>localStorage.setItem('pocketbase_auth',JSON.stringify(auth)),c.actors.editor.auth)
+ let phase='initial load'
+ const page=await context.newPage(),errors=[],errorStacks=[],unhandledRejections=[],errorPhases=[],compilerErrors=[]
+ page.on('pageerror',error=>{errors.push(error.message);errorStacks.push(error.stack);errorPhases.push(phase)})
+ page.on('console',message=>{if(message.type()==='debug'&&message.text().startsWith('PRIMO_UNHANDLED '))unhandledRejections.push(JSON.parse(message.text().slice(16)))})
+ page.on('console',async message=>{if(message.type()==='error'&&message.text().startsWith('Build error:')){
+  const during=phase
+  const details=await Promise.all(message.args().map(arg=>arg.evaluate(e=>({message:e?.message,stack:e?.stack,id:e?.id,plugin:e?.plugin,hook:e?.hook})).catch(()=>null)))
+  const diagnostic={phase:during,message:message.text(),details};compilerErrors.push(diagnostic);console.error('COMPILER_DIAGNOSTIC '+JSON.stringify(diagnostic))
+ }})
+ await context.addInitScript(()=>addEventListener('unhandledrejection',event=>{const e=event.reason;console.debug('PRIMO_UNHANDLED '+JSON.stringify({message:e?.message,status:e?.status,isAbort:e?.isAbort,url:e?.url?.split('?')[0],stack:e?.stack,originalMessage:e?.originalError?.message,originalStack:e?.originalError?.stack}))}))
+ let canceledCreate=0,successfulCreate=0,aborted=0,recovered=0
+ const report={...c.provenance,status:'FAIL',browser:engine,browserVersion:browser.version(),pageErrors:errors,errorStacks,unhandledRejections,errorPhases,compilerErrors}
+ t.after(async()=>{Object.assign(report,{canceledPresenceCreate:canceledCreate,subsequentSuccessfulPresenceCreates:successfulCreate,canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered});await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n')})
+ await page.route('**/api/collections/user_activities/records**',async route=>{if(route.request().method()==='POST'&&!canceledCreate){canceledCreate++;await route.abort('failed')}else if(route.request().method()==='PATCH'&&!aborted){aborted++;await route.abort('failed')}else await route.continue()})
+ page.on('response',response=>{if(response.url().includes('/user_activities/records')&&response.ok()){if(response.request().method()==='PATCH')recovered++;if(response.request().method()==='POST')successfulCreate++}})
+ const ready=async()=>{
+  try { await page.waitForFunction(()=>{const frames=[...document.querySelectorAll('main iframe[title=block]')];return frames.length===5&&frames.every(f=>f.contentDocument?.querySelector('h1[contenteditable=true]'))},null,{timeout:90000}) }
+  catch(error) {
+   report.failedReadiness=await page.evaluate(phase=>({phase,body:document.body.innerText,frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({body:f.contentDocument?.body?.innerText,readyState:f.contentDocument?.readyState,html:f.contentDocument?.body?.innerHTML?.slice(0,1500)}))}),phase)
+   throw error
+  }
+ }
+ await page.goto(c.origin+'/admin/sites/'+c.site.id);await ready()
+ for(let n=0;n<300&&(!aborted||!recovered);n++)await delay(100)
+ assert.equal(canceledCreate,1,'An actual presence create must have been canceled');assert.ok(successfulCreate>0,'Presence creation must recover after cancellation')
+ assert.equal(aborted,1,'An actual presence update must have been canceled');assert.ok(recovered>0,'Heartbeat must resume after the canceled request')
+ const title=page.locator('main iframe[title=block]').first().contentFrame().locator('h1[data-key=heading]'),tag='Saved while presence recovers'
+ let contentPatchCount=0
+ await page.route('**/api/collections/page_section_entries/records/'+c.heading.id,async route=>{
+  if(route.request().method()==='PATCH'&&++contentPatchCount===1)await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({message:'Disposable autosave failure'})})
+  else await route.continue()
+ })
+ phase='failed inline autosave';await title.click();await title.fill(tag);await title.blur()
+ await page.getByText('Changes could not be saved. Keep this page open and retry.',{exact:true}).waitFor()
+ assert.equal(await title.innerText(),tag,'A failed save must retain the edited content in the editor')
+ await c.verifyContent()
+ phase='blocked unsaved logout'
+ await page.getByRole('button',{name:'More options',exact:true}).click()
+ await page.getByRole('menuitem',{name:'Log out',exact:true}).click()
+ await page.getByText('Save or retry your changes before logging out.',{exact:true}).waitFor()
+ assert.ok(page.url().includes('/admin/sites/'+c.site.id),'Unsaved content must not cross a logout/account boundary')
+ phase='blocked unsaved reload'
+ const warning=page.waitForEvent('dialog'),blocked=page.reload().catch(()=>null)
+ const dialogWarning=await warning;assert.equal(dialogWarning.type(),'beforeunload');await dialogWarning.dismiss();await blocked
+ await ready();assert.equal(await title.innerText(),tag,'Dismissing the reload must preserve the unsaved draft')
+ phase='retry inline autosave'
+ const save=page.waitForResponse(r=>r.url().includes('/page_section_entries/records/'+c.heading.id)&&r.request().method()==='PATCH'&&r.ok())
+ await page.getByRole('button',{name:'Retry',exact:true}).click();await save
+ await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
+ phase='confirmed save and first reload';await page.reload();await ready();await c.verifyContent(tag)
+ assert.equal(contentPatchCount,2,'Reload/blur must not write an unchanged value again')
+ const own=c.before.filter(e=>e.section===c.section.id),field=key=>c.fields.find(f=>f.key===key),alpha=own.find(e=>e.field===field('name').id&&e.value==='Alpha').parent
+ const roots=own.filter(e=>e.field===field('items').id&&!e.parent).sort((a,b)=>a.index-b.index),links=own.filter(e=>e.field===field('links').id&&e.parent===alpha).sort((a,b)=>a.index-b.index)
+ await title.hover();await page.getByRole('button',{name:'Edit Block Content'}).click();const dialog=page.getByRole('dialog'),row=id=>dialog.locator('.RepeaterFieldItem[data-entry-id="'+id+'"]')
+ assert.equal(await dialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
+ await row(roots[1].id).getByRole('button',{name:'Move Item item up',exact:true}).click()
+ if(!await row(alpha).locator('[id$="-name"] textarea').isVisible())await row(alpha).locator('button.title').first().click()
+ await row(links[1].id).getByRole('button',{name:'Move Link item up',exact:true}).click();await dialog.getByRole('button',{name:'Save',exact:true}).click();await dialog.waitFor({state:'hidden'});await page.getByRole('status',{name:'Content save status',exact:true}).waitFor({state:'hidden'})
+ for(let n=0;n<3;n++){phase='post-reorder reload '+(n+1);await page.reload();await ready();const after=await c.verifyContent(tag);assert.equal(after.find(e=>e.id===roots[1].id).index,0);assert.equal(after.find(e=>e.id===links[1].id).index,0)}
+ // Navigation cleanup is another detached presence task, separate from content.
+ let cleanupAborted=false
+ await page.route('**/api/collections/user_activities/records/*',async route=>{if(route.request().method()==='DELETE'){cleanupAborted=true;await route.abort('failed')}else await route.fallback()})
+ phase='leave editor for dashboard';await page.goto(c.origin+'/admin/dashboard/sites');await page.waitForSelector('.site-card-footer a');await delay(500)
+ await c.verifyContent(tag);assert.equal(errors.length,0,c.redact(errors.join('\n')));assert.deepEqual(compilerErrors,[],'Caught compiler failures must also fail qualification')
+ assert.equal((await c.list('sites')).length,1,'Editor must not see the foreign site')
+ Object.assign(report,{status:'PASS_PRESENCE_BROWSER',canceledPresenceUpdate:aborted,subsequentSuccessfulPresenceUpdates:recovered,cleanupAbortObserved:cleanupAborted,contentAndAllIdsRetained:true,rootAndNestedReorderRetained:true,autosaveFailureRetainsDraft:true,unsavedReloadPrevented:true,unsavedLogoutPrevented:true,autosaveRetrySaved:true,unchangedAutosaveSkipped:true,abruptReloads:4})
+ await fs.writeFile('presence-'+engine+'.json',JSON.stringify(report,null,2)+'\n');console.log(report)
+})

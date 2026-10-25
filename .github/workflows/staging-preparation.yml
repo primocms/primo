@@ -1,0 +1,47 @@
+name: Staging preparation regressions
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/staging-preparation.yml'
+      - 'tests/staging/launch/**'
+      - 'tests/staging/hosted/**'
+      - 'tests/staging/rc7-packages.json'
+      - 'package*.json'
+permissions:
+  contents: read
+concurrency:
+  group: staging-preparation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tools:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.13.0', '24.0.0']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Rehearse tool entry points and recovery against loopback mocks only
+        run: node --test tests/staging/launch/test/*.test.mjs
+      - name: Check hosted helper syntax without network or credentials
+        run: |
+          for script in tests/staging/hosted/*.mjs; do node --check "$script"; done
+          python3 -c 'import ast,pathlib; ast.parse(pathlib.Path("tests/staging/hosted/backup-inventory.py").read_text())'
+      - name: Examples must remain blocked with no access or service secrets
+        shell: bash
+        run: |
+          set +e
+          node tests/staging/launch/preflight.mjs --config tests/staging/launch/staging.example.json
+          result=$?
+          test "$result" -eq 2 || exit 1
+          node tests/staging/launch/fixture.mjs --config tests/staging/launch/fixture.example.json
+          result=$?
+          test "$result" -eq 2 || exit 1

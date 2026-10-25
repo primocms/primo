@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import './catalog-cards.css'
 	import './wizard.css'
 	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X, ChevronLeft } from 'lucide-svelte'
@@ -43,7 +44,7 @@
 	// Keep undefined until loaded so we can show skeletons
 	const starter_sites = $derived(Sites.list({ sort: 'index' }) ?? undefined)
 	// Starter groups sidebar state
-	let active_starters_group_id = $state(all_site_groups?.[0]?.id ?? '')
+	let active_starters_group_id = $state(untrack(() => all_site_groups?.[0]?.id ?? ''))
 	// When groups load/update, pick first available if none selected.
 	watch(
 		() => (all_site_groups ?? []).map((g) => g.id),
@@ -58,7 +59,7 @@
 
 	// Marketplace (Starters) - site groups and sites
 	const marketplace_site_groups = $derived(SiteGroups.from(marketplace).list({ sort: 'index' }) ?? [])
-	let active_marketplace_starters_group_id = $state(marketplace_site_groups?.find((g) => g.name === 'Featured')?.id ?? marketplace_site_groups?.[0]?.id ?? '')
+	let active_marketplace_starters_group_id = $state(untrack(() => marketplace_site_groups?.find((g) => g.name === 'Featured')?.id ?? marketplace_site_groups?.[0]?.id ?? ''))
 	watch(
 		() => (marketplace_site_groups ?? []).map((g) => g.id),
 		(ids) => {
@@ -175,6 +176,7 @@
 			if (!selected_block_ids.length) return
 
 			const site = created_site
+			if (!site) throw new Error('Site creation did not return a site')
 			const source_symbols = selected_blocks.filter((symbol) => !!symbol)
 			const source_symbol_fields = selected_block_fields.filter((field) => !!field)
 			const source_symbol_entries = selected_block_entries.filter((entry) => !!entry)

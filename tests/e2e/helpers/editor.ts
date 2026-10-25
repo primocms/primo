@@ -3,6 +3,7 @@ import { expect } from '@playwright/test'
 import { TEST_SERVER_URL } from './paths'
 
 const TRANSPARENT_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+const diagnosticPages = new WeakSet<Page>()
 
 /** Serves every remote image request from the harness instead of the
  * public internet. The fixture content (and the image dialog's own test
@@ -15,6 +16,14 @@ const TRANSPARENT_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcS
  * suite independent of external network access. Covers the canvas iframe
  * too: page.route applies to every frame in the page. */
 export async function stubExternalImages(page: Page) {
+	if (!diagnosticPages.has(page)) {
+		diagnosticPages.add(page)
+		page.on('console', async message => {
+			if (message.type() !== 'error' || !message.text().startsWith('Build error:')) return
+			const details = await Promise.all(message.args().map(arg => arg.evaluate(e => ({ message: e?.message, stack: e?.stack, id: e?.id, plugin: e?.plugin, hook: e?.hook })).catch(() => null)))
+			console.error('COMPILER_DIAGNOSTIC ' + JSON.stringify({ message: message.text(), details }))
+		})
+	}
 	await page.route('https://images.unsplash.com/**', (route) => route.fulfill({ status: 200, contentType: 'image/png', body: TRANSPARENT_PNG }))
 }
 
@@ -136,7 +145,7 @@ export async function openBlockContentModal(page: Page, canvasElementLocator: Re
 	await canvasElementLocator.hover()
 	await page.getByRole('button', { name: 'Edit Block Content' }).click()
 	const dialog = page.getByRole('dialog')
-	await expect(dialog.locator('.RepeaterField')).toBeVisible({ timeout: 10000 })
+	await expect(dialog.locator('.RepeaterField').first()).toBeVisible({ timeout: 10000 })
 	return dialog
 }
 
@@ -148,3 +157,13 @@ export async function openBlockContentModal(page: Page, canvasElementLocator: Re
 // Use the real "Preview"/"Publish" toolbar button (see publishing.spec.ts's
 // publishViaUI) to exercise the actual flow instead of half-reimplementing
 // client-side compilation here.
+
+/** The real compiler permits two 10s download attempts, plus worker startup
+ * and module-graph compilation. A 10s assertion can expire before its recovery.
+ * Keep the bound on the actual editable element; never replace it with a sleep.
+ */
+export async function editableHeadline(page: Page) {
+ const headline = canvasFrame(page).locator('[data-testid="headline"]')
+ await expect(headline).toHaveAttribute('contenteditable', 'true', {timeout:45000})
+ return headline
+}

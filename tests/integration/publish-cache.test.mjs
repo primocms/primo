@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import ts from 'typescript'
 import { script_version, symbol_script_url } from '../../src/lib/workers/publish-assets.js'
 
-async function publisher({ failUpload = false, failCompile = false, tracked = false } = {}) {
+async function publisher({ failUpload = false, failCompile = false, tracked = false, headline = 'Headline' } = {}) {
 	// Erase TypeScript and supply the worker's stores/runes as a loaded snapshot.
 	// Execute the real publication callback and page generator with controlled
 	// compiler/upload completion so regressions in their ordering are observable.
@@ -43,7 +43,7 @@ async function publisher({ failUpload = false, failCompile = false, tracked = fa
 		Sites: { one: () => site },
 		Pages: { one: () => page },
 		usePageData: () => ({ data: { pages: [page], symbols: [symbol], page_sections: [section], page_type_sections: [] } }),
-		useContent: () => ({ en: { headline: 'Headline' } }),
+		useContent: () => ({ en: { headline } }),
 		self: {
 			commit: async () => {},
 			invalidate_lists() {},
@@ -128,4 +128,17 @@ test('insecure HTTP editors still produce fresh cache keys without SubtleCrypto'
 	const first = await script_version('same bundle', crypto)
 	assert.match(first, /^[a-f0-9]{64}$/)
 	assert.notEqual(await script_version('same bundle', crypto), first)
+})
+
+test('inline hydration props escape embedded script tags without changing source content', async () => {
+	const headline = '<script>let image = 1;</script><ScRiPt>alert(1)</ScRiPt><!-- café 🦉'
+	const build = await publisher({ headline })
+	build.release()
+	await build.worker.run()
+	const html = build.uploads.find((upload) => upload.field === 'compiled_html').text
+	assert.equal((html.match(/<script type="module">/g) || []).length, 1)
+	assert.equal((html.match(/<\/script>/gi) || []).length, 1)
+	const props = html.match(/props: (.*?) \}\);/s)[1]
+	assert.equal(props.includes('<'), false)
+	assert.equal(JSON.parse(props).headline, headline)
 })

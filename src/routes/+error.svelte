@@ -2,7 +2,7 @@
 	import { page } from '$app/state'
 </script>
 
-<div class="placeholder">{page.error?.message}</div>
+<div class="placeholder" role="alert">{page.error?.message || 'Something went wrong. Reload and try again.'}</div>
 
 <style>
 	.placeholder {

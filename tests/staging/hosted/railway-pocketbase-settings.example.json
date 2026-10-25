@@ -1,0 +1,6 @@
+{
+  "trustedProxy": {
+    "headers": ["X-Real-IP"],
+    "useLeftmostIP": false
+  }
+}

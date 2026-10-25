@@ -2,6 +2,7 @@
 	import * as _ from 'lodash-es'
 	import { fade } from 'svelte/transition'
 	import Icon from '@iconify/svelte'
+	import Spinner from '../../ui/Spinner.svelte'
 	import Toggle from 'svelte-toggle'
 	import { Button } from '$lib/components/ui/button'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -10,9 +11,10 @@
 	import { locale, mod_key_held, dragging_symbol } from '../../stores/app/misc'
 	import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import IFrame from '../../components/IFrame.svelte'
-	import { createEventDispatcher, onMount } from 'svelte'
+	import { createEventDispatcher, onMount, onDestroy, untrack } from 'svelte'
 	import { watch } from 'runed'
 	import { block_html } from '$lib/builder/code_generators'
+	import { startPreviewTask } from '$lib/builder/preview_task.js'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { SiteSymbols } from '$lib/pocketbase/collections'
 	import { useExportSiteSymbol } from '$lib/workers/ExportSymbol.svelte'
@@ -46,10 +48,11 @@
 		active_page_type_id?: string | null
 	} = $props()
 
-	let name_el = $state()
+	// Local editing state is seeded once; incoming record updates must not erase a draft.
+	let name_el = $state<HTMLElement>()
 
 	let renaming = $state(false)
-	let new_name = $state(symbol.name)
+	let new_name = $state(untrack(() => symbol.name))
 
 	const related_activities = $derived(getUserActivity({ filter: ({ site_symbol }) => site_symbol?.id === symbol.id }))
 
@@ -102,7 +105,7 @@
 		if (!foreign_page_types.length) return ''
 		const names = foreign_page_types
 			.map((id) => PageTypes.one(id))
-			.filter(Boolean)
+			.filter((pt) => pt != null)
 			.map((pt) => pt.name)
 			.join(', ')
 		return names ? `References Page Fields from ${names}.` : 'Uses Page Field(s) from another page type'
@@ -114,32 +117,40 @@
 
 	// Rebuild preview whenever code or data meaningfully change
 	let last_signature = $state<any>()
+	let cancel_preview: (() => void) | undefined
+	onDestroy(() => cancel_preview?.())
+	onMount(() => {
+		const cancel = () => cancel_preview?.()
+		window.addEventListener('pagehide', cancel)
+		return () => window.removeEventListener('pagehide', cancel)
+	})
 	watch(
 		() => ({ html: symbol.html, css: symbol.css, js: symbol.js, data }),
 		({ html, css, js, data }) => {
 			const signature = { html, css, js, data }
 			if (_.isEqual(last_signature, signature) || !data) return
 			last_signature = _.cloneDeep(signature)
+			cancel_preview?.()
 
 			is_loading = true
 			component_error = undefined
-			try {
-				const blockData = data || {}
-				block_html({ code: { html, css, js }, data: blockData }).then((res) => {
-					if (res && res.body) {
-						componentCode = res
-					}
-				})
-			} catch (error) {
-				console.error('Sidebar symbol error for', symbol.name, ':', error)
-				component_error = error
-			} finally {
-				is_loading = false
-			}
+			const task = startPreviewTask({
+				run: () => block_html({ code: { html, css, js }, data: data || {} }),
+				onResult: (res) => {
+					if (res?.body) componentCode = res
+					component_error = res?.error
+				},
+				onError: (error) => {
+					console.error('Sidebar symbol error for', symbol.name, ':', error)
+					component_error = error
+				},
+				onSettled: () => { is_loading = false }
+			})
+			cancel_preview = task.cancel
 		}
 	)
 
-	let element = $state()
+	let element = $state<HTMLElement>()
 	$effect(() => {
 		// Re-registered when read_only flips (e.g. the startup author-mode
 		// refresh) so a Browse-mode session never carries a live drag source.
@@ -342,14 +353,14 @@
 			</div>
 		{:else if is_loading}
 			<div class="loading">
-				<Icon icon="eos-icons:three-dots-loading" />
+				<Spinner />
 			</div>
 		{:else if componentCode}
 			{#each related_activities as [activity]}
 				<div transition:fade class="absolute z-10 bg-[#222] p-1 right-0 top-0 rounded-bl-lg flex justify-center -space-x-1">
 					<Avatar.Root class="ring-background ring-2 size-5">
 						{#if activity.user_avatar}
-							<Avatar.Image src={activity.user_avatar} alt={activity.user.name || activity.user.email} class="object-cover object-center" />
+							<Avatar.Image src={activity.user_avatar.toString()} alt={activity.user.name || activity.user.email} class="object-cover object-center" />
 						{/if}
 						<Avatar.Fallback>{(activity.user.name || activity.user.email).slice(0, 2).toUpperCase()}</Avatar.Fallback>
 					</Avatar.Root>

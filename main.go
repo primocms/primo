@@ -30,6 +30,9 @@ func setup(pb *pocketbase.PocketBase) error {
 	if err := internal.RegisterRecoverySnapshotUploads(pb); err != nil {
 		return err
 	}
+	if err := internal.RegisterContentPermissions(pb); err != nil {
+		return err
+	}
 
 	if err := internal.RegisterCORS(pb); err != nil {
 		return err

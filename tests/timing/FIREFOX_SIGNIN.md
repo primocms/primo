@@ -1,0 +1,9 @@
+# Frozen RC.11 Firefox sign-in stress
+
+Run `PRIMO_BROWSER=firefox PRIMO_AUTH_STRESS=1 PRIMO_AUTH_REPEATS=20 node --test tests/presence/auth.test.mjs` after installing the pinned dependencies and Firefox. Set `PRIMO_TEST_CMS_BINARY` to the sealed RC.11 executable, `PRIMO_CANDIDATE_SHA` to its product source, and `PRIMO_QA_SOURCE_SHA` to the test source. Verify the installed CLI/MCP archive bytes and original CMS receipt with `node tests/staging/rc8/verify.mjs` before and after.
+
+The opt-in run interleaves 20 normal sign-ins, 20 first-refresh cancellations, and 20 delayed password/refresh sessions with first-refresh cancellation. Each uses a fresh browser context and generated local account. The final session consumes the actual production auth budget, verifies the visible HTTP 429 without expecting a refresh, waits for the configured quiet period, and signs in again. No password is retried silently. Content IDs, values and bindings are compared after every session, and the production rate-limit settings must remain identical.
+
+`auth-firefox.json` records product and QA identities, browser/runtime versions, per-session phase, auth HTTP status or transport failure, elapsed times and recovery counts. Failed sessions also capture UI state and a browser trace. JSON diagnostics exclude account tokens/passwords. Traces may contain credentials for the generated disposable account; keep trace artifacts restricted. The fixture is destroyed after each run. A failure terminates the run and preserves its evidence; workflow reruns must not replace the first failure report.
+
+The frozen qualification workflow runs this against the original Linux amd64 and macOS arm64 artifacts from run 39188774819. Its other jobs rerun all five native package checks, all three browser suites, packaged agent/client handoff, Safari, security framing and copied recovery. Source builds remain supplemental and never replace the sealed RC.11 artifacts.

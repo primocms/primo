@@ -103,6 +103,8 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled  bool   `json:"telemetry_enabled"`
 				SMTPEnabled       bool   `json:"smtp_enabled"`
 				HostedMode        bool   `json:"hosted_mode"`
+				ManagedBootstrap  bool   `json:"managed_bootstrap"`
+				OwnerOnly         bool   `json:"owner_only"`
 				BillingURL        string `json:"billing_url,omitempty"`
 				DevMode           bool   `json:"dev_mode"`
 				SiteCap           int    `json:"site_cap,omitempty"`
@@ -121,6 +123,8 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled:  telemetryEnabled,
 				SMTPEnabled:       smtpEnabled,
 				HostedMode:        isHostedMode(),
+				ManagedBootstrap:  os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true",
+				OwnerOnly:         ownerOnly(pb),
 				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),
 				DevMode:           DevMode,
 				SiteCap:           siteCap,

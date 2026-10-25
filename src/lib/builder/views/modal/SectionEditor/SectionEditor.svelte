@@ -1,6 +1,6 @@
-<script module>
+<script module lang="ts">
 	import { writable } from 'svelte/store'
-	const orientation = writable('horizontal')
+	const orientation = writable<'horizontal' | 'vertical'>('horizontal')
 </script>
 
 <!-- svelte-ignore state_referenced_locally -->
@@ -16,7 +16,7 @@
 	import { watch } from 'runed'
 	import { onModKey } from '$lib/builder/utils/keyboard'
 	import { browser } from '$app/environment'
-	import { PageSectionEntries, PageSections, PageEntries, PageTypeSectionEntries, SiteSymbolFields, SiteSymbols, SiteSymbolEntries, SiteEntries, Sites } from '$lib/pocketbase/collections'
+	import { PageSectionEntries, PageSections, PageEntries, PageTypeSectionEntries, PageTypeSections, SiteSymbolFields, SiteSymbols, SiteSymbolEntries, SiteEntries, Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 	import { current_user } from '$lib/pocketbase/user'
@@ -46,7 +46,7 @@
 			}
 		}
 	}: {
-		component: ObjectOf<typeof PageTypeSection> | ObjectOf<typeof PageSections>
+		component: ObjectOf<typeof PageTypeSections> | ObjectOf<typeof PageSections>
 		tab: string
 		has_unsaved_changes: boolean
 		header?: any
@@ -302,7 +302,7 @@
 		</Pane>
 		<PaneResizer class="PaneResizer" />
 		<Pane defaultSize={50}>
-			<ComponentPreview id={symbol?.id} {code} data={component_data} {fields} bind:orientation={$orientation} view="small" {loading} head={$site_html} />
+			<ComponentPreview id={symbol?.id} {code} data={component_data} {fields} bind:orientation={$orientation} view="small" {loading} />
 		</Pane>
 	</PaneGroup>
 </main>

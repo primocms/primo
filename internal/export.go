@@ -577,18 +577,18 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		}
 	}
 
-	// Fetch page type fields for name lookups
-	pageTypeFieldNames := make(map[string]string) // field id -> name
+	// Keep complete definitions so nested page values use the same ancestry
+	// as section content, including same-named children in different groups.
+	pageTypeFields := make(map[string]*core.Record)
+	fieldsByParent := make(map[string][]*core.Record)
 	for _, pt := range pageTypes {
-		ptFields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pt.Id})
-		if err == nil {
-			for _, field := range ptFields {
-				key := field.GetString("key")
-				if key == "" {
-					key = field.GetString("name")
-				}
-				pageTypeFieldNames[field.Id] = key
-			}
+		fields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pt.Id})
+		if err != nil {
+			return nil, err
+		}
+		for _, field := range fields {
+			pageTypeFields[field.Id] = field
+			fieldsByParent[field.GetString("parent")] = append(fieldsByParent[field.GetString("parent")], field)
 		}
 	}
 
@@ -602,15 +602,31 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 			return nil, fmt.Errorf("failed to fetch page entries: %w", err)
 		}
 
-		fieldValues := make(map[string]interface{})
+		entriesByParent := make(map[string][]*core.Record)
 		for _, entry := range pageEntries {
-			fieldId := entry.GetString("field")
-			// Look up field name
-			fieldName := pageTypeFieldNames[fieldId]
-			if fieldName == "" {
-				fieldName = fieldId // Fallback to ID if name not found
+			parent := entry.GetString("parent")
+			entriesByParent[parent] = append(entriesByParent[parent], entry)
+		}
+		for _, entries := range entriesByParent {
+			sort.SliceStable(entries, func(i, j int) bool { return entries[i].GetInt("index") < entries[j].GetInt("index") })
+		}
+		// Editor saves target child entries. A cached whole-group value must
+		// not mask a later child edit. These are request-local decoded records.
+		for _, entry := range pageEntries {
+			if field := pageTypeFields[entry.GetString("field")]; field != nil && field.GetString("type") == "group" && len(entriesByParent[entry.Id]) > 0 {
+				entry.Set("value", nil)
 			}
-			fieldValues[fieldName] = normalizeValue(entry.Get("value"))
+		}
+		fieldValues := buildSectionContent(entriesByParent[""], pageTypeFields, fieldsByParent, entriesByParent).values
+		// Older imports stored entire repeater arrays in one root entry.
+		// Preserve those values on export; the next import structures them.
+		for _, entry := range entriesByParent[""] {
+			field := pageTypeFields[entry.GetString("field")]
+			if field != nil && field.GetString("type") == "repeater" && len(entriesByParent[entry.Id]) == 0 {
+				if items, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
+					fieldValues[field.GetString("key")] = items
+				}
+			}
 		}
 
 		// Fetch page sections (blocks on the page)

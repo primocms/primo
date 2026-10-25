@@ -53,6 +53,12 @@ func RegisterValidation(pb *pocketbase.PocketBase) error {
 			name := field.GetName()
 			value := event.Record.Get(name)
 
+			// Match the JSON representation exposed by the records API. Goja
+			// otherwise sees PocketBase timestamps as objects, not strings.
+			if date, ok := value.(types.DateTime); ok {
+				value = date.String()
+			}
+
 			if field.Type() == "json" {
 				val := value.(types.JSONRaw)
 				value, err = vm.RunString("(" + val.String() + ")")

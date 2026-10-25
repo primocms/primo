@@ -13,6 +13,7 @@
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
 	import { site_html } from '$lib/builder/stores/app/page'
 	import { processCode } from '$lib/builder/utils'
+	import { createSiteHeadPreview } from '$lib/builder/site_head.js'
 	import { page } from '$app/state'
 	import type { Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
@@ -35,22 +36,14 @@
 	} = $props()
 
 	// Set context so child components can access the site
-	const context = $state({ value: site })
+	const context = { get value() { return site } }
 	site_context.set(context)
-	$effect(() => {
-		context.value = site
-
-		if (!site_data) return
-		compile_component_head({ html: site.head, data: site_data }).then((generated_code) => {
-			$site_html = generated_code
-		})
-	})
 
 	const user = fromStore(current_user).current
 	if (!user) {
 		throw new Error('No current user')
 	} else {
-		setUserActivity({ user: user.id, site: site.id })
+		setUserActivity(() => ({ user: user.id, site: site.id }))
 	}
 
 	let showing_sidebar = $state(true)
@@ -154,6 +147,7 @@
 
 	// reset site html to avoid issues when navigating to new site
 	onDestroy(() => {
+		head_preview.cancel()
 		$site_html = null
 	})
 
@@ -170,21 +164,19 @@
 		})
 		if (!compiled.error) {
 			return compiled.head
-		} else return ''
+		} else throw new Error(compiled.error)
 	}
 
-	// Generate <head> tag code – only when site data meaningfully changes
-	let last_site_data = $state<any>()
+	const head_preview = createSiteHeadPreview({
+		compile: compile_component_head,
+		onResult: (head) => { $site_html = head; toast.dismiss('site-head-compile-error') },
+		onError: (error) => {
+			console.error('Site head compilation failed:', error)
+			toast.error('Site head could not be compiled. Reload to retry.', { id: 'site-head-compile-error' })
+		}
+	})
 	$effect(() => {
-		if (!site_data) return
-
-		// Skip recompilation if data is effectively unchanged
-		if (_.isEqual(last_site_data, site_data)) return
-
-		last_site_data = _.cloneDeep(site_data)
-		compile_component_head({ html: site.head, data: site_data }).then((generated_code) => {
-			$site_html = generated_code
-		})
+		head_preview.update({ html: site.head, data: site_data })
 	})
 
 	// --- Browse mode safety net ---------------------------------------------
@@ -313,7 +305,7 @@
 	</PaneGroup>
 </div>
 
-<svelte:window onresize={reset} />
+<svelte:window onresize={reset} onpagehide={() => head_preview.cancel()} onpageshow={(event) => { if (event.persisted) head_preview.update({ html: site.head, data: site_data }) }} />
 
 <style lang="postcss">
 	.mobile-sidebar-bar {

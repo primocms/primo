@@ -27,22 +27,36 @@ export const set_current_user = (site?: Site) => {
 }
 
 export const check_session = async () => {
-	if (self.instance?.authStore.isValid) {
-		return self.instance
-			.collection('users')
-			.authRefresh()
-			.then(() => {
-				track_cms_opened()
-				// Clear cached data since auth was refreshed - forces refetch with valid token
-				self.lists.clear()
-				self.records.clear()
-				return true
-			})
-			.catch(() => {
-				self.instance?.authStore.clear()
-				return false
-			})
-	} else {
-		return false
+	const client = self.instance
+	if (!client?.authStore.isValid) return false
+	const original_token = client.authStore.token
+	for (let attempt = 0; attempt < 2; attempt++) {
+		// A different successful login/refresh owns its credentials now.
+		if (attempt && client.authStore.token !== original_token) return false
+		try {
+			await client.collection('users').authRefresh()
+			track_cms_opened()
+			self.lists.clear()
+			self.records.clear()
+			return true
+		} catch (error) {
+			const failure = error as { isAbort?: boolean; status?: number } | undefined
+			const temporary =
+				failure?.isAbort ||
+				failure?.status === 0 ||
+				failure?.status === 408 ||
+				failure?.status === 429 ||
+				(failure?.status !== undefined && failure.status >= 500)
+			if (client.authStore.token !== original_token) return false
+			if (temporary && attempt === 0) {
+				await new Promise((resolve) => setTimeout(resolve, 250))
+				continue
+			}
+			// A transport/server outage does not establish that a token is bad.
+			// Return unverified after a bounded retry; only rejection signs out.
+			if (failure?.status === 400 || failure?.status === 401 || failure?.status === 403) client.authStore.clear()
+			return false
+		}
 	}
+	return false
 }

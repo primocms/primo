@@ -2,7 +2,7 @@ import posthog from 'posthog-js/dist/module.no-external'
 import 'posthog-js/dist/exception-autocapture'
 import 'posthog-js/dist/tracing-headers'
 import 'posthog-js/dist/web-vitals'
-import { instance } from './instance'
+import { instance, instance_ready } from './instance'
 
 const POSTHOG_KEY = 'phc_BjtMaGQMikAbssG6oaMrrksEB9m5J825kJZnwR8Qx87B'
 const POSTHOG_HOST = 'https://us.i.posthog.com'
@@ -20,6 +20,9 @@ const strip_url_properties = (properties?: Record<string, unknown>) => {
 }
 
 export const initialized = (async () => {
+	// Settings are loaded by the client startup barrier, not module evaluation.
+	// A failed barrier prevents startup and must not start telemetry.
+	try { await instance_ready } catch { return }
 	if (!instance.telemetry_enabled || instance.dev_mode) {
 		return
 	}

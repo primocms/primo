@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "preparedDate": "2026-10-25",
+  "candidate": {
+    "cms": "3.3.2-rc.12",
+    "cli": "0.3.0-rc.2",
+    "mcp": "0.1.11-rc.2"
+  },
+  "plannedStableVersions": {
+    "cms": "3.3.2",
+    "cli": "0.3.0",
+    "mcp": "0.1.11"
+  },
+  "mainInput": "453f03299113a88eba6e23318c14240f238e7310",
+  "cmsFrozenProduct": "5642f312bd29b83dea7ed3c86c68581ad52c5db3",
+  "cmsQaInput": "91ff71f82a7c276b609a6d861e22c48ef536c7d4",
+  "scriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
+  "records": [
+    {
+      "repository": "primocms/primo",
+      "number": 1362,
+      "title": "Fix inline script escaping in editor publication",
+      "head": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
+      "branch": "fix/publish-script-escaping",
+      "base": "main",
+      "draft": false,
+      "decision": "included-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1358,
+      "title": "Reuse unchanged pages and scripts during editor publishing",
+      "head": "43eefcd861d898c0ce53eb832872ced1706c83da",
+      "branch": "codex/incremental-publishing",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1357,
+      "title": "Approve Primo CLI login through the browser",
+      "head": "90d0e591448973925daa783ba10b64cff92e2228",
+      "branch": "codex/browser-cli-login",
+      "base": "main",
+      "draft": true,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1356,
+      "title": "Fix page-type head inheritance in editor previews",
+      "head": "489b6cec59820d417088a530876eecbaa67dbfa6",
+      "branch": "codex/editor-page-type-head",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1355,
+      "title": "Fix page list overflow and collapsed sidebar rendering",
+      "head": "ed4060f66983fa6ae1cc5c3e85a6ae3bce8aaa12",
+      "branch": "fix/page-list-sidebar-layout",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1353,
+      "title": "Test frozen RC.11 Firefox sign-in under repeated interruptions and delays",
+      "head": "91ff71f82a7c276b609a6d861e22c48ef536c7d4",
+      "branch": "test/rc11-firefox-signin-stress",
+      "base": "fix/rc11-timing-checks",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1352,
+      "title": "Fix timing checks for compiler readiness and production sign-in",
+      "head": "4cba6f958ccc0abeba26203356b32a88abe30c71",
+      "branch": "fix/rc11-timing-checks",
+      "base": "fix/firefox-compiler-recovery",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1351,
+      "title": "Recover Firefox compiler engine failures and qualify RC.11",
+      "head": "5642f312bd29b83dea7ed3c86c68581ad52c5db3",
+      "branch": "fix/firefox-compiler-recovery",
+      "base": "fix/rc10-hosted-provisioning",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1350,
+      "title": "Guard purchaser readiness and patch hosting dependencies",
+      "head": "a67e5c2995963ec6c97ba4e2b8ea7e10e754a9fa",
+      "branch": "fix/rc10-hosting-readiness",
+      "base": "review/hosting-provisioner-baseline",
+      "draft": true,
+      "decision": "active-hosting"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1349,
+      "title": "Fix managed purchaser provisioning and prepare RC.10",
+      "head": "6478ddb600ef1a058914ba323e6cc5886c795297",
+      "branch": "fix/rc10-hosted-provisioning",
+      "base": "fix/presence-reload",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1347,
+      "title": "Verify RC.9 hosted draft editing in native Safari",
+      "head": "d6a58636042fab51340a8bfe091aeafdd043748f",
+      "branch": "test/rc9-hosted-canary",
+      "base": "fix/presence-reload",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1346,
+      "title": "fix: qualify editor reload, save recovery and Safari for RC.9",
+      "head": "15085e33013584ba47c581052997e93e7131a37d",
+      "branch": "fix/presence-reload",
+      "base": "release/founding-builders-rc.8",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1345,
+      "title": "Consolidate frozen founding-builder fixes into reviewed RC.8",
+      "head": "af0f4aa73cb55e3565b53792bab91916d99a41b5",
+      "branch": "release/founding-builders-rc.8",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1344,
+      "title": "Prepare the ten-builder pilot and SMTP access worksheet",
+      "head": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f",
+      "branch": "docs/ten-builder-pilot-defaults",
+      "base": "test/rc7-disposable-hosted-staging",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1343,
+      "title": "test: verify RC7 hosted handoff and reverse-proxy realtime",
+      "head": "ad2ab9e0411d6397ed0dcb80da6b30f232358436",
+      "branch": "test/rc7-disposable-hosted-staging",
+      "base": "test/rc7-launch-gate-preparation",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1342,
+      "title": "test: prepare RC.7 staging fixtures and safe launch probes",
+      "head": "e5491d12a1848f8b7f77f3035addae56ead404f0",
+      "branch": "test/rc7-launch-gate-preparation",
+      "base": "test/rc7-exact-package-handoff",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1341,
+      "title": "Improve CMS mobile layouts and touch controls",
+      "head": "8ed3e7ee9e48f0f57c3aff649ffb447ed8e720be",
+      "branch": "codex/cms-mobile-responsiveness",
+      "base": "main",
+      "draft": false,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1340,
+      "title": "test: verify frozen RC.7 packages and browser handoffs",
+      "head": "925d4698ff2b8adf9c69ce38b1235fd8b6069637",
+      "branch": "test/rc7-exact-package-handoff",
+      "base": "release/founding-builders-rc.7",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1339,
+      "title": "release: prepare founding builders CMS RC.7",
+      "head": "7c1c7d4127479793c8b8856c102ef7d76fd75b80",
+      "branch": "release/founding-builders-rc.7",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1338,
+      "title": "test: verify exact RC.6 packages across browser handoffs",
+      "head": "789af72217204cdb0177b51851970871eae7a0d3",
+      "branch": "test/rc6-exact-package-handoff",
+      "base": "release/founding-builders-rc.6",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1337,
+      "title": "Draft: prepare production-validated CMS v3.3.2-rc.6 candidate",
+      "head": "7d4f982ee1af1f8d7b1a6662364816ec9b15426c",
+      "branch": "release/founding-builders-rc.6",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1336,
+      "title": "fix: preserve unchanged content identities on source-only pushes",
+      "head": "5c6c3061572ac5b23234509c293f9080c4b4df0f",
+      "branch": "fix/preserve-unchanged-section-entries",
+      "base": "fix/production-validation-rc6",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1335,
+      "title": "fix: preserve editor text, page drafts and cross-browser dialog behavior",
+      "head": "d9a4cd12cd74bb11bd44ef01bb81b6c854a60125",
+      "branch": "fix/browser-compatibility-rc6",
+      "base": "test/rc5-disposable-staging",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1334,
+      "title": "fix: validate PocketBase timestamps in production",
+      "head": "9af51545459af47fb9186f4cca60795822aa888e",
+      "branch": "fix/production-validation-rc6",
+      "base": "release/founding-builders-rc.5",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1333,
+      "title": "test: frozen RC.5 cross-browser staging",
+      "head": "80765f8b4aa4fb0363422fec5ea8dc8de65cc720",
+      "branch": "test/rc5-disposable-staging",
+      "base": "release/founding-builders-rc.5",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1332,
+      "title": "Draft: prepare warning-free CMS v3.3.2-rc.5 candidate",
+      "head": "399b9a5c4e5532ac5da6dd5e03433d3dca8d1a36",
+      "branch": "release/founding-builders-rc.5",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1331,
+      "title": "Resolve remaining Svelte warnings and enforce a zero-warning gate",
+      "head": "5d146f95f365de6a2821c40ae9151bf1bdb96aa0",
+      "branch": "fix/svelte-warning-readiness",
+      "base": "release/founding-builders-rc.4",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1330,
+      "title": "Draft: prepare type-checked CMS v3.3.2-rc.4 candidate",
+      "head": "9c5335d304c6f52db8d77993ed5b1dcd534a1ab5",
+      "branch": "release/founding-builders-rc.4",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1329,
+      "title": "Restore passing CMS type checks and enforce editor contracts",
+      "head": "087c78cf11872640e8aadb89a53057de7ca95816",
+      "branch": "fix/typecheck-readiness",
+      "base": "release/founding-builders-rc.1",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1328,
+      "title": "Allow content-only editors to reorder repeater items",
+      "head": "db9452113efb7abccf5fad972b7b2c6aa7f24f56",
+      "branch": "fix/editor-repeater-reordering",
+      "base": "fix/content-only-editors",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1327,
+      "title": "Draft: prepare CMS v3.3.2-rc.3 with editor repeater reordering",
+      "head": "7883f4a3565d1a431fe5437a4719ed88f22e8ab4",
+      "branch": "release/founding-builders-rc.1",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1326,
+      "title": "Enforce content editor permissions on design source and settings",
+      "head": "392066ac855252151df06176729d5dc08a13a8f4",
+      "branch": "fix/content-only-editors",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1325,
+      "title": "Preserve published section DOM and head nodes during hydration",
+      "head": "2d3cb7a5e9d6cc798db430467431b7e3ffee4128",
+      "branch": "fix/published-section-hydration",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1324,
+      "title": "Revalidate published responses and restore content security headers",
+      "head": "ee867b06af5bd4b49c488edb7df74567c24d9361",
+      "branch": "fix/published-response-headers",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1323,
+      "title": "Preserve nested page-type fields across export and import",
+      "head": "4257412e0068f704194c8afb7b1d4cf8acd22562",
+      "branch": "fix/page-type-nested-fields",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-cms"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1208,
+      "title": "Add \"Develop locally\" affordance to the dashboard",
+      "head": "841a258924cd61bbc671062198ae2ff6bf94c80d",
+      "branch": "feature/dashboard-develop-locally",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 69,
+      "title": "Use browser approval for hosted CLI login",
+      "head": "de1bdae8de46b351f26f71e9799776235304de13",
+      "branch": "codex/browser-cli-login",
+      "base": "master",
+      "draft": true,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 68,
+      "title": "Persist local server logs for agent-managed development",
+      "head": "65d945e751954edb8d1a700f17b5378145b9da41",
+      "branch": "codex/local-agent-server-logs",
+      "base": "master",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 67,
+      "title": "Draft: prepare secure CLI 0.3.0-rc.2 with exact MCP candidate",
+      "head": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc",
+      "branch": "release/founding-builders-rc.1",
+      "base": "master",
+      "draft": true,
+      "decision": "active-cli"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 66,
+      "title": "Require supported Node versions and show an early upgrade message",
+      "head": "ea41298f167d3b8db2358f08a993080fb7758bb3",
+      "branch": "fix/supported-node-versions",
+      "base": "master",
+      "draft": true,
+      "decision": "superseded-cli"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 65,
+      "title": "Protect newer CMS edits from automatic two-way imports",
+      "head": "1439c2a97ff8fab8ed83542415b713b06c42f797",
+      "branch": "fix/guard-two-way-imports",
+      "base": "master",
+      "draft": true,
+      "decision": "superseded-cli"
+    },
+    {
+      "repository": "primocms/primo-cli",
+      "number": 64,
+      "title": "Preserve server-rendered DOM when hydrating CLI-built pages",
+      "head": "22e713e5bf6d5af566f8a76f6e950eec2810704b",
+      "branch": "fix/static-section-hydration",
+      "base": "master",
+      "draft": true,
+      "decision": "superseded-cli"
+    },
+    {
+      "repository": "primocms/mcp",
+      "number": 32,
+      "title": "Skip unchanged page and script compilation during publishing",
+      "head": "9d108b583d404275d493afab2f4e851db369d1e4",
+      "branch": "codex/incremental-publishing",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/mcp",
+      "number": 31,
+      "title": "Allow local agents to run Primo and inspect server logs",
+      "head": "16ed5d3ca6742668c13c1550d15abd5ff3ec1d70",
+      "branch": "codex/local-agent-server-logs",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/mcp",
+      "number": 30,
+      "title": "Draft: prepare secure MCP 0.1.11-rc.2 release candidate",
+      "head": "8c96de27908373983bfff831ee99e4231e0873c8",
+      "branch": "release/founding-builders-rc.1",
+      "base": "main",
+      "draft": true,
+      "decision": "active-mcp"
+    },
+    {
+      "repository": "primocms/mcp",
+      "number": 29,
+      "title": "Fix independent section hydration in the publish compiler",
+      "head": "1c323840a45b56104ecabc3ac398c9fc7e98c5cf",
+      "branch": "fix/published-section-hydration",
+      "base": "main",
+      "draft": true,
+      "decision": "superseded-mcp"
+    },
+    {
+      "repository": "primocms/docs",
+      "number": 10,
+      "title": "Document browser approval for CLI sign-in",
+      "head": "1a3c8bcb35e007268df33fa619feb286259f4b8f",
+      "branch": "codex/browser-cli-login",
+      "base": "main",
+      "draft": true,
+      "decision": "deferred"
+    },
+    {
+      "repository": "primocms/docs",
+      "number": 9,
+      "title": "Document agent-managed local servers and persistent logs",
+      "head": "5e3cce1558a7ed0b088d07053d053ae2096e9b97",
+      "branch": "codex/local-agent-server-logs",
+      "base": "main",
+      "draft": false,
+      "decision": "deferred"
+    }
+  ]
+}
