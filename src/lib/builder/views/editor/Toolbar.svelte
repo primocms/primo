@@ -96,18 +96,26 @@
 			// layer ignores, so the bare build is the same work `primo preview`
 			// performs from the CLI.
 			if (!$read_only) {
-				// Create new snapshot and remove all other ones
-				// TODO: The amount of snapshots could be larger once make UI for managing and restoring them
-				const snapshots_to_remove = [...(existing_snapshots ?? [])]
-				const snapshot = await run_when_loaded(create_snapshot)
-				SiteSnapshots.create({
-					site: site.id,
-					file: Snapshot.encode(snapshot)
-				})
-				for (const existing_snapshot of snapshots_to_remove) {
-					SiteSnapshots.delete(existing_snapshot.id)
+				// Publication is already active. Snapshot maintenance must not report
+				// a failed publication or queue deletion of the last working backup.
+				try {
+					const collection = self.instance?.collection('site_snapshots')
+					if (!collection) throw new Error('No instance')
+					const snapshots_to_remove = [...(existing_snapshots ?? [])]
+					const snapshot = await run_when_loaded(create_snapshot)
+					await collection.create({ site: site.id, file: Snapshot.encode(snapshot) })
+					for (const existing_snapshot of snapshots_to_remove) {
+						try {
+							await collection.delete(existing_snapshot.id)
+						} catch (error) {
+							console.warn('Could not remove an older recovery snapshot:', error)
+						}
+					}
+					self.invalidate_lists()
+				} catch (error) {
+					console.warn('Site published, but the recovery snapshot could not be saved:', error)
+					toast.warning('Site published, but a recovery snapshot could not be saved. Previous snapshots are still available.')
 				}
-				await self.commit()
 			}
 			track_site_published({ site_id: site.id })
 		} catch (e) {

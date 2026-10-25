@@ -191,16 +191,19 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 							}
 
 							// 6) Svelte runtime pinned
-							if (importee === 'svelte') return SVELTE_CDN
-							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice('svelte/'.length)}`
+							const serverRuntime = svelteOptions.generate === 'server' ? '?conditions=worker&bundle=false' : ''
+							if (importee === 'svelte') return SVELTE_CDN + serverRuntime
+							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice('svelte/'.length)}${serverRuntime}`
 
 							// 7) Bare package → let esm.sh resolve
 							return `${CDN_URL}/${importee}`
 						},
 						async load(id) {
 							if (id === 'virtual:esm-env') {
-								return `export const DEV = false; export const PROD = true; export const BROWSER = true;`
+								return `export const DEV = false; export const PROD = true; export const BROWSER = ${svelteOptions.generate !== 'server'};`
 							}
+							// The renderer and compiled page must share the same SSR context.
+							if (id === './entry.js' && svelteOptions.generate === 'server') return component_lookup.get(id) + "\nexport { render } from 'svelte/server';"
 							if (component_lookup.has(id)) return component_lookup.get(id)
 
 							// Fetch external modules with caching
