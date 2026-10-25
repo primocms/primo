@@ -29,6 +29,11 @@ func RegisterRecoverySnapshotUploads(pb *pocketbase.PocketBase) error {
 				if err != nil || collection.Name != "site_snapshots" {
 					return e.Next()
 				}
+				// Auth tokens have already been loaded by PocketBase's earlier
+				// middleware. Reject guests before reading or spooling any bytes.
+				if e.Auth == nil {
+					return e.UnauthorizedError("Authentication required.", nil)
+				}
 				body, ok := e.Request.Body.(*router.RereadableReadCloser)
 				if !ok {
 					return e.InternalServerError("Unexpected snapshot request body wrapper.", nil)

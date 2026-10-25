@@ -253,3 +253,38 @@ func TestRecoverySnapshotUploadRateLimitPrecedesBodyRead(t *testing.T) {
 		t.Fatalf("rate-limited upload body was read %d times", counter.reads)
 	}
 }
+
+// TestRecoverySnapshotUploadAuthenticationPrecedesBodyRead rejects missing or
+// invalid credentials without reading large uploads, even without rate limits.
+func TestRecoverySnapshotUploadAuthenticationPrecedesBodyRead(t *testing.T) {
+	app := newPushTestApp(t)
+	defer app.ResetBootstrapState()
+	if err := RegisterRecoverySnapshotUploads(app); err != nil {
+		t.Fatal(err)
+	}
+	app.Settings().RateLimits.Enabled = false
+	site := createImportTestSite(t, app)
+	handler, _ := pushTestHTTP(t, app)
+	collection, err := app.FindCollectionByNameOrId("site_snapshots")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, collectionRef := range []string{collection.Name, collection.Id} {
+		for _, credential := range []string{"", "invalid-token"} {
+			req := snapshotUploadRequest(t, site.Id, 256<<20)
+			req.URL.Path = "/api/collections/" + collectionRef + "/records"
+			if credential != "" {
+				req.Header.Set("Authorization", credential)
+			}
+			counter := &snapshotReadCounter{ReadCloser: req.Body}
+			req.Body = counter
+			pushHTTP(t, handler, req, http.StatusUnauthorized)
+			if counter.reads != 0 || req.MultipartForm != nil {
+				t.Fatalf("unauthenticated upload was parsed: reads=%d, form=%v", counter.reads, req.MultipartForm)
+			}
+		}
+	}
+	if count, err := app.CountRecords("site_snapshots"); err != nil || count != 0 {
+		t.Fatalf("unauthenticated uploads created %d snapshots: %v", count, err)
+	}
+}
