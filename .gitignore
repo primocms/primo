@@ -66,3 +66,6 @@ bugs.md
 internal/SPEC-*.md
 
 /auth-*.json
+
+# Generated local browser/handoff evidence
+/tests/staging/evidence/
