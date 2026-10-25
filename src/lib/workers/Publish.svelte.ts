@@ -333,7 +333,8 @@ export const usePublishSite = (site_id?: string) => {
 								.filter((section) => section.symbol === symbol.id)
 								.map((section) => {
 									const content = section_content?.[page.id]?.[section.id]?.[locale]
-									return `hydrate(App, { target: document.querySelector('#section-${section.id}'), props: ${JSON.stringify(content)} });`
+									// Escape HTML delimiters so embedded source cannot close the inline script.
+									return `hydrate(App, { target: document.querySelector('#section-${section.id}'), props: ${JSON.stringify(content).replace(/</g, '\\u003c')} });`
 								})
 								.join('') +
 							'}).catch(e => console.error(e));'
