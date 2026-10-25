@@ -2,7 +2,6 @@ import * as _ from 'lodash-es'
 import PromiseWorker from 'promise-worker'
 import rollupWorker from './workers/rollup.worker.js?worker'
 import postCSSWorker from './workers/postcss.worker.js?worker'
-import { render } from 'svelte/server'
 
 const postcss_worker = new PromiseWorker(new postCSSWorker())
 const rollup_worker = new PromiseWorker(new rollupWorker())
@@ -78,7 +77,7 @@ export async function html({ component, head, buildStatic = true, css = 'externa
 	} else if (buildStatic) {
 		const blob = new Blob([res.ssr], { type: 'text/javascript' })
 		const url = URL.createObjectURL(blob)
-		const { default: App } = await import(/* @vite-ignore */ url)
+		const { default: App, render } = await import(/* @vite-ignore */ url)
 		URL.revokeObjectURL(url)
 
 		let component_data
