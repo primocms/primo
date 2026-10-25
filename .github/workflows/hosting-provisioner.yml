@@ -1,0 +1,41 @@
+name: Hosting provisioner regressions
+on:
+  pull_request:
+    paths:
+      - 'hosting/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/hosting-provisioner.yml'
+permissions:
+  contents: read
+jobs:
+  hosting:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.26.10
+          cache: true
+      - run: go test -race ./hosting -count=1
+      - name: Check reachable hosting vulnerabilities
+        run: |
+          GOTOOLCHAIN=go1.27.3 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          GOTOOLCHAIN=go1.26.10 govulncheck ./cmd/primo-hosting
+      - name: Build the draft control executable
+        run: |
+          go build -trimpath -ldflags="-s -w" -o primo-hosting_linux_amd64 ./cmd/primo-hosting
+          sha256sum primo-hosting_linux_amd64 > hosting-sha256.txt
+          go version -m primo-hosting_linux_amd64 > hosting-build.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc10-hosting-control-linux_amd64
+          path: |
+            primo-hosting_linux_amd64
+            hosting-sha256.txt
+            hosting-build.txt
+          if-no-files-found: error
