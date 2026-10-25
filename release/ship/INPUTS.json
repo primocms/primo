@@ -14,13 +14,13 @@
   "mainInput": "453f03299113a88eba6e23318c14240f238e7310",
   "cmsFrozenProduct": "5642f312bd29b83dea7ed3c86c68581ad52c5db3",
   "cmsQaInput": "91ff71f82a7c276b609a6d861e22c48ef536c7d4",
-  "scriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
+  "scriptEscapingInput": "3a0e2da925af2fa27084cccfef3c36834f300351",
   "records": [
     {
       "repository": "primocms/primo",
       "number": 1362,
       "title": "Fix inline script escaping in editor publication",
-      "head": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
+      "head": "3a0e2da925af2fa27084cccfef3c36834f300351",
       "branch": "fix/publish-script-escaping",
       "base": "main",
       "draft": false,
@@ -184,7 +184,7 @@
       "branch": "codex/cms-mobile-responsiveness",
       "base": "main",
       "draft": false,
-      "decision": "superseded-cms"
+      "decision": "deferred"
     },
     {
       "repository": "primocms/primo",
@@ -496,5 +496,6 @@
       "draft": false,
       "decision": "deferred"
     }
-  ]
+  ],
+  "initialScriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6"
 }

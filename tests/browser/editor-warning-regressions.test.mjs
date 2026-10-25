@@ -18,7 +18,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 		'test:utilities': 'export const createUniqueID = () => "select-test"; export const clickOutside = () => {};',
 		'test:context': 'export const site_context = {get: () => ({value: {page_types: () => []}}), getOr: () => ({value: null})}; export const debugging_context={getOr:()=>false};',
 		'test:stores':
-			'import {writable} from "svelte/store"; export const mod_key_held=writable(false); export const current_user=writable({siteRole:"developer"}); export const read_only=writable(false);',
+			'import {writable} from "svelte/store"; export const mod_key_held=writable(false); export const current_user=writable({siteRole:"developer"}); export const read_only=writable(false); export const locale=writable("en");',
 		'test:page': 'export const page={url:new URL("http://localhost/admin/site")};',
 		'test:environment': 'export const browser=true;',
 		'test:tooltip': 'export const Provider=()=>{}, Root=()=>{}, Trigger=()=>{}, Content=()=>{};',
@@ -46,6 +46,7 @@ async function fixture(source, { presence = false, pageData = false, pageForm = 
 					if(iframe)b.onResolve({filter:/^\.\/misc$/},()=>({path:'test:iframe-misc',namespace:'test'}))
 					if(toolbar)b.onResolve({filter:/^\.\.\/\.\.\/ui$/},()=>({path:'test:toolbar-ui',namespace:'test'}))
 					if (repeater) {
+                        b.onResolve({filter:/^\$lib\/Entity$/},()=>({path:'test:repeater-entity',namespace:'test'}))
 						b.onResolve({filter:/^\.\/RepeaterFieldItem\.svelte$/},()=>({path:'test:repeater-item.svelte',namespace:'test'}))
 						b.onResolve({filter:/^idb-keyval$/},()=>({path:'test:repeater-storage',namespace:'test'}))
 						b.onResolve({filter:/^\.\.\/utils$/},()=>({path:'test:repeater-utils',namespace:'test'}))
@@ -376,10 +377,11 @@ test('root renders authentication while persistence loads, then protects pending
 })
 
 test('delayed repeater preferences preserve newer explicit open and close choices', async()=>{
- const f=await fixture(`<script>import Repeater from ${component('src/lib/builder/field-types/RepeaterField.svelte')};let show=$state(true);export function leave(){show=false}</script>{#if show}<Repeater entity={{type:'page_sections',id:'section'}} field={{id:'items',key:'items',label:'Items'}} fields={[]} entries={[{id:'alpha',field:'items',index:0},{id:'bravo',field:'items',index:1}]} level={0} onchange={()=>{}}/>{/if}`,{repeater:true,extraMocks:{
+ const f=await fixture(`<script>import Repeater from ${component('src/lib/builder/field-types/RepeaterField.svelte')};let show=$state(true);export function leave(){show=false}</script>{#if show}<Repeater entity={{type:'page_sections',id:'section',collection:{manager:{entry_reordering:{errors:new Map()}}}}} field={{id:'items',key:'items',label:'Items'}} fields={[]} entries={[{id:'alpha',field:'items',index:0,locale:'en'},{id:'bravo',field:'items',index:1,locale:'en'}]} level={0} onchange={()=>{}}/>{/if}`,{repeater:true,extraMocks:{
   'test:repeater-item.svelte':`<script>import {createEventDispatcher} from 'svelte';let {entry,is_visible}=$props();const dispatch=createEventDispatcher()</script><button onclick={()=>dispatch('toggle')}>{entry.id}</button>{#if is_visible}<output data-testid={entry.id}>Open</output>{/if}`,
   'test:repeater-storage':`export const get=()=>new Promise(resolve=>{window.restoreRepeaters=resolve});export const set=(id,value)=>{window.savedRepeaters={id,value};return Promise.resolve()}`,
-  'test:repeater-utils':'export const get_empty_value=()=>null;'
+  'test:repeater-utils':'export const get_empty_value=()=>null;',
+  'test:repeater-entity':'export const identify_entity_collection=entity=>entity.type;'
  }})
  try{
   const {page}=f
@@ -390,8 +392,12 @@ test('delayed repeater preferences preserve newer explicit open and close choice
   await page.waitForTimeout(30)
   assert.equal(await page.getByTestId('alpha').count(),1,'Late stored collapse must not hide fields opened by the editor')
   assert.equal(await page.getByTestId('bravo').count(),0,'Late stored expansion must not undo an explicit close')
-  await page.evaluate(()=>subject.leave());await page.waitForFunction(()=>!!window.savedRepeaters)
-  assert.deepEqual(await page.evaluate(()=>savedRepeaters),{id:'items',value:{alpha:true,bravo:false,untouched:true}})
+  await page.getByRole('button',{name:'alpha',exact:true}).click()
+  await page.getByRole('button',{name:'alpha',exact:true}).click()
+  const saved=await page.evaluate(()=>savedRepeaters)
+  assert.match(saved.id,/^repeater-visible-v2:/)
+  assert.deepEqual(saved.value,{alpha:true,bravo:false,untouched:true})
+  await page.evaluate(()=>subject.leave())
   assert.deepEqual(f.errors,[])
  }finally{await f.close()}
 })

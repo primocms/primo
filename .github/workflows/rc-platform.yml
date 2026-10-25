@@ -24,6 +24,21 @@ concurrency:
   group: rc-platform-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+      - run: npm ci
+      # Keep the strict audit gate independent so a finding does not prevent
+      # collecting native/browser evidence for the same candidate source.
+      - run: npm audit
   native:
     timeout-minutes: 25
     strategy:
@@ -55,7 +70,6 @@ jobs:
           go-version: 1.26.9
           cache: true
       - run: npm ci
-      - run: npm audit
       - run: npm run check
       - name: Check reachable Go vulnerabilities
         if: matrix.target == 'linux_amd64'

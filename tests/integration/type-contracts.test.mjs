@@ -108,8 +108,7 @@ for (const [label, props, active] of [
 
 test('page compilation without an explicit head supplies empty head props and retains component data', async () => {
 	const source = await readFile(new URL('../../src/lib/compiler/processors.js', import.meta.url), 'utf8')
-	const requests = [],
-		renders = []
+	const requests = []
 	class PromiseWorker {
 		async postMessage(input) {
 			requests.push(input)
@@ -123,11 +122,7 @@ test('page compilation without an explicit head supplies empty head props and re
 		postCSSWorker: class {},
 		_: require('lodash-es'),
 		Blob,
-		URL: { createObjectURL: () => 'data:text/javascript,export default function(){};export function render(app,{props}){return {head:JSON.stringify(props),body:%22Rendered%22}}', revokeObjectURL() {} },
-		render: (_app, { props }) => {
-			renders.push(props)
-			return { head: '', body: 'Rendered' }
-		}
+		URL: { createObjectURL: () => 'data:text/javascript,export default function(){};export function render(app,{props}){return {head:JSON.stringify(props),body:%22Rendered%22}}', revokeObjectURL() {} }
 	}
 	const code = source.replace(/^import .*$/gm, '').replace(/^export /gm, '')
 	const html = Function(...Object.keys(scope), code + '\nreturn html')(...Object.values(scope))
