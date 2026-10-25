@@ -103,3 +103,46 @@ test.describe('Publishing', () => {
 		expect(homeRes.ok()).toBeTruthy()
 	})
 })
+
+test('browser publication preserves embedded source and hydrates interactive output', async ({ page, request, context }) => {
+	const { token } = await devAuth(request)
+	const fixture = await seedFixtureSite(token, 'Script Escaping Fixture')
+	const headers = { Authorization: `Bearer ${token}` }
+	const source = '<script>let image = 1;</script><ScRiPt>window.escapingLeak = true</ScRiPt><!-- café 🦉'
+	const update = await request.patch(`${TEST_SERVER_URL}/api/collections/site_symbols/records/${fixture.symbolId}`, {
+		headers,
+		data: {
+			html: '<pre data-testid="source">{headline}</pre><button data-testid="counter" onclick={() => count++}>Clicks: {count}</button>',
+			js: 'let { headline = "" } = $props(); let count = $state(0);'
+		}
+	})
+	expect(update.ok()).toBeTruthy()
+	const entries = await request.get(`${TEST_SERVER_URL}/api/collections/page_section_entries/records`, {
+		headers,
+		params: { filter: `section = "${fixture.sectionId}" && field = "${fixture.fieldIds.headline}"` }
+	})
+	const entry = (await entries.json()).items[0]
+	expect(entry).toBeTruthy()
+	const contentUpdate = await request.patch(`${TEST_SERVER_URL}/api/collections/page_section_entries/records/${entry.id}`, {
+		headers,
+		data: { value: source }
+	})
+	expect(contentUpdate.ok()).toBeTruthy()
+	await loginAsDeveloper(page, fixture.siteId)
+	await expect(canvasFrame(page).getByTestId('source')).toHaveText(source, { timeout: 15000 })
+	await publishViaUI(page)
+
+	const published = await context.newPage()
+	const errors: string[] = []
+	published.on('pageerror', error => errors.push(error.message))
+	await published.goto(`${TEST_SERVER_URL}/?_site=${fixture.siteId}`)
+	await expect(published.getByTestId('source')).toHaveText(source)
+	await published.getByTestId('counter').click()
+	await expect(published.getByTestId('counter')).toHaveText('Clicks: 1')
+	expect(errors).toEqual([])
+	await expect(published.locator('script[type="module"]')).toHaveCount(1)
+	expect(await published.locator('script[type="module"]').textContent()).toContain('\\u003c/script>')
+	expect(await published.locator('script:not([type])').allTextContents()).not.toContain('window.escapingLeak = true')
+	await published.screenshot({ path: test.info().outputPath('published-script-escaping.png'), fullPage: true })
+	await published.close()
+})
