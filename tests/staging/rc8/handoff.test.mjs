@@ -167,7 +167,14 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  const contentDialog=clientPage.getByRole('dialog')
  assert.equal(await contentDialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
  const itemLocator=id=>contentDialog.locator(`.RepeaterFieldItem[data-entry-id="${id}"]`)
- const moveItem=async(id,label)=>{await itemLocator(id).getByRole('button',{name:/^Rearrange /}).click();await clientPage.getByRole('menuitem',{name:label,exact:true}).click()}
+ const moveItem=async(id,label)=>{
+  const trigger=itemLocator(id).getByRole('button',{name:/^Rearrange /})
+  await trigger.click()
+  const menuId=await trigger.getAttribute('aria-controls');assert.ok(menuId,'The open trigger must own its menu')
+  const menu=clientPage.locator(`[role="menu"][id="${menuId}"]`)
+  await menu.getByRole('menuitem',{name:label,exact:true}).click()
+  await menu.waitFor({state:'hidden'})
+ }
  await moveItem(charlie,'Move to first')
  if(!await itemLocator(alpha).locator('[id$="-name"] textarea').isVisible()) await itemLocator(alpha).locator('button.title').first().click()
  await moveItem(nestedSecond,'Move earlier')

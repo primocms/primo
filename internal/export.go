@@ -610,13 +610,6 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		for _, entries := range entriesByParent {
 			sort.SliceStable(entries, func(i, j int) bool { return entries[i].GetInt("index") < entries[j].GetInt("index") })
 		}
-		// Editor saves target child entries. A cached whole-group value must
-		// not mask a later child edit. These are request-local decoded records.
-		for _, entry := range pageEntries {
-			if field := pageTypeFields[entry.GetString("field")]; field != nil && field.GetString("type") == "group" && len(entriesByParent[entry.Id]) > 0 {
-				entry.Set("value", nil)
-			}
-		}
 		fieldValues := buildSectionContent(entriesByParent[""], pageTypeFields, fieldsByParent, entriesByParent).values
 		// Older imports stored entire repeater arrays in one root entry.
 		// Preserve those values on export; the next import structures them.
@@ -1378,16 +1371,43 @@ func buildSectionContent(
 			// Group: single entry with nested children
 			if len(fieldEntries) > 0 {
 				entry := fieldEntries[0]
-				// First try to use stored value if it's a complete object
-				storedValue := normalizeValue(entry.Get("value"))
-				if storedMap, ok := storedValue.(map[string]interface{}); ok && len(storedMap) > 0 {
-					addKV(fieldKey, storedMap)
-				} else {
-					// Build from child entries
-					childEntries := entriesByParent[entry.Id]
-					if len(childEntries) > 0 {
-						addKV(fieldKey, buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent))
+				storedMap, _ := normalizeValue(entry.Get("value")).(map[string]interface{})
+				childEntries := entriesByParent[entry.Id]
+				if len(childEntries) == 0 {
+					// Legacy groups may exist only as a stored JSON object.
+					if len(storedMap) > 0 {
+						addKV(fieldKey, storedMap)
 					}
+				} else {
+					// Structured children are authoritative after edits/reorders.
+					// A whole-group import cache must never restore their old values.
+					group := buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
+					known := make(map[string]bool)
+					for _, definition := range fieldById {
+						if definition.GetString("parent") == field.Id {
+							key := definition.GetString("key")
+							if key == "" {
+								key = definition.GetString("name")
+							}
+							known[key] = true
+						}
+					}
+					// Retain unmodeled legacy keys without resurrecting a deleted
+					// modeled child or overriding any reconstructed value.
+					extra := make([]string, 0)
+					for key := range storedMap {
+						if !known[key] {
+							if _, exists := group.values[key]; !exists {
+								extra = append(extra, key)
+							}
+						}
+					}
+					sort.Strings(extra)
+					for _, key := range extra {
+						group.keys = append(group.keys, key)
+						group.values[key] = storedMap[key]
+					}
+					addKV(fieldKey, group)
 				}
 			}
 

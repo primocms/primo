@@ -63,11 +63,20 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     record.phase='open-block-content';await click(await button('Edit Block Content'))
     const row=id=>'[role=dialog] .RepeaterFieldItem[data-entry-id="'+id+'"]'
     assert.equal(await execute("return [...document.querySelectorAll('[role=dialog] button')].some(b=>b.textContent.trim()==='Create Field')"),false)
-    record.phase='move-root-repeater';await click(await element(row(roots[1].id)+' button[aria-label="Move Item item up"]'))
+    const moveItem=async id=>{
+     const trigger=await element(row(id)+' > .repeater-item-container > .item-options > .primo-buttons button[aria-label^="Rearrange "]')
+     await click(trigger)
+     const menuId=await execute("return arguments[0].getAttribute('aria-controls')",[{'element-6066-11e4-a52e-4f735466cecf':trigger}]);assert.ok(menuId,'Safari move trigger must own its menu')
+     await wait(()=>execute("return !!document.getElementById(arguments[0])?.querySelector('[role=menuitem]')",[menuId]),'Safari move menu missing')
+     const action=await execute("return [...document.getElementById(arguments[0]).querySelectorAll('[role=menuitem]')].find(el=>el.textContent.trim()==='Move earlier')",[menuId]);assert.ok(action,'Safari Move earlier action missing')
+     await click(action['element-6066-11e4-a52e-4f735466cecf'])
+     await wait(()=>execute("return !document.getElementById(arguments[0])?.getClientRects().length",[menuId]),'Safari move menu must close')
+    }
+    record.phase='move-root-repeater';await moveItem(roots[1].id)
     record.phase='expand-root-repeater'
     if(!await execute("return !!document.querySelector(arguments[0]+' textarea')?.getClientRects().length",[row(alpha)]))await click(await element(row(alpha)+' button.title'))
     await wait(()=>execute("return !!document.querySelector(arguments[0]+' textarea')?.getClientRects().length",[row(alpha)]),'Safari root item must remain expanded')
-    record.phase='move-nested-repeater';await click(await element(row(links[1].id)+' button[aria-label="Move Link item up"]'))
+    record.phase='move-nested-repeater';await moveItem(links[1].id)
     record.phase='save-repeater-dialog';await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content dialog did not save')
     for(let n=0;n<3;n++){
      await saved();await command('POST',session+'/refresh',{});await ready();await observeErrors();const after=await c.verifyContent(tag)

@@ -294,7 +294,11 @@ test.describe('Repeaters', () => {
 			const trigger = item(id).getByRole('button', { name: /^Rearrange / })
 			if (keyboard) { await trigger.focus(); await page.keyboard.press('Enter') }
 			else await trigger.click()
-			await page.getByRole('menuitem', { name: label, exact: true }).click()
+			const menuId = await trigger.getAttribute('aria-controls')
+			expect(menuId).toBeTruthy()
+			const menu = page.locator(`[role="menu"][id="${menuId}"]`)
+			await menu.getByRole('menuitem', { name: label, exact: true }).click()
+			await menu.waitFor({ state: 'hidden' })
 		}
 		await move(containers[2].id, 'Move earlier', true)
 		await move(containers[2].id, 'Move later')

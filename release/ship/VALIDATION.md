@@ -11,6 +11,8 @@ The current integration target is [CMS #1363](https://github.com/primocms/primo/
 - CLI 0.3.0-rc.3 and MCP 0.1.11-rc.3 refresh their vulnerable locks and raise the Markdown parser floor to 14.3.3. CLI source lock resolves the retained exact MCP archive; shipped metadata retains its exact candidate version. New local archives and SHA-256 values are in tests/staging/rc8-packages.json.
 - Hosting uses Go 1.26.10 and x/crypto 0.57 with compatible transitive updates. It remains a separate hosting-only review target; never deploy its older CMS tree.
 
+- Final handoff exposed stale imported group caches masking nested repeater edits on pull. Export now prioritizes structured child records, retains stored-only legacy groups and unmodeled legacy keys, and does not restore deleted modeled values. A regression fails on the previous source and passes with the fix. Native Safari now exercises the current owned move menu; recovery checks the current RC.13 version.
+
 ## Security gates
 
 Full npm audits for CMS, CLI and MCP report **zero vulnerabilities**, with no exclusions or lowered severity threshold. CMS and hosting govulncheck report **zero reachable and zero imported-package vulnerabilities**. The scanner additionally reports GO-2026-5932 for unmaintained OpenPGP code contained in x/crypto: this package is not imported or called, has no fixed module version, and remains module-only evidence. It is not suppressed; patched crypto versions are retained for the packages actually used.
