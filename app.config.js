@@ -15,7 +15,7 @@ function compilerFiles(directory) {
 	)
 }
 const publishCompilerHash = createHash('sha256')
-for (const file of [...compilerFiles('./src/lib/compiler'), './src/lib/workers/Publish.svelte.ts', './src/lib/workers/publish-cache.js', './src/lib/workers/publish-assets.js', './src/lib/common/baseline-css.ts', './package-lock.json'].sort()) {
+for (const file of [...compilerFiles('./src/lib/compiler'), './src/lib/builder/component.js', './src/lib/builder/utils.ts', './src/lib/Content.svelte.ts', './src/lib/PageData.svelte.ts', './src/lib/pages.ts', './src/lib/workers/Publish.svelte.ts', './src/lib/workers/publish-cache.js', './src/lib/workers/publish-assets.js', './src/lib/common/baseline-css.ts', './package-lock.json'].sort()) {
 	publishCompilerHash.update(file).update(readFileSync(new URL(file, import.meta.url)))
 }
 

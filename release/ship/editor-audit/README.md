@@ -23,3 +23,8 @@ local-file-inventory.json and local-merge.json describe the CMS source compariso
 Final results and source identity are recorded in the release PR and CI, rather than changing the source commit solely to record the hashes of that same commit. Test harnesses now use a real EventTarget for cancellable preview events and the current cache/reordering modules. Preview-head browser checks additionally cover page-cache suspension/resume. The browser-login handoff uses the installed candidate CLI by default. Mobile layout and local-development entry-point checks are included.
 
 The client-site audit suite remains opt-in for private exported datasets; ordinary release workflows exercise isolated synthetic fixtures. No current QA or production server has been updated by this reconciliation.
+
+
+## Original feature-review follow-ups
+
+Seven still-valid minor findings from the original feature PRs are addressed in the cumulative candidates: responsive SiteEditor panes remount on orientation change; reduced-padding mobile titles clear the close control; esbuild is a direct devDependency; local publication processors/data helpers participate in the compiler fingerprint; each physical log line carries metadata; an exited/failed CMS stops startup waiting immediately with output listeners attached before PID recording; and the background example retains early startup stderr/stdout. Cache invalidation and multiline logs have regression tests, the immediate-exit test has a tighter deadline, and responsive split persistence is exercised across viewport changes.

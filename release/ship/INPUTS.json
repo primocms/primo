@@ -539,7 +539,7 @@
       },
       "cli": {
         "archive": "primo-cli-0.3.0-rc.3.tgz",
-        "sha256": "9f74486cfd44ad111e7ebf199c36af341d4d9407d22544ba0916c91309b1dc4e"
+        "sha256": "ea5f90ad233bfcf4ae0ba0a7421d0afb62d4ea4deea257a14b9c4c30b1cbd4b6"
       },
       "mcp": {
         "archive": "primo-mcp-0.1.11-rc.3.tgz",
@@ -547,8 +547,17 @@
       }
     },
     "note": "Unpublished candidate archives rebuilt at the same prerelease versions; exact hashes distinguish this revision from prior immutable CI artifacts.",
-    "cliHead": "f7ebad4b9c9553e37548e2376ba1d7ddaf49b845",
+    "cliHead": "0e192b3b47a8566b3c67710c6c9f4efe235b7c5e",
     "mcpHead": "0686cd687cc6ab03e607f13631525bd2085954d3",
-    "documentationPR": "https://github.com/primocms/docs/pull/11"
+    "documentationPR": "https://github.com/primocms/docs/pull/11",
+    "reviewFindingsAddressed": [
+      "mobile orientation loads independent pane layout",
+      "mobile close control clears the title icon",
+      "esbuild is a direct declared test dependency",
+      "local publish processors and data helpers invalidate cached output",
+      "every physical log line identifies timestamp and source",
+      "CMS exit/error stops readiness waiting immediately with both streams captured",
+      "background startup example retains early errors"
+    ]
   }
 }

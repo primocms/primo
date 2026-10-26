@@ -65,7 +65,7 @@
 		.dialog-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 		.dialog-tools { grid-column: 1 / -1; grid-row: 2; margin-left: 0; }
 		.dialog-tools:empty { display: none; }
-		.dialog-header :global(.dialog-heading) { grid-column: 1; grid-row: 1; justify-content: flex-start; padding-left: 36px; font-size: 16px; }
+		.dialog-header :global(.dialog-heading) { grid-column: 1; grid-row: 1; justify-content: flex-start; padding-left: 56px; font-size: 16px; }
 		.dialog-header :global(.dialog-heading svg) { flex-shrink: 0; }
 		.dialog-header :global(> button) { grid-column: 2; grid-row: 1; min-height: 40px; }
 	}

@@ -109,6 +109,7 @@
 {#if site}
 	<main class="SiteEditor">
 		{#if $current_user?.siteRole === 'developer'}
+			{#key mobile.current}
 			<PaneGroup direction={mobile.current ? 'vertical' : 'horizontal'} style="display: flex;" autoSaveId={mobile.current ? 'SiteEditor-mobile' : 'SiteEditor-horizontal'}>
 				<Pane defaultSize={50}>
 					<Fields
@@ -177,6 +178,7 @@
 					</PaneGroup>
 				</Pane>
 			</PaneGroup>
+			{/key}
 		{:else}
 			<Content
 				entity={site}
