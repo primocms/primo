@@ -2,6 +2,7 @@ package internal
 
 import (
 	_ "embed"
+	"sync"
 
 	"github.com/dop251/goja"
 	"github.com/pocketbase/pocketbase"
@@ -13,11 +14,29 @@ import (
 //go:embed common/index.cjs
 var commonScript string
 
+// A runtime is exclusively checked out for one validation. The model parsers
+// are synchronous and do not retain record values between calls.
+type validationRuntime struct {
+	vm     *goja.Runtime
+	models *goja.Object
+}
+
+func newValidationRuntime(prog *goja.Program) (*validationRuntime, error) {
+	vm := goja.New()
+	if _, err := vm.RunProgram(prog); err != nil {
+		return nil, err
+	}
+	models := vm.GlobalObject().Get("exports").ToObject(vm).Get("models").ToObject(vm)
+	return &validationRuntime{vm: vm, models: models}, nil
+}
+
 func RegisterValidation(pb *pocketbase.PocketBase) error {
 	prog, err := goja.Compile("validation.js", "globalThis.exports = {};class File {};"+commonScript, true)
 	if err != nil {
 		return err
 	}
+
+	var runtimes sync.Pool
 
 	pb.OnRecordValidate().BindFunc(func(event *core.RecordEvent) error {
 		// Skip validation in dev mode for performance (import creates hundreds of records)
@@ -27,14 +46,16 @@ func RegisterValidation(pb *pocketbase.PocketBase) error {
 
 		var err error
 
-		// Evaluate models
-		vm := goja.New()
-		if _, err := vm.RunProgram(prog); err != nil {
-			return err
+		// Reuse initialized models; sync.Pool never shares a runtime concurrently.
+		runtime, _ := runtimes.Get().(*validationRuntime)
+		if runtime == nil {
+			runtime, err = newValidationRuntime(prog)
+			if err != nil {
+				return err
+			}
 		}
-		models := vm.GlobalObject().
-			Get("exports").ToObject(vm).
-			Get("models").ToObject(vm)
+		vm, models := runtime.vm, runtime.models
+		defer runtimes.Put(runtime)
 
 		// Select model for validation
 		collection := event.Record.Collection()
