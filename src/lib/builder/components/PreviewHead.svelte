@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte'
+	import { toast } from 'svelte-sonner'
 	import { cloneDeep, isEqual } from 'lodash-es'
 	import { page } from '$app/state'
 	import { PageTypes, type Sites } from '$lib/pocketbase/collections'
@@ -22,8 +23,10 @@
 	type HeadInput = { site: string; page?: string; page_type?: string; locale: string; code: string; data: Record<string, unknown> }
 	let last_input: HeadInput | undefined
 	let request = 0
+	let suspended = $state(false)
 
 	$effect(() => {
+		if (suspended) return
 		// Wait for the viewed page/type and its content, rather than compiling
 		// expressions against an incomplete set of props during navigation.
 		if (!site_content || (page_type_id && !page_type) || (content_entity && !page_content)) {
@@ -51,10 +54,16 @@
 			component: { html: `<svelte:head>${input.code}</svelte:head>`, css: '', js: '', data: input.data }
 		})
 			.then((compiled) => {
-				if (current_request === request) $site_html = compiled.error ? '' : (compiled.head ?? '')
+				if (current_request !== request) return
+				if (compiled.error) throw new Error(compiled.error)
+				$site_html = compiled.head ?? ''
+				toast.dismiss('site-head-compile-error')
 			})
-			.catch(() => {
-				if (current_request === request) $site_html = ''
+			.catch((error) => {
+				if (current_request !== request) return
+				$site_html = ''
+				console.error('Preview head compilation failed:', error)
+				toast.error('Page head could not be compiled. Reload to retry.', { id: 'site-head-compile-error' })
 			})
 	})
 
@@ -65,3 +74,8 @@
 		$site_html = null
 	})
 </script>
+
+<svelte:window
+	onpagehide={() => { request++; last_input = undefined; suspended = true }}
+	onpageshow={(event) => { if (event.persisted) suspended = false }}
+/>

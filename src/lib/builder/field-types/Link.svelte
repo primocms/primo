@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as _ from 'lodash-es'
 	import Icon from '@iconify/svelte'
 	import UI from '../ui'
 	import { watch } from 'runed'
@@ -8,6 +7,7 @@
 	import type { Field } from '$lib/common/models/Field'
 
 	const { field, entry: passedEntry, onchange }: { field: Field; entry?: any; onchange: FieldValueHandler } = $props()
+	const input_id = $props.id()
 
 	const default_value = {
 		label: '',
@@ -81,24 +81,17 @@
 		return result
 	})
 
-	// Auto-select first page on open
-	let auto_selected_page = $state(false)
+	let selected = $state<'page' | 'url'>('page')
+	const entry_id = $derived(passedEntry?.id)
+	// Opening an optional link must not create a destination. Keep the
+	// chosen input mode while the user clears or replaces a URL.
 	watch(
-		() => selectable_pages,
+		() => entry_id,
 		() => {
-			const top_page = selectable_pages[0]
-			if (!top_page || auto_selected_page) return
-
-			const has_url = entry?.value?.url
-			const has_page = entry?.value?.page
-			if (!has_url && !has_page && selected === 'page') {
-				onchange({ [field.key]: { 0: { value: { ...entry.value, page: top_page.id } } } })
-				auto_selected_page = true
-			}
-		}
+			selected = passedEntry?.value?.url ? 'url' : 'page'
+		},
+		{ lazy: false }
 	)
-
-	let selected = $derived<'page' | 'url'>(entry?.value?.url ? 'url' : 'page')
 </script>
 
 <div class="Link">
@@ -109,7 +102,7 @@
 				onchange({ [field.key]: { 0: { value: { ...entry.value, label: text } } } })
 			}}
 			value={entry?.value?.label}
-			id="page-label"
+			id={input_id}
 			placeholder="About Us"
 		/>
 		<div class="url-select">
@@ -126,7 +119,8 @@
 			{#if selected === 'page'}
 				<UI.Select
 					fullwidth={true}
-					value={entry?.value?.page}
+					value={entry?.value?.page ?? null}
+					fallback_label="Choose a page"
 					options={selectable_pages}
 					on:input={({ detail: pageId }) => {
 						const page = all_pages.find((p) => p.id === pageId)
@@ -144,7 +138,7 @@
 						// auto-set https protocol only if no protocol exists and it's not a relative URL
 						const text = entry?.value?.url
 						if (!text) return
-						const has_protocol = text.includes('://')
+						const has_protocol = /^[a-z][a-z\d+.-]*:/i.test(text)
 						const is_relative = text.startsWith('/') || text.startsWith('#')
 						if (!has_protocol && !is_relative) {
 							const url_with_protocol = `https://${text}`

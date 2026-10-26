@@ -144,6 +144,12 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			}
 			defer reader.Close()
 
+			if site != nil {
+				// Agents verify that a custom-domain HTTPS request reached this
+				// site's published files, rather than a CMS or another site.
+				requestEvent.Response.Header().Set("X-Primo-Site", site.Id)
+			}
+
 			// Preview requests (`?_site=ID`, incl. subresources resolved via the
 			// referrer) must never be served from cache: the preview iframe's
 			// cache-busting `v` token changes only once per publish, so without

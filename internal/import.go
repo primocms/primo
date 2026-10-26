@@ -17,6 +17,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"golang.org/x/net/html"
@@ -293,12 +294,12 @@ func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
 		// Preview endpoint - shows what would change
 		serveEvent.Router.POST("/api/primo/import/{siteId}/preview", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, true)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		// Apply endpoint - actually makes changes
 		serveEvent.Router.POST("/api/primo/import/{siteId}", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, false)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		return serveEvent.Next()
 	})
@@ -318,7 +319,7 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 
 	// Parse multipart form (must read body before any access checks so we can
 	// peek at site.yaml when creating a new site).
-	if err := e.Request.ParseMultipartForm(32 << 20); err != nil { // 32MB max
+	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}
 
@@ -572,10 +573,9 @@ func readSiteConfigFromZip(zipData []byte) (string, string) {
 }
 
 // maxImportUncompressedBytes caps the total decompressed size of an import zip.
-// The multipart limit (32MB) only bounds the *compressed* upload; a small zip
-// can inflate to gigabytes and we buffer every entry in memory, so without a
-// decompressed budget a crafted zip bomb OOMs the server. 512MB is far above
-// any real site (the marketing site is <4MB) while still killing a bomb early.
+// The request body limit only bounds the compressed upload; a small zip can
+// inflate to gigabytes and we buffer every entry in memory, so a separate
+// decompressed budget prevents a crafted zip bomb from exhausting memory.
 const maxImportUncompressedBytes = 512 << 20
 
 func processImport(app core.App, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {

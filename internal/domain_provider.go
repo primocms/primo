@@ -62,6 +62,19 @@ func getDomainProvider() DomainProvider {
 	}
 }
 
+// Readiness exposes configuration presence, never the credential itself. The
+// attach/status calls still verify actual access and certificate state remotely.
+func domainProviderReady(provider DomainProvider) bool {
+	switch p := provider.(type) {
+	case flyProvider:
+		return p.configured() == nil
+	case railwayProvider:
+		return p.configured() == nil
+	default:
+		return false
+	}
+}
+
 // manualProvider is the default. It can't talk to a platform API, so it returns
 // generic DNS guidance and optimistically reports the domain live — the actual
 // routing/TLS is the operator's responsibility (their reverse proxy). Hosts that

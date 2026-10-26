@@ -26,8 +26,10 @@
 	import { self as selfManager } from '$lib/pocketbase/managers'
 	import { getUserActivity } from '$lib/UserActivity.svelte'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { reorderedPages } from './page-order'
 
 	let editing_page = $state(false)
+	let renaming_page = $state(false)
 
 	/** @type {Props} */
 	let {
@@ -62,27 +64,29 @@
 	const related_activities = $derived(getUserActivity({ filter: (activity) => activity.page?.id === page.id }))
 
 	let showing_children = $state(false)
-	let children = $derived((page.children() ?? []).sort((a, b) => b.index - a.index))
+	let children = $derived((page.children() ?? []).sort((a, b) => a.index - b.index))
 	let has_children = $derived(children.length > 0 && page.slug !== '')
 	let has_toggled = $state(false)
+	let toggle_loaded = $state(false)
 	const active = $derived(page.id === active_page_id)
 
 	// Local hover_position for this level's children (separate from parent's hover_position)
 	// This is used to track hover position for subpages when this Item has children
 	let children_hover_position = $state<string | null>(null)
 
-	let expansion_loaded = $state(false)
 	onMount(() => {
-		let active = true
-		get(`page-list-toggle--${page.id}`).then((toggled) => {
-			if (!active) return
-			if (toggled !== undefined) showing_children = toggled
-			expansion_loaded = true
-		})
-		return () => { active = false }
+		let mounted = true
+		get(`page-list-toggle--${page.id}`)
+			.then((toggled) => {
+				if (!mounted) return
+				if (!has_toggled && toggled !== undefined) showing_children = toggled
+				toggle_loaded = true
+			})
+			.catch(() => { if (mounted) toggle_loaded = true })
+		return () => { mounted = false }
 	})
 	$effect(() => {
-		if (expansion_loaded) set(`page-list-toggle--${page.id}`, showing_children)
+		if (toggle_loaded) void set(`page-list-toggle--${page.id}`, showing_children).catch(() => {})
 	})
 
 	let creating_page = $state(false)
@@ -108,7 +112,7 @@
 		return descendants
 	}
 
-	let drag_handle_element = $state<HTMLButtonElement>()
+	let drag_handle_element = $state<HTMLElement>()
 	let element = $state<HTMLElement>()
 	// Browse mode removes the drag handle from the DOM, so a registration made
 	// once on mount would keep pointing at the detached element after a
@@ -131,9 +135,10 @@
 		})
 	})
 
-	onMount(async () => {
-		dropTargetForElements({
+	onMount(() => {
+		return dropTargetForElements({
 			element: element!,
+			canDrop: ({ source }) => !$read_only && !!source.data.page && (source.data.page as Page).parent === page.parent,
 			getData({ input, element }) {
 				return attachClosestEdge(
 					{ page },
@@ -164,101 +169,27 @@
 				} else if (edge === 'top') {
 					// For top edge, we want to show the indicator above this item
 					// which is the bottom of the previous item
-					if (page.index === 0 && page.parent === '') {
-						hover_position = null // Can't drop above home page
-					} else if (page.index === 0 && page.parent) {
-						// First child in a nested level - show at top of children list
-						hover_position = `${page.parent}-children-top`
-					} else {
-						// Find the previous sibling
+					if (page.id === homepage?.id) hover_position = null
+					else {
 						const siblings = allPages.filter((p) => p.parent === page.parent).sort((a, b) => a.index - b.index)
-						const prevIndex = siblings.findIndex((p) => p.id === page.id) - 1
-						if (prevIndex >= 0) {
-							hover_position = `${siblings[prevIndex].id}-bottom`
-						}
+						const previous = siblings[siblings.findIndex((p) => p.id === page.id) - 1]
+						hover_position = previous ? `${previous.id}-bottom` : page.parent === homepage?.id ? `${homepage.id}-bottom` : `${page.parent}-children-top`
 					}
 				}
 			},
 			onDragLeave() {
 				hover_position = null
 			},
-			onDrop({ self, source }) {
-				// Dropped - adjust index of moved page and siblings pages
-				const page_dragged_over = self.data.page as ObjectOf<typeof Pages>
-				const page_being_dragged = source.data.page as ObjectOf<typeof Pages>
-				const closestEdgeOfTarget = extractClosestEdge(self.data)
-
-				// Don't allow dragging onto itself
-				if (page_dragged_over.id === page_being_dragged.id) {
-					hover_position = null
-					return
-				}
-
-				// Don't allow placing above home page
-				if (closestEdgeOfTarget === 'top' && page_dragged_over.index === 0 && page_dragged_over.parent === '') {
-					hover_position = null
-					return
-				}
-
-				// Check if dragging between different parent levels
-				const same_parent = page_dragged_over.parent === page_being_dragged.parent
-
-				// Get all siblings (pages with same parent as the target)
-				const siblings = allPages.filter((p) => p.parent === page_dragged_over.parent).sort((a, b) => a.index - b.index)
-
-				const old_index = page_being_dragged.index
-				let target_index
-
-				if (closestEdgeOfTarget === 'top') {
-					target_index = page_dragged_over.index
-				} else if (closestEdgeOfTarget === 'bottom') {
-					target_index = page_dragged_over.index + 1
-				}
-
+			onDrop({ self, source, location }) {
 				hover_position = null
-
-				// Only allow reordering within same parent
-				if (same_parent) {
-					// Delay the actual updates to prevent jerky animations
-					requestAnimationFrame(() => {
-						// Adjust target index if we're moving from before to after in the list
-						let final_index = target_index
-						if (old_index < target_index) {
-							final_index = target_index - 1
-						}
-
-						// Don't do anything if position hasn't changed
-						if (old_index === final_index) {
-							return
-						}
-
-						// Reindex all affected siblings
-						for (let i = 0; i < siblings.length; i++) {
-							const sibling = siblings[i]
-							let new_index = sibling.index
-
-							if (sibling.id === page_being_dragged.id) {
-								new_index = final_index
-							} else if (old_index < final_index) {
-								// Moving item down - shift others up
-								if (sibling.index > old_index && sibling.index <= final_index) {
-									new_index = sibling.index - 1
-								}
-							} else {
-								// Moving item up - shift others down
-								if (sibling.index >= final_index && sibling.index < old_index) {
-									new_index = sibling.index + 1
-								}
-							}
-
-							if (new_index !== sibling.index) {
-								Pages.update(sibling.id, { index: new_index })
-							}
-						}
-
-						selfManager.commit()
-					})
-				}
+				// A nested row can also be inside its parent's drop target.
+				if ($read_only || location.current.dropTargets[0]?.element !== self.element) return
+				const edge = extractClosestEdge(self.data)
+				if (edge !== 'top' && edge !== 'bottom') return
+				const updates = reorderedPages(allPages, source.data.page as Page, page, edge, page.parent === homepage?.id ? 1 : 0)
+				if (!updates.length) return
+				for (const { id, index } of updates) Pages.update(id, { index })
+				void selfManager.commit().catch((error) => toast.error(error instanceof Error ? error.message : 'Could not reorder pages. Please try again.'))
 			}
 		})
 	})
@@ -275,15 +206,31 @@
 				<div class="details">
 					<div
 						class="name"
+						role="textbox"
+						aria-label="Page name"
+						aria-busy={renaming_page}
+						contenteditable={!renaming_page}
 						bind:this={name_input_el}
 						use:content_editable={{
 							on_change: (val) => {},
-							on_submit: (val) => {
-								// Inline rename can already be open when the mode flips.
-								if ($read_only) return
-								Pages.update(page.id, { name: val })
-								selfManager.commit()
-								editing_page = false
+							on_submit: async (val) => {
+								if ($read_only || renaming_page) return
+								const name = val.trim()
+								if (!name) {
+									toast.error('Enter a page name.')
+									name_input_el?.focus()
+									return
+								}
+								renaming_page = true
+								try {
+									Pages.update(page.id, { name })
+									await selfManager.commit()
+									editing_page = false
+								} catch (error) {
+									toast.error(error instanceof Error ? error.message : 'Could not rename this page. Please try again.')
+								} finally {
+									renaming_page = false
+								}
 							}
 						}}
 					>
@@ -318,6 +265,8 @@
 						has_toggled = true
 					}}
 					aria-label="Toggle child pages"
+					aria-expanded={showing_children}
+					disabled={!toggle_loaded}
 				>
 					<Icon icon="mdi:chevron-down" />
 				</button>
@@ -373,10 +322,13 @@
 												pages_to_delete = [page, ...descendants]
 												pending_delete = async () => {
 													const parent_id = page.parent
+													const deleting_active_page = page.id === active_page_id || descendants.some((desc) => desc.id === active_page_id)
+													const home_url = homepage && build_cms_page_url(homepage, pageState.url)
 
-													// Delete the page and all descendants
+													// Delete children first: deleting a parent cascades on the
+													// server, so deleting it first makes child requests fail.
+													;[...descendants].reverse().forEach((desc) => Pages.delete(desc.id))
 													Pages.delete(page.id)
-													descendants.forEach((desc) => Pages.delete(desc.id))
 
 													// Reindex remaining sibling pages
 													const sibling_pages = allPages.filter((p) => p.parent === parent_id && p.id !== page.id && !descendants.some((d) => d.id === p.id)).sort((a, b) => a.index - b.index)
@@ -392,10 +344,7 @@
 
 													// If the deleted page was the one open, navigate to homepage
 													try {
-														if (page_slug === page.slug && homepage) {
-															const home_url = build_cms_page_url(homepage, pageState.url)
-															if (home_url) await goto(home_url, { replace: true })
-														}
+														if (deleting_active_page && home_url) await goto(home_url, { replace: true })
 													} catch (e) {
 														console.warn('Navigation after delete failed', e)
 													}
@@ -404,6 +353,8 @@
 											} else {
 												// Direct delete for pages without children
 												const parent_id = page.parent
+												const deleting_active_page = page.id === active_page_id
+												const home_url = homepage && build_cms_page_url(homepage, pageState.url)
 												Pages.delete(page.id)
 
 												// Reindex remaining sibling pages
@@ -420,10 +371,7 @@
 
 												// If the deleted page was the one open, navigate to homepage
 												try {
-													if (page_slug === page.slug && homepage) {
-														const home_url = build_cms_page_url(homepage, pageState.url)
-														if (home_url) await goto(home_url, { replace: true })
-													}
+													if (deleting_active_page && home_url) await goto(home_url, { replace: true })
 												} catch (e) {
 													console.warn('Navigation after delete failed', e)
 												}
@@ -667,6 +615,11 @@
 					color: var(--color-gray-5);
 				}
 
+				div.name[contenteditable] {
+					min-width: 8rem;
+					min-height: 1.5rem;
+				}
+
 				div.name {
 					white-space: nowrap;
 					overflow: hidden;
@@ -785,6 +738,7 @@
 	}
 
 	.drop-indicator-top {
+		pointer-events: none;
 		height: 4px;
 		display: flex;
 		align-items: center;

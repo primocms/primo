@@ -142,6 +142,8 @@ export async function replaceContentEditableText(page: Page, locator: Locator, n
 /** Opens the block's "Edit Block Content" modal (code editor + data/fields
  * panel) by hovering the given canvas element to reveal the block toolbar. */
 export async function openBlockContentModal(page: Page, canvasElementLocator: ReturnType<FrameLocator['locator']>) {
+	// Inline editing dismisses controls until the pointer leaves and returns.
+	await page.mouse.move(0, 0)
 	await canvasElementLocator.hover()
 	await page.getByRole('button', { name: 'Edit Block Content' }).click()
 	const dialog = page.getByRole('dialog')

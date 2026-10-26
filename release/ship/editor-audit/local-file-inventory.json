@@ -1,0 +1,320 @@
+[
+  {
+    "path": "src/lib/builder/Primo.svelte",
+    "same": false,
+    "target": true,
+    "lines": 403
+  },
+  {
+    "path": "src/lib/builder/components/ComponentPreview.svelte",
+    "same": false,
+    "target": true,
+    "lines": 791
+  },
+  {
+    "path": "src/lib/builder/components/Fields/EntryContent.svelte",
+    "same": false,
+    "target": true,
+    "lines": 156
+  },
+  {
+    "path": "src/lib/builder/components/Sidebar/PageType_Sidebar.svelte",
+    "same": false,
+    "target": true,
+    "lines": 566
+  },
+  {
+    "path": "src/lib/builder/components/misc.js",
+    "same": false,
+    "target": true,
+    "lines": 296
+  },
+  {
+    "path": "src/lib/builder/field-types/Link.svelte",
+    "same": false,
+    "target": true,
+    "lines": 206
+  },
+  {
+    "path": "src/lib/builder/ui/LargeSwitch.svelte",
+    "same": false,
+    "target": true,
+    "lines": 128
+  },
+  {
+    "path": "src/lib/builder/utilities.js",
+    "same": false,
+    "target": true,
+    "lines": 93
+  },
+  {
+    "path": "src/lib/builder/views/editor/Layout/BlockToolbar.svelte",
+    "same": false,
+    "target": true,
+    "lines": 273
+  },
+  {
+    "path": "src/lib/builder/views/editor/Layout/ComponentNode.svelte",
+    "same": false,
+    "target": true,
+    "lines": 1619
+  },
+  {
+    "path": "src/lib/builder/views/editor/Page.svelte",
+    "same": false,
+    "target": true,
+    "lines": 1143
+  },
+  {
+    "path": "src/lib/builder/views/editor/PageType.svelte",
+    "same": false,
+    "target": true,
+    "lines": 1115
+  },
+  {
+    "path": "src/lib/builder/views/editor/Toolbar.svelte",
+    "same": false,
+    "target": true,
+    "lines": 614
+  },
+  {
+    "path": "src/lib/builder/views/modal/BlockEditor.svelte",
+    "same": false,
+    "target": true,
+    "lines": 266
+  },
+  {
+    "path": "src/lib/builder/views/modal/Collaboration.svelte",
+    "same": false,
+    "target": true,
+    "lines": 510
+  },
+  {
+    "path": "src/lib/builder/views/modal/SectionEditor/SectionEditor.svelte",
+    "same": false,
+    "target": true,
+    "lines": 342
+  },
+  {
+    "path": "src/lib/builder/views/modal/SiteEditor/SiteEditor.svelte",
+    "same": false,
+    "target": true,
+    "lines": 262
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/Item.svelte",
+    "same": false,
+    "target": true,
+    "lines": 826
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/PageForm.svelte",
+    "same": false,
+    "target": true,
+    "lines": 109
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/SitePages.svelte",
+    "same": false,
+    "target": true,
+    "lines": 445
+  },
+  {
+    "path": "src/lib/common/models/Page.ts",
+    "same": false,
+    "target": true,
+    "lines": 15
+  },
+  {
+    "path": "src/lib/common/models/SiteSymbol.ts",
+    "same": false,
+    "target": true,
+    "lines": 10
+  },
+  {
+    "path": "src/lib/compiler/processors.js",
+    "same": false,
+    "target": true,
+    "lines": 181
+  },
+  {
+    "path": "src/lib/compiler/workers/rollup.worker.js",
+    "same": false,
+    "target": true,
+    "lines": 361
+  },
+  {
+    "path": "src/lib/components/app-sidebar.svelte",
+    "same": false,
+    "target": true,
+    "lines": 378
+  },
+  {
+    "path": "src/lib/components/ui/dialog/dialog-content.svelte",
+    "same": false,
+    "target": true,
+    "lines": 42
+  },
+  {
+    "path": "src/lib/components/ui/dialog/dialog-header.svelte",
+    "same": false,
+    "target": true,
+    "lines": 72
+  },
+  {
+    "path": "src/lib/components/ui/sheet/sheet-content.svelte",
+    "same": false,
+    "target": true,
+    "lines": 55
+  },
+  {
+    "path": "src/lib/components/ui/sidebar/sidebar.svelte",
+    "same": false,
+    "target": true,
+    "lines": 89
+  },
+  {
+    "path": "src/lib/instance.ts",
+    "same": false,
+    "target": true,
+    "lines": 24
+  },
+  {
+    "path": "src/lib/pocketbase/CollectionManager.ts",
+    "same": false,
+    "target": true,
+    "lines": 161
+  },
+  {
+    "path": "src/lib/pocketbase/CollectionMapping.svelte.ts",
+    "same": false,
+    "target": true,
+    "lines": 368
+  },
+  {
+    "path": "src/lib/workers/CopyEntries.svelte.ts",
+    "same": false,
+    "target": true,
+    "lines": 127
+  },
+  {
+    "path": "src/lib/workers/Publish.svelte.ts",
+    "same": false,
+    "target": true,
+    "lines": 512
+  },
+  {
+    "path": "src/routes/dashboard/library/+page.svelte",
+    "same": false,
+    "target": true,
+    "lines": 669
+  },
+  {
+    "path": "src/routes/dashboard/sites/+page.svelte",
+    "same": false,
+    "target": true,
+    "lines": 753
+  },
+  {
+    "path": "tests/browser/preview-runtime.test.mjs",
+    "same": false,
+    "target": true,
+    "lines": 196
+  },
+  {
+    "path": "tests/e2e/helpers/editor.ts",
+    "same": false,
+    "target": true,
+    "lines": 152
+  },
+  {
+    "path": "tests/e2e/page-creation.spec.ts",
+    "same": false,
+    "target": true,
+    "lines": 360
+  },
+  {
+    "path": "tests/e2e/section-image-preservation.spec.ts",
+    "same": false,
+    "target": true,
+    "lines": 147
+  },
+  {
+    "path": "tests/integration/publish-cache.test.mjs",
+    "same": false,
+    "target": true,
+    "lines": 258
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/page-order.ts",
+    "same": false,
+    "target": false,
+    "lines": 14
+  },
+  {
+    "path": "src/lib/workers/publish-cache.js",
+    "same": false,
+    "target": false,
+    "lines": 20
+  },
+  {
+    "path": "tests/e2e/client-editor-audit.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 483
+  },
+  {
+    "path": "tests/e2e/dashboard-groups.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 111
+  },
+  {
+    "path": "tests/e2e/dashboard-navigation.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 125
+  },
+  {
+    "path": "tests/e2e/inline-text-flicker.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 70
+  },
+  {
+    "path": "tests/e2e/link-editing.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 63
+  },
+  {
+    "path": "tests/e2e/page-management.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 145
+  },
+  {
+    "path": "tests/e2e/rich-text-flicker.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 118
+  },
+  {
+    "path": "tests/e2e/section-outline.spec.ts",
+    "same": false,
+    "target": false,
+    "lines": 46
+  },
+  {
+    "path": "tests/integration/publish-record-cache.test.mjs",
+    "same": false,
+    "target": false,
+    "lines": 32
+  },
+  {
+    "path": "tests/integration/publish-snapshot.test.mjs",
+    "same": true,
+    "target": true,
+    "lines": 104
+  }
+]

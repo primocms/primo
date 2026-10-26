@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -24,7 +25,7 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/primo/bootstrap", func(e *core.RequestEvent) error {
 			return handleBootstrap(pb, e)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		return serveEvent.Next()
 	})
@@ -45,7 +46,7 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 	// Parse before the transaction: PocketBase serializes writes through one
 	// connection, so reading a slow upload inside the transaction would block
 	// every other write on the server for the duration of the upload.
-	if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
+	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}
 

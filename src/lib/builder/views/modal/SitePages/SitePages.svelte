@@ -15,16 +15,23 @@
 	import { tick } from 'svelte'
 	import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 	import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
-	import { useCopyEntries } from '$lib/workers/CopyEntries.svelte'
+	import { create_entity_entries as copyEntries } from '$lib/workers/CopyEntries.svelte'
+	import type { Entry } from '$lib/common/models/Entry'
+	import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
+	import type { PageTypeSectionEntry } from '$lib/common/models/PageTypeSectionEntry'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { reorderedPages } from './page-order'
+	import { toast } from 'svelte-sonner'
 
 	let { onManagePageTypes }: { onManagePageTypes?: () => void } = $props()
 
 	let hover_position = $state<string | null>(null)
 
 	function gapDropTarget(node: HTMLElement, page: ObjectOf<typeof Pages>) {
-		dropTargetForElements({
+		const targetPage = () => (page.id === homepage?.id ? [...root_pages].sort((a, b) => a.index - b.index)[0] : page)
+		const cleanup = dropTargetForElements({
 			element: node,
+			canDrop: ({ source }) => !$read_only && !!source.data.page && !!targetPage() && (source.data.page as Page).parent === targetPage()?.parent,
 			getData({ input }) {
 				return attachClosestEdge(
 					{ page },
@@ -37,7 +44,7 @@
 			},
 			onDrag({ self, source }) {
 				const page_being_dragged = source.data.page as ObjectOf<typeof Pages>
-				const same_parent = page.parent === page_being_dragged.parent
+				const same_parent = targetPage()?.parent === page_being_dragged.parent
 				if (!same_parent) {
 					hover_position = null
 					return
@@ -50,12 +57,22 @@
 			},
 			onDragLeave() {
 				hover_position = null
+			},
+			onDrop({ source }) {
+				hover_position = null
+				if ($read_only) return
+				const target = targetPage()
+				if (!target) return
+				const updates = reorderedPages(all_pages, source.data.page as Page, target, page.id === homepage?.id ? 'top' : 'bottom', target.parent === homepage?.id ? 1 : 0)
+				if (!updates.length) return
+				for (const { id, index } of updates) Pages.update(id, { index })
+				void self.commit().catch((error) => toast.error(error instanceof Error ? error.message : 'Could not reorder pages. Please try again.'))
 			}
 		})
 
 		return {
 			destroy() {
-				// Cleanup if needed
+				cleanup()
 			}
 		}
 	}
@@ -79,14 +96,6 @@
 	let building_page_parent = $state('')
 	let page_list = $state<HTMLUListElement>()
 	let page_list_height = $state<number>()
-	let new_page = $state<ObjectOf<typeof Pages>>()
-	let finish_creation: ((error?: unknown) => void) | undefined
-	let committing_page = false
-	let new_page_page_type = $derived(new_page && PageTypes.one(new_page.page_type))
-	let new_page_page_type_sections = $derived(new_page_page_type?.sections())
-
-	const copy_page_type_entries = $derived(useCopyEntries([new_page_page_type]))
-	const copy_page_type_section_entries = $derived(useCopyEntries(new_page_page_type_sections))
 
 	function revealCreatingPage(node: HTMLElement, pending: boolean) {
 		let observer: ResizeObserver | undefined
@@ -144,62 +153,6 @@
 		}
 	}
 
-	// Copy page type entries
-	let copying_page_type_entries: 'no' | 'working' | 'done' = $state('no')
-	$effect(() => {
-		if (!new_page || !new_page_page_type || !copy_page_type_entries || copying_page_type_entries !== 'no') {
-			return
-		}
-
-		copying_page_type_entries = 'working'
-		copy_page_type_entries
-			.run(new_page_page_type, new_page)
-			.then(() => {
-				copying_page_type_entries = 'done'
-			})
-			.catch((error) => finish_creation?.(error))
-	})
-
-	// Copy page type sections to new page
-	let copying_page_type_section_entries: 'no' | 'working' | 'done' = $state('no')
-	$effect(() => {
-		if (!new_page || !new_page_page_type_sections || !copy_page_type_section_entries || copying_page_type_section_entries !== 'no' || copying_page_type_entries !== 'done') {
-			return
-		}
-
-		copying_page_type_section_entries = 'working'
-		let promise = Promise.resolve()
-		for (const pts of new_page_page_type_sections) {
-			// Skip header and footer sections - these are handled at the site level
-			if (pts.zone === 'header' || pts.zone === 'footer') {
-				continue
-			}
-			// Create the page section
-			const page_section = PageSections.create({
-				page: new_page.id,
-				symbol: pts.symbol,
-				index: pts.index
-			})
-			promise = promise.then(() => copy_page_type_section_entries.run(pts, page_section))
-		}
-
-		promise
-			.then(async () => {
-				copying_page_type_section_entries = 'done'
-			})
-			.catch((error) => finish_creation?.(error))
-	})
-
-	$effect(() => {
-		if (new_page && !committing_page && copying_page_type_entries === 'done' && copying_page_type_section_entries === 'done') {
-			committing_page = true
-			self.commit().then(
-				() => finish_creation?.(),
-				(error) => finish_creation?.(error)
-			)
-		}
-	})
-
 	async function create_page_with_sections(page_data: Omit<Page, 'id' | 'index'>) {
 		// Guard the mutation, not just the trigger: a form already open when the
 		// mode flips would otherwise still submit.
@@ -217,39 +170,52 @@
 		building_page = true
 		building_page_name = page_data.name
 		building_page_parent = page_data.parent
-		return new Promise<void>((resolve, reject) => {
-			finish_creation = async (error) => {
-				const page_id = new_page?.id
-				new_page = undefined
-				finish_creation = undefined
-				if (error && page_id) {
-					// Remove only this failed creation's changes; keep other edits intact.
-					const section_ids = new Set(
-						[...self.changes].filter(([, change]) => 'data' in change && change.collection === 'page_sections' && (change.data as Record<string, unknown>).page === page_id).map(([id]) => id)
-					)
-					for (const [id, change] of [...self.changes]) {
-						if (id === page_id || ('data' in change && ((change.data as Record<string, unknown>).page === page_id || section_ids.has((change.data as Record<string, unknown>).section as string))))
-							self.changes.delete(id)
-					}
-					if (self.records.get(page_id)?.data) {
-						try {
-							await self.instance?.collection('pages').delete(page_id)
-							self.records.set(page_id, null)
-						} catch (cleanup_error) {
-							console.error('Could not remove partially created page', cleanup_error)
-						}
-					}
-				}
-				building_page = false
-				committing_page = false
-				copying_page_type_entries = 'no'
-				copying_page_type_section_entries = 'no'
-				if (error) reject(error)
-				else resolve()
-			}
+		let new_page: ObjectOf<typeof Pages> | undefined
+		try {
+			const instance = self.instance
+			if (!instance) throw new Error('The editor is not connected. Please try again.')
 			new_page = Pages.create({ ...page_data, index: new_index })
 			building_page_id = new_page.id
-		})
+
+			// Load one complete snapshot before copying. Reactive copy workers
+			// can be replaced when creating a section invalidates their source
+			// lists, leaving multi-section templates stuck halfway through.
+			const [page_entries, sections, section_entries] = await Promise.all([
+				instance.collection('page_type_entries').getFullList<Entry>({ filter: instance.filter('field.page_type = {:type}', { type: page_data.page_type }) }),
+				instance.collection('page_type_sections').getFullList<PageTypeSection>({ filter: instance.filter('page_type = {:type}', { type: page_data.page_type }), sort: 'index' }),
+				instance.collection('page_type_section_entries').getFullList<PageTypeSectionEntry>({ filter: instance.filter('section.page_type = {:type}', { type: page_data.page_type }) })
+			])
+			copyEntries({ source_entity_entries: page_entries, destination_entity: new_page })
+			for (const section of sections) {
+				if (section.zone === 'header' || section.zone === 'footer') continue
+				const destination = PageSections.create({ page: new_page.id, symbol: section.symbol, index: section.index })
+				copyEntries({ source_entity_entries: section_entries.filter((entry) => entry.section === section.id), destination_entity: destination })
+			}
+			await self.commit()
+		} catch (error) {
+			const page_id = new_page?.id
+			if (page_id) {
+				// Remove only this failed creation's changes; keep other edits intact.
+				const section_ids = new Set(
+					[...self.changes].filter(([, change]) => 'data' in change && change.collection === 'page_sections' && (change.data as Record<string, unknown>).page === page_id).map(([id]) => id)
+				)
+				for (const [id, change] of [...self.changes]) {
+					if (id === page_id || ('data' in change && ((change.data as Record<string, unknown>).page === page_id || section_ids.has((change.data as Record<string, unknown>).section as string))))
+						self.changes.delete(id)
+				}
+				if (self.records.get(page_id)?.data) {
+					try {
+						await self.instance?.collection('pages').delete(page_id)
+						self.records.set(page_id, null)
+					} catch (cleanup_error) {
+						console.error('Could not remove partially created page', cleanup_error)
+					}
+				}
+			}
+			throw error
+		} finally {
+			building_page = false
+		}
 	}
 </script>
 
@@ -390,6 +356,7 @@
 		}
 
 		.drop-indicator-inline {
+			pointer-events: none;
 			height: 4px;
 			display: flex;
 			align-items: center;

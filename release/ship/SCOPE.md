@@ -18,7 +18,7 @@ Supervised ten-builder pilot for new sites and desktop editing, with operator-pr
 
 ## Deferred
 
-Browser-approved login (CMS #1357, CLI #69, docs #10); agent logs (CLI #68, MCP #31, docs #9); incremental publishing (CMS #1358, MCP #32); preview head inheritance (#1356); sidebar/page-list polish (#1355); mobile editing (#1341); dashboard local-development affordance (#1208); unrelated dependency majors/new features beyond the required security migration. A newly reproduced security/data-loss blocker requires a scope amendment and requalification.
+Unrelated dependency-major automation and the unfinished local plugin/forms experiment remain outside this release. All current feature PRs were authorized for inclusion on October 25 and are listed below.
 
 General cross-origin embedding, hostile-publisher sandboxing, delegated invitations, legacy migration promises, production SLA and broader-scale claims remain outside this pilot. Editors remain trusted publishers of compiled output.
 
@@ -29,3 +29,12 @@ RC.13 is a new product identity because the authorized security migration change
 Accepted one-hour ten-editor API/content limits: p95 public <=1 s, save/readback <=2 s, zero errors; this does not attest ten simultaneous browser compilations. Zero data loss, cross-site access and destructive conflict overwrites are required.
 
 Pilot activation needs the final candidate's hosted purchaser/ingress/realtime checks, actual invitation/setup/reset delivery on the selected host, host/support ownership and private recipient-to-site assignments. RC.10 provider/mail and RC.9 pilot evidence are historical. Physical iPhone/Android public-page checks, actual domain/TLS/CDN when used, backup/restore and client handoff gate first-client publication. Representative sanitized fixtures gate actual legacy migrations. Desktop new-site drafts do not imply client-publication authorization.
+
+
+## October 25 editor and feature reconciliation
+
+The user expanded RC.13 to include all current feature PRs: CMS #1341, #1355–1358 and #1208; CLI #68–69; MCP #31–32; documentation #9–10. These provide mobile layouts, page-list/sidebar fixes, page-type head inheritance, browser-approved CLI login, incremental publication, local-agent logs and the dashboard local-development entry point. Current uncommitted CDFI and dashboard fixes are also included: creation/template-copy lifetime, form drafts, rename/delete/reorder, empty links, stale block movement controls, content/image/inline-text/rich-text stability, section outline lifetime and dashboard navigation/loading. Large site imports include bootstrap, site and library routes with the same bounded request budget. The older worktree domain-change fix preserves published output instead of compiling unpublished drafts.
+
+The prior frozen RC.13 source remains immutable historical evidence. This amended RC.13 revision must pass new source/native/exact-package qualification. The CLI/MCP archives are rebuilt unpublished candidates; their refreshed SHA-256 and integrity values identify the new bytes. Older green CI and the existing QA deployment do not attest these new bytes. No registry publication, main merge, production/QA deployment, email or invitation is part of this reconciliation.
+
+The [worktree inventory](editor-audit/worktree-inventory.json) records all 94 inspected checkouts. Preserved historical checkouts and the unfinished plugin experiment are not independent release inputs. Dependency-major bot PRs are tracked separately from feature PRs and are not silently mixed into this build.

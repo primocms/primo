@@ -4,12 +4,12 @@
 
 | Component | Active target | Rule |
 | --- | --- | --- |
-| CMS | New consolidation PR, RC.13 | Cumulative RC.11 product/QA, current main, #1362 |
+| CMS | New consolidation PR, RC.13 | Cumulative RC.11 product/QA, current main, #1362, current feature PRs and local editor fixes |
 | MCP | primocms/mcp#30 | Already includes #29; no separate merge |
 | CLI | primocms/primo-cli#67 | Already includes #64–66; no separate merges |
 | Hosting | primocms/primo#1350 | Hosting-only against recorded baseline; never deploy its CMS tree |
 
-INPUTS.json records every existing PR, immutable head/base and inclusion/defer decision. Historical CMS release/QA drafts #1323–1353 (excluding deferred mobile work #1341 and independent hosting #1350) are superseded as independent merge targets. Gaps in the PR numbers are not invented inputs. #1347 remains historical RC.9 hosted Safari evidence. #1362 is incorporated as a focused patch/regression with its source branch preserved. Historical PRs retain discussions and heads for focused review; mark supersession in their descriptions and never merge them independently. No issue closure or maintainer approval is inferred.
+INPUTS.json records every existing PR, immutable head/base and inclusion/defer decision. Historical CMS release/QA drafts #1323–1353 (with mobile #1341 now included, and hosting #1350 retained independently) are superseded as independent merge targets. Gaps in the PR numbers are not invented inputs. #1347 remains historical RC.9 hosted Safari evidence. #1362 is incorporated as a focused patch/regression with its source branch preserved. Historical PRs retain discussions and heads for focused review; mark supersession in their descriptions and never merge them independently. No issue closure or maintainer approval is inferred.
 
 ## Reconciliation decisions
 
@@ -20,3 +20,8 @@ INPUTS.json records every existing PR, immutable head/base and inclusion/defer d
 - Restrict frozen RC.11 timing qualification to its historical base; new product tests use RC.13 artifacts. CLI #67 and MCP #30 now carry the authorized RC.3 dependency refresh; historical RC.2 source/archive heads remain provenance. Public-release/tag/container workflows are unchanged. codex/release-consolidation does not match main/feature/**/rc/** container push triggers.
 
 Review data/permissions/conflicts/recovery first, compiler/publication second, bootstrap/hosting third, dependency/artifact/rollout evidence last. Reconfirm main and active heads against INPUTS.json before merge. Green checks are evidence, not maintainer approval.
+
+
+## Current feature inputs
+
+All current feature PRs are represented in the active candidates: CMS #1341, #1355, #1356, #1357, #1358 and #1208 → CMS #1363; CLI #68/#69 → CLI #67; MCP #31/#32 → MCP #30; docs #9/#10 → docs #11. Original branches/worktrees remain recoverable. The unfinished WIP plugin/forms branch is explicitly excluded rather than treated as a reviewed current feature PR. See editor-audit/README.md for local fixes and verification.

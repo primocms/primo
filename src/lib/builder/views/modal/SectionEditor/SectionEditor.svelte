@@ -20,7 +20,6 @@
 	import { browser } from '$app/env'
 	import { PageSectionEntries, PageSections, PageEntries, PageTypeSectionEntries, PageTypeSections, SiteSymbolFields, SiteSymbols, SiteSymbolEntries, SiteEntries, Sites } from '$lib/pocketbase/collections'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
-	import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 	import { current_user } from '$lib/pocketbase/user'
 	import * as _ from 'lodash-es'
 	import { useContent } from '$lib/Content.svelte'
@@ -154,10 +153,13 @@
 		if (!$has_error && symbol) {
 			loading = true
 
-			// Update symbol code (doing this here to prevent compilation for the symbol in the sidebar/background
-			SiteSymbols.update(symbol.id, { html, css, js })
-
 			try {
+				// Content saves must not rewrite block code. Besides triggering
+				// previews on other pages, that could overwrite a developer's
+				// changes made while this content dialog was open.
+				if (html !== initial_code.html || css !== initial_code.css || js !== initial_code.js) {
+					SiteSymbols.update(symbol.id, { html, css, js })
+				}
 				if (newly_created_fields.size > 0 && entries && symbol_entries) {
 					copy_new_field_entries({ entries, field_ids: newly_created_fields, symbol_entries, create_entry: SiteSymbolEntries.create })
 				}

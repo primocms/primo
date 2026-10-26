@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import ts from 'typescript'
 import { z } from 'zod'
+import { createCacheLoads } from '../../src/lib/pocketbase/cache_load.js'
+import { createEntryReordering } from '../../src/lib/pocketbase/entry-reordering.js'
 
 async function loadFactory(file, exportedName, scope) {
 	const source = await readFile(new URL(`../../src/lib/pocketbase/${file}`, import.meta.url), 'utf8')
@@ -13,8 +15,8 @@ async function loadFactory(file, exportedName, scope) {
 }
 
 test('publish responses refresh committed record overlays without realtime; pending edits win', async () => {
-	const createManager = await loadFactory('CollectionManager.ts', 'createCollectionManager', { OrderedSvelteMap: Map, is_files_mode: () => false })
-	const createMapping = await loadFactory('CollectionMapping.svelte.ts', 'createCollectionMapping', { customAlphabet: () => () => 'generated', untrack: fn => fn() })
+	const createManager = await loadFactory('CollectionManager.ts', 'createCollectionManager', { OrderedSvelteMap: Map, is_files_mode: () => false, createEntryReordering })
+	const createMapping = await loadFactory('CollectionMapping.svelte.ts', 'createCollectionMapping', { customAlphabet: () => () => 'generated', untrack: fn => fn(), createCacheLoads })
 	const manager = createManager()
 	const schema = z.object({ id: z.string(), name: z.string(), compiled_html: z.string(), compiled_html_hash: z.string() })
 	const pages = createMapping('pages', schema, manager)

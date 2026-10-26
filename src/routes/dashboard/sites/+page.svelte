@@ -28,8 +28,6 @@
 	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
-	import { fade } from 'svelte/transition'
-	import { prefersReducedMotion } from 'svelte/motion'
 
 	import { current_user } from '$lib/pocketbase/user'
 	import Collaboration from '$lib/builder/views/modal/Collaboration.svelte'
@@ -236,23 +234,23 @@
 	}
 
 	let is_creating_site = $state(false)
-	$effect(() => {
-		is_rename_group_open
-		is_rename_site_open
-		is_move_site_open
-		save.reset()
-	})
+
+	// "Develop locally" dialog — the in-product path from the CMS to the
+	// file-based (CLI) workflow: pull → edit → push. The server URL is
+	// pre-filled so editors can copy a working command without knowing the
+	// CLI already.
 	let is_develop_locally_open = $state(false)
-	const server_url = $derived(self.baseURL || (typeof location !== 'undefined' ? location.origin : ''))
-	const develop_steps = $derived([
+	const server_url = $derived(self.instance?.baseURL || (typeof location !== 'undefined' ? location.origin : ''))
+	type DevelopStep = { label: string; command?: string; note?: string }
+	const develop_steps: DevelopStep[] = $derived([
 		{ label: 'Install the CLI', command: 'npm install -g primo-cli' },
-		{ label: 'Pull your workspace into the current folder', command: `primo pull -s ${server_url}`, note: "You'll be prompted to log in the first time." },
-		{ label: 'Edit the files with a local agent or by hand', note: 'Open the folder in your editor or point an AI agent at it — sites are plain files.' },
+		{ label: 'Pull this server to your machine', command: `primo pull -s ${server_url}`, note: "You'll be prompted to log in the first time." },
+		{ label: 'Edit the files locally', note: 'Run `primo dev` in the new folder to edit with the CMS, or edit the files directly with your editor or an AI agent.' },
 		{ label: 'Push your changes back to the server', command: 'primo push' }
 	])
 
 	let copied_command: string | null = $state(null)
-	let copied_timeout: ReturnType<typeof setTimeout> | null = null
+	let copied_timeout: ReturnType<typeof setTimeout> | undefined
 	async function copy_command(command: string) {
 		try {
 			await navigator.clipboard.writeText(command)
@@ -263,7 +261,14 @@
 			console.error('Failed to copy command:', error)
 		}
 	}
-	$effect(() => () => { if (copied_timeout) clearTimeout(copied_timeout) })
+	$effect(() => () => clearTimeout(copied_timeout))
+
+	$effect(() => {
+		is_rename_group_open
+		is_rename_site_open
+		is_move_site_open
+		save.reset()
+	})
 </script>
 
 <header class="sites-header flex h-14 shrink-0 items-center gap-2">
@@ -336,7 +341,7 @@
 </header>
 <div class="sites-content">
 	{#key site_group_id}
-		<div class="sites-list" transition:fade|global={{ duration: prefersReducedMotion.current ? 0 : 160 }}>
+		<div class="sites-list">
 			{#if sites?.length}
 				<div class="sites-grid">
 					{#each sites as site (site.id)}
@@ -613,13 +618,14 @@
 					<div class="min-w-0 flex-1">
 						<h3 class="font-medium text-sm mb-1">{step.label}</h3>
 						{#if step.command}
+							{@const command = step.command}
 							<button
 								type="button"
-								onclick={() => copy_command(step.command)}
+								onclick={() => copy_command(command)}
 								class="group flex w-full items-center justify-between gap-2 rounded-md bg-[#111] px-3 py-2 text-left font-mono text-xs text-muted-foreground hover:text-foreground"
 							>
-								<span class="truncate">{step.command}</span>
-								{#if copied_command === step.command}
+								<span class="truncate">{command}</span>
+								{#if copied_command === command}
 									<Check class="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
 								{:else}
 									<Copy class="h-3.5 w-3.5 flex-shrink-0 opacity-50 group-hover:opacity-100" />

@@ -191,11 +191,11 @@
 
 	// Set the refresh_preview store to the debounced compile function
 	$effect(() => {
-		$refresh_preview = setIframeApp
+		$refresh_preview = () => setIframeApp(true)
 	})
 
 	// Add Command+R keyboard shortcut to refresh preview
-	onModKey('r', setIframeApp)
+	onModKey('r', () => setIframeApp(true))
 
 	let channel
 	onMount(() => {
@@ -328,11 +328,11 @@
 		}
 	}
 
-	async function setIframeApp() {
+	async function setIframeApp(reset = false) {
 		if (!channel) return
 		channel.postMessage({
 			event: 'SET_APP',
-			payload: { componentApp, data }
+			payload: { componentApp, data, reset }
 		})
 	}
 

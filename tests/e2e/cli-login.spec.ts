@@ -5,7 +5,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { devAuth } from './helpers/server'
-import { TEST_SERVER_URL } from './helpers/paths'
+import { TEST_SERVER_URL, CLI_ENTRY } from './helpers/paths'
 
 // The browser tests run against the actual CMS build; the optional companion
 // CLI path adds a cross-repository handoff test without changing the pinned CLI.
@@ -48,8 +48,7 @@ test('an invalid approval link gives an actionable message', async ({ page }) =>
 })
 
 test('companion CLI resumes after browser approval and reuses the saved login', async ({ page, request }) => {
-	const entry = process.env.PRIMO_BROWSER_LOGIN_CLI
-	test.skip(!entry, 'Set PRIMO_BROWSER_LOGIN_CLI to test the companion CLI checkout.')
+	const entry = process.env.PRIMO_BROWSER_LOGIN_CLI || CLI_ENTRY
 	const auth = await devAuth(request)
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'primo-browser-login-'))
 	const environment = { ...process.env, HOME: directory, USERPROFILE: directory }

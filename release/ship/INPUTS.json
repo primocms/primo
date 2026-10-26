@@ -34,7 +34,7 @@
       "branch": "codex/incremental-publishing",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo",
@@ -44,7 +44,7 @@
       "branch": "codex/browser-cli-login",
       "base": "main",
       "draft": true,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo",
@@ -54,7 +54,7 @@
       "branch": "codex/editor-page-type-head",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo",
@@ -64,7 +64,7 @@
       "branch": "fix/page-list-sidebar-layout",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo",
@@ -184,7 +184,7 @@
       "branch": "codex/cms-mobile-responsiveness",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo",
@@ -374,7 +374,7 @@
       "branch": "feature/dashboard-develop-locally",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo-cli",
@@ -384,7 +384,7 @@
       "branch": "codex/browser-cli-login",
       "base": "master",
       "draft": true,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo-cli",
@@ -394,7 +394,7 @@
       "branch": "codex/local-agent-server-logs",
       "base": "master",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/primo-cli",
@@ -444,7 +444,7 @@
       "branch": "codex/incremental-publishing",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/mcp",
@@ -454,7 +454,7 @@
       "branch": "codex/local-agent-server-logs",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/mcp",
@@ -484,7 +484,7 @@
       "branch": "codex/browser-cli-login",
       "base": "main",
       "draft": true,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     },
     {
       "repository": "primocms/docs",
@@ -494,7 +494,7 @@
       "branch": "codex/local-agent-server-logs",
       "base": "main",
       "draft": false,
-      "decision": "deferred"
+      "decision": "included-feature-reconciliation"
     }
   ],
   "initialScriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
@@ -524,5 +524,31 @@
         "sha256": "b5450aca59386f9bd3e6ec5b93c35e7d11d19c2324af81842750042c2ee24854"
       }
     }
+  },
+  "editorFeatureReconciliation": {
+    "previousFrozenCMS": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+    "date": "2026-10-25",
+    "worktreesAudited": 94,
+    "domainPreservationInput": "57054ded7d411a7cd144982a9b32b4564c53e83b",
+    "companionArchives": {
+      "cms": {
+        "version": "v3.3.2-rc.13",
+        "previousFrozenSource": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+        "buildTime": "2026-10-25T00:00:00Z",
+        "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
+      },
+      "cli": {
+        "archive": "primo-cli-0.3.0-rc.3.tgz",
+        "sha256": "9f74486cfd44ad111e7ebf199c36af341d4d9407d22544ba0916c91309b1dc4e"
+      },
+      "mcp": {
+        "archive": "primo-mcp-0.1.11-rc.3.tgz",
+        "sha256": "ca5c1275ad6d54d061aa51ac47e760a3adf6d7a33c7cff8c8743f4f1ff1addc5"
+      }
+    },
+    "note": "Unpublished candidate archives rebuilt at the same prerelease versions; exact hashes distinguish this revision from prior immutable CI artifacts.",
+    "cliHead": "f7ebad4b9c9553e37548e2376ba1d7ddaf49b845",
+    "mcpHead": "0686cd687cc6ab03e607f13631525bd2085954d3",
+    "documentationPR": "https://github.com/primocms/docs/pull/11"
   }
 }

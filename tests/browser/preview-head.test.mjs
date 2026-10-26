@@ -23,6 +23,7 @@ const stateModule = `
 	export const highlightedElement = writable(null);
 	export const current_user = writable(null);
 	export const browser = true;
+	export const toast = { dismiss() {}, error() {} };
 	export const content_editable = () => ({});
 	export const onModKey = () => {};
 	export const processCSS = async (css) => css;
@@ -79,13 +80,14 @@ const bundle = await build({
 		{
 			name: 'preview-head-fixture',
 			setup(b) {
+				b.onResolve({ filter: /^svelte-sonner$/, namespace: 'fixture' }, () => ({path: 'fixture-state', namespace: 'fixture'}))
 				b.onResolve({ filter: /^(preview-head|modal-preview|fixture|fixture-state|iframe-helpers)$/ }, ({ path }) => ({ path, namespace: 'fixture' }))
 				b.onResolve({ filter: /^\$lib\/builder\/stores\/app\/page\.js$/, namespace: 'fixture' }, () => ({ path: 'fixture-state', namespace: 'fixture' }))
 				b.onResolve({ filter: /^\.\/misc\.js$/, namespace: 'fixture' }, () => ({ path: 'iframe-helpers', namespace: 'fixture' }))
 				b.onResolve({ filter: /^(@iconify\/svelte|svelte-inspect-value)$/, namespace: 'fixture' }, () => ({ path: 'empty-component', namespace: 'fixture' }))
 				b.onResolve(
 					{
-						filter: /^(\$app\/(state|environment)|\$lib\/(pocketbase\/(collections|user)|pages|Content\.svelte|builder\/utils(\/keyboard)?)|\.\.\/(stores\/app\/(misc|page)|utils|utilities))$/,
+						filter: /^(\$app\/(state|environment|env)|\$lib\/(pocketbase\/(collections|user)|pages|Content\.svelte|builder\/utils(\/keyboard)?)|\.\.\/(stores\/app\/(misc|page)|utils|utilities))$/,
 						namespace: 'fixture'
 					},
 					() => ({
@@ -351,4 +353,26 @@ test('the block editing modal remounts its app when inherited head changes reloa
 	})
 	await page.waitForFunction(() => document.querySelector('iframe[title="Preview HTML"]')?.contentDocument?.title === 'New head', undefined, { timeout: 5000 })
 	await preview.getByText('Preview content').waitFor({ timeout: 3000 })
+})
+
+
+test('page-cache suspension cancels a late head and restores the current page on resume', async (t) => {
+	const page = await start(t)
+	await waitForTitle(page, 'Home')
+	await page.evaluate(() => {
+		window.deferCompiles = true
+		window.fixture.state.content.home.en.seo_title = 'Stale suspended head'
+	})
+	await page.waitForFunction(() => window.fixture.calls.length === 2)
+	await page.evaluate(async () => {
+		window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
+		await window.fixture.calls[1].resolve()
+	})
+	await waitForTitle(page, 'Home')
+	await page.evaluate(() => {
+		window.fixture.state.content.home.en.seo_title = 'Resumed head'
+		window.deferCompiles = false
+		window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+	})
+	await waitForTitle(page, 'Resumed head')
 })

@@ -1,16 +1,16 @@
 {
   "cms": {
     "version": "v3.3.2-rc.13",
-    "previousFrozenSource": "14a3aeaa2c1bed9f3f057dc4bc63205c586ca395",
+    "previousFrozenSource": "3167081fddfe291613a0e19bcc26682ba9044ed2",
     "buildTime": "2026-10-25T00:00:00Z",
     "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
   },
   "cli": {
     "archive": "primo-cli-0.3.0-rc.3.tgz",
-    "sha256": "0f4c6a6d097331cab2e023075a47a4f722f8e9ea87195b6cd9c26c5de9dc9652"
+    "sha256": "9f74486cfd44ad111e7ebf199c36af341d4d9407d22544ba0916c91309b1dc4e"
   },
   "mcp": {
     "archive": "primo-mcp-0.1.11-rc.3.tgz",
-    "sha256": "b5450aca59386f9bd3e6ec5b93c35e7d11d19c2324af81842750042c2ee24854"
+    "sha256": "ca5c1275ad6d54d061aa51ac47e760a3adf6d7a33c7cff8c8743f4f1ff1addc5"
   }
 }

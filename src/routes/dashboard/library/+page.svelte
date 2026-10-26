@@ -49,7 +49,7 @@
 
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
 	const active_symbol_id = $derived(page.url.searchParams.get('block'))
-	const symbol_groups = $derived(LibrarySymbolGroups.list() ?? [])
+	const symbol_groups = $derived(LibrarySymbolGroups.list())
 
 	function update_library_url(search_params: Record<string, string | null | undefined>) {
 		const url = new URL(page.url.href)
@@ -74,7 +74,7 @@
 
 	// Auto-select first group if none selected and groups exist
 	$effect(() => {
-		if (!active_symbol_group_id && symbol_groups.length > 0) {
+		if (!active_symbol_group_id && symbol_groups?.length) {
 			update_library_url({ group: symbol_groups[0].id })
 		}
 	})
@@ -82,7 +82,7 @@
 	const active_symbol_group = $derived(active_symbol_group_id ? LibrarySymbolGroups.one(active_symbol_group_id) : undefined)
 
 	// Get symbols for the active group using direct query instead of relationship method
-	const group_symbols = $derived(active_symbol_group?.symbols() ?? [])
+	const group_symbols = $derived(active_symbol_group?.symbols())
 
 	const sidebar = useSidebar()
 
@@ -364,7 +364,9 @@
 </header>
 
 <div class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
-	{#if symbol_groups.length === 0}
+	{#if symbol_groups == null}
+		{@render loading_blocks()}
+	{:else if symbol_groups.length === 0}
 		<!-- No groups exist -->
 		<EmptyState
 			class="h-[50vh]"
@@ -379,12 +381,8 @@
 		/>
 	{:else}
 		{#key active_symbol_group_id}
-			{#if group_symbols === undefined}
-				<!-- Loading state -->
-				<div class="flex flex-col items-center justify-center gap-4 py-8">
-					<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">Loading blocks...</p>
-				</div>
+			{#if group_symbols == null}
+				{@render loading_blocks()}
 			{:else if group_symbols.length}
 				<Masonry items={group_symbols}>
 					{#snippet children(symbol)}
@@ -432,6 +430,13 @@
 		{/key}
 	{/if}
 </div>
+
+{#snippet loading_blocks()}
+	<div class="flex flex-col items-center justify-center gap-4 py-8" role="status">
+		<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+		<p class="text-sm text-muted-foreground">Loading blocks...</p>
+	</div>
+{/snippet}
 
 <!-- Symbol Dialogs -->
 <Dialog.Root

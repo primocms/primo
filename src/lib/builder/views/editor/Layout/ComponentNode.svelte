@@ -127,6 +127,8 @@
 	}
 
 	let is_editing = $state(false)
+	const pending_text_restores = new Set<HTMLElement>()
+	let text_dom_restore_pending = $state(false)
 
 	let field_save_timeout: ReturnType<typeof setTimeout>
 	let pending_field_save = false
@@ -562,15 +564,17 @@
 				const target = e.target as HTMLElement
 				if (target) {
 					const value = target.innerText
-					// Browser editing can replace text nodes that Svelte still references.
-					// Restore those nodes before applying the saved value through props.
-					restoreTextDOM(element)
+					// Keep the edited text visible until the iframe applies its new props.
+					// Restoring Svelte's original nodes here would paint the old value
+					// while the asynchronous preview message is still in flight.
+					pending_text_restores.add(element)
+					text_dom_restore_pending = true
 					save_edited_value({ id, value })
 				}
 			}
 
 			const focus_handler = () => {
-				rememberTextDOM(element)
+				if (!pending_text_restores.has(element)) rememberTextDOM(element)
 				is_editing = true
 			}
 
@@ -807,6 +811,23 @@
 			doc.addEventListener('primo-rendered', make_content_editable)
 			doc_event_listeners.set('content-render', () => doc.removeEventListener('primo-rendered', make_content_editable))
 
+			const restore_text_before_render = (event: Event) => {
+				// A preview message may arrive after the user has started another edit.
+				// Retry on blur instead of replacing the active editing surface.
+				if (is_editing) {
+					event.preventDefault()
+					text_dom_restore_pending = true
+					return
+				}
+				for (const element of pending_text_restores) {
+					if (element.ownerDocument === doc && element.isConnected) restoreTextDOM(element)
+				}
+				pending_text_restores.clear()
+				text_dom_restore_pending = false
+			}
+			doc.addEventListener('primo-before-render', restore_text_before_render)
+			doc_event_listeners.set('text-restore', () => doc.removeEventListener('primo-before-render', restore_text_before_render))
+
 			const select_section = () => dispatch('select')
 			doc.addEventListener('pointerdown', select_section, true)
 			doc.addEventListener('focusin', select_section, true)
@@ -880,12 +901,12 @@
 	let last_sent_data = $state<any>()
 	let last_sent_js = $state<string>('')
 	watch(
-		() => ({ updated_js: generated_js, updated_data: component_data, ready: setup_complete && !is_editing }),
-		({ updated_js, updated_data, ready }) => {
+		() => ({ updated_js: generated_js, updated_data: component_data, ready: setup_complete && !is_editing, restore_text: text_dom_restore_pending }),
+		({ updated_js, updated_data, ready, restore_text }) => {
 			if (!(ready && updated_data && updated_js)) return
 
 			// Skip if updated_data is deeply equal to the last sent value
-			if (_.isEqual(last_sent_data, updated_data) && last_sent_js === updated_js) return
+			if (!restore_text && _.isEqual(last_sent_data, updated_data) && last_sent_js === updated_js) return
 
 			// Store a snapshot to avoid mutation side-effects
 			last_sent_data = _.cloneDeep(updated_data)

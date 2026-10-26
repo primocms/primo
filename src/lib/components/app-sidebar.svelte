@@ -76,15 +76,15 @@
 	}
 
 	function get_dashboard_url() {
-		if (typeof window === 'undefined') return '/admin/dashboard'
+		if (typeof window === 'undefined') return '/admin/dashboard/sites'
 		const { protocol, hostname, port } = window.location
 		if (hostname === 'localhost' || hostname === '127.0.0.1') {
-			return `${protocol}//${hostname}${port ? `:${port}` : ''}/`
+			return `${protocol}//${hostname}${port ? `:${port}` : ''}/admin/dashboard/sites`
 		}
 		if (hostname.endsWith('.localhost')) {
-			return `${protocol}//localhost${port ? `:${port}` : ''}/`
+			return `${protocol}//localhost${port ? `:${port}` : ''}/admin/dashboard/sites`
 		}
-		return '/admin/dashboard'
+		return '/admin/dashboard/sites'
 	}
 
 	const path = $derived(page.url.pathname.split('/').slice(0, 4).join('/'))
@@ -150,7 +150,10 @@
 									hidden: false
 								}}
 								onclick={() => {
-									window.location.href = get_dashboard_url()
+									const url = new URL(get_dashboard_url(), window.location.href)
+									// Keep the dashboard mounted when staying on the same host.
+									if (url.origin === window.location.origin) goto(url)
+									else window.location.href = url.href
 									sidebar.setOpen(true)
 								}}
 								class="px-2.5 md:px-2"
@@ -190,7 +193,7 @@
 									hidden: false
 								}}
 								onclick={() => {
-									goto('/admin/dashboard/marketplace')
+									goto('/admin/dashboard/marketplace/starters')
 									sidebar.setOpen(true)
 								}}
 								class="px-2.5 md:px-2"

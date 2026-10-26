@@ -12,6 +12,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"gopkg.in/yaml.v3"
 )
@@ -107,7 +108,7 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 			}
 			freshServer := decision.freshServer
 
-			if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
+			if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 				return e.BadRequestError("Failed to parse form", err)
 			}
 
@@ -186,7 +187,7 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				"revision": revision,
 				"backup":   backup,
 			})
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 		return serveEvent.Next()
 	})
 	return nil

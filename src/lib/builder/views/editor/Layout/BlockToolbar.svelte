@@ -54,7 +54,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
-<div in:fade={{ duration: 100 }} class="BlockToolbar primo-reset" class:page-toolbar={!!name} bind:this={node}>
+<div transition:fade={{ duration: typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 100 }} class="BlockToolbar primo-reset" class:page-toolbar={!!name} bind:this={node}>
 	{#if name}
 		<div class="page-toolbar-top">
 			<div class="block-label"><span>{name}</span>{#if layout_zone}<small>Shared · {layout_zone === 'header' ? 'Header' : 'Footer'}</small>{/if}</div>

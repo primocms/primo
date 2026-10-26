@@ -51,7 +51,7 @@ export const useCopyEntries = <T extends 'page' | 'section'>(source_entities: (S
 	return worker
 }
 
-const create_entity_entries = ({
+export const create_entity_entries = ({
 	source_entity_entries,
 	source_parent_entry,
 	destination_entity,
