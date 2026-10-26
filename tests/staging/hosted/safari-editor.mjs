@@ -50,12 +50,23 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
  const execute=(script,args=[])=>cmd('POST',session+'/execute/sync',{script,args})
  const wait=async(fn,label,ms=90000)=>{const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await delay(250)}invariant(false,label)}
  const element=async(selector)=>{const e=await cmd('POST',session+'/element',{using:'css selector',value:selector});return e['element-6066-11e4-a52e-4f735466cecf']}
- const click=id=>cmd('POST',session+'/element/'+encodeURIComponent(id)+'/click',{})
+ const click=async id=>{
+   const reference={'element-6066-11e4-a52e-4f735466cecf':id}
+   let previous
+   // Native Safari does not auto-wait for dialog/repeater layout updates.
+   // Observe stable, exposed geometry before issuing one native click.
+   await wait(async()=>{
+    const rect=await execute("const el=arguments[0];el.scrollIntoView({block:'center',inline:'nearest'});const r=el.getBoundingClientRect();const x=r.left+r.width/2,y=r.top+r.height/2;const hit=document.elementFromPoint(x,y);return !el.disabled&&r.width>0&&r.height>0&&getComputedStyle(el).visibility==='visible'&&(hit===el||el.contains(hit))?[r.left,r.top,r.width,r.height]:null",[reference])
+    const stable=rect&&JSON.stringify(rect)===JSON.stringify(previous);previous=rect;return stable
+   },'Safari control must be exposed and stable before native click',15000)
+   return cmd('POST',session+'/element/'+encodeURIComponent(id)+'/click',{})
+  }
  const type=(id,text)=>cmd('POST',session+'/element/'+encodeURIComponent(id)+'/value',{text})
  const button=async(label)=>{const e=await execute("return [...document.querySelectorAll('button')].find(b=>b.textContent.trim()===arguments[0] || b.getAttribute('aria-label')===arguments[0])",[label]);invariant(e,'Expected editor button absent');return e['element-6066-11e4-a52e-4f735466cecf']}
  try{
   report.phase='open-safari';const opened=await cmd('POST','/session',{capabilities:{alwaysMatch:{browserName:'safari',platformName:'mac',pageLoadStrategy:'normal'}}});session='/session/'+encodeURIComponent(opened.sessionId);report.browser=opened.capabilities
   await cmd('POST',session+'/timeouts',{implicit:0,pageLoad:60000,script:15000})
+  report.phase='clear-origin-storage';await cmd('POST',session+'/url',{url:c.cmsOrigin+'/api/health'});await execute('localStorage.clear();sessionStorage.clear();return true');await cmd('DELETE',session+'/cookie')
   report.phase='native-sign-in';await cmd('POST',session+'/url',{url:c.cmsOrigin+'/admin/auth'})
   await wait(()=>execute("return !!document.querySelector('input[type=email]')"),'Safari sign-in form missing')
   await type(await element('input[type=email]'),actor.email);await type(await element('input[type=password]'),actor.password);await click(await element('button[type=submit]'))
@@ -66,7 +77,7 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
   report.phase='native-heading-edit';const frame=await element('main iframe[title=block]');await cmd('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':frame}})
   const h=await element('h1[data-key=heading]');await click(h);await cmd('POST',session+'/element/'+encodeURIComponent(h)+'/clear',{});await type(h,tag);await type(h,'\uE004')
   await wait(async()=>(await api('/api/collections/page_section_entries/records/'+heading.id,{token:auth.token})).value===tag,'Safari native heading edit did not persist')
-  await cmd('POST',session+'/frame',{id:null});await cmd('POST',session+'/refresh',{})
+  await cmd('POST',session+'/frame',{id:null});await wait(()=>execute("return !document.querySelector('[role=status][aria-label=\"Content save status\"]')"),'Safari heading save did not finish');await cmd('POST',session+'/refresh',{})
   await wait(()=>execute("return document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1')?.textContent===arguments[0]",[tag]),'Safari edit lost after reload')
   report.phase='nested-repeater';const f2=await element('main iframe[title=block]');await cmd('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':f2}})
   const hover=await element('h1[data-key=heading]');await cmd('POST',session+'/actions',{actions:[{type:'pointer',id:'mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:100,origin:{'element-6066-11e4-a52e-4f735466cecf':hover},x:0,y:0}]}]})
@@ -87,7 +98,7 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
   if(!await execute("const x=document.querySelector(arguments[0]+' textarea');return !!x&&x.getClientRects().length>0",[row(alpha)]))await click(await element(row(alpha)+' button.title'))
   await moveItem(nested[1].id)
   await click(await button('Save'));await wait(()=>execute("return !document.querySelector('[role=dialog]')"),'Safari content save did not finish')
-  await cmd('POST',session+'/refresh',{});await wait(()=>execute("return !!document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1')"),'Safari reload failed')
+  await wait(()=>execute("return !document.querySelector('[role=status][aria-label=\"Content save status\"]')"),'Safari dialog save did not finish');await cmd('POST',session+'/refresh',{});await wait(()=>execute("return !!document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1')"),'Safari reload failed')
   const after=await entries();invariant(JSON.stringify(after.map(e=>e.id).sort())===JSON.stringify(before.map(e=>e.id).sort()),'Safari reorder changed record identities')
   for(const old of before){const current=after.find(e=>e.id===old.id);for(const key of ['field','section','parent','locale'])invariant(current[key]===old[key],'Safari reorder changed a binding');if(!['group','repeater'].includes(fields.find(f=>f.id===old.field)?.type))invariant(JSON.stringify(current.value)===JSON.stringify(old.id===heading.id?tag:old.value),'Safari reorder lost a leaf value')}
   for(const e of moved)invariant(after.find(x=>x.id===e.id).index===expectedIndices.get(e.id),'Safari nested/root order not persisted')
