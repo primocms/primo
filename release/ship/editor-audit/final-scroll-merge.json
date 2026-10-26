@@ -30,6 +30,15 @@
     "resolution": "Applied window scroll action to existing release route; kept SvelteKit 3 APIs and mobile styles"
   },
   {
-    "resolution": "Retain supported original route snapshots on SvelteKit 3.1 after registered-snapshot API reproduced lost reload state; retain final editor fix for startup remounts, duplicate action updates, preview completion, layout settling, reload memory, and immediate user scroll takeover"
+    "resolution": "Retain supported original route snapshots on SvelteKit 3.1 and the final editor fix for startup remounts, duplicate action updates, marked skeleton placeholders, preview completion, layout settling, reload memory, and immediate user scroll takeover"
+  },
+  {
+    "path": "src/lib/components/ui/skeleton/skeleton.svelte",
+    "conflicts": 0,
+    "resolution": "Mark loading placeholders so restoration waits for real content"
+  },
+  {
+    "path": "src/lib/pocketbase/CollectionMapping.svelte.ts",
+    "resolution": "Memoize scoped mappings per manager so canceled relationship loads cannot evict newer loads after authentication clears caches; deterministic failure-before/pass-after regression and cross-server isolation test added"
   }
 ]

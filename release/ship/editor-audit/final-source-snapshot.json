@@ -146,6 +146,10 @@
       "sha256": "f1333fae83318ee9ab7dc7d1b317007b652b83f34d4a0cb84bbcc919e06635a6"
     },
     {
+      "path": "src/lib/components/ui/skeleton/skeleton.svelte",
+      "sha256": "1746b9518674dcb2b4cb9afa5e0764f677a9ecf7e53c420235c7d955506627e1"
+    },
+    {
       "path": "src/lib/instance.ts",
       "sha256": "5aec49ba12a0c43450c605ebc1eae8e3dc732c4ae3a60528567b103c7cca8cba"
     },

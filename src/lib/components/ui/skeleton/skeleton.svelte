@@ -6,4 +6,4 @@
 	let { ref = $bindable(null), class: className, ...restProps }: WithoutChildren<WithElementRef<HTMLAttributes<HTMLDivElement>>> = $props()
 </script>
 
-<div bind:this={ref} class={cn('bg-primary/10 animate-pulse rounded-md', className)} {...restProps}></div>
+<div data-slot="skeleton" bind:this={ref} class={cn('bg-primary/10 animate-pulse rounded-md', className)} {...restProps}></div>

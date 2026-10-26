@@ -80,6 +80,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 ): CollectionMapping<T, Options> => {
 	const { instance, changes, records, lists } = manager
 	const collection = instance?.collection(name)
+	const scopedMappings = new WeakMap<CollectionManager, CollectionMapping<T, { links: Options['links']; subscribe: false }>>()
 	const recordLoads = createCacheLoads()
 	const listLoads = createCacheLoads()
 
@@ -365,7 +366,15 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			await collection.confirmPasswordReset(passwordResetToken, password, passwordConfirm)
 		},
 		from: (manager: CollectionManager) => {
-			return createCollectionMapping(name, model, manager, { links: options?.links, subscribe: false })
+			// Relationship getters can run again while a load is pending. Share
+			// its owner and retry state instead of letting an older canceled
+			// mapping evict the newer mapping's loading placeholder.
+			let mapping = scopedMappings.get(manager)
+			if (!mapping) {
+				mapping = createCollectionMapping(name, model, manager, { links: options?.links, subscribe: false })
+				scopedMappings.set(manager, mapping)
+			}
+			return mapping
 		},
 		manager
 	}
