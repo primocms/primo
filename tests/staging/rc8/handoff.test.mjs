@@ -23,7 +23,26 @@ import {make_workspace,run_cli,CLI_ENTRY} from './cli-helper.mjs'
 const binary = path.resolve(process.env.PRIMO_TEST_CMS_BINARY)
 
 test('founding builder: init, file authoring, dev, conflicts, publish, client invite and republish', {timeout:480000}, async t=>{
- const ws=await make_workspace();t.after(ws.cleanup)
+ const ws=await make_workspace()
+ let mcp,dev,browser
+ t.after(async()=>{
+  // Stop writers before deleting their workspace. A failed UI assertion must
+  // still close every resource rather than leaving the test runner alive.
+  try { if(browser) await browser.close() }
+  finally {
+   try { if(mcp) await mcp.close() }
+   finally {
+    try {
+     if(dev&&dev.exitCode===null&&dev.signalCode===null){
+      const closed=new Promise(resolve=>dev.once('close',resolve))
+      const force=setTimeout(()=>dev.kill('SIGKILL'),5000);force.unref()
+      dev.kill('SIGTERM')
+      try { await closed } finally { clearTimeout(force) }
+     }
+    } finally { await ws.cleanup() }
+   }
+  }
+ })
  const options={cwd:ws.work,home:ws.home,timeout_ms:45000}
  const cli=(args,opts={})=>run_cli(args,{...options,...opts})
  const ok=async(args,opts)=>{const r=await cli(args,opts);assert.equal(r.code,0,r.output);return r}
@@ -34,9 +53,9 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  await fs.writeFile(path.join(ws.work,'server.yaml'),`port: ${port}\n`)
  await ok(['new','client','--skip-dev'])
  const site=path.join(ws.work,'sites/client')
- const mcp=new Client({name:'founding-handoff-qa',version:'1.0.0'})
+ mcp=new Client({name:'founding-handoff-qa',version:'1.0.0'})
  const transport=new StdioClientTransport({command:process.execPath,args:[mcpEntry],cwd:ws.work,stderr:'pipe'})
- await mcp.connect(transport);t.after(()=>mcp.close());assert.equal(mcp.getServerVersion().version,'0.1.11-rc.3')
+ await mcp.connect(transport);assert.equal(mcp.getServerVersion().version,'0.1.11-rc.3')
  const call=async(name,args={})=>{const result=await mcp.callTool({name,arguments:args});assert.ok(!result.isError,JSON.stringify(result));return result.structuredContent??JSON.parse(result.content.find(c=>c.type==='text').text)}
  await call('list_docs');await call('get_docs',{section:'recommended-defaults'})
  for(const [name,args] of [['scaffold_block',{name:'banner',fields:[{name:'heading',type:'text'}]}],['scaffold_page_type',{name:'default',allowed_blocks:['banner'],fields:[{name:'seo_title',type:'text'},{name:'seo_description',type:'text'},{name:'og_image',type:'image'}]}]]) {
@@ -58,9 +77,8 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
   const result=await call(name,args);assert.equal(result.ok,true,JSON.stringify(result))
  }
  console.log('PASS agent-authored files validated through the packaged MCP: two pages and five block instances')
- const dev=spawn(process.execPath,[CLI_ENTRY,'dev','--author','both','--port',String(port)],{cwd:ws.work,env:{...process.env,HOME:ws.home,USERPROFILE:ws.home,PRIMO_BINARY:binary,PRIMO_MCP_LOCAL:mcpEntry,PRIMO_ENABLE_USAGE_STATS:'false'},stdio:['ignore','pipe','pipe']})
+ dev=spawn(process.execPath,[CLI_ENTRY,'dev','--author','both','--port',String(port)],{cwd:ws.work,env:{...process.env,HOME:ws.home,USERPROFILE:ws.home,PRIMO_BINARY:binary,PRIMO_MCP_LOCAL:mcpEntry,PRIMO_ENABLE_USAGE_STATS:'false'},stdio:['ignore','pipe','pipe']})
  let logs='';dev.stdout.on('data',b=>logs+=b);dev.stderr.on('data',b=>logs+=b)
- t.after(async()=>{if(dev.exitCode===null){const closed=new Promise(r=>dev.once('close',r));dev.kill('SIGTERM');await closed}})
  let auth
  for(let i=0;i<200;i++){try{const r=await fetch(`${server}/api/primo/dev-auth`,{method:'POST'});if(r.ok){auth=await r.json();break}}catch{}if(dev.exitCode!==null)break;await delay(100)}
  assert.ok(auth?.token,logs)
@@ -138,7 +156,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  await api('/api/collections/users/confirm-password-reset',{method:'POST',data:{token:resetToken,password:'ClientPassword123!',passwordConfirm:'ClientPassword123!'}})
  const client=await api('/api/collections/users/auth-with-password',{method:'POST',data:{identity:'founding-client@example.test',password:'ClientPassword123!'}})
  await api(`/api/collections/page_section_entries/records/${entry.id}`,{method:'PATCH',token:client.token,data:{value:'Client draft headline'}})
- const browser=await browserType.launch({headless:true,...(process.env.PRIMO_BROWSER_CHANNEL ? {channel:process.env.PRIMO_BROWSER_CHANNEL}: {})});console.log('BROWSER '+engine+' '+browser.version());t.after(()=>browser.close())
+ browser=await browserType.launch({headless:true,...(process.env.PRIMO_BROWSER_CHANNEL ? {channel:process.env.PRIMO_BROWSER_CHANNEL}: {})});console.log('BROWSER '+engine+' '+browser.version())
  const clientContext=await browser.newContext();const clientPage=await clientContext.newPage()
  clientPage.setDefaultTimeout(20000);clientPage.on('pageerror',e=>console.log('CLIENT PAGEERROR '+e.message));clientPage.on('console',m=>{if(m.type()==='error')console.log('CLIENT CONSOLE '+m.text())});clientPage.on('requestfailed',r=>console.log('CLIENT REQUESTFAILED '+r.url()+' '+r.failure()?.errorText))
  await clientPage.addInitScript(({token,record})=>localStorage.setItem('pocketbase_auth',JSON.stringify({token,record})),client)
@@ -163,7 +181,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  const names=repeaterBefore.filter(e=>e.field===nameField.id)
  const alpha=names.find(e=>e.value==='Alpha').parent;const charlie=names.find(e=>e.value==='Charlie').parent
  const nestedSecond=repeaterBefore.find(e=>e.field===labelField.id&&e.value==='Second nested link').parent
- await clientHeading.hover();await clientPage.getByRole('button',{name:'Edit Block Content'}).click()
+ await clientPage.mouse.move(0,0);await clientHeading.hover();await clientPage.getByRole('button',{name:'Edit Block Content'}).click()
  const contentDialog=clientPage.getByRole('dialog')
  assert.equal(await contentDialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
  const itemLocator=id=>contentDialog.locator(`.RepeaterFieldItem[data-entry-id="${id}"]`)

@@ -43,15 +43,14 @@ test('rich text never flashes old content during delayed saves or rapid field ch
 	})
 
 	async function editParagraph(text: string) {
-		await rich.locator('p').first().evaluate(paragraph => {
-			const editor = paragraph.closest('.ProseMirror') as HTMLElement
-			editor.focus()
-			const range = paragraph.ownerDocument.createRange()
-			range.selectNodeContents(paragraph)
-			const selection = paragraph.ownerDocument.getSelection()!
-			selection.removeAllRanges()
-			selection.addRange(range)
-		})
+		// Native paragraph selection updates ProseMirror's selection as well as
+		// the DOM. A programmatic Range can race Firefox's focus handling.
+		const paragraph = rich.locator('p').first()
+		const previous = (await paragraph.textContent())!.trim()
+		await rich.focus()
+		await expect(rich).toBeFocused()
+		await paragraph.click({ clickCount: 3, position: { x: 8, y: 8 } })
+		await expect.poll(() => rich.evaluate(element => element.ownerDocument.getSelection()?.toString().trim())).toBe(previous)
 		await page.keyboard.type(text)
 		await expect(rich.locator('p').first()).toHaveText(text)
 	}

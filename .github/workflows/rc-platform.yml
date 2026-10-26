@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/rc-platform.yml'
       - 'tests/platform/**'
+      - 'tests/e2e/**'
       - 'tests/staging/rc8/**'
       - 'tests/security/**'
       - 'tests/staging/rc8-packages.json'

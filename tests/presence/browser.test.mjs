@@ -58,7 +58,7 @@ test(engine+' production presence survives canceled requests, inline save, neste
  assert.equal(contentPatchCount,2,'Reload/blur must not write an unchanged value again')
  const own=c.before.filter(e=>e.section===c.section.id),field=key=>c.fields.find(f=>f.key===key),alpha=own.find(e=>e.field===field('name').id&&e.value==='Alpha').parent
  const roots=own.filter(e=>e.field===field('items').id&&!e.parent).sort((a,b)=>a.index-b.index),links=own.filter(e=>e.field===field('links').id&&e.parent===alpha).sort((a,b)=>a.index-b.index)
- await title.hover();await page.getByRole('button',{name:'Edit Block Content'}).click();const dialog=page.getByRole('dialog'),row=id=>dialog.locator('.RepeaterFieldItem[data-entry-id="'+id+'"]')
+ await page.mouse.move(0,0);await title.hover();await page.getByRole('button',{name:'Edit Block Content'}).click();const dialog=page.getByRole('dialog'),row=id=>dialog.locator('.RepeaterFieldItem[data-entry-id="'+id+'"]')
  assert.equal(await dialog.getByRole('button',{name:'Create Field',exact:true}).count(),0)
  const moveItem=async id=>{
   const trigger=row(id).locator(':scope > .repeater-item-container > .item-options > .primo-buttons button[aria-label^="Rearrange "]')
