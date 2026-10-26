@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { snapshot } from '$app/navigation'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -52,7 +51,7 @@
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
 	const libraryScroll = createDashboardScroll({ selector: '.masonry' })
 	const rememberLibraryScroll = libraryScroll.action
-	snapshot({ id: 'dashboard-library', ...libraryScroll.snapshot })
+	export const snapshot = libraryScroll.snapshot
 	const active_symbol_id = $derived(page.url.searchParams.get('block'))
 	const symbol_groups = $derived(LibrarySymbolGroups.list())
 

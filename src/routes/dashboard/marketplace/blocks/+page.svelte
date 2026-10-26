@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
 	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
@@ -25,7 +24,7 @@
 
 	const marketplaceScroll = createMarketplaceScroll()
 	const rememberMarketplaceScroll = marketplaceScroll.action
-	snapshot({ id: 'dashboard-marketplace-blocks', ...marketplaceScroll.snapshot })
+	export const snapshot = marketplaceScroll.snapshot
 
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const marketplace_symbol_group = $derived(group_id ? LibrarySymbolGroups.from(marketplace).one(group_id) : undefined)

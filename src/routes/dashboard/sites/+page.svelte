@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { snapshot } from '$app/navigation'
 	import { createDashboardScroll } from '$lib/components/dashboard-scroll'
 	const siteScroll = createDashboardScroll({ windowScroll: true })
 	const rememberSiteScroll = siteScroll.action
-	snapshot({ id: 'dashboard-sites', ...siteScroll.snapshot })
+	export const snapshot = siteScroll.snapshot
 	import { untrack } from 'svelte'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()

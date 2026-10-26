@@ -30,6 +30,6 @@
     "resolution": "Applied window scroll action to existing release route; kept SvelteKit 3 APIs and mobile styles"
   },
   {
-    "resolution": "Use registered SvelteKit 3 snapshot API for all four dashboard routes; retain final editor fix for preview completion, two animation frames of layout settling, reload memory, and immediate user scroll takeover"
+    "resolution": "Retain supported original route snapshots on SvelteKit 3.1 after registered-snapshot API reproduced lost reload state; retain final editor fix for startup remounts, duplicate action updates, preview completion, layout settling, reload memory, and immediate user scroll takeover"
   }
 ]

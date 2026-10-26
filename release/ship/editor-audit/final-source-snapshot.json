@@ -123,7 +123,7 @@
     },
     {
       "path": "src/lib/components/dashboard-scroll.ts",
-      "sha256": "6d3644002dd9ddc91cad3523cf7d14c8eb9550510220dd7e1f744eaae3c06e13"
+      "sha256": "73043283c4824a46cdffec80487bcca7077279a9a8a9a40970e4c9f3e819b3e9"
     },
     {
       "path": "src/lib/components/marketplace-navigation.svelte.ts",
@@ -203,7 +203,7 @@
     },
     {
       "path": "tests/e2e/dashboard-rapid-groups.spec.ts",
-      "sha256": "53a261330aba41156b88be53dc9536819c97c45841fc78b6c7b9f1eac9f44fb2"
+      "sha256": "c35b86bc5ccb72ea702278680f452db07e3f5e5f39bc5dc19b837cc405193a10"
     },
     {
       "path": "tests/e2e/helpers/editor.ts",

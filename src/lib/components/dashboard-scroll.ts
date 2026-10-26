@@ -1,30 +1,41 @@
 import { tick } from 'svelte'
 import type { Snapshot } from '@sveltejs/kit'
+import { beforeNavigate } from '$app/navigation'
 
 type ScrollSnapshot = { key: string; top: number }
 const reloadStorageKey = 'primo:dashboard-scroll-reload'
 let checkedReload = false
+let reloadSnapshot: (ScrollSnapshot & { url: string }) | undefined
 
 function takeReloadSnapshot(key: string): ScrollSnapshot | undefined {
-	if (checkedReload) return
-	checkedReload = true
-	try {
-		const saved = JSON.parse(sessionStorage.getItem(reloadStorageKey) ?? 'null')
-		sessionStorage.removeItem(reloadStorageKey)
-		const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
-		if (navigation?.type === 'reload' && saved?.url === location.href && saved.key === key && Number.isFinite(saved.top) && saved.top >= 0) return saved
-	} catch {
-		// Scrolling still works when browser storage is unavailable.
+	if (!checkedReload) {
+		checkedReload = true
+		try {
+			const saved = JSON.parse(sessionStorage.getItem(reloadStorageKey) ?? 'null')
+			sessionStorage.removeItem(reloadStorageKey)
+			const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+			if (navigation?.type === 'reload' && saved?.url === location.href && typeof saved.key === 'string' && Number.isFinite(saved.top) && saved.top >= 0) reloadSnapshot = saved
+		} catch {
+			// Scrolling still works when browser storage is unavailable.
+		}
 	}
+	return reloadSnapshot?.url === location.href && reloadSnapshot.key === key ? reloadSnapshot : undefined
 }
 
 /** Restore dashboard scrolling after navigation, reload, and async previews. */
 export function createDashboardScroll({ selector, positions, windowScroll = false }: { selector?: string; positions?: Map<string, number>; windowScroll?: boolean } = {}) {
+	// Authentication can refresh its record cache and remount the dashboard
+	// during startup. Keep reload state through those mounts, then release it
+	// on the first navigation so later visits use their own history entry.
+	beforeNavigate(() => {
+		reloadSnapshot = undefined
+	})
 	let root: HTMLElement | undefined
 	let key = ''
 	let pending: number | null = null
 	let queuedSnapshot: ScrollSnapshot | undefined
 	let ready = false
+	let initialized = false
 	let restorationFrame = 0
 	let version = 0
 	let observe = () => {}
@@ -94,7 +105,10 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		const mutation = new MutationObserver(observe)
 		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
 		const onScroll = (event: Event) => {
-			if (event.target === scroller() && pending === null) remember()
+			if ((event.target === scroller() || (windowScroll && event.target === document)) && pending === null) {
+				remember()
+				if (reloadSnapshot?.key === key && reloadSnapshot.url === location.href) reloadSnapshot.top = capture().top
+			}
 		}
 		const onInteraction = () => {
 			cancelAnimationFrame(restorationFrame)
@@ -116,6 +130,10 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		window.addEventListener('pagehide', onPageHide)
 
 		function update(nextKey: string) {
+			// The route URL can settle again after the action mounts. Svelte
+			// may call update with the same key; keep its restored position.
+			if (initialized && nextKey === key) return
+			initialized = true
 			cancelAnimationFrame(restorationFrame)
 			// The keyed cards may already have been removed here, clamping
 			// scrollTop to zero. Scroll events/snapshot capture saved the old

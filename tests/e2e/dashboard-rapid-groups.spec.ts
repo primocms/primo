@@ -119,6 +119,12 @@ async function checkGroupHistory(page: Page, groups: any[], records: any[][], se
 }
 
 async function checkGroupRefresh(page: Page, groups: any[], records: any[][], selector: string, scroller: string) {
+	// Let the dashboard mount before session validation clears its record
+	// cache. Restoration must survive that startup remount as well.
+	await page.route('**/api/collections/users/auth-refresh', async (route) => {
+		await new Promise((resolve) => setTimeout(resolve, 450))
+		await route.continue()
+	})
 	// Use a non-default group to catch a refresh silently selecting the first.
 	await page.getByRole('link', { name: groups[1].name, exact: true }).click()
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[1].length)
