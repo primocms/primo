@@ -1,4 +1,9 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
+	import { createDashboardScroll } from '$lib/components/dashboard-scroll'
+	const siteScroll = createDashboardScroll({ windowScroll: true })
+	const rememberSiteScroll = siteScroll.action
+	snapshot({ id: 'dashboard-sites', ...siteScroll.snapshot })
 	import { untrack } from 'svelte'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
@@ -339,7 +344,7 @@
 		{/if}
 	</div>
 </header>
-<div class="sites-content">
+<div use:rememberSiteScroll={site_group_id ?? ''} class="sites-content">
 	{#key site_group_id}
 		<div class="sites-list">
 			{#if sites?.length}

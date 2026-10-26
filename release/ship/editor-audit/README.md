@@ -28,3 +28,8 @@ The client-site audit suite remains opt-in for private exported datasets; ordina
 ## Original feature-review follow-ups
 
 Seven still-valid minor findings from the original feature PRs are addressed in the cumulative candidates: responsive SiteEditor panes remount on orientation change; reduced-padding mobile titles clear the close control; esbuild is a direct devDependency; local publication processors/data helpers participate in the compiler fingerprint; each physical log line carries metadata; an exited/failed CMS stops startup waiting immediately with output listeners attached before PID recording; and the background example retains early startup stderr/stdout. Cache invalidation and multiline logs have regression tests, the immediate-exit test has a tighter deadline, and responsive split persistence is exercised across viewport changes.
+
+
+## Final concurrent editor update
+
+The final inventory comparison captured a scroll-restoration fix completed in the other editor chat during qualification. Library and both Marketplace views now preserve each Back/Forward history entry, including repeated visits to a group and delayed card loading. The dashboard-scroll helper, route snapshots and twelve rapid-navigation/history/refresh regressions are included. Refresh restoration additionally covers window scrolling in Sites and late authenticated dashboard mounts. The release uses SvelteKit 3’s registered snapshot API so history captures also cover reused/shallow entries; deprecated route snapshot exports are removed. The final source snapshot is recorded after the concurrent update.

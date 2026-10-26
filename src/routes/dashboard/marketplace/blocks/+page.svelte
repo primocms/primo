@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
-	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
 	import * as Popover from '$lib/components/ui/popover'
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -21,6 +22,10 @@
 	import { get } from 'svelte/store'
 	import { watch } from 'runed'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
+
+	const marketplaceScroll = createMarketplaceScroll()
+	const rememberMarketplaceScroll = marketplaceScroll.action
+	snapshot({ id: 'dashboard-marketplace-blocks', ...marketplaceScroll.snapshot })
 
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const marketplace_symbol_group = $derived(group_id ? LibrarySymbolGroups.from(marketplace).one(group_id) : undefined)

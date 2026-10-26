@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
-	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
 	import * as Sidebar from '$lib/components/ui/sidebar'
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -14,6 +15,10 @@
 	import { goto } from '$app/navigation'
 	import { marketplace } from '$lib/pocketbase/managers'
 	import { SiteGroups, Sites } from '$lib/pocketbase/collections'
+
+	const marketplaceScroll = createMarketplaceScroll()
+	const rememberMarketplaceScroll = marketplaceScroll.action
+	snapshot({ id: 'dashboard-marketplace-starters', ...marketplaceScroll.snapshot })
 
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const starters = $derived(group_id ? (Sites.from(marketplace).list({ filter: { group: group_id }, sort: 'index' }) ?? undefined) : undefined)

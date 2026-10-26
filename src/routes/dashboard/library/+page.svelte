@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -34,6 +35,7 @@
 		Store
 	} from 'lucide-svelte'
 	import SymbolButton from '$lib/components/SymbolButton.svelte'
+	import { createDashboardScroll } from '$lib/components/dashboard-scroll'
 	import { browser } from '$app/env'
 	import { page } from '$app/state'
 	import { beforeNavigate, goto } from '$app/navigation'
@@ -48,6 +50,9 @@
 	import { self } from '$lib/pocketbase/managers'
 
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
+	const libraryScroll = createDashboardScroll({ selector: '.masonry' })
+	const rememberLibraryScroll = libraryScroll.action
+	snapshot({ id: 'dashboard-library', ...libraryScroll.snapshot })
 	const active_symbol_id = $derived(page.url.searchParams.get('block'))
 	const symbol_groups = $derived(LibrarySymbolGroups.list())
 
@@ -363,7 +368,7 @@
 	</div>
 </header>
 
-<div class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
+<div use:rememberLibraryScroll={active_symbol_group_id ?? ''} class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
 	{#if symbol_groups == null}
 		{@render loading_blocks()}
 	{:else if symbol_groups.length === 0}
