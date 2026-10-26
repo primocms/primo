@@ -49,11 +49,11 @@ test('site editing restores independent desktop and mobile split layouts', async
 	const firstPane = group.locator(':scope > [data-pane]').first()
 	const handle = dialog.locator('.PaneResizer-primary')
 	await expect(handle).toBeVisible()
-	const handleBox = (await handle.boundingBox())!
-	await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2)
-	await page.mouse.down()
-	await page.mouse.move(handleBox.x + 200, handleBox.y + handleBox.height / 2, { steps: 5 })
-	await page.mouse.up()
+	// Use the pane's accessible resize control so dialog opening/layout
+	// animation cannot move a pixel-based drag target between events.
+	await handle.focus()
+	await expect(handle).toBeFocused()
+	for (let step = 0; step < 3; step++) await handle.press('ArrowRight')
 	const widthRatio = async () => (await firstPane.boundingBox())!.width / (await group.boundingBox())!.width
 	await expect.poll(widthRatio).toBeGreaterThan(0.65)
 	const desktopRatio = await widthRatio()
