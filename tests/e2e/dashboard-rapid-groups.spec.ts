@@ -54,11 +54,12 @@ async function scrollContent(page: Page, selector: string, position = 350) {
 			})
 		)
 		.toBe(true)
-	// Use real scroll input before setting an exact reproducible position.
-	// This also exercises taking over from any pending restoration.
-	await page.mouse.move(1000, 600)
-	await page.mouse.wheel(0, 1)
-	await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+	// Use real, non-moving keyboard input to take over restoration. A
+	// wheel animation can finish after the exact fixture position is set.
+	const focusable = page.locator(selector).locator('button, a[href], [tabindex]:not([tabindex="-1"])').first()
+	await focusable.evaluate((node) => (node as HTMLElement).focus({ preventScroll: true }))
+	await expect(focusable).toBeFocused()
+	await page.keyboard.press('Shift')
 	return page.locator(selector).evaluate((node, position) => {
 		for (let element: Element | null = node; element; element = element.parentElement) {
 			if (element.scrollHeight - element.clientHeight > 350 && (element === document.scrollingElement || /auto|scroll/.test(getComputedStyle(element).overflowY))) {
@@ -137,7 +138,12 @@ async function checkGroupRefresh(page: Page, groups: any[], records: any[][], se
 		}, scroller)
 	for (const position of [280, 120]) {
 		await scrollContent(page, scroller, position)
+		const validation = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/collections/users/auth-refresh' && response.request().method() === 'POST')
 		await page.reload({ waitUntil: 'domcontentloaded' })
+		await (await validation).finished()
+		// Assert the final authenticated view, after validation clears caches,
+		// rather than accepting an early pre-validation render.
+		await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
 		await expect(page).toHaveURL(new RegExp(`group=${groups[1].id}`))
 		await expect(page.getByRole('link', { name: groups[1].name, exact: true })).toHaveAttribute('data-active', 'true')
 		await expect.poll(async () => (await page.locator(`.dashboard-content ${selector}`).allTextContents()).map((name) => name.trim()).sort()).toEqual(records[1].map((record) => record.name).sort())
