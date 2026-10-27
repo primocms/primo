@@ -128,6 +128,8 @@ for (const section of ['sites', 'library'] as const) {
 }
 
 async function checkGroupHistory(page: Page, groups: any[], records: any[][], selector: string, scroller: string, lateLayout = false) {
+	const errors: string[] = []
+	page.on('pageerror', (error) => errors.push(error.message))
 	const readScroll = () =>
 		page.evaluate((selector) => {
 			for (let element = document.querySelector(selector); element; element = element.parentElement) {
@@ -181,6 +183,7 @@ async function checkGroupHistory(page: Page, groups: any[], records: any[][], se
 		await page.goForward()
 		await expectGroup(index, position)
 	}
+	expect(errors, 'history and preview resizing must not emit unhandled browser errors').toEqual([])
 }
 
 async function checkGroupRefresh(page: Page, groups: any[], records: any[][], selector: string, scroller: string) {

@@ -66,6 +66,7 @@ export function createDashboardScroll({
 	let ready = false
 	let initialized = false
 	let restorationFrame = 0
+	let layoutFrame = 0
 	let version = 0
 	let observe = () => {}
 	const scroller = () => (windowScroll ? (document.scrollingElement as HTMLElement | null) : selector ? root?.querySelector<HTMLElement>(selector) : root)
@@ -100,6 +101,15 @@ export function createDashboardScroll({
 			})
 		})
 	}
+	// Resize callbacks must not change the layout being delivered. Safari
+	// reports an undelivered-observer loop when scrolling updates it inline.
+	const scheduleRestore = () => {
+		cancelAnimationFrame(layoutFrame)
+		layoutFrame = requestAnimationFrame(() => {
+			layoutFrame = 0
+			restore()
+		})
+	}
 	const snapshot: Snapshot<ScrollSnapshot> = {
 		capture() {
 			remember()
@@ -122,16 +132,16 @@ export function createDashboardScroll({
 		// Dashboard pages mount after async authentication, after SvelteKit's
 		// initial snapshot pass. Preserve reload state until this action mounts.
 		queuedSnapshot = takeEditorReturnSnapshot(initialKey) ?? takeReloadSnapshot(initialKey) ?? queuedSnapshot
-		const resize = new ResizeObserver(restore)
+		const resize = new ResizeObserver(scheduleRestore)
 		observe = () => {
 			resize.disconnect()
 			resize.observe(node)
 			const target = scroller()
 			if (target) {
 				resize.observe(target)
-				for (const child of target.children) resize.observe(child)
+				for (const child of target.children) if (child.tagName !== 'HEAD') resize.observe(child)
 			}
-			restore()
+			scheduleRestore()
 		}
 		const mutation = new MutationObserver(observe)
 		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] })
@@ -146,6 +156,7 @@ export function createDashboardScroll({
 			}
 		}
 		const onInteraction = () => {
+			cancelAnimationFrame(layoutFrame)
 			cancelAnimationFrame(restorationFrame)
 			pending = null
 		}
@@ -169,6 +180,7 @@ export function createDashboardScroll({
 			// may call update with the same key; keep its restored position.
 			if (initialized && nextKey === key) return
 			initialized = true
+			cancelAnimationFrame(layoutFrame)
 			cancelAnimationFrame(restorationFrame)
 			// The keyed cards may already have been removed here, clamping
 			// scrollTop to zero. Scroll events/snapshot capture saved the old
@@ -190,6 +202,7 @@ export function createDashboardScroll({
 		return {
 			update,
 			destroy() {
+				cancelAnimationFrame(layoutFrame)
 				cancelAnimationFrame(restorationFrame)
 				version++
 				root = undefined
