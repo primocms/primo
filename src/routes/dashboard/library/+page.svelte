@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -51,11 +52,11 @@
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
 	const libraryScroll = createDashboardScroll({ selector: '.masonry' })
 	const rememberLibraryScroll = libraryScroll.action
-	export const snapshot = libraryScroll.snapshot
+	snapshot({ id: 'dashboard-library', ...libraryScroll.snapshot })
 	const active_symbol_id = $derived(page.url.searchParams.get('block'))
 	const symbol_groups = $derived(LibrarySymbolGroups.list())
 
-	function update_library_url(search_params: Record<string, string | null | undefined>) {
+	function update_library_url(search_params: Record<string, string | null | undefined>, open_editor = false) {
 		const url = new URL(page.url.href)
 		for (const [key, value] of Object.entries(search_params)) {
 			if (value) {
@@ -64,7 +65,16 @@
 				url.searchParams.delete(key)
 			}
 		}
-		goto(url, { replace: true, reset: false })
+		const state = { ...page.state } as { libraryEditorOrigin?: string }
+		// Opening a block gets its own history entry. Closing returns to the
+		// original list entry, so Back/Forward and the close button agree.
+		if (search_params.block === null && state.libraryEditorOrigin === url.href) {
+			window.history.back()
+			return
+		}
+		if (open_editor) state.libraryEditorOrigin = page.url.href
+		else if (search_params.block === null) delete state.libraryEditorOrigin
+		goto(url, { replace: !open_editor, reset: false, state })
 	}
 
 	beforeNavigate((navigation) => {
@@ -187,7 +197,7 @@
 	let is_symbol_editor_open = $state(false)
 
 	function begin_symbol_edit(symbol: ObjectOf<typeof LibrarySymbols>) {
-		update_library_url({ group: symbol.group, block: symbol.id })
+		update_library_url({ group: symbol.group, block: symbol.id }, true)
 	}
 
 	$effect(() => {

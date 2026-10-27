@@ -40,5 +40,8 @@
   {
     "path": "src/lib/pocketbase/CollectionMapping.svelte.ts",
     "resolution": "Memoize scoped mappings per manager so canceled relationship loads cannot evict newer loads after authentication clears caches; deterministic failure-before/pass-after regression and cross-server isolation test added"
+  },
+  {
+    "resolution": "Include completed site/Library editor-return fix; adapt Library URL state to SvelteKit 3 reset/replace options; register lifecycle-bound snapshots on all four routes; retain history targets through late preview relayout until real input. Four editor-return and one deterministic late-layout regression added."
   }
 ]

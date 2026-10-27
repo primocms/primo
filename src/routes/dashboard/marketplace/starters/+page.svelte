@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
 	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
@@ -17,7 +18,7 @@
 
 	const marketplaceScroll = createMarketplaceScroll()
 	const rememberMarketplaceScroll = marketplaceScroll.action
-	export const snapshot = marketplaceScroll.snapshot
+	snapshot({ id: 'dashboard-marketplace-starters', ...marketplaceScroll.snapshot })
 
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const starters = $derived(group_id ? (Sites.from(marketplace).list({ filter: { group: group_id }, sort: 'index' }) ?? undefined) : undefined)

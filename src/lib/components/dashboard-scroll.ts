@@ -4,8 +4,22 @@ import { beforeNavigate } from '$app/navigation'
 
 type ScrollSnapshot = { key: string; top: number }
 const reloadStorageKey = 'primo:dashboard-scroll-reload'
+const editorReturnStorageKey = 'primo:sites-editor-return'
 let checkedReload = false
 let reloadSnapshot: (ScrollSnapshot & { url: string }) | undefined
+let editorReturnSnapshot: (ScrollSnapshot & { url: string }) | undefined
+
+function takeEditorReturnSnapshot(key: string): ScrollSnapshot | undefined {
+	try {
+		const saved = JSON.parse(sessionStorage.getItem(editorReturnStorageKey) ?? 'null')
+		sessionStorage.removeItem(editorReturnStorageKey)
+		if (saved?.url === location.href && typeof saved.key === 'string' && Number.isFinite(saved.top) && saved.top >= 0) editorReturnSnapshot = saved
+	} catch {
+		// History restoration remains available without browser storage.
+	}
+	if (editorReturnSnapshot?.url !== location.href) editorReturnSnapshot = undefined
+	return editorReturnSnapshot?.key === key ? editorReturnSnapshot : undefined
+}
 
 function takeReloadSnapshot(key: string): ScrollSnapshot | undefined {
 	if (!checkedReload) {
@@ -23,12 +37,27 @@ function takeReloadSnapshot(key: string): ScrollSnapshot | undefined {
 }
 
 /** Restore dashboard scrolling after navigation, reload, and async previews. */
-export function createDashboardScroll({ selector, positions, windowScroll = false }: { selector?: string; positions?: Map<string, number>; windowScroll?: boolean } = {}) {
+export function createDashboardScroll({
+	selector,
+	positions,
+	windowScroll = false,
+	siteEditorReturn = false
+}: { selector?: string; positions?: Map<string, number>; windowScroll?: boolean; siteEditorReturn?: boolean } = {}) {
 	// Authentication can refresh its record cache and remount the dashboard
 	// during startup. Keep reload state through those mounts, then release it
 	// on the first navigation so later visits use their own history entry.
-	beforeNavigate(() => {
+	beforeNavigate((navigation) => {
 		reloadSnapshot = undefined
+		editorReturnSnapshot = undefined
+		if (siteEditorReturn && navigation.to && /^\/admin\/(?:sites\/[^/]+|site)(?:\/|$)/.test(navigation.to.url.pathname)) {
+			try {
+				// Back/Forward changes window.location before this callback;
+				// the router still identifies the list we are leaving.
+				sessionStorage.setItem(editorReturnStorageKey, JSON.stringify({ ...capture(), url: navigation.from?.url.href ?? location.href }))
+			} catch {
+				// Opening an editor must still work when storage is restricted.
+			}
+		}
 	})
 	let root: HTMLElement | undefined
 	let key = ''
@@ -59,14 +88,15 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		const top = pending
 		const currentVersion = version
 		// Let the browser finish its own reload/layout scrolling before
-		// releasing the target. User input still cancels immediately.
+		// reapplying the target. User input still cancels immediately.
 		restorationFrame = requestAnimationFrame(() => {
 			if (pending !== top || version !== currentVersion) return
 			node.scrollTop = top
 			restorationFrame = requestAnimationFrame(() => {
 				if (pending !== top || version !== currentVersion) return
 				node.scrollTop = top
-				pending = null
+				// A later preview relayout may clamp scrolling again.
+				// Keep this target until real user input takes control.
 			})
 		})
 	}
@@ -77,6 +107,7 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		},
 		restore(saved) {
 			if (!saved) return
+			saved = takeEditorReturnSnapshot(saved.key) ?? takeReloadSnapshot(saved.key) ?? saved
 			if (!root || saved.key !== key) {
 				queuedSnapshot = saved
 				return
@@ -90,7 +121,7 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		root = node
 		// Dashboard pages mount after async authentication, after SvelteKit's
 		// initial snapshot pass. Preserve reload state until this action mounts.
-		queuedSnapshot = takeReloadSnapshot(initialKey) ?? queuedSnapshot
+		queuedSnapshot = takeEditorReturnSnapshot(initialKey) ?? takeReloadSnapshot(initialKey) ?? queuedSnapshot
 		const resize = new ResizeObserver(restore)
 		observe = () => {
 			resize.disconnect()
@@ -105,9 +136,13 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 		const mutation = new MutationObserver(observe)
 		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
 		const onScroll = (event: Event) => {
-			if ((event.target === scroller() || (windowScroll && event.target === document)) && pending === null) {
+			if (event.target !== scroller() && !(windowScroll && event.target === document)) return
+			if (pending !== null) {
+				restore()
+			} else {
 				remember()
 				if (reloadSnapshot?.key === key && reloadSnapshot.url === location.href) reloadSnapshot.top = capture().top
+				if (editorReturnSnapshot?.key === key && editorReturnSnapshot.url === location.href) editorReturnSnapshot.top = capture().top
 			}
 		}
 		const onInteraction = () => {
@@ -139,7 +174,7 @@ export function createDashboardScroll({ selector, positions, windowScroll = fals
 			// scrollTop to zero. Scroll events/snapshot capture saved the old
 			// group's position before that DOM replacement.
 			key = nextKey
-			pending = queuedSnapshot?.key === key ? queuedSnapshot.top : (positions?.get(key) ?? 0)
+			pending = queuedSnapshot?.key === key ? queuedSnapshot.top : ((takeEditorReturnSnapshot(key) ?? takeReloadSnapshot(key))?.top ?? positions?.get(key) ?? 0)
 			queuedSnapshot = undefined
 			ready = false
 			const currentVersion = ++version

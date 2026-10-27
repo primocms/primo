@@ -71,7 +71,53 @@ async function scrollContent(page: Page, selector: string, position = 350) {
 	}, position)
 }
 
-async function checkGroupHistory(page: Page, groups: any[], records: any[][], selector: string, scroller: string) {
+for (const section of ['sites', 'library'] as const) {
+	for (const returnMethod of ['control', 'back'] as const) {
+		test(`${section} editor: ${returnMethod} restores the group and scroll position`, async ({ page }) => {
+			test.setTimeout(45000)
+			const groups = section === 'sites' ? siteGroups : libraryGroups
+			const scroller = section === 'sites' ? 'html' : '.masonry'
+			await loginAsDeveloperAtDashboard(page, siteGroups[0].id)
+			if (section === 'library') await page.getByRole('button', { name: 'Library', exact: true }).click()
+			await page.getByRole('link', { name: groups[1].name, exact: true }).click()
+			const cards = page.locator(section === 'sites' ? '.site-card-footer > div > a' : '.catalog-preview')
+			await expect(cards).toHaveCount(12)
+			await scrollContent(page, section === 'sites' ? '.sites-content' : '.masonry', 280)
+			const index = await cards.evaluateAll((cards) =>
+				cards.findIndex((card) => {
+					const box = card.getBoundingClientRect()
+					return box.top >= 80 && box.bottom < innerHeight - 20
+				})
+			)
+			expect(index, 'open a visible card without changing the list scroll').toBeGreaterThanOrEqual(0)
+			await cards.nth(index).click()
+			if (section === 'sites') await expect(page.locator('#primo-toolbar .sites-link')).toBeVisible()
+			else {
+				await expect(page).toHaveURL(/block=/)
+				await expect(page.getByRole('dialog')).toBeVisible()
+			}
+			if (returnMethod === 'back') await page.goBack()
+			else if (section === 'sites') await page.locator('#primo-toolbar .sites-link').click()
+			else await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click()
+			await expect(page).toHaveURL(new RegExp(`/dashboard/${section}\\?group=${groups[1].id}$`))
+			await expect(page.getByRole('link', { name: groups[1].name, exact: true })).toHaveAttribute('data-active', 'true')
+			await expect(page.getByRole('dialog')).toHaveCount(0)
+			await expect(cards).toHaveCount(12)
+			await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)
+			await expect(page.locator('.dashboard-content > header')).toHaveCount(1)
+			if (returnMethod === 'back') {
+				await page.goForward()
+				if (section === 'sites') await expect(page.locator('#primo-toolbar .sites-link')).toBeVisible()
+				else await expect(page.getByRole('dialog')).toBeVisible()
+				await page.goBack()
+				await expect(page).toHaveURL(new RegExp(`/dashboard/${section}\\?group=${groups[1].id}$`))
+				await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)
+			}
+		})
+	}
+}
+
+async function checkGroupHistory(page: Page, groups: any[], records: any[][], selector: string, scroller: string, lateLayout = false) {
 	const readScroll = () =>
 		page.evaluate((selector) => {
 			for (let element = document.querySelector(selector); element; element = element.parentElement) {
@@ -87,6 +133,14 @@ async function checkGroupHistory(page: Page, groups: any[], records: any[][], se
 		if (index === 2)
 			await expect(page.locator('.dashboard-content h2').filter({ hasText: /This group is empty|No blocks in this group|No starters in this category|No blocks in this category/ })).toBeVisible()
 		await expect.poll(async () => Math.abs((await readScroll()) - scroll), { message: `${groups[index].name}: restore this history entry's scroll position` }).toBeLessThan(1)
+		if (lateLayout && index !== 2) {
+			const content = page.locator('.marketplace-content > .masonry')
+			const display = await content.evaluate((node) => node.style.display)
+			await content.evaluate((node) => { node.style.display = 'none' })
+			await expect.poll(readScroll).toBe(0)
+			await content.evaluate((node, display) => { node.style.display = display }, display)
+			await expect.poll(async () => Math.abs((await readScroll()) - scroll), { message: 'late preview relayout retains the history target until user input' }).toBeLessThan(1)
+		}
 		await expect(page.locator('.dashboard-content > header')).toHaveCount(1)
 	}
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[0].length)
@@ -254,11 +308,13 @@ for (const section of ['sites', 'library'] as const) {
 }
 
 for (const section of ['starters', 'blocks'] as const) {
-	for (const mode of ['rapid', 'history', 'refresh'] as const) {
+	for (const mode of (section === 'blocks' ? ['rapid', 'history', 'refresh', 'layout'] : ['rapid', 'history', 'refresh']) as readonly ('rapid' | 'history' | 'refresh' | 'layout')[]) {
 		test(
 			mode === 'rapid'
 				? `marketplace ${section}: rapid switches preserve category scroll and reject late responses`
-				: mode === 'history'
+				: mode === 'layout'
+					? `marketplace ${section}: late preview resizing preserves each history entry`
+					: mode === 'history'
 					? `marketplace ${section}: browser Back and Forward restore each history entry`
 					: `marketplace ${section}: refresh restores the selected group and scroll position`,
 			async ({ page }) => {
@@ -301,7 +357,7 @@ for (const section of ['starters', 'blocks'] as const) {
 				await loginAsDeveloperAtDashboard(page, siteGroups[0].id)
 				await page.getByRole('button', { name: 'Marketplace', exact: true }).click()
 				if (section === 'blocks') await page.getByRole('link', { name: 'Blocks', exact: true }).click()
-				if (mode === 'history') await checkGroupHistory(page, groups, records, '.catalog-name', '.marketplace-content')
+				if (mode === 'history' || mode === 'layout') await checkGroupHistory(page, groups, records, '.catalog-name', '.marketplace-content', mode === 'layout')
 				else if (mode === 'refresh') await checkGroupRefresh(page, groups, records, '.catalog-name', '.marketplace-content')
 				else await checkRapidSwitches(page, groups, records, '.catalog-name', '.marketplace-content', true)
 			}

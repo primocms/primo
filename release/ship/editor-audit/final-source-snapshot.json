@@ -123,7 +123,7 @@
     },
     {
       "path": "src/lib/components/dashboard-scroll.ts",
-      "sha256": "73043283c4824a46cdffec80487bcca7077279a9a8a9a40970e4c9f3e819b3e9"
+      "sha256": "da154f97f56934715ef0fdf5c40559c3619ea08aa7ff562bc55b2dd7416c2821"
     },
     {
       "path": "src/lib/components/marketplace-navigation.svelte.ts",
@@ -175,7 +175,7 @@
     },
     {
       "path": "src/routes/dashboard/library/+page.svelte",
-      "sha256": "b1e727a7a965309e9f46db21e2599fa9651ccf26e7d34c3c56461d705c5454ed"
+      "sha256": "c235746f14e3eb048ccba65c1a9a3139e9038cf2a36e94365120d9d65a5c49fa"
     },
     {
       "path": "src/routes/dashboard/marketplace/blocks/+page.svelte",
@@ -187,7 +187,7 @@
     },
     {
       "path": "src/routes/dashboard/sites/+page.svelte",
-      "sha256": "c8f24453d2b63ce39e18925c5d5c66c5fbacf0a983aa8a6b5eb049f4affe91ba"
+      "sha256": "9692d70c6ac6de8c3c69c493ceab0af429e4c05dbec1d032777116c9e17a317a"
     },
     {
       "path": "tests/browser/preview-runtime.test.mjs",
@@ -207,7 +207,7 @@
     },
     {
       "path": "tests/e2e/dashboard-rapid-groups.spec.ts",
-      "sha256": "c35b86bc5ccb72ea702278680f452db07e3f5e5f39bc5dc19b837cc405193a10"
+      "sha256": "2a992ddb63d2ab272695e8ad5eec4762bfaa517d2746e72432d77bdbb598a7d1"
     },
     {
       "path": "tests/e2e/helpers/editor.ts",
@@ -253,5 +253,6 @@
       "path": "tests/integration/publish-snapshot.test.mjs",
       "sha256": "e6c5a3b3b18683db57925fe60c412559b3ad096f81622b03b01f8ce74d9c80d2"
     }
-  ]
+  ],
+  "frozenAtUTC": "2026-10-27T01:30:41.516488+00:00"
 }
