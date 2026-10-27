@@ -7,7 +7,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-// validatePublicationPages requires one homepage and one public path per page.
+// validatePublicationPages accepts empty page sets. Non-empty sets must have
+// exactly one homepage and a unique public path for every page.
 // It rejects invalid drafts before generation so detached roots cannot overwrite
 // index.html and disconnected sections of the tree cannot silently disappear.
 func validatePublicationPages(pages []*core.Record) error {
