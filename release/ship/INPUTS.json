@@ -495,6 +495,16 @@
       "base": "main",
       "draft": false,
       "decision": "included-feature-reconciliation"
+    },
+    {
+      "repository": "primocms/primo",
+      "number": 1365,
+      "title": "Preserve routes and sections in partial site uploads",
+      "head": "30b4bb44b48f2eacbdf1bfab219aa17356fef902",
+      "branch": "codex/fix-partial-uploads",
+      "base": "codex/release-consolidation",
+      "draft": true,
+      "decision": "included-final-upload-preservation"
     }
   ],
   "initialScriptEscapingInput": "d9aab4cf504cd7ebe97e1c6388fc601fb46679e6",
