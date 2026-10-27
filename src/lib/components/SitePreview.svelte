@@ -2,6 +2,7 @@
 	import type { Site } from '$lib/common/models/Site'
 	import { Globe } from 'lucide-svelte'
 	import { onDestroy, tick } from 'svelte'
+	import { createResizeTask } from '$lib/resize_task.js'
 
 	let { site, style, src }: { site?: Site; style?: string; src?: string } = $props()
 
@@ -19,6 +20,7 @@
 	let iframe = $state<HTMLIFrameElement>()
 	let iframeLoaded = $state()
 	let resize_observer = $state<ResizeObserver>()
+	const resize_task = createResizeTask(resize_preview)
 
 	async function init_preview() {
 		await tick()
@@ -26,14 +28,8 @@
 		// if (!iframe?.contentWindow?.document?.body) return
 		if (resize_observer) resize_observer?.disconnect()
 
-		resize_observer = new ResizeObserver((entries) => {
-			if (!container || !iframe) return
-			const { offsetWidth: parentWidth } = container
-			const { offsetWidth: childWidth } = iframe
-
-			if (parentWidth === 0) return
-			scale = parentWidth / childWidth
-			iframeHeight = `${100 / scale}%`
+		resize_observer = new ResizeObserver(() => {
+			resize_task.schedule()
 			// give it a sec to load in
 			setTimeout(() => {
 				iframeLoaded = true
@@ -47,16 +43,18 @@
 		if (!container || !iframe) return
 		const { clientWidth: parentWidth } = container
 		const { clientWidth: childWidth } = iframe
+		if (parentWidth === 0 || childWidth === 0) return
 		scale = parentWidth / childWidth
 		iframeHeight = `${100 / scale}%`
 	}
 
 	onDestroy(() => {
+		resize_task.dispose()
 		resize_observer?.disconnect()
 	})
 </script>
 
-<svelte:window onresize={resize_preview} />
+<svelte:window onresize={resize_task.schedule} />
 
 <div class="iframe-root bg-gray-900" {style}>
 	<div bind:this={container} class="iframe-container">

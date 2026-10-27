@@ -76,6 +76,10 @@ test('dashboard thumbnails keep their styles when page scripts would change the 
 	await expect(thumbnail.locator('#headline')).toHaveCSS('color', 'rgb(12, 34, 56)')
 	const iframe = page.frames().find((frame) => frame.url().includes(`_site=${ids.siteId}`))!
 	await iframe.waitForLoadState('load')
+	for (const width of [900, 1280]) {
+		await page.setViewportSize({ width, height: 720 })
+		await expect.poll(() => page.locator(`iframe[src*="_site=${ids.siteId}"]`).evaluate((frame) => Math.abs(frame.getBoundingClientRect().width - frame.parentElement!.clientWidth))).toBeLessThan(1)
+	}
 	await expect(thumbnail.locator('#headline')).toHaveText('Stored preview')
 	await expect(thumbnail.locator('#headline')).toHaveClass('styled')
 
