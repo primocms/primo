@@ -134,7 +134,7 @@ export function createDashboardScroll({
 			restore()
 		}
 		const mutation = new MutationObserver(observe)
-		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] })
 		const onScroll = (event: Event) => {
 			if (event.target !== scroller() && !(windowScroll && event.target === document)) return
 			// Layout observers reapply a pending history target. Reapplying it
