@@ -16,8 +16,10 @@ concurrency:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    # Installation, server checks and the expanded editor suite share this budget.
+    # Individual assertion/test timeouts remain unchanged.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 

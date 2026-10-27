@@ -107,7 +107,9 @@ jobs:
   exact-browser:
     needs: native
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # Include browser installation, the full suite and installed handoff/recovery.
+    # Per-test limits and performance assertions remain unchanged.
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:

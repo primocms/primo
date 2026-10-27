@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/browser-compatibility.yml'
+      - '.github/workflows/e2e.yml'
+      - '.github/workflows/rc-platform.yml'
       - 'src/**'
       - 'internal/**'
       - 'tests/**'
