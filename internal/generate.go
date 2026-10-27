@@ -158,6 +158,10 @@ func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *c
 		return nil, err
 	}
 
+	if err := validatePublicationPages(pages); err != nil {
+		return nil, err
+	}
+
 	newFiles := make([]string, 0, len(pages))
 	for _, page := range pages {
 		if page.GetString("parent") == "" {
