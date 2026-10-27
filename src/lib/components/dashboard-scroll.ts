@@ -137,9 +137,9 @@ export function createDashboardScroll({
 		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
 		const onScroll = (event: Event) => {
 			if (event.target !== scroller() && !(windowScroll && event.target === document)) return
-			if (pending !== null) {
-				restore()
-			} else {
+			// Layout observers reapply a pending history target. Reapplying it
+			// on every scroll would fight focus/scrollIntoView before a click.
+			if (pending === null) {
 				remember()
 				if (reloadSnapshot?.key === key && reloadSnapshot.url === location.href) reloadSnapshot.top = capture().top
 				if (editorReturnSnapshot?.key === key && editorReturnSnapshot.url === location.href) editorReturnSnapshot.top = capture().top

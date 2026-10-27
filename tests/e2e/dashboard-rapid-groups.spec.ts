@@ -59,8 +59,8 @@ async function scrollContent(page: Page, selector: string, position = 350) {
 	const focusable = page.locator(selector).locator('button, a[href], [tabindex]:not([tabindex="-1"])').first()
 	await focusable.evaluate((node) => (node as HTMLElement).focus({ preventScroll: true }))
 	await expect(focusable).toBeFocused()
-	await page.keyboard.press('Shift')
-	return page.locator(selector).evaluate((node, position) => {
+	await page.keyboard.press('ArrowLeft')
+	const top = await page.locator(selector).evaluate((node, position) => {
 		for (let element: Element | null = node; element; element = element.parentElement) {
 			if (element.scrollHeight - element.clientHeight > 350 && (element === document.scrollingElement || /auto|scroll/.test(getComputedStyle(element).overflowY))) {
 				element.scrollTop = position
@@ -69,6 +69,14 @@ async function scrollContent(page: Page, selector: string, position = 350) {
 		}
 		return 0
 	}, position)
+	await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+	await expect.poll(() => page.locator(selector).evaluate((node) => {
+		for (let element: Element | null = node; element; element = element.parentElement) {
+			if (element === document.scrollingElement || /auto|scroll/.test(getComputedStyle(element).overflowY)) return element.scrollTop
+		}
+		return 0
+	})).toBe(top)
+	return top
 }
 
 for (const section of ['sites', 'library'] as const) {
