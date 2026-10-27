@@ -611,6 +611,10 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		files[f.Name] = data
 	}
 
+	if err := validateImportPageReferences(app, site, files); err != nil {
+		return nil, err
+	}
+
 	// Collects non-fatal import problems (orphaned fields, etc.) to surface
 	// back to the CLI so they're impossible to miss instead of silently dropped.
 	var warnings []ImportWarning
@@ -1201,11 +1205,12 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		}
 	}
 
-	// Map to track imported page paths to IDs
-	pathToId := make(map[string]string)
+	// Seed dependencies from this site so a partial upload can omit parents.
+	// Parents included in this archive overwrite these IDs as they are imported.
+	pathToId := pathToPageId
 
-	// Import homepage first to get its ID
-	var homepageId string
+	// Import homepage first to get its ID, or retain the existing homepage.
+	homepageId := pathToId[""]
 	if homepageInfo != nil && !previewOnly {
 		pageId, sectionIds, err := importPage(app, site, homepageInfo.data, homepageInfo.raw, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
 		if err != nil {
@@ -1232,20 +1237,9 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				lastSlash := strings.LastIndex(info.path, "/")
 				parentPath := info.path[:lastSlash]
 
-				// Look up the parent page ID. If the parent folder has no
-				// own yaml (e.g. pages/blog/ exists but pages/blog.yaml
-				// doesn't), skip the page rather than orphan it as a
-				// pseudo-homepage with parent="". Cascades: any child of a
-				// skipped page is also skipped because it won't find its
-				// parent in pathToId either.
 				pid, ok := pathToId[parentPath]
 				if !ok {
-					warnings = append(warnings, ImportWarning{
-						Kind:    "orphaned_page",
-						File:    "pages/" + info.path + ".yaml",
-						Message: fmt.Sprintf("Skipping page %q because its parent folder %q has no %s.yaml or %s/index.yaml", info.path, parentPath, parentPath, parentPath),
-					})
-					continue
+					return nil, fmt.Errorf("%s: parent page %q could not be resolved", info.file, parentPath)
 				}
 				parentId = pid
 			} else {
@@ -2385,22 +2379,12 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		sectionsColl, _ := app.FindCollectionByNameOrId("page_sections")
 		entriesColl, _ := app.FindCollectionByNameOrId("page_section_entries")
 
-		// Get symbol name -> id mapping (case-insensitive)
-		symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-		symbolByName := make(map[string]string)
-		for _, s := range symbols {
-			name := s.GetString("name")
-			symbolByName[name] = s.Id
-			symbolByName[strings.ToLower(name)] = s.Id
-			symbolByName[sanitizeFilename(name)] = s.Id
+		// Resolve existing folders even when their block files were not uploaded.
+		symbols, err := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
+		if err != nil {
+			return "", nil, err
 		}
-		// Also map folder names to symbol IDs (for export compatibility)
-		for folderName, displayName := range folderToDisplayName {
-			if symbolId := symbolByName[displayName]; symbolId != "" {
-				symbolByName[folderName] = symbolId
-				symbolByName[strings.ToLower(folderName)] = symbolId
-			}
-		}
+		symbolByName := importSymbolLookup(symbols, folderToDisplayName)
 
 		for i, sectionData := range pageData.Sections {
 			blockName := getString(sectionData, "block")
@@ -2410,16 +2394,7 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 				symbolId = symbolByName[strings.ToLower(blockName)]
 			}
 			if symbolId == "" {
-				if warnings != nil {
-					*warnings = append(*warnings, ImportWarning{
-						Kind:    "unknown_block",
-						File:    sourceFile,
-						Path:    fmt.Sprintf("sections[%d].block", i),
-						Block:   blockName,
-						Message: fmt.Sprintf("section %d references block %q which does not exist; section skipped", i, blockName),
-					})
-				}
-				continue
+				return "", nil, fmt.Errorf("%s: sections[%d].block references unknown block %q", sourceFile, i, blockName)
 			}
 
 			// Match by _id when present, else treat as a new section.
@@ -3128,20 +3103,7 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 
 	// Get all symbols for this site
 	symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-	symbolByName := make(map[string]string)
-	for _, s := range symbols {
-		name := s.GetString("name")
-		symbolByName[name] = s.Id
-		symbolByName[strings.ToLower(name)] = s.Id
-		symbolByName[sanitizeFilename(name)] = s.Id
-	}
-	// Also map folder names to symbol IDs
-	for folderName, displayName := range folderToDisplayName {
-		if symbolId := symbolByName[displayName]; symbolId != "" {
-			symbolByName[folderName] = symbolId
-			symbolByName[strings.ToLower(folderName)] = symbolId
-		}
-	}
+	symbolByName := importSymbolLookup(symbols, folderToDisplayName)
 
 	// Get existing page_type_symbols
 	existingPtSymbols, _ := app.FindRecordsByFilter("page_type_symbols", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
@@ -3214,23 +3176,11 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 
 		// Get all symbols for this site
 		symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-		symbolByName := make(map[string]string)
-		symbolFields := make(map[string][]*core.Record) // symbolId -> fields
-		for _, s := range symbols {
-			name := s.GetString("name")
-			symbolByName[name] = s.Id
-			symbolByName[strings.ToLower(name)] = s.Id
-			symbolByName[sanitizeFilename(name)] = s.Id
-			// Fetch fields for this symbol
-			fields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": s.Id})
-			symbolFields[s.Id] = fields
-		}
-		// Also map folder names to symbol IDs
-		for folderName, displayName := range folderToDisplayName {
-			if symbolId := symbolByName[displayName]; symbolId != "" {
-				symbolByName[folderName] = symbolId
-				symbolByName[strings.ToLower(folderName)] = symbolId
-			}
+		symbolByName := importSymbolLookup(symbols, folderToDisplayName)
+		symbolFields := make(map[string][]*core.Record)
+		for _, symbol := range symbols {
+			fields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
+			symbolFields[symbol.Id] = fields
 		}
 
 		resolveLayoutContent := func(sectionData ExportedLayoutSection) map[string]interface{} {
