@@ -578,6 +578,9 @@ func readSiteConfigFromZip(zipData []byte) (string, string) {
 // decompressed budget prevents a crafted zip bomb from exhausting memory.
 const maxImportUncompressedBytes = 512 << 20
 
+// processImport validates archive dependencies, previews changes, or applies them
+// to the hosted draft. Apply callers must provide a transaction so errors roll
+// back schema, page, and content updates together.
 func processImport(app core.App, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
@@ -2107,6 +2110,9 @@ func rekeyPage(app core.App, oldPage *core.Record, newId string) error {
 	return nil
 }
 
+// importPage reconciles a page at its file-derived route, retaining existing
+// section identities and resolving blocks already stored on the site. It
+// returns the page and section IDs for source-file writeback.
 func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []byte, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
 	// Derive slug from file path (last segment)
 	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
@@ -3044,6 +3050,9 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
+// importPageType reconciles a page type’s fields, allowed blocks, and supplied
+// layout using stable block folder keys. An omitted layout leaves existing
+// shared sections intact.
 func importPageType(app core.App, site *core.Record, ptFolder string, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}, warnings *[]ImportWarning) error {
 	configPath := fmt.Sprintf("page-types/%s/config.yaml", ptFolder)
 	layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptFolder)

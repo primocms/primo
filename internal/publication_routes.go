@@ -7,9 +7,9 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-// Every page must belong to one homepage and one public path. Refuse an
-// invalid draft before generating pages: otherwise detached roots overwrite
-// index.html and disconnected sections of the tree silently disappear.
+// validatePublicationPages requires one homepage and one public path per page.
+// It rejects invalid drafts before generation so detached roots cannot overwrite
+// index.html and disconnected sections of the tree cannot silently disappear.
 func validatePublicationPages(pages []*core.Record) error {
 	if len(pages) == 0 {
 		return nil
