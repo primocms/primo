@@ -89,7 +89,19 @@ export async function freshInstall() {
 			)
 			return binary ? fs.readFile(file) : fs.readFile(file, 'utf8')
 		}
-		const [bytes, sums] = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
+		const distribution = process.env.PRIMO_TEST_NODE_DISTRIBUTIONS ? path.resolve(process.env.PRIMO_TEST_NODE_DISTRIBUTIONS) : null
+		let bytes, sums
+		if (distribution) {
+			const provenance = JSON.parse(await fs.readFile(path.join(distribution, 'provenance.json'), 'utf8'))
+			assert.equal(provenance.sourceCommit, process.env.PRIMO_CANDIDATE_SHA, 'official runtime provenance must match candidate')
+			assert.equal(provenance.node, version)
+			;[bytes, sums] = await Promise.all([fs.readFile(path.join(distribution, archive)), fs.readFile(path.join(distribution, 'SHASUMS256.txt'), 'utf8')])
+			const receipt = provenance.archives.find((item) => item.name === archive)
+			assert.equal(receipt?.url, base + archive)
+			assert.equal(receipt.sha256, sha(bytes), 'staged official runtime checksum')
+		} else {
+			;[bytes, sums] = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
+		}
 		const expected = sums
 			.split('\n')
 			.find((line) => line.endsWith('  ' + archive))
@@ -192,6 +204,7 @@ export async function freshInstall() {
 			initial: { nodeOnPath: false, primoOnPath: false, credentials: false, packageCache: false },
 			node: version,
 			nodeArchiveSha256: expected,
+			nodeDelivery: distribution ? 'verified official distribution artifact; fresh private installation' : 'official HTTPS download; fresh private installation',
 			cli: '0.3.0-rc.3',
 			mcp: '0.1.11-rc.3',
 			cms: 'v3.3.2-rc.13',
