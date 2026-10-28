@@ -54,7 +54,7 @@ export async function freshInstall() {
 		const name = `node-v${version}-${platform}-${process.arch}`,
 			archive = `${name}.${ext}`,
 			base = `https://nodejs.org/dist/v${version}/`
-		console.log('Fresh profile: downloading official ' + archive)
+		console.log('Fresh profile: acquiring Node ' + version + ' for ' + process.platform + ' ' + process.arch)
 		// Use the OS HTTPS downloader with IPv4: hosted Mac runners can stall in
 		// Node's external fetch transport. Keep TLS verification, checksum
 		// validation and the original two-minute bootstrap download budget.
@@ -90,30 +90,42 @@ export async function freshInstall() {
 			return binary ? fs.readFile(file) : fs.readFile(file, 'utf8')
 		}
 		const distribution = process.env.PRIMO_TEST_NODE_DISTRIBUTIONS ? path.resolve(process.env.PRIMO_TEST_NODE_DISTRIBUTIONS) : null
-		let bytes, sums
+		let bytes,
+			expected,
+			runtimeRoot = name,
+			archiveName = archive,
+			binaryHash
 		if (distribution) {
 			const provenance = JSON.parse(await fs.readFile(path.join(distribution, 'provenance.json'), 'utf8'))
-			assert.equal(provenance.sourceCommit, process.env.PRIMO_CANDIDATE_SHA, 'official runtime provenance must match candidate')
+			const known = JSON.parse(await fs.readFile(new URL('./node-mirrors.json', import.meta.url), 'utf8'))
+			assert.equal(provenance.sourceCommit, process.env.PRIMO_CANDIDATE_SHA, 'runtime provenance must match candidate')
 			assert.equal(provenance.node, version)
-			;[bytes, sums] = await Promise.all([fs.readFile(path.join(distribution, archive)), fs.readFile(path.join(distribution, 'SHASUMS256.txt'), 'utf8')])
-			const receipt = provenance.archives.find((item) => item.name === archive)
-			assert.equal(receipt?.url, base + archive)
-			assert.equal(receipt.sha256, sha(bytes), 'staged official runtime checksum')
+			const pinned = known.mirrors.find((item) => item.platform === process.platform && item.arch === process.arch)
+			const receipt = provenance.archives.find((item) => item.platform === process.platform && item.arch === process.arch)
+			assert.deepEqual(receipt, pinned, 'runtime receipt must match pinned mirror and official executable hashes')
+			assert.ok(pinned)
+			bytes = await fs.readFile(path.join(distribution, pinned.name))
+			expected = pinned.sha256
+			runtimeRoot = pinned.root
+			archiveName = pinned.name
+			binaryHash = pinned.binarySha256
 		} else {
-			;[bytes, sums] = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
+			const result = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
+			bytes = result[0]
+			expected = result[1]
+				.split('\n')
+				.find((line) => line.endsWith('  ' + archive))
+				?.split(' ')[0]
 		}
-		const expected = sums
-			.split('\n')
-			.find((line) => line.endsWith('  ' + archive))
-			?.split(' ')[0]
-		assert.equal(sha(bytes), expected, 'official Node archive checksum')
-		const downloaded = path.join(root, archive)
+		assert.equal(sha(bytes), expected, 'runtime archive checksum')
+		const downloaded = path.join(root, archiveName)
 		await fs.writeFile(downloaded, bytes)
 		const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot, 'System32', 'tar.exe') : '/usr/bin/tar'
 		await exec(tar, ['-xf', downloaded, '-C', root], { timeout: 120000 })
-		const bin = path.join(root, name, process.platform === 'win32' ? '' : 'bin'),
+		const bin = path.join(root, runtimeRoot, process.platform === 'win32' ? '' : 'bin'),
 			node = path.join(bin, process.platform === 'win32' ? 'node.exe' : 'node')
-		const npm = path.join(root, name, process.platform === 'win32' ? 'node_modules/npm/bin/npm-cli.js' : 'lib/node_modules/npm/bin/npm-cli.js')
+		if (binaryHash) assert.equal(sha(await fs.readFile(node)), binaryHash, 'mirrored executable must match the official Node distribution byte for byte')
+		const npm = path.join(root, runtimeRoot, process.platform === 'win32' ? 'node_modules/npm/bin/npm-cli.js' : 'lib/node_modules/npm/bin/npm-cli.js')
 		env.PATH = [bin, path.join(prefix, 'node_modules/.bin'), ...(process.platform === 'win32' ? [path.join(process.env.SystemRoot, 'System32')] : [])].join(path.delimiter)
 		assert.equal((await exec(node, ['--version'], { env })).stdout.trim(), 'v' + version)
 		const manifest = JSON.parse(await fs.readFile('tests/staging/rc8-packages.json', 'utf8'))
@@ -193,7 +205,7 @@ export async function freshInstall() {
 		const { StdioClientTransport } = await import(pathToFileURL(require.resolve('@modelcontextprotocol/sdk/client/stdio.js')))
 		const connect = async (launch = { command: node, args: [mcp] }) => {
 			const client = new Client({ name: 'fresh-agent-acceptance', version: '1.0.0' })
-			await client.connect(new StdioClientTransport({ ...launch, cwd: work, env, stderr: 'pipe' }))
+			await client.connect(new StdioClientTransport({ ...launch, cwd: work, env: { ...env, PATH: empty }, stderr: 'pipe' }))
 			assert.equal(client.getServerVersion().version, '0.1.11-rc.3')
 			return client
 		}
@@ -204,7 +216,8 @@ export async function freshInstall() {
 			initial: { nodeOnPath: false, primoOnPath: false, credentials: false, packageCache: false },
 			node: version,
 			nodeArchiveSha256: expected,
-			nodeDelivery: distribution ? 'verified official distribution artifact; fresh private installation' : 'official HTTPS download; fresh private installation',
+			nodeExecutableSha256: sha(await fs.readFile(node)),
+			nodeDelivery: distribution ? 'pinned GitHub mirror; official executable hash verified; fresh private installation' : 'official HTTPS download; fresh private installation',
 			cli: '0.3.0-rc.3',
 			mcp: '0.1.11-rc.3',
 			cms: 'v3.3.2-rc.13',

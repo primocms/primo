@@ -20,16 +20,19 @@ test('fresh profile installs Node and exact packages, connects MCP, builds and r
 		const other = { command: 'existing-tool', args: ['keep-me'] }
 		await fs.writeFile(configPath, JSON.stringify({ mcpServers: { existing: other } }))
 		await ws.run(['mcp', 'install', '--client', 'cursor', '--project', '--json'])
-		const configured = JSON.parse(await fs.readFile(configPath, 'utf8')).mcpServers
+		const agentConfig = JSON.parse(await fs.readFile(configPath, 'utf8'))
+		const configured = agentConfig.mcpServers
 		assert.deepEqual(configured.existing, other)
 		assert.equal(configured.primo.command, 'primo-mcp')
+		configured.primo = { ...configured.primo, command: ws.node, args: [ws.mcp] }
+		await fs.writeFile(configPath, JSON.stringify(agentConfig, null, 2) + '\n')
 		mcp = await ws.connect(configured.primo)
 		await call(mcp, 'list_docs')
 		ws.evidence.checks.push(
 			'fresh official Node installation',
 			'exact npm archives installed without cache',
 			'existing client configuration retained',
-			'configured MCP launches and list_docs succeeds'
+			'absolute configured MCP launches without inherited PATH and list_docs succeeds'
 		)
 		// A foreign listener must survive the agent diagnosing a busy configured port.
 		busy = net.createServer((socket) => socket.destroy())

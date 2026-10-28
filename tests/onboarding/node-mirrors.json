@@ -1,0 +1,65 @@
+{
+  "node": "22.17.0",
+  "mirrors": [
+    {
+      "platform": "linux",
+      "arch": "x64",
+      "name": "node-22.17.0-linux-x64.tar.gz",
+      "url": "https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/node-22.17.0-linux-x64.tar.gz",
+      "sha256": "0404e396269d838b2e2c1ad25809ff8d9a730dc4e96694b59214673569867790",
+      "binarySha256": "8071ae0fca095a272ad698a90c7061801a86fb6392ddb81e922b68a91a4374b9",
+      "root": ".",
+      "officialArchive": "node-v22.17.0-linux-x64.tar.xz",
+      "officialArchiveSha256": "325c0f1261e0c61bcae369a1274028e9cfb7ab7949c05512c5b1e630f7e80e12",
+      "officialChecksumSource": "https://nodejs.org/dist/v22.17.0/SHASUMS256.txt"
+    },
+    {
+      "platform": "linux",
+      "arch": "arm64",
+      "name": "node-22.17.0-linux-arm64.tar.gz",
+      "url": "https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/node-22.17.0-linux-arm64.tar.gz",
+      "sha256": "bffdac72d31091b2c12b245a10c03c484af6aaa42e5c397028ced7eb5c84389c",
+      "binarySha256": "cd8324a6ad6ea42472dfdce35f8cf21d746cd4ef53654dea605c69f1fce47fbf",
+      "root": ".",
+      "officialArchive": "node-v22.17.0-linux-arm64.tar.xz",
+      "officialArchiveSha256": "140aee84be6774f5fb3f404be72adbe8420b523f824de82daeb5ab218dab7b18",
+      "officialChecksumSource": "https://nodejs.org/dist/v22.17.0/SHASUMS256.txt"
+    },
+    {
+      "platform": "darwin",
+      "arch": "x64",
+      "name": "node-22.17.0-darwin-x64.tar.gz",
+      "url": "https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/node-22.17.0-darwin-x64.tar.gz",
+      "sha256": "1ca12ad9d89c4345284424554836bee5fa2b4411e878f47cee3c9f58c18d3966",
+      "binarySha256": "f3b9015450b5d4f8951a4c73d570609db9993056aa05e509587565b6fcb559ce",
+      "root": ".",
+      "officialArchive": "node-v22.17.0-darwin-x64.tar.xz",
+      "officialArchiveSha256": "f79de1f64df4ac68493a344bb5ab7d289d0275271e87b543d1278392c9de778a",
+      "officialChecksumSource": "https://nodejs.org/dist/v22.17.0/SHASUMS256.txt"
+    },
+    {
+      "platform": "darwin",
+      "arch": "arm64",
+      "name": "node-22.17.0-darwin-arm64.tar.gz",
+      "url": "https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/node-22.17.0-darwin-arm64.tar.gz",
+      "sha256": "e86094fcae4848811937af687b134ec24c37ebded90a9a3ebed300577d10bb01",
+      "binarySha256": "7bf25453c4280d0c4b8501144e419dd9597eeddd5804c4f4ab571d3286489547",
+      "root": ".",
+      "officialArchive": "node-v22.17.0-darwin-arm64.tar.xz",
+      "officialArchiveSha256": "cc9cc294eaf782dd93c8c51f460da610cc35753c6a9947411731524d16e97914",
+      "officialChecksumSource": "https://nodejs.org/dist/v22.17.0/SHASUMS256.txt"
+    },
+    {
+      "platform": "win32",
+      "arch": "x64",
+      "name": "node-22.17.0-win32-x64.7z",
+      "url": "https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/node-22.17.0-win32-x64.7z",
+      "sha256": "4e999b4c2d21c5925bdf2bc75cb471432ba1d5d80a833031e77c8f1953d26aa9",
+      "binarySha256": "39d45b5933f339d3ebdebd76474893dab5d7da1038920f65cf5bbcf0f20f3636",
+      "root": "",
+      "officialArchive": "node-v22.17.0-win-x64.zip",
+      "officialArchiveSha256": "721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85",
+      "officialChecksumSource": "https://nodejs.org/dist/v22.17.0/SHASUMS256.txt"
+    }
+  ]
+}

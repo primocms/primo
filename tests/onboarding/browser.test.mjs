@@ -32,7 +32,8 @@ test(engine + ' agent handoff: empty profile, declined consent, browser approval
 		page.setDefaultTimeout(20000)
 		const errors = []
 		page.on('pageerror', (error) => errors.push(c.redact(error.message)))
-		const plan = agentSetupPlan(c.origin)
+		const plan = agentSetupPlan(c.origin, process.env.PRIMO_ONBOARDING_AUTHOR_MODE || (engine === 'webkit' ? 'cms' : 'files'))
+		report.authorMode = plan.authorMode
 		const tokens = path.join(ws.home, '.primo/tokens.json')
 		const approval = async () => {
 			login = ws.start(plan.login)
@@ -79,18 +80,31 @@ test(engine + ' agent handoff: empty profile, declined consent, browser approval
 		assert.match(config, new RegExp(c.site.id))
 		assert.doesNotMatch(config, new RegExp(c.foreign.id))
 		await ws.run(['mcp', 'install', '--client', 'cursor', '--project', '--json'])
-		const launch = JSON.parse(await fs.readFile(path.join(ws.work, '.cursor/mcp.json'), 'utf8')).mcpServers.primo
+		const configPath = path.join(ws.work, '.cursor/mcp.json')
+		const agentConfig = JSON.parse(await fs.readFile(configPath, 'utf8'))
+		agentConfig.mcpServers.primo = { ...agentConfig.mcpServers.primo, command: ws.node, args: [ws.mcp] }
+		await fs.writeFile(configPath, JSON.stringify(agentConfig, null, 2) + '\n')
+		const launch = agentConfig.mcpServers.primo
 		mcp = await ws.connect(launch)
 		await call(mcp, 'list_docs')
 		const stopped = JSON.parse((await ws.run(plan.status)).stdout)
 		assert.equal(stopped.running, false)
-		dev = ws.start(plan.dev)
+		dev = ws.start(plan.bootstrap)
 		let state
 		await until(async () => {
 			assert.equal(dev.exitCode, null, c.redact(dev.output))
 			state = JSON.parse((await ws.run(plan.status)).stdout)
 			return state.running && state.sites.length === 1 && state.sites.every((s) => s.in_cms && s.sync?.ok)
 		}, 'pulled workspace did not import successfully')
+		if (plan.authorMode === 'cms') {
+			await stop(dev)
+			dev = ws.start(plan.dev)
+			await until(async () => {
+				assert.equal(dev.exitCode, null, c.redact(dev.output))
+				state = JSON.parse((await ws.run(plan.status)).stdout)
+				return state.running && state.sites.every((site) => site.in_cms && site.sync?.ok)
+			}, 'visual mode did not become ready after seeding')
+		}
 		const local = `http://127.0.0.1:${state.port}`
 		assert.equal(path.resolve(state.workspace), path.resolve(ws.work))
 		assert.equal(state.sites[0].site_id, c.site.id)
@@ -99,7 +113,23 @@ test(engine + ' agent handoff: empty profile, declined consent, browser approval
 		await call(mcp, 'get_dev_logs', { site_path: site })
 		await page.goto(local + '/admin')
 		await page.waitForURL('**/admin/sites/' + c.site.id)
-		await expect(page.locator('main iframe[title=block]').first().contentFrame().locator('h1')).toBeVisible()
+		const localHeading = page.locator('main iframe[title=block]').first().contentFrame().locator('h1')
+		await expect(localHeading).toBeVisible()
+		if (plan.authorMode === 'cms') {
+			await expect(localHeading).toHaveAttribute('contenteditable', 'true')
+			// Iframe input bridges attach after the first visible canvas paint.
+			// Reuse the existing editor harness's bounded interaction readiness.
+			await expect(async () => {
+				await localHeading.click()
+				await page.keyboard.press('ControlOrMeta+A')
+				await page.keyboard.press('Backspace')
+				await page.keyboard.type('Fresh visual onboarding')
+				await expect(localHeading).toHaveText('Fresh visual onboarding', { timeout: 1000 })
+			}).toPass({ timeout: 10000 })
+			await localHeading.blur()
+			await until(async () => (await fs.readFile(path.join(site, 'pages/index.yaml'), 'utf8')).includes('Fresh visual onboarding'), 'fresh visual edit did not reach local files')
+			report.checks.push('fresh visual choice seeds files before CMS authoring', 'real visual edit writes back to local files')
+		}
 		await ws.run(['preview', '--dir', site])
 		const preview = await fetch(local + '/?_site=' + c.site.id)
 		assert.ok(preview.ok)
@@ -121,7 +151,7 @@ test(engine + ' agent handoff: empty profile, declined consent, browser approval
 				'new request approved by browser resumes CLI',
 				'saved login reused',
 				'scoped pull excludes foreign site',
-				'actual configured MCP list_docs/status/logs',
+				'absolute configured MCP list_docs/status/logs without inherited PATH',
 				'ready imported workspace identity',
 				'local CMS opens with expected site',
 				'actual local preview serves rendered site',

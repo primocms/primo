@@ -1,40 +1,28 @@
-// Stage official runtime bytes once on Linux. Every native acceptance test still
-// starts with no runtime, credentials or package cache and installs its own copy.
+// GitHub's setup-node distribution mirror avoids slow nodejs.org CDN paths.
+// Pinned archive hashes and byte-identical official executable hashes are in
+// node-mirrors.json. Every platform still installs a new private runtime.
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-const version = '22.17.0',
-	base = `https://nodejs.org/dist/v${version}/`,
-	root = path.resolve('node-distributions')
-const names = ['linux-x64.tar.xz', 'linux-arm64.tar.xz', 'darwin-x64.tar.xz', 'darwin-arm64.tar.xz', 'win-x64.zip'].map((suffix) => `node-v${version}-${suffix}`)
-const get = async (name) => {
-	const response = await fetch(base + name, { signal: AbortSignal.timeout(120000) })
-	assert.ok(response.ok, 'Official Node distribution HTTP ' + response.status)
-	return Buffer.from(await response.arrayBuffer())
-}
-const sums = (await get('SHASUMS256.txt')).toString('utf8')
+const pinned = JSON.parse(await fs.readFile(new URL('./node-mirrors.json', import.meta.url), 'utf8'))
+const root = path.resolve('node-distributions')
 await fs.mkdir(root, { recursive: true })
-await fs.writeFile(path.join(root, 'SHASUMS256.txt'), sums)
 const results = await Promise.allSettled(
-	names.map(async (name) => {
-		const bytes = await get(name),
-			sha256 = createHash('sha256').update(bytes).digest('hex')
-		assert.equal(
-			sha256,
-			sums
-				.split('\n')
-				.find((line) => line.endsWith('  ' + name))
-				?.split(' ')[0],
-			name + ' official checksum'
-		)
-		await fs.writeFile(path.join(root, name), bytes)
-		return { name, url: base + name, sha256 }
+	pinned.mirrors.map(async (item) => {
+		assert.equal(path.basename(item.name), item.name)
+		assert.ok(item.url.startsWith('https://github.com/actions/node-versions/releases/download/22.17.0-15866718879/'))
+		const response = await fetch(item.url, { signal: AbortSignal.timeout(120000) })
+		assert.ok(response.ok, 'Maintained Node mirror HTTP ' + response.status)
+		const bytes = Buffer.from(await response.arrayBuffer())
+		assert.equal(createHash('sha256').update(bytes).digest('hex'), item.sha256, item.name + ' pinned mirror checksum')
+		await fs.writeFile(path.join(root, item.name), bytes)
+		return item
 	})
 )
 for (const result of results) if (result.status === 'rejected') throw result.reason
 await fs.writeFile(
 	path.join(root, 'provenance.json'),
-	JSON.stringify({ sourceCommit: process.env.PRIMO_CANDIDATE_SHA, node: version, archives: results.map((result) => result.value) }, null, 2) + '\n'
+	JSON.stringify({ sourceCommit: process.env.PRIMO_CANDIDATE_SHA, node: pinned.node, archives: results.map((result) => result.value) }, null, 2) + '\n'
 )
-console.log('Verified five official runtime distributions for isolated native installation.')
+console.log('Verified five pinned runtime distributions; consumers also verify the official executable hashes.')

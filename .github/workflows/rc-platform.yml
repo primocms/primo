@@ -52,7 +52,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.17.0
-      - name: Verify official Node archives before fresh native installation
+      - name: Verify pinned runtimes before fresh native installation
         env:
           PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
         run: node tests/onboarding/distributions.mjs
