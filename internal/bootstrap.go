@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/json"
-	"io"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
@@ -50,8 +49,13 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		return e.BadRequestError("Failed to parse form", err)
 	}
 
+	zipData, err := readImportArchive(pb, e, true)
+	if err != nil {
+		return err
+	}
+
 	var response map[string]interface{}
-	err := pb.RunInTransaction(func(app core.App) error {
+	err = pb.RunInTransaction(func(app core.App) error {
 		// Check if any sites exist - only allow bootstrap when none exist.
 		// Exception: localhost can always bootstrap (for local dev), and we
 		// keep that exception even when the lookup fails so a broken DB on
@@ -155,16 +159,7 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		// authoritative persisted ID rather than the request's siteId.
 		siteId = site.Id
 
-		// Check for ZIP file upload
-		file, _, err := e.Request.FormFile("file")
-		if err == nil {
-			defer file.Close()
-
-			zipData, err := io.ReadAll(file)
-			if err != nil {
-				return e.InternalServerError("Failed to read file", err)
-			}
-
+		if zipData != nil {
 			// Validate ZIP
 			_, err = zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 			if err != nil {

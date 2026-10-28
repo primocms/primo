@@ -112,15 +112,9 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.BadRequestError("Failed to parse form", err)
 			}
 
-			file, _, err := e.Request.FormFile("file")
+			zipData, err := readImportArchive(pb, e, false)
 			if err != nil {
-				return e.BadRequestError("No file uploaded", err)
-			}
-			defer file.Close()
-
-			zipData, err := io.ReadAll(file)
-			if err != nil {
-				return e.InternalServerError("Failed to read file", err)
+				return err
 			}
 
 			// Optional "deletes" form field: a JSON manifest of IDs the
@@ -200,18 +194,27 @@ func processLibraryImport(pb core.App, zipData []byte, deletes DeletesManifest) 
 	}
 
 	files := make(map[string][]byte, len(reader.File))
+	var totalBytes int64
 	for _, f := range reader.File {
 		if f.FileInfo().IsDir() {
 			continue
+		}
+		if f.UncompressedSize64 > uint64(int64(maxImportUncompressedBytes)-totalBytes) {
+			return nil, fmt.Errorf("library archive exceeds maximum uncompressed size of %d bytes", maxImportUncompressedBytes)
 		}
 		rc, err := f.Open()
 		if err != nil {
 			return nil, err
 		}
-		data, err := io.ReadAll(rc)
+		remaining := int64(maxImportUncompressedBytes) - totalBytes
+		data, err := io.ReadAll(io.LimitReader(rc, remaining+1))
 		rc.Close()
 		if err != nil {
 			return nil, err
+		}
+		totalBytes += int64(len(data))
+		if totalBytes > maxImportUncompressedBytes {
+			return nil, fmt.Errorf("library archive exceeds maximum uncompressed size of %d bytes", maxImportUncompressedBytes)
 		}
 		files[f.Name] = data
 	}

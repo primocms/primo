@@ -135,7 +135,7 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				OwnerOnly:           ownerOnly(pb),
 				DomainProvider:      getDomainProvider().Name(),
 				DomainProviderReady: domainProviderReady(getDomainProvider()),
-				Capabilities:        []string{"agent_launch_v1", "cli_browser_login", "domains"},
+				Capabilities:        []string{"agent_launch_v1", "cli_browser_login", "domains", "import_chunks_v1"},
 				BaseDomain:          baseDomain(),
 			})
 		})

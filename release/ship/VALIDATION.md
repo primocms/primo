@@ -34,3 +34,24 @@ The initial post-migration CDN-dependent local runs were stopped after concrete 
 ## Shipping boundaries
 
 Final-head five-platform/native, three-engine source and exact-package workflows, Safari, framing and copied recovery must pass before code-readiness is claimed. MCP-first registry publication and stable lock/integrity refresh, final registry handoff, RC.13 hosted purchaser/ingress/realtime/mail qualification, selected host/support/recipients and first-client device/domain/operations or actual legacy migrations retain their scoped external gates. They cannot be claimed complete under the no-publication/no-deployment instruction.
+
+## October 27 batched import follow-up
+
+This revision addresses #1354 with CMS staging and the CLI archive identified
+by `INPUTS.json.batchedImports` and `tests/staging/rc8-packages.json`.
+
+- CLI source build and all 211 tests pass, zero skips, on Node 22.13.0 and 24.0.0.
+- Full CMS `go test ./...` passes on Go 1.26.10; focused chunked-import and
+  bounded-library tests also pass with the race detector.
+- The exact rebuilt CLI archive, installed from the CMS lockfile, passes the
+  real-CMS 36 MiB round-trip through a 256 KiB proxy. Coverage includes lost
+  chunk acknowledgements, both library commands, preview without mutation,
+  stable upload IDs, rejected stale final commits and removed staging files.
+- The same installed-package contract is now part of `tests/platform`, so
+  existing native-platform CI runs it against each candidate executable.
+
+The local CMS executable reused the previous candidate's generated frontend
+and common validation assets; this backend-only check does not replace a fresh
+full-source native build. The new head's existing native/browser qualification
+workflows must complete before release readiness or publication is claimed.
+No registry publication or deployment has been performed.

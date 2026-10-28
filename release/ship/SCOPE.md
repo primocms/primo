@@ -38,3 +38,19 @@ The user expanded RC.13 to include all current feature PRs: CMS #1341, #1355–1
 The prior frozen RC.13 source remains immutable historical evidence. This amended RC.13 revision must pass new source/native/exact-package qualification. The CLI/MCP archives are rebuilt unpublished candidates; their refreshed SHA-256 and integrity values identify the new bytes. Older green CI and the existing QA deployment do not attest these new bytes. No registry publication, main merge, production/QA deployment, email or invitation is part of this reconciliation.
 
 The [worktree inventory](editor-audit/worktree-inventory.json) records all 94 inspected checkouts. Preserved historical checkouts and the unfinished plugin experiment are not independent release inputs. Dependency-major bot PRs are tracked separately from feature PRs and are not silently mixed into this build.
+
+## October 27 proxy-safe pushes (#1354)
+
+The release now includes coordinated CMS/CLI batched archive transport for
+site push, preview, bootstrap and both library push entry points. Requests
+adapt from 1 MiB down to 64 KiB on proxy 413 responses, with checksum-verified
+idempotent chunk retries and a single guarded final import. Private bounded
+staging expires and never replaces content before commit. Library archive
+expansion now shares the site's 512 MiB budget.
+
+The new real-CMS regression sends a 36 MiB site through a proxy limited to
+256 KiB, including a lost chunk acknowledgement, pull/push round-trip, preview,
+both library commands, stable asset identities and a client edit between
+preflight and commit. Native candidate CI runs this against the bundled CLI.
+The amended CLI archive needs fresh candidate qualification; previous green
+runs and the existing QA deployment do not attest these bytes.
