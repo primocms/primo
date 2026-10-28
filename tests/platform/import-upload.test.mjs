@@ -53,7 +53,7 @@ test('real CMS through 256 KiB proxy: >32 MiB pull/push, replay, preview, librar
 			const resultHeaders = Object.fromEntries(result.headers); delete resultHeaders['content-encoding']; delete resultHeaders['transfer-encoding']
 			resultHeaders['content-length'] = String(resultBody.length)
 			response.writeHead(result.status, resultHeaders); response.end(resultBody)
-		} catch (error) { proxyError = error; response.writeHead(500); response.end(String(error)) }
+		} catch (error) { proxyError = error; response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' }); response.end('Proxy fixture failed') }
 	})
 	await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve))
 	const server = `http://127.0.0.1:${proxy.address().port}`

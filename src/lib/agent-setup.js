@@ -1,5 +1,5 @@
 // Kept in step with the coordinated archives in release/vendor.
-export const localDevelopmentRelease = Object.freeze({ cli: '0.3.0-rc.3', mcp: '0.1.11-rc.3', cms: 'v3.3.2-rc.13' })
+export const localDevelopmentRelease = Object.freeze({ cli: '0.3.0', mcp: '0.1.11', cms: 'v3.3.2' })
 
 /** An argument-array contract: server addresses and folders are data, never shell snippets. */
 export function agentSetupPlan(serverUrl, mode = 'files') {
