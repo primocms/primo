@@ -10,7 +10,8 @@ import { createHash } from 'node:crypto'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import { pathToFileURL, fileURLToPath } from 'node:url'
+import { agentSetupPlan } from '../../src/lib/agent-setup.js'
 export const exec = promisify(execFile)
 const sha = (bytes) => createHash('sha256').update(bytes).digest('hex')
 export async function freshInstall() {
@@ -54,16 +55,21 @@ export async function freshInstall() {
 			archive = `${name}.${ext}`,
 			base = `https://nodejs.org/dist/v${version}/`
 		console.log('Fresh profile: downloading official ' + archive)
-		const [bytes, sums] = await Promise.all([
-			fetch(base + archive, { signal: AbortSignal.timeout(120000) }).then(async (r) => {
-				assert.ok(r.ok)
-				return Buffer.from(await r.arrayBuffer())
-			}),
-			fetch(base + 'SHASUMS256.txt', { signal: AbortSignal.timeout(30000) }).then(async (r) => {
-				assert.ok(r.ok)
-				return r.text()
-			})
-		])
+		// Retry only official bootstrap transport failures, within the original
+		// two-minute download budget. Checksum mismatches never get retried.
+		const official = async (url, binary) => {
+			for (let attempt = 0; attempt < 2; attempt++) {
+				try {
+					const response = await fetch(url, { signal: AbortSignal.timeout(binary ? 60000 : 15000) })
+					assert.ok(response.ok, 'Official Node distribution HTTP ' + response.status)
+					return binary ? Buffer.from(await response.arrayBuffer()) : await response.text()
+				} catch (error) {
+					if (attempt === 1) throw error
+					console.log('Fresh profile: retrying official Node bootstrap download')
+				}
+			}
+		}
+		const [bytes, sums] = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
 		const expected = sums
 			.split('\n')
 			.find((line) => line.endsWith('  ' + archive))
@@ -71,10 +77,8 @@ export async function freshInstall() {
 		assert.equal(sha(bytes), expected, 'official Node archive checksum')
 		const downloaded = path.join(root, archive)
 		await fs.writeFile(downloaded, bytes)
-		if (process.platform === 'win32') {
-			const script = `Expand-Archive -LiteralPath '${downloaded.replaceAll("'", "''")}' -DestinationPath '${root.replaceAll("'", "''")}'`
-			await exec('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], { timeout: 120000 })
-		} else await exec('/usr/bin/tar', ['-xf', downloaded, '-C', root], { timeout: 120000 })
+		const tar = process.platform === 'win32' ? path.join(process.env.SystemRoot, 'System32', 'tar.exe') : '/usr/bin/tar'
+		await exec(tar, ['-xf', downloaded, '-C', root], { timeout: 120000 })
 		const bin = path.join(root, name, process.platform === 'win32' ? '' : 'bin'),
 			node = path.join(bin, process.platform === 'win32' ? 'node.exe' : 'node')
 		const npm = path.join(root, name, process.platform === 'win32' ? 'node_modules/npm/bin/npm-cli.js' : 'lib/node_modules/npm/bin/npm-cli.js')
@@ -113,11 +117,16 @@ export async function freshInstall() {
 			binaryBytes = await fs.readFile(binary),
 			requests = []
 		const asset = `primo_${process.platform === 'win32' ? 'windows' : process.platform}_${process.arch === 'x64' ? 'amd64' : process.arch}${process.platform === 'win32' ? '.exe' : ''}`
+		const pinnedURL = `https://github.com/primocms/primo/releases/download/v3.3.2-rc.13/${asset}`
+		const releaseURL = agentSetupPlan('https://onboarding.example.test').cmsRelease
 		feed = http.createServer((req, res) => {
 			requests.push(req.url)
 			if (req.url === '/latest') {
 				res.setHeader('Content-Type', 'application/json')
 				res.end(JSON.stringify({ tag_name: 'v3.3.2-rc.13' }))
+			} else if (req.url === '/candidate-release') {
+				res.setHeader('Content-Type', 'application/json')
+				res.end(JSON.stringify({ tag_name: 'v3.3.2-rc.13', assets: [{ name: asset, browser_download_url: pinnedURL }] }))
 			} else if (req.url === '/' + asset) res.end(binaryBytes)
 			else {
 				res.writeHead(404)
@@ -127,11 +136,27 @@ export async function freshInstall() {
 		await new Promise((resolve) => feed.listen(0, '127.0.0.1', resolve))
 		const origin = `http://127.0.0.1:${feed.address().port}`
 		const preload = path.join(root, 'candidate-feed.cjs')
+		const routesFile = path.join(root, 'candidate-release-routes.json')
 		await fs.writeFile(
-			preload,
-			`const original=globalThis.fetch;globalThis.fetch=(input,options)=>{let url=typeof input==='string'?input:input.url;const routes=${JSON.stringify({ 'https://api.github.com/repos/primocms/primo/releases/latest': origin + '/latest', ['https://github.com/primocms/primo/releases/latest/download/' + asset]: origin + '/' + asset })};return original(routes[url]||input,options)};`
+			routesFile,
+			JSON.stringify({
+				'https://api.github.com/repos/primocms/primo/releases/latest': origin + '/latest',
+				['https://github.com/primocms/primo/releases/latest/download/' + asset]: origin + '/' + asset,
+				[releaseURL]: origin + '/candidate-release',
+				[pinnedURL]: origin + '/' + asset
+			})
 		)
+		await fs.copyFile(new URL('./candidate-feed.cjs', import.meta.url), preload)
+		env.PRIMO_TEST_RELEASE_ROUTES = routesFile
 		env.NODE_OPTIONS = '--require ' + JSON.stringify(preload)
+		const installPinnedCMS = async () => {
+			const destination = path.join(home, 'candidate-cms', process.platform === 'win32' ? 'primo.exe' : 'primo')
+			await exec(node, [fileURLToPath(new URL('./install-candidate.mjs', import.meta.url)), releaseURL, destination, asset, pinnedURL], { env, timeout: 30000 })
+			assert.equal(sha(await fs.readFile(destination)), sha(binaryBytes), 'exact tagged CMS download checksum')
+			assert.match((await exec(destination, ['--version'], { env })).stdout, /v3\.3\.2-rc\.13/)
+			env.PRIMO_BINARY = destination
+			return destination
+		}
 		const { Client } = await import(pathToFileURL(require.resolve('@modelcontextprotocol/sdk/client/index.js')))
 		const { StdioClientTransport } = await import(pathToFileURL(require.resolve('@modelcontextprotocol/sdk/client/stdio.js')))
 		const connect = async (launch = { command: node, args: [mcp] }) => {
@@ -170,6 +195,7 @@ export async function freshInstall() {
 			cleanup,
 			evidence,
 			requests,
+			installPinnedCMS,
 			managedBinary: path.join(home, '.primo/bin', process.platform === 'win32' ? 'primo.exe' : 'primo')
 		}
 	} catch (error) {

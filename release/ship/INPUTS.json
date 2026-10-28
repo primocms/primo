@@ -569,5 +569,13 @@
       "CMS exit/error stops readiness waiting immediately with both streams captured",
       "background startup example retains early errors"
     ]
+  },
+  "localSecurityPatch": {
+    "package": "@primocms/deepmerge-patched",
+    "version": "4.3.1-primo.1",
+    "path": "release/vendor/deepmerge",
+    "advisory": "GHSA-gcqx-w48m-w2h4",
+    "implementationSha256": "9307c9aaeea8fcbbf97876d7e6b1177bb8cecadf5ad7a11ad7e9b5b6323fdec5",
+    "replacement": "root deepmerge npm override; no audit suppression"
   }
 }

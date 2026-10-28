@@ -13,6 +13,10 @@ The current integration target is [CMS #1363](https://github.com/primocms/primo/
 
 - Final handoff exposed stale imported group caches masking nested repeater edits on pull. Export now prioritizes structured child records, retains stored-only legacy groups and unmodeled legacy keys, and does not restore deleted modeled values. A regression fails on the previous source and passes with the fix. Native Safari now exercises the current owned move menu; recovery checks the current RC.13 version.
 
+## Onboarding qualification dependency refresh
+
+The October 27 advisory update changed the previous qualification's audit results. The strict gates found reachable GO-2026-6860 in x/net's HTML parser and GHSA-gcqx-w48m-w2h4 in the Svelte build plugin's merge dependency. CMS now uses x/net 0.62.0 and its required compatible transitive updates. There is no published patched deepmerge version; a private, explicitly renamed local fork applies the documented forbidden-key/data-property repair, retaining the original MIT license. A root npm override replaces the vulnerable implementation for all callers. Reproducer tests fail against upstream 4.3.1, then pass with the patch alongside nested-option/array/symbol/custom-merge compatibility checks. `release/vendor/deepmerge/README.md` records provenance, scope and removal criteria; INPUTS.json pins its implementation hash. No advisory exclusion or severity relaxation is added.
+
 ## Security gates
 
 Full npm audits for CMS, CLI and MCP report **zero vulnerabilities**, with no exclusions or lowered severity threshold. CMS and hosting govulncheck report **zero reachable and zero imported-package vulnerabilities**. The scanner additionally reports GO-2026-5932 for unmaintained OpenPGP code contained in x/crypto: this package is not imported or called, has no fixed module version, and remains module-only evidence. It is not suppressed; patched crypto versions are retained for the packages actually used.

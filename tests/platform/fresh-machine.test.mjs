@@ -134,6 +134,8 @@ test('fresh profile installs Node and exact packages, connects MCP, builds and r
 		assert.equal(JSON.parse((await ws.run(['status', '--json'])).stdout).pid, state.pid)
 		await stop(dev)
 		assert.equal(JSON.parse((await ws.run(['status', '--json'])).stdout).running, false)
+		await ws.installPinnedCMS()
+		ws.evidence.checks.push('exact tagged CMS installation for prereleases outside latest stable')
 		;({ state, url } = await start('cms'))
 		// An actual CMS source edit must reach the same file in visual-author mode.
 		const visualAuth = await fetch(url + '/api/primo/dev-auth', { method: 'POST' }).then((r) => r.json())
