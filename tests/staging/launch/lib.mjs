@@ -105,7 +105,10 @@ export async function request(c, value, {method='GET',token,body,headers={},befo
  const allowedMutation=(method==='POST' && u.pathname==='/api/collections/users/auth-with-password') || (method==='PATCH' && /^\/api\/collections\/page_section_entries\/records\/[a-z0-9]{15}$/.test(u.pathname))
  invariant(method==='GET' || (u.origin===c.cmsOrigin && allowedMutation),'This tool cannot publish, deploy, create users, or send mail')
  if(beforeRequest)beforeRequest()
+ const diagnosticStart=performance.now();let phase='headers',responseStatus=null
+ try{
  const response=await fetch(u,{method,redirect:'error',signal:AbortSignal.timeout(c.requestTimeoutMs),headers:{...headers,...(token?{Authorization:'Bearer '+token}:{}),...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body)})
+ phase='body';responseStatus=response.status
  const chunks=[];let bytes=0
  if(response.body)for await(const chunk of response.body) {
   bytes+=chunk.byteLength
@@ -114,6 +117,11 @@ export async function request(c, value, {method='GET',token,body,headers={},befo
  }
  const text=Buffer.concat(chunks).toString('utf8')
  return {status:response.status,ok:response.ok,headers:response.headers,text,json:()=>JSON.parse(text)}
+ }catch(error){
+  const diagnostic={utc:new Date().toISOString(),method,origin:u.origin,path:u.pathname,queryKeys:[...u.searchParams.keys()],phase,responseStatus,elapsedMs:performance.now()-diagnosticStart,errorName:error?.name,causeCode:error?.cause?.code||error?.code||null}
+  await fs.appendFile(path.resolve(c.baseDirectory,'request-failures.jsonl'),JSON.stringify(diagnostic)+'\n',{mode:0o600}).catch(()=>{})
+  throw error
+ }
 }
 export function apiUrl(c,pathname) {const u=new URL(pathname,c.cmsOrigin);invariant(u.origin===c.cmsOrigin,'API URL escaped origin');return u.href}
 export async function verifyTarget(c) {

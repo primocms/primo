@@ -1,0 +1,245 @@
+{
+  "environmentId": "primo-rc7-qa-6fbf902e30857f0729ec4cf1",
+  "disposable": true,
+  "cmsOrigin": "https://rc7-cms-disposable-rc7.up.railway.app",
+  "cmsProbePath": "/?_site=w46o8jsexo34ysi",
+  "publicPages": [
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=w46o8jsexo34ysi",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=is6yukaz2cm19dx",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=u6m4z1u8rw9a3py",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=vxh0bnzbhe4grrr",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=tn1rp6wg75r1t6g",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=llwmen5eg42n279",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=nv8z90ynfqtbbq0",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=u1p634yoai37q98",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=qfvyrp8jy1kq4zt",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    },
+    {
+      "url": "https://rc7-cms-disposable-rc7.up.railway.app/?_site=3q0m9rn29eihn14",
+      "headings": [
+        "QA section 0",
+        "QA section 1",
+        "QA section 2",
+        "QA section 3",
+        "QA section 4"
+      ]
+    }
+  ],
+  "requestTimeoutMs": 15000,
+  "outputDirectory": "../../../qa-soak-results",
+  "soak": {
+    "durationSeconds": 3600,
+    "minimumGateSeconds": 3600,
+    "workers": 10,
+    "loginIntervalMs": 1700,
+    "intervalMs": 10000,
+    "maxRequests": 100000,
+    "criteriaConfirmed": true,
+    "p95PublicMs": 1000,
+    "p95SaveRoundtripMs": 2000,
+    "maxErrorRate": 0,
+    "exclusiveScratchRecords": true
+  },
+  "actors": [
+    {
+      "name": "agency-01",
+      "userId": "7gi7go9pwhgn41p",
+      "siteId": "w46o8jsexo34ysi",
+      "pageId": "nkma057t0b6r8r2",
+      "sectionId": "w58q25s9vz4zo1s",
+      "fieldId": "vzxsxzlckffo30i",
+      "entryId": "rs6chtzz90mhwow",
+      "expectedOriginalValue": "QA scratch agency-01",
+      "emailEnv": "PRIMO_QA_EMAIL_01",
+      "passwordEnv": "PRIMO_QA_PASSWORD_01"
+    },
+    {
+      "name": "agency-02",
+      "userId": "f80hmpvj6ny22rm",
+      "siteId": "is6yukaz2cm19dx",
+      "pageId": "dkstw1bray0d7x2",
+      "sectionId": "m8ufhja4fti7u0s",
+      "fieldId": "bo5aa054mdueg0n",
+      "entryId": "ktbp0sdq2s8donl",
+      "expectedOriginalValue": "QA scratch agency-02",
+      "emailEnv": "PRIMO_QA_EMAIL_02",
+      "passwordEnv": "PRIMO_QA_PASSWORD_02"
+    },
+    {
+      "name": "agency-03",
+      "userId": "a9rnfisum0xd3pl",
+      "siteId": "u6m4z1u8rw9a3py",
+      "pageId": "sxrmx15hy259awp",
+      "sectionId": "wmopc1vll9zaqd9",
+      "fieldId": "wzdso0rdkga8q7k",
+      "entryId": "4wrh113ttr7fj9u",
+      "expectedOriginalValue": "QA scratch agency-03",
+      "emailEnv": "PRIMO_QA_EMAIL_03",
+      "passwordEnv": "PRIMO_QA_PASSWORD_03"
+    },
+    {
+      "name": "agency-04",
+      "userId": "5ups4ygkdsuydic",
+      "siteId": "vxh0bnzbhe4grrr",
+      "pageId": "6vkpijwcwb128ct",
+      "sectionId": "mgvmb5utfn60t51",
+      "fieldId": "lpm79ipr0y0ic15",
+      "entryId": "g1xv4fq20ngacxy",
+      "expectedOriginalValue": "QA scratch agency-04",
+      "emailEnv": "PRIMO_QA_EMAIL_04",
+      "passwordEnv": "PRIMO_QA_PASSWORD_04"
+    },
+    {
+      "name": "agency-05",
+      "userId": "55hzvl83ijxh6gp",
+      "siteId": "tn1rp6wg75r1t6g",
+      "pageId": "rhm6s7ly4bwlfrk",
+      "sectionId": "u2kydss3m8e1qye",
+      "fieldId": "5zb11lrvpioyut6",
+      "entryId": "fiorecoa8q162fb",
+      "expectedOriginalValue": "QA scratch agency-05",
+      "emailEnv": "PRIMO_QA_EMAIL_05",
+      "passwordEnv": "PRIMO_QA_PASSWORD_05"
+    },
+    {
+      "name": "agency-06",
+      "userId": "h9rgz1be4n0bvvc",
+      "siteId": "llwmen5eg42n279",
+      "pageId": "tal3a1dqsuut7id",
+      "sectionId": "2njsb0uyzzvmyzi",
+      "fieldId": "vuhx0silyst4m3x",
+      "entryId": "rgkantozscs9wtt",
+      "expectedOriginalValue": "QA scratch agency-06",
+      "emailEnv": "PRIMO_QA_EMAIL_06",
+      "passwordEnv": "PRIMO_QA_PASSWORD_06"
+    },
+    {
+      "name": "agency-07",
+      "userId": "59c8aav4pxmmr42",
+      "siteId": "nv8z90ynfqtbbq0",
+      "pageId": "6dhq27icedrdvz4",
+      "sectionId": "9qn2dila6fwyokn",
+      "fieldId": "hsyodis7xxwkxg9",
+      "entryId": "6y2kaiar0ejocyn",
+      "expectedOriginalValue": "QA scratch agency-07",
+      "emailEnv": "PRIMO_QA_EMAIL_07",
+      "passwordEnv": "PRIMO_QA_PASSWORD_07"
+    },
+    {
+      "name": "agency-08",
+      "userId": "g8nfti9cas5ljzi",
+      "siteId": "u1p634yoai37q98",
+      "pageId": "yuze706t84hjlm8",
+      "sectionId": "yfjx459gfs9ybcw",
+      "fieldId": "vcesudoma655bxo",
+      "entryId": "57sa1z5scd8f4hz",
+      "expectedOriginalValue": "QA scratch agency-08",
+      "emailEnv": "PRIMO_QA_EMAIL_08",
+      "passwordEnv": "PRIMO_QA_PASSWORD_08"
+    },
+    {
+      "name": "agency-09",
+      "userId": "pb57o9jlj9dm5cg",
+      "siteId": "qfvyrp8jy1kq4zt",
+      "pageId": "ewialfjdpsyzh2v",
+      "sectionId": "70six2dyxkjmvpl",
+      "fieldId": "6l2uk5scct1204x",
+      "entryId": "n7y2xfu4qy0tuhr",
+      "expectedOriginalValue": "QA scratch agency-09",
+      "emailEnv": "PRIMO_QA_EMAIL_09",
+      "passwordEnv": "PRIMO_QA_PASSWORD_09"
+    },
+    {
+      "name": "agency-10",
+      "userId": "256d96q5q2bjb39",
+      "siteId": "3q0m9rn29eihn14",
+      "pageId": "6mlxknepklg86fp",
+      "sectionId": "14gsbn6xsy9og4s",
+      "fieldId": "rzj1a732evya5kg",
+      "entryId": "7b1s2k5ahgm6nfp",
+      "expectedOriginalValue": "QA scratch agency-10",
+      "emailEnv": "PRIMO_QA_EMAIL_10",
+      "passwordEnv": "PRIMO_QA_PASSWORD_10"
+    }
+  ]
+}

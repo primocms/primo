@@ -7,6 +7,7 @@ export async function soak(c,{profile='read',env=process.env,signal}={}) {
  const runId=randomUUID(),start=performance.now(),stats={requests:0,publicMs:[],saveMs:[],cycles:0,errors:0},actors=[]
  const result={kind:'bounded-soak',runId,profile,status:'FAIL',published:false,deployed:false,mailSent:false,cleanup:[],checks:[]}
  let stop=false,limited=false,failure=null
+ console.log(JSON.stringify({event:'workload-run',runId}))
  const count=()=>{if(stats.requests>=c.soak.maxRequests){limited=true;throw Error('Request cap reached')}stats.requests++}
  const send=(url,options={})=>request(c,url,{...options,beforeRequest:count})
  const get=(collection,id,token)=>record(c,collection,id,token,{beforeRequest:count})

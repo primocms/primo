@@ -1,0 +1,33 @@
+name: Disposable QA RC13 full-hour soak
+on:
+  push:
+    branches: [codex/qa-cloud-soak-20261028]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: disposable-rc13-cloud-soak
+  cancel-in-progress: false
+jobs:
+  soak:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+      - name: Ten scoped QA editors for one uninterrupted hour
+        env:
+          PRIMO_QA_SCOPED_USERS: ${{ secrets.PRIMO_RC13_QA_SOAK_20261028 }}
+        run: node tests/staging/launch/qa-cloud-run.mjs
+      - name: Preserve sanitized result and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-rc13-full-hour-result
+          path: qa-soak-results/
+          if-no-files-found: warn
+          retention-days: 7
