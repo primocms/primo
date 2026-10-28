@@ -41,7 +41,30 @@ jobs:
       # Keep the strict audit gate independent so a finding does not prevent
       # collecting native/browser evidence for the same candidate source.
       - run: npm audit
+  bootstrap-distributions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+      - name: Verify official Node archives before fresh native installation
+        env:
+          PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tests/onboarding/distributions.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc13-node-distributions
+          path: node-distributions/
+          compression-level: 0
+          if-no-files-found: error
+
   native:
+    needs: bootstrap-distributions
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -88,11 +111,16 @@ jobs:
       - name: Build versioned native executable
         shell: bash
         run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.13 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-node-distributions
+          path: frozen-node
       - name: Exercise exact native candidate and installed CLI
         shell: bash
         env:
           PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
           PRIMO_TEST_CMS_BINARY: primo_${{ matrix.target }}
+          PRIMO_TEST_NODE_DISTRIBUTIONS: frozen-node
         run: node --test tests/platform/*.test.mjs
       - name: Retain tested bytes and provenance
         uses: actions/upload-artifact@v4
