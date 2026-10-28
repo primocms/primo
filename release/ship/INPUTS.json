@@ -601,5 +601,27 @@
       }
     },
     "note": "Current companion archives for proxy-safe batched imports. Earlier archive entries above are historical. New native/exact-package CI qualification is required before publication."
+  },
+  "siteFieldIntegration": {
+    "date": "2026-10-28",
+    "mcpHead": "5174e05",
+    "cliHead": "d29ae86",
+    "archives": {
+      "cms": {
+        "version": "v3.3.2-rc.13",
+        "previousFrozenSource": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+        "buildTime": "2026-10-25T00:00:00Z",
+        "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
+      },
+      "cli": {
+        "archive": "primo-cli-0.3.0-rc.3.tgz",
+        "sha256": "af6f476a81c876515cb488114951f1a66dfb6c8ff52106a91149299c004d15c9"
+      },
+      "mcp": {
+        "archive": "primo-mcp-0.1.11-rc.3.tgz",
+        "sha256": "d82dc39fec95b0ffd557d24731bdc106605c69923c46dc5a9c5d90aebec8a1cb"
+      }
+    },
+    "qualification": "Current candidate must pass fresh native/browser qualification; prior evidence remains historical."
   }
 }

@@ -3,7 +3,7 @@ import type { PageSection } from '$lib/common/models/PageSection'
 import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 import type { SiteSymbol } from '$lib/common/models/SiteSymbol'
 import { PRIMO_BASELINE_CSS } from '$lib/common/baseline-css'
-import { useContent } from '$lib/Content.svelte'
+import { useContent, assertSiteFieldReferences } from '$lib/Content.svelte'
 import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 import { processors } from '../builder/component'
 import { usePageData } from '../PageData.svelte'
@@ -37,6 +37,7 @@ export const usePublishSite = (site_id?: string) => {
 			try {
 				// Flush pending editor changes before capturing the draft revision.
 				await self.commit()
+				assertSiteFieldReferences(data.site, data.site_fields, [...data.site_fields, ...data.symbol_fields, ...data.page_type_fields])
 				const status_response = await fetch(publication_url, { headers })
 				// Older servers retain their legacy Publish endpoint. New servers
 				// serialize editor and CLI builds through the same revision checks.

@@ -55,3 +55,25 @@ and common validation assets; this backend-only check does not replace a fresh
 full-source native build. The new head's existing native/browser qualification
 workflows must complete before release readiness or publication is claimed.
 No registry publication or deployment has been performed.
+
+## October 28 site-field integration and held final packages
+
+Owning-site keys and field IDs now resolve consistently in browser publishing,
+MCP publication, static builds and partial imports. Missing/ambiguous references
+fail before publication artifacts are uploaded. IDs retain precedence over keys.
+
+Local current-source evidence: CMS source check has zero errors/warnings; all
+159 integration tests and full Go suite pass. CLI has 214 passing tests with
+zero skips on Node 22.13.0 and 24.0.0. MCP has 36 passing publishing/runtime
+regressions on both minimum runtime lines, plus Svelte resolution, null-image
+and protocol smoke checks. Fresh CMS frontend assets were built for this run.
+
+The rebuilt exact candidate MCP/CLI archives are in release/vendor with updated
+locks/manifests. The real site-field publication/round-trip/live-preservation
+contract is now part of the five-platform installed-package gate.
+
+Prepared stable MCP 0.1.11 / CLI 0.3.0 tarballs and integrity manifest live in
+final-packages/. Both exact tarballs passed a disposable offline installation
+and real-CMS site-field/proxy contracts. They remain unpublished. Final CMS
+native bytes, full current-head CI, hosted one-hour QA and actual registry
+handoff are still gates; no older run is promoted to cover these changed bytes.

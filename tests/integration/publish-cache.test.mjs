@@ -4,10 +4,11 @@ import { createHash, webcrypto } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
 import ts from 'typescript'
+import { loadResolver } from '../helpers/content-resolver.mjs'
 import { script_version, symbol_script_url } from '../../src/lib/workers/publish-assets.js'
 import { input_fingerprint, page_file_name, script_file_name, page_file_matches, cached_script_version } from '../../src/lib/workers/publish-cache.js'
 
-async function publisher({ failUpload = false, failCompile = false, failCollection, tracked = false, snapshot, headline = 'Headline' } = {}) {
+async function publisher({ failUpload = false, failCompile = false, failCollection, tracked = false, snapshot, headline = 'Headline', invalidReference = false } = {}) {
 	// Erase TypeScript and supply the worker's stores/runes as a loaded snapshot.
 	// Execute the real publication callback and page generator with controlled
 	// compiler/upload completion so regressions in their ordering are observable.
@@ -54,7 +55,8 @@ async function publisher({ failUpload = false, failCompile = false, failCollecti
 		useSvelteWorker: (_ready, _loaded, work) => ({ status: 'working', run: work }),
 		Sites: { one: () => site },
 		Pages: { one: (id) => snapshot.pages.find(page => page.id === id) },
-		usePageData: () => ({ data: { pages: snapshot.pages, symbols: snapshot.symbols, page_sections: snapshot.sections, page_type_sections: snapshot.layout } }),
+		assertSiteFieldReferences: (await loadResolver({}, {})).assertSiteFieldReferences,
+		usePageData: () => ({ data: { site, site_fields: [], symbol_fields: invalidReference ? [{ id: 'broken-ref', key: 'navigation', symbol: 'hero', type: 'site-field', config: { field: 'missing-nav' } }] : [], page_type_fields: [], pages: snapshot.pages, symbols: snapshot.symbols, page_sections: snapshot.sections, page_type_sections: snapshot.layout } }),
 		useContent: (entity, options) => snapshot.content?.(entity, options) ?? ({ en: { headline } }),
 		self: {
 			commit: async () => {},
@@ -268,4 +270,12 @@ test('inline hydration props escape embedded script tags without changing source
 	const props = html.match(/props: (.*?) \}\);/s)[1]
 	assert.equal(props.includes('<'), false)
 	assert.equal(JSON.parse(props).headline, headline)
+})
+
+test('browser unresolved site-field preflight rejects before uploads or activation', async () => {
+ const build = await publisher({ tracked: true, invalidReference: true })
+ build.release()
+ await assert.rejects(build.worker.run(), /missing-nav.*hero.*navigation.*broken-ref.*config.field.*site\/fields.yaml/)
+ assert.equal(build.uploads.length, 0)
+ assert.deepEqual(build.events, [])
 })

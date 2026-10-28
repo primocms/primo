@@ -54,3 +54,11 @@ both library commands, stable asset identities and a client edit between
 preflight and commit. Native candidate CI runs this against the bundled CLI.
 The amended CLI archive needs fresh candidate qualification; previous green
 runs and the existing QA deployment do not attest these bytes.
+
+## October 28 site-field resolution
+
+The release includes consistent owning-site key/ID resolution and publication
+preflight diagnostics across MCP, CLI and CMS, plus partial-import key lookup.
+Current candidate archives/locks are refreshed. Stable npm package artifacts
+are prepared under final-packages/ and remain unpublished. Their manifest
+separates offline package verification from pending registry/native/hosted gates.

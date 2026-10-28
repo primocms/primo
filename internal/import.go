@@ -697,6 +697,14 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 
 	// Import site fields FIRST so we can resolve site-field references in blocks
 	siteFieldKeyToId := make(map[string]string)
+	// Partial block uploads must also resolve portable keys against existing roots.
+	existingSiteFields, err := app.FindRecordsByFilter("site_fields", "site = {:site} && parent = ''", "", 0, 0, dbx.Params{"site": siteId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to load site fields: %w", err)
+	}
+	for _, field := range existingSiteFields {
+		siteFieldKeyToId[field.GetString("key")] = field.Id
+	}
 	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		if !previewOnly {
 			var err error
@@ -1532,8 +1540,21 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 				if fieldType == "site-field" {
 					if configMap, ok := config.(map[string]interface{}); ok {
 						if fieldName, ok := configMap["field"].(string); ok && fieldName != "" {
-							if fieldId, found := siteFieldKeyToId[fieldName]; found {
-								configMap["field"] = fieldId
+							// IDs take precedence when an ID also happens to be a key.
+							resolved := ""
+							for _, id := range siteFieldKeyToId {
+								if id == fieldName {
+									resolved = id
+									break
+								}
+							}
+							if resolved == "" {
+								resolved = siteFieldKeyToId[fieldName]
+							}
+							if resolved != "" {
+								configMap["field"] = resolved
+							} else {
+								*warnings = append(*warnings, ImportWarning{File: sourceFile, Path: fieldPath + ".config.field", Field: fieldKey, Block: displayName, Message: fmt.Sprintf("Unresolved site-field reference %q. Use the ID or unique key of a top-level field in site/fields.yaml; publication will fail until this is corrected.", fieldName)})
 							}
 						}
 					}

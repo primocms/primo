@@ -4,7 +4,7 @@ import fs from 'fs/promises'
 import os from 'os'
 import path from 'path'
 
-const REPO_ROOT = path.resolve('node_modules/primo-cli')
+const REPO_ROOT = path.resolve(process.env.PRIMO_TEST_CLI_ROOT || 'node_modules/primo-cli')
 const package_json = JSON.parse(readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'))
 export const CLI_ENTRY = path.join(REPO_ROOT, package_json.bin.primo)
 
