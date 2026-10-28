@@ -290,6 +290,9 @@ type ImportResult struct {
 }
 
 func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
+	if err := registerImportUploads(pb); err != nil {
+		return err
+	}
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Preview endpoint - shows what would change
 		serveEvent.Router.POST("/api/primo/import/{siteId}/preview", func(e *core.RequestEvent) error {
@@ -323,16 +326,9 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.BadRequestError("Failed to parse form", err)
 	}
 
-	file, _, err := e.Request.FormFile("file")
+	zipData, err := readImportArchive(pb, e, false)
 	if err != nil {
-		return e.BadRequestError("No file uploaded", err)
-	}
-	defer file.Close()
-
-	// Read ZIP data
-	zipData, err := io.ReadAll(file)
-	if err != nil {
-		return e.InternalServerError("Failed to read file", err)
+		return err
 	}
 
 	// Pull name/group from site.yaml in the zip. These populate required
