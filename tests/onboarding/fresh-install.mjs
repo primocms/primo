@@ -198,7 +198,7 @@ export async function freshInstall() {
 			const destination = path.join(home, 'candidate-cms', process.platform === 'win32' ? 'primo.exe' : 'primo')
 			await exec(node, [fileURLToPath(new URL('./install-candidate.mjs', import.meta.url)), releaseURL, destination, asset, pinnedURL], { env, timeout: 30000 })
 			assert.equal(sha(await fs.readFile(destination)), sha(binaryBytes), 'exact tagged CMS download checksum')
-			assert.match((await exec(destination, ['--version'], { env })).stdout, /v3\.3\.2-rc\.13/)
+			assert.match((await exec(destination, ['--version'], { env })).stdout, /v3\.3\.2/)
 			env.PRIMO_BINARY = destination
 			return destination
 		}

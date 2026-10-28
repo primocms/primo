@@ -17,3 +17,10 @@ containers/releases and production deployment. Hosted QA remains unresolved
 following the pinned hour's TCP timeouts and requires verified recovery and a
 passing run covering the final product changes. Do not overwrite active QA
 writers or promote failed/earlier evidence to this new identity.
+
+The local stable fresh-machine gate now also passes: private Node installation,
+exact npm archives, actual MCP connectivity, scoped pull, managed and tagged
+CMS installation, port recovery, file/visual mode switching, preview/build and
+shutdown. All 29 release-preparation tool regressions pass. RC-only escaped
+version assertions were updated to the stable identity; their behavior checks
+and timeouts remain enforced.

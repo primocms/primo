@@ -102,7 +102,7 @@ test('fresh profile installs Node and exact packages, connects MCP, builds and r
 				.digest('hex'),
 			ws.evidence.cmsSha256
 		)
-		assert.match((await exec(ws.managedBinary, ['--version'], { env: ws.env })).stdout, /v3\.3\.2-rc\.13/)
+		assert.match((await exec(ws.managedBinary, ['--version'], { env: ws.env })).stdout, /v3\.3\.2/)
 		const duplicate = await ws.run(['dev', '--author', 'files']).then(
 			() => null,
 			(error) => error

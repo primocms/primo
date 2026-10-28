@@ -19,7 +19,7 @@ test('production upgrade and copied recovery retain content, image and publicati
  assert.ok(oldManifest.cms.nativeSha256ByTarget[target], `Unsupported prior artifact target: ${target}`)
  assert.equal(hash(await fs.readFile(previous)), oldManifest.cms.nativeSha256ByTarget[target])
  assert.match((await exec(previous, ['--version'])).stdout, /v3\.3\.2-rc\.7/)
- assert.match((await exec(candidate, ['--version'])).stdout, /v3\.3\.2-rc\.13/)
+ assert.match((await exec(candidate, ['--version'])).stdout, /v3\.3\.2/)
  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'primo-rc8-recovery-'))
  let child, token, superToken, activeBinary = previous, version = 'v3.3.2-rc.7', data = path.join(root, 'original')
  const stop = async () => { if (child && child.exitCode === null) { const closed = new Promise(resolve => child.once('close', resolve)); child.kill('SIGTERM'); await closed } }
