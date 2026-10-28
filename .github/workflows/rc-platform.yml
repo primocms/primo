@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/rc-platform.yml'
       - 'tests/platform/**'
+      - 'tests/onboarding/**'
       - 'tests/e2e/**'
       - 'tests/staging/rc8/**'
       - 'tests/security/**'
@@ -102,6 +103,7 @@ jobs:
             platform-result.json
             production-result.json
             hosted-native-result.json
+            fresh-machine-result.json
           if-no-files-found: error
 
   exact-browser:
@@ -157,6 +159,9 @@ jobs:
       - name: Run the actual packaged agent and client handoff
         if: ${{ !cancelled() }}
         run: node --test tests/staging/rc8/handoff.test.mjs
+      - name: Verify agent onboarding from an empty local profile
+        if: ${{ !cancelled() }}
+        run: node --test tests/onboarding/browser.test.mjs
       - name: Verify fresh production password sign-in and scoped dashboard
         if: ${{ !cancelled() }}
         run: node --test tests/presence/auth.test.mjs
@@ -182,6 +187,7 @@ jobs:
             presence-${{ matrix.browser }}.json
             cache-${{ matrix.browser }}.json
             auth-${{ matrix.browser }}.json
+            onboarding-${{ matrix.browser }}.json
 
   native-safari:
     needs: native

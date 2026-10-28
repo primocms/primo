@@ -59,3 +59,12 @@ Repeated local diagnostics reproduced a separate fixture race: preview layout br
 Native Safari qualification captured a ResizeObserver delivery loop on the Sites dashboard. The helper now schedules resize-driven scrolling in the next animation frame, cancels queued layout work on interaction/update/destruction, and avoids observing HEAD when the document is the scroller. The original zero-error Safari assertion remains enabled; dashboard history/preview scenarios also assert zero unhandled browser errors.
 
 The same Safari delivery diagnostic also contains the SitePreview thumbnail observer. Thumbnail measurement now uses the existing coalesced resize task (already used by editor previews), with cancellation on destroy and guards for zero-size hidden containers. Both observed layout writers are deferred; browser errors are not filtered.
+
+
+## Agent-assisted no-terminal onboarding
+
+Develop locally now offers a server-specific agent setup prompt with a choice of file or visual authoring. It covers supported Node installation, exact matching CLI/MCP packages, browser consent, an empty destination folder, actual tool verification, workspace readiness, preview, safe port selection and recovery. Manual commands remain expandable; blocked clipboard access has a selectable-text fallback. No password/token is embedded in the handoff, and setup does not push or publish hosted content.
+
+Fresh-profile release gates install official portable Node plus unchanged package archives with no developer PATH, credentials or package cache. Native tests cover five OS/architecture targets; browser handoffs cover all three release engines with real production-mode sign-in and consent. See tests/onboarding/README.md for the exact scope and unpublished-candidate delivery fixture. Updated candidate results are recorded on the release PR/CI; previous qualifications apply only to their recorded source commit.
+
+The new fresh-profile mode-switch regression reproduced an existing source-export defect: imported raw block source took precedence over subsequent CMS HTML/CSS/JavaScript edits. Site and shared-library exports now retain imported bytes only while their parsed values still match the current editable columns. The focused regression fails on the prior implementation for both export paths and preserves exact original bytes when unchanged; it also verifies changes and deletion of individual source columns.

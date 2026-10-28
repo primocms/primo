@@ -114,33 +114,7 @@ func exportLibraryToZip(pb core.App) ([]byte, error) {
 			blockFolder := uniqueSanitizedName(symbol.GetString("name"), symbol.Id, usedBlockFolders)
 			basePath := fmt.Sprintf("library/%s/%s", groupFolder, blockFolder)
 
-			raw := symbol.GetString("raw_source")
-			var output []byte
-			if raw != "" {
-				output = []byte(raw)
-			} else {
-				html := symbol.GetString("html")
-				css := symbol.GetString("css")
-				js := symbol.GetString("js")
-
-				var code strings.Builder
-				if js != "" {
-					code.WriteString("<script>\n")
-					code.WriteString(js)
-					code.WriteString("\n</script>\n\n")
-				}
-				if html != "" {
-					code.WriteString(html)
-				}
-				if css != "" {
-					code.WriteString("\n\n<style>\n")
-					code.WriteString(css)
-					code.WriteString("\n</style>")
-				}
-				if code.Len() > 0 {
-					output = []byte(code.String())
-				}
-			}
+			output := exportComponentSource(symbol)
 
 			if len(output) > 0 {
 				if err := writeFileToZip(zw, basePath+"/component.svelte", output); err != nil {

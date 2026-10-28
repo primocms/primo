@@ -18,7 +18,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus, Terminal, Check, Copy } from 'lucide-svelte'
+	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus, Terminal } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
@@ -30,6 +30,7 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
+	import { agentSetupPrompt, localDevelopmentRelease } from '$lib/agent-setup.js'
 	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
@@ -240,30 +241,29 @@
 
 	let is_creating_site = $state(false)
 
-	// "Develop locally" dialog — the in-product path from the CMS to the
-	// file-based (CLI) workflow: pull → edit → push. The server URL is
-	// pre-filled so editors can copy a working command without knowing the
-	// CLI already.
 	let is_develop_locally_open = $state(false)
+	let local_author_mode = $state('files')
+	let setup_copy_error = $state(false)
 	const server_url = $derived(self.instance?.baseURL || (typeof location !== 'undefined' ? location.origin : ''))
-	type DevelopStep = { label: string; command?: string; note?: string }
-	const develop_steps: DevelopStep[] = $derived([
-		{ label: 'Install the CLI', command: 'npm install -g primo-cli' },
-		{ label: 'Pull this server to your machine', command: `primo pull -s ${server_url}`, note: "You'll be prompted to log in the first time." },
-		{ label: 'Edit the files locally', note: 'Run `primo dev` in the new folder to edit with the CMS, or edit the files directly with your editor or an AI agent.' },
-		{ label: 'Push your changes back to the server', command: 'primo push' }
+	const setup_prompt = $derived(server_url ? agentSetupPrompt(server_url, local_author_mode) : 'Loading this server…')
+	const develop_steps = $derived([
+		{ label: 'Install the matching CLI', command: `npm install -g primo-cli@${localDevelopmentRelease.cli}` },
+		{ label: 'Approve access in your browser (replace SERVER_ADDRESS below)', command: 'primo login --no-browser --server SERVER_ADDRESS' },
+		{ label: 'Pull into an empty workspace folder (replace both placeholders)', command: 'primo pull SERVER_ADDRESS EMPTY_FOLDER' },
+		{ label: 'Start local development from the workspace root', command: `primo dev --author ${local_author_mode}` }
 	])
 
 	let copied_command: string | null = $state(null)
 	let copied_timeout: ReturnType<typeof setTimeout> | undefined
 	async function copy_command(command: string) {
 		try {
+			setup_copy_error = false
 			await navigator.clipboard.writeText(command)
 			copied_command = command
 			if (copied_timeout) clearTimeout(copied_timeout)
 			copied_timeout = setTimeout(() => (copied_command = null), 1500)
 		} catch (error) {
-			console.error('Failed to copy command:', error)
+			setup_copy_error = true
 		}
 	}
 	$effect(() => () => clearTimeout(copied_timeout))
@@ -612,51 +612,43 @@
 {/if}
 
 <Dialog.Root bind:open={is_develop_locally_open}>
-	<Dialog.Content class="sm:max-w-[525px] pt-12 gap-0">
-		<h2 class="text-lg font-semibold leading-none tracking-tight">Develop locally</h2>
-		<p class="text-muted-foreground text-sm mb-6">Pull this server's sites to your machine to edit them as files. Run these in your terminal:</p>
-
-		<div class="space-y-4">
-			{#each develop_steps as step, i}
-				<div class="flex gap-4">
-					<div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">{i + 1}</div>
-					<div class="min-w-0 flex-1">
-						<h3 class="font-medium text-sm mb-1">{step.label}</h3>
-						{#if step.command}
-							{@const command = step.command}
-							<button
-								type="button"
-								onclick={() => copy_command(command)}
-								class="group flex w-full items-center justify-between gap-2 rounded-md bg-[#111] px-3 py-2 text-left font-mono text-xs text-muted-foreground hover:text-foreground"
-							>
-								<span class="truncate">{command}</span>
-								{#if copied_command === command}
-									<Check class="h-3.5 w-3.5 flex-shrink-0 text-green-500" />
-								{:else}
-									<Copy class="h-3.5 w-3.5 flex-shrink-0 opacity-50 group-hover:opacity-100" />
-								{/if}
-							</button>
-						{/if}
-						{#if step.note}
-							<p class="text-muted-foreground text-xs mt-1">{step.note}</p>
-						{/if}
-					</div>
-				</div>
-			{/each}
-		</div>
-
-		<p class="text-muted-foreground text-xs mt-6">Pulling copies every site on this server into the current folder.</p>
-
-		<Dialog.Footer class="mt-6 sm:justify-between sm:items-center">
-			<a
-				href="https://docs.primo.build/getting-started/installation"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4"
-			>
-				View docs
-			</a>
-			<Button type="button" onclick={() => (is_develop_locally_open = false)}>Okay</Button>
+	<Dialog.Content class="sm:max-w-[640px] pt-12 gap-4">
+		<Dialog.Title>Develop locally</Dialog.Title>
+		<p class="text-muted-foreground text-sm">Let your coding agent set up Primo and run the local server. You can stay in your agent chat and browser.</p>
+		<fieldset class="space-y-2">
+			<legend class="text-sm font-medium mb-2">How would you like to work?</legend>
+			<label class="flex items-start gap-3 rounded-md border p-3 text-sm cursor-pointer">
+				<input type="radio" name="local-author-mode" value="files" bind:group={local_author_mode} class="mt-1" />
+				<span><strong class="block">Build with my agent</strong><span class="text-muted-foreground">Your agent edits the files. The visual CMS is read-only.</span></span>
+			</label>
+			<label class="flex items-start gap-3 rounded-md border p-3 text-sm cursor-pointer">
+				<input type="radio" name="local-author-mode" value="cms" bind:group={local_author_mode} class="mt-1" />
+				<span><strong class="block">Edit in the visual CMS</strong><span class="text-muted-foreground">Your visual edits are saved to local files. Ask your agent to switch modes when needed.</span></span>
+			</label>
+		</fieldset>
+		<ol class="list-decimal pl-5 space-y-1 text-sm">
+			<li>Copy the setup prompt into an agent that can run commands on your computer.</li>
+			<li>Choose an empty folder and approve any installation or file-access requests.</li>
+			<li>Sign in and approve access in your browser, then open the local link your agent provides.</li>
+		</ol>
+		<p class="text-muted-foreground text-xs">This copies the sites and shared library your account can access on this server. Your agent checks Node and Primo, connects its tools, and verifies startup. Hosted content is unchanged until you explicitly request a push or publication.</p>
+		<label for="primo-agent-setup" class="text-sm font-medium">Setup prompt for your agent</label>
+		<textarea id="primo-agent-setup" readonly value={setup_prompt} rows={5} class="w-full min-w-0 resize-y rounded-md border bg-[#111] p-3 text-xs leading-relaxed" spellcheck="false"></textarea>
+		<Button type="button" onclick={() => copy_command(setup_prompt)}>{copied_command === setup_prompt ? 'Prompt copied' : 'Copy agent setup prompt'}</Button>
+		{#if setup_copy_error}<p role="alert" class="text-sm">Copying was blocked. Select the setup prompt above and copy it into your agent.</p>{/if}
+		<details class="text-sm">
+			<summary class="cursor-pointer text-muted-foreground">Manual terminal setup</summary>
+			<div class="space-y-3 mt-3">
+				<p class="text-xs break-all">Server address: {server_url}</p>
+				{#each develop_steps as step}
+					<div><p class="text-xs mb-1">{step.label}</p><code class="block whitespace-pre-wrap break-all rounded bg-[#111] p-2 text-xs">{step.command}</code></div>
+				{/each}
+				<p class="text-xs text-muted-foreground">Requires Node 22.13+ on the 22.x line or Node 24+. Browser approval requires HTTPS outside this computer. Use the matching published release; an unpublished candidate cannot be installed from npm yet.</p>
+			</div>
+		</details>
+		<Dialog.Footer class="sm:justify-between sm:items-center">
+			<a href="https://docs.primo.build/getting-started/installation#let-your-agent-set-up-a-local-workspace" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4">View setup guide</a>
+			<Button type="button" variant="outline" onclick={() => (is_develop_locally_open = false)}>Done</Button>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

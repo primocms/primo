@@ -272,36 +272,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		symbolName := recordFolder(symbol)
 		symbolNames[symbol.Id] = symbolName
 
-		// Prefer the raw bytes captured at import time so the file
-		// round-trips losslessly. Fall back to reconstructing from the
-		// parsed columns for symbols imported before raw_source existed.
-		raw := symbol.GetString("raw_source")
-		var output []byte
-		if raw != "" {
-			output = []byte(raw)
-		} else {
-			html := symbol.GetString("html")
-			css := symbol.GetString("css")
-			js := symbol.GetString("js")
-
-			var code strings.Builder
-			if js != "" {
-				code.WriteString("<script>\n")
-				code.WriteString(js)
-				code.WriteString("\n</script>\n\n")
-			}
-			if html != "" {
-				code.WriteString(html)
-			}
-			if css != "" {
-				code.WriteString("\n\n<style>\n")
-				code.WriteString(css)
-				code.WriteString("\n</style>")
-			}
-			if code.Len() > 0 {
-				output = []byte(code.String())
-			}
-		}
+		output := exportComponentSource(symbol)
 
 		if len(output) > 0 {
 			if err := writeFileToZip(zw, fmt.Sprintf("blocks/%s/component.svelte", symbolName), output); err != nil {
@@ -1432,4 +1403,30 @@ func buildSectionContent(
 	}
 
 	return &orderedMap{keys: keys, values: values}
+}
+
+// exportComponentSource retains imported formatting only while it still describes
+// the current editable columns. A CMS code edit leaves raw_source as the import
+// receipt; blindly exporting that receipt would undo the edit on the next sync.
+func exportComponentSource(symbol *core.Record) []byte {
+	html, css, js := symbol.GetString("html"), symbol.GetString("css"), symbol.GetString("js")
+	if raw := symbol.GetString("raw_source"); raw != "" {
+		rawHTML, rawCSS, rawJS := parseComponent(raw)
+		if rawHTML == html && rawCSS == css && rawJS == js {
+			return []byte(raw)
+		}
+	}
+	var code strings.Builder
+	if js != "" {
+		code.WriteString("<script>\n")
+		code.WriteString(js)
+		code.WriteString("\n</script>\n\n")
+	}
+	code.WriteString(html)
+	if css != "" {
+		code.WriteString("\n\n<style>\n")
+		code.WriteString(css)
+		code.WriteString("\n</style>")
+	}
+	return []byte(code.String())
 }

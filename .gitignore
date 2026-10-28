@@ -69,3 +69,7 @@ internal/SPEC-*.md
 
 # Generated local browser/handoff evidence
 /tests/staging/evidence/
+
+# Generated onboarding qualification evidence
+/onboarding-*.json
+/fresh-machine-result.json
