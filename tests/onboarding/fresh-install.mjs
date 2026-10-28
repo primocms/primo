@@ -55,19 +55,39 @@ export async function freshInstall() {
 			archive = `${name}.${ext}`,
 			base = `https://nodejs.org/dist/v${version}/`
 		console.log('Fresh profile: downloading official ' + archive)
-		// Retry only official bootstrap transport failures, within the original
-		// two-minute download budget. Checksum mismatches never get retried.
+		// Use the OS HTTPS downloader with IPv4: hosted Mac runners can stall in
+		// Node's external fetch transport. Keep TLS verification, checksum
+		// validation and the original two-minute bootstrap download budget.
+		const curl = process.platform === 'win32' ? path.join(process.env.SystemRoot, 'System32', 'curl.exe') : '/usr/bin/curl'
 		const official = async (url, binary) => {
-			for (let attempt = 0; attempt < 2; attempt++) {
-				try {
-					const response = await fetch(url, { signal: AbortSignal.timeout(binary ? 60000 : 15000) })
-					assert.ok(response.ok, 'Official Node distribution HTTP ' + response.status)
-					return binary ? Buffer.from(await response.arrayBuffer()) : await response.text()
-				} catch (error) {
-					if (attempt === 1) throw error
-					console.log('Fresh profile: retrying official Node bootstrap download')
-				}
-			}
+			const file = path.join(root, binary ? archive : 'SHASUMS256.txt')
+			await exec(
+				curl,
+				[
+					'--ipv4',
+					'--fail',
+					'--location',
+					'--proto',
+					'=https',
+					'--proto-redir',
+					'=https',
+					'--tlsv1.2',
+					'--connect-timeout',
+					'15',
+					'--max-time',
+					'55',
+					'--retry',
+					'1',
+					'--retry-all-errors',
+					'--retry-delay',
+					'1',
+					'--output',
+					file,
+					url
+				],
+				{ timeout: 120000, maxBuffer: 1024 * 1024 }
+			)
+			return binary ? fs.readFile(file) : fs.readFile(file, 'utf8')
 		}
 		const [bytes, sums] = await Promise.all([official(base + archive, true), official(base + 'SHASUMS256.txt', false)])
 		const expected = sums
