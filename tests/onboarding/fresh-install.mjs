@@ -64,6 +64,7 @@ export async function freshInstall() {
 			await exec(
 				curl,
 				[
+					'--disable',
 					'--ipv4',
 					'--fail',
 					'--location',
