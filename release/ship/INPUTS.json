@@ -646,5 +646,27 @@
       }
     },
     "qualification": "Local real-CMS browser/Node serialization parity and all 214 CLI tests pass on Node 22.13/24.0; renewed full native/browser qualification is required for these exact archives. Prior source and archive evidence remains historical."
+  },
+  "rendererUpgradeRegressionIntegration": {
+    "date": "2026-10-29",
+    "mcpHead": "bf426e47fc9625e03f1a7551a50885561f508238",
+    "cliHead": "b87b641f14f719419a9e392f5ca2fa5afc984875",
+    "archives": {
+      "cms": {
+        "version": "v3.3.2-rc.13",
+        "previousFrozenSource": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+        "buildTime": "2026-10-25T00:00:00Z",
+        "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
+      },
+      "cli": {
+        "archive": "primo-cli-0.3.0-rc.3.tgz",
+        "sha256": "7a9c97d8fe5ab96c674a4b5d9407517bdfd3f7b9584e6976230e867ce8692c3c"
+      },
+      "mcp": {
+        "archive": "primo-mcp-0.1.11-rc.3.tgz",
+        "sha256": "8cdfb61e49c2d23a2436b81357139893ea67663134ec5e642bebd455579ec7b2"
+      }
+    },
+    "qualification": "Only shipped MCP change versus 830559a is the test script declaration in package metadata. All non-metadata shipped files and CLI tarball are byte-identical; renderer-upgrade regression and MCP CI pass. Renewed exact-package native qualification is required."
   }
 }
