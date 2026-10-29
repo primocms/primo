@@ -12,9 +12,9 @@
       "archive": "primo-mcp-0.1.11.tgz",
       "version": "0.1.11",
       "sourceArchive": "primo-mcp-0.1.11-rc.3.tgz",
-      "sourceSHA256": "a3c0330e149adc2afe765196144b1a4fd3e97659a7f003d4c549f0a27def1503",
-      "sha256": "641d75c1c28b1f38e3618a45b28c75691c06b862bbc168017c74555206aeaf41",
-      "integrity": "sha512-8Too0p0Jn9DxcgRdEmcG26qhWoC25glT9lDNt/orLoNRFQF7QV87Kg9w1HQq8jwPyx6/yn4RKHxJ1aCHZAjTeQ==",
+      "sourceSHA256": "8cdfb61e49c2d23a2436b81357139893ea67663134ec5e642bebd455579ec7b2",
+      "sha256": "816f880d63699a53b00f6d3f45ae6eced10ef76369375b48a2f49a258ef60c2b",
+      "integrity": "sha512-LtWTwB7N5wnJBYWIITR30H7rlTCSHUrb9ukQZpFVA3voMMjM4fl0hYIY8pijsfFquL4DzmKUxtLkMYzyERwDqg==",
       "files": 129
     },
     "cli": {
