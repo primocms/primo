@@ -1562,6 +1562,10 @@ func updateFieldConfigReferences(app core.App, collName string, fieldMap, pageTy
 func updateEntryValueReferences(app core.App, collName string, fieldMap, pageMap, uploadMap IDMap, entryMap IDMap) {
 	cloneLog("[updateEntryValueReferences] Starting for collection: %s, pageMap has %d entries", collName, len(pageMap))
 
+	// Repeater entries share fields. Cache types, including missing fields,
+	// rather than querying up to three collections for every entry.
+	fieldTypes := make(map[string]string)
+
 	// Only update entries we just created (in entryMap)
 	for _, newId := range entryMap {
 		rec, err := app.FindRecordById(collName, newId)
@@ -1575,13 +1579,17 @@ func updateEntryValueReferences(app core.App, collName string, fieldMap, pageMap
 		}
 
 		// Get the field to check its type
-		var fieldType string
-		for _, fieldColl := range []string{"site_fields", "site_symbol_fields", "page_type_fields"} {
-			field, err := app.FindRecordById(fieldColl, fieldId)
-			if err == nil {
-				fieldType = field.GetString("type")
-				break
+		fieldType, cached := fieldTypes[fieldId]
+		if !cached {
+			for _, fieldColl := range []string{"site_fields", "site_symbol_fields", "page_type_fields"} {
+				field, err := app.FindRecordById(fieldColl, fieldId)
+				if err == nil {
+					fieldType = field.GetString("type")
+					break
+				}
 			}
+
+			fieldTypes[fieldId] = fieldType
 		}
 
 		value := rec.Get("value")

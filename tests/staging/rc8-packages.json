@@ -7,10 +7,10 @@
   },
   "cli": {
     "archive": "primo-cli-0.3.0.tgz",
-    "sha256": "fb952dbd90603c30f6e217d92a39c56f33dd157255f65ff03bb1879c13a3e1b0"
+    "sha256": "249764769cd2ba488ecd39d3dec6d39dbc49621e3ad293ae704c16e2ca29ac46"
   },
   "mcp": {
     "archive": "primo-mcp-0.1.11.tgz",
-    "sha256": "56640b2fa0a23a936d7b37b92f4d7774d39ae397dc05444b567f019b573aaf68"
+    "sha256": "641d75c1c28b1f38e3618a45b28c75691c06b862bbc168017c74555206aeaf41"
   }
 }

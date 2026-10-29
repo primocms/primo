@@ -6,6 +6,11 @@ import { seedFixtureSite } from './helpers/seed'
 async function dragPage(page: Page, source: Locator, target: Locator, edge: 'top' | 'bottom') {
 	await source.scrollIntoViewIfNeeded()
 	await target.scrollIntoViewIfNeeded()
+	// A previous reorder updates DOM order before its FLIP animation finishes.
+	// Hover waits for stable geometry so the next native drag picks up the
+	// requested row rather than a sibling moving through its old coordinates.
+	await target.hover()
+	await source.hover()
 	const start = (await source.boundingBox())!
 	const end = (await target.boundingBox())!
 	await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)

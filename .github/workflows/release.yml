@@ -7,9 +7,11 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build:
+    if: ${{ !contains(github.ref_name, '-') }}
     strategy:
       matrix:
         include:
@@ -75,8 +77,52 @@ jobs:
           name: primo_${{ matrix.goos }}_${{ matrix.goarch }}
           path: primo_*
 
+  candidate:
+    if: contains(github.ref_name, '-')
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [linux_amd64, linux_arm64, darwin_amd64, darwin_arm64, windows_amd64.exe]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+      - name: Require passing qualification for the exact tagged source
+        id: qualified
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let native;
+            for (const workflow_id of ['rc-platform.yml', 'e2e.yml', 'browser-compatibility.yml', 'staging-preparation.yml']) {
+              const response = await github.rest.actions.listWorkflowRuns({ ...context.repo, workflow_id, head_sha: context.sha, event: 'pull_request', per_page: 10 });
+              const run = response.data.workflow_runs[0];
+              if (!run || run.head_sha !== context.sha || run.conclusion !== 'success') throw new Error(`${workflow_id}: exact source has no current passing qualification`);
+              if (workflow_id === 'rc-platform.yml') native = run.id;
+            }
+            core.setOutput('run', native);
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.qualified.outputs.run }}
+          name: rc13-${{ matrix.target }}
+          path: qualified
+      - name: Retain qualified bytes without rebuilding
+        env:
+          PRIMO_QUALIFICATION_RUN: ${{ steps.qualified.outputs.run }}
+        run: node release/ship/candidate-asset.mjs qualified '${{ matrix.target }}' candidate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: primo_${{ matrix.target }}
+          path: candidate/*
+          if-no-files-found: error
+
   release:
-    needs: build
+    needs: [build, candidate]
+    if: ${{ always() && (needs.build.result == 'success' || needs.candidate.result == 'success') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -91,3 +137,5 @@ jobs:
         with:
           files: binaries/*
           draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          make_latest: ${{ contains(github.ref_name, '-') && 'false' || 'true' }}
