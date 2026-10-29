@@ -8,6 +8,9 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
 
+// TestPublicationRejectsBrokenRoutesWithoutReplacingLiveSite verifies that
+// detached pages and duplicate routes cannot activate a new publication or
+// replace the HTML currently served to visitors.
 func TestPublicationRejectsBrokenRoutesWithoutReplacingLiveSite(t *testing.T) {
 	for _, broken := range []string{"detached-page", "duplicate-route"} {
 		t.Run(broken, func(t *testing.T) {

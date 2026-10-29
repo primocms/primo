@@ -10,9 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Validate page dependencies before importing fields, uploads, or content. A
-// partial archive may reference existing records, but an unresolved dependency
-// must reject both preview and apply rather than silently dropping a section.
+// validateImportPageReferences checks page dependencies before importing fields,
+// uploads, or content. A partial archive may reference existing records, but an
+// unresolved dependency must reject preview and apply rather than drop a section.
 func validateImportPageReferences(app core.App, site *core.Record, files map[string][]byte) error {
 	symbols, err := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
 	if err != nil {
@@ -121,8 +121,9 @@ func validateImportPageReferences(app core.App, site *core.Record, files map[str
 	return nil
 }
 
-// Folder names are stable keys, unlike editable display names. Resolve aliases
-// first and folders last so a display-name collision cannot steal a folder key.
+// importSymbolLookup indexes stable folder keys and editable display names.
+// It resolves aliases first and folders last so a display-name collision cannot
+// steal a folder key.
 func importSymbolLookup(symbols []*core.Record, folderToDisplayName map[string]string) map[string]string {
 	result := make(map[string]string)
 	for _, s := range symbols {

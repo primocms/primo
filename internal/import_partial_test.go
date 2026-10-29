@@ -10,6 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TestPartialImportPreservesParentsAndSections verifies that page-only uploads
+// update content without detaching routes or replacing sections, including
+// nested pages and blocks with renamed display labels.
 func TestPartialImportPreservesParentsAndSections(t *testing.T) {
 	for _, renamed := range []bool{false, true} {
 		for _, file := range []string{"pages/vs/index.yaml", "pages/vs/wordpress.yaml"} {
@@ -88,6 +91,8 @@ func TestPartialImportPreservesParentsAndSections(t *testing.T) {
 	}
 }
 
+// TestPartialImportRejectsUnresolvedReferences checks that preview and apply
+// reject missing block or parent dependencies without changing the draft.
 func TestPartialImportRejectsUnresolvedReferences(t *testing.T) {
 	for _, kind := range []string{"block", "parent", "homepage"} {
 		for _, preview := range []bool{true, false} {
@@ -147,6 +152,9 @@ func TestPartialImportRejectsUnresolvedReferences(t *testing.T) {
 	}
 }
 
+// TestPartialPageTypeImportResolvesExistingBlockFolder verifies that a page-type
+// upload retains shared-layout and allowed-block references when the renamed
+// block’s definition is omitted from the archive.
 func TestPartialPageTypeImportResolvesExistingBlockFolder(t *testing.T) {
 	app := newImportTestApp(t)
 	defer app.ResetBootstrapState()
