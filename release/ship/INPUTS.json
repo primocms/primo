@@ -668,5 +668,20 @@
       }
     },
     "qualification": "Only shipped MCP change versus 830559a is the test script declaration in package metadata. All non-metadata shipped files and CLI tarball are byte-identical; renderer-upgrade regression and MCP CI pass. Renewed exact-package native qualification is required."
+  },
+  "publicMCPRegistryIntegration": {
+    "date": "2026-10-29",
+    "mcpHead": "bf426e47fc9625e03f1a7551a50885561f508238",
+    "cliHead": "2ba5437154297879c4a71ad7ee4c8cea23b7e582",
+    "mcpArchiveSHA256": "8cdfb61e49c2d23a2436b81357139893ea67663134ec5e642bebd455579ec7b2",
+    "registryTarball": "https://registry.npmjs.org/primo-mcp/-/primo-mcp-0.1.11-rc.3.tgz",
+    "registryIntegrity": "sha512-nxh6IMXkPydoPIWONkDmJPkLKYlKX1jsv+Cl3LpM4S9qpB4vayPxhcSkPI9gUWLfPAHM77kh2cP5d0Avbjq8ZA==",
+    "mcpDistTags": {
+      "latest": "0.1.10",
+      "rc": "0.1.11-rc.3"
+    },
+    "registryBytesVerified": true,
+    "includedDocumentationPR": 1366,
+    "qualification": "Current final input; exact-source native/browser/hosted qualification is required. Earlier entries remain historical."
   }
 }

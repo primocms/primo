@@ -79,3 +79,14 @@ source also includes main's starter-clone optimization (#1364): reused
 validation runtimes and cached field types retain production validation while
 reducing repeated work during cloning. New qualification is required after
 this integration; earlier hosted evidence stays attributed to its tested source.
+
+## Final prerelease input freeze
+
+The release includes MCP #34, which verifies that renderer upgrades invalidate
+cached publication pages even when stored content is unchanged, and the
+comments-only import/publication contract documentation from CMS #1366.
+MCP 0.1.11-rc.3 is published on npm’s `rc` channel and its archive bytes and
+integrity are verified; stable `latest` remains 0.1.10. CLI and CMS locks use
+that immutable public MCP archive. The CLI archive is byte-identical to the
+previous publishing-content candidate. Renewed native/browser/hosted evidence
+must match these final inputs before CMS/CLI prerelease publication.
