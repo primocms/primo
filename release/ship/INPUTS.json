@@ -623,5 +623,28 @@
       }
     },
     "qualification": "Current candidate must pass fresh native/browser qualification; prior evidence remains historical."
+  },
+  "publishContentIntegration": {
+    "date": "2026-10-29",
+    "issue": "primocms/mcp#33",
+    "mcpHead": "830559a5161c0aee120eb8b769395679902266c7",
+    "cliHead": "ca824e680b350c14e4708b4ce8bbada664e1869f",
+    "archives": {
+      "cms": {
+        "version": "v3.3.2-rc.13",
+        "previousFrozenSource": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+        "buildTime": "2026-10-25T00:00:00Z",
+        "sourceCommit": "workflow head SHA; final frozen manifest is generated from tested artifacts"
+      },
+      "cli": {
+        "archive": "primo-cli-0.3.0-rc.3.tgz",
+        "sha256": "7a9c97d8fe5ab96c674a4b5d9407517bdfd3f7b9584e6976230e867ce8692c3c"
+      },
+      "mcp": {
+        "archive": "primo-mcp-0.1.11-rc.3.tgz",
+        "sha256": "a3c0330e149adc2afe765196144b1a4fd3e97659a7f003d4c549f0a27def1503"
+      }
+    },
+    "qualification": "Local real-CMS browser/Node serialization parity and all 214 CLI tests pass on Node 22.13/24.0; renewed full native/browser qualification is required for these exact archives. Prior source and archive evidence remains historical."
   }
 }

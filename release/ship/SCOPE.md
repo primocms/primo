@@ -13,6 +13,8 @@ handoff, stable-channel preservation and final public-install checks.
 
 ## Included
 
+- MCP #33: CLI publication preserves image width/height and uses the CMS rich-text schema/serializer for links, marks, heading levels and supported nodes. Updated exact companion archives require renewed source/native/installed-package qualification; historical hosted results retain their tested source identities.
+
 - Cumulative RC.11 CMS product and latest QA: guarded synchronization, nested field/content identities, content-only source permissions, production validation, independent hydration/head identity, cache/security headers, supported runtimes, same-origin framing, compiler lifecycle/recovery, presence/reload/save recovery, managed purchaser bootstrap and owner-only access.
 - Current main at INPUTS.json's SHA, retaining transactional repeater ordering/ancestor values (#1359), browser publication/snapshot preservation (#1360), authenticated streaming recovery snapshot uploads (#1361).
 - The reproduced inline hydration-prop script escaping fix and regression (#1362).

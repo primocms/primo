@@ -12,18 +12,18 @@
       "archive": "primo-mcp-0.1.11.tgz",
       "version": "0.1.11",
       "sourceArchive": "primo-mcp-0.1.11-rc.3.tgz",
-      "sourceSHA256": "d82dc39fec95b0ffd557d24731bdc106605c69923c46dc5a9c5d90aebec8a1cb",
-      "sha256": "56640b2fa0a23a936d7b37b92f4d7774d39ae397dc05444b567f019b573aaf68",
-      "integrity": "sha512-HYKMVRFAIu9P4H2XWGHMHkFVS6M2VgGDNzBS0/ZuA2HOaBxykmDnbsVW9Nn1q4prN6Ry/lfRl3qCF3Lz92J2+g==",
-      "files": 125
+      "sourceSHA256": "a3c0330e149adc2afe765196144b1a4fd3e97659a7f003d4c549f0a27def1503",
+      "sha256": "641d75c1c28b1f38e3618a45b28c75691c06b862bbc168017c74555206aeaf41",
+      "integrity": "sha512-8Too0p0Jn9DxcgRdEmcG26qhWoC25glT9lDNt/orLoNRFQF7QV87Kg9w1HQq8jwPyx6/yn4RKHxJ1aCHZAjTeQ==",
+      "files": 129
     },
     "cli": {
       "archive": "primo-cli-0.3.0.tgz",
       "version": "0.3.0",
       "sourceArchive": "primo-cli-0.3.0-rc.3.tgz",
-      "sourceSHA256": "af6f476a81c876515cb488114951f1a66dfb6c8ff52106a91149299c004d15c9",
-      "sha256": "fb952dbd90603c30f6e217d92a39c56f33dd157255f65ff03bb1879c13a3e1b0",
-      "integrity": "sha512-Xzu/Ci9vCWi9C4uvf9d9xZKMp7bUTTb6SfUejnA+kYzCNHftjxzIhmURiKP/UY/szJTLuaMWSdzogkpuGdApmw==",
+      "sourceSHA256": "7a9c97d8fe5ab96c674a4b5d9407517bdfd3f7b9584e6976230e867ce8692c3c",
+      "sha256": "249764769cd2ba488ecd39d3dec6d39dbc49621e3ad293ae704c16e2ca29ac46",
+      "integrity": "sha512-p5okQpPr2pKjEEl/oKYJqMk1qfoYHk7M6Lc7T/CEXkFuz/o2uud8+JjM/lcSBWGyVLdb/+V1Mzp+CcY66ijD1A==",
       "files": 95
     }
   }
