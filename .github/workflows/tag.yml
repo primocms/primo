@@ -38,6 +38,24 @@ jobs:
         id: channel
         run: node release/ship/release-channel.mjs
 
+      - name: Retrieve and verify the published qualified RC executables
+        if: github.event.release.prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir .release-image --pattern 'primo_linux_amd64' --pattern 'primo_linux_arm64' --pattern 'primo_linux_amd64.qualification.json' --pattern 'primo_linux_arm64.qualification.json'
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import {verifyCandidateAsset} from './release/ship/candidate-asset.mjs';
+          for (const target of ['linux_amd64', 'linux_arm64']) {
+            const file = `.release-image/primo_${target}`;
+            const report = JSON.parse(await fs.readFile(`${file}.qualification.json`, 'utf8'));
+            const sha256 = verifyCandidateAsset({target, report, bytes: await fs.readFile(file), source: process.env.GITHUB_SHA, version: process.env.RELEASE_TAG});
+            console.log(`${sha256}  primo_${target}`);
+          }
+          NODE
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -56,6 +74,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ github.event.release.prerelease && 'release/ship/Dockerfile.native' || 'Dockerfile' }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.channel.outputs.tags }}

@@ -21,6 +21,8 @@ to rename RC.13 as stable. The coordinated prerelease tuple remains CMS
 4. Make the compatible CMS prerelease available, then publish the exact CLI
    archive to npm's `rc` dist-tag. The released image gets only the exact RC
    version tag. Stable minor/major/latest tags must remain unchanged.
+   The RC image copies the same qualified Linux executables from the release
+   and verifies their provenance/checksums; it does not compile new RC binaries.
 5. From empty profiles, install from the public registry and exact GitHub tag;
    verify every shipped file, Node 22/24 CLI and MCP startup, browser consent,
    scoped pull, local development/preview and visual-edit writeback. Archive

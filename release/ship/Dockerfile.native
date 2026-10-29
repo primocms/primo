@@ -1,0 +1,11 @@
+FROM alpine:3
+ARG TARGETARCH
+COPY .release-image/primo_linux_${TARGETARCH} /app/primo
+RUN chmod 755 /app/primo
+ENV PRIMO_SUPERUSER_EMAIL=""
+ENV PRIMO_SUPERUSER_PASSWORD=""
+ENV PRIMO_USER_EMAIL=""
+ENV PRIMO_USER_PASSWORD=""
+EXPOSE 8080
+WORKDIR /app
+CMD ["./primo", "serve", "--http=0.0.0.0:8080"]
