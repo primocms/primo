@@ -1,0 +1,23 @@
+name: Release publication safeguards
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/tag.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/release-preflight.yml'
+      - 'release/ship/release-channel.mjs'
+      - 'release/ship/candidate-asset.mjs'
+      - 'tests/release/**'
+permissions:
+  contents: read
+jobs:
+  channels-and-assets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+      - run: node --test tests/release/*.test.mjs

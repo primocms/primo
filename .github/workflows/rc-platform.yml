@@ -3,6 +3,11 @@ on:
   pull_request:
     paths:
       - '.github/workflows/rc-platform.yml'
+      - '.github/workflows/tag.yml'
+      - '.github/workflows/release.yml'
+      - 'release/ship/release-channel.mjs'
+      - 'release/ship/candidate-asset.mjs'
+      - 'tests/release/**'
       - 'tests/platform/**'
       - 'tests/onboarding/**'
       - 'tests/e2e/**'

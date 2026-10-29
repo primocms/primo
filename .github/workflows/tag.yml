@@ -1,11 +1,8 @@
 name: Build and push Docker image
 
-# Publishing a GitHub release IS the production deploy: this pushes the image
-# (including :latest, which Railway auto-redeploys on) only when a release is
-# published. A tag push alone now just builds binaries into a draft release
-# (release.yml) — review the draft, publish it, and that rolls prod. Before
-# 2026-09 this triggered on the tag push itself, which deployed to Railway the
-# moment a tag landed, making draft releases a decorative gate.
+# Published prereleases receive only their exact version image. Stable releases
+# additionally update minor, major and latest channels followed by consumers.
+# Tag pushes alone build a draft binary release in release.yml.
 on:
   release:
     types: [published]
@@ -26,10 +23,20 @@ jobs:
       attestations: write
       id-token: write
     outputs:
-      version: ${{ steps.meta.outputs.version }}
+      version: ${{ steps.channel.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+
+      - name: Validate release identity and select publication channels
+        id: channel
+        run: node release/ship/release-channel.mjs
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -37,20 +44,6 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            # Explicit :latest — Railway/self-host deployers follow this tag to
-            # track releases. metadata-action adds it implicitly for semver, but
-            # pin it here so it can't silently stop updating.
-            type=raw,value=latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -65,10 +58,13 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.channel.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.channel.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
           build-args: |
-            PRIMO_VERSION=${{ github.head_ref || github.ref_name }}
+            PRIMO_VERSION=${{ github.event.release.tag_name }}
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
