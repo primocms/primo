@@ -6,6 +6,11 @@ Prepared 2026-10-25. This is the current release contract; release/rc8 documents
 
 Supervised ten-builder pilot for new sites and desktop editing, with operator-provisioned site-scoped developer and content-editor roles. Proposed stable versions: CMS 3.3.2, CLI 0.3.0, MCP 0.1.11. Candidate versions: CMS 3.3.2-rc.13, CLI 0.3.0-rc.3, MCP 0.1.11-rc.3. Final version changes require new artifacts and verification.
 
+Publishing RC.13 uses the candidate versions above. Stable renaming/native
+qualification and real-customer rollout gates belong to later promotion. See
+ROLLOUT.md's prerelease path for the exact npm `rc` channel, tested binary
+handoff, stable-channel preservation and final public-install checks.
+
 ## Included
 
 - Cumulative RC.11 CMS product and latest QA: guarded synchronization, nested field/content identities, content-only source permissions, production validation, independent hydration/head identity, cache/security headers, supported runtimes, same-origin framing, compiler lifecycle/recovery, presence/reload/save recovery, managed purchaser bootstrap and owner-only access.
@@ -62,3 +67,13 @@ preflight diagnostics across MCP, CLI and CMS, plus partial-import key lookup.
 Current candidate archives/locks are refreshed. Stable npm package artifacts
 are prepared under final-packages/ and remain unpublished. Their manifest
 separates offline package verification from pending registry/native/hosted gates.
+
+## October 28 publication readiness
+
+The prerelease path now preserves stable container channels and refuses a
+mislabeled release. RC binary releases reuse the five executables that passed
+exact-source qualification rather than rebuilding after tests. The final
+source also includes main's starter-clone optimization (#1364): reused
+validation runtimes and cached field types retain production validation while
+reducing repeated work during cloning. New qualification is required after
+this integration; earlier hosted evidence stays attributed to its tested source.
