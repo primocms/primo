@@ -8,6 +8,7 @@ const editorReturnStorageKey = 'primo:sites-editor-return'
 let checkedReload = false
 let reloadSnapshot: (ScrollSnapshot & { url: string }) | undefined
 let editorReturnSnapshot: (ScrollSnapshot & { url: string }) | undefined
+let remountSnapshot: (ScrollSnapshot & { url: string }) | undefined
 
 function takeEditorReturnSnapshot(key: string): ScrollSnapshot | undefined {
 	try {
@@ -49,6 +50,7 @@ export function createDashboardScroll({
 	beforeNavigate((navigation) => {
 		reloadSnapshot = undefined
 		editorReturnSnapshot = undefined
+		remountSnapshot = undefined
 		if (siteEditorReturn && navigation.to && /^\/admin\/(?:sites\/[^/]+|site)(?:\/|$)/.test(navigation.to.url.pathname)) {
 			try {
 				// Back/Forward changes window.location before this callback;
@@ -60,6 +62,7 @@ export function createDashboardScroll({
 		}
 	})
 	let root: HTMLElement | undefined
+	let mountedUrl = ''
 	let key = ''
 	let pending: number | null = null
 	let queuedSnapshot: ScrollSnapshot | undefined
@@ -131,7 +134,8 @@ export function createDashboardScroll({
 		root = node
 		// Dashboard pages mount after async authentication, after SvelteKit's
 		// initial snapshot pass. Preserve reload state until this action mounts.
-		queuedSnapshot = takeEditorReturnSnapshot(initialKey) ?? takeReloadSnapshot(initialKey) ?? queuedSnapshot
+		queuedSnapshot = takeEditorReturnSnapshot(initialKey) ?? takeReloadSnapshot(initialKey) ??
+			(remountSnapshot?.url === location.href && remountSnapshot.key === initialKey ? remountSnapshot : undefined) ?? queuedSnapshot
 		const resize = new ResizeObserver(scheduleRestore)
 		observe = () => {
 			resize.disconnect()
@@ -147,6 +151,10 @@ export function createDashboardScroll({
 		mutation.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] })
 		const onScroll = (event: Event) => {
 			if (event.target !== scroller() && !(windowScroll && event.target === document)) return
+			// Session validation can clear cached records and unmount this page
+			// without navigation. Keep its last observed position outside the
+			// component so the replacement survives the loading view's clamp to 0.
+			remountSnapshot = { ...capture(), url: mountedUrl }
 			// Layout observers reapply a pending history target. Reapplying it
 			// on every scroll would fight focus/scrollIntoView before a click.
 			if (pending === null) {
@@ -180,6 +188,7 @@ export function createDashboardScroll({
 			// may call update with the same key; keep its restored position.
 			if (initialized && nextKey === key) return
 			initialized = true
+			mountedUrl = location.href
 			cancelAnimationFrame(layoutFrame)
 			cancelAnimationFrame(restorationFrame)
 			// The keyed cards may already have been removed here, clamping

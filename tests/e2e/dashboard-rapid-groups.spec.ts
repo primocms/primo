@@ -1,11 +1,24 @@
 import { test, expect, type Page } from '@playwright/test'
-import { loginAsDeveloperAtDashboard } from './helpers/editor'
+import { loginAsDeveloperAtDashboard as openDashboardBeforeValidation } from './helpers/editor'
 import { devAuth } from './helpers/server'
 
 let siteGroups: any[]
 let libraryGroups: any[]
 let sites: any[][]
 let blocks: any[][]
+
+async function loginAsDeveloperAtDashboard(page: Page, groupId?: string) {
+	const validated = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/collections/users/auth-refresh' && response.request().method() === 'POST')
+	await openDashboardBeforeValidation(page, groupId)
+	await (await validated).finished()
+	// History/reload fixtures start after initial validation. The dedicated
+	// initial-session case below deliberately controls that pending boundary.
+	await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+}
+
+async function expectGroupRecords(page: Page, selector: string, records: any[]) {
+	await expect.poll(async () => (await page.locator(`.dashboard-content ${selector}`).allTextContents()).map((name) => name.trim()).sort()).toEqual(records.map((record) => record.name).sort())
+}
 
 test.use({ viewport: { width: 1440, height: 800 } })
 
@@ -81,6 +94,44 @@ async function scrollContent(page: Page, selector: string, position = 350) {
 	return position
 }
 
+test('sites: completing initial session validation preserves the user scroll position', async ({ page }) => {
+	let releaseRefresh!: () => void
+	let releaseUserRead!: () => void
+	const refreshGate = new Promise<void>((resolve) => (releaseRefresh = resolve))
+	const userGate = new Promise<void>((resolve) => (releaseUserRead = resolve))
+	let holdUserRead = false
+	await page.route('**/api/collections/users/auth-refresh', async (route) => {
+		await refreshGate
+		await route.continue()
+	})
+	await page.route('**/api/collections/users/records/**', async (route) => {
+		if (holdUserRead) await userGate
+		await route.continue()
+	})
+	const refreshed = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/collections/users/auth-refresh' && response.request().method() === 'POST')
+	try {
+		await openDashboardBeforeValidation(page, siteGroups[0].id)
+		await page.getByRole('link', { name: siteGroups[1].name, exact: true }).click()
+		const cards = page.locator('.dashboard-content .site-card-footer > div > a')
+		await expect(cards).toHaveCount(12)
+		await expectGroupRecords(page, '.site-card-footer > div > a', sites[1])
+		await scrollContent(page, '.sites-content', 280)
+		// Force validation's cache-clear/loading boundary after the user scrolls.
+		// This must retain the position even when the dashboard is remounted.
+		holdUserRead = true
+		releaseRefresh()
+		await (await refreshed).finished()
+		await expect(page.getByText('Loading sites…', { exact: true })).toBeVisible()
+		releaseUserRead()
+		await expect(cards).toHaveCount(12)
+		await expect(page.getByRole('link', { name: siteGroups[1].name, exact: true })).toHaveAttribute('data-active', 'true')
+		await expect.poll(() => page.locator('html').evaluate((node) => node.scrollTop)).toBe(280)
+	} finally {
+		releaseRefresh()
+		releaseUserRead()
+	}
+})
+
 for (const section of ['sites', 'library'] as const) {
 	for (const returnMethod of ['control', 'back'] as const) {
 		test(`${section} editor: ${returnMethod} restores the group and scroll position`, async ({ page }) => {
@@ -92,6 +143,7 @@ for (const section of ['sites', 'library'] as const) {
 			await page.getByRole('link', { name: groups[1].name, exact: true }).click()
 			const cards = page.locator(section === 'sites' ? '.site-card-footer > div > a' : '.catalog-preview')
 			await expect(cards).toHaveCount(12)
+			await expectGroupRecords(page, section === 'sites' ? '.site-card-footer > div > a' : '.catalog-name', section === 'sites' ? sites[1] : blocks[1])
 			await scrollContent(page, section === 'sites' ? '.sites-content' : '.masonry', 280)
 			const index = await cards.evaluateAll((cards) =>
 				cards.findIndex((card) => {
@@ -156,12 +208,15 @@ async function checkGroupHistory(page: Page, groups: any[], records: any[][], se
 		await expect(page.locator('.dashboard-content > header')).toHaveCount(1)
 	}
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[0].length)
+	await expectGroupRecords(page, selector, records[0])
 	await scrollContent(page, scroller, 280)
 	await page.getByRole('link', { name: groups[1].name, exact: true }).click()
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[1].length)
+	await expectGroupRecords(page, selector, records[1])
 	await scrollContent(page, scroller, 120)
 	await page.getByRole('link', { name: groups[0].name, exact: true }).click()
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[0].length)
+	await expectGroupRecords(page, selector, records[0])
 	// Visiting A twice at different positions distinguishes browser history
 	// restoration from a single shared "last scroll for this group" value.
 	await scrollContent(page, scroller, 40)
@@ -196,6 +251,7 @@ async function checkGroupRefresh(page: Page, groups: any[], records: any[][], se
 	// Use a non-default group to catch a refresh silently selecting the first.
 	await page.getByRole('link', { name: groups[1].name, exact: true }).click()
 	await expect(page.locator(`.dashboard-content ${selector}`)).toHaveCount(records[1].length)
+	await expectGroupRecords(page, selector, records[1])
 	const readScroll = () =>
 		page.evaluate((selector) => {
 			for (let element = document.querySelector(selector); element; element = element.parentElement) {
