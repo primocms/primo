@@ -537,6 +537,7 @@ func (p *FlyProvisioner) Step(ctx context.Context, j *Job, c *Credentials) error
 			Editors   int    `json:"editor_cap"`
 			OwnerOnly bool   `json:"owner_only"`
 			Provider  string `json:"domain_provider"`
+			SMTP      bool   `json:"smtp_enabled"`
 		}
 		if err := request(ctx, p.Client, "GET", "https://"+host+"/api/primo/info", "", nil, &info); err != nil {
 			return err
@@ -564,10 +565,24 @@ func (p *FlyProvisioner) Step(ctx context.Context, j *Job, c *Credentials) error
 			return err
 		}
 		if j.State == "final_check" {
+			if p.Config.SMTPManagementToken != "" && (!info.SMTP || j.SMTPKeyID == "") {
+				return errors.New("hosted SMTP not ready")
+			}
 			j.State = "ready_email"
 		} else {
-			j.State = "cleanup"
+			if p.Config.SMTPManagementToken != "" {
+				j.State = "smtp_key"
+			} else {
+				j.State = "cleanup"
+			}
 		}
+	case "smtp_key":
+		return p.createSMTPKey(ctx, j, c)
+	case "smtp_settings":
+		if err := p.configureSMTP(ctx, j, c); err != nil {
+			return err
+		}
+		j.State = "cleanup"
 	case "cleanup":
 		var result struct {
 			Version uint64 `json:"version"`
