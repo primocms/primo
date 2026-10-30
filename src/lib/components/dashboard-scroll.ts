@@ -65,6 +65,7 @@ export function createDashboardScroll({
 	let mountedUrl = ''
 	let key = ''
 	let pending: number | null = null
+	let restoringSnapshot = false
 	let queuedSnapshot: ScrollSnapshot | undefined
 	let ready = false
 	let initialized = false
@@ -126,6 +127,7 @@ export function createDashboardScroll({
 				return
 			}
 			pending = saved.top
+			restoringSnapshot = true
 			restore()
 		}
 	}
@@ -161,7 +163,7 @@ export function createDashboardScroll({
 				remember()
 				if (reloadSnapshot?.key === key && reloadSnapshot.url === location.href) reloadSnapshot.top = capture().top
 				if (editorReturnSnapshot?.key === key && editorReturnSnapshot.url === location.href) editorReturnSnapshot.top = capture().top
-			} else if (scroller()?.scrollTop !== pending) {
+			} else if (restoringSnapshot && scroller()?.scrollTop !== pending) {
 				// A browser history offset can arrive after route/layout restoration
 				// without resizing anything. Preserve the target until user input.
 				scheduleRestore()
@@ -171,6 +173,7 @@ export function createDashboardScroll({
 			cancelAnimationFrame(layoutFrame)
 			cancelAnimationFrame(restorationFrame)
 			pending = null
+			restoringSnapshot = false
 		}
 		const onPageHide = () => {
 			try {
@@ -184,6 +187,8 @@ export function createDashboardScroll({
 		scrollEvents.addEventListener('scroll', onScroll, true)
 		scrollEvents.addEventListener('wheel', onInteraction, { passive: true })
 		scrollEvents.addEventListener('pointerdown', onInteraction)
+		scrollEvents.addEventListener('pointermove', onInteraction)
+		scrollEvents.addEventListener('focusin', onInteraction)
 		scrollEvents.addEventListener('keydown', onInteraction)
 		window.addEventListener('pagehide', onPageHide)
 
@@ -199,7 +204,11 @@ export function createDashboardScroll({
 			// scrollTop to zero. Scroll events/snapshot capture saved the old
 			// group's position before that DOM replacement.
 			key = nextKey
-			pending = queuedSnapshot?.key === key ? queuedSnapshot.top : ((takeEditorReturnSnapshot(key) ?? takeReloadSnapshot(key))?.top ?? positions?.get(key) ?? 0)
+			const saved = queuedSnapshot?.key === key ? queuedSnapshot : (takeEditorReturnSnapshot(key) ?? takeReloadSnapshot(key))
+			pending = saved?.top ?? positions?.get(key) ?? 0
+			// Initial/default positions must not undo focus or scrollIntoView.
+			// Only a restored snapshot needs protection from a late history offset.
+			restoringSnapshot = saved !== undefined
 			queuedSnapshot = undefined
 			ready = false
 			const currentVersion = ++version
@@ -225,6 +234,8 @@ export function createDashboardScroll({
 				scrollEvents.removeEventListener('scroll', onScroll, true)
 				scrollEvents.removeEventListener('wheel', onInteraction)
 				scrollEvents.removeEventListener('pointerdown', onInteraction)
+				scrollEvents.removeEventListener('pointermove', onInteraction)
+				scrollEvents.removeEventListener('focusin', onInteraction)
 				scrollEvents.removeEventListener('keydown', onInteraction)
 				window.removeEventListener('pagehide', onPageHide)
 			}
