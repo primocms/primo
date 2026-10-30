@@ -40,11 +40,22 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
    // inert same-origin document, before the app can start an auth-refresh redirect.
    await command('POST',session+'/url',{url:c.origin+'/api/health'});await execute('localStorage.clear();sessionStorage.clear();return true');await command('DELETE',session+'/cookie');await command('POST',session+'/url',{url:c.origin+'/admin/auth'});await observeErrors()
    await wait(()=>execute("return ['input[type=email]','input[type=password]','button[type=submit]'].every(selector=>{const el=document.querySelector(selector);return el&&!el.disabled&&el.getClientRects().length})"),'Safari sign-in form missing')
+   // Fixture logins share the production auth budget with the native browser.
+   // Keep that setup traffic out of each independent password/refresh pair.
+   record.phase='wait-for-seeded-auth-budget';record.authWindowWaitMs=await c.waitForAuthWindow()
+   await execute("const expected=arguments[0];window.__presenceAuthResponses=[];const originalFetch=window.fetch;window.fetch=async function(...args){const route=new URL(args[0] instanceof Request?args[0].url:String(args[0]),location.href).pathname;const auth=/\\/users\\/auth-(with-password|refresh)$/.test(route);try{const response=await originalFetch.apply(this,args);if(auth){let input;try{input=JSON.parse(args[1]?.body||'null')}catch{}window.__presenceAuthResponses.push({path:route,status:response.status,...(route.endsWith('/auth-with-password')?{identityMatches:input?.identity===expected.email,passwordMatches:input?.password===expected.password}:{})})};return response}catch(error){if(auth)window.__presenceAuthResponses.push({path:route,transportFailure:true});throw error}};return true",[{email:c.actors.editor.email,password:c.actors.editor.password}])
    record.phase='native-email-entry';await type(await element('input[type=email]'),c.actors.editor.email)
    record.phase='native-password-entry';await type(await element('input[type=password]'),c.actors.editor.password)
+   assert.equal(await execute("return document.querySelector('input[type=email]').value===arguments[0]&&document.querySelector('input[type=password]').value===arguments[1]",[c.actors.editor.email,c.actors.editor.password]),true,'Native Safari must enter the exact fixture credentials')
    record.phase='native-sign-in-submit';await click(await element('button[type=submit]'))
+   await wait(()=>execute("return window.__presenceAuthResponses.some(r=>r.path.endsWith('/auth-with-password'))"),'Safari password response was not observed',30000)
+   record.authResponses=await execute('return window.__presenceAuthResponses');c.noteAuthResponse()
+   assert.equal(record.authResponses.find(r=>r.path.endsWith('/auth-with-password')).status,200,'Native Safari password sign-in must succeed before refresh qualification')
    record.phase='scoped-editor-load'
    await openScopedSafariSite(command,session,c.origin);await ready();await observeErrors()
+   record.authResponses=await execute('return window.__presenceAuthResponses');c.noteAuthResponse()
+   await wait(()=>execute("return window.__presenceAuthResponses.some(r=>r.path.endsWith('/auth-refresh')&&r.status===200)"),'Native Safari must complete session validation',10000)
+   record.authResponses=await execute('return window.__presenceAuthResponses');c.noteAuthResponse()
    record.checks.push('Fresh native password sign-in; one assigned site; all five production editor blocks editable')
    if(attempt===0){
     record.phase='native-content-edit-reorder'
@@ -104,7 +115,7 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
    }
    assert.deepEqual(await execute("return JSON.parse(sessionStorage.getItem('presence-client-errors')||'[]')"),[],'Caught client router errors must also fail Safari qualification')
    record.phase='complete';record.status='PASS'
-  }catch(error){record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,clientErrorDetails:JSON.parse(sessionStorage.getItem('presence-client-errors')||'[]'),errorDetails:JSON.parse(sessionStorage.getItem('presence-error-details')||'[]'),ready:document.readyState,text:document.body.innerText.slice(0,1800),loader:document.querySelector('#app-boot-loader')?.outerHTML,scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),resources:performance.getEntriesByType('resource').map(r=>({path:new URL(r.name).pathname,status:r.responseStatus,duration:r.duration,bytes:r.transferSize})),buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);
+  }catch(error){record.authResponses=await execute('return window.__presenceAuthResponses||[]').catch(()=>[]);record.failure=c.redact(error.message);record.diagnostic=await execute("return {path:location.pathname,clientErrorDetails:JSON.parse(sessionStorage.getItem('presence-client-errors')||'[]'),errorDetails:JSON.parse(sessionStorage.getItem('presence-error-details')||'[]'),ready:document.readyState,text:document.body.innerText.slice(0,1800),loader:document.querySelector('#app-boot-loader')?.outerHTML,scripts:[...document.scripts].map(s=>({src:s.src,type:s.type})),resources:performance.getEntriesByType('resource').map(r=>({path:new URL(r.name).pathname,status:r.responseStatus,duration:r.duration,bytes:r.transferSize})),buttons:[...document.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.textContent.trim().slice(0,80)})),frames:[...document.querySelectorAll('main iframe[title=block]')].map(f=>({editable:!!f.contentDocument?.querySelector('h1[contenteditable=true]')}))}").catch(()=>null);
    if(record.phase==='clear-origin-storage'&&record.diagnostic){
     // Diagnose already requested application modules only after a failed native
     // navigation. Re-importing a failed ESM exposes its cached rejection; this
@@ -116,5 +127,6 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
   }
   finally{await command('DELETE',session);session=null}
  }
+ assert.deepEqual((await c.api('/api/settings',{token:c.admin.token})).rateLimits,c.authLimits,'Native Safari qualification must preserve production rate limits')
  console.log({...report,status:'PASS_NATIVE_SAFARI'})
 })

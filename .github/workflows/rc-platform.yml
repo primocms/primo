@@ -139,6 +139,13 @@ jobs:
             hosted-native-result.json
             fresh-machine-result.json
           if-no-files-found: error
+      - name: Retain failed fresh-install diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc13-fresh-install-failure-${{ matrix.target }}
+          path: fresh-install-failure.json
+          if-no-files-found: ignore
 
   exact-browser:
     needs: native

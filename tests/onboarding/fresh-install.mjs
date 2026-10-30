@@ -38,6 +38,7 @@ export async function freshInstall() {
 	for (const key of Object.keys(env)) if (/^(PRIMO_|NODE_OPTIONS$|NODE_PATH$|NPM_CONFIG_|npm_config_prefix$|CLAUDE_|CODEX_HOME$|CURSOR_)/.test(key)) delete env[key]
 	env.PRIMO_ENABLE_USAGE_STATS = 'false'
 	let feed
+	let stage = 'fresh-profile', stageStarted = performance.now()
 	const cleanup = async () => {
 		if (feed) await new Promise((resolve) => feed.close(resolve))
 		await fs.rm(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 })
@@ -133,7 +134,9 @@ export async function freshInstall() {
 		const archives = [manifest.mcp, manifest.cli].map((item) => path.resolve('release/vendor', item.archive))
 		for (const item of [manifest.mcp, manifest.cli]) assert.equal(sha(await fs.readFile(path.resolve('release/vendor', item.archive))), item.sha256, 'candidate package checksum')
 		console.log('Fresh profile: installing exact CLI and MCP archives')
-		await exec(node, [npm, 'install', '--prefix', prefix, '--no-audit', '--no-fund', ...archives], { env, cwd: root, timeout: 180000, maxBuffer: 4 * 1024 * 1024 })
+		stage = 'npm-install'; stageStarted = performance.now()
+		await exec(node, [npm, 'install', '--prefix', prefix, '--no-audit', '--no-fund', '--timing', ...archives], { env, cwd: root, timeout: 180000, maxBuffer: 4 * 1024 * 1024 })
+		stage = 'installed-runtime-verification'; stageStarted = performance.now()
 		console.log('Fresh profile: packages installed; verifying runtime and MCP')
 		const cli = path.join(prefix, 'node_modules/primo-cli/dist/index.js'),
 			require = createRequire(cli),
@@ -246,6 +249,25 @@ export async function freshInstall() {
 			managedBinary: path.join(home, '.primo/bin', process.platform === 'win32' ? 'primo.exe' : 'primo')
 		}
 	} catch (error) {
+		// The fresh HOME is removed below. Preserve bounded, credential-free npm
+		// timing evidence before cleanup, so a timeout is not mistaken for a
+		// package/runtime failure. Do not retry or extend the install deadline.
+		if (stage === 'npm-install') {
+			const logDir = path.join(home, 'npm-cache', '_logs')
+			const names = (await fs.readdir(logDir).catch(() => [])).filter(name => name.endsWith('-debug-0.log')).sort()
+			const log = names.length ? await fs.readFile(path.join(logDir, names.at(-1)), 'utf8').catch(() => '') : ''
+			const sanitize = text => text.replace(/https?:\/\/[^\s)]+/g, value => {
+				try { const url = new URL(value); return url.protocol + '//' + url.host + url.pathname } catch { return '[URL]' }
+			}).replace(/(?:npm_[A-Za-z0-9]+|eyJ[A-Za-z0-9_.-]{30,})/g, '[REDACTED]')
+			const diagnostic = {
+				status: 'FAIL_FRESH_NPM_INSTALL', sourceCommit: process.env.PRIMO_CANDIDATE_SHA || null,
+				platform: process.platform, stage, elapsedMs: Math.round(performance.now() - stageStarted),
+				code: error.code ?? null, signal: error.signal ?? null, killed: error.killed ?? false,
+				npmLog: sanitize(log.split('\n').filter(line => /^\d+ (?:http|timing|error|verbose (?:stack|cwd|os|node|npm|exit|code))\b/.test(line)).slice(-80).join('\n')).slice(-16000)
+			}
+			await fs.writeFile('fresh-install-failure.json', JSON.stringify(diagnostic, null, 2) + '\n')
+			console.error(JSON.stringify(diagnostic))
+		}
 		await cleanup()
 		throw error
 	}
