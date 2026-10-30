@@ -31,13 +31,14 @@ type Job struct {
 	StartedAt                                    int64
 	ReadyAt                                      int64
 	Retired                                      bool
+	SMTPKeyID                                    string
 	DomainParentHash                             string
 	DomainTokenUpdatedAt                         int64
 	DomainRotation                               DomainRotation
 	Suspension                                   Suspension
 }
 
-type Credentials struct{ Password, AdminPassword, DomainToken string }
+type Credentials struct{ Password, AdminPassword, DomainToken, SMTPPassword string }
 
 type Store struct {
 	db   *sql.DB

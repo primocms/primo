@@ -28,7 +28,11 @@ It does not run inside customer apps or modify existing Railway tenants.
    and creates DNS-only records. It waits for actual issued certificates, then
    enables public HTTP/HTTPS and checks plan caps, workspace/wildcard HTTPS, customer
    sign-in, and rejection of the old public installer account.
-6. Bootstrap secrets are removed, the Machine is updated to that secrets version,
+6. With hosted SMTP configured, a sending-only Resend key restricted to
+   `email.primo.build` is created for this customer. Its password is checkpointed
+   encrypted before applying and verifying PocketBase SMTP (465, implicit TLS),
+   sender and workspace URL settings. Setup failures block the ready email.
+7. Bootstrap secrets are removed, the Machine is updated to that secrets version,
    and sign-in/HTTPS checks run again after restart. The control plane then discards
    the customer's password and sends the dashboard link. The customer signs in at
    `/admin/auth` with their purchase email and chosen password.
@@ -49,7 +53,8 @@ Job state, purchase email and credentials are encrypted with AES-256-GCM at rest
 Keep the encryption key in Fly secrets and separately in the operator's password
 manager: losing it makes the state unrecoverable. The SQLite file is mode 600.
 Operator bootstrap credentials remain encrypted for support access; customer
-servers never receive the Fly organization token, Cloudflare token or email key.
+servers never receive the Fly organization token, Cloudflare token, control-plane
+email key or SMTP management key. Each receives its own restricted SMTP key.
 
 ## Recovery and limits
 
@@ -436,3 +441,32 @@ test delivered one real operator email (verified Delivered in Resend), a differe
 delivery ID did not repeat it, and no customer job or resource was created.
 Customer portal plan changes are disabled and verified in Polar to enforce the
 approved manual policy. Go tests, race checks, vet and local monitor tests passed.
+
+
+## Automatic customer SMTP
+
+Set both `HOSTING_SMTP_MANAGEMENT_TOKEN` and `HOSTING_SMTP_DOMAIN_ID` on the
+control plane to enable automatic SMTP for new signups. The management token must
+be a dedicated Resend full-access key, distinct from `RESEND_API_KEY`; Resend does
+not offer a keys-only management permission. Never install it in customer apps.
+The domain ID must identify the verified `email.primo.build` sending domain.
+`HOSTING_FROM_EMAIL` must use that domain, e.g. `Primo <hello@email.primo.build>`.
+With neither variable, legacy manual SMTP behavior remains available; setting only
+one is a startup error. Enabling this does not change existing ready customer settings.
+
+Customer keys are named `primo-hosted-<job ID>` with `sending_access` and the
+configured `domain_id`. They are not reused across customers. Retrying after a
+lost create response/checkpoint revokes only orphan keys with that exact job-owned
+name before replacement; unrelated keys remain untouched. The key password is
+removed from the control-plane credential checkpoint after final verification,
+while its ID is retained for lifecycle cleanup. PocketBase retains the customer
+key in its settings database, persisted on the customer's encrypted Fly volume.
+No SMTP password or parent email credential is installed in customer environment
+variables or returned in operator/customer status output.
+
+`POST /ops/jobs/{id}/retire` now revokes that customer's SMTP key before saving
+retirement; failures prevent retirement and can be retried. It still does not
+remove the app, data, DNS or billing. A subscription hold/suspension alone does not
+retire a server or revoke its key. Operators should retire removed workspaces.
+Resend sending limits and reputation are shared at account/domain level; these
+keys isolate credentials and revocation, not per-customer provider quotas.

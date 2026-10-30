@@ -448,6 +448,21 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "only a ready job can be retired", 409)
 			return
 		}
+		if j.SMTPKeyID != "" {
+			revoker, ok := s.Provisioner.(interface {
+				RevokeSMTPKey(context.Context, *Job) error
+			})
+			if !ok {
+				http.Error(w, "SMTP key revocation unavailable", 503)
+				return
+			}
+			ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+			defer cancel()
+			if err := revoker.RevokeSMTPKey(ctx, &j); err != nil {
+				http.Error(w, "SMTP key revocation failed; retirement not saved", 503)
+				return
+			}
+		}
 		// Retirement is bookkeeping for an operator-removed app; it never stops
 		// Machines or deletes a customer's data, archives, DNS, or billing.
 		j.Retired = true
@@ -627,6 +642,7 @@ func (s *Service) Tick(ctx context.Context, owner string) error {
 				// Clear the customer's password after verification and bootstrap-secret removal.
 				if j.State == "ready" || j.State == "ready_email" {
 					creds.Password = ""
+					creds.SMTPPassword = ""
 				}
 				var data []byte
 				data, err = json.Marshal(creds)
