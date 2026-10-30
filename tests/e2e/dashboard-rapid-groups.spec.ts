@@ -168,12 +168,24 @@ for (const section of ['sites', 'library'] as const) {
 			await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)
 			await expect(page.locator('.dashboard-content > header')).toHaveCount(1)
 			if (returnMethod === 'back') {
+				if (section === 'sites') {
+					// Browser history may apply its document offset after route/layout restoration.
+					await page.evaluate(() => window.scrollTo(0, 0))
+					await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)
+				}
 				await page.goForward()
 				if (section === 'sites') await expect(page.locator('#primo-toolbar .sites-link')).toBeVisible()
 				else await expect(page.getByRole('dialog')).toBeVisible()
 				await page.goBack()
 				await expect(page).toHaveURL(new RegExp(`/dashboard/${section}\\?group=${groups[1].id}$`))
 				await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)
+				if (section === 'sites') {
+					await page.keyboard.press('ArrowLeft')
+					await page.evaluate(() => window.scrollTo(0, 120))
+					await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(120)
+					await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+					await expect(page.locator(scroller)).toHaveJSProperty('scrollTop', 120)
+				}
 			}
 		})
 	}
