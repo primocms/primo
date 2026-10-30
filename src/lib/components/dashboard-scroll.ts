@@ -161,6 +161,10 @@ export function createDashboardScroll({
 				remember()
 				if (reloadSnapshot?.key === key && reloadSnapshot.url === location.href) reloadSnapshot.top = capture().top
 				if (editorReturnSnapshot?.key === key && editorReturnSnapshot.url === location.href) editorReturnSnapshot.top = capture().top
+			} else if (scroller()?.scrollTop !== pending) {
+				// A browser history offset can arrive after route/layout restoration
+				// without resizing anything. Preserve the target until user input.
+				scheduleRestore()
 			}
 		}
 		const onInteraction = () => {
