@@ -11,6 +11,8 @@ import json from './plugins/json'
 import glsl from './plugins/glsl'
 import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
 import preview_runtime from '../preview-runtime.svelte.js?raw'
+import { createModuleLoader } from './module_loader.js'
+import { resolvePinnedRuntime, pinnedRuntimeAsset } from './pinned-runtime.js'
 
 const sveltePromiseWorker = new PromiseWorker(new svelteWorker())
 
@@ -21,14 +23,17 @@ const CDN_URL = 'https://esm.sh'
 const SVELTE_CDN = `${CDN_URL}/svelte@${SVELTE_VERSION}`
 
 // In-memory cache for external modules (persists for worker lifetime)
-const module_cache = new Map()
+const loadModule = createModuleLoader()
 
 registerPromiseWorker(rollup_worker)
+/** @param {{component: any, head?: {code: string, data: object}, hydrated?: boolean, buildStatic?: boolean, css?: string, format?: import('@rollup/browser').ModuleFormat, dev_mode?: boolean, runtime?: string[]}} options */
 async function rollup_worker({ component, head, hydrated, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [] }) {
 	const final = {
 		ssr: '',
 		dom: '',
-		error: ''
+		error: '',
+		failureKind: '',
+		errorStack: ''
 	}
 
 	const head_validation_error = validateHeadCode(head?.code || '')
@@ -158,7 +163,7 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 				input: './entry.js',
 				onwarn(warning, warn) {
 					// Suppress circular dependency warnings from esm.sh Svelte modules
-					if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.ids?.some((id) => id.includes('esm.sh/svelte'))) {
+					if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.ids?.some((id) => id.includes('esm.sh/svelte') || id.startsWith('primo-runtime:svelte/'))) {
 						return
 					}
 					// Use default warning handler for other warnings
@@ -171,6 +176,9 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 						async resolveId(importee, importer) {
 							// 1) Virtual esm-env
 							if (importee === 'esm-env') return 'virtual:esm-env'
+							const pinned = resolvePinnedRuntime(importee, importer, svelteOptions.generate === 'server')
+							if (pinned) return pinned
+							if (importee === 'node:async_hooks' && importer?.startsWith('primo-runtime:svelte/')) return { id: importee, external: true }
 
 							// 2) Local virtual files (in-memory Svelte sources)
 							if (component_lookup.has(importee)) return importee
@@ -190,15 +198,15 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 								if (importee.startsWith('/')) return new URL(importee, CDN_URL).href
 							}
 
-							// 6) Svelte runtime pinned
-							const serverRuntime = svelteOptions.generate === 'server' ? '?conditions=worker&bundle=false' : ''
-							if (importee === 'svelte') return SVELTE_CDN + serverRuntime
-							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice('svelte/'.length)}${serverRuntime}`
+							// 6) Non-runtime Svelte imports retain their original version pin.
+							if (importee.startsWith('svelte/')) return `${SVELTE_CDN}/${importee.slice(7)}`
 
 							// 7) Bare package → let esm.sh resolve
 							return `${CDN_URL}/${importee}`
 						},
 						async load(id) {
+							const asset = pinnedRuntimeAsset(id)
+							if (asset) return loadModule(asset)
 							if (id === 'virtual:esm-env') {
 								return `export const DEV = false; export const PROD = true; export const BROWSER = ${svelteOptions.generate !== 'server'};`
 							}
@@ -208,21 +216,8 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 
 							// Fetch external modules with caching
 							if (/^https?:/.test(id)) {
-								// Check cache first
-								if (module_cache.has(id)) {
-									return module_cache.get(id)
-								}
-
 								try {
-									const response = await fetch(id)
-									if (!response.ok) {
-										throw new Error(`Failed to fetch ${id}: ${response.status} ${response.statusText}`)
-									}
-									const code = await response.text()
-
-									// Cache the result
-									module_cache.set(id, code)
-									return code
+									return await loadModule(id)
 								} catch (error) {
 									console.error(`Error loading external module: ${id}`, error)
 									throw error
@@ -239,8 +234,8 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 							try {
 								const res = await sveltePromiseWorker.postMessage({
 									code,
-										svelteOptions,
-										module: id.endsWith('.svelte.js')
+									svelteOptions: { ...svelteOptions, filename: id === './App.svelte' && !Array.isArray(component) && component.filename ? component.filename : id },
+									module: id.endsWith('.svelte.js')
 								})
 								return res.code
 
@@ -279,10 +274,16 @@ async function rollup_worker({ component, head, hydrated, buildStatic = true, cs
 	return final
 
 	function noteBuildError(error, id) {
-		const error_message = error instanceof Error ? error.message : String(error)
-		console.error('Build error:', error_message, error)
-
 		if (final.error) return
+		const error_message = error instanceof Error ? error.message : String(error)
+		if (error?.name === 'InternalError' && error_message === 'too much recursion') {
+			final.failureKind = 'engine-recursion'
+			final.errorStack = error.stack || ''
+		} else {
+			// Include plain strings as well as the Error object: browser traces and
+			// remote console collectors cannot always serialize worker Error handles.
+			console.error('Build error:', error_message, error?.stack || '', error?.id || id || '', error)
+		}
 		final.error = formatRollupError(error, id)
 	}
 }

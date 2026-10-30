@@ -86,13 +86,13 @@ for (const kind of ['component', 'dynamic']) {
 			const frame = page.frames()[1]
 			await frame.waitForFunction(() => window.__PRIMO_CONTEXT__?.environment === 'editor' && document.readyState === 'complete')
 			const source = await bundle('v1')
-			const send = (data, js = source) =>
+			const send = (data, js = source, reset = false) =>
 				page.evaluate(
-					({ kind, js, data }) => {
+					({ kind, js, data, reset }) => {
 						if (kind === 'component') document.querySelector('iframe').contentWindow.postMessage({ payload: { js, data } }, '*')
-						else window.channel.postMessage({ payload: { componentApp: js, data } })
+						else window.channel.postMessage({ payload: { componentApp: js, data, reset } })
 					},
-					{ kind, js, data }
+					{ kind, js, data, reset }
 				)
 			await send(initial)
 			await frame.waitForFunction(() => document.querySelector('h1')?.textContent === 'Before' && [...document.images].every((img) => img.complete))
@@ -155,12 +155,12 @@ for (const kind of ['component', 'dynamic']) {
 				const body = document.querySelector('.body')
 				const anchor = body.lastChild
 				window.surface = window.adapter.createRichTextSurface(body)
-					window.surface.textContent = 'Visible editor content'
-					window.backingSource = anchor.parentNode
-					document.addEventListener('primo-rendered', () => {
-						const source = window.adapter.restoreRichTextSurface(body, window.surface)
-						if (source) window.backingSource = source
-					})
+				window.surface.textContent = 'Visible editor content'
+				window.backingSource = anchor.parentNode
+				document.addEventListener('primo-rendered', () => {
+					const source = window.adapter.restoreRichTextSurface(body, window.surface)
+					if (source) window.backingSource = source
+				})
 			})
 			await send({ ...next, body: '<p>Updated backing content</p>' })
 			await frame.waitForFunction(() => window.backingSource.textContent === 'Updated backing content')
@@ -168,7 +168,8 @@ for (const kind of ['component', 'dynamic']) {
 			assert.equal(await frame.evaluate(() => window.surface.isConnected), true)
 
 			// Code changes remount, resetting local state and disposing the old instance.
-			await send(next, await bundle('v2'))
+			const nextSource = await bundle('v2')
+			await send(next, nextSource)
 			await frame.waitForFunction(() => document.querySelector('footer')?.textContent === 'v2')
 			assert.deepEqual(
 				await frame.evaluate(() => ({
@@ -179,6 +180,14 @@ for (const kind of ['component', 'dynamic']) {
 				})),
 				{ mounts: 2, unmounts: 1, count: '0', oldImageConnected: false }
 			)
+			if (kind === 'dynamic') {
+				await frame.locator('button').click()
+				await frame.waitForFunction(() => document.querySelector('button')?.textContent === '1')
+				await send(next, nextSource, true)
+				await frame.waitForFunction(() => window.mounts === 3)
+				assert.equal(await frame.locator('button').textContent(), '0')
+				assert.equal(await frame.evaluate(() => window.unmounts), 2)
+			}
 			assert.deepEqual(errors, [])
 		} finally {
 			await browser.close()

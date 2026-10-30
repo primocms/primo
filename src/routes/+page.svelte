@@ -6,9 +6,9 @@
 
 	onMount(async () => {
 		if (await check_session()) {
-			await goto(self.instance?.authStore.record?.serverRole ? '/admin/site' : '/admin/dashboard/sites', { replaceState: true })
+			await goto(self.instance?.authStore.record?.serverRole ? '/admin/site' : '/admin/dashboard/sites', { replace: true })
 		} else {
-			await goto('/admin/auth', { replaceState: true })
+			await goto('/admin/auth', { replace: true })
 		}
 	})
 </script>

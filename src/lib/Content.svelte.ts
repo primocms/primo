@@ -1,6 +1,6 @@
 import type { Entry } from '$lib/common/models/Entry.js'
 import type { locales } from './common'
-import { SiteFields, Sites, Pages, PageTypeFields, PageTypes, SiteSymbols, LibraryUploads } from './pocketbase/collections'
+import { Sites, Pages, PageTypeFields, PageTypes, SiteSymbols, LibraryUploads } from './pocketbase/collections'
 import type { Field } from './common/models/Field'
 import { get_empty_value, get_focal_point, get_focal_position, convert_markdown_to_html, convert_rich_text_to_html, normalize_entry_value } from '$lib/builder/utils'
 import { self } from './pocketbase/managers'
@@ -8,6 +8,35 @@ import type { ObjectOf } from './pocketbase/CollectionMapping.svelte'
 import { build_live_page_url } from './pages'
 import { page_context, page_type_context, site_context } from './builder/stores/context'
 import { is_entity_of, type Entity, type ENTITY_COLLECTIONS, type EntityOf } from './Entity'
+
+// Resolve against the owning site's loaded roots, never a global record lookup.
+// Loading is handled by the caller; null means invalid (publication preflight reports it).
+export const findSiteField = (fields: Field[], reference: unknown) => {
+	if (typeof reference !== 'string' || !reference) return null
+	const roots = fields.filter((field) => !field.parent)
+	const byId = roots.find((field) => field.id === reference)
+	if (byId) return byId
+	const byKey = roots.filter((field) => field.key === reference)
+	return byKey.length === 1 ? byKey[0] : null
+}
+
+export const assertSiteFieldReferences = (site: { id: string; name?: string }, siteFields: Field[], fields: Field[]) => {
+	for (const field of fields) {
+		if (field.type !== 'site-field' || findSiteField(siteFields, field.config?.field)?.key) continue
+		const owner = 'symbol' in field ? `block ${field.symbol}` : 'page_type' in field ? `page type ${field.page_type}` : `site ${site.id}`
+		throw new Error(`Unresolved or ambiguous site-field reference ${JSON.stringify(field.config?.field ?? '')} in ${owner}, field "${field.key || field.id}" (${field.id}). Set config.field to the ID or unique key of a top-level field in site "${site.name || site.id}" (${site.id}); check site/fields.yaml.`)
+	}
+}
+
+const siteForEntity = (entity: Entity) => {
+	if (is_entity_of(entity, 'sites')) return entity
+	if ('site' in entity) return Sites.one(entity.site)
+	if ('symbol' in entity) {
+		const symbol = SiteSymbols.one(entity.symbol)
+		return symbol && Sites.one(symbol.site)
+	}
+	return site_context.getOr({ value: null }).value
+}
 
 export type UseContentOptions = {
 	/**
@@ -262,19 +291,15 @@ export const useContent = <Collection extends keyof typeof ENTITY_COLLECTIONS>(e
 				const locale = 'en'
 				if (!content[locale]) content[locale] = {}
 
-				if (!field.config?.field) continue
-				const siteField = SiteFields.one(field.config.field)
-				if (siteField === null) continue
-				if (!siteField) return
-				if (!siteField.key) continue
-
-				const site = Sites.one(siteField.site)
+				const site = siteForEntity(entity)
 				if (site === null) continue
 				if (!site) return
 
 				const siteFields = site.fields()
 				if (siteFields === null) continue
 				if (!siteFields) return
+				const siteField = findSiteField(siteFields, field.config?.field)
+				if (!siteField?.key) continue
 
 				const siteEntries = site.entries()
 				if (siteEntries === null) continue
@@ -620,14 +645,15 @@ const resolveEntries = ({ entity, field, entries, parentEntry }: { entity: Entit
 
 	// Handle site fields specially - get entries from the site entity
 	else if (field.type === 'site-field' && field.key) {
-		if (!field.config?.field) return []
-		const siteField = SiteFields.one(field.config.field)
-		if (siteField === null) return []
-		if (!siteField) return
-
-		const site = Sites.one(siteField.site)
+		const site = siteForEntity(entity)
 		if (site === null) return []
 		if (!site) return
+
+		const siteFields = site.fields()
+		if (siteFields === null) return []
+		if (!siteFields) return
+		const siteField = findSiteField(siteFields, field.config?.field)
+		if (!siteField) return []
 
 		const siteEntries = site.entries()
 		if (siteEntries === null) return []

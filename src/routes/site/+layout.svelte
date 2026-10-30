@@ -30,7 +30,7 @@
 		refresh_author_mode()
 
 		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+			await goto(login_url, { replace: true })
 			return
 		}
 
@@ -51,7 +51,7 @@
 						// (host === id) have no reachable vhost and must open by id at
 						// /admin/sites/{id} — otherwise the id gets used as a hostname
 						// and DNS fails. site_editor_url handles both cases.
-						window.location.href = site_editor_url(first_site)
+						window.location.href = site_editor_url({ id: first_site.id, host: first_site.host })
 						return
 					}
 				} else {
@@ -82,7 +82,7 @@
 	$effect(() => {
 		const list_loaded = sites_by_host !== undefined
 		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
-			goto('/admin/dashboard', { replaceState: true })
+			goto('/admin/dashboard', { replace: true })
 		} else if (site) {
 			creating_site = false
 		}

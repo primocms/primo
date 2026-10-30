@@ -17,7 +17,7 @@
 		refresh_author_mode()
 
 		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+			await goto(login_url, { replace: true })
 			return
 		}
 	})

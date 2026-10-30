@@ -3,7 +3,7 @@ import type { PageSection } from '$lib/common/models/PageSection'
 import type { PageTypeSection } from '$lib/common/models/PageTypeSection'
 import type { SiteSymbol } from '$lib/common/models/SiteSymbol'
 import { PRIMO_BASELINE_CSS } from '$lib/common/baseline-css'
-import { useContent } from '$lib/Content.svelte'
+import { useContent, assertSiteFieldReferences } from '$lib/Content.svelte'
 import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 import { processors } from '../builder/component'
 import { usePageData } from '../PageData.svelte'
@@ -11,6 +11,12 @@ import { Pages, PageSections, PageTypeSections, Sites } from '../pocketbase/coll
 import { self } from '../pocketbase/managers'
 import { useSvelteWorker } from './Worker.svelte'
 import { script_version, symbol_script_url } from './publish-assets.js'
+import { VERSION as SVELTE_VERSION } from 'svelte/compiler'
+import { input_fingerprint, page_file_name, script_file_name, page_file_matches, cached_script_version } from './publish-cache.js'
+
+declare const __PRIMO_PUBLISH_COMPILER_VERSION__: string
+// Browser and Node producers cannot reuse each other's compiled output.
+const COMPILER_PROFILE = ['editor-publish-v1', __PRIMO_PUBLISH_COMPILER_VERSION__, SVELTE_VERSION, PRIMO_BASELINE_CSS]
 
 export const usePublishSite = (site_id?: string) => {
 	const worker = useSvelteWorker(
@@ -31,6 +37,7 @@ export const usePublishSite = (site_id?: string) => {
 			try {
 				// Flush pending editor changes before capturing the draft revision.
 				await self.commit()
+				assertSiteFieldReferences(data.site, data.site_fields, [...data.site_fields, ...data.symbol_fields, ...data.page_type_fields])
 				const status_response = await fetch(publication_url, { headers })
 				// Older servers retain their legacy Publish endpoint. New servers
 				// serialize editor and CLI builds through the same revision checks.
@@ -47,6 +54,7 @@ export const usePublishSite = (site_id?: string) => {
 				}
 				const promises: Promise<void>[] = []
 				const symbol_versions = new Map<string, string>()
+				const symbol_hashes = new Map<string, string>()
 				// Homepage previews are rendered alongside the other pages,
 				// but the sites.preview upload is deferred until after the published
 				// files have been regenerated (see below) — its filename is the
@@ -55,13 +63,20 @@ export const usePublishSite = (site_id?: string) => {
 				// the previous build, leaving the thumbnail stale.
 				const preview_uploads: (() => Promise<void>)[] = []
 				for (const { symbol, field_keys } of symbols_with_field_keys!) {
+					const { css } = await processors.css(symbol.css || '')
+					const hash = await input_fingerprint([COMPILER_PROFILE, { html: symbol.html, js: symbol.js, css, field_keys }])
+					symbol_hashes.set(symbol.id, hash)
 					if (!symbol.js) {
 						// No need to compile symbol JavaScript if there's none
 						continue
 					}
+					const cached_version = cached_script_version(symbol.compiled_js, symbol.compiled_js_hash, hash)
+					if (cached_version) {
+						symbol_versions.set(symbol.id, cached_version)
+						continue
+					}
 
 					const locale = 'en' as const
-					const { css } = await processors.css(symbol.css || '')
 
 					// Get symbol's default content
 					const symbol_data = symbol_content?.[symbol.id]?.[locale] ?? {}
@@ -73,6 +88,7 @@ export const usePublishSite = (site_id?: string) => {
 					const promise = processors
 						.html({
 							component: {
+								filename: `symbol-${symbol.id}.svelte`,
 								html: symbol.html,
 								js: symbol.js,
 								css,
@@ -95,9 +111,11 @@ export const usePublishSite = (site_id?: string) => {
 							}
 
 							const version = await script_version(res.js)
-							await self.instance?.collection('site_symbols').update(symbol.id, {
-								compiled_js: new File([res.js], 'symbol.js', { type: 'text/javascript' })
+							const uploaded = await self.instance?.collection('site_symbols').update(symbol.id, {
+								compiled_js: new File([res.js], script_file_name(hash, version), { type: 'text/javascript' }),
+								...(typeof symbol.compiled_js_hash === 'string' ? { compiled_js_hash: hash } : {})
 							})
+							if (uploaded) self.update_record(symbol.id, uploaded)
 							symbol_versions.set(symbol.id, version)
 						})
 						.catch((error) => {
@@ -112,7 +130,9 @@ export const usePublishSite = (site_id?: string) => {
 				promises.length = 0
 
 				for (const page of data.pages) {
-					if (!page.parent) {
+					const hash = await page_fingerprint(page, symbol_hashes, symbol_versions)
+					const reuse = page.compiled_html_hash === hash && page_file_matches(page.compiled_html, hash)
+					if (!page.parent && !page_file_matches(site?.preview, hash)) {
 						// Generate the homepage preview now, but only upload it to
 						// sites.preview after the published files are refreshed.
 						const promise = generate_page(page, symbol_versions, true).then(async ({ success, html, error }) => {
@@ -126,13 +146,15 @@ export const usePublishSite = (site_id?: string) => {
 									throw new Error('No site')
 								}
 
-								await self.instance?.collection('sites').update(site.id, {
-									preview: new File([html], 'index.html')
+								const uploaded = await self.instance?.collection('sites').update(site.id, {
+									preview: new File([html], page_file_name(hash))
 								})
+								if (uploaded) self.update_record(site.id, uploaded)
 							})
 						})
 						promises.push(promise)
 					}
+					if (reuse) continue
 
 					const promise = generate_page(page, symbol_versions)
 						.then(async ({ success, html, error, page_info }) => {
@@ -147,9 +169,11 @@ export const usePublishSite = (site_id?: string) => {
 								throw new Error(`Generating page "${page.name || page.id}" (${page.slug || '/'}) not successful: ${error || 'Unknown error'}`)
 							}
 
-							await self.instance?.collection('pages').update(page.id, {
-								compiled_html: new File([html], 'index.html', { type: 'text/html' })
+							const uploaded = await self.instance?.collection('pages').update(page.id, {
+								compiled_html: new File([html], page_file_name(hash), { type: 'text/html' }),
+								...(typeof page.compiled_html_hash === 'string' ? { compiled_html_hash: hash } : {})
 							})
+							if (uploaded) self.update_record(page.id, uploaded)
 						})
 						.catch((error) => {
 							console.error(`Page compilation error for "${page.name || page.id}":`, error)
@@ -193,6 +217,20 @@ export const usePublishSite = (site_id?: string) => {
 		}
 	)
 
+	const page_fingerprint = async (page: Page, symbol_hashes: Map<string, string>, symbol_versions: Map<string, string>) => {
+		const page_type = page_types?.find((type) => type.id === page.page_type)
+		const layout = data?.page_type_sections.filter((section) => section.page_type === page_type?.id) ?? []
+		const sections = [...layout.filter((section) => section.zone === 'header'), ...(data?.page_sections.filter((section) => section.page === page.id) ?? []), ...layout.filter((section) => section.zone === 'footer')].filter(deduplicate('id'))
+		return input_fingerprint([COMPILER_PROFILE, {
+			page: { id: page.id, name: page.name, slug: page.slug, parent: page.parent, page_type: page.page_type },
+			head: [site?.head ?? '', page_type?.head ?? ''], foot: [site?.foot ?? '', page_type?.foot ?? ''],
+			data: { ...site_content?.en, ...page_content?.[page.id]?.en },
+			sections: sections.map((section) => ({ id: section.id, symbol: section.symbol, zone: 'zone' in section ? section.zone : 'body',
+				data: section_content?.[page.id]?.[section.id]?.en ?? {}, source: symbol_hashes.get(section.symbol) ?? null,
+				version: symbol_versions.get(section.symbol) ?? null }))
+		}])
+	}
+
 	const generate_page = async (page: Page, symbol_versions: Map<string, string>, no_js = false) => {
 		const locale = 'en' as const
 		let error_details = ''
@@ -234,6 +272,7 @@ export const usePublishSite = (site_id?: string) => {
 								const { css } = await processors.css(postcss || '')
 								return [
 									{
+										filename: `symbol-${symbol.id}.svelte`,
 										html,
 										js,
 										css,
@@ -261,8 +300,8 @@ export const usePublishSite = (site_id?: string) => {
 				data: site_data
 			}
 
-			// Process each zone separately and collect CSS from each
-			// Pass head to all zones (needed for head.data), but only include head.code once
+			// Page metadata must also render when every section zone is empty.
+			const page_head = await processors.html({ component: [], head, locale, css: 'external' })
 			const head_without_code = { code: '', data: head.data }
 
 			console.log(`Compiling HTML for page "${page.name || page.id}"`)
@@ -272,8 +311,9 @@ export const usePublishSite = (site_id?: string) => {
 
 			const header_result = has_header
 				? await processors.html({
+						independent: true,
 						component: await build_components(header_sections),
-						head, // Include custom head code in first zone processing
+						head: head_without_code,
 						locale,
 						css: 'external'
 					})
@@ -281,8 +321,9 @@ export const usePublishSite = (site_id?: string) => {
 
 			const body_result = has_body
 				? await processors.html({
+						independent: true,
 						component: await build_components(body_sections),
-						head: has_header ? head_without_code : head, // Include head.code if no header zone
+						head: head_without_code,
 						locale,
 						css: 'external'
 					})
@@ -291,16 +332,17 @@ export const usePublishSite = (site_id?: string) => {
 			const footer_result =
 				footer_sections && footer_sections.length > 0
 					? await processors.html({
+							independent: true,
 							component: await build_components(footer_sections),
-							head: has_header || has_body ? head_without_code : head, // Include head.code if no header/body zones
+							head: head_without_code,
 							locale,
 							css: 'external'
 						})
 					: { body: '', head: '' }
 
 			// Check for errors in any zone
-			if (header_result.error || body_result.error || footer_result.error) {
-				const zone_error = header_result.error || body_result.error || footer_result.error
+			if (page_head.error || header_result.error || body_result.error || footer_result.error) {
+				const zone_error = page_head.error || header_result.error || body_result.error || footer_result.error
 				error_details = `HTML compilation error: ${zone_error}`
 				console.error(`HTML compilation error for page "${page.name || page.id}":`, zone_error)
 				return {
@@ -312,8 +354,8 @@ export const usePublishSite = (site_id?: string) => {
 				}
 			}
 
-			// Combine CSS from all zones (header includes custom head.code)
-			const combined_head = (header_result.head || '') + (body_result.head || '') + (footer_result.head || '')
+			// Include page metadata once, followed by each section's own head.
+			const combined_head = (page_head.head || '') + (header_result.head || '') + (body_result.head || '') + (footer_result.head || '')
 
 			const page_symbols_with_js = sections
 				.map((section) => ({ symbol_id: section.symbol }))
@@ -333,7 +375,7 @@ export const usePublishSite = (site_id?: string) => {
 								.filter((section) => section.symbol === symbol.id)
 								.map((section) => {
 									const content = section_content?.[page.id]?.[section.id]?.[locale]
-									return `hydrate(App, { target: document.querySelector('#section-${section.id}'), props: ${JSON.stringify(content)} });`
+									return `hydrate(App, { target: document.querySelector('#section-${section.id}'), props: ${JSON.stringify(content).replace(/</g, '\\u003c')} });`
 								})
 								.join('') +
 							'}).catch(e => console.error(e));'

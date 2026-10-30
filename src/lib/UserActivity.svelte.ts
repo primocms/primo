@@ -10,6 +10,7 @@ import { get } from 'svelte/store'
 import { current_user } from './pocketbase/user'
 import { instance } from './instance'
 import type { ObjectOf } from './pocketbase/CollectionMapping.svelte'
+import { createPresenceScheduler } from './user_activity_scheduler.js'
 
 export type UserActivityValues = Omit<UserActivity, 'id'>
 
@@ -29,7 +30,8 @@ export type UserActivityInfo = {
 
 const user_activity_context = new Context<{ value: UserActivityValues }>('user_activity')
 
-export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
+export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => Partial<UserActivityValues>)) => {
+	const read_overrides = typeof overrides === 'function' ? overrides : () => overrides
 	// User activity is collaborator presence ("who else is editing this site").
 	// It's meaningless in local dev (single user, no collaborators) and would
 	// write churn records against the local DB, so don't track it there.
@@ -39,7 +41,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 	if (existing_context.value) {
 		// Set activity overrides through context
 		watch(
-			() => overrides,
+			read_overrides,
 			(overrides) => {
 				for (const [key, value] of Object.entries(overrides)) {
 					existing_context.value[key] = value
@@ -60,63 +62,51 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 			site: '',
 			page_type: '',
 			page: '',
-			site_symbol: ''
+			site_symbol: '',
+			page_type_section: '',
+			page_section: ''
 		}
 	})
 	user_activity_context.set(context)
 	watch(
-		() => overrides,
-		() => {
-			context.value = {
-				user: '',
-				site: '',
-				page_type: '',
-				page: '',
-				site_symbol: '',
-				page_type_section: '',
-				page_section: '',
-				...overrides
-			}
+		read_overrides,
+		(overrides) => {
+			// Parent navigation updates must not erase the activity owned by children.
+			Object.assign(context.value, overrides)
 		}
 	)
 
-	let task: number | undefined
 	let activity: ObjectOf<typeof UserActivities> | null = null
 	const track = async () => {
-		clearTimeout(task)
-
 		// Skip tracking if required fields are missing
 		if (!context.value.user || !context.value.site) {
 			return
 		}
 
-		if (activity) {
-			activity = UserActivities.update(activity.id, context.value)
-			await manager.commit()
-		} else {
-			activity = UserActivities.create(context.value)
-			await manager.commit()
-		}
-
-		task = setTimeout(track, 5000)
-	}
-
-	const startTracking = async () => {
-		if (task) return
-		task = setTimeout(track, 500)
+		const nextActivity = activity
+			? UserActivities.update(activity.id, context.value)
+			: UserActivities.create(context.value)
+		await manager.commit()
+		// A canceled create has no confirmed cached record. Retry creation on the
+		// next heartbeat rather than trying to update a nonexistent activity.
+		activity = nextActivity
 	}
 
 	const stopTracking = async () => {
-		clearTimeout(task)
-		task = undefined
-
 		if (activity) {
-			// There's only one activity per user
-			UserActivities.delete(activity.id)
+			const id = activity.id
 			activity = null
+			// Hidden includes hard navigation. Starting authenticated cleanup
+			// there can outlive the JS document even with a caught promise.
+			// The server expires presence after inactivity; resume with a new
+			// record because the old one may already have expired.
+			if (document.hidden) return
+			// There's only one activity per user
+			UserActivities.delete(id)
 			await manager.commit()
 		}
 	}
+	const tracker = createPresenceScheduler({ update: track, remove: stopTracking })
 
 	const visible = new IsDocumentVisible()
 	watch(
@@ -124,10 +114,10 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 		({ visible }) => {
 			if (!visible) {
 				// Tab not visible
-				stopTracking()
-			} else if (!activity) {
+				void tracker.stop()
+			} else {
 				// Start or resume tracking user activity
-				startTracking()
+				tracker.start()
 			}
 		}
 	)
@@ -136,12 +126,12 @@ export const setUserActivity = (overrides: Partial<UserActivityValues>) => {
 		() => {
 			if (activity) {
 				// Force update
-				track()
+				tracker.refresh()
 			}
 		}
 	)
 
-	onDestroy(stopTracking)
+	onDestroy(() => { void tracker.dispose() })
 }
 
 export const getUserActivity = ({ filter }: { filter?: (activity: UserActivityInfo) => unknown } = {}): UserActivityInfo[][] => {

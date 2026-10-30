@@ -82,6 +82,7 @@ func RegisterSiteLimit(pb *pocketbase.PocketBase) error {
 // billed editor seats. Cap of 0 means unlimited. Low risk regardless: an
 // over-cap assignment is trivially reversible.
 func RegisterEditorLimit(pb *pocketbase.PocketBase) error {
+	registerOwnerOnly(pb)
 	pb.OnRecordCreateRequest("site_role_assignments").BindFunc(func(e *core.RecordRequestEvent) error {
 		cap := getCap(pb, "editor_cap", "PRIMO_EDITOR_CAP")
 		if cap > 0 && e.Record.GetString("role") == "editor" {

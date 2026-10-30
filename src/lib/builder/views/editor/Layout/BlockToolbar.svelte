@@ -1,5 +1,5 @@
 <script>
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { createEventDispatcher } from 'svelte'
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'
@@ -36,11 +36,25 @@
 	if (browser) DEBUGGING = debugging_context.getOr(false)
 
 	const base_path = $state(pageState.url.pathname.includes('/sites/') ? `/admin/sites/${site?.id}` : '/admin/site')
+	/** @type {HTMLDetailsElement | undefined} */
+	let more_actions = $state()
+	function close_actions() {
+		if (more_actions) more_actions.open = false
+	}
 </script>
+
+<svelte:window onkeydown={(event) => {
+	if (event.key === 'Escape' && more_actions?.open && more_actions.contains(document.activeElement)) {
+		close_actions()
+		more_actions.querySelector('summary')?.focus()
+		event.preventDefault()
+		event.stopPropagation()
+	}
+}} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
-<div in:fade={{ duration: 100 }} class="BlockToolbar primo-reset" class:page-toolbar={!!name} bind:this={node}>
+<div transition:fade={{ duration: typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 100 }} class="BlockToolbar primo-reset" class:page-toolbar={!!name} bind:this={node}>
 	{#if name}
 		<div class="page-toolbar-top">
 			<div class="block-label"><span>{name}</span>{#if layout_zone}<small>Shared · {layout_zone === 'header' ? 'Header' : 'Footer'}</small>{/if}</div>
@@ -50,17 +64,17 @@
 					<span>{$read_only ? 'View content' : 'Edit content'}</span>
 				</button>
 				{#if $current_user?.siteRole === 'developer' || (!immovable && !$read_only)}
-					<details class="more-actions">
+					<details class="more-actions" bind:this={more_actions}>
 						<summary aria-label="More block actions" title="More block actions"><Icon icon="lucide:ellipsis" /></summary>
-						<div class="action-menu" onclick={(event) => { if (event.target.closest('button, a')) event.currentTarget.closest('details').open = false }} onkeydown={(event) => { if (event.key === 'Escape') { const details = event.currentTarget.closest('details'); details.open = false; details.querySelector('summary').focus() } }} role="group" aria-label="Block actions">
+						<div class="action-menu" role="group" aria-label="Block actions">
 							{#if $current_user?.siteRole === 'developer'}
-								<button onclick={() => dispatch('edit-code')}><Icon icon="ph:code-bold" />{$read_only ? 'View code' : 'Edit code'}</button>
-								{#if layout_zone && page_type}<a href="{base_path}/page-type--{page_type.id}">Edit shared template</a>{/if}
+								<button onclick={() => { close_actions(); dispatch('edit-code') }}><Icon icon="ph:code-bold" />{$read_only ? 'View code' : 'Edit code'}</button>
+								{#if layout_zone && page_type}<a onclick={close_actions} href="{base_path}/page-type--{page_type.id}">Edit shared template</a>{/if}
 							{/if}
 							{#if !immovable && !$read_only}
-								{#if !isFirst}<button onclick={() => dispatch('moveUp')}>Move up</button>{/if}
-								{#if !is_last}<button onclick={() => dispatch('moveDown')}>Move down</button>{/if}
-								<button onclick={() => dispatch('delete')}>Delete block</button>
+								{#if !isFirst}<button onclick={() => { close_actions(); dispatch('moveUp') }}>Move up</button>{/if}
+								{#if !is_last}<button onclick={() => { close_actions(); dispatch('moveDown') }}>Move down</button>{/if}
+								<button onclick={() => { close_actions(); dispatch('delete') }}>Delete block</button>
 							{/if}
 						</div>
 					</details>

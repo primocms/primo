@@ -1,0 +1,364 @@
+name: Candidate native platforms
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/rc-platform.yml'
+      - '.github/workflows/tag.yml'
+      - '.github/workflows/release.yml'
+      - 'release/ship/release-channel.mjs'
+      - 'release/ship/candidate-asset.mjs'
+      - 'release/ship/Dockerfile.native'
+      - 'tests/release/**'
+      - 'tests/platform/**'
+      - 'tests/onboarding/**'
+      - 'tests/e2e/**'
+      - 'tests/staging/rc8/**'
+      - 'tests/security/**'
+      - 'tests/staging/rc8-packages.json'
+      - 'tests/presence/**'
+      - 'internal/**'
+      - 'src/**'
+      - 'static/**'
+      - 'migrations/**'
+      - 'main.go'
+      - 'go.*'
+      - '*config*'
+      - 'package*.json'
+      - 'release/vendor/**'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: rc-platform-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - run: npm ci
+      # Keep the strict audit gate independent so a finding does not prevent
+      # collecting native/browser evidence for the same candidate source.
+      - run: npm audit
+  bootstrap-distributions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+      - name: Verify pinned runtimes before fresh native installation
+        env:
+          PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tests/onboarding/distributions.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rc13-node-distributions
+          path: node-distributions/
+          compression-level: 0
+          if-no-files-found: error
+
+  native:
+    needs: bootstrap-distributions
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux_amd64
+          - runner: ubuntu-24.04-arm
+            target: linux_arm64
+          - runner: macos-15-intel
+            target: darwin_amd64
+          - runner: macos-15
+            target: darwin_arm64
+          - runner: windows-latest
+            target: windows_amd64.exe
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.26.10
+          cache: true
+      - run: npm ci
+      - run: npm run check
+      - name: Check reachable Go vulnerabilities
+        if: matrix.target == 'linux_amd64'
+        shell: bash
+        run: |
+          GOTOOLCHAIN=go1.27.3 go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          GOTOOLCHAIN=go1.26.10 govulncheck ./...
+      - name: Build embedded frontend
+        shell: bash
+        run: |
+          npx svelte-kit sync
+          npx vite --config common.config.js build
+          NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
+      - name: Build versioned native executable
+        shell: bash
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.13 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-node-distributions
+          path: frozen-node
+      - name: Exercise exact native candidate and installed CLI
+        shell: bash
+        env:
+          PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PRIMO_TEST_CMS_BINARY: primo_${{ matrix.target }}
+          PRIMO_TEST_NODE_DISTRIBUTIONS: frozen-node
+        run: node --test tests/platform/*.test.mjs
+      - name: Retain tested bytes and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc13-${{ matrix.target }}
+          path: |
+            primo_${{ matrix.target }}
+            platform-result.json
+            production-result.json
+            hosted-native-result.json
+            fresh-machine-result.json
+          if-no-files-found: error
+      - name: Retain failed fresh-install diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc13-fresh-install-failure-${{ matrix.target }}
+          path: fresh-install-failure.json
+          if-no-files-found: ignore
+
+  exact-browser:
+    needs: native
+    runs-on: ubuntu-24.04
+    # Include browser installation, the full suite and installed handoff/recovery.
+    # Per-test limits and performance assertions remain unchanged.
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_BROWSER: ${{ matrix.browser }}
+      PRIMO_BROWSER: ${{ matrix.browser }}
+      PRIMO_PRESENCE_HOST: primo-presence.test
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      RC_INSTALL: ${{ github.workspace }}
+      PLAYWRIGHT_JSON_OUTPUT_FILE: frozen-results.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-linux_amd64
+          path: frozen
+      - name: Verify exact installed archives and tested native provenance
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify the fixed WebKit networking library and actual process mapping
+        if: matrix.browser == 'webkit'
+        run: node tests/platform/webkit-runtime.mjs
+      - name: Resolve reserved preview alias only inside this disposable runner
+        run: echo '127.0.0.1 primo-preview.test primo-presence.test' | sudo tee -a /etc/hosts
+      - name: Run the complete suite against the exact native package
+        run: npx playwright test --timeout=90000 --reporter=list,json
+      - name: Repeat Firefox worker recovery and the original scrolling scenario
+        if: matrix.browser == 'firefox'
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: firefox-compiler-repeats.json
+        run: npx playwright test tests/e2e/compiler-lifecycle.spec.ts tests/e2e/page-creation.spec.ts --grep 'Firefox engine regexp|replaces one visible loading row' --repeat-each=10 --timeout=90000 --reporter=list,json
+      - name: Run the actual packaged agent and client handoff
+        if: ${{ !cancelled() }}
+        run: node --test tests/staging/rc8/handoff.test.mjs
+      - name: Verify agent onboarding from an empty local profile
+        if: ${{ !cancelled() }}
+        run: node --test tests/onboarding/browser.test.mjs
+      - name: Verify fresh production password sign-in and scoped dashboard
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/auth.test.mjs
+      - name: Verify production presence cancellation, reload and content retention
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/browser.test.mjs
+      - name: Verify canceled scoped-user and site-list caches recover without reload
+        if: ${{ !cancelled() }}
+        run: node --test tests/presence/cache.test.mjs
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc13-exact-${{ matrix.browser }}
+          path: |
+            frozen-results.json
+            firefox-compiler-repeats.json
+            webkit-runtime.json
+            test-results
+            /tmp/primo-e2e-server.log
+            presence-${{ matrix.browser }}.json
+            cache-${{ matrix.browser }}.json
+            auth-${{ matrix.browser }}.json
+            onboarding-${{ matrix.browser }}.json
+
+  native-safari:
+    needs: native
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_darwin_arm64
+      PRIMO_QA_SAFARI_WEBDRIVER: http://127.0.0.1:4444
+      PRIMO_PRESENCE_HOST: primo-presence.test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-darwin_arm64
+          path: frozen
+      - name: Verify the exact Mac candidate and unchanged built CLI/MCP packages
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+      - name: Run actual Safari with local generated accounts only
+        shell: bash
+        run: |
+          sudo /usr/bin/safaridriver --enable
+          echo '127.0.0.1 primo-presence.test' | sudo tee -a /etc/hosts
+          /usr/bin/safaridriver --port 4444 > "$RUNNER_TEMP/safari-driver.log" 2>&1 &
+          driver_pid=$!
+          trap 'kill "$driver_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4444/status > /dev/null; then break; fi
+            sleep 1
+          done
+          node --test tests/presence/safari.test.mjs
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc13-native-safari
+          path: presence-safari.json
+          if-no-files-found: error
+
+  copied-recovery:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PRIMO_PREVIOUS_BINARY: ${{ github.workspace }}/previous/primo_linux_amd64
+      PRIMO_RECOVERY_RESULT: ${{ github.workspace }}/recovery-result.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-linux_amd64
+          path: frozen
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc7-linux_amd64
+          path: previous
+          run-id: 38962963117
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify candidate provenance and rehearse production copied recovery
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY" "$PRIMO_PREVIOUS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node --test tests/staging/rc8/recovery.test.mjs
+          node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc13-copied-recovery
+          path: recovery-result.json
+          if-no-files-found: warn
+
+  adversarial-framing:
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_TEST_CMS_BINARY: ${{ github.workspace }}/frozen/primo_linux_amd64
+      PLAYWRIGHT_JSON_OUTPUT_FILE: framing-security-results.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: rc13-linux_amd64
+          path: frozen
+      - name: Verify the exact tested native artifact
+        run: |
+          chmod 755 "$PRIMO_TEST_CMS_BINARY"
+          node tests/staging/rc8/verify.mjs
+          node -e 'console.log("PRIMO_TEST_CMS_SHA256="+require("./frozen/platform-result.json").sha256)' >> "$GITHUB_ENV"
+      - run: npx playwright install --with-deps chromium
+      - name: Prove allowed rendering and cross-origin refusal in an isolated process
+        run: npx playwright test --config tests/security/playwright.config.ts --reporter=list,json
+      - name: Reverify all product bytes
+        if: always()
+        run: node tests/staging/rc8/verify.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rc13-framing-security
+          path: |
+            framing-security-results.json
+            tests/security/test-results/

@@ -10,6 +10,7 @@
 	import { Collaborators, SiteRoleAssignments, Users, type Sites } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
 	import Icon from '@iconify/svelte'
+	import Spinner from '../../ui/Spinner.svelte'
 	import { Loader } from 'lucide-svelte'
 	import { nanoid } from 'nanoid'
 	import { track_collaborator_added, track_operation_error, categorize_error } from '$lib/analytics'
@@ -255,63 +256,67 @@
 
 <div class="Invitation">
 	<main>
-		<h2>Invite site collaborator</h2>
-		<form
-			onsubmit={(e) => {
-				e.preventDefault()
+		{#if instance.owner_only}
+			<p>Your plan includes only your account. Upgrade to invite collaborators.</p>
+		{:else}
+			<h2>Invite site collaborator</h2>
+			<form
+				onsubmit={(e) => {
+					e.preventDefault()
 
-				if (!(e.submitter instanceof HTMLButtonElement)) {
-					return
-				}
+					if (!(e.submitter instanceof HTMLButtonElement)) {
+						return
+					}
 
-				const method = e.submitter.value
-				if (method === 'email') {
-					invite_collaborator()
-				} else if (method === 'link') {
-					generate_link()
-				}
-			}}
-		>
-			<label class="subheading" for="email">Enter collaborator email</label>
-			<div>
-				<div class="input-group">
-					<input bind:value={email} type="email" placeholder="Email address" name="email" list="site-invite-accounts" required />
-					<datalist id="site-invite-accounts">
-						{#each available_users as user (user.id)}
-							<option value={user.email}>{user.name || user.email}</option>
-						{/each}
-					</datalist>
-					<select bind:value={role} required>
-						<option value="developer">Developer</option>
-						<option value="editor">Content Editor</option>
-					</select>
+					const method = e.submitter.value
+					if (method === 'email') {
+						invite_collaborator()
+					} else if (method === 'link') {
+						generate_link()
+					}
+				}}
+			>
+				<label class="subheading" for="email">Enter collaborator email</label>
+				<div>
+					<div class="input-group">
+						<input bind:value={email} type="email" placeholder="Email address" name="email" list="site-invite-accounts" required />
+						<datalist id="site-invite-accounts">
+							{#each available_users as user (user.id)}
+								<option value={user.email}>{user.name || user.email}</option>
+							{/each}
+						</datalist>
+						<select bind:value={role} required>
+							<option value="developer">Developer</option>
+							<option value="editor">Content Editor</option>
+						</select>
+					</div>
 				</div>
-			</div>
-			<div>
-				{#if instance.smtp_enabled}
-					<button type="submit" value="email" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
-						{#if sending}
-							<Icon icon="eos-icons:three-dots-loading" />
+				<div>
+					{#if instance.smtp_enabled}
+						<button type="submit" value="email" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
+							{#if sending}
+								<Spinner />
+							{:else}
+								Send invite
+							{/if}
+						</button>
+						<span>or</span>
+					{/if}
+					<button type="submit" value="link" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
+						{#if generating}
+							<Spinner />
 						{:else}
-							Send invite
+							Generate link
 						{/if}
 					</button>
-					<span>or</span>
-				{/if}
-				<button type="submit" value="link" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
-					{#if generating}
-						<Icon icon="eos-icons:three-dots-loading" />
-					{:else}
-						Generate link
+					{#if error}
+						<output class="error">
+							{error}
+						</output>
 					{/if}
-				</button>
-				{#if error}
-					<output class="error">
-						{error}
-					</output>
-				{/if}
-			</div>
-		</form>
+				</div>
+			</form>
+		{/if}
 		<section>
 			<h3 class="subheading">People with Access</h3>
 			{#if !server_members || !site_collborators}
@@ -468,39 +473,8 @@
 		font-weight: 400;
 		font-size: 0.75rem;
 		/* color: #3a3d45; */
-		.letter {
-			height: 26px;
-			width: 26px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: #81a6fd;
-			color: white;
-			font-weight: 700;
-			font-size: 0.875rem;
-			line-height: 0;
-			border-radius: 50%;
-		}
 		.email {
 			flex: 1;
-		}
-		.status-pill {
-			padding: 2px 8px;
-			border-radius: 12px;
-			font-size: 0.625rem;
-			font-weight: 500;
-			text-transform: uppercase;
-			letter-spacing: 0.025em;
-
-			&.pending {
-				background: rgba(251, 191, 36, 0.2);
-				color: #fbbf24;
-			}
-
-			&.sent {
-				background: rgba(129, 140, 248, 0.2);
-				color: #818cf8;
-			}
 		}
 	}
 </style>

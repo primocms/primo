@@ -217,10 +217,16 @@ var pushTargetPattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 var pushBackupPattern = regexp.MustCompile(`^backup-[0-9]+\.zip$`)
 
 func authorizePushState(app core.App, e *core.RequestEvent, target string) error {
+	return authorizePushStateWithInfo(app, e, target, nil)
+}
+
+// Binary staging has no import form to parse. Its caller supplies an empty
+// request body; the final import rechecks access with the actual form.
+func authorizePushStateWithInfo(app core.App, e *core.RequestEvent, target string, info *core.RequestInfo) error {
 	if !pushTargetPattern.MatchString(target) {
 		return e.BadRequestError("Invalid push target", nil)
 	}
-	if DevMode && IsLocalhost(e) {
+	if DevMode && IsLocalhost(e) && (e.Auth == nil || isSiteDeveloper(app, e.Auth, target)) {
 		return nil
 	}
 	if e.Auth == nil {
@@ -257,9 +263,14 @@ func authorizePushState(app core.App, e *core.RequestEvent, target string) error
 	if err != nil {
 		return err
 	}
-	info, err := e.RequestInfo()
-	if err != nil {
-		return err
+	if !isSiteDeveloper(app, e.Auth, target) {
+		return e.ForbiddenError("A developer is required to import site design", nil)
+	}
+	if info == nil {
+		info, err = e.RequestInfo()
+		if err != nil {
+			return err
+		}
 	}
 	allowed, err := app.CanAccessRecord(site, info, site.Collection().UpdateRule)
 	if err != nil {

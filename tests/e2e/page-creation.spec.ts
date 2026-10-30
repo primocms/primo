@@ -4,6 +4,111 @@ import { devAuth, SERVER_URL } from './helpers/server'
 import { seedFixtureSite } from './helpers/seed'
 
 test.describe('Pages creation row', () => {
+	test('late page types preserve the entered name, custom URL and form position', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const ids = await seedFixtureSite(token, 'Delayed page types')
+		const headers = { Authorization: `Bearer ${token}` }
+		const response = await request.post(`${SERVER_URL}/api/collections/page_types/records`, { headers, data: { site: ids.siteId, name: 'Story', icon: 'ri:newspaper-fill', color: '#30798A' } })
+		expect(response.ok()).toBeTruthy()
+		const story = await response.json()
+		await loginAsDeveloper(page, ids.siteId)
+		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible()
+		let release!: () => void
+		let held = false
+		const gate = new Promise<void>((resolve) => (release = resolve))
+		await page.route('**/api/collections/page_types/records*', async (route) => {
+			const filter = new URL(route.request().url()).searchParams.get('filter') ?? ''
+			if (route.request().method() === 'GET' && filter.includes(ids.siteId) && !/\bid\s*=/.test(filter)) {
+				held = true
+				await gate
+			}
+			await route.continue()
+		})
+		try {
+			await page.getByRole('button', { name: 'Pages', exact: true }).click()
+			const dialog = page.getByRole('dialog')
+			await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+			await expect.poll(() => held).toBe(true)
+			const name = dialog.getByLabel('Page name', { exact: true })
+			const slug = dialog.getByLabel('Page slug', { exact: true })
+			await name.fill('Kept page name')
+			await slug.fill('chosen-page-url')
+			const before = (await name.boundingBox())!
+			await expect(dialog.getByRole('button', { name: 'Create page', exact: true })).toBeDisabled()
+			release()
+			await expect(dialog.getByRole('button', { name: 'Create page', exact: true })).toBeEnabled()
+			await expect(name).toHaveValue('Kept page name')
+			await expect(slug).toHaveValue('chosen-page-url')
+			const after = (await name.boundingBox())!
+			expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(2)
+			expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(2)
+			const select = dialog.locator('.Select', { hasText: 'Page Type' })
+			await select.locator('button.primary').click()
+			await select.locator('.popup .options').getByRole('button', { name: 'Story', exact: true }).click()
+			await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+			await expect(dialog.getByRole('link', { name: 'Kept page name', exact: true })).toBeVisible()
+			const saved = await request.get(`${SERVER_URL}/api/collections/pages/records`, { headers, params: { filter: `site = "${ids.siteId}" && slug = "chosen-page-url"` } })
+			expect((await saved.json()).items[0]).toMatchObject({ name: 'Kept page name', slug: 'chosen-page-url', page_type: story.id })
+		} finally {
+			release()
+		}
+	})
+
+	test('closing the Pages dialog while defaults load still saves a complete multi-section page', async ({ page, request }) => {
+		const { token } = await devAuth(request)
+		const ids = await seedFixtureSite(token, 'Background page creation')
+		const headers = { Authorization: `Bearer ${token}` }
+		const home = await (await request.get(`${SERVER_URL}/api/collections/pages/records/${ids.pageId}`, { headers })).json()
+		for (const index of [0, 1]) {
+			const response = await request.post(`${SERVER_URL}/api/collections/page_type_sections/records`, { headers, data: { page_type: home.page_type, symbol: ids.symbolId, index, zone: 'body' } })
+			expect(response.ok()).toBeTruthy()
+			const section = await response.json()
+			const entry = await request.post(`${SERVER_URL}/api/collections/page_type_section_entries/records`, {
+				headers,
+				data: { section: section.id, field: ids.fieldIds.headline, locale: 'en', index: 0, value: `Body ${index}` }
+			})
+			expect(entry.ok()).toBeTruthy()
+		}
+		await loginAsDeveloper(page, ids.siteId)
+		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible()
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		const dialog = page.getByRole('dialog')
+		await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+		await dialog.getByLabel('Page name', { exact: true }).fill('Background creation')
+		let release!: () => void
+		let started!: () => void
+		const gate = new Promise<void>((resolve) => (release = resolve))
+		const loading = new Promise<void>((resolve) => (started = resolve))
+		await page.route('**/api/collections/page_type_section_entries/records*', async (route) => {
+			if (route.request().method() === 'GET') {
+				started()
+				await gate
+			}
+			await route.continue()
+		})
+		try {
+			await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
+			await loading
+			await expect(dialog.getByRole('status')).toHaveText('Creating Background creation…')
+			await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+			await expect(dialog).toBeHidden()
+			release()
+			await expect
+				.poll(async () => {
+					const response = await request.get(`${SERVER_URL}/api/collections/page_section_entries/records`, {
+						headers,
+						params: { filter: `section.page.site = "${ids.siteId}" && section.page.slug = "background-creation"` }
+					})
+					return (await response.json()).items.map((entry) => entry.value).sort()
+				})
+				.toEqual(['Body 0', 'Body 1'])
+			await page.getByRole('button', { name: 'Pages', exact: true }).click()
+			await expect(dialog.getByRole('link', { name: 'Background creation', exact: true })).toBeVisible()
+		} finally {
+			release()
+		}
+	})
+
 	test('rejects a second form while a subpage saves, then allows retry', async ({ page, request }) => {
 		const { token } = await devAuth(request)
 		const ids = await seedFixtureSite(token, 'Concurrent Page Creation')
@@ -98,6 +203,10 @@ test.describe('Pages creation row', () => {
 			await create('page_type_entries', { field: field.id, locale: 'en', index: 0, value: 'Template title' })
 			const section = await create('page_type_sections', { page_type: home.page_type, symbol: ids.symbolId, index: 0, zone: 'body' })
 			await create('page_type_section_entries', { section: section.id, field: ids.fieldIds.headline, locale: 'en', index: 0, value: 'Template headline' })
+			const secondSection = await create('page_type_sections', { page_type: home.page_type, symbol: ids.symbolId, index: 1, zone: 'body' })
+			await create('page_type_section_entries', { section: secondSection.id, field: ids.fieldIds.headline, locale: 'en', index: 0, value: 'Second template headline' })
+			const item = await create('page_type_section_entries', { section: secondSection.id, field: ids.fieldIds.items, locale: 'en', index: 0, value: null })
+			await create('page_type_section_entries', { section: secondSection.id, field: ids.fieldIds.name, locale: 'en', index: 0, parent: item.id, value: 'Nested template item' })
 			if (overflow) {
 				for (let index = 0; index < 18; index++) {
 					await create('pages', { site: ids.siteId, parent: ids.pageId, page_type: home.page_type, name: `Existing ${index}`, slug: `existing-${index}`, index })
@@ -171,10 +280,17 @@ test.describe('Pages creation row', () => {
 				const [created] = await list('pages', `site = "${ids.siteId}" && slug = "new-page"`)
 				const [copiedEntry] = await list('page_entries', `page = "${created.id}"`)
 				expect(copiedEntry.value).toBe('Template title')
-				const [copiedSection] = await list('page_sections', `page = "${created.id}"`)
+				const copiedSections = await list('page_sections', `page = "${created.id}"`)
+				expect(copiedSections).toHaveLength(2)
+				const copiedSection = copiedSections.find((section) => section.index === 0)
 				expect(copiedSection.symbol).toBe(ids.symbolId)
 				const [copiedSectionEntry] = await list('page_section_entries', `section = "${copiedSection.id}"`)
 				expect(copiedSectionEntry.value).toBe('Template headline')
+				const secondEntries = await list('page_section_entries', `section = "${copiedSections.find((section) => section.index === 1).id}"`)
+				expect(secondEntries.find((entry) => entry.field === ids.fieldIds.headline).value).toBe('Second template headline')
+				const copiedItem = secondEntries.find((entry) => entry.field === ids.fieldIds.items)
+				expect(copiedItem.id).not.toBe(item.id)
+				expect(secondEntries.find((entry) => entry.field === ids.fieldIds.name)).toMatchObject({ parent: copiedItem.id, value: 'Nested template item' })
 
 				if (!overflow) {
 					await dialog.getByRole('button', { name: 'Create page', exact: true }).click()
@@ -240,5 +356,44 @@ test.describe('Pages creation row', () => {
 				releaseEntries()
 			}
 		})
+	}
+})
+
+test('page-list child expansion survives closing, reopening and reloading', async ({ page, request }) => {
+	const { token } = await devAuth(request)
+	const ids = await seedFixtureSite(token, 'Persistent page expansion')
+	const headers = { Authorization: `Bearer ${token}` }
+	const endpoint = `${SERVER_URL}/api/collections/pages/records`
+	const homeResponse = await request.get(`${endpoint}/${ids.pageId}`, { headers })
+	expect(homeResponse.ok()).toBeTruthy()
+	const home = await homeResponse.json()
+	const parentResponse = await request.post(endpoint, {
+		headers,
+		data: { site: ids.siteId, parent: ids.pageId, page_type: home.page_type, name: 'Expansion Parent', slug: 'expansion-parent', index: 1 }
+	})
+	expect(parentResponse.ok()).toBeTruthy()
+	const parent = await parentResponse.json()
+	const childResponse = await request.post(endpoint, { headers, data: { site: ids.siteId, parent: parent.id, page_type: home.page_type, name: 'Expansion Child', slug: 'expansion-child', index: 0 } })
+	expect(childResponse.ok()).toBeTruthy()
+	await loginAsDeveloper(page, ids.siteId)
+	await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+	const openPages = async () => {
+		await page.getByRole('button', { name: 'Pages', exact: true }).click()
+		await expect(page.getByRole('dialog')).toBeVisible()
+	}
+	const parentRow = () => page.getByRole('dialog').locator(`[data-page-id="${parent.id}"]`)
+	await openPages()
+	await parentRow().getByRole('button', { name: 'Toggle child pages' }).click()
+	await expect(page.getByRole('link', { name: 'Expansion Child', exact: true })).toBeVisible()
+	for (let attempt = 0; attempt < 2; attempt++) {
+		await page.keyboard.press('Escape')
+		await expect(page.getByRole('dialog')).toBeHidden()
+		if (attempt === 1) {
+			await page.reload()
+			await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible({ timeout: 15000 })
+		}
+		await openPages()
+		await expect(parentRow()).toHaveClass(/expanded/)
+		await expect(page.getByRole('link', { name: 'Expansion Child', exact: true })).toBeVisible()
 	}
 })

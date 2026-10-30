@@ -1,5 +1,5 @@
 <script>
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { createEventDispatcher } from 'svelte'
 	import { debugging_context } from '$lib/builder/stores/context'
 	import { fade } from 'svelte/transition'

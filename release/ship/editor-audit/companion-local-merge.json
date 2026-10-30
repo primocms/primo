@@ -1,0 +1,212 @@
+[
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/deploy.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/dev.ts",
+    "result": "conflict-not-applied"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/login.ts",
+    "result": "conflict-not-applied"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/new.ts",
+    "result": "conflict-not-applied"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/preview.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/push.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/status.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/index.ts",
+    "result": "already-covered"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/dev-runtime.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/helpers/mock-server.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/logs.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/commands/publish.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/command-output.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/dev-logs.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/hosted-targets.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/portable-uploads.ts",
+    "result": "new-file-differs"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/publication.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "src/utils/read-dev-logs.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/dev-logs.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/dev-upload-writeback.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/portable-uploads.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/publication.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/publish-cms.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-cli",
+    "path": "tests/upload-roundtrip-cms.test.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/smoke-tests.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/test-dev-runtime.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/index.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/reference/site-structure.md",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/build_preview.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/get_dev_status.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/publish_compiler.ts",
+    "result": "already-covered"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/benchmark-publish.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/publish-cache-fixture.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/test-incremental-publish-cms.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/test-incremental-publish.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/test-publish-cache-browser.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "scripts/test-publish-cache-version.mjs",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/get_dev_logs.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/publish-cache.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "primo-mcp",
+    "path": "src/tools/read-dev-logs.ts",
+    "result": "identical"
+  },
+  {
+    "repository": "docs",
+    "path": "cli/local-development.mdx",
+    "result": "identical"
+  },
+  {
+    "repository": "docs",
+    "path": "reference/mcp-server.mdx",
+    "result": "identical"
+  }
+]

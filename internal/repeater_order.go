@@ -85,6 +85,18 @@ func saveRepeaterOrder(app core.App, info *core.RequestInfo, request repeaterOrd
 		if config.entryOwner != "" {
 			fieldOwner = owner.GetString(config.fieldOwner)
 		}
+		// This custom endpoint saves records directly, so REST request hooks do
+		// not run. Apply the same content/design boundary before any writes.
+		relations := map[string]string{"site_fields": "site", "site_symbol_fields": "symbol.site", "page_type_fields": "page_type.site"}
+		site := permissionSite(tx, field, relations[config.fields])
+		if !isSiteDeveloper(tx, info.Auth, site) {
+			switch request.Collection {
+			case "site_entries", "page_entries", "page_section_entries", "page_type_section_entries":
+				// Membership is still checked for every item below.
+			default:
+				return apis.NewForbiddenError("A developer is required to change site design or settings", nil)
+			}
+		}
 		if field.GetString(config.fieldOwner) != fieldOwner {
 			return apis.NewBadRequestError("Field belongs to different content.", nil)
 		}

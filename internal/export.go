@@ -272,36 +272,7 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		symbolName := recordFolder(symbol)
 		symbolNames[symbol.Id] = symbolName
 
-		// Prefer the raw bytes captured at import time so the file
-		// round-trips losslessly. Fall back to reconstructing from the
-		// parsed columns for symbols imported before raw_source existed.
-		raw := symbol.GetString("raw_source")
-		var output []byte
-		if raw != "" {
-			output = []byte(raw)
-		} else {
-			html := symbol.GetString("html")
-			css := symbol.GetString("css")
-			js := symbol.GetString("js")
-
-			var code strings.Builder
-			if js != "" {
-				code.WriteString("<script>\n")
-				code.WriteString(js)
-				code.WriteString("\n</script>\n\n")
-			}
-			if html != "" {
-				code.WriteString(html)
-			}
-			if css != "" {
-				code.WriteString("\n\n<style>\n")
-				code.WriteString(css)
-				code.WriteString("\n</style>")
-			}
-			if code.Len() > 0 {
-				output = []byte(code.String())
-			}
-		}
+		output := exportComponentSource(symbol)
 
 		if len(output) > 0 {
 			if err := writeFileToZip(zw, fmt.Sprintf("blocks/%s/component.svelte", symbolName), output); err != nil {
@@ -577,18 +548,18 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		}
 	}
 
-	// Fetch page type fields for name lookups
-	pageTypeFieldNames := make(map[string]string) // field id -> name
+	// Keep complete definitions so nested page values use the same ancestry
+	// as section content, including same-named children in different groups.
+	pageTypeFields := make(map[string]*core.Record)
+	fieldsByParent := make(map[string][]*core.Record)
 	for _, pt := range pageTypes {
-		ptFields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pt.Id})
-		if err == nil {
-			for _, field := range ptFields {
-				key := field.GetString("key")
-				if key == "" {
-					key = field.GetString("name")
-				}
-				pageTypeFieldNames[field.Id] = key
-			}
+		fields, err := pb.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pt.Id})
+		if err != nil {
+			return nil, err
+		}
+		for _, field := range fields {
+			pageTypeFields[field.Id] = field
+			fieldsByParent[field.GetString("parent")] = append(fieldsByParent[field.GetString("parent")], field)
 		}
 	}
 
@@ -602,15 +573,24 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 			return nil, fmt.Errorf("failed to fetch page entries: %w", err)
 		}
 
-		fieldValues := make(map[string]interface{})
+		entriesByParent := make(map[string][]*core.Record)
 		for _, entry := range pageEntries {
-			fieldId := entry.GetString("field")
-			// Look up field name
-			fieldName := pageTypeFieldNames[fieldId]
-			if fieldName == "" {
-				fieldName = fieldId // Fallback to ID if name not found
+			parent := entry.GetString("parent")
+			entriesByParent[parent] = append(entriesByParent[parent], entry)
+		}
+		for _, entries := range entriesByParent {
+			sort.SliceStable(entries, func(i, j int) bool { return entries[i].GetInt("index") < entries[j].GetInt("index") })
+		}
+		fieldValues := buildSectionContent(entriesByParent[""], pageTypeFields, fieldsByParent, entriesByParent).values
+		// Older imports stored entire repeater arrays in one root entry.
+		// Preserve those values on export; the next import structures them.
+		for _, entry := range entriesByParent[""] {
+			field := pageTypeFields[entry.GetString("field")]
+			if field != nil && field.GetString("type") == "repeater" && len(entriesByParent[entry.Id]) == 0 {
+				if items, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
+					fieldValues[field.GetString("key")] = items
+				}
 			}
-			fieldValues[fieldName] = normalizeValue(entry.Get("value"))
 		}
 
 		// Fetch page sections (blocks on the page)
@@ -1362,16 +1342,43 @@ func buildSectionContent(
 			// Group: single entry with nested children
 			if len(fieldEntries) > 0 {
 				entry := fieldEntries[0]
-				// First try to use stored value if it's a complete object
-				storedValue := normalizeValue(entry.Get("value"))
-				if storedMap, ok := storedValue.(map[string]interface{}); ok && len(storedMap) > 0 {
-					addKV(fieldKey, storedMap)
-				} else {
-					// Build from child entries
-					childEntries := entriesByParent[entry.Id]
-					if len(childEntries) > 0 {
-						addKV(fieldKey, buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent))
+				storedMap, _ := normalizeValue(entry.Get("value")).(map[string]interface{})
+				childEntries := entriesByParent[entry.Id]
+				if len(childEntries) == 0 {
+					// Legacy groups may exist only as a stored JSON object.
+					if len(storedMap) > 0 {
+						addKV(fieldKey, storedMap)
 					}
+				} else {
+					// Structured children are authoritative after edits/reorders.
+					// A whole-group import cache must never restore their old values.
+					group := buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
+					known := make(map[string]bool)
+					for _, definition := range fieldById {
+						if definition.GetString("parent") == field.Id {
+							key := definition.GetString("key")
+							if key == "" {
+								key = definition.GetString("name")
+							}
+							known[key] = true
+						}
+					}
+					// Retain unmodeled legacy keys without resurrecting a deleted
+					// modeled child or overriding any reconstructed value.
+					extra := make([]string, 0)
+					for key := range storedMap {
+						if !known[key] {
+							if _, exists := group.values[key]; !exists {
+								extra = append(extra, key)
+							}
+						}
+					}
+					sort.Strings(extra)
+					for _, key := range extra {
+						group.keys = append(group.keys, key)
+						group.values[key] = storedMap[key]
+					}
+					addKV(fieldKey, group)
 				}
 			}
 
@@ -1396,4 +1403,30 @@ func buildSectionContent(
 	}
 
 	return &orderedMap{keys: keys, values: values}
+}
+
+// exportComponentSource retains imported formatting only while it still describes
+// the current editable columns. A CMS code edit leaves raw_source as the import
+// receipt; blindly exporting that receipt would undo the edit on the next sync.
+func exportComponentSource(symbol *core.Record) []byte {
+	html, css, js := symbol.GetString("html"), symbol.GetString("css"), symbol.GetString("js")
+	if raw := symbol.GetString("raw_source"); raw != "" {
+		rawHTML, rawCSS, rawJS := parseComponent(raw)
+		if rawHTML == html && rawCSS == css && rawJS == js {
+			return []byte(raw)
+		}
+	}
+	var code strings.Builder
+	if js != "" {
+		code.WriteString("<script>\n")
+		code.WriteString(js)
+		code.WriteString("\n</script>\n\n")
+	}
+	code.WriteString(html)
+	if css != "" {
+		code.WriteString("\n\n<style>\n")
+		code.WriteString(css)
+		code.WriteString("\n</style>")
+	}
+	return []byte(code.String())
 }

@@ -3,7 +3,7 @@
 	import { cn } from '$lib/utils.ts'
 	import type { WithElementRef } from 'bits-ui'
 	import type { HTMLAttributes } from 'svelte/elements'
-	import { SIDEBAR_WIDTH_MOBILE } from './constants.js'
+	import { SIDEBAR_WIDTH_MOBILE, SIDEBAR_WIDTH_ICON } from './constants.js'
 	import { useSidebar } from './context.svelte.js'
 
 	let {
@@ -36,14 +36,14 @@
 		<Sheet.Content
 			data-sidebar="sidebar"
 			data-mobile="true"
-			class="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-			style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE};"
+			class={cn('bg-sidebar text-sidebar-foreground w-(--sidebar-width) max-w-[calc(100vw-2rem)] p-0', className)}
+			style="--sidebar-width: {SIDEBAR_WIDTH_MOBILE}; --sidebar-width-icon: {SIDEBAR_WIDTH_ICON};"
 			side={side}
 		>
 			<!-- Caller-provided attributes (id, data-*, ARIA, handlers) and the bound
 			`ref` land on this wrapper div, matching the desktop branch's contract —
 			Sheet.Content is a Dialog content and can't take the div HTMLAttributes. -->
-			<div bind:this={ref} class="flex h-full w-full flex-col" {...restProps}>
+			<div bind:this={ref} data-sidebar="sidebar" class="flex h-full w-full flex-col" {...restProps}>
 				{@render children?.()}
 			</div>
 		</Sheet.Content>

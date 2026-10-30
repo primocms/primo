@@ -4,6 +4,8 @@ import { customAlphabet } from 'nanoid'
 import { untrack } from 'svelte'
 import type { ObjectWithId } from './Object'
 import type { CollectionManager } from './CollectionManager'
+import { observeSubscription } from './subscription.js'
+import { createCacheLoads } from './cache_load.js'
 
 export type ObjectOf<T> = T extends CollectionMapping<infer Object, infer Options> ? MappedObject<Object, Options> : never
 
@@ -51,8 +53,8 @@ const generateId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 15)
 // sites.preview must stay reactive: its filename is the dashboard thumbnail's
 // reload token, updated once after the published files have been generated.
 const PUBLISH_ARTIFACT_FIELDS: Record<string, string[]> = {
-	pages: ['compiled_html'],
-	site_symbols: ['compiled_js']
+	pages: ['compiled_html', 'compiled_html_hash'],
+	site_symbols: ['compiled_js', 'compiled_js_hash']
 }
 
 const ECHO_IGNORED_KEYS = ['updated', 'id', 'collectionId', 'collectionName']
@@ -78,9 +80,12 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 ): CollectionMapping<T, Options> => {
 	const { instance, changes, records, lists } = manager
 	const collection = instance?.collection(name)
+	const scopedMappings = new WeakMap<CollectionManager, CollectionMapping<T, { links: Options['links']; subscribe: false }>>()
+	const recordLoads = createCacheLoads()
+	const listLoads = createCacheLoads()
 
 	if (collection && options?.subscribe) {
-		collection.subscribe('*', (data) => {
+		void observeSubscription(collection.subscribe('*', (data) => {
 			const operation = data.action as 'create' | 'update' | 'delete'
 			const values = data.record
 			const id = values.id
@@ -102,7 +107,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			// Reset position of the change to place it the last
 			changes.delete(id)
 			changes.set(id, { collection: name, operation, committed: true, data: values })
-		})
+		}))
 	}
 
 	const mapObject = (record: unknown): MappedObject<T, Options> => {
@@ -153,17 +158,18 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 
 					untrack(() => {
 						records.set(id, undefined)
+						const request = recordLoads.begin(id)
 						collection
 							.getOne(id)
 							.then((record) => {
-								records.set(id, { data: record })
+								request.settle(() => records.set(id, { data: record }))
 							})
 							.catch((error) => {
-								// Autocancelled requests are expected when the effect re-runs;
-								// don't poison the record cache — the winning request will populate it.
-								if (error?.isAbort || error?.status === 0) return
-								console.error(error)
-								records.set(id, null)
+								if (error?.isAbort || error?.status === 0) {
+									request.retry(() => records.delete(id))
+									return
+								}
+								request.settle(() => { console.error(error); records.set(id, null) })
 							})
 					})
 				})
@@ -193,13 +199,14 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 
 				untrack(() => {
 					lists.set(listId, existingList ? { invalidated: false, ids: existingList?.ids } : undefined)
+					const request = listLoads.begin(listId)
 					collection
 						.getFullList({
 							...options,
 							filter,
 							requestKey: listId
 						})
-						.then((fetchedRecords) => {
+						.then((fetchedRecords) => request.settle(() => {
 							const validRecords = fetchedRecords.filter((record) => {
 								const valid = typeof record?.id === 'string' && record.id.length > 0
 								if (!valid) {
@@ -213,13 +220,13 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 							})
 							// Store the list of IDs
 							lists.set(listId, { invalidated: false, ids: validRecords.map(({ id }) => id) })
-						})
+						}))
 						.catch((error) => {
-							// Autocancelled requests are expected when the effect re-runs;
-							// the winning request will populate the list, so don't nuke the cache.
-							if (error?.isAbort || error?.status === 0) return
-							console.error(error)
-							lists.set(listId, null)
+							if (error?.isAbort || error?.status === 0) {
+								request.retry(() => lists.delete(listId))
+								return
+							}
+							request.settle(() => { console.error(error); lists.set(listId, null) })
 						})
 				})
 			})
@@ -359,7 +366,15 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 			await collection.confirmPasswordReset(passwordResetToken, password, passwordConfirm)
 		},
 		from: (manager: CollectionManager) => {
-			return createCollectionMapping(name, model, manager, { links: options?.links, subscribe: false })
+			// Relationship getters can run again while a load is pending. Share
+			// its owner and retry state instead of letting an older canceled
+			// mapping evict the newer mapping's loading placeholder.
+			let mapping = scopedMappings.get(manager)
+			if (!mapping) {
+				mapping = createCollectionMapping(name, model, manager, { links: options?.links, subscribe: false })
+				scopedMappings.set(manager, mapping)
+			}
+			return mapping
 		},
 		manager
 	}

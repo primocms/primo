@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
-	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
 	import * as Popover from '$lib/components/ui/popover'
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -22,6 +23,10 @@
 	import { watch } from 'runed'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 
+	const marketplaceScroll = createMarketplaceScroll()
+	const rememberMarketplaceScroll = marketplaceScroll.action
+	snapshot({ id: 'dashboard-marketplace-blocks', ...marketplaceScroll.snapshot })
+
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const marketplace_symbol_group = $derived(group_id ? LibrarySymbolGroups.from(marketplace).one(group_id) : undefined)
 	const marketplace_symbols = $derived(marketplace_symbol_group?.symbols() ?? undefined)
@@ -31,9 +36,9 @@
 	// Auto-select first marketplace group if none is selected
 	$effect(() => {
 		if (!group_id && marketplace_symbol_groups.length > 0) {
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', marketplace_symbol_groups[0].id)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 
@@ -66,7 +71,7 @@
 				sort: 'index'
 			})
 
-			if (marketplace_fields?.length > 0) {
+			if (marketplace_fields && marketplace_fields.length > 0) {
 				const field_map = new Map()
 
 				// Create fields in order, handling parent relationships
@@ -102,7 +107,7 @@
 							})
 						: []
 
-				if (marketplace_entries?.length > 0) {
+				if (marketplace_entries && marketplace_entries.length > 0) {
 					const entry_map = new Map()
 
 					// Create entries in order, handling parent relationships

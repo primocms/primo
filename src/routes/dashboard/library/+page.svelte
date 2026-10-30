@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -34,7 +35,8 @@
 		Store
 	} from 'lucide-svelte'
 	import SymbolButton from '$lib/components/SymbolButton.svelte'
-	import { browser } from '$app/environment'
+	import { createDashboardScroll } from '$lib/components/dashboard-scroll'
+	import { browser } from '$app/env'
 	import { page } from '$app/state'
 	import { beforeNavigate, goto } from '$app/navigation'
 	import { useSidebar } from '$lib/components/ui/sidebar'
@@ -48,11 +50,14 @@
 	import { self } from '$lib/pocketbase/managers'
 
 	const active_symbol_group_id = $derived(page.url.searchParams.get('group'))
+	const libraryScroll = createDashboardScroll({ selector: '.masonry' })
+	const rememberLibraryScroll = libraryScroll.action
+	snapshot({ id: 'dashboard-library', ...libraryScroll.snapshot })
 	const active_symbol_id = $derived(page.url.searchParams.get('block'))
-	const symbol_groups = $derived(LibrarySymbolGroups.list() ?? [])
+	const symbol_groups = $derived(LibrarySymbolGroups.list())
 
-	function update_library_url(search_params: Record<string, string | null | undefined>) {
-		const url = new URL(page.url)
+	function update_library_url(search_params: Record<string, string | null | undefined>, open_editor = false) {
+		const url = new URL(page.url.href)
 		for (const [key, value] of Object.entries(search_params)) {
 			if (value) {
 				url.searchParams.set(key, value)
@@ -60,21 +65,30 @@
 				url.searchParams.delete(key)
 			}
 		}
-		goto(url, { replaceState: true, keepFocus: true, noScroll: true })
+		const state = { ...page.state } as { libraryEditorOrigin?: string }
+		// Opening a block gets its own history entry. Closing returns to the
+		// original list entry, so Back/Forward and the close button agree.
+		if (search_params.block === null && state.libraryEditorOrigin === url.href) {
+			window.history.back()
+			return
+		}
+		if (open_editor) state.libraryEditorOrigin = page.url.href
+		else if (search_params.block === null) delete state.libraryEditorOrigin
+		goto(url, { replace: !open_editor, reset: false, state })
 	}
 
 	beforeNavigate((navigation) => {
 		if (!browser || !active_symbol_id) return
 		if (!navigation.to || navigation.to.url.pathname === page.url.pathname) return
 
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.delete('block')
 		window.history.replaceState(window.history.state, '', url)
 	})
 
 	// Auto-select first group if none selected and groups exist
 	$effect(() => {
-		if (!active_symbol_group_id && symbol_groups.length > 0) {
+		if (!active_symbol_group_id && symbol_groups?.length) {
 			update_library_url({ group: symbol_groups[0].id })
 		}
 	})
@@ -82,7 +96,7 @@
 	const active_symbol_group = $derived(active_symbol_group_id ? LibrarySymbolGroups.one(active_symbol_group_id) : undefined)
 
 	// Get symbols for the active group using direct query instead of relationship method
-	const group_symbols = $derived(active_symbol_group?.symbols() ?? [])
+	const group_symbols = $derived(active_symbol_group?.symbols())
 
 	const sidebar = useSidebar()
 
@@ -96,9 +110,9 @@
 	async function create_first_group() {
 		const group = LibrarySymbolGroups.create({ name: 'Default', index: 0 })
 		await self.commit()
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.set('group', group.id)
-		goto(url, { replaceState: true })
+		goto(url, { replace: true })
 	}
 
 	let file = $state<File>()
@@ -124,7 +138,7 @@
 			console.error('Failed to import symbol:', error)
 
 			// Show more detailed error message
-			if (error.response?.data) {
+			if (error instanceof Error && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
 				console.error('PocketBase error details:', error.response.data)
 			}
 
@@ -161,9 +175,9 @@
 	let upload_file_invalid = $state(false)
 
 	// Export symbol
-	let symbol_to_export = $state<ObjectOf<typeof SiteSymbols>>()
+	let symbol_to_export = $state<ObjectOf<typeof LibrarySymbols>>()
 	const exportSymbol = $derived(useExportLibrarySymbol(symbol_to_export?.id))
-	async function export_symbol(symbol: ObjectOf<typeof SiteSymbols>) {
+	async function export_symbol(symbol: ObjectOf<typeof LibrarySymbols>) {
 		symbol_to_export = symbol
 		await tick()
 		await exportSymbol.run()
@@ -183,7 +197,7 @@
 	let is_symbol_editor_open = $state(false)
 
 	function begin_symbol_edit(symbol: ObjectOf<typeof LibrarySymbols>) {
-		update_library_url({ group: symbol.group, block: symbol.id })
+		update_library_url({ group: symbol.group, block: symbol.id }, true)
 	}
 
 	$effect(() => {
@@ -363,8 +377,10 @@
 	</div>
 </header>
 
-<div class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
-	{#if symbol_groups.length === 0}
+<div use:rememberLibraryScroll={active_symbol_group_id ?? ''} class="flex flex-1 flex-col gap-4 px-4 pb-4 overflow-hidden">
+	{#if symbol_groups == null}
+		{@render loading_blocks()}
+	{:else if symbol_groups.length === 0}
 		<!-- No groups exist -->
 		<EmptyState
 			class="h-[50vh]"
@@ -379,12 +395,8 @@
 		/>
 	{:else}
 		{#key active_symbol_group_id}
-			{#if group_symbols === undefined}
-				<!-- Loading state -->
-				<div class="flex flex-col items-center justify-center gap-4 py-8">
-					<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
-					<p class="text-sm text-muted-foreground">Loading blocks...</p>
-				</div>
+			{#if group_symbols == null}
+				{@render loading_blocks()}
 			{:else if group_symbols.length}
 				<Masonry items={group_symbols}>
 					{#snippet children(symbol)}
@@ -432,6 +444,13 @@
 		{/key}
 	{/if}
 </div>
+
+{#snippet loading_blocks()}
+	<div class="flex flex-col items-center justify-center gap-4 py-8" role="status">
+		<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+		<p class="text-sm text-muted-foreground">Loading blocks...</p>
+	</div>
+{/snippet}
 
 <!-- Symbol Dialogs -->
 <Dialog.Root
@@ -483,7 +502,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			symbol_type="library"
 			bind:has_unsaved_changes={creating_block_has_unsaved_changes}
@@ -520,7 +539,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			block={symbol_being_edited}
 			symbol_type="library"

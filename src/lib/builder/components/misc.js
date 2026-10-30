@@ -40,7 +40,7 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
             }
             if (request !== render_request) return;
             if (payload.data) {
-              update(payload.data)
+              update(payload.data, payload.reset)
             }
           } catch (error) {
             if (request !== render_request) return;
@@ -72,7 +72,7 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           return module_import;
         }
 
-        function update(props) {
+        function update(props, force_remount = false) {
           // Reset runtime error display in parent
           try { channel.postMessage({ event: 'BEGIN' }); } catch (_) {}
 
@@ -82,7 +82,7 @@ export const dynamic_iframe_srcdoc = (head, broadcast_id) => {
           if (!mod) return
 
           try {
-            if (preview && preview_module === mod) {
+            if (!force_remount && preview && preview_module === mod) {
               preview.update(props)
             } else {
               if (preview) preview.destroy()
@@ -259,6 +259,7 @@ export const component_iframe_srcdoc = ({ head = '', foot = '', zone = 'body', s
             if (!target) return
             if (!mod) return
             try {
+              if (!document.dispatchEvent(new Event('primo-before-render', { cancelable: true }))) return
               if (preview && preview_module === mod) {
                 preview.update(props)
               } else {

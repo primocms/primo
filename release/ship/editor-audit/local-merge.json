@@ -1,0 +1,230 @@
+[
+  {
+    "path": "internal/import.go",
+    "result": "merged"
+  },
+  {
+    "path": "internal/import_library.go",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/builder/Primo.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/components/ComponentPreview.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/components/Fields/EntryContent.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/components/Sidebar/PageType_Sidebar.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/components/misc.js",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/field-types/Link.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/ui/LargeSwitch.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/utilities.js",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/editor/Layout/BlockToolbar.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/editor/Layout/ComponentNode.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/editor/Page.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/editor/PageType.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/views/editor/Toolbar.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/modal/BlockEditor.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/modal/Collaboration.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SectionEditor/SectionEditor.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SiteEditor/SiteEditor.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/Item.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/PageForm.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/SitePages.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/common/models/Page.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/common/models/SiteSymbol.ts",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/compiler/processors.js",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/compiler/workers/rollup.worker.js",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/components/app-sidebar.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "src/lib/components/ui/dialog/dialog-content.svelte",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/components/ui/dialog/dialog-header.svelte",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/components/ui/sheet/sheet-content.svelte",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/components/ui/sidebar/sidebar.svelte",
+    "result": "identical"
+  },
+  {
+    "path": "src/lib/instance.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/pocketbase/CollectionManager.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/pocketbase/CollectionMapping.svelte.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/workers/CopyEntries.svelte.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/lib/workers/Publish.svelte.ts",
+    "result": "merged"
+  },
+  {
+    "path": "src/routes/dashboard/library/+page.svelte",
+    "result": "merged"
+  },
+  {
+    "path": "src/routes/dashboard/sites/+page.svelte",
+    "result": "conflict"
+  },
+  {
+    "path": "tests/browser/preview-runtime.test.mjs",
+    "result": "merged"
+  },
+  {
+    "path": "tests/e2e/helpers/editor.ts",
+    "result": "merged"
+  },
+  {
+    "path": "tests/e2e/page-creation.spec.ts",
+    "result": "merged"
+  },
+  {
+    "path": "tests/e2e/section-image-preservation.spec.ts",
+    "result": "merged"
+  },
+  {
+    "path": "tests/integration/publish-cache.test.mjs",
+    "result": "conflict"
+  },
+  {
+    "path": "internal/import_upload.go",
+    "result": "added"
+  },
+  {
+    "path": "internal/import_upload_test.go",
+    "result": "added"
+  },
+  {
+    "path": "src/lib/builder/views/modal/SitePages/page-order.ts",
+    "result": "added"
+  },
+  {
+    "path": "src/lib/workers/publish-cache.js",
+    "result": "identical"
+  },
+  {
+    "path": "tests/e2e/client-editor-audit.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/dashboard-groups.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/dashboard-navigation.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/inline-text-flicker.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/link-editing.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/page-management.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/rich-text-flicker.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/e2e/section-outline.spec.ts",
+    "result": "added"
+  },
+  {
+    "path": "tests/integration/publish-record-cache.test.mjs",
+    "result": "new-file-differs"
+  },
+  {
+    "path": "tests/integration/publish-snapshot.test.mjs",
+    "result": "identical"
+  }
+]

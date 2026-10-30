@@ -103,6 +103,8 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				TelemetryEnabled  bool   `json:"telemetry_enabled"`
 				SMTPEnabled       bool   `json:"smtp_enabled"`
 				HostedMode        bool   `json:"hosted_mode"`
+				ManagedBootstrap  bool   `json:"managed_bootstrap"`
+				OwnerOnly         bool   `json:"owner_only"`
 				BillingURL        string `json:"billing_url,omitempty"`
 				DevMode           bool   `json:"dev_mode"`
 				SiteCap           int    `json:"site_cap,omitempty"`
@@ -110,25 +112,31 @@ func RegisterInfoEndpoint(pb *pocketbase.PocketBase) error {
 				LibraryBlockCount int64  `json:"library_block_count"`
 				EditorCap         int    `json:"editor_cap,omitempty"`
 				// Domain provider + base domain let the editor pick the
-				// connect-domain flow: "railway" runs the attach+poll flow,
-				// "manual" shows generic DNS guidance. base_domain (if set)
-				// means new sites get a live subdomain and is shown as a hint.
-				DomainProvider string `json:"domain_provider"`
-				BaseDomain     string `json:"base_domain,omitempty"`
+				// connect-domain flow: "railway" and "fly" attach and poll,
+				// while "manual" shows generic DNS guidance. base_domain (if
+				// set) gives new sites a live subdomain and is shown as a hint.
+				DomainProvider      string   `json:"domain_provider"`
+				DomainProviderReady bool     `json:"domain_provider_ready"`
+				Capabilities        []string `json:"capabilities"`
+				BaseDomain          string   `json:"base_domain,omitempty"`
 			}{
-				Id:                id,
-				Version:           version,
-				TelemetryEnabled:  telemetryEnabled,
-				SMTPEnabled:       smtpEnabled,
-				HostedMode:        isHostedMode(),
-				BillingURL:        os.Getenv("PRIMO_BILLING_URL"),
-				DevMode:           DevMode,
-				SiteCap:           siteCap,
-				SiteCount:         siteCount,
-				LibraryBlockCount: libraryBlockCount,
-				EditorCap:         editorCap,
-				DomainProvider:    getDomainProvider().Name(),
-				BaseDomain:        baseDomain(),
+				Id:                  id,
+				Version:             version,
+				TelemetryEnabled:    telemetryEnabled,
+				SMTPEnabled:         smtpEnabled,
+				HostedMode:          isHostedMode(),
+				ManagedBootstrap:    os.Getenv("PRIMO_MANAGED_BOOTSTRAP") == "true",
+				BillingURL:          os.Getenv("PRIMO_BILLING_URL"),
+				DevMode:             DevMode,
+				SiteCap:             siteCap,
+				SiteCount:           siteCount,
+				LibraryBlockCount:   libraryBlockCount,
+				EditorCap:           editorCap,
+				OwnerOnly:           ownerOnly(pb),
+				DomainProvider:      getDomainProvider().Name(),
+				DomainProviderReady: domainProviderReady(getDomainProvider()),
+				Capabilities:        []string{"agent_launch_v1", "cli_browser_login", "domains", "import_chunks_v1"},
+				BaseDomain:          baseDomain(),
 			})
 		})
 

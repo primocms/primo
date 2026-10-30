@@ -1,4 +1,10 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
+	import { createDashboardScroll } from '$lib/components/dashboard-scroll'
+	const siteScroll = createDashboardScroll({ windowScroll: true, siteEditorReturn: true })
+	const rememberSiteScroll = siteScroll.action
+	snapshot({ id: 'dashboard-sites', ...siteScroll.snapshot })
+	import { untrack } from 'svelte'
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
@@ -12,7 +18,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte'
 	import { Separator } from '$lib/components/ui/separator'
 	import { Button } from '$lib/components/ui/button'
-	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus } from 'lucide-svelte'
+	import { Users as UsersIcon, LogOut, Globe, Loader, ChevronDown, SquarePen, Trash2, EllipsisVertical, ArrowLeftRight, Download, CirclePlus, Terminal } from 'lucide-svelte'
 	import { useSidebar } from '$lib/components/ui/sidebar'
 	import { page } from '$app/state'
 	import type { Site } from '$lib/common/models/Site'
@@ -24,11 +30,10 @@
 	import { useSiteSnapshot } from '$lib/Snapshot.svelte'
 	import { Snapshot } from '$lib/common/models/Snapshot'
 	import { instance } from '$lib/instance'
+	import { agentSetupPrompt, localDevelopmentRelease } from '$lib/agent-setup.js'
 	import { is_host_assigned, is_host_reachable, site_editor_url } from '$lib/site_host'
 	import CreateSite from '$lib/components/CreateSite.svelte'
 	import ConnectDomain from '$lib/components/ConnectDomain.svelte'
-	import { fade } from 'svelte/transition'
-	import { prefersReducedMotion } from 'svelte/motion'
 
 	import { current_user } from '$lib/pocketbase/user'
 	import Collaboration from '$lib/builder/views/modal/Collaboration.svelte'
@@ -67,9 +72,9 @@
 		if (!site_group_id && site_groups.length > 0) {
 			const last_group = get_last_site_group()
 			const fallback = last_group && site_groups.some((group) => group.id === last_group) ? last_group : site_groups[0].id
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', fallback)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 	$effect(() => {
@@ -224,7 +229,7 @@
 	}
 
 	let is_move_site_open = $state(false)
-	let selected_group_id = $state(site_groups[0]?.id ?? '')
+	let selected_group_id = $state(untrack(() => site_groups[0]?.id ?? ''))
 	async function move_site() {
 		await save.run(async () => {
 			if (!current_site) return
@@ -235,6 +240,34 @@
 	}
 
 	let is_creating_site = $state(false)
+
+	let is_develop_locally_open = $state(false)
+	let local_author_mode = $state('files')
+	let setup_copy_error = $state(false)
+	const server_url = $derived(self.instance?.baseURL || (typeof location !== 'undefined' ? location.origin : ''))
+	const setup_prompt = $derived(server_url ? agentSetupPrompt(server_url, local_author_mode) : 'Loading this server…')
+	const develop_steps = $derived([
+		{ label: 'Install the matching CLI', command: `npm install -g primo-cli@${localDevelopmentRelease.cli}` },
+		{ label: 'Approve access in your browser (replace SERVER_ADDRESS below)', command: 'primo login --no-browser --server SERVER_ADDRESS' },
+		{ label: 'Pull into an empty workspace folder (replace both placeholders)', command: 'primo pull SERVER_ADDRESS EMPTY_FOLDER' },
+		{ label: 'Start local development from the workspace root', command: `primo dev --author ${local_author_mode}` }
+	])
+
+	let copied_command: string | null = $state(null)
+	let copied_timeout: ReturnType<typeof setTimeout> | undefined
+	async function copy_command(command: string) {
+		try {
+			setup_copy_error = false
+			await navigator.clipboard.writeText(command)
+			copied_command = command
+			if (copied_timeout) clearTimeout(copied_timeout)
+			copied_timeout = setTimeout(() => (copied_command = null), 1500)
+		} catch (error) {
+			setup_copy_error = true
+		}
+	}
+	$effect(() => () => clearTimeout(copied_timeout))
+
 	$effect(() => {
 		is_rename_group_open
 		is_rename_site_open
@@ -243,8 +276,8 @@
 	})
 </script>
 
-<header class="flex h-14 shrink-0 items-center gap-2">
-	<div class="flex flex-1 items-center gap-2 px-3">
+<header class="sites-header flex h-14 shrink-0 items-center gap-2">
+	<div class="flex min-w-0 flex-1 items-center gap-2 px-3">
 		{#if has_server_role}
 			<Sidebar.Trigger />
 			<Separator orientation="vertical" class="mr-2 h-4" />
@@ -275,11 +308,14 @@
 			</DropdownMenu.Root>
 		{/if}
 	</div>
-	<div class="ml-auto mr-4 flex items-center gap-3">
+	<div class="site-actions ml-auto mr-4 flex shrink-0 items-center gap-3">
 		{#if has_server_role}
 			{#if instance.site_cap}
 				<span class="text-xs text-muted-foreground">{all_sites.length} of {instance.site_cap} sites</span>
 			{/if}
+			<Button size="sm" variant="ghost" aria-label="Develop locally" class="develop-locally-button" onclick={() => (is_develop_locally_open = true)}>
+				<Terminal class="h-4 w-4" /><span class="develop-label">Develop locally</span>
+			</Button>
 			<Button
 				size="sm"
 				class="create-site-button"
@@ -295,6 +331,10 @@
 				size="sm"
 				variant="ghost"
 				onclick={async () => {
+					if (self.has_pending_changes()) {
+						toast.error('Save or retry your changes before logging out.')
+						return
+					}
 					self.instance?.authStore.clear()
 					await goto('/admin/auth')
 				}}
@@ -304,9 +344,9 @@
 		{/if}
 	</div>
 </header>
-<div class="sites-content">
+<div use:rememberSiteScroll={site_group_id ?? ''} class="sites-content">
 	{#key site_group_id}
-		<div class="sites-list" transition:fade|global={{ duration: prefersReducedMotion.current ? 0 : 160 }}>
+		<div class="sites-list">
 			{#if sites?.length}
 				<div class="sites-grid">
 					{#each sites as site (site.id)}
@@ -571,6 +611,48 @@
 	</div>
 {/if}
 
+<Dialog.Root bind:open={is_develop_locally_open}>
+	<Dialog.Content class="sm:max-w-[640px] pt-12 gap-4">
+		<Dialog.Title>Develop locally</Dialog.Title>
+		<p class="text-muted-foreground text-sm">Let your coding agent set up Primo and run the local server. You can stay in your agent chat and browser.</p>
+		<fieldset class="space-y-2">
+			<legend class="text-sm font-medium mb-2">How would you like to work?</legend>
+			<label class="flex items-start gap-3 rounded-md border p-3 text-sm cursor-pointer">
+				<input type="radio" name="local-author-mode" value="files" bind:group={local_author_mode} class="mt-1" />
+				<span><strong class="block">Build with my agent</strong><span class="text-muted-foreground">Your agent edits the files. The visual CMS is read-only.</span></span>
+			</label>
+			<label class="flex items-start gap-3 rounded-md border p-3 text-sm cursor-pointer">
+				<input type="radio" name="local-author-mode" value="cms" bind:group={local_author_mode} class="mt-1" />
+				<span><strong class="block">Edit in the visual CMS</strong><span class="text-muted-foreground">Your visual edits are saved to local files. Ask your agent to switch modes when needed.</span></span>
+			</label>
+		</fieldset>
+		<ol class="list-decimal pl-5 space-y-1 text-sm">
+			<li>Copy the setup prompt into an agent that can run commands on your computer.</li>
+			<li>Choose an empty folder and approve any installation or file-access requests.</li>
+			<li>Sign in and approve access in your browser, then open the local link your agent provides.</li>
+		</ol>
+		<p class="text-muted-foreground text-xs">This copies the sites and shared library your account can access on this server. Your agent checks Node and Primo, connects its tools, and verifies startup. Hosted content is unchanged until you explicitly request a push or publication.</p>
+		<label for="primo-agent-setup" class="text-sm font-medium">Setup prompt for your agent</label>
+		<textarea id="primo-agent-setup" readonly value={setup_prompt} rows={5} class="w-full min-w-0 resize-y rounded-md border bg-[#111] p-3 text-xs leading-relaxed" spellcheck="false"></textarea>
+		<Button type="button" onclick={() => copy_command(setup_prompt)}>{copied_command === setup_prompt ? 'Prompt copied' : 'Copy agent setup prompt'}</Button>
+		{#if setup_copy_error}<p role="alert" class="text-sm">Copying was blocked. Select the setup prompt above and copy it into your agent.</p>{/if}
+		<details class="text-sm">
+			<summary class="cursor-pointer text-muted-foreground">Manual terminal setup</summary>
+			<div class="space-y-3 mt-3">
+				<p class="text-xs break-all">Server address: {server_url}</p>
+				{#each develop_steps as step}
+					<div><p class="text-xs mb-1">{step.label}</p><code class="block whitespace-pre-wrap break-all rounded bg-[#111] p-2 text-xs">{step.command}</code></div>
+				{/each}
+				<p class="text-xs text-muted-foreground">Requires Node 22.13+ on the 22.x line or Node 24+. Browser approval requires HTTPS outside this computer. Use the matching published release; an unpublished candidate cannot be installed from npm yet.</p>
+			</div>
+		</details>
+		<Dialog.Footer class="sm:justify-between sm:items-center">
+			<a href="https://docs.primo.build/getting-started/installation#let-your-agent-set-up-a-local-workspace" target="_blank" rel="noopener noreferrer" class="text-muted-foreground hover:text-foreground text-sm underline underline-offset-4">View setup guide</a>
+			<Button type="button" variant="outline" onclick={() => (is_develop_locally_open = false)}>Done</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
 <style lang="postcss">
 	.sites-content {
 		display: grid;
@@ -658,11 +740,21 @@
 		}
 	}
 	@media (max-width: 700px) {
+		.develop-label { display: none; }
+		:global(.develop-locally-button) { min-height: 44px; min-width: 44px; }
+		.site-actions { gap: 6px; margin-right: 12px; }
+		:global(.create-site-button) { min-height: 44px; }
+		.group-options { width: 40px; height: 44px; flex-shrink: 0; }
 		.sites-content {
 			padding: 0 16px 16px;
 		}
 		.sites-grid {
 			gap: 16px;
 		}
+	}
+	@media (max-width: 480px) {
+		.sites-header { height: auto; flex-wrap: wrap; gap: 0; padding-bottom: 8px; }
+		.sites-header > div:first-child { flex-basis: 100%; min-height: 48px; }
+		.site-actions { width: 100%; justify-content: flex-end; padding-inline: 12px; margin: 0; }
 	}
 </style>

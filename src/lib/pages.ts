@@ -50,7 +50,7 @@ export const resolve_page = (site: ObjectOf<typeof Sites>, path: string[]) => {
  *
  * This function should be called reactively (eg. inside $deferred).
  */
-export const build_cms_page_url = (page: ObjectOf<typeof Pages>, current_url: URL) => {
+export const build_cms_page_url = (page: ObjectOf<typeof Pages>, current_url: Pick<URL, 'pathname' | 'href'>) => {
 	const path = build_page_path(page)
 	if (!path) {
 		return
@@ -59,7 +59,7 @@ export const build_cms_page_url = (page: ObjectOf<typeof Pages>, current_url: UR
 	const base_path = current_url.pathname.includes('/sites/') ? `/admin/sites/${page.site}` : '/admin/site'
 	path.push(base_path)
 
-	return new URL(path.reverse().join('/'), current_url)
+	return new URL(path.reverse().join('/'), current_url.href)
 }
 
 /**

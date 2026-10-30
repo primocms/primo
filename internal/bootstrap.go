@@ -5,10 +5,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/json"
-	"io"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -24,7 +24,7 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		serveEvent.Router.POST("/api/primo/bootstrap", func(e *core.RequestEvent) error {
 			return handleBootstrap(pb, e)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		return serveEvent.Next()
 	})
@@ -32,6 +32,9 @@ func RegisterBootstrapEndpoint(pb *pocketbase.PocketBase) error {
 }
 
 func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
+	if e.Auth != nil && !isSiteDeveloper(pb, e.Auth, "") {
+		return e.ForbiddenError("A server developer is required to bootstrap a workspace", nil)
+	}
 	// Cheap early rejection so a non-empty server doesn't read the upload at
 	// all. The authoritative check still runs inside the transaction below.
 	if !(DevMode && IsLocalhost(e)) {
@@ -42,12 +45,17 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 	// Parse before the transaction: PocketBase serializes writes through one
 	// connection, so reading a slow upload inside the transaction would block
 	// every other write on the server for the duration of the upload.
-	if err := e.Request.ParseMultipartForm(32 << 20); err != nil {
+	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}
 
+	zipData, err := readImportArchive(pb, e, true)
+	if err != nil {
+		return err
+	}
+
 	var response map[string]interface{}
-	err := pb.RunInTransaction(func(app core.App) error {
+	err = pb.RunInTransaction(func(app core.App) error {
 		// Check if any sites exist - only allow bootstrap when none exist.
 		// Exception: localhost can always bootstrap (for local dev), and we
 		// keep that exception even when the lookup fails so a broken DB on
@@ -151,16 +159,7 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 		// authoritative persisted ID rather than the request's siteId.
 		siteId = site.Id
 
-		// Check for ZIP file upload
-		file, _, err := e.Request.FormFile("file")
-		if err == nil {
-			defer file.Close()
-
-			zipData, err := io.ReadAll(file)
-			if err != nil {
-				return e.InternalServerError("Failed to read file", err)
-			}
-
+		if zipData != nil {
 			// Validate ZIP
 			_, err = zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 			if err != nil {

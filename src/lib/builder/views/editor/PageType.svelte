@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as _ from 'lodash-es'
-	import { tick } from 'svelte'
+	import { tick, untrack } from 'svelte'
 	import { fade } from 'svelte/transition'
 	import { site_context, page_type_context } from '$lib/builder/stores/context'
 	import { flip } from 'svelte/animate'
@@ -25,14 +25,11 @@
 
 	let { page_type }: { page_type: ObjectOf<typeof PageTypes> } = $props()
 
-	setUserActivity({ page_type: page_type.id })
+	setUserActivity(() => ({ page_type: page_type.id }))
 
 	// Set context so child components can access the page type
-	const context = $state({ value: page_type })
+	const context = { get value() { return page_type } }
 	page_type_context.set(context)
-	$effect(() => {
-		context.value = page_type
-	})
 
 	const { value: site } = site_context.get()
 	const site_symbols = $derived(site?.symbols() ?? [])
@@ -45,9 +42,9 @@
 	const footer_sections = $derived(page_type_sections.filter((s) => s.zone === 'footer').sort((a, b) => a.index - b.index))
 
 	// Page type head and foot editors
-	let head = $state(page_type.head || '')
-	let foot = $state(page_type.foot || '')
-	let save_timeout = null
+	let head = $state(untrack(() => page_type.head || ''))
+	let foot = $state(untrack(() => page_type.foot || ''))
+	let save_timeout: ReturnType<typeof setTimeout> | null = null
 
 	// Update head and foot when page type changes
 	$effect(() => {
@@ -56,12 +53,12 @@
 	})
 
 	// Head editor resize state
-	const storage_key = `head-editor-height-${page_type.id}`
-	let head_editor_height = $state(typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(storage_key) || '50') : 50)
+	const storage_key = $derived(`head-editor-height-${page_type.id}`)
+	let head_editor_height = $state(untrack(() => typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(storage_key) || '50') : 50))
 	let is_resizing = $state(false)
 	let resize_start_y = $state(0)
 	let resize_start_height = $state(0)
-	let resize_raf = null
+	let resize_raf: number | null = null
 
 	function start_resize(event: MouseEvent) {
 		is_resizing = true
@@ -147,9 +144,9 @@
 		return result
 	})
 
-	let block_toolbar_element = $state()
-	let page_el = $state()
-	let hovered_block_el = $state()
+	let block_toolbar_element = $state<HTMLElement>()
+	let page_el: HTMLElement = $state()!
+	let hovered_block_el = $state<HTMLElement | null>(null)
 
 	let showing_block_toolbar = $state(false)
 	let hovering_toolbar = $state(false)
@@ -185,7 +182,7 @@
 		}
 	}
 
-	let hide_toolbar_timeout = null
+	let hide_toolbar_timeout: ReturnType<typeof setTimeout> | null = null
 
 	function hide_block_toolbar() {
 		// Clear any existing timeout
@@ -223,26 +220,26 @@
 		temp_container.innerHTML = code
 
 		const elements = Array.from(temp_container.childNodes)
-		const scripts = []
+		const scripts: HTMLScriptElement[] = []
 
 		elements.forEach((child) => {
-			if (child.tagName === 'SCRIPT') {
+			if (child instanceof HTMLScriptElement) {
 				scripts.push(child)
 			} else {
 				document.head.appendChild(child)
 			}
 		})
 
-		function load_script(script_element) {
-			return new Promise((resolve) => {
+		function load_script(script_element: HTMLScriptElement) {
+			return new Promise<void>((resolve) => {
 				const new_script = document.createElement('script')
 				Array.from(script_element.attributes).forEach((attr) => {
 					new_script.setAttribute(attr.name, attr.value)
 				})
 
 				if (script_element.src) {
-					new_script.onload = resolve
-					new_script.onerror = resolve // Proceed even if a script fails to load
+					new_script.onload = () => resolve()
+					new_script.onerror = () => resolve() // Proceed even if a script fails to load
 				} else {
 					new_script.textContent = script_element.textContent
 				}
@@ -264,7 +261,7 @@
 	// DROP INDICATOR //////////
 	////////////////////////////
 
-	let drop_indicator_element = $state()
+	let drop_indicator_element = $state<HTMLElement>()
 	let showing_drop_indicator = $state(false)
 
 	async function show_drop_indicator() {
@@ -328,7 +325,7 @@
 	let dragging_over_section = $state(false)
 	let hovering_over_zone = $state(null)
 
-	let dragging = $state({
+	let dragging = $state<{ id: string | null; position: string | null }>({
 		id: null,
 		position: null
 	})
@@ -365,7 +362,7 @@
 			async onDrop({ source }) {
 				if ($read_only || !source.data?.block || !page_type) return
 
-				const block_being_dragged = source.data.block
+				const block_being_dragged = source.data.block as { id: string }
 				const zone_sections = page_type_sections.filter((s) => (s.zone || 'body') === zone)
 				const target_index = zone_sections.length
 
@@ -436,10 +433,10 @@
 			async onDrag({ self, source }) {
 				if (!source.data?.block) return
 
-				hovered_block_el = self.element
-				if (dragging.id !== self.data.section.id || dragging.position !== extractClosestEdge(self.data)) {
+				hovered_block_el = element
+				if (dragging.id !== section.id || dragging.position !== extractClosestEdge(self.data)) {
 					dragging = {
-						id: self.data.section.id,
+						id: section.id,
 						position: extractClosestEdge(self.data)
 					}
 				}
@@ -453,8 +450,8 @@
 			async onDrop({ self, source }) {
 				if ($read_only || !source.data?.block || !page_type) return
 
-				const block_being_dragged = source.data.block
-				const section_dragged_over = self.data.section
+				const block_being_dragged = source.data.block as { id: string }
+				const section_dragged_over = section
 				const closestEdgeOfTarget = extractClosestEdge(self.data)
 				const section_zone = section_dragged_over.zone || 'body'
 
@@ -557,7 +554,8 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
+		{#if editing_section_target}
 		<SectionEditor
 			component={editing_section_target}
 			tab={editing_section_tab}
@@ -572,6 +570,7 @@
 				}
 			}}
 		/>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>
 
@@ -750,9 +749,9 @@
 								show_block_toolbar()
 							}
 						}}
-						onmouseenter={async ({ target }) => {
+						onmouseenter={async ({ currentTarget }) => {
 							hovered_section_id = section.id
-							hovered_block_el = target
+							hovered_block_el = currentTarget
 							if (!moving) {
 								show_block_toolbar()
 							}
@@ -816,9 +815,9 @@
 								show_block_toolbar()
 							}
 						}}
-						onmouseenter={async ({ target }) => {
+						onmouseenter={async ({ currentTarget }) => {
 							hovered_section_id = section.id
-							hovered_block_el = target
+							hovered_block_el = currentTarget
 							if (!moving) {
 								show_block_toolbar()
 							}
@@ -879,9 +878,9 @@
 								show_block_toolbar()
 							}
 						}}
-						onmouseenter={async ({ target }) => {
+						onmouseenter={async ({ currentTarget }) => {
 							hovered_section_id = section.id
-							hovered_block_el = target
+							hovered_block_el = currentTarget
 							if (!moving) {
 								show_block_toolbar()
 							}
@@ -939,7 +938,7 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 100vh;
+		height: 100dvh;
 		display: flex;
 		align-items: center;
 		justify-content: center;

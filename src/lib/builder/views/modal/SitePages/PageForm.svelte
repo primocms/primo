@@ -12,9 +12,11 @@
 	import { revealRow } from './reveal-row'
 
 	let { parent, oncreate }: { parent?: ObjectOf<typeof Pages>; oncreate: (new_page: Omit<Page, 'id' | 'parent' | 'site' | 'index'>) => void | Promise<void> } = $props()
+	const form_id = $props.id()
 
 	const { value: site } = site_context.get()
 	const page_types = $derived(site?.page_types())
+	const has_page_types = $derived(page_types?.length !== 0)
 
 	// set page type equal to the last type used under this parent
 	const default_page_type_id = $derived(parent?.children()?.[0]?.page_type ?? site?.page_types()?.[0]?.id ?? '')
@@ -25,17 +27,16 @@
 		page_type: ''
 	})
 	$effect.pre(() => {
-		new_page = {
-			name: '',
-			slug: '',
-			page_type: default_page_type_id
-		}
+		// Defaults may resolve after the user starts typing. Fill only an
+		// unset type, preserving their draft and any explicit type choice.
+		const default_type = default_page_type_id
+		if (!new_page.page_type && default_type) new_page.page_type = default_type
 	})
 
 	let saving = $state(false)
 	let error = $state('')
 
-	let page_creation_disabled = $derived(!new_page.name.trim() || !new_page.slug || saving)
+	let page_creation_disabled = $derived(!new_page.name.trim() || !new_page.slug || saving || !page_types || (page_types.length > 0 && !new_page.page_type))
 
 	let page_label_edited = $state(false)
 	$effect(() => {
@@ -62,16 +63,18 @@
 	aria-busy={saving}
 	in:fade={{ duration: 100 }}
 	onintroend={(e) => revealRow(e.currentTarget)}
-	class:has-page-types={page_types && page_types.length > 1}
+	class:has-page-types={has_page_types}
 >
-	<UI.TextInput autofocus={true} bind:value={new_page.name} id="page-label" label="Page name" disabled={saving} placeholder="About Us" />
-	<UI.TextInput bind:value={new_page.slug} id="page-slug" label="Page slug" disabled={saving} oninput={() => (page_label_edited = true)} placeholder="about-us" />
-	{#if page_types && page_types.length > 1}
+	<UI.TextInput autofocus={true} bind:value={new_page.name} id={`${form_id}-name`} label="Page name" disabled={saving} placeholder="About Us" />
+	<UI.TextInput bind:value={new_page.slug} id={`${form_id}-slug`} label="Page slug" disabled={saving} oninput={() => (page_label_edited = true)} placeholder="about-us" />
+	{#if has_page_types}
 		<UI.Select
 			fullwidth={true}
 			label="Page Type"
+			loading={saving || !page_types}
+			fallback_label={!page_types ? 'Loading page types…' : 'Choose a page type'}
 			value={new_page.page_type}
-			options={page_types?.map((p) => ({ value: p.id, icon: p.icon, label: p.name }))}
+			options={page_types?.map((p) => ({ value: p.id, icon: p.icon, label: p.name })) ?? []}
 			on:input={({ detail: page_type_id }) => (new_page.page_type = page_type_id)}
 		/>
 	{/if}
