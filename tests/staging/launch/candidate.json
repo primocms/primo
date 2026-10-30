@@ -1,24 +1,23 @@
 {
   "cms": {
-    "sourceCommit": "8e94fb051ec22b7a0335130ed98c6e4c14e1f1f3",
-    "version": "v3.3.2-rc.7",
-    "sha256": "7ef3f290e3555933037cb2be8edba77b6691f81e9672d6b60de3ef9f0db30c60",
-    "runId": 38962963117,
-    "artifactName": "rc7-linux_amd64",
+    "sourceCommit": "10d6d648f228efeae406965f4729d16a0aeacd6f",
+    "version": "v3.3.2-rc.13",
+    "sha256": "0e2b5569107401d9094c2c397091ddac1655257989169203f4ade68b6c6daa57",
+    "runId": 40988381491,
     "nativeSha256ByTarget": {
-      "darwin_amd64": "10cc02bb2d0566529754b114533fe94da6a8131efe63ffe3ddb37b95ab2e4a33",
-      "darwin_arm64": "deb8fae7d640abc76fb89b6cb4258f3db5cd69450cf9a458aeabaa0832b7956a",
-      "linux_amd64": "7ef3f290e3555933037cb2be8edba77b6691f81e9672d6b60de3ef9f0db30c60",
-      "linux_arm64": "2e3513cc1334af1480543ed2d8b5ed5080635a322fa1c2c952f90f1167c9b8f5",
-      "windows_amd64": "c11b2e119ac9dcaf9bd273f18d4008074c11d633bf7f0dc64dd8b02663cceb23"
+      "linux_amd64": "0e2b5569107401d9094c2c397091ddac1655257989169203f4ade68b6c6daa57",
+      "linux_arm64": "6f8a5265edbd0c8861988e2922ef921215ecdbb14a3f6057efa88e275555ff42",
+      "darwin_amd64": "c4975671ace381879b9dcf71fb466bd7f295123d0c11c6874707fd6f9f9feb2c",
+      "darwin_arm64": "320a8fee20499cfff8e92ed0855c16d08be3c09ebe9dfa5cb76a2e7ae8192a01",
+      "windows_amd64.exe": "bb0ed292ec9235d32059879c508b17b9c12b6f6c0b0c9f16e6d18918b2fa754c"
     }
   },
   "cli": {
-    "archive": "primo-cli-0.3.0-rc.2.tgz",
-    "sha256": "4d4dea80ac9bd3a3c4bc6721bd6320d83833f4c2ac6731148c0bc1be63349483"
+    "archive": "primo-cli-0.3.0-rc.3.tgz",
+    "sha256": "7a9c97d8fe5ab96c674a4b5d9407517bdfd3f7b9584e6976230e867ce8692c3c"
   },
   "mcp": {
-    "archive": "primo-mcp-0.1.11-rc.2.tgz",
-    "sha256": "a7c32c82bc748b18cc694782493112937aec86c86cc056b407ab1a8e8b7c0a03"
+    "archive": "primo-mcp-0.1.11-rc.3.tgz",
+    "sha256": "8cdfb61e49c2d23a2436b81357139893ea67663134ec5e642bebd455579ec7b2"
   }
 }
