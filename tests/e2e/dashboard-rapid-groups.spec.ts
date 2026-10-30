@@ -53,6 +53,18 @@ test.beforeAll(async ({ request }) => {
 	}
 })
 
+test('sites: off-screen options remain reachable before any scroll interaction', async ({ page }) => {
+	await loginAsDeveloperAtDashboard(page, siteGroups[0].id)
+	await expectGroupRecords(page, '.site-card-footer > div > a', sites[0])
+	await expect.poll(() => page.locator('.dashboard-content .IFrame').evaluateAll((previews) => previews.every((preview) => preview.querySelector('iframe.fadein')))).toBe(true)
+	const option = page.getByRole('button', { name: `Options for ${sites[0][11].name}`, exact: true })
+	await option.scrollIntoViewIfNeeded()
+	await expect(option).toBeInViewport()
+	await option.click()
+	await page.getByRole('menuitem', { name: 'Rename', exact: true }).click()
+	await expect(page.getByRole('dialog', { name: 'Rename site', exact: true })).toBeVisible()
+})
+
 async function scrollContent(page: Page, selector: string, position = 350) {
 	// Scroll the finished list, then reload into uncached async previews.
 	// Otherwise a preview resize can change the position before leaving.
