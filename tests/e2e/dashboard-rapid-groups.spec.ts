@@ -181,6 +181,8 @@ for (const section of ['sites', 'library'] as const) {
 			await expect(page.locator('.dashboard-content > header')).toHaveCount(1)
 			if (returnMethod === 'back') {
 				if (section === 'sites') {
+					// History can also restore focus; that is not fresh pointer/keyboard intent.
+					await cards.nth(index).evaluate((node) => (node as HTMLElement).focus({ preventScroll: true }))
 					// Browser history may apply its document offset after route/layout restoration.
 					await page.evaluate(() => window.scrollTo(0, 0))
 					await expect.poll(() => page.locator(scroller).evaluate((node) => node.scrollTop)).toBe(280)

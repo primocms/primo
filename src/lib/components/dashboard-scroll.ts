@@ -187,8 +187,6 @@ export function createDashboardScroll({
 		scrollEvents.addEventListener('scroll', onScroll, true)
 		scrollEvents.addEventListener('wheel', onInteraction, { passive: true })
 		scrollEvents.addEventListener('pointerdown', onInteraction)
-		scrollEvents.addEventListener('pointermove', onInteraction)
-		scrollEvents.addEventListener('focusin', onInteraction)
 		scrollEvents.addEventListener('keydown', onInteraction)
 		window.addEventListener('pagehide', onPageHide)
 
@@ -234,8 +232,6 @@ export function createDashboardScroll({
 				scrollEvents.removeEventListener('scroll', onScroll, true)
 				scrollEvents.removeEventListener('wheel', onInteraction)
 				scrollEvents.removeEventListener('pointerdown', onInteraction)
-				scrollEvents.removeEventListener('pointermove', onInteraction)
-				scrollEvents.removeEventListener('focusin', onInteraction)
 				scrollEvents.removeEventListener('keydown', onInteraction)
 				window.removeEventListener('pagehide', onPageHide)
 			}
