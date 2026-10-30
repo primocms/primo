@@ -224,7 +224,18 @@ test.describe('Pages creation row', () => {
 			await pageTypeSelect.locator('.popup .options button', { hasText: 'Default' }).click()
 			await dialog.getByPlaceholder('About Us').fill('New Page')
 			const before = (await dialog.boundingBox())!
-			if (overflow) await pageList.evaluate((node) => (node.scrollTop = 0))
+			if (overflow) {
+				// Opening the form reveals it after slide/FLIP layout settles. Let
+				// that pending reveal finish before establishing the test's top
+				// position, otherwise it can replace zero with the form's offset.
+				await pageList.evaluate(async (node) => {
+					const animations = node.getAnimations({ subtree: true }).filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+					await Promise.allSettled(animations.map((animation) => animation.finished))
+					await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+					node.scrollTop = 0
+				})
+				await expect.poll(() => pageList.evaluate((node) => node.scrollTop)).toBe(0)
+			}
 			const initialScroll = await pageList.evaluate((node) => node.scrollTop)
 
 			let releasePage!: () => void

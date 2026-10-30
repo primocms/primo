@@ -116,7 +116,7 @@ jobs:
           NODE_OPTIONS=--max_old_space_size=16384 npx vite --config app.config.js build
       - name: Build versioned native executable
         shell: bash
-        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2-rc.13 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
+        run: go build -ldflags="-s -w -X github.com/primocms/primo/internal.buildVersion=v3.3.2 -X github.com/primocms/primo/internal.buildTime=2026-10-25T00:00:00Z" -o primo_${{ matrix.target }} .
       - uses: actions/download-artifact@v4
         with:
           name: rc13-node-distributions

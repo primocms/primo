@@ -149,8 +149,8 @@ export async function freshInstall() {
 			child.stderr.on('data', (b) => (child.output += b))
 			return child
 		}
-		assert.equal((await run(['--version'])).stdout.trim(), '0.3.0-rc.3')
-		assert.equal(JSON.parse(await fs.readFile(path.join(prefix, 'node_modules/primo-mcp/package.json'), 'utf8')).version, '0.1.11-rc.3')
+		assert.equal((await run(['--version'])).stdout.trim(), '0.3.0')
+		assert.equal(JSON.parse(await fs.readFile(path.join(prefix, 'node_modules/primo-mcp/package.json'), 'utf8')).version, '0.1.11')
 		assert.equal(
 			await fs.access(path.join(home, '.primo/tokens.json')).then(
 				() => true,
@@ -165,16 +165,16 @@ export async function freshInstall() {
 			binaryBytes = await fs.readFile(binary),
 			requests = []
 		const asset = `primo_${process.platform === 'win32' ? 'windows' : process.platform}_${process.arch === 'x64' ? 'amd64' : process.arch}${process.platform === 'win32' ? '.exe' : ''}`
-		const pinnedURL = `https://github.com/primocms/primo/releases/download/v3.3.2-rc.13/${asset}`
+		const pinnedURL = `https://github.com/primocms/primo/releases/download/v3.3.2/${asset}`
 		const releaseURL = agentSetupPlan('https://onboarding.example.test').cmsRelease
 		feed = http.createServer((req, res) => {
 			requests.push(req.url)
 			if (req.url === '/latest') {
 				res.setHeader('Content-Type', 'application/json')
-				res.end(JSON.stringify({ tag_name: 'v3.3.2-rc.13' }))
+				res.end(JSON.stringify({ tag_name: 'v3.3.2' }))
 			} else if (req.url === '/candidate-release') {
 				res.setHeader('Content-Type', 'application/json')
-				res.end(JSON.stringify({ tag_name: 'v3.3.2-rc.13', assets: [{ name: asset, browser_download_url: pinnedURL }] }))
+				res.end(JSON.stringify({ tag_name: 'v3.3.2', assets: [{ name: asset, browser_download_url: pinnedURL }] }))
 			} else if (req.url === '/' + asset) res.end(binaryBytes)
 			else {
 				res.writeHead(404)
@@ -201,7 +201,7 @@ export async function freshInstall() {
 			const destination = path.join(home, 'candidate-cms', process.platform === 'win32' ? 'primo.exe' : 'primo')
 			await exec(node, [fileURLToPath(new URL('./install-candidate.mjs', import.meta.url)), releaseURL, destination, asset, pinnedURL], { env, timeout: 30000 })
 			assert.equal(sha(await fs.readFile(destination)), sha(binaryBytes), 'exact tagged CMS download checksum')
-			assert.match((await exec(destination, ['--version'], { env })).stdout, /v3\.3\.2-rc\.13/)
+			assert.match((await exec(destination, ['--version'], { env })).stdout, /v3\.3\.2/)
 			env.PRIMO_BINARY = destination
 			return destination
 		}
@@ -210,7 +210,7 @@ export async function freshInstall() {
 		const connect = async (launch = { command: node, args: [mcp] }) => {
 			const client = new Client({ name: 'fresh-agent-acceptance', version: '1.0.0' })
 			await client.connect(new StdioClientTransport({ ...launch, cwd: work, env: { ...env, PATH: empty }, stderr: 'pipe' }))
-			assert.equal(client.getServerVersion().version, '0.1.11-rc.3')
+			assert.equal(client.getServerVersion().version, '0.1.11')
 			return client
 		}
 		const evidence = {
@@ -222,9 +222,9 @@ export async function freshInstall() {
 			nodeArchiveSha256: expected,
 			nodeExecutableSha256: sha(await fs.readFile(node)),
 			nodeDelivery: distribution ? 'pinned GitHub mirror; official executable hash verified; fresh private installation' : 'official HTTPS download; fresh private installation',
-			cli: '0.3.0-rc.3',
-			mcp: '0.1.11-rc.3',
-			cms: 'v3.3.2-rc.13',
+			cli: '0.3.0',
+			mcp: '0.1.11',
+			cms: 'v3.3.2',
 			cmsSha256: sha(binaryBytes),
 			privateCandidateFeed: true,
 			archiveSha256: await Promise.all(archives.map(async (file) => ({ name: path.basename(file), sha256: sha(await fs.readFile(file)) }))),
