@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { spawn } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import { once } from 'node:events'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -53,6 +53,7 @@ test('companion CLI resumes after browser approval and reuses the saved login', 
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'primo-browser-login-'))
 	const environment = { ...process.env, HOME: directory, USERPROFILE: directory }
 	const child = spawn(process.execPath, [entry!, 'login', TEST_SERVER_URL, '--no-browser'], { env: environment })
+	let again: ChildProcess | undefined
 	let output = ''
 	child.stdout.on('data', (data) => {
 		output += data
@@ -73,12 +74,12 @@ test('companion CLI resumes after browser approval and reuses the saved login', 
 		expect(child.exitCode, output).toBe(0)
 		const tokens = JSON.parse(await fs.readFile(path.join(directory, '.primo/tokens.json'), 'utf8'))
 		expect(tokens[TEST_SERVER_URL]).toBeTruthy()
-		const again = spawn(process.execPath, [entry!, 'login', TEST_SERVER_URL, '--no-browser'], { env: environment })
+		again = spawn(process.execPath, [entry!, 'login', TEST_SERVER_URL, '--no-browser'], { env: environment })
 		let reused = ''
-		again.stdout.on('data', (data) => {
+		again.stdout!.on('data', (data) => {
 			reused += data
 		})
-		again.stderr.on('data', (data) => {
+		again.stderr!.on('data', (data) => {
 			reused += data
 		})
 		await once(again, 'close')
@@ -86,6 +87,11 @@ test('companion CLI resumes after browser approval and reuses the saved login', 
 		expect(reused).toContain('Already logged in')
 		expect(reused).not.toContain('Approve access')
 	} finally {
+		if (again && again.exitCode === null) {
+			const stopped = once(again, 'close')
+			again.kill('SIGKILL')
+			await stopped
+		}
 		if (child.exitCode === null) {
 			child.kill('SIGKILL')
 			await closed

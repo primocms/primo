@@ -96,7 +96,7 @@
 	const active_symbol_group = $derived(active_symbol_group_id ? LibrarySymbolGroups.one(active_symbol_group_id) : undefined)
 
 	// Get symbols for the active group using direct query instead of relationship method
-	const group_symbols = $derived(active_symbol_group?.symbols())
+	const group_symbols = $derived(active_symbol_group === null ? [] : active_symbol_group?.symbols())
 
 	const sidebar = useSidebar()
 

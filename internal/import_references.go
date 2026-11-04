@@ -78,22 +78,13 @@ func validateImportPageReferences(app core.App, site *core.Record, files map[str
 		}
 		incoming = append(incoming, pageReference{file, route, page})
 	}
-	// A moved page cannot still satisfy a dependency at its former URL. Remove
-	// that subtree before adding destinations, including parents in this archive.
+	moves := map[string]string{}
 	for _, item := range incoming {
-		if item.page.ID == "" {
-			continue
-		}
-		for old, id := range paths {
-			if id == item.page.ID && old != item.path {
-				for route := range paths {
-					if route == old || (old != "" && strings.HasPrefix(route, old+"/")) {
-						delete(paths, route)
-					}
-				}
-			}
+		if item.page.ID != "" {
+			moves[item.page.ID] = item.path
 		}
 	}
+	paths = remapImportedPagePaths(paths, moves)
 	for _, item := range incoming {
 		paths[item.path] = "incoming"
 	}
@@ -119,6 +110,33 @@ func validateImportPageReferences(app core.App, site *core.Record, files map[str
 		}
 	}
 	return nil
+}
+
+// Omitted descendants retain their IDs and move with their closest imported
+// ancestor. Compute from the original map so nested moves don't depend on order.
+func remapImportedPagePaths(paths map[string]string, destinations map[string]string) map[string]string {
+	moves := map[string]string{}
+	for old, id := range paths {
+		if next, ok := destinations[id]; ok && old != next && old != "" {
+			moves[old] = next
+		}
+	}
+	result := make(map[string]string, len(paths))
+	for route, id := range paths {
+		next, explicit := destinations[id]
+		if !explicit {
+			next = route
+			closest := ""
+			for old, destination := range moves {
+				if strings.HasPrefix(route, old+"/") && len(old) > len(closest) {
+					closest = old
+					next = strings.TrimPrefix(destination+strings.TrimPrefix(route, old), "/")
+				}
+			}
+		}
+		result[next] = id
+	}
+	return result
 }
 
 // importSymbolLookup indexes stable folder keys and editable display names.

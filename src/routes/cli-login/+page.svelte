@@ -16,6 +16,7 @@
 	let error = $state('')
 	let outcome = $state('')
 	let email = $state('')
+	let user_id = $state('')
 
 	onMount(async () => {
 		if (!valid_code) {
@@ -27,6 +28,7 @@
 			return
 		}
 		email = self.authStore.record?.email || ''
+		user_id = self.authStore.record?.id || ''
 		loading = false
 	})
 
@@ -35,7 +37,7 @@
 		busy = true
 		error = ''
 		try {
-			await self.send('/api/primo/cli-login/approve', { method: 'POST', body: { user_code: code, action } })
+			await self.send('/api/primo/cli-login/approve', { method: 'POST', body: { user_code: code, user_id, action } })
 			outcome = action
 		} catch (err: any) {
 			if (err.status === 401) {

@@ -28,6 +28,7 @@
 	const normalized_email = $derived(email.trim().toLowerCase())
 
 	async function invite_collaborator() {
+		if (invite_disabled_reason) { error = invite_disabled_reason; return }
 		try {
 			const stillLoading = !users || !server_members || !site_collborators
 			if (stillLoading) {
@@ -73,6 +74,7 @@
 	}
 
 	async function generate_link() {
+		if (invite_disabled_reason) { error = invite_disabled_reason; return }
 		try {
 			const stillLoading = !users || !server_members || !site_collborators
 			if (stillLoading) {
@@ -189,6 +191,7 @@
 	// affordance once this site is at its plan's per-site editor limit.
 	let site_editor_count = $derived(site.role_assignments()?.filter((a) => a.role === 'editor').length ?? 0)
 	let at_editor_cap = $derived(!!instance.editor_cap && site_editor_count >= instance.editor_cap)
+	let invite_disabled_reason = $derived(instance.owner_only ? 'Your plan includes only the owner account. Upgrade to invite collaborators.' : at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined)
 	let removing_collaborator = $state(false)
 	let collaborator_to_remove = $state<{ user: User; assignment: SiteRoleAssignment }>()
 
@@ -293,7 +296,7 @@
 				</div>
 				<div>
 					{#if instance.smtp_enabled}
-						<button type="submit" value="email" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
+						<button type="submit" value="email" disabled={!!invite_disabled_reason} title={invite_disabled_reason}>
 							{#if sending}
 								<Spinner />
 							{:else}
@@ -302,7 +305,7 @@
 						</button>
 						<span>or</span>
 					{/if}
-					<button type="submit" value="link" disabled={at_editor_cap} title={at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined}>
+					<button type="submit" value="link" disabled={!!invite_disabled_reason} title={invite_disabled_reason}>
 						{#if generating}
 							<Spinner />
 						{:else}

@@ -13,3 +13,16 @@ test('release rejects a rebuilt binary, stale source, wrong version or different
 		assert.throws(() => verifyCandidateAsset({ target: 'linux_amd64', report, bytes, source, version, ...change }))
 	}
 })
+
+test('published assets must match the independently retrieved successful run artifact', async () => {
+ const { verifyPublishedCandidateAsset } = await import('../../release/ship/candidate-asset.mjs')
+ const run={id:123,head_sha:source,conclusion:'success',event:'pull_request',path:'.github/workflows/rc-platform.yml',repository:{full_name:'primocms/primo'}}
+ const options={repository:'primocms/primo',readRun:async()=>run,readArtifact:async()=>({bytes,report})}
+ const input={target:'linux_amd64',report:{...report,qualificationRun:'123'},bytes,source,version}
+ assert.equal(await verifyPublishedCandidateAsset(input,options),report.sha256)
+ const forged=Buffer.from('replacement matching its own forged report')
+ await assert.rejects(verifyPublishedCandidateAsset({...input,bytes:forged,report:{...input.report,sha256:createHash('sha256').update(forged).digest('hex')}},options),/differs from the trusted/)
+ for(const change of [{head_sha:'b'.repeat(40)},{conclusion:'failure'},{path:'.github/workflows/other.yml'},{event:'workflow_dispatch'},{repository:{full_name:'attacker/primo'}}]) {
+ await assert.rejects(verifyPublishedCandidateAsset(input,{...options,readRun:async()=>({...run,...change})}),/Untrusted/)
+ }
+})

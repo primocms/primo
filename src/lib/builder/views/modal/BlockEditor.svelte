@@ -6,6 +6,7 @@
 <!-- svelte-ignore state_referenced_locally -->
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog'
+	import { toast } from 'svelte-sonner'
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte'
 	const mobile = new IsMobile()
 	import LargeSwitch from '$lib/builder/ui/LargeSwitch.svelte'
@@ -124,6 +125,7 @@
 				await self.commit()
 			} catch (error) {
 				console.error('Failed to save content', error)
+				toast.error('Could not save this block. Your changes are still here. Please try again.')
 				return
 			} finally {
 				loading = false

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -76,6 +77,29 @@ func onlyPermissionFields(record *core.Record, allowed ...string) bool {
 // Compiled artifacts remain writable for trusted editors to publish; this is
 // a source-design boundary, not a sandbox against executable output uploads.
 func RegisterContentPermissions(pb *pocketbase.PocketBase) error {
+	pb.OnRecordUpdateRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
+		if e.Auth != nil && !e.Auth.IsSuperuser() && e.Auth.GetString("serverRole") != "developer" {
+			if e.Auth.Id != e.Record.Id || !onlyPermissionFields(e.Record, "name", "avatar") {
+				return e.ForbiddenError("Only your name and avatar may be changed here", nil)
+			}
+		}
+		return e.Next()
+	})
+	pb.OnRecordValidate("pages").BindFunc(func(e *core.RecordEvent) error {
+		seen := map[string]bool{e.Record.Id: true}
+		for parent := e.Record.GetString("parent"); parent != ""; {
+			if seen[parent] {
+				return apis.NewBadRequestError("Page parents must not form a cycle", nil)
+			}
+			seen[parent] = true
+			record, err := e.App.FindRecordById("pages", parent)
+			if err != nil || record.GetString("site") != e.Record.GetString("site") {
+				return apis.NewBadRequestError("Page parent must belong to the same site", nil)
+			}
+			parent = record.GetString("parent")
+		}
+		return e.Next()
+	})
 	scopes := map[string]string{
 		"site_groups": "", "library_symbol_groups": "", "library_symbols": "", "library_symbol_fields": "", "library_symbol_entries": "",
 		"sites": "", "site_fields": "site", "site_entries": "field.site",

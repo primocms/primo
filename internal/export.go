@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -252,8 +253,12 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch page type fields: %w", err)
 		}
+		fieldByID := map[string]*core.Record{}
+		for _, field := range ptFields {
+			fieldByID[field.Id] = field
+		}
 		for _, f := range ptFields {
-			key := f.GetString("key")
+			key := buildBlockFieldCompositeKey(f, fieldByID)
 			if key == "" {
 				continue
 			}
@@ -582,13 +587,12 @@ func exportSiteToZip(pb core.App, site *core.Record) ([]byte, error) {
 			sort.SliceStable(entries, func(i, j int) bool { return entries[i].GetInt("index") < entries[j].GetInt("index") })
 		}
 		fieldValues := buildSectionContent(entriesByParent[""], pageTypeFields, fieldsByParent, entriesByParent).values
-		// Older imports stored entire repeater arrays in one root entry.
-		// Preserve those values on export; the next import structures them.
-		for _, entry := range entriesByParent[""] {
-			field := pageTypeFields[entry.GetString("field")]
-			if field != nil && field.GetString("type") == "repeater" && len(entriesByParent[entry.Id]) == 0 {
-				if items, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
-					fieldValues[field.GetString("key")] = items
+		// An absent page repeater is explicitly empty, so pull/reimport can
+		// clear populated destinations rather than silently preserving them.
+		for _, field := range pageTypeFields {
+			if field.GetString("page_type") == page.GetString("page_type") && field.GetString("parent") == "" && field.GetString("type") == "repeater" {
+				if _, exists := fieldValues[field.GetString("key")]; !exists {
+					fieldValues[field.GetString("key")] = []interface{}{}
 				}
 			}
 		}
@@ -1331,6 +1335,12 @@ func buildSectionContent(
 				// Every container is an item, even before it has child values.
 				// Export an empty object so its position survives pull/reimport.
 				childEntries := entriesByParent[entry.Id]
+				if len(childEntries) == 0 {
+					if legacy, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
+						items = append(items, legacy...)
+						continue
+					}
+				}
 				item := buildSectionContent(childEntries, fieldById, fieldsByParent, entriesByParent)
 				items = append(items, item)
 			}
@@ -1410,21 +1420,30 @@ func buildSectionContent(
 // receipt; blindly exporting that receipt would undo the edit on the next sync.
 func exportComponentSource(symbol *core.Record) []byte {
 	html, css, js := symbol.GetString("html"), symbol.GetString("css"), symbol.GetString("js")
+	scriptTag, styleTag := "<script>", "<style>"
 	if raw := symbol.GetString("raw_source"); raw != "" {
 		rawHTML, rawCSS, rawJS := parseComponent(raw)
 		if rawHTML == html && rawCSS == css && rawJS == js {
 			return []byte(raw)
 		}
+		// Parsed columns store block contents; the imported receipt retains
+		// language/context attributes needed to compile later CMS edits.
+		if tag := regexp.MustCompile(`<script\b[^>]*>`).FindString(raw); tag != "" {
+			scriptTag = tag
+		}
+		if tag := regexp.MustCompile(`<style\b[^>]*>`).FindString(raw); tag != "" {
+			styleTag = tag
+		}
 	}
 	var code strings.Builder
 	if js != "" {
-		code.WriteString("<script>\n")
+		code.WriteString(scriptTag + "\n")
 		code.WriteString(js)
 		code.WriteString("\n</script>\n\n")
 	}
 	code.WriteString(html)
 	if css != "" {
-		code.WriteString("\n\n<style>\n")
+		code.WriteString("\n\n" + styleTag + "\n")
 		code.WriteString(css)
 		code.WriteString("\n</style>")
 	}

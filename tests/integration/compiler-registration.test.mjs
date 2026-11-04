@@ -25,3 +25,12 @@ test('missing processor registration rejects rather than leaving a permanent spi
  for(let n=0;n<100;n++){t.mock.timers.tick(100);await Promise.resolve()}
  await checked
 })
+
+ test('registration during the final wait is observed before timeout',async t=>{
+ t.mock.timers.enable({apis:['setTimeout']})
+ const {processors,registerProcessors}=await fresh()
+ const waiting=processors.html('final registration')
+ for(let n=0;n<99;n++){t.mock.timers.tick(100);await Promise.resolve()}
+ t.mock.timers.tick(100);registerProcessors({html:async raw=>raw})
+ assert.equal(await waiting,'final registration')
+ })

@@ -35,7 +35,7 @@ export async function freshInstall() {
 		PATH: empty,
 		PRIMO_ENABLE_USAGE_STATS: 'false'
 	}
-	for (const key of Object.keys(env)) if (/^(PRIMO_|NODE_OPTIONS$|NODE_PATH$|NPM_CONFIG_|npm_config_prefix$|CLAUDE_|CODEX_HOME$|CURSOR_)/.test(key)) delete env[key]
+	for (const key of Object.keys(env)) if (/^(PRIMO_|NODE_OPTIONS$|NODE_PATH$|NPM_CONFIG_|npm_config_prefix$|npm_config_registry$|CLAUDE_|CODEX_HOME$|CURSOR_)/.test(key)) delete env[key]
 	env.PRIMO_ENABLE_USAGE_STATS = 'false'
 	let feed
 	let stage = 'fresh-profile', stageStarted = performance.now()

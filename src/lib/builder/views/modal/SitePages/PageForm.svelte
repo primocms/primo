@@ -36,7 +36,7 @@
 	let saving = $state(false)
 	let error = $state('')
 
-	let page_creation_disabled = $derived(!new_page.name.trim() || !new_page.slug || saving || !page_types || (page_types.length > 0 && !new_page.page_type))
+	let page_creation_disabled = $derived(!new_page.name.trim() || !new_page.slug || saving || !page_types || !new_page.page_type)
 
 	let page_label_edited = $state(false)
 	$effect(() => {

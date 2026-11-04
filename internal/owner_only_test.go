@@ -77,6 +77,7 @@ func TestOwnerOnlyBlocksCollaboratorsThroughAPI(t *testing.T) {
 		{"grant developer", "POST", "/api/collections/site_role_assignments/records", `{"site":"` + site.Id + `","user":"` + other.Id + `","role":"developer"}`, 403},
 		{"change assignment user", "PATCH", "/api/collections/site_role_assignments/records/" + assignment.Id, `{"user":"` + other.Id + `"}`, 403},
 		{"promote other user", "PATCH", "/api/collections/users/records/" + other.Id, `{"serverRole":"developer"}`, 403},
+		{"owner deletion", "DELETE", "/api/collections/users/records/" + owner.Id, `{}`, 403},
 		{"owner profile", "PATCH", "/api/collections/users/records/" + owner.Id, `{"name":"Owner"}`, 200},
 		{"owner login", "POST", "/api/collections/users/auth-with-password", `{"identity":"owner@example.com","password":"owner-test-password"}`, 200},
 		{"other login", "POST", "/api/collections/users/auth-with-password", `{"identity":"other@example.com","password":"other-test-password"}`, 403},

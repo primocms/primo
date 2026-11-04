@@ -186,7 +186,7 @@
 				if ($read_only || location.current.dropTargets[0]?.element !== self.element) return
 				const edge = extractClosestEdge(self.data)
 				if (edge !== 'top' && edge !== 'bottom') return
-				const updates = reorderedPages(allPages, source.data.page as Page, page, edge, page.parent === homepage?.id ? 1 : 0)
+				const updates = reorderedPages(allPages, source.data.page as Page, page, edge, page.parent === homepage?.id ? (homepage?.index ?? 0) + 1 : 0)
 				if (!updates.length) return
 				for (const { id, index } of updates) Pages.update(id, { index })
 				void selfManager.commit().catch((error) => toast.error(error instanceof Error ? error.message : 'Could not reorder pages. Please try again.'))

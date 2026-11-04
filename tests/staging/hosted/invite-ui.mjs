@@ -5,8 +5,11 @@ const c=await context(),{run,state,evidence}=c
 const actors=JSON.parse(await fs.readFile(path.join(run,'private/actors.json'),'utf8')),actor={...actors[0]}
 const admin=await c.login(c.credentials.adminEmail,c.credentials.adminPassword,true)
 const setupPassword=randomBytes(24).toString('base64url')+'Aa1!';c.secrets.add(setupPassword)
-const freshUser=await c.create('users',{email:'handoff-'+randomBytes(6).toString('hex')+'@primo-qa.invalid',name:'Disposable handoff client',password:setupPassword,passwordConfirm:setupPassword,invite:'pending'},admin.token)
-await c.create('site_role_assignments',{site:actor.siteId,user:freshUser.id,role:'editor'},admin.token)
+const errors=[]
+let freshUser,assignment,browser,browserContext,page,passed=false
+try {
+freshUser=await c.create('users',{email:'handoff-'+randomBytes(6).toString('hex')+'@primo-qa.invalid',name:'Disposable handoff client',password:setupPassword,passwordConfirm:setupPassword,invite:'pending'},admin.token)
+assignment=await c.create('site_role_assignments',{site:actor.siteId,user:freshUser.id,role:'editor'},admin.token)
 Object.assign(actor,{email:freshUser.email,userId:freshUser.id,password:setupPassword})
 const mailCredentials=JSON.parse(await fs.readFile(path.join(run,'private/mail.json'),'utf8'))
 c.secrets.add(mailCredentials.password)
@@ -22,10 +25,8 @@ const invitation=(delivered.HTML || '').match(/href="([^"]+create=[^"]+)"/)?.[1]
 invariant(invitation && new URL(invitation).origin===state.cmsOrigin,'Invitation origin differs from staging')
 const token=new URL(invitation).searchParams.get('create');invariant(token,'No invitation setup token');c.secrets.add(token)
 const browserModule=await import(pathToFileURL(path.join(c.kit,'tooling/node_modules/@playwright/test/index.mjs')))
-const browser=await browserModule.chromium.launch({headless:true})
-let browserContext,page
-const errors=[]
-try{
+browser=await browserModule.chromium.launch({headless:true})
+
  browserContext=await browser.newContext({viewport:{width:1280,height:900}})
  page=await browserContext.newPage();page.on('pageerror',e=>errors.push(e.message))
  await page.goto(invitation)
@@ -45,6 +46,14 @@ try{
  await page.waitForFunction(()=>document.querySelector('main iframe[title=block]')?.contentDocument?.querySelector('h1'),null,{timeout:90000})
  invariant(errors.length===0,'Invitation GUI emitted browser runtime errors')
  evidence.status='PASS_HOSTED_BROWSER_INVITATION_ACCEPTANCE';evidence.browser={name:'chromium',version:browser.version()};evidence.checks=['Actual SMTP invitation reached private capture only','Exact emailed HTTPS setup link, password and confirmation entered through the browser form, Create account submitted and automatically signed in','Scoped client opened its five-block editor and remained signed in after reload; no source/content canary changes'];evidence.externalMailDelivery=false
- await c.save('invitation-ui.json',evidence);console.log('PASS real capture-mail link and complete browser account setup')
+ await c.save('invitation-ui.json',evidence);passed=true;console.log('PASS real capture-mail link and complete browser account setup')
 }catch(error){await c.save('invitation-ui-failure.json',{failure:c.redact(error.stack),errors},true);console.error(c.redact(error.stack));process.exitCode=1}
-finally{await browserContext?.close();await browser.close()}
+finally{
+ const cleanupErrors=[]
+ for(const close of [()=>browserContext?.close(),()=>browser?.close()]){try{await close()}catch(error){cleanupErrors.push(error)}}
+ if(!passed){
+  if(assignment)try{await c.ok('/api/collections/site_role_assignments/records/'+assignment.id,{method:'DELETE',token:admin.token})}catch(error){cleanupErrors.push(error)}
+  if(freshUser)try{await c.ok('/api/collections/users/records/'+freshUser.id,{method:'DELETE',token:admin.token})}catch(error){cleanupErrors.push(error)}
+ }
+ for(const error of cleanupErrors){console.error(c.redact(error.stack||String(error)));process.exitCode=1}
+}

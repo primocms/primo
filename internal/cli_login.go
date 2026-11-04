@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -59,6 +60,17 @@ func RegisterCLILoginEndpoints(pb *pocketbase.PocketBase) error {
 func registerCLILoginEndpoints(pb *pocketbase.PocketBase, store *cliLoginStore) error {
 	pb.OnServe().BindFunc(func(event *core.ServeEvent) error {
 		event.Router.POST("/api/primo/cli-login/start", func(e *core.RequestEvent) error {
+			// Native CLI requests have no browser origin. A cross-site browser
+			// must not consume this user's small pending-login allowance.
+			if e.Request.Header.Get("Sec-Fetch-Site") == "cross-site" {
+				return cliLoginError(e, http.StatusForbidden, "cross_site_request", "Start login from Primo CLI.")
+			}
+			if origin := e.Request.Header.Get("Origin"); origin != "" {
+				u, err := url.Parse(origin)
+				if err != nil || u.Host != e.Request.Host || (u.Scheme != "https" && u.Scheme != "http") {
+					return cliLoginError(e, http.StatusForbidden, "cross_site_request", "Start login from Primo CLI.")
+				}
+			}
 			store.mu.Lock()
 			defer store.mu.Unlock()
 			now := store.now()
@@ -101,6 +113,7 @@ func registerCLILoginEndpoints(pb *pocketbase.PocketBase, store *cliLoginStore) 
 			}
 			var body struct {
 				UserCode string `json:"user_code"`
+				UserID   string `json:"user_id"`
 				Action   string `json:"action"`
 			}
 			if err := e.BindBody(&body); err != nil {
@@ -108,6 +121,9 @@ func registerCLILoginEndpoints(pb *pocketbase.PocketBase, store *cliLoginStore) 
 			}
 			if body.Action != "approve" && body.Action != "deny" {
 				return e.BadRequestError("Choose approve or deny", nil)
+			}
+			if body.UserID != e.Auth.Id {
+				return cliLoginError(e, http.StatusConflict, "account_changed", "Your signed-in account changed. Reload this page and check the account before approving.")
 			}
 			store.mu.Lock()
 			defer store.mu.Unlock()

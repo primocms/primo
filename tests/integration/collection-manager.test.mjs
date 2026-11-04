@@ -67,6 +67,18 @@ test('retrying a partial content batch preserves acknowledged changes and saves 
  const manager=createCollectionManager({collection:()=>({update:async(id,data)=>{calls.push(id);if(id==='b'&&fail)throw {status:503};return {id,...data}}})},undefined,{retain_failed_change:change=>change.operation==='update'})
  for(const id of ['a','b','c'])manager.changes.set(id,{collection:'page_section_entries',operation:'update',committed:false,data:{value:'Client '+id}})
  await assert.rejects(manager.commit());assert.equal(manager.records.get('a').data.value,'Client a');assert.equal(manager.changes.get('b').data.value,'Client b');assert.equal(manager.has_pending_changes(),true)
- fail=false;await manager.commit();assert.deepEqual(calls,['a','b','b','c']);assert.equal(manager.has_pending_changes(),false)
+ fail=false;await manager.commit();assert.deepEqual(calls,['a','b','c','b']);assert.equal(manager.has_pending_changes(),false)
  for(const id of ['a','b','c'])assert.equal(manager.records.get(id).data.value,'Client '+id)
 })
+
+ test('a permanently failing draft does not block unrelated later saves',async()=>{
+ const saved=[]
+ const manager=createCollectionManager({collection:()=>({update:async(id,data)=>{if(id==='broken')throw new Error('broken');saved.push(id);return {id,...data}}})})
+ manager.changes.set('broken',{collection:'page_section_entries',operation:'update',committed:false,data:{value:'retain me'}})
+ for(const id of ['first','second']){
+ manager.changes.set(id,{collection:'page_section_entries',operation:'update',committed:false,data:{value:id}})
+ await assert.rejects(manager.commit(),/broken/)
+ assert.equal(manager.changes.get('broken').committed,false)
+ }
+ assert.deepEqual(saved,['first','second'])
+ })

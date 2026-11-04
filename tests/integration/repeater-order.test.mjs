@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { createEntryReordering, orderKey } from '../../src/lib/pocketbase/entry-reordering.js'
+import { createEntryReordering, orderKey, orderIndexKey } from '../../src/lib/pocketbase/entry-reordering.js'
 
 const scope = { collection: 'page_section_entries', owner: 'section', ownerKey: 'section', field: 'items', parent: '', locale: 'en' }
 function draft() {
@@ -18,9 +18,9 @@ test('repeated moves keep the original conflict baseline and track new/deleted i
 	assert.deepEqual(
 		[...order.indices],
 		[
-			['b', 0],
-			['a', 1],
-			['d', 2]
+			[orderIndexKey(scope.collection, 'b'), 0],
+			[orderIndexKey(scope.collection, 'a'), 1],
+			[orderIndexKey(scope.collection, 'd'), 2]
 		]
 	)
 	assert.deepEqual(order.pending.get(orderKey(scope)).expected, { b: 3, a: 0, d: 9 })
@@ -42,7 +42,7 @@ test('failed saving keeps the order retryable; successful saving clears only the
 			changes
 		)
 	)
-	assert.equal(order.indices.get('a'), 1)
+	assert.equal(order.indices.get(orderIndexKey(scope.collection, 'a')), 1)
 	assert.match(order.errors.get(orderKey(scope)), /could not be saved/)
 	await order.commit(
 		{
@@ -90,9 +90,9 @@ test('a move arriving during a save is retained with the newly confirmed baselin
 	assert.deepEqual(
 		[...order.indices],
 		[
-			['c', 0],
-			['b', 1],
-			['a', 2]
+			[orderIndexKey(scope.collection, 'c'), 0],
+			[orderIndexKey(scope.collection, 'b'), 1],
+			[orderIndexKey(scope.collection, 'a'), 2]
 		]
 	)
 })
@@ -196,3 +196,13 @@ test('an ordinary create failure leaves the draft available for a successful Sav
 	assert.equal(manager.changes.get('a').committed, true)
 	assert.equal(manager.records.get('a').data.id, 'a')
 })
+
+ test('order overlays distinguish the same record ID in different collections', () => {
+ const order = draft()
+ order.stage(scope, ['shared','a'], {shared:1,a:0})
+ const other = {...scope,collection:'site_entries'}
+ order.stage(other,['a','shared'],{shared:0,a:1})
+ assert.equal(order.indices.get(orderIndexKey(scope.collection,'shared')),0)
+ assert.equal(order.indices.get(orderIndexKey(other.collection,'shared')),1)
+ assert.equal(order.indices.get(orderIndexKey('pages','shared')),undefined)
+ })

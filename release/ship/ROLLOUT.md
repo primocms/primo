@@ -11,9 +11,12 @@ to rename RC.13 as stable. The coordinated prerelease tuple remains CMS
 1. Freeze the final source. Require passing native/exact-package, browser,
    source, staging and release-safeguard checks at that source. The October 28
    hosted profile passes for fed368b4; later product changes need new evidence.
-2. Verify the exact candidate archives against rc8-packages.json. Publish MCP
-   first to npm's `rc` dist-tag, never `latest`. Refresh source registry locks
-   to the same immutable archive integrity and verify dependency resolution.
+2. Verify the exact candidate archives against rc8-packages.json. MCP
+   0.1.11-rc.3 is already published to npm's `rc` dist-tag; do not republish
+   it. Confirm the registry integrity recorded in INPUTS.json matches the
+   source locks and verify dependency resolution. Publish no MCP version to
+   `latest`. The current CLI RC and CMS RC.13 are also immutable published
+   artifacts; review fixes require new qualified versions before publication.
 3. Create the CMS tag at the qualified source. The candidate release workflow
    copies the five tested CI executables after checking source, version,
    platform and SHA-256; it refuses to rebuild replacement RC bytes. Review the

@@ -14,8 +14,10 @@ import (
 // storage instead of retaining PocketBase v0.35's additional full-body heap copy.
 // PocketBase's normal 32 MiB multipart memory threshold spills larger files to
 // disk. Its dynamic body limits, collection rate checks, and record authorization
-// remain in the existing handlers, with no eager parsing before those checks.
+// remain in the existing handlers. Bound authenticated uploads before parsing;
+// record create rules requiring multipart fields run in PocketBase afterward.
 func RegisterRecoverySnapshotUploads(pb *pocketbase.PocketBase) error {
+	capacity := make(chan struct{}, 1)
 	pb.OnServe().BindFunc(func(event *core.ServeEvent) error {
 		event.Router.Bind(&hook.Handler[*core.RequestEvent]{
 			Id:       "primoSnapshotStream",
@@ -33,6 +35,13 @@ func RegisterRecoverySnapshotUploads(pb *pocketbase.PocketBase) error {
 				// middleware. Reject guests before reading or spooling any bytes.
 				if e.Auth == nil {
 					return e.UnauthorizedError("Authentication required.", nil)
+				}
+				select {
+				case capacity <- struct{}{}:
+					defer func() { <-capacity }()
+				default:
+					e.Response.Header().Set("Retry-After", "1")
+					return e.TooManyRequestsError("Another recovery snapshot upload is running. Retry after it finishes.", nil)
 				}
 				body, ok := e.Request.Body.(*router.RereadableReadCloser)
 				if !ok {

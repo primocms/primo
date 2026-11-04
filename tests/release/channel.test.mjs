@@ -19,6 +19,10 @@ test('mislabeled releases cannot promote a prerelease to stable', () => {
 		assert.throws(() => releaseChannel({ tag, prerelease, repository }))
 	}
 })
+test('rejects numeric prerelease identifiers with leading zeros', () => {
+	for (const tag of ['v3.3.2-01', 'v3.3.2-rc.01']) assert.throws(() => releaseChannel({ tag, prerelease: true, repository }))
+})
+
 test('rejects non-version refs and output injection', () => {
 	for (const tag of ['main', 'v3.3', 'v4.0.0', 'v3.3.02', 'v3.3.2\nlatest', 'v3.3.2+meta']) assert.throws(() => releaseChannel({ tag, prerelease: false, repository }))
 	assert.throws(() => releaseChannel({ tag: 'v3.3.2', prerelease: false, repository: 'primocms/primo\ntags=latest' }))

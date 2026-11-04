@@ -222,7 +222,7 @@ func authorizePushState(app core.App, e *core.RequestEvent, target string) error
 
 // Binary staging has no import form to parse. Its caller supplies an empty
 // request body; the final import rechecks access with the actual form.
-func authorizePushStateWithInfo(app core.App, e *core.RequestEvent, target string, info *core.RequestInfo) error {
+func authorizePushStateWithInfo(app core.App, e *core.RequestEvent, target string, info *core.RequestInfo, staging ...bool) error {
 	if !pushTargetPattern.MatchString(target) {
 		return e.BadRequestError("Invalid push target", nil)
 	}
@@ -265,6 +265,9 @@ func authorizePushStateWithInfo(app core.App, e *core.RequestEvent, target strin
 	}
 	if !isSiteDeveloper(app, e.Auth, target) {
 		return e.ForbiddenError("A developer is required to import site design", nil)
+	}
+	if len(staging) > 0 && staging[0] {
+		return nil
 	}
 	if info == nil {
 		info, err = e.RequestInfo()

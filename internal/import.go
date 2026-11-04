@@ -322,6 +322,11 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 
 	// Parse multipart form (must read body before any access checks so we can
 	// peek at site.yaml when creating a new site).
+	release, err := acquireImportCapacity(pb, e)
+	if err != nil {
+		return err
+	}
+	defer release()
 	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}
@@ -1214,7 +1219,13 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 
 	// Seed dependencies from this site so a partial upload can omit parents.
 	// Parents included in this archive overwrite these IDs as they are imported.
-	pathToId := pathToPageId
+	moves := map[string]string{}
+	for _, info := range allPages {
+		if info.existing != nil {
+			moves[info.existing.Id] = info.path
+		}
+	}
+	pathToId := remapImportedPagePaths(pathToPageId, moves)
 
 	// Import homepage first to get its ID, or retain the existing homepage.
 	homepageId := pathToId[""]
@@ -2351,6 +2362,36 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 			fieldId := field.Id
 			if field.GetString("type") == "repeater" || field.GetString("type") == "group" {
+				// Processing a changed page file must not replace an unchanged
+				// subtree and invalidate other clients' pending entry edits.
+				ids := map[string]bool{}
+				for _, entry := range existingEntries {
+					if entry.GetString("parent") == "" && entry.GetString("field") == fieldId {
+						ids[entry.Id] = true
+					}
+				}
+				for changed := true; changed; {
+					changed = false
+					for _, entry := range existingEntries {
+						if ids[entry.GetString("parent")] && !ids[entry.Id] {
+							ids[entry.Id] = true
+							changed = true
+						}
+					}
+				}
+				tree := []*core.Record{}
+				for _, entry := range existingEntries {
+					if ids[entry.Id] {
+						tree = append(tree, entry)
+					}
+				}
+				unchanged, err := sectionContentUnchanged(tree, ptFields, map[string]interface{}{fieldKey: value})
+				if err != nil {
+					return "", nil, err
+				}
+				if unchanged {
+					continue
+				}
 				// Replace this field's item tree; unrelated scalar entries retain IDs.
 				for _, entry := range existingEntries {
 					if entry.GetString("field") == fieldId && entry.GetString("parent") == "" {
@@ -2359,7 +2400,7 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 						}
 					}
 				}
-				if err := importPageContentField(app, entriesColl, page.Id, field, value, "", 0, fieldsByParent); err != nil {
+				if err := importPageContentField(app, entriesColl, page.Id, field, value, "", 0, fieldsByParent, warnings, sourceFile); err != nil {
 					return "", nil, err
 				}
 				continue
@@ -2549,6 +2590,17 @@ func sectionContentUnchanged(entries, fields []*core.Record, incoming map[string
 		}
 		byParent[entry.GetString("parent")] = append(byParent[entry.GetString("parent")], entry)
 	}
+	for _, entry := range entries {
+		field := fieldByID[entry.GetString("field")]
+		if field.GetString("type") == "group" && len(children[field.Id]) > 0 && len(byParent[entry.Id]) == 0 {
+			return false, nil
+		}
+		if field.GetString("type") == "repeater" && len(byParent[entry.Id]) == 0 {
+			if _, legacy := normalizeValue(entry.Get("value")).([]interface{}); legacy {
+				return false, nil
+			}
+		}
+	}
 	// Marshal/unmarshal uses the exact export representation, including nested
 	// ordered maps and JSON-number normalization, without reading binary assets.
 	raw, err := yaml.Marshal(buildSectionContent(byParent[""], fieldByID, children, byParent))
@@ -2652,9 +2704,7 @@ func importPageTypeFields(app core.App, pageType *core.Record, ptFields []interf
 		matched[field.Id] = true
 		byPath[fieldPath] = field
 		parents[fieldPath] = parentKey
-		if parentKey == "" {
-			keyToId[fieldKey] = field.Id
-		}
+		keyToId[fieldPath] = field.Id
 	}
 
 	for fieldPath, parentKey := range parents {
@@ -2688,7 +2738,7 @@ func importPageTypeFields(app core.App, pageType *core.Record, ptFields []interf
 
 // importPageContentField stores the same parent/item structure used by the
 // editor and other content scopes. Containers cannot be opaque JSON values.
-func importPageContentField(app core.App, collection *core.Collection, pageID string, field *core.Record, value interface{}, parentID string, index int, children map[string][]*core.Record) error {
+func importPageContentField(app core.App, collection *core.Collection, pageID string, field *core.Record, value interface{}, parentID string, index int, children map[string][]*core.Record, warnings *[]ImportWarning, sourceFile string) error {
 	if field.GetString("type") == "repeater" {
 		items, _ := value.([]interface{})
 		for i, item := range items {
@@ -2702,8 +2752,9 @@ func importPageContentField(app core.App, collection *core.Collection, pageID st
 				return err
 			}
 			values, _ := item.(map[string]interface{})
+			warnUnknownPageContent(values, children[field.Id], warnings, sourceFile, fmt.Sprintf("%s[%d]", field.GetString("key"), i))
 			for _, child := range children[field.Id] {
-				if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+				if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children, warnings, sourceFile); err != nil {
 					return err
 				}
 			}
@@ -2722,13 +2773,34 @@ func importPageContentField(app core.App, collection *core.Collection, pageID st
 	}
 	if field.GetString("type") == "group" {
 		values, _ := value.(map[string]interface{})
+		warnUnknownPageContent(values, children[field.Id], warnings, sourceFile, field.GetString("key"))
 		for _, child := range children[field.Id] {
-			if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children); err != nil {
+			if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children, warnings, sourceFile); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+func warnUnknownPageContent(values map[string]interface{}, fields []*core.Record, warnings *[]ImportWarning, file, path string) {
+	if warnings == nil {
+		return
+	}
+	known := map[string]bool{}
+	for _, field := range fields {
+		known[field.GetString("key")] = true
+	}
+	keys := []string{}
+	for key := range values {
+		if !known[key] {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		*warnings = append(*warnings, ImportWarning{Kind: "orphaned_field", File: file, Path: path + "." + key, Field: key, Message: fmt.Sprintf("%s: content key %q is not a declared subfield of %q and was not imported", file, key, path)})
+	}
 }
 
 // resolvePageFieldRef parses a page-field config.field value and returns the
