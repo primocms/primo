@@ -6,17 +6,24 @@ native build identity and active qualification expectations use those stable
 versions. The candidate source/evidence remains preserved on the parent release
 branch. Native CI must build these source bytes; no RC binary is relabeled.
 
-Local checks: source check zero errors/warnings and all 159 integration tests
-pass. The freshly built stable Mac executable is exercised with the exact
-stable archives. Full current-head native/browser/recovery/security CI is the
-next gate. Stable tarball hashes and offline handoff evidence are retained in
-final-packages/ and the parent qualification record.
+Qualification at `85867022c9b2744bdbab5393947afdf87d8c373f` passed all
+20 stable checks, including five native platforms, source/installed browser
+engines, native Safari, fresh installation, production validation, recovery,
+framing and security. Recorded runs:
+- Native/downstream: https://github.com/primocms/primo/actions/runs/40998678023
+- Source: https://github.com/primocms/primo/actions/runs/40998678113
+- E2E: https://github.com/primocms/primo/actions/runs/40998678302
 
-Still held: registry publication/integrity handoff, main merges, tags,
-containers/releases and production deployment. Hosted QA remains unresolved
-following the pinned hour's TCP timeouts and requires verified recovery and a
-passing run covering the final product changes. Do not overwrite active QA
-writers or promote failed/earlier evidence to this new identity.
+The final ten-editor hosted hour passed on the prerelease source `10d6d648`
+(run 40999083456): 3600.002 seconds, 17000 requests and zero errors. This was
+not a hosted run of the stable executable. Earlier TCP timeout evidence remains
+historical; the passing CI hour does not claim its local trigger was fixed.
+
+New review fixes change source/package identities. Those changes need fresh
+qualification; the completed runs above attest only their recorded source.
+Stable tarball hashes and offline handoff evidence remain in final-packages/.
+Registry publication/integrity handoff, integration merges, tags, containers,
+release publication and production deployment remain held.
 
 The local stable fresh-machine gate now also passes: private Node installation,
 exact npm archives, actual MCP connectivity, scoped pull, managed and tagged
