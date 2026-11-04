@@ -302,6 +302,7 @@ func TestAttentionRetirementRevokesSavedSMTPKey(t *testing.T) {
 	s, _, _ := fixture(t)
 	j := enqueue(t, s)
 	j.State = "attention"
+	j.Error = "smtp_settings"
 	j.SMTPKeyID = "customer-key"
 	if err := s.Store.Save(j); err != nil {
 		t.Fatal(err)
@@ -320,6 +321,17 @@ func TestAttentionRetirementRevokesSavedSMTPKey(t *testing.T) {
 	s.Handler().ServeHTTP(w, r)
 	if w.Code != 202 || !revoked {
 		t.Fatal("attention credential could not be retired", w.Code)
+	}
+	r = httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retry", nil)
+	r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, r)
+	if w.Code != 409 {
+		t.Fatal("retired job accepted a retry", w.Code)
+	}
+	saved, err := s.Store.Get(j.ID)
+	if err != nil || !saved.Retired || saved.State != "attention" || saved.Error != "smtp_settings" {
+		t.Fatal("retry changed retired job", err)
 	}
 }
 

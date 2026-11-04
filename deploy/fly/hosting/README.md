@@ -31,7 +31,7 @@ It does not run inside customer apps or modify existing Railway tenants.
 6. With hosted SMTP configured, a sending-only Resend key restricted to
    `email.primo.build` is created for this customer. Its password is checkpointed
    encrypted before applying and verifying PocketBase SMTP (465, implicit TLS),
-   sender and workspace URL settings. A PocketBase test email to the operator alert address (or sender address when no alert address is configured) verifies SMTP authentication before readiness. Setup failures block the ready email.
+   sender and workspace URL settings. A PocketBase test email to the required operator alert address verifies SMTP authentication before readiness. Setup failures block the ready email.
 7. Bootstrap secrets are removed, the Machine is updated to that secrets version,
    and sign-in/HTTPS checks run again after restart. The control plane then discards
    the customer's password and sends the dashboard link. The customer signs in at

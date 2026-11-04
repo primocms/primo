@@ -101,6 +101,9 @@ func ConfigFromEnv() (Config, error) {
 			return c, errors.New("missing required hosting configuration; see deploy/fly/hosting/README.md")
 		}
 	}
+	if _, err := mail.ParseAddress(c.AlertEmail); err != nil {
+		return c, errors.New("HOSTING_ALERT_EMAIL must be a valid email address")
+	}
 	for _, raw := range []string{c.PublicURL, c.BillingURL} {
 		u, err := url.Parse(raw)
 		if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {

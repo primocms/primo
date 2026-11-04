@@ -477,10 +477,12 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
+		s.workerMu.Lock()
+		defer s.workerMu.Unlock()
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || j.State != "attention" {
+		if err != nil || j.State != "attention" || j.Retired {
 			http.Error(w, "job is not awaiting retry", 409)
 			return
 		}
