@@ -5,7 +5,7 @@ export function releaseChannel({ tag, prerelease, repository }) {
 	if (typeof prerelease !== 'boolean') throw new Error('The release prerelease flag is required')
 	if (!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/i.test(repository || '')) throw new Error('Invalid repository')
 	const match = /^v(3\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))(-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(tag || '')
-	if (!match) throw new Error('Expected an exact v3 semantic version tag')
+	if (!match || match[2]?.slice(1).split('.').some(part => /^0[0-9]+$/.test(part))) throw new Error('Expected an exact v3 semantic version tag')
 	const version = tag.slice(1)
 	const candidate = Boolean(match[2])
 	if (candidate !== prerelease) throw new Error('Release prerelease flag must match its version tag')

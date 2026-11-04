@@ -107,6 +107,11 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.UnauthorizedError("Authentication required", nil)
 			}
 			freshServer := decision.freshServer
+			release, err := acquireImportCapacity(pb, e)
+			if err != nil {
+				return err
+			}
+			defer release()
 
 			if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 				return e.BadRequestError("Failed to parse form", err)
@@ -193,6 +198,9 @@ func processLibraryImport(pb core.App, zipData []byte, deletes DeletesManifest) 
 		return nil, fmt.Errorf("invalid ZIP file: %w", err)
 	}
 
+	if len(reader.File) > 100000 {
+		return nil, fmt.Errorf("library archive exceeds maximum entry count of 100000")
+	}
 	files := make(map[string][]byte, len(reader.File))
 	var totalBytes int64
 	for _, f := range reader.File {

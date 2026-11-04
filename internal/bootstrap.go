@@ -45,6 +45,11 @@ func handleBootstrap(pb *pocketbase.PocketBase, e *core.RequestEvent) error {
 	// Parse before the transaction: PocketBase serializes writes through one
 	// connection, so reading a slow upload inside the transaction would block
 	// every other write on the server for the duration of the upload.
+	release, err := acquireImportCapacity(pb, e)
+	if err != nil {
+		return err
+	}
+	defer release()
 	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}

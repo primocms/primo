@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"database/sql"
+	"errors"
 	"os"
 	"strconv"
 
@@ -14,6 +16,9 @@ func ownerOnly(app core.App) bool {
 		if value, err := strconv.ParseBool(record.GetString("value")); err == nil {
 			return value
 		}
+		return true
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return true
 	}
 	return os.Getenv("PRIMO_OWNER_ONLY") == "true"
 }
@@ -41,6 +46,12 @@ func registerOwnerOnly(pb *pocketbase.PocketBase) {
 	pb.OnRecordUpdateRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
 		if ownerOnly(pb) && e.Record.Id != hostedOwnerID(pb) {
 			return denied()
+		}
+		return e.Next()
+	})
+	pb.OnRecordDeleteRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
+		if ownerOnly(pb) && (hostedOwnerID(pb) == "" || e.Record.Id == hostedOwnerID(pb)) {
+			return apis.NewForbiddenError("The owner account cannot be deleted on this plan.", nil)
 		}
 		return e.Next()
 	})

@@ -14,7 +14,7 @@ const expected='v3.3.2-rc.13'
 
 test('native candidate starts, edits content safely, survives restart and builds with the packaged CLI', {timeout:120000}, async t=>{
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-native-'));let child,logs=''
- const stop=async()=>{if(child&&child.exitCode===null){const closed=new Promise(r=>child.once('close',r));child.kill('SIGTERM');await closed}}
+ const stop=async()=>{if(child&&child.exitCode===null&&child.signalCode===null){const closed=new Promise(r=>child.once('close',r));child.kill('SIGTERM');await closed}}
  t.after(async()=>{await stop();await fs.rm(root,{recursive:true,force:true,maxRetries:30,retryDelay:100})})
  assert.ok((await exec(binary,['--version'])).stdout.includes(expected))
  const reserve=net.createServer();await new Promise(r=>reserve.listen(0,'127.0.0.1',r));const port=reserve.address().port;await new Promise(r=>reserve.close(r))

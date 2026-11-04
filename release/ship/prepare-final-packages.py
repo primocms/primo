@@ -18,14 +18,17 @@ manifest = {'state': 'prepared-unpublished', 'publicationAuthorized': False, 're
 for kind in ['mcp', 'cli']:
     source = root / 'release/vendor' / inputs[kind]['archive']
     raw = source.read_bytes()
-    assert hashlib.sha256(raw).hexdigest() == inputs[kind]['sha256'], f'{kind}: candidate checksum mismatch'
+    if hashlib.sha256(raw).hexdigest() != inputs[kind]['sha256']:
+        raise SystemExit(f'{kind}: candidate checksum mismatch')
     with tempfile.TemporaryDirectory(prefix=f'primo-final-{kind}-') as temp:
         stage = pathlib.Path(temp)
         with tarfile.open(source) as archive:
             for member in archive:
                 path = pathlib.PurePosixPath(member.name)
-                assert path.parts[0] == 'package' and '..' not in path.parts and not path.is_absolute()
-                assert member.isdir() or member.isfile(), 'Archive links are not supported'
+                if not path.parts or path.parts[0] != 'package' or '..' in path.parts or path.is_absolute():
+                    raise SystemExit('Invalid archive path')
+                if not (member.isdir() or member.isfile()):
+                    raise SystemExit('Archive links are not supported')
                 target = stage.joinpath(*path.parts)
                 if member.isdir(): target.mkdir(parents=True, exist_ok=True)
                 else:
@@ -44,7 +47,8 @@ for kind in ['mcp', 'cli']:
         with tarfile.open(source) as before, tarfile.open(stable) as after:
             a = {m.name: before.extractfile(m).read() for m in before if m.isfile() and m.name != 'package/package.json'}
             b = {m.name: after.extractfile(m).read() for m in after if m.isfile() and m.name != 'package/package.json'}
-            assert a == b, f'{kind}: unexpected shipped-file change'
+            if a != b:
+                raise SystemExit(f'{kind}: unexpected shipped-file change')
         data = stable.read_bytes()
         manifest['packages'][kind] = {'archive': stable.name, 'version': versions[kind], 'sourceArchive': source.name, 'sourceSHA256': inputs[kind]['sha256'], 'sha256': hashlib.sha256(data).hexdigest(), 'integrity': 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode(), 'files': len(b)+1}
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')

@@ -5,8 +5,11 @@ const c=await context(),{run,state,evidence}=c
 const actors=JSON.parse(await fs.readFile(path.join(run,'private/actors.json'),'utf8')),actor={...actors[0]}
 const admin=await c.login(c.credentials.adminEmail,c.credentials.adminPassword,true)
 const setupPassword=randomBytes(24).toString('base64url')+'Aa1!';c.secrets.add(setupPassword)
-const freshUser=await c.create('users',{email:'handoff-'+randomBytes(6).toString('hex')+'@primo-qa.invalid',name:'Disposable handoff client',password:setupPassword,passwordConfirm:setupPassword,invite:'pending'},admin.token)
-await c.create('site_role_assignments',{site:actor.siteId,user:freshUser.id,role:'editor'},admin.token)
+const errors=[],publicErrors=[]
+let freshUser,assignment,browser,browserContext,page,passed=false
+try {
+freshUser=await c.create('users',{email:'handoff-'+randomBytes(6).toString('hex')+'@primo-qa.invalid',name:'Disposable handoff client',password:setupPassword,passwordConfirm:setupPassword,invite:'pending'},admin.token)
+assignment=await c.create('site_role_assignments',{site:actor.siteId,user:freshUser.id,role:'editor'},admin.token)
 Object.assign(actor,{email:freshUser.email,userId:freshUser.id,password:setupPassword})
 const mailCredentials=JSON.parse(await fs.readFile(path.join(run,'private/mail.json'),'utf8'))
 c.secrets.add(mailCredentials.password)
@@ -22,10 +25,8 @@ const invitation=(delivered.HTML || '').match(/href="([^"]+create=[^"]+)"/)?.[1]
 invariant(invitation && new URL(invitation).origin===state.cmsOrigin,'Invitation origin differs from staging')
 const token=new URL(invitation).searchParams.get('create');invariant(token,'No invitation setup token');c.secrets.add(token)
 const browserModule=await import(pathToFileURL(path.join(c.kit,'tooling/node_modules/@playwright/test/index.mjs')))
-const browser=await browserModule.chromium.launch({headless:true})
-let browserContext,page
-const errors=[],publicErrors=[]
-try {
+browser=await browserModule.chromium.launch({headless:true})
+
  browserContext=await browser.newContext({viewport:{width:1280,height:900}})
  page=await browserContext.newPage();page.setDefaultTimeout(30000)
  await page.goto(invitation)
@@ -105,10 +106,18 @@ try {
  evidence.checks.push('Content-only client publishes through exact CMS browser compiler and exact installed CLI; public HTTPS content, counter interaction and all five original SSR heading nodes retained')
  const config=JSON.parse(await fs.readFile(path.join(run,'private/staging.local.json'),'utf8'));config.publicPages[0].headings[0]='Client approved RC7 heading';await c.save('staging.local.json',config,true)
  evidence.status='PASS_HOSTED_CLIENT_HANDOFF';evidence.browser={name:'chromium',version:browser.version()};evidence.mailScope='Private capture SMTP only; ordinary provider AUTH/TLS and inbox deliverability remain unverified';evidence.accountSetup='Actual emailed HTTPS link/form; setup token redeemed using public API; browser session then verifies client access'
- await c.save('handoff.json',evidence)
+ await c.save('handoff.json',evidence);passed=true
  console.log('PASS hosted client invitation, nested reorder, browser and exact CLI republication, public hydration and interaction')
 }catch(error){
  await page?.screenshot({path:path.join(run,'private/handoff-failure.png'),fullPage:true}).catch(()=>{})
  const diagnostic={failure:c.redact(error.stack),errors,publicErrors,page:await page?.evaluate(()=>({path:location.pathname,text:document.body.innerText.slice(0,2000)})).catch(()=>null)}
  await c.save('handoff-failure.json',diagnostic,true);console.error(c.redact(error.stack));process.exitCode=1
-}finally{await browserContext?.close();await browser.close()}
+}finally{
+ const cleanupErrors=[]
+ for(const close of [()=>browserContext?.close(),()=>browser?.close()]){try{await close()}catch(error){cleanupErrors.push(error)}}
+ if(!passed){
+  if(assignment)try{await c.ok('/api/collections/site_role_assignments/records/'+assignment.id,{method:'DELETE',token:admin.token})}catch(error){cleanupErrors.push(error)}
+  if(freshUser)try{await c.ok('/api/collections/users/records/'+freshUser.id,{method:'DELETE',token:admin.token})}catch(error){cleanupErrors.push(error)}
+ }
+ for(const error of cleanupErrors){console.error(c.redact(error.stack||String(error)));process.exitCode=1}
+}

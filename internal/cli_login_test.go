@@ -39,6 +39,7 @@ func cliLoginTestServer(t *testing.T) (http.Handler, *cliLoginStore, string, cor
 		t.Fatal(err)
 	}
 	user := core.NewRecord(collection)
+	user.Id = "cliuser00000001"
 	user.Set("email", "cli-user@example.com")
 	user.Set("serverRole", "editor")
 	user.SetPassword("cli-test-password")
@@ -54,6 +55,11 @@ func cliLoginTestServer(t *testing.T) (http.Handler, *cliLoginStore, string, cor
 
 func cliLoginHTTP(t *testing.T, handler http.Handler, route string, body any, token string) (int, map[string]any) {
 	t.Helper()
+	if route == "approve" && token != "" {
+		if fields, ok := body.(map[string]string); ok && fields["user_id"] == "" {
+			fields["user_id"] = "cliuser00000001"
+		}
+	}
 	data, _ := json.Marshal(body)
 	req := httptest.NewRequest("POST", "http://cms.example.com/api/primo/cli-login/"+route, bytes.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
@@ -200,5 +206,37 @@ func TestCLILoginClaimIsAtomicAndRevocationIsRespected(t *testing.T) {
 	status, result := cliLoginHTTP(t, handler, "token", map[string]string{"device_code": start["device_code"].(string)}, "")
 	if status != 403 || result["token"] != nil {
 		t.Fatal("revoked browser session granted access", status)
+	}
+}
+
+func TestCLILoginRejectsAccountSwitchBeforeConsent(t *testing.T) {
+	h, _, token, _ := cliLoginTestServer(t)
+	_, start := cliLoginHTTP(t, h, "start", nil, "")
+	code := start["user_code"].(string)
+	status, result := cliLoginHTTP(t, h, "approve", map[string]string{"user_code": code, "user_id": "differentuser01", "action": "approve"}, token)
+	if status != 409 || result["error"] != "account_changed" {
+		t.Fatal("account switch accepted", status, result)
+	}
+	status, _ = cliLoginHTTP(t, h, "approve", map[string]string{"user_code": code, "action": "approve"}, token)
+	if status != 200 {
+		t.Fatal("rejected mismatch consumed consent", status)
+	}
+}
+func TestCLILoginCrossSiteStartDoesNotConsumeCapacity(t *testing.T) {
+	h, store, _, _ := cliLoginTestServer(t)
+	for _, header := range []map[string]string{{"Sec-Fetch-Site": "cross-site"}, {"Origin": "https://attacker.example"}, {"Origin": "null"}} {
+		req := httptest.NewRequest("POST", "http://cms.example.com/api/primo/cli-login/start", nil)
+		for key, value := range header {
+			req.Header.Set(key, value)
+		}
+		response := httptest.NewRecorder()
+		h.ServeHTTP(response, req)
+		if response.Code != 403 || len(store.requests) != 0 {
+			t.Fatal("cross-site start allocated capacity", response.Code)
+		}
+	}
+	status, _ := cliLoginHTTP(t, h, "start", nil, "")
+	if status != 200 {
+		t.Fatal("native CLI request rejected", status)
 	}
 }

@@ -49,6 +49,8 @@ export const createCollectionManager = (
 			throw new Error('No instance')
 		}
 
+		let first_error: unknown
+		let failed = false
 		// Process each change individually
 		for (const [id, change] of changes) {
 			// Skip already committed changes
@@ -87,9 +89,13 @@ export const createCollectionManager = (
 					else changes.delete(id)
 				}
 
-				throw error
+				if (!failed) first_error = error
+				failed = true
 			}
 		}
+		// Preserve failed drafts without starving unrelated edits queued after them.
+		// Orders wait until their create/update dependencies have all succeeded.
+		if (failed) throw first_error
 		await entry_reordering.commit(instance, records, changes, on_committed)
 		// Finish moves queued while an order request was in flight, including
 		// creating/deleting their dependencies, before reporting Save complete.

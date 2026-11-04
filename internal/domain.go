@@ -1,6 +1,10 @@
 package internal
 
 import (
+	"bytes"
+	"encoding/xml"
+	"io"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -149,7 +153,13 @@ func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost
 	if err != nil {
 		return err
 	}
-	if publication.GetString("prefix") != "" || oldHost == "" {
+	if publication.GetString("prefix") != "" {
+		return nil
+	}
+	if err := DeleteSiteHostFiles(pb, newHost); err != nil {
+		return err
+	}
+	if oldHost == "" {
 		return nil
 	}
 	system, err := pb.NewFilesystem()
@@ -166,11 +176,53 @@ func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost
 		if file.IsDir {
 			continue
 		}
+		if strings.TrimPrefix(file.Key, oldPrefix) == "sitemap.xml" {
+			reader, err := system.GetReader(file.Key)
+			if err != nil {
+				return err
+			}
+			data, err := io.ReadAll(reader)
+			reader.Close()
+			if err != nil {
+				return err
+			}
+			updated, err := rewriteSitemapHost(data, newHost)
+			if err != nil {
+				return err
+			}
+			if err := system.Upload(updated, "sites/"+newHost+"/sitemap.xml"); err != nil {
+				return err
+			}
+			continue
+		}
 		if err := system.Copy(file.Key, "sites/"+newHost+"/"+strings.TrimPrefix(file.Key, oldPrefix)); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func rewriteSitemapHost(data []byte, host string) ([]byte, error) {
+	var document sitemap
+	if err := xml.Unmarshal(data, &document); err != nil {
+		return nil, err
+	}
+	for i := range document.URLs {
+		location, err := url.Parse(document.URLs[i].Loc)
+		if err != nil {
+			return nil, err
+		}
+		location.Scheme, location.Host, location.User = "https", host, nil
+		document.URLs[i].Loc = location.String()
+	}
+	var buf bytes.Buffer
+	buf.WriteString(xml.Header)
+	encoder := xml.NewEncoder(&buf)
+	encoder.Indent("", "  ")
+	if err := encoder.Encode(document); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // authorizeSiteDomain resolves the {siteId} route param and enforces that the
@@ -181,7 +233,7 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 	if siteId == "" {
 		return nil, e.BadRequestError("Missing site ID", nil)
 	}
-	if e.Auth == nil && !IsLocalhost(e) {
+	if e.Auth == nil && !(DevMode && IsLocalhost(e)) {
 		return nil, e.UnauthorizedError("Authentication required", nil)
 	}
 	site, err := pb.FindRecordById("sites", siteId)
@@ -191,7 +243,7 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 	if e.Auth != nil && !isSiteDeveloper(pb, e.Auth, site.Id) {
 		return nil, e.ForbiddenError("A developer is required to change domains", nil)
 	}
-	if !IsLocalhost(e) {
+	if !(DevMode && IsLocalhost(e)) {
 		info, err := e.RequestInfo()
 		if err != nil {
 			return nil, e.InternalServerError("Failed to get request info", err)

@@ -6,6 +6,7 @@ import { transform } from 'esbuild'
 // Exercise the actual mapping and load ownership with deterministic effects,
 // SDK cancellation and retry timers. The browser regressions cover reactivity.
 const source = (await fs.readFile(new URL('../../src/lib/pocketbase/CollectionMapping.svelte.ts', import.meta.url), 'utf8'))
+ .replace("'./entry-reordering.js'", JSON.stringify(new URL('../../src/lib/pocketbase/entry-reordering.js',import.meta.url).href))
  .replace("import { customAlphabet } from 'nanoid'", 'const customAlphabet = () => () => "created"')
  .replace("import { untrack } from 'svelte'", 'const untrack = callback => callback()')
  .replace("import { observeSubscription } from './subscription.js'", 'const observeSubscription = () => {}')

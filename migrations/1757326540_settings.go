@@ -1,6 +1,8 @@
 package migrations
 
 import (
+	"database/sql"
+	"errors"
 	"os"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -44,11 +46,16 @@ func init() {
 					return err
 				}
 
-				record := core.NewRecord(collection)
-				record.Set("email", superuserEmail)
-				record.Set("password", superuserPassword)
-				if err := app.Save(record); err != nil {
-					return err
+				if _, err := app.FindAuthRecordByEmail(collection, superuserEmail); err != nil {
+					if !errors.Is(err, sql.ErrNoRows) {
+						return err
+					}
+					record := core.NewRecord(collection)
+					record.Set("email", superuserEmail)
+					record.Set("password", superuserPassword)
+					if err := app.Save(record); err != nil {
+						return err
+					}
 				}
 			}
 

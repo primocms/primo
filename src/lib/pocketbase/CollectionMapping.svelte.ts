@@ -6,6 +6,7 @@ import type { ObjectWithId } from './Object'
 import type { CollectionManager } from './CollectionManager'
 import { observeSubscription } from './subscription.js'
 import { createCacheLoads } from './cache_load.js'
+import { orderIndexKey } from './entry-reordering.js'
 
 export type ObjectOf<T> = T extends CollectionMapping<infer Object, infer Options> ? MappedObject<Object, Options> : never
 
@@ -92,9 +93,10 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 
 			const cached = records.get(id)?.data as Record<string, unknown> | undefined
 			if (operation === 'update' && isPublishArtifactEcho(name, cached, values)) {
-				// Refresh cache so future reads see the new artifact, but skip
-				// `changes` so reactive consumers don't re-derive.
-				records.set(id, { data: values })
+				// Refresh artifact caches and committed overlays together. Pending
+				// content drafts retain precedence over the server echo.
+				const artifacts = Object.fromEntries(PUBLISH_ARTIFACT_FIELDS[name].map(field => [field, values[field]]))
+				manager.update_record(id, artifacts)
 				return
 			}
 
@@ -112,7 +114,7 @@ export const createCollectionMapping = <T extends ObjectWithId, Options extends 
 
 	const mapObject = (record: unknown): MappedObject<T, Options> => {
 		let object = model.parse(record)
-		const index = manager.entry_reordering.indices.get(object.id)
+		const index = manager.entry_reordering.indices.get(orderIndexKey(name, object.id))
 		if (index !== undefined) object = { ...object, index }
 		const links = Object.fromEntries(
 			Object.entries(options?.links ?? {}).map(([property, factory]) => [property, factory.bind({ ...object, collection: collectionMapping, values: () => ({ ...object }) })])

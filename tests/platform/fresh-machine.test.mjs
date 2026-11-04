@@ -47,42 +47,56 @@ test('fresh profile installs Node and exact packages, connects MCP, builds and r
 		assert.match(refused.stdout + refused.stderr, /port.*in use/i)
 		assert.equal(busy.listening, true)
 		let selected
-		for (let attempt = 0; attempt < 50; attempt++) {
-			const first = net.createServer(),
-				second = net.createServer()
-			await new Promise((resolve) => first.listen(0, '127.0.0.1', resolve))
-			const port = first.address().port
-			if (port >= 65535) {
-				await new Promise((resolve) => first.close(resolve))
-				continue
-			}
-			try {
-				await new Promise((resolve, reject) => {
-					second.once('error', reject)
-					second.listen(port + 1, '127.0.0.1', resolve)
-				})
-				selected = port
-			} catch (error) {
-				if (error.code !== 'EADDRINUSE') throw error
-			} finally {
-				await new Promise((resolve) => first.close(resolve))
-				if (second.listening) await new Promise((resolve) => second.close(resolve))
-			}
-			if (selected) break
-		}
-		assert.ok(selected, 'agent could not select a free port pair')
-		const start = async (mode) => {
-			dev = ws.start(['dev', '--author', mode, '--port', String(selected)])
-			let state
-			await until(async () => {
-				assert.equal(dev.exitCode, null, dev.output)
-				try {
-					state = JSON.parse((await ws.run(['status', '--json'])).stdout)
-					return state.running && state.sites.length === 1 && state.sites.every((s) => s.in_cms && s.sync?.ok)
-				} catch {
-					return false
+		const selectPorts = async () => {
+			selected = 0
+			for (let attempt = 0; attempt < 50; attempt++) {
+				const first = net.createServer(),
+					second = net.createServer()
+				await new Promise((resolve) => first.listen(0, '127.0.0.1', resolve))
+				const port = first.address().port
+				if (port >= 65535) {
+					await new Promise((resolve) => first.close(resolve))
+					continue
 				}
-			}, 'development server did not become ready')
+				try {
+					await new Promise((resolve, reject) => {
+						second.once('error', reject)
+						second.listen(port + 1, '127.0.0.1', resolve)
+					})
+					selected = port
+				} catch (error) {
+					if (error.code !== 'EADDRINUSE') throw error
+				} finally {
+					await new Promise((resolve) => first.close(resolve))
+					if (second.listening) await new Promise((resolve) => second.close(resolve))
+				}
+				if (selected) break
+			}
+			assert.ok(selected, 'agent could not select a free port pair')
+		}
+		await selectPorts()
+		const start = async (mode) => {
+			let state
+			for (let collision = 0; ; collision++) {
+				dev = ws.start(['dev', '--author', mode, '--port', String(selected)])
+				try {
+					await until(async () => {
+						assert.equal(dev.exitCode, null, dev.output)
+						try {
+							state = JSON.parse((await ws.run(['status', '--json'])).stdout)
+							return state.running && state.sites.length === 1 && state.sites.every((s) => s.in_cms && s.sync?.ok)
+						} catch {
+							return false
+						}
+					}, 'development server did not become ready')
+					break
+				} catch (error) {
+					if (collision >= 2 || !/(?:EADDRINUSE|port[^\n]*is in use)/i.test(dev.output)) throw error
+					console.log('Retained fresh-install port collision: ' + dev.output)
+					await stop(dev)
+					await selectPorts()
+				}
+			}
 			console.log('Fresh profile: ' + mode + ' development server is ready')
 			assert.equal(path.resolve(state.workspace), path.resolve(ws.work))
 			assert.notEqual(state.port, blocked)

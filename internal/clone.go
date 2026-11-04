@@ -1585,11 +1585,11 @@ func updateEntryValueReferences(app core.App, collName string, fieldMap, pageMap
 				field, err := app.FindRecordById(fieldColl, fieldId)
 				if err == nil {
 					fieldType = field.GetString("type")
+					fieldTypes[fieldId] = fieldType
 					break
 				}
 			}
 
-			fieldTypes[fieldId] = fieldType
 		}
 
 		value := rec.Get("value")

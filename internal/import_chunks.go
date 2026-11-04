@@ -46,7 +46,7 @@ func uploadOwner(e *core.RequestEvent) string {
 	return e.Auth.Collection().Id + ":" + e.Auth.Id
 }
 
-func authorizeImportUpload(app core.App, e *core.RequestEvent, endpoint string) error {
+func authorizeImportUpload(app core.App, e *core.RequestEvent, endpoint string, final ...bool) error {
 	switch endpoint {
 	case "/api/primo/bootstrap":
 		if e.Auth != nil && !isSiteDeveloper(app, e.Auth, "") {
@@ -76,9 +76,14 @@ func authorizeImportUpload(app core.App, e *core.RequestEvent, endpoint string) 
 		if e.Auth == nil && !(DevMode && IsLocalhost(e)) {
 			return e.UnauthorizedError("Authentication required", nil)
 		}
+		if len(final) > 0 && final[0] {
+			return authorizePushState(app, e, target)
+		}
+		// Staging only reserves private bytes. Check developer ownership now;
+		// request-dependent update rules run on the actual final import form.
 		return authorizePushStateWithInfo(app, e, target, &core.RequestInfo{
 			Auth: e.Auth, Method: http.MethodPost, Body: map[string]any{}, Query: map[string]string{}, Headers: map[string]string{},
-		})
+		}, true)
 	}
 }
 
@@ -281,7 +286,7 @@ func readImportArchive(app core.App, e *core.RequestEvent, optional bool) ([]byt
 	if u == nil || u.owner != uploadOwner(e) || u.endpoint != e.Request.URL.Path {
 		return nil, e.NotFoundError("Upload not found for this caller and endpoint", nil)
 	}
-	if err := authorizeImportUpload(app, e, u.endpoint); err != nil {
+	if err := authorizeImportUpload(app, e, u.endpoint, true); err != nil {
 		return nil, err
 	}
 	if u.received != u.size {

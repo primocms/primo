@@ -1,5 +1,6 @@
 // Order drafts are separate from value changes: indices must reach the server
 // together, while new entries/fields still use the normal dependency order.
+export const orderIndexKey = (collection, id) => JSON.stringify([collection, id])
 export const orderKey = (scope) => JSON.stringify([scope.collection, scope.owner, scope.field, scope.parent || '', scope.locale])
 export const inOrderScope = (data, scope) =>
 	data.field === scope.field && (data.parent || '') === scope.parent && data.locale === scope.locale && (!scope.ownerKey || data[scope.ownerKey] === scope.owner)
@@ -7,9 +8,9 @@ export const inOrderScope = (data, scope) =>
 export function createEntryReordering({ pending, indices, errors }) {
 	function publish(key, order) {
 		const previous = pending.get(key)
-		for (const id of previous?.ids ?? []) indices.delete(id)
+		for (const id of previous?.ids ?? []) indices.delete(orderIndexKey(order.collection, id))
 		pending.set(key, order)
-		order.ids.forEach((id, index) => indices.set(id, index))
+		order.ids.forEach((id, index) => indices.set(orderIndexKey(order.collection, id), index))
 		errors.delete(key)
 	}
 	return {
@@ -37,7 +38,7 @@ export function createEntryReordering({ pending, indices, errors }) {
 			for (const [key, order] of [...pending]) {
 				if (order.parent === id || order.field === id || order.owner === id) {
 					pending.delete(key)
-					for (const item of order.ids) indices.delete(item)
+					for (const item of order.ids) indices.delete(orderIndexKey(order.collection, item))
 					errors.delete(key)
 					continue
 				}
@@ -60,7 +61,7 @@ export function createEntryReordering({ pending, indices, errors }) {
 					}
 					if (pending.get(key) === order) {
 						pending.delete(key)
-						for (const id of order.ids) indices.delete(id)
+						for (const id of order.ids) indices.delete(orderIndexKey(order.collection, id))
 					} else if (pending.has(key)) {
 						// A second move arrived while saving. Keep it visible and use the
 						// confirmed server order as its next conflict-check baseline.

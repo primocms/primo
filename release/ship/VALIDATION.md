@@ -1,6 +1,6 @@
 # RC.13 security and qualification record
 
-The current integration target is [CMS #1363](https://github.com/primocms/primo/pull/1363). This security refresh supersedes the RC.12 audit failures; older source/artifacts and their failures remain historical evidence. No publication, deployment or invitation is part of this work.
+The current integration target is [CMS #1363](https://github.com/primocms/primo/pull/1363). This security refresh supersedes the RC.12 audit failures; older source/artifacts and their failures remain historical evidence. No stable publication, deployment or invitation is part of this work. MCP 0.1.11-rc.3, CLI 0.3.0-rc.3 and CMS 3.3.2-rc.13 have completed their historical prerelease publication; current review fixes are unpublished new source requiring fresh qualification.
 
 ## Remediation
 
@@ -54,7 +54,7 @@ The local CMS executable reused the previous candidate's generated frontend
 and common validation assets; this backend-only check does not replace a fresh
 full-source native build. The new head's existing native/browser qualification
 workflows must complete before release readiness or publication is claimed.
-No registry publication or deployment has been performed.
+At that historical checkpoint, registry publication had not been performed. MCP 0.1.11-rc.3, CLI 0.3.0-rc.3 and CMS RC.13 were subsequently published; their immutable archives do not include the new review fixes. No deployment is performed by this review pass.
 
 ## October 28 site-field integration and held final packages
 
@@ -75,5 +75,5 @@ contract is now part of the five-platform installed-package gate.
 Prepared stable MCP 0.1.11 / CLI 0.3.0 tarballs and integrity manifest live in
 final-packages/. Both exact tarballs passed a disposable offline installation
 and real-CMS site-field/proxy contracts. They remain unpublished. Final CMS
-native bytes, full current-head CI, hosted one-hour QA and actual registry
+native bytes, full current-head CI, hosted one-hour QA and actual stable registry
 handoff are still gates; no older run is promoted to cover these changed bytes.

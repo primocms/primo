@@ -9,6 +9,8 @@ async function runProcessor(language, raw) {
   if (compiler) return await compiler(raw)
   await new Promise(resolve => setTimeout(resolve, 100))
  }
+ const compiler = compilers[language]
+ if (compiler) return await compiler(raw)
  throw new Error(`${language.toUpperCase()} compiler did not register`)
 }
 

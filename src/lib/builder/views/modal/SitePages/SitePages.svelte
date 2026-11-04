@@ -63,7 +63,7 @@
 				if ($read_only) return
 				const target = targetPage()
 				if (!target) return
-				const updates = reorderedPages(all_pages, source.data.page as Page, target, page.id === homepage?.id ? 'top' : 'bottom', target.parent === homepage?.id ? 1 : 0)
+				const updates = reorderedPages(all_pages, source.data.page as Page, target, page.id === homepage?.id ? 'top' : 'bottom', target.parent === homepage?.id ? (homepage?.index ?? 0) + 1 : 0)
 				if (!updates.length) return
 				for (const { id, index } of updates) Pages.update(id, { index })
 				void self.commit().catch((error) => toast.error(error instanceof Error ? error.message : 'Could not reorder pages. Please try again.'))
@@ -203,15 +203,16 @@
 					if (id === page_id || ('data' in change && ((change.data as Record<string, unknown>).page === page_id || section_ids.has((change.data as Record<string, unknown>).section as string))))
 						self.changes.delete(id)
 				}
-				if (self.records.get(page_id)?.data) {
+				{
 					try {
 						await self.instance?.collection('pages').delete(page_id)
 						self.records.set(page_id, null)
 					} catch (cleanup_error) {
-						console.error('Could not remove partially created page', cleanup_error)
+						if (!(cleanup_error && typeof cleanup_error === 'object' && 'status' in cleanup_error && cleanup_error.status === 404)) console.error('Could not remove partially created page', cleanup_error)
 					}
 				}
 			}
+			toast.error(error instanceof Error ? error.message : 'Could not create the page. Please try again.')
 			throw error
 		} finally {
 			building_page = false

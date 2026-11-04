@@ -88,7 +88,7 @@
 	watch(
 		() => entry_id,
 		() => {
-			selected = passedEntry?.value?.url ? 'url' : 'page'
+			selected = passedEntry?.value?.page ? 'page' : passedEntry?.value?.url ? 'url' : 'page'
 		},
 		{ lazy: false }
 	)

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/pocketbase/pocketbase/core"
+	"strings"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestExportRetainsCMSSourceEditsAfterFileImport(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			app := newImportTestApp(t)
 			defer app.ResetBootstrapState()
-			raw := "<!-- authored formatting -->\n<script>\n let headline = 'Original'\n</script>\n\n<h1>{headline}</h1>\n<style>h1 { color: red }</style>\n"
+			raw := "<!-- authored formatting -->\n<script lang=\"ts\">\n let headline = 'Original'\n</script>\n\n<h1>{headline}</h1>\n<style lang=\"css\">h1 { color: red }</style>\n"
 			var symbol *core.Record
 			var export func() ([]byte, error)
 			file := "blocks/hero/component.svelte"
@@ -71,6 +72,12 @@ func TestExportRetainsCMSSourceEditsAfterFileImport(t *testing.T) {
 					t.Fatal(err)
 				}
 				source := readZipFile(t, archive, file)
+				if symbol.GetString("js") != "" && !strings.Contains(source, `<script lang="ts">`) {
+					t.Fatal("script attributes lost", source)
+				}
+				if symbol.GetString("css") != "" && !strings.Contains(source, `<style lang="css">`) {
+					t.Fatal("style attributes lost", source)
+				}
 				html, css, js := parseComponent(source)
 				if html != symbol.GetString("html") || css != symbol.GetString("css") || js != symbol.GetString("js") {
 					t.Fatalf("%s edit exported stale source: html=%q css=%q js=%q", edit.field, html, css, js)
