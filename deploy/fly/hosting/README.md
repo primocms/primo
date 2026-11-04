@@ -1,5 +1,10 @@
 # Hosted signup automation
 
+Operator runbook for Primo's managed hosting service. This provisioning service
+is not needed to self-host Primo. Self-hosters configure their own server and
+SMTP provider; the Fly, Polar and Resend management settings below apply only
+when operating this separate managed-hosting control plane.
+
 Deployed on Fly with live Polar billing for new Maker and Solo purchases.
 The customer domain adapter, isolated Fly deployment, guarded fresh-server
 bootstrap, and actual Resend setup/ready email delivery have passed live tests.
