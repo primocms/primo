@@ -31,7 +31,7 @@ It does not run inside customer apps or modify existing Railway tenants.
 6. With hosted SMTP configured, a sending-only Resend key restricted to
    `email.primo.build` is created for this customer. Its password is checkpointed
    encrypted before applying and verifying PocketBase SMTP (465, implicit TLS),
-   sender and workspace URL settings. Setup failures block the ready email.
+   sender and workspace URL settings. A PocketBase test email to the operator alert address (or sender address when no alert address is configured) verifies SMTP authentication before readiness. Setup failures block the ready email.
 7. Bootstrap secrets are removed, the Machine is updated to that secrets version,
    and sign-in/HTTPS checks run again after restart. The control plane then discards
    the customer's password and sends the dashboard link. The customer signs in at
@@ -54,7 +54,7 @@ Keep the encryption key in Fly secrets and separately in the operator's password
 manager: losing it makes the state unrecoverable. The SQLite file is mode 600.
 Operator bootstrap credentials remain encrypted for support access; customer
 servers never receive the Fly organization token, Cloudflare token, control-plane
-email key or SMTP management key. Each receives its own restricted SMTP key.
+email key or SMTP management key. With both automatic SMTP settings configured, each new server receives its own restricted SMTP key; existing ready servers keep their current settings.
 
 ## Recovery and limits
 
@@ -470,3 +470,5 @@ remove the app, data, DNS or billing. A subscription hold/suspension alone does 
 retire a server or revoke its key. Operators should retire removed workspaces.
 Resend sending limits and reputation are shared at account/domain level; these
 keys isolate credentials and revocation, not per-customer provider quotas.
+
+Keep the management token configured while any job retains an SMTP key ID, including retired or attention jobs whose cleanup may need retrying. Removing the token makes key revocation unavailable. The retire endpoint accepts ready and attention jobs; use it after operator removal of the app to revoke credentials without deleting customer data or billing.

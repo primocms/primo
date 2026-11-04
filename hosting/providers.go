@@ -503,6 +503,10 @@ func (p *FlyProvisioner) Step(ctx context.Context, j *Job, c *Credentials) error
 		}
 		j.State = "verify"
 	case "verify", "final_check":
+		if j.State == "final_check" && p.Config.SMTPManagementToken != "" && j.SMTPKeyID == "" {
+			j.State = "smtp_key"
+			return nil
+		}
 		if j.State == "final_check" {
 			// Updating a Machine is asynchronous: HTTP can still reach the old
 			// process after the update returns. Check the running environment

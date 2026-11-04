@@ -19,6 +19,13 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 		j.State = "smtp_settings"
 		return nil
 	}
+	var domain struct{ Name, Status string }
+	if err := request(ctx, p.Client, "GET", "https://api.resend.com/domains/"+url.PathEscape(p.Config.SMTPDomainID), p.Config.SMTPManagementToken, nil, &domain); err != nil {
+		return err
+	}
+	if !strings.EqualFold(domain.Name, "email.primo.build") || domain.Status != "verified" {
+		return errors.New("hosted SMTP requires the verified email.primo.build domain")
+	}
 	name := "primo-hosted-" + j.ID
 	if len(j.ID) != 24 || strings.Trim(j.ID, "0123456789abcdef") != "" {
 		return errors.New("invalid SMTP customer identity")
@@ -27,10 +34,8 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 	// or checkpoint by revoking only orphan keys with this exact job-owned name.
 	orphanIDs := []string{}
 	after := ""
-	for page := 0; ; page++ {
-		if page >= 20 {
-			return errors.New("SMTP key listing exceeded safety limit")
-		}
+	seenCursors := map[string]bool{}
+	for {
 		var keys struct {
 			Data    []struct{ ID, Name string }
 			HasMore bool `json:"has_more"`
@@ -53,10 +58,11 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 		if !keys.HasMore {
 			break
 		}
-		if len(keys.Data) == 0 || keys.Data[len(keys.Data)-1].ID == after {
+		if len(keys.Data) == 0 || seenCursors[keys.Data[len(keys.Data)-1].ID] {
 			return errors.New("invalid SMTP key pagination")
 		}
 		after = keys.Data[len(keys.Data)-1].ID
+		seenCursors[after] = true
 	}
 	for _, id := range orphanIDs {
 		if err := p.deleteSMTPKey(ctx, id); err != nil {
@@ -120,7 +126,7 @@ func (p *FlyProvisioner) configureSMTP(ctx context.Context, j *Job, c *Credentia
 		return err
 	}
 	sender, err := mail.ParseAddress(p.Config.FromEmail)
-	if err != nil || !strings.HasSuffix(sender.Address, "@email.primo.build") {
+	if err != nil || !strings.HasSuffix(strings.ToLower(sender.Address), "@email.primo.build") {
 		return errors.New("invalid hosted SMTP sender")
 	}
 	if settings.Meta == nil {
@@ -140,6 +146,14 @@ func (p *FlyProvisioner) configureSMTP(ctx context.Context, j *Job, c *Credentia
 	}
 	if !settings.SMTP.Enabled || !settings.SMTP.TLS || settings.SMTP.Host != "smtp.resend.com" || settings.SMTP.Port != 465 || settings.SMTP.Username != "resend" || settings.SMTP.AuthMethod != "PLAIN" || settings.Meta["senderAddress"] != sender.Address || settings.Meta["appURL"] != base {
 		return errors.New("customer SMTP verification failed")
+	}
+	recipient := p.Config.AlertEmail
+	if recipient == "" {
+		recipient = sender.Address
+	}
+	if err := request(ctx, p.Client, "POST", base+"/api/settings/test/email", auth.Token,
+		map[string]string{"email": recipient, "template": "verification", "collection": "users"}, nil); err != nil {
+		return errors.New("customer SMTP delivery check failed")
 	}
 	return nil
 }

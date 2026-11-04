@@ -444,8 +444,8 @@ func (s *Service) Handler() http.Handler {
 		s.workerMu.Lock()
 		defer s.workerMu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || j.State != "ready" {
-			http.Error(w, "only a ready job can be retired", 409)
+		if err != nil || (j.State != "ready" && j.State != "attention") {
+			http.Error(w, "only a ready or attention job can be retired", 409)
 			return
 		}
 		if j.SMTPKeyID != "" {

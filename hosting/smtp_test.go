@@ -1,11 +1,14 @@
 package hosting
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -24,9 +27,14 @@ func smtpProvisioner(t *testing.T, handler func(*http.Request, map[string]any) (
 			}
 		} else {
 			raw, _ := json.Marshal(body)
-			if strings.Contains(string(raw), "management-secret") || strings.Contains(string(raw), "control-send-only") || strings.Contains(r.Header.Get("Authorization"), "management-secret") {
+			if strings.Contains(string(raw), "management-secret") || strings.Contains(string(raw), "control-send-only") || strings.Contains(r.Header.Get("Authorization"), "management-secret") || strings.Contains(r.Header.Get("Authorization"), "control-send-only") {
 				t.Fatal("parent credential leaked to customer")
 			}
+		}
+		if r.URL.Host == "api.resend.com" && r.URL.Path == "/domains/domain-id" {
+			w := httptest.NewRecorder()
+			json.NewEncoder(w).Encode(map[string]string{"name": "email.primo.build", "status": "verified"})
+			return w.Result(), nil
 		}
 		status, value := handler(r, body)
 		w := httptest.NewRecorder()
@@ -100,6 +108,11 @@ func TestSMTPSettingsRetriesReuseKeyAndVerifyBeforeCleanup(t *testing.T) {
 			t.Fatal("unexpected customer host")
 		}
 		switch r.URL.Path {
+		case "/api/settings/test/email":
+			if b["email"] != "hello@email.primo.build" || b["collection"] != "users" || b["template"] != "verification" {
+				t.Fatal("unexpected SMTP probe")
+			}
+			return 204, nil
 		case "/api/collections/_superusers/auth-with-password":
 			if b["password"] != "admin-secret" {
 				t.Fatal("wrong setup identity")
@@ -233,5 +246,142 @@ func TestRetirementRequiresSuccessfulSMTPRevocation(t *testing.T) {
 	got, _ = s.Store.Get(j.ID)
 	if !got.Retired {
 		t.Fatal("retirement not saved")
+	}
+}
+
+func TestSMTPFinalCheckCanResumeWhenSMTPWasEnabledMidProvisioning(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("no external call is needed to resume SMTP setup")
+		return 500, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "final_check"}
+	if err := p.Step(context.Background(), &j, &Credentials{}); err != nil || j.State != "smtp_key" {
+		t.Fatal("final check did not resume SMTP setup", err)
+	}
+}
+
+func TestSMTPDomainMismatchStopsBeforeKeyCreation(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("mismatched domain must not create or list keys")
+		return 500, nil
+	})
+	p.Client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		if r.URL.Path != "/domains/domain-id" {
+			t.Fatal("unexpected request")
+		}
+		w := httptest.NewRecorder()
+		json.NewEncoder(w).Encode(map[string]string{"name": "wrong.example", "status": "verified"})
+		return w.Result(), nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
+	if err := p.Step(context.Background(), &j, &Credentials{}); err == nil || j.State != "smtp_key" {
+		t.Fatal("domain mismatch accepted")
+	}
+}
+
+func TestSMTPKeyPaginationExceedsTwentyPages(t *testing.T) {
+	pages := 0
+	p := smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "GET" {
+			pages++
+			return 200, map[string]any{"data": []map[string]string{{"id": fmt.Sprint(pages), "name": "other"}}, "has_more": pages < 22}
+		}
+		if r.Method == "POST" {
+			return 200, map[string]string{"id": "new-key", "token": "re_customer"}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
+	if err := p.Step(context.Background(), &j, &Credentials{}); err != nil || pages != 22 {
+		t.Fatal("pagination stopped early", err)
+	}
+}
+
+func TestAttentionRetirementRevokesSavedSMTPKey(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.SMTPKeyID = "customer-key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	revoked := false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method != "DELETE" {
+			t.Fatal("unexpected request")
+		}
+		revoked = true
+		return 204, nil
+	})
+	r := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+	r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, r)
+	if w.Code != 202 || !revoked {
+		t.Fatal("attention credential could not be retired", w.Code)
+	}
+}
+
+func TestSMTPWorkerPersistsKeyCheckpointAcrossStoreReopen(t *testing.T) {
+	s, _, _ := fixture(t)
+	s.Store.Close()
+	filename := filepath.Join(t.TempDir(), "checkpoint.sqlite")
+	key := bytes.Repeat([]byte{42}, 32)
+	var err error
+	s.Store, err = OpenStore(filename, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { s.Store.Close() })
+	j := enqueue(t, s)
+	j.State = "smtp_key"
+	j.Slug = "smtp-customer"
+	raw, _ := json.Marshal(Credentials{AdminPassword: "admin-secret"})
+	j.Secrets, err = s.Store.seal(j.ID+":credentials", string(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	sawPassword := false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, b map[string]any) (int, any) {
+		switch {
+		case r.URL.Host == "api.resend.com" && r.Method == "GET":
+			return 200, map[string]any{"data": []any{}, "has_more": false}
+		case r.URL.Host == "api.resend.com" && r.Method == "POST":
+			return 200, map[string]string{"id": "saved-key", "token": "re_customer-only"}
+		case strings.HasSuffix(r.URL.Path, "auth-with-password"):
+			return 200, map[string]string{"token": "customer-session"}
+		case r.URL.Path == "/api/settings/test/email":
+			return 204, nil
+		case r.Method == "PATCH":
+			sawPassword = b["smtp"].(map[string]any)["password"] == "re_customer-only"
+			return 200, nil
+		case r.URL.Path == "/api/settings":
+			return 200, map[string]any{"meta": map[string]any{"senderAddress": "hello@email.primo.build", "appURL": "https://smtp-customer.primo.page"}, "smtp": map[string]any{"enabled": true, "tls": true, "host": "smtp.resend.com", "port": 465, "username": "resend", "authMethod": "PLAIN"}}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	if err = s.Tick(context.Background(), "test-worker"); err != nil {
+		t.Fatal(err)
+	}
+	first, _ := s.Store.Get(j.ID)
+	if first.State != "smtp_settings" {
+		t.Fatal("key checkpoint not saved", first.State)
+	}
+	s.Store.Close()
+	s.Store, err = OpenStore(filename, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Tick(context.Background(), "test-worker"); err != nil {
+		t.Fatal(err)
+	}
+	next, _ := s.Store.Get(j.ID)
+	if !sawPassword || next.State != "cleanup" {
+		t.Fatal("SMTP password lost across checkpoint", next.State)
 	}
 }

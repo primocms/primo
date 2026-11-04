@@ -52,7 +52,7 @@ func ConfigFromEnv() (Config, error) {
 	}
 	if c.SMTPManagementToken != "" {
 		sender, err := mail.ParseAddress(c.FromEmail)
-		if err != nil || !strings.HasSuffix(sender.Address, "@email.primo.build") || c.SMTPManagementToken == c.ResendToken {
+		if err != nil || !strings.HasSuffix(strings.ToLower(sender.Address), "@email.primo.build") || c.SMTPManagementToken == c.ResendToken {
 			return c, errors.New("hosted SMTP requires a separate management token and email.primo.build sender")
 		}
 	}
