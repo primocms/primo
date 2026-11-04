@@ -471,4 +471,4 @@ retire a server or revoke its key. Operators should retire removed workspaces.
 Resend sending limits and reputation are shared at account/domain level; these
 keys isolate credentials and revocation, not per-customer provider quotas.
 
-Keep the management token configured while any job retains an SMTP key ID, including retired or attention jobs whose cleanup may need retrying. Removing the token makes key revocation unavailable. The retire endpoint accepts ready and attention jobs; use it after operator removal of the app to revoke credentials without deleting customer data or billing.
+Keep the management token configured until all issued SMTP keys have been successfully revoked, including attention jobs whose cleanup may need retrying. Removing the token makes key revocation unavailable. The retire endpoint accepts ready and attention jobs; use it after operator removal of the app to revoke credentials without deleting customer data or billing.

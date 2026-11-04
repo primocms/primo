@@ -147,9 +147,13 @@ func (p *FlyProvisioner) configureSMTP(ctx context.Context, j *Job, c *Credentia
 	if !settings.SMTP.Enabled || !settings.SMTP.TLS || settings.SMTP.Host != "smtp.resend.com" || settings.SMTP.Port != 465 || settings.SMTP.Username != "resend" || settings.SMTP.AuthMethod != "PLAIN" || settings.Meta["senderAddress"] != sender.Address || settings.Meta["appURL"] != base {
 		return errors.New("customer SMTP verification failed")
 	}
-	recipient := p.Config.AlertEmail
-	if recipient == "" {
-		recipient = sender.Address
+	recipient := sender.Address
+	if p.Config.AlertEmail != "" {
+		operator, err := mail.ParseAddress(p.Config.AlertEmail)
+		if err != nil {
+			return errors.New("invalid SMTP check recipient")
+		}
+		recipient = operator.Address
 	}
 	if err := request(ctx, p.Client, "POST", base+"/api/settings/test/email", auth.Token,
 		map[string]string{"email": recipient, "template": "verification", "collection": "users"}, nil); err != nil {
