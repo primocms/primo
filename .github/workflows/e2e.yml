@@ -16,6 +16,9 @@ concurrency:
 
 jobs:
   e2e:
+    # This isolated baseline contains the existing control-plane service. Its
+    # focused PR is qualified by hosting-provisioner.yml; CMS RC.10 runs full CI.
+    if: github.base_ref != 'review/hosting-provisioner-baseline'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

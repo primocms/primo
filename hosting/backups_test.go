@@ -160,6 +160,10 @@ func TestCustomerBackupRestoresPocketBaseAndFiles(t *testing.T) {
 	}
 	client := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
 		w := httptest.NewRecorder()
+		// Real net/http servers always provide a non-nil request body.
+		if r.Body == nil {
+			r.Body = http.NoBody
+		}
 		handler.ServeHTTP(w, r)
 		return w.Result(), nil
 	})}

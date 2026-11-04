@@ -202,6 +202,13 @@ func TestFlyPipelineReconcilesLostResponsesAndProtectsBootstrap(t *testing.T) {
 				}
 			}
 		case path == base+"/machines/machine-id/exec":
+			if j.State == "final_check" {
+				if _, ok := body["command"].([]any); !ok {
+					t.Fatal("cleanup readiness must use a structured command")
+				}
+				write(map[string]any{"exit_code": 0, "stdout": hashToken(c.DomainToken) + "  -\n"})
+				break
+			}
 			if body["cmd"] != "wget -q -O - http://127.0.0.1:8080/api/primo/info" {
 				t.Fatal("wrong Fly exec schema")
 			}
