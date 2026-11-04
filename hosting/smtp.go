@@ -26,44 +26,11 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 	if !strings.EqualFold(domain.Name, "email.primo.build") || domain.Status != "verified" {
 		return errors.New("hosted SMTP requires the verified email.primo.build domain")
 	}
+	orphanIDs, err := p.jobSMTPKeyIDs(ctx, j)
+	if err != nil {
+		return err
+	}
 	name := "primo-hosted-" + j.ID
-	if len(j.ID) != 24 || strings.Trim(j.ID, "0123456789abcdef") != "" {
-		return errors.New("invalid SMTP customer identity")
-	}
-	// Resend exposes a newly created token once. Reconcile a lost create response
-	// or checkpoint by revoking only orphan keys with this exact job-owned name.
-	orphanIDs := []string{}
-	after := ""
-	seenCursors := map[string]bool{}
-	for {
-		var keys struct {
-			Data    []struct{ ID, Name string }
-			HasMore bool `json:"has_more"`
-		}
-		endpoint := "https://api.resend.com/api-keys?limit=100"
-		if after != "" {
-			endpoint += "&after=" + url.QueryEscape(after)
-		}
-		if err := request(ctx, p.Client, "GET", endpoint, p.Config.SMTPManagementToken, nil, &keys); err != nil {
-			return err
-		}
-		for _, key := range keys.Data {
-			if key.ID == "" {
-				return errors.New("invalid SMTP key listing")
-			}
-			if key.Name == name {
-				orphanIDs = append(orphanIDs, key.ID)
-			}
-		}
-		if !keys.HasMore {
-			break
-		}
-		if len(keys.Data) == 0 || seenCursors[keys.Data[len(keys.Data)-1].ID] {
-			return errors.New("invalid SMTP key pagination")
-		}
-		after = keys.Data[len(keys.Data)-1].ID
-		seenCursors[after] = true
-	}
 	for _, id := range orphanIDs {
 		if err := p.deleteSMTPKey(ctx, id); err != nil {
 			return err
@@ -82,6 +49,50 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 	return nil
 }
 
+// Lookup is shared by lost-response recovery and explicit retirement. It never
+// returns keys belonging to another job, even on a paginated provider response.
+func (p *FlyProvisioner) jobSMTPKeyIDs(ctx context.Context, j *Job) ([]string, error) {
+	name := "primo-hosted-" + j.ID
+	if len(j.ID) != 24 || strings.Trim(j.ID, "0123456789abcdef") != "" {
+		return nil, errors.New("invalid SMTP customer identity")
+	}
+	// Resend exposes a newly created token once. Reconcile a lost create response
+	// or checkpoint by revoking only orphan keys with this exact job-owned name.
+	orphanIDs := []string{}
+	after := ""
+	seenCursors := map[string]bool{}
+	for {
+		var keys struct {
+			Data    []struct{ ID, Name string }
+			HasMore bool `json:"has_more"`
+		}
+		endpoint := "https://api.resend.com/api-keys?limit=100"
+		if after != "" {
+			endpoint += "&after=" + url.QueryEscape(after)
+		}
+		if err := request(ctx, p.Client, "GET", endpoint, p.Config.SMTPManagementToken, nil, &keys); err != nil {
+			return nil, err
+		}
+		for _, key := range keys.Data {
+			if key.ID == "" {
+				return nil, errors.New("invalid SMTP key listing")
+			}
+			if key.Name == name {
+				orphanIDs = append(orphanIDs, key.ID)
+			}
+		}
+		if !keys.HasMore {
+			break
+		}
+		if len(keys.Data) == 0 || seenCursors[keys.Data[len(keys.Data)-1].ID] {
+			return nil, errors.New("invalid SMTP key pagination")
+		}
+		after = keys.Data[len(keys.Data)-1].ID
+		seenCursors[after] = true
+	}
+	return orphanIDs, nil
+}
+
 func (p *FlyProvisioner) deleteSMTPKey(ctx context.Context, id string) error {
 	if p.Config.SMTPManagementToken == "" {
 		return errors.New("SMTP management credential missing")
@@ -96,10 +107,22 @@ func (p *FlyProvisioner) deleteSMTPKey(ctx context.Context, id string) error {
 // Retirement is explicit operator bookkeeping after removing a customer app.
 // A failed or lost revocation response remains retryable; 404 means completed.
 func (p *FlyProvisioner) RevokeSMTPKey(ctx context.Context, j *Job) error {
-	if j.SMTPKeyID == "" {
+	if j.SMTPKeyID != "" {
+		return p.deleteSMTPKey(ctx, j.SMTPKeyID)
+	}
+	if p.Config.SMTPManagementToken == "" {
 		return nil
 	}
-	return p.deleteSMTPKey(ctx, j.SMTPKeyID)
+	ids, err := p.jobSMTPKeyIDs(ctx, j)
+	if err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if err := p.deleteSMTPKey(ctx, id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (p *FlyProvisioner) configureSMTP(ctx context.Context, j *Job, c *Credentials) error {

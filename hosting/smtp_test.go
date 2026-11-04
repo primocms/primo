@@ -397,3 +397,64 @@ func TestSMTPWorkerPersistsKeyCheckpointAcrossStoreReopen(t *testing.T) {
 		t.Fatal("SMTP password lost across checkpoint", next.State)
 	}
 }
+
+func TestRetirementReconcilesSMTPKeyWithLostCreateResponse(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.Error = "smtp_key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	listed, revoked := false, false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "GET" {
+			listed = true
+			return 200, map[string]any{"data": []map[string]string{{"id": "unrelated", "name": "another-job"}, {"id": "lost-key", "name": "primo-hosted-" + j.ID}}, "has_more": false}
+		}
+		if r.Method == "DELETE" && r.URL.Path == "/api-keys/lost-key" {
+			revoked = true
+			return 204, nil
+		}
+		t.Fatal("unexpected retirement request", r.Method, r.URL.Path)
+		return 500, nil
+	})
+	req := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+	req.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	saved, err := s.Store.Get(j.ID)
+	if w.Code != 202 || !listed || !revoked || err != nil || !saved.Retired {
+		t.Fatal("orphan key not revoked before retirement", w.Code, err)
+	}
+}
+func TestRetiredInvitationCannotBeResentOrClaimed(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	token := claimToken(t, s, j)
+	j.State = "attention"
+	j.Error = "invite"
+	j.Retired = true
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/resend", nil)
+	req.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	saved, _ := s.Store.Get(j.ID)
+	if w.Code != 409 || saved.ClaimHash != j.ClaimHash || saved.State != j.State {
+		t.Fatal("retired invitation renewed", w.Code)
+	}
+	// Previously generated tokens must stay unusable even on stale invite state.
+	saved.State = "invite"
+	if err := s.Store.Save(saved); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.findClaim(token); err == nil {
+		t.Fatal("retired claim lookup accepted token")
+	}
+	if _, err := s.Store.Claim(token, "retired-server", "valid-password-123", "session", s.now()); err == nil {
+		t.Fatal("retired claim transaction accepted token")
+	}
+}

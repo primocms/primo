@@ -299,7 +299,7 @@ func (s *Store) Claim(token, slug, password, session string, now time.Time) (Job
 			rows.Close()
 			return Job{}, err
 		}
-		if j.ClaimHash == hashToken(token) && j.ClaimExpires > now.Unix() {
+		if !j.Retired && j.ClaimHash == hashToken(token) && j.ClaimExpires > now.Unix() {
 			chosen = j
 		}
 	}

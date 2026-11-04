@@ -211,7 +211,7 @@ func (s *Service) findClaim(token string) (Job, error) {
 		return Job{}, err
 	}
 	for _, j := range jobs {
-		if (j.State == "invite" || j.State == "awaiting_claim") && j.ClaimHash == hashToken(token) && j.ClaimExpires > s.now().Unix() {
+		if !j.Retired && (j.State == "invite" || j.State == "awaiting_claim") && j.ClaimHash == hashToken(token) && j.ClaimExpires > s.now().Unix() {
 			if held, err := s.Store.Held(j.Subscription); err != nil {
 				return Job{}, err
 			} else if held {
@@ -448,14 +448,14 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "only a ready or attention job can be retired", 409)
 			return
 		}
-		if j.SMTPKeyID != "" {
-			revoker, ok := s.Provisioner.(interface {
-				RevokeSMTPKey(context.Context, *Job) error
-			})
-			if !ok {
-				http.Error(w, "SMTP key revocation unavailable", 503)
-				return
-			}
+		revoker, canRevoke := s.Provisioner.(interface {
+			RevokeSMTPKey(context.Context, *Job) error
+		})
+		if !canRevoke && (j.SMTPKeyID != "" || s.Config.SMTPManagementToken != "") {
+			http.Error(w, "SMTP key revocation unavailable", 503)
+			return
+		}
+		if canRevoke {
 			ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 			defer cancel()
 			if err := revoker.RevokeSMTPKey(ctx, &j); err != nil {
@@ -504,10 +504,12 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
+		s.workerMu.Lock()
+		defer s.workerMu.Unlock()
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || (j.State != "invite" && j.State != "awaiting_claim" && !(j.State == "attention" && j.Error == "invite")) {
+		if err != nil || j.Retired || (j.State != "invite" && j.State != "awaiting_claim" && !(j.State == "attention" && j.Error == "invite")) {
 			http.Error(w, "setup has already been claimed", 409)
 			return
 		}
