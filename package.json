@@ -98,7 +98,9 @@
 		},
 		"primo-mcp": "$primo-mcp",
 		"runed": "$runed",
-		"deepmerge": "$deepmerge"
+		"deepmerge": "$deepmerge",
+		"glob": "14.0.2",
+		"minimatch": "11.0.1"
 	},
 	"engines": {
 		"node": "^22.17.0 || >=24.0.0"
