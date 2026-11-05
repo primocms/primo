@@ -5,8 +5,13 @@ import ts from 'typescript'
 const source=await readFile(new URL('../../src/lib/pocketbase/user.ts',import.meta.url),'utf8')
 const {outputText}=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}})
 function fixture(results){
- const observed={calls:0,clears:0,tracked:0,cacheClears:0,waits:[]},store={isValid:true,token:'valid-original',record:{id:'editor'},clear(){observed.clears++;this.token='';this.record=null}}
- const self={instance:{authStore:store,collection:()=>({authRefresh:async()=>{observed.calls++;const result=results.shift();if(typeof result==='function')return result(store);if(result)throw result;return {token:store.token,record:store.record}}})},lists:{clear(){observed.cacheClears++}},records:{clear(){observed.cacheClears++}}}
+ const observed={calls:0,clears:0,tracked:0,cacheClears:0,saves:0,waits:[]},store={isValid:true,token:'valid-original',record:{id:'editor'},save(token,record){observed.saves++;this.token=token;this.record=record},clear(){observed.clears++;this.token='';this.record=null}}
+ const request=async()=>{observed.calls++;const result=results.shift();if(typeof result==='function')return result(store);if(result)throw result;return {token:store.token,record:store.record}}
+ const self={instance:{authStore:store,
+  send:async(url,options)=>{assert.equal(url,'/api/collections/users/auth-refresh');assert.equal(options.method,'POST');assert.equal(options.headers.Authorization,'valid-original');return request()},
+  // Model the SDK side effect so reverting to authRefresh reproduces the race.
+  collection:()=>({authRefresh:async()=>{const response=await request();store.save(response.token,response.record);return response}})
+ },lists:{clear(){observed.cacheClears++}},records:{clear(){observed.cacheClears++}}}
  const mocks={'$lib/analytics':{track_cms_opened(){observed.tracked++}},'./managers':{self},'./collections':{},'svelte/store':{writable:value=>({value}),readonly:value=>value}}
  const exports={};Function('require','exports','setTimeout',outputText)(id=>{assert.ok(mocks[id],id);return mocks[id]},exports,(fn,ms)=>{observed.waits.push(ms);queueMicrotask(fn);return 0})
  return {observed,store,check:exports.check_session}
@@ -37,4 +42,15 @@ test('a completed refresh from an unmounted route cannot clear active caches or 
   assert.equal(f.observed.clears,0);assert.equal(f.observed.cacheClears,0);assert.equal(f.observed.tracked,0)
   assert.equal(f.store.token,'valid-original')
  }
+})
+
+
+test('a late successful refresh cannot overwrite a later login',async()=>{
+ let release;const gate=new Promise(resolve=>{release=resolve})
+ const f=fixture([async()=>{await gate;return {token:'stale-response',record:{id:'old-editor'}}}])
+ const pending=f.check()
+ f.store.save('later-login',{id:'new-editor'})
+ release();assert.equal(await pending,false)
+ assert.equal(f.store.token,'later-login');assert.equal(f.store.record.id,'new-editor')
+ assert.equal(f.observed.saves,1);assert.equal(f.observed.cacheClears,0);assert.equal(f.observed.tracked,0)
 })
