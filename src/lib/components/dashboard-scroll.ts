@@ -13,12 +13,15 @@ let remountSnapshot: (ScrollSnapshot & { url: string }) | undefined
 function takeEditorReturnSnapshot(key: string): ScrollSnapshot | undefined {
 	try {
 		const saved = JSON.parse(sessionStorage.getItem(editorReturnStorageKey) ?? 'null')
-		sessionStorage.removeItem(editorReturnStorageKey)
-		if (saved?.url === location.href && typeof saved.key === 'string' && Number.isFinite(saved.top) && saved.top >= 0) editorReturnSnapshot = saved
+		// The first Sites mount may precede its ?group= redirect. Only the
+		// matching list may consume the saved return position.
+		if (saved?.key === key && typeof saved.key === 'string' && Number.isFinite(saved.top) && saved.top >= 0) {
+			editorReturnSnapshot = {...saved, url: location.href}
+			sessionStorage.removeItem(editorReturnStorageKey)
+		}
 	} catch {
 		// History restoration remains available without browser storage.
 	}
-	if (editorReturnSnapshot?.url !== location.href) editorReturnSnapshot = undefined
 	return editorReturnSnapshot?.key === key ? editorReturnSnapshot : undefined
 }
 

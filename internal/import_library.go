@@ -107,6 +107,9 @@ func RegisterLibraryImportEndpoint(pb *pocketbase.PocketBase) error {
 				return e.UnauthorizedError("Authentication required", nil)
 			}
 			freshServer := decision.freshServer
+			if err := authorizePushState(pb, e, "library"); err != nil {
+				return err
+			}
 			release, err := acquireImportCapacity(pb, e)
 			if err != nil {
 				return err

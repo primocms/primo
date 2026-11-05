@@ -320,8 +320,13 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.UnauthorizedError("Authentication required", nil)
 	}
 
-	// Parse multipart form (must read body before any access checks so we can
-	// peek at site.yaml when creating a new site).
+	// Check coarse access before reading multipart content. Full rule checks
+	// run after parsing site.yaml when creating a new site.
+	// Staging authorization checks identity and developer ownership without
+	// parsing a body or evaluating request-dependent update rules yet.
+	if err := authorizePushStateWithInfo(pb, e, siteId, nil, true); err != nil {
+		return err
+	}
 	release, err := acquireImportCapacity(pb, e)
 	if err != nil {
 		return err
