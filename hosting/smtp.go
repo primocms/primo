@@ -1,0 +1,203 @@
+package hosting
+
+import (
+	"context"
+	"errors"
+	"net/mail"
+	"net/url"
+	"strings"
+)
+
+// Each customer receives only a sending-only, domain-restricted credential.
+// The management credential never leaves the control plane. A separate worker
+// checkpoint saves the returned password encrypted before customer setup begins.
+func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentials) error {
+	if p.Config.SMTPManagementToken == "" || p.Config.SMTPDomainID == "" {
+		return errors.New("hosted SMTP configuration missing")
+	}
+	if j.SMTPKeyID != "" && c.SMTPPassword != "" {
+		j.State = "smtp_settings"
+		return nil
+	}
+	var domain struct{ Name, Status string }
+	if err := request(ctx, p.Client, "GET", "https://api.resend.com/domains/"+url.PathEscape(p.Config.SMTPDomainID), p.Config.SMTPManagementToken, nil, &domain); err != nil {
+		return err
+	}
+	if !strings.EqualFold(domain.Name, "email.primo.build") || domain.Status != "verified" {
+		return errors.New("hosted SMTP requires the verified email.primo.build domain")
+	}
+	orphanIDs, err := p.jobSMTPKeyIDs(ctx, j)
+	if err != nil {
+		return err
+	}
+	name := "primo-hosted-" + j.ID
+	for _, id := range orphanIDs {
+		if err := p.deleteSMTPKey(ctx, id); err != nil {
+			return err
+		}
+	}
+	// A failed create may have minted an orphan; its next attempt must rescan.
+	j.SMTPKeyScan = SMTPKeyScan{}
+	var key struct{ ID, Token string }
+	if err := request(ctx, p.Client, "POST", "https://api.resend.com/api-keys", p.Config.SMTPManagementToken,
+		map[string]string{"name": name, "permission": "sending_access", "domain_id": p.Config.SMTPDomainID}, &key); err != nil {
+		return err
+	}
+	if key.ID == "" || !strings.HasPrefix(key.Token, "re_") || key.Token == p.Config.SMTPManagementToken || key.Token == p.Config.ResendToken {
+		return errors.New("invalid customer SMTP credential")
+	}
+	j.SMTPKeyID, c.SMTPPassword = key.ID, key.Token
+	j.State = "smtp_settings"
+	return nil
+}
+
+const smtpKeyPagesPerAttempt = 5
+
+// Lookup is shared by lost-response recovery and explicit retirement. It never
+// returns keys belonging to another job, even on a paginated provider response.
+func (p *FlyProvisioner) jobSMTPKeyIDs(ctx context.Context, j *Job) ([]string, error) {
+	name := "primo-hosted-" + j.ID
+	if len(j.ID) != 24 || strings.Trim(j.ID, "0123456789abcdef") != "" {
+		return nil, errors.New("invalid SMTP customer identity")
+	}
+	// Resend exposes a newly created token once. Reconcile a lost create response
+	// or checkpoint by revoking only orphan keys with this exact job-owned name.
+	if j.SMTPKeyScan.Complete {
+		return j.SMTPKeyScan.IDs, nil
+	}
+	if j.SMTPKeyScan.Seen == nil {
+		j.SMTPKeyScan.Seen = map[string]bool{}
+	}
+	// Limit provider work per checkpoint, rather than restarting a large scan
+	// after the worker's or retirement handler's context deadline.
+	for page := 0; page < smtpKeyPagesPerAttempt; page++ {
+		var keys struct {
+			Data    []struct{ ID, Name string }
+			HasMore bool `json:"has_more"`
+		}
+		endpoint := "https://api.resend.com/api-keys?limit=100"
+		if j.SMTPKeyScan.After != "" {
+			endpoint += "&after=" + url.QueryEscape(j.SMTPKeyScan.After)
+		}
+		if err := request(ctx, p.Client, "GET", endpoint, p.Config.SMTPManagementToken, nil, &keys); err != nil {
+			return nil, err
+		}
+		for _, key := range keys.Data {
+			if key.ID == "" {
+				return nil, errors.New("invalid SMTP key listing")
+			}
+			if key.Name == name {
+				j.SMTPKeyScan.IDs = append(j.SMTPKeyScan.IDs, key.ID)
+			}
+		}
+		if !keys.HasMore {
+			j.SMTPKeyScan.Complete = true
+			return j.SMTPKeyScan.IDs, nil
+		}
+		if len(keys.Data) == 0 || j.SMTPKeyScan.Seen[keys.Data[len(keys.Data)-1].ID] {
+			return nil, errors.New("invalid SMTP key pagination")
+		}
+		j.SMTPKeyScan.After = keys.Data[len(keys.Data)-1].ID
+		j.SMTPKeyScan.Seen[j.SMTPKeyScan.After] = true
+	}
+	return nil, errNotReady
+}
+
+func (p *FlyProvisioner) deleteSMTPKey(ctx context.Context, id string) error {
+	if p.Config.SMTPManagementToken == "" {
+		return errors.New("SMTP management credential missing")
+	}
+	err := request(ctx, p.Client, "DELETE", "https://api.resend.com/api-keys/"+url.PathEscape(id), p.Config.SMTPManagementToken, nil, nil)
+	if errors.Is(err, apiStatus(404)) {
+		return nil
+	}
+	return err
+}
+
+func (j *Job) mayHaveSMTPKey() bool {
+	return j.SMTPKeyID != "" || strings.HasPrefix(j.State, "smtp_") || strings.HasPrefix(j.Error, "smtp_") || j.SMTPKeyScan.After != "" || j.SMTPKeyScan.Complete || len(j.SMTPKeyScan.IDs) > 0
+}
+
+// Retirement is explicit operator bookkeeping after removing a customer app.
+// A failed or lost revocation response remains retryable; 404 means completed.
+func (p *FlyProvisioner) RevokeSMTPKey(ctx context.Context, j *Job) error {
+	if j.SMTPKeyID != "" {
+		return p.deleteSMTPKey(ctx, j.SMTPKeyID)
+	}
+	if !j.mayHaveSMTPKey() {
+		return nil
+	}
+	if p.Config.SMTPManagementToken == "" {
+		return errors.New("SMTP management credential missing")
+	}
+	ids, err := p.jobSMTPKeyIDs(ctx, j)
+	if err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if err := p.deleteSMTPKey(ctx, id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *FlyProvisioner) configureSMTP(ctx context.Context, j *Job, c *Credentials) error {
+	if j.SMTPKeyID == "" || c.SMTPPassword == "" || c.AdminPassword == "" {
+		return errors.New("customer SMTP setup credential missing")
+	}
+	base := "https://" + j.Slug + "." + p.Config.Domain
+	var auth struct{ Token string }
+	if err := request(ctx, p.Client, "POST", base+"/api/collections/_superusers/auth-with-password", "", map[string]string{"identity": "hosting-admin@primo.page", "password": c.AdminPassword}, &auth); err != nil {
+		return err
+	}
+	if auth.Token == "" {
+		return errors.New("customer SMTP authentication failed")
+	}
+	var settings struct {
+		Meta map[string]any
+		SMTP struct {
+			Enabled, TLS               bool
+			Host, Username, AuthMethod string
+			Port                       int
+		}
+	}
+	if err := request(ctx, p.Client, "GET", base+"/api/settings", auth.Token, nil, &settings); err != nil {
+		return err
+	}
+	sender, err := mail.ParseAddress(p.Config.FromEmail)
+	if err != nil || !strings.HasSuffix(strings.ToLower(sender.Address), "@email.primo.build") {
+		return errors.New("invalid hosted SMTP sender")
+	}
+	if settings.Meta == nil {
+		settings.Meta = map[string]any{}
+	}
+	name := sender.Name
+	if name == "" {
+		name = "Primo"
+	}
+	settings.Meta["senderName"], settings.Meta["senderAddress"], settings.Meta["appURL"] = name, sender.Address, base
+	body := map[string]any{"meta": settings.Meta, "smtp": map[string]any{"enabled": true, "host": "smtp.resend.com", "port": 465, "tls": true, "username": "resend", "password": c.SMTPPassword, "authMethod": "PLAIN"}}
+	if err := request(ctx, p.Client, "PATCH", base+"/api/settings", auth.Token, body, nil); err != nil {
+		return err
+	}
+	if err := request(ctx, p.Client, "GET", base+"/api/settings", auth.Token, nil, &settings); err != nil {
+		return err
+	}
+	if !settings.SMTP.Enabled || !settings.SMTP.TLS || settings.SMTP.Host != "smtp.resend.com" || settings.SMTP.Port != 465 || settings.SMTP.Username != "resend" || settings.SMTP.AuthMethod != "PLAIN" || settings.Meta["senderAddress"] != sender.Address || settings.Meta["appURL"] != base {
+		return errors.New("customer SMTP verification failed")
+	}
+	recipient := sender.Address
+	if p.Config.AlertEmail != "" {
+		operator, err := mail.ParseAddress(p.Config.AlertEmail)
+		if err != nil {
+			return errors.New("invalid SMTP check recipient")
+		}
+		recipient = operator.Address
+	}
+	if err := request(ctx, p.Client, "POST", base+"/api/settings/test/email", auth.Token,
+		map[string]string{"email": recipient, "template": "verification", "collection": "users"}, nil); err != nil {
+		return errors.New("customer SMTP delivery check failed")
+	}
+	return nil
+}

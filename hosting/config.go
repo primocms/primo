@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/mail"
 	"net/url"
 	"os"
 	"strconv"
@@ -23,6 +24,7 @@ type Config struct {
 	PublicURL, Database, Domain, FlyOrg, Region, Image, FlyToken, FlyCLI string
 	CloudflareToken, CloudflareZone, WebhookSecret, WebhookScheme        string
 	ResendToken, FromEmail, BillingURL, OpsToken, AlertEmail             string
+	SMTPManagementToken, SMTPDomainID                                    string
 	Key                                                                  []byte
 	Products                                                             map[string]Plan
 	Cutover                                                              time.Time
@@ -38,11 +40,21 @@ func ConfigFromEnv() (Config, error) {
 		Image: os.Getenv("HOSTING_CUSTOMER_IMAGE"), FlyToken: os.Getenv("FLY_API_TOKEN"), FlyCLI: os.Getenv("HOSTING_FLY_CLI"),
 		CloudflareToken: os.Getenv("CLOUDFLARE_API_TOKEN"), CloudflareZone: os.Getenv("CLOUDFLARE_ZONE_ID"),
 		WebhookSecret: os.Getenv("POLAR_WEBHOOK_SECRET"), WebhookScheme: os.Getenv("POLAR_WEBHOOK_SCHEME"),
+		SMTPManagementToken: os.Getenv("HOSTING_SMTP_MANAGEMENT_TOKEN"), SMTPDomainID: os.Getenv("HOSTING_SMTP_DOMAIN_ID"),
 		ResendToken: os.Getenv("RESEND_API_KEY"), FromEmail: os.Getenv("HOSTING_FROM_EMAIL"),
 		BillingURL: os.Getenv("HOSTING_BILLING_URL"), OpsToken: os.Getenv("HOSTING_OPS_TOKEN"),
 		AlertEmail:   os.Getenv("HOSTING_ALERT_EMAIL"),
 		MonitorToken: os.Getenv("HOSTING_MONITOR_TOKEN"),
 		Backups:      BackupConfig{Enabled: os.Getenv("HOSTING_BACKUPS_ENABLED") == "true", Bucket: os.Getenv("HOSTING_R2_BUCKET"), Region: os.Getenv("HOSTING_R2_REGION"), Endpoint: os.Getenv("HOSTING_R2_ENDPOINT"), AccessKey: os.Getenv("HOSTING_R2_ACCESS_KEY"), Secret: os.Getenv("HOSTING_R2_SECRET_KEY"), Recipient: os.Getenv("HOSTING_BACKUP_RECIPIENT")},
+	}
+	if (c.SMTPManagementToken == "") != (c.SMTPDomainID == "") {
+		return c, errors.New("hosted SMTP requires both management token and domain ID")
+	}
+	if c.SMTPManagementToken != "" {
+		sender, err := mail.ParseAddress(c.FromEmail)
+		if err != nil || !strings.HasSuffix(strings.ToLower(sender.Address), "@email.primo.build") || c.SMTPManagementToken == c.ResendToken {
+			return c, errors.New("hosted SMTP requires a separate management token and email.primo.build sender")
+		}
 	}
 	if c.Database == "" {
 		c.Database = "/data/hosting.sqlite"
@@ -88,6 +100,9 @@ func ConfigFromEnv() (Config, error) {
 		if strings.TrimSpace(value) == "" {
 			return c, errors.New("missing required hosting configuration; see deploy/fly/hosting/README.md")
 		}
+	}
+	if _, err := mail.ParseAddress(c.AlertEmail); err != nil {
+		return c, errors.New("HOSTING_ALERT_EMAIL must be a valid email address")
 	}
 	for _, raw := range []string{c.PublicURL, c.BillingURL} {
 		u, err := url.Parse(raw)

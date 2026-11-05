@@ -31,13 +31,24 @@ type Job struct {
 	StartedAt                                    int64
 	ReadyAt                                      int64
 	Retired                                      bool
+	SMTPKeyID                                    string
+	SMTPKeyScan                                  SMTPKeyScan
 	DomainParentHash                             string
 	DomainTokenUpdatedAt                         int64
 	DomainRotation                               DomainRotation
 	Suspension                                   Suspension
 }
 
-type Credentials struct{ Password, AdminPassword, DomainToken string }
+// SMTPKeyScan is encrypted with the job and resumes provider inventory across
+// bounded worker attempts and operator retirement requests.
+type SMTPKeyScan struct {
+	After    string
+	IDs      []string
+	Seen     map[string]bool
+	Complete bool
+}
+
+type Credentials struct{ Password, AdminPassword, DomainToken, SMTPPassword string }
 
 type Store struct {
 	db   *sql.DB
@@ -298,7 +309,7 @@ func (s *Store) Claim(token, slug, password, session string, now time.Time) (Job
 			rows.Close()
 			return Job{}, err
 		}
-		if j.ClaimHash == hashToken(token) && j.ClaimExpires > now.Unix() {
+		if !j.Retired && j.ClaimHash == hashToken(token) && j.ClaimExpires > now.Unix() {
 			chosen = j
 		}
 	}

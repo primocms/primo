@@ -1,0 +1,557 @@
+package hosting
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func smtpProvisioner(t *testing.T, handler func(*http.Request, map[string]any) (int, any)) *FlyProvisioner {
+	t.Helper()
+	p := NewFlyProvisioner(Config{SMTPManagementToken: "management-secret", SMTPDomainID: "domain-id", ResendToken: "control-send-only", FromEmail: "Primo <hello@email.primo.build>", Domain: "primo.page"})
+	p.Client = &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		body := map[string]any{}
+		if r.Body != nil {
+			json.NewDecoder(r.Body).Decode(&body)
+		}
+		if r.URL.Host == "api.resend.com" {
+			if r.Header.Get("Authorization") != "Bearer management-secret" {
+				t.Fatal("wrong management credential")
+			}
+		} else {
+			raw, _ := json.Marshal(body)
+			if strings.Contains(string(raw), "management-secret") || strings.Contains(string(raw), "control-send-only") || strings.Contains(r.Header.Get("Authorization"), "management-secret") || strings.Contains(r.Header.Get("Authorization"), "control-send-only") {
+				t.Fatal("parent credential leaked to customer")
+			}
+		}
+		if r.URL.Host == "api.resend.com" && r.URL.Path == "/domains/domain-id" {
+			w := httptest.NewRecorder()
+			json.NewEncoder(w).Encode(map[string]string{"name": "email.primo.build", "status": "verified"})
+			return w.Result(), nil
+		}
+		status, value := handler(r, body)
+		w := httptest.NewRecorder()
+		w.WriteHeader(status)
+		if value != nil {
+			json.NewEncoder(w).Encode(value)
+		}
+		return w.Result(), nil
+	})}
+	return p
+}
+func TestSMTPKeyLostResponseReconcilesOnlyJobOwnedOrphan(t *testing.T) {
+	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
+	c := Credentials{}
+	creates, deletes := 0, 0
+	orphan := false
+	p := smtpProvisioner(t, func(r *http.Request, b map[string]any) (int, any) {
+		switch r.Method {
+		case "GET":
+			keys := []map[string]string{{"id": "unrelated", "name": "another customer"}}
+			if orphan {
+				keys = append(keys, map[string]string{"id": "lost-key", "name": "primo-hosted-" + j.ID})
+			}
+			return 200, map[string]any{"data": keys, "has_more": false}
+		case "DELETE":
+			if r.URL.Path != "/api-keys/lost-key" {
+				t.Fatal("deleted unrelated key")
+			}
+			deletes++
+			orphan = false
+			return 204, nil
+		case "POST":
+			if b["permission"] != "sending_access" || b["domain_id"] != "domain-id" || b["name"] != "primo-hosted-"+j.ID {
+				t.Fatal("customer key not restricted")
+			}
+			creates++
+			if creates == 1 {
+				orphan = true
+				return 500, map[string]string{"token": "must-not-log"}
+			}
+			return 200, map[string]string{"id": "saved-key", "token": "re_customer-only"}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	if err := p.Step(context.Background(), &j, &c); err == nil || strings.Contains(err.Error(), "must-not-log") {
+		t.Fatal("lost create was not safely failed")
+	}
+	if j.State != "smtp_key" || c.SMTPPassword != "" {
+		t.Fatal("failed key advanced checkpoint")
+	}
+	if err := p.Step(context.Background(), &j, &c); err != nil {
+		t.Fatal(err)
+	}
+	if j.State != "smtp_settings" || j.SMTPKeyID != "saved-key" || c.SMTPPassword != "re_customer-only" || deletes != 1 || creates != 2 {
+		t.Fatal("orphan reconciliation failed")
+	}
+	// Replaying a successfully saved checkpoint must not mint another credential.
+	j.State = "smtp_key"
+	if err := p.Step(context.Background(), &j, &c); err != nil || creates != 2 {
+		t.Fatal("checkpoint replay duplicated key")
+	}
+}
+func TestSMTPSettingsRetriesReuseKeyAndVerifyBeforeCleanup(t *testing.T) {
+	j := Job{ID: "00112233445566778899aabb", Slug: "smtp-customer", State: "smtp_settings", SMTPKeyID: "customer-key"}
+	c := Credentials{AdminPassword: "admin-secret", SMTPPassword: "re_customer-only"}
+	patches := 0
+	enabled := false
+	p := smtpProvisioner(t, func(r *http.Request, b map[string]any) (int, any) {
+		if r.URL.Host != "smtp-customer.primo.page" {
+			t.Fatal("unexpected customer host")
+		}
+		switch r.URL.Path {
+		case "/api/settings/test/email":
+			if b["email"] != "hello@email.primo.build" || b["collection"] != "users" || b["template"] != "verification" {
+				t.Fatal("unexpected SMTP probe")
+			}
+			return 204, nil
+		case "/api/collections/_superusers/auth-with-password":
+			if b["password"] != "admin-secret" {
+				t.Fatal("wrong setup identity")
+			}
+			return 200, map[string]string{"token": "customer-admin-session"}
+		case "/api/settings":
+			if r.Header.Get("Authorization") != "Bearer customer-admin-session" {
+				t.Fatal("wrong settings auth")
+			}
+			if r.Method == "PATCH" {
+				patches++
+				smtp := b["smtp"].(map[string]any)
+				meta := b["meta"].(map[string]any)
+				if smtp["password"] != "re_customer-only" || smtp["port"] != float64(465) || smtp["tls"] != true || meta["senderAddress"] != "hello@email.primo.build" || meta["appURL"] != "https://smtp-customer.primo.page" || meta["appName"] != "Existing name" {
+					t.Fatal("wrong SMTP settings or lost metadata")
+				}
+				enabled = true
+				if patches == 1 {
+					return 503, nil
+				}
+				return 200, nil
+			}
+			return 200, map[string]any{"meta": map[string]any{"appName": "Existing name", "senderAddress": "hello@email.primo.build", "appURL": "https://smtp-customer.primo.page"}, "smtp": map[string]any{"enabled": enabled, "tls": true, "host": "smtp.resend.com", "port": 465, "username": "resend", "authMethod": "PLAIN"}}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	if err := p.Step(context.Background(), &j, &c); err == nil || j.State != "smtp_settings" {
+		t.Fatal("lost settings response advanced job")
+	}
+	if err := p.Step(context.Background(), &j, &c); err != nil {
+		t.Fatal(err)
+	}
+	if patches != 2 || j.State != "cleanup" {
+		t.Fatal("SMTP setup did not verify and advance")
+	}
+}
+func TestSMTPSettingsRejectFalseSuccess(t *testing.T) {
+	j := Job{Slug: "smtp-customer", State: "smtp_settings", SMTPKeyID: "key"}
+	c := Credentials{AdminPassword: "admin", SMTPPassword: "re_customer"}
+	p := smtpProvisioner(t, func(r *http.Request, b map[string]any) (int, any) {
+		if strings.HasSuffix(r.URL.Path, "auth-with-password") {
+			return 200, map[string]string{"token": "session"}
+		}
+		if r.Method == "PATCH" {
+			return 200, nil
+		}
+		return 200, map[string]any{"meta": map[string]any{}, "smtp": map[string]any{"enabled": false}}
+	})
+	if err := p.Step(context.Background(), &j, &c); err == nil || j.State != "smtp_settings" {
+		t.Fatal("disabled SMTP marked configured")
+	}
+}
+func TestSMTPRevokeIsRetryableAndIdempotent(t *testing.T) {
+	calls := 0
+	p := smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method != "DELETE" || r.URL.Path != "/api-keys/customer-key" {
+			t.Fatal("wrong key revoked")
+		}
+		calls++
+		if calls == 1 {
+			return 503, nil
+		}
+		return 404, nil
+	})
+	j := Job{SMTPKeyID: "customer-key"}
+	if err := p.RevokeSMTPKey(context.Background(), &j); !errors.Is(err, apiStatus(503)) {
+		t.Fatal("revocation error swallowed")
+	}
+	if err := p.RevokeSMTPKey(context.Background(), &j); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestSMTPSecretsRemainEncryptedAtRest(t *testing.T) {
+	store, err := OpenStore(t.TempDir()+"/state.sqlite", make([]byte, 32))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	raw, _ := json.Marshal(Credentials{SMTPPassword: "re_customer-only"})
+	encrypted, err := store.seal("job:credentials", string(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(encrypted, "re_customer-only") {
+		t.Fatal("plaintext SMTP credential")
+	}
+	plain, err := store.open("job:credentials", encrypted)
+	if err != nil || plain != string(raw) {
+		t.Fatal("SMTP checkpoint not recoverable")
+	}
+}
+
+func TestRetirementRequiresSuccessfulSMTPRevocation(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "ready"
+	j.SMTPKeyID = "customer-key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	attempts := 0
+	p := smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		attempts++
+		if r.Method != "DELETE" || r.URL.Path != "/api-keys/customer-key" {
+			t.Fatal("wrong retirement credential")
+		}
+		if attempts == 1 {
+			return 503, nil
+		}
+		return 204, nil
+	})
+	s.Provisioner = p
+	retire := func() int {
+		r := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+		r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+		w := httptest.NewRecorder()
+		s.Handler().ServeHTTP(w, r)
+		return w.Code
+	}
+	if retire() != 503 {
+		t.Fatal("failed revocation accepted retirement")
+	}
+	got, _ := s.Store.Get(j.ID)
+	if got.Retired {
+		t.Fatal("job retired before credential revoked")
+	}
+	if retire() != 202 {
+		t.Fatal("successful revocation did not retire")
+	}
+	got, _ = s.Store.Get(j.ID)
+	if !got.Retired {
+		t.Fatal("retirement not saved")
+	}
+}
+
+func TestSMTPFinalCheckCanResumeWhenSMTPWasEnabledMidProvisioning(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("no external call is needed to resume SMTP setup")
+		return 500, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "final_check"}
+	if err := p.Step(context.Background(), &j, &Credentials{}); err != nil || j.State != "smtp_key" {
+		t.Fatal("final check did not resume SMTP setup", err)
+	}
+}
+
+func TestSMTPDomainMismatchStopsBeforeKeyCreation(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("mismatched domain must not create or list keys")
+		return 500, nil
+	})
+	p.Client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		if r.URL.Path != "/domains/domain-id" {
+			t.Fatal("unexpected request")
+		}
+		w := httptest.NewRecorder()
+		json.NewEncoder(w).Encode(map[string]string{"name": "wrong.example", "status": "verified"})
+		return w.Result(), nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
+	if err := p.Step(context.Background(), &j, &Credentials{}); err == nil || j.State != "smtp_key" {
+		t.Fatal("domain mismatch accepted")
+	}
+}
+
+func TestSMTPKeyPaginationExceedsTwentyPages(t *testing.T) {
+	pages := 0
+	p := smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "GET" {
+			pages++
+			return 200, map[string]any{"data": []map[string]string{{"id": fmt.Sprint(pages), "name": "other"}}, "has_more": pages < 22}
+		}
+		if r.Method == "POST" {
+			return 200, map[string]string{"id": "new-key", "token": "re_customer"}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
+	for attempt := 0; attempt < 5; attempt++ {
+		before := pages
+		err := p.Step(context.Background(), &j, &Credentials{})
+		if pages-before > smtpKeyPagesPerAttempt {
+			t.Fatal("unbounded inventory request")
+		}
+		if attempt < 4 && !errors.Is(err, errNotReady) {
+			t.Fatal("scan did not checkpoint", err)
+		}
+		if attempt == 4 && (err != nil || pages != 22 || j.State != "smtp_settings") {
+			t.Fatal("pagination stopped early", err)
+		}
+		// Round-trip the encrypted job payload representation between attempts.
+		data, _ := json.Marshal(j)
+		if err := json.Unmarshal(data, &j); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestAttentionRetirementRevokesSavedSMTPKey(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.Error = "smtp_settings"
+	j.SMTPKeyID = "customer-key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	revoked := false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method != "DELETE" {
+			t.Fatal("unexpected request")
+		}
+		revoked = true
+		return 204, nil
+	})
+	r := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+	r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, r)
+	if w.Code != 202 || !revoked {
+		t.Fatal("attention credential could not be retired", w.Code)
+	}
+	r = httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retry", nil)
+	r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w = httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, r)
+	if w.Code != 409 {
+		t.Fatal("retired job accepted a retry", w.Code)
+	}
+	saved, err := s.Store.Get(j.ID)
+	if err != nil || !saved.Retired || saved.State != "attention" || saved.Error != "smtp_settings" {
+		t.Fatal("retry changed retired job", err)
+	}
+}
+
+func TestSMTPWorkerPersistsKeyCheckpointAcrossStoreReopen(t *testing.T) {
+	s, _, _ := fixture(t)
+	s.Store.Close()
+	filename := filepath.Join(t.TempDir(), "checkpoint.sqlite")
+	key := bytes.Repeat([]byte{42}, 32)
+	var err error
+	s.Store, err = OpenStore(filename, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { s.Store.Close() })
+	j := enqueue(t, s)
+	j.State = "smtp_key"
+	j.Slug = "smtp-customer"
+	raw, _ := json.Marshal(Credentials{AdminPassword: "admin-secret"})
+	j.Secrets, err = s.Store.seal(j.ID+":credentials", string(raw))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	sawPassword := false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, b map[string]any) (int, any) {
+		switch {
+		case r.URL.Host == "api.resend.com" && r.Method == "GET":
+			return 200, map[string]any{"data": []any{}, "has_more": false}
+		case r.URL.Host == "api.resend.com" && r.Method == "POST":
+			return 200, map[string]string{"id": "saved-key", "token": "re_customer-only"}
+		case strings.HasSuffix(r.URL.Path, "auth-with-password"):
+			return 200, map[string]string{"token": "customer-session"}
+		case r.URL.Path == "/api/settings/test/email":
+			return 204, nil
+		case r.Method == "PATCH":
+			sawPassword = b["smtp"].(map[string]any)["password"] == "re_customer-only"
+			return 200, nil
+		case r.URL.Path == "/api/settings":
+			return 200, map[string]any{"meta": map[string]any{"senderAddress": "hello@email.primo.build", "appURL": "https://smtp-customer.primo.page"}, "smtp": map[string]any{"enabled": true, "tls": true, "host": "smtp.resend.com", "port": 465, "username": "resend", "authMethod": "PLAIN"}}
+		}
+		t.Fatal("unexpected request")
+		return 500, nil
+	})
+	if err = s.Tick(context.Background(), "test-worker"); err != nil {
+		t.Fatal(err)
+	}
+	first, _ := s.Store.Get(j.ID)
+	if first.State != "smtp_settings" {
+		t.Fatal("key checkpoint not saved", first.State)
+	}
+	s.Store.Close()
+	s.Store, err = OpenStore(filename, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Tick(context.Background(), "test-worker"); err != nil {
+		t.Fatal(err)
+	}
+	next, _ := s.Store.Get(j.ID)
+	if !sawPassword || next.State != "cleanup" {
+		t.Fatal("SMTP password lost across checkpoint", next.State)
+	}
+}
+
+func TestRetirementReconcilesSMTPKeyWithLostCreateResponse(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.Error = "smtp_key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	listed, revoked := false, false
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "GET" {
+			listed = true
+			return 200, map[string]any{"data": []map[string]string{{"id": "unrelated", "name": "another-job"}, {"id": "lost-key", "name": "primo-hosted-" + j.ID}}, "has_more": false}
+		}
+		if r.Method == "DELETE" && r.URL.Path == "/api-keys/lost-key" {
+			revoked = true
+			return 204, nil
+		}
+		t.Fatal("unexpected retirement request", r.Method, r.URL.Path)
+		return 500, nil
+	})
+	req := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+	req.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	saved, err := s.Store.Get(j.ID)
+	if w.Code != 202 || !listed || !revoked || err != nil || !saved.Retired {
+		t.Fatal("orphan key not revoked before retirement", w.Code, err)
+	}
+}
+func TestRetiredInvitationCannotBeResentOrClaimed(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	token := claimToken(t, s, j)
+	j.State = "attention"
+	j.Error = "invite"
+	j.Retired = true
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/resend", nil)
+	req.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+	w := httptest.NewRecorder()
+	s.Handler().ServeHTTP(w, req)
+	saved, _ := s.Store.Get(j.ID)
+	if w.Code != 409 || saved.ClaimHash != j.ClaimHash || saved.State != j.State {
+		t.Fatal("retired invitation renewed", w.Code)
+	}
+	// Previously generated tokens must stay unusable even on stale invite state.
+	saved.State = "invite"
+	if err := s.Store.Save(saved); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.findClaim(token); err == nil {
+		t.Fatal("retired claim lookup accepted token")
+	}
+	if _, err := s.Store.Claim(token, "retired-server", "valid-password-123", "session", s.now()); err == nil {
+		t.Fatal("retired claim transaction accepted token")
+	}
+}
+
+func TestSMTPRetirementScanCheckpointsBeforeRetiring(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.Error = "smtp_key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	pages, deletes := 0, 0
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "DELETE" {
+			deletes++
+			if r.URL.Path != "/api-keys/owned" {
+				t.Fatal("foreign key deletion")
+			}
+			return 204, nil
+		}
+		if r.Method != "GET" {
+			t.Fatal("unexpected request")
+		}
+		pages++
+		expected := ""
+		if pages > 1 {
+			expected = fmt.Sprint(pages - 1)
+		}
+		if r.URL.Query().Get("after") != expected {
+			t.Fatalf("scan restarted: %s", r.URL.String())
+		}
+		keys := []map[string]string{{"id": fmt.Sprint(pages), "name": "unrelated"}}
+		if pages == 1 {
+			keys = append([]map[string]string{{"id": "owned", "name": "primo-hosted-" + j.ID}}, keys...)
+		}
+		return 200, map[string]any{"data": keys, "has_more": pages <= smtpKeyPagesPerAttempt}
+	})
+	retire := func() int {
+		r := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+		r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+		w := httptest.NewRecorder()
+		s.Handler().ServeHTTP(w, r)
+		return w.Code
+	}
+	if status := retire(); status != 503 {
+		t.Fatal("incomplete scan retired job", status)
+	}
+	saved, err := s.Store.Get(j.ID)
+	if err != nil || saved.Retired || saved.SMTPKeyScan.After != fmt.Sprint(smtpKeyPagesPerAttempt) || len(saved.SMTPKeyScan.IDs) != 1 || deletes != 0 {
+		t.Fatal("scan not safely checkpointed", err)
+	}
+	if status := retire(); status != 202 || deletes != 1 {
+		t.Fatal("resumed retirement failed", status, deletes)
+	}
+	saved, err = s.Store.Get(j.ID)
+	if err != nil || !saved.Retired {
+		t.Fatal("retirement not persisted", err)
+	}
+}
+
+func TestSMTPRetirementWithoutManagementCredential(t *testing.T) {
+	for _, phase := range []string{"smtp_key", "smtp_settings", "volume"} {
+		t.Run(phase, func(t *testing.T) {
+			p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) { t.Fatal("unexpected provider lookup"); return 500, nil })
+			p.Config.SMTPManagementToken = ""
+			j := Job{ID: "00112233445566778899aabb", State: "attention", Error: phase}
+			err := p.RevokeSMTPKey(context.Background(), &j)
+			if (err != nil) != (phase != "volume") {
+				t.Fatal("unsafe credential decision", err)
+			}
+		})
+	}
+}
+
+func TestSMTPRetirementBeforeSMTPDoesNotDependOnProvider(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("never reached SMTP; provider must not be contacted")
+		return 503, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "attention", Error: "machine"}
+	if err := p.RevokeSMTPKey(context.Background(), &j); err != nil {
+		t.Fatal(err)
+	}
+}

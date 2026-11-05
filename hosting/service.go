@@ -211,7 +211,7 @@ func (s *Service) findClaim(token string) (Job, error) {
 		return Job{}, err
 	}
 	for _, j := range jobs {
-		if (j.State == "invite" || j.State == "awaiting_claim") && j.ClaimHash == hashToken(token) && j.ClaimExpires > s.now().Unix() {
+		if !j.Retired && (j.State == "invite" || j.State == "awaiting_claim") && j.ClaimHash == hashToken(token) && j.ClaimExpires > s.now().Unix() {
 			if held, err := s.Store.Held(j.Subscription); err != nil {
 				return Job{}, err
 			} else if held {
@@ -444,9 +444,30 @@ func (s *Service) Handler() http.Handler {
 		s.workerMu.Lock()
 		defer s.workerMu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || j.State != "ready" {
-			http.Error(w, "only a ready job can be retired", 409)
+		if err != nil || (j.State != "ready" && j.State != "attention") {
+			http.Error(w, "only a ready or attention job can be retired", 409)
 			return
+		}
+		revoker, canRevoke := s.Provisioner.(interface {
+			RevokeSMTPKey(context.Context, *Job) error
+		})
+		if !canRevoke && j.mayHaveSMTPKey() {
+			http.Error(w, "SMTP key revocation unavailable", 503)
+			return
+		}
+		if canRevoke {
+			ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+			defer cancel()
+			if err := revoker.RevokeSMTPKey(ctx, &j); err != nil {
+				// Preserve inventory progress without retiring an unrevoked credential.
+				if s.Store.Save(j) != nil {
+					http.Error(w, "SMTP revocation checkpoint failed; retirement not saved", 503)
+					return
+				}
+				w.Header().Set("Retry-After", "10")
+				http.Error(w, "SMTP key revocation failed; retirement not saved", 503)
+				return
+			}
 		}
 		// Retirement is bookkeeping for an operator-removed app; it never stops
 		// Machines or deletes a customer's data, archives, DNS, or billing.
@@ -462,10 +483,12 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
+		s.workerMu.Lock()
+		defer s.workerMu.Unlock()
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || j.State != "attention" {
+		if err != nil || j.State != "attention" || j.Retired {
 			http.Error(w, "job is not awaiting retry", 409)
 			return
 		}
@@ -487,10 +510,12 @@ func (s *Service) Handler() http.Handler {
 			http.Error(w, "unauthorized", 401)
 			return
 		}
+		s.workerMu.Lock()
+		defer s.workerMu.Unlock()
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		j, err := s.Store.Get(r.PathValue("id"))
-		if err != nil || (j.State != "invite" && j.State != "awaiting_claim" && !(j.State == "attention" && j.Error == "invite")) {
+		if err != nil || j.Retired || (j.State != "invite" && j.State != "awaiting_claim" && !(j.State == "attention" && j.Error == "invite")) {
 			http.Error(w, "setup has already been claimed", 409)
 			return
 		}
@@ -627,6 +652,7 @@ func (s *Service) Tick(ctx context.Context, owner string) error {
 				// Clear the customer's password after verification and bootstrap-secret removal.
 				if j.State == "ready" || j.State == "ready_email" {
 					creds.Password = ""
+					creds.SMTPPassword = ""
 				}
 				var data []byte
 				data, err = json.Marshal(creds)
