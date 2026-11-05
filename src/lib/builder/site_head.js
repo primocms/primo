@@ -12,7 +12,8 @@ export function createSiteHeadPreview({compile,onResult,onError}) {
  return {
   /** @param {{html: string, data: object | undefined}} input */
   update(input) {
-   if (!input.data || isEqual(previous,input)) return task?.settled
+   if (!input.data) { task?.cancel(); previous=undefined; return task?.settled }
+   if (isEqual(previous,input)) return task?.settled
    previous=cloneDeep({html:input.html,data:input.data})
    task?.cancel()
    const current={html:input.html,data:input.data}

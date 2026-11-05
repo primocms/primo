@@ -86,13 +86,21 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		const nextActivity = activity
 			? UserActivities.update(activity.id, context.value)
 			: UserActivities.create(context.value)
-		await manager.commit()
+		try {
+			await manager.commit()
+		} catch (error) {
+			if (activity && (error as { status?: number })?.status === 404) {
+				manager.changes.delete(activity.id)
+				activity = null
+			}
+			throw error
+		}
 		// A canceled create has no confirmed cached record. Retry creation on the
 		// next heartbeat rather than trying to update a nonexistent activity.
 		activity = nextActivity
 	}
 
-	const stopTracking = async () => {
+	const stopTracking = async (options?: { hidden?: boolean }) => {
 		if (activity) {
 			const id = activity.id
 			activity = null
@@ -100,7 +108,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 			// there can outlive the JS document even with a caught promise.
 			// The server expires presence after inactivity; resume with a new
 			// record because the old one may already have expired.
-			if (document.hidden) return
+			if (options?.hidden) return
 			// There's only one activity per user
 			UserActivities.delete(id)
 			await manager.commit()
@@ -114,7 +122,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		({ visible }) => {
 			if (!visible) {
 				// Tab not visible
-				void tracker.stop()
+				void tracker.stop({ hidden: document.hidden })
 			} else {
 				// Start or resume tracking user activity
 				tracker.start()
@@ -131,7 +139,7 @@ export const setUserActivity = (overrides: Partial<UserActivityValues> | (() => 
 		}
 	)
 
-	onDestroy(() => { void tracker.dispose() })
+	onDestroy(() => { void tracker.dispose({ hidden: document.hidden }) })
 }
 
 export const getUserActivity = ({ filter }: { filter?: (activity: UserActivityInfo) => unknown } = {}): UserActivityInfo[][] => {

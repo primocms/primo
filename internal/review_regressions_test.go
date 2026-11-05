@@ -46,6 +46,36 @@ func TestReviewMovedPageRetainsOmittedDescendantRoutes(t *testing.T) {
 	}
 }
 
+func TestReviewIDLessMovedPageRetainsOmittedDescendantRoutes(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	if _, err := processImport(app, site, zipFiles(t, baseSiteFiles()), false); err != nil {
+		t.Fatal(err)
+	}
+	pages, err := app.FindAllRecords("pages")
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := pages[0]
+	create := func(name, slug, parent string) *core.Record {
+		return permissionRecord(t, app, "pages", map[string]any{"site": site.Id, "page_type": home.GetString("page_type"), "name": name, "slug": slug, "parent": parent, "index": 1})
+	}
+	docs := create("Docs", "docs", home.Id)
+	faq := create("FAQ", "faq", docs.Id)
+	files := map[string]string{"pages/guides.yaml": "name: Docs\npage_type: default\n", "pages/guides/faq/details.yaml": "name: Details\npage_type: default\n"}
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	paths, err := buildPagePathMap(app, site.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if paths["guides/faq"] != faq.Id || paths["guides/faq/details"] == "" || paths["docs/faq"] != "" {
+		t.Fatal("descendant route identities lost", paths)
+	}
+}
+
 func TestReviewSitemapMoveKeepsPathsAndUsesNewHTTPSHost(t *testing.T) {
 	data, err := rewriteSitemapHost([]byte(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://old.test/a%20b/?x=1&amp;y=2</loc></url></urlset>`), "new.test")
 	if err != nil {
@@ -256,5 +286,76 @@ func TestReviewConcurrentSnapshotsRejectBeforeReadingBody(t *testing.T) {
 	pushHTTP(t, handler, req, http.StatusTooManyRequests)
 	if body.reads != 0 {
 		t.Fatal("concurrent snapshot body was parsed")
+	}
+}
+
+func TestUnchangedPageConvertsLegacyNestedEntries(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	files := baseSiteFiles()
+	files["page-types/default/fields.yaml"] = "- name: cards\n  type: repeater\n  subfields:\n    - name: title\n      type: text\n"
+	files["pages/index.yaml"] = "name: Home\npage_type: default\ncontent:\n  cards:\n    - title: Legacy content\n"
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := app.FindAllRecords("page_entries")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var root *core.Record
+	for _, entry := range entries {
+		if entry.GetString("parent") == "" {
+			root = entry
+		} else if err := app.Delete(entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if root == nil {
+		t.Fatal("missing repeater item")
+	}
+	root.Set("value", []map[string]interface{}{{"title": "Legacy content"}})
+	if err := app.Save(root); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := processImport(app, site, zipFiles(t, files), false); err != nil {
+		t.Fatal(err)
+	}
+	entries, err = app.FindAllRecords("page_entries")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, entry := range entries {
+		if entry.GetString("parent") != "" && normalizeValue(entry.Get("value")) == "Legacy content" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("unchanged source retained opaque legacy values")
+	}
+}
+
+func TestUnchangedPageKeepsNestedContentWarnings(t *testing.T) {
+	app := newImportTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	files := baseSiteFiles()
+	files["blocks/hero/fields.yaml"] = "- name: details\n  type: group\n  subfields:\n    - name: title\n      type: text\n"
+	files["pages/index.yaml"] = "name: Home\npage_type: default\nsections:\n  - block: hero\n    content:\n      details:\n        title: Kept\n        undeclared: Report every time\n"
+	for pass := 0; pass < 2; pass++ {
+		result, err := processImport(app, site, zipFiles(t, files), false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := false
+		for _, warning := range result.Warnings {
+			if warning.Kind == "orphaned_field" && warning.Path == "sections[0].content.details.undeclared" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("pass %d lost nested warning: %+v", pass, result.Warnings)
+		}
 	}
 }

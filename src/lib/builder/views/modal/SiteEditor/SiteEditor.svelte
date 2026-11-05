@@ -24,13 +24,17 @@
 	const { value: site } = site_context.get()
 	const fields = $derived(site?.fields() ?? [])
 	const entries = $derived(site?.entries() ?? [])
-	const site_data = $derived(useContent(site, { target: 'cms' })?.[$locale] ?? {})
+	const resolved_site_data = $derived(useContent(site, { target: 'cms' }))
+	const site_data = $derived(resolved_site_data?.[$locale] ?? {})
 
 	hide_dynamic_field_types_context.set(true)
 
-	const initial_code = { head: site?.head, foot: site?.foot }
+	const initial_code = { head: site?.head || '', foot: site?.foot || '' }
 	// Dirty comparison must retain the data from when this editing session opened.
-	const initial_data = untrack(() => _.cloneDeep(site_data))
+	let initial_data = $state.raw<Record<string, unknown> | undefined>(untrack(() => resolved_site_data ? _.cloneDeep(site_data) : undefined))
+	$effect(() => {
+		if (initial_data === undefined && resolved_site_data !== undefined) initial_data = _.cloneDeep(site_data)
+	})
 
 	let head = $state(site?.head || '')
 	let foot = $state(site?.foot || '')
@@ -48,7 +52,7 @@
 	// Compare current state to initial data
 	$effect(() => {
 		const code_changed = head !== initial_code.head || foot !== initial_code.foot
-		const data_changed = !_.isEqual(initial_data, site_data)
+		const data_changed = initial_data !== undefined && !_.isEqual(initial_data, site_data)
 		has_unsaved_changes = code_changed || data_changed
 	})
 

@@ -126,6 +126,7 @@ export async function safariEditor(c,actor,env=process.env,{loadOnly=false}={}){
   if(session)try{await cmd('DELETE',session);report.sessionClosed=true}catch{report.status='FAIL';report.sessionClosed=false}
  }
  report.requiresLocalCliCleanupPublication=published
+ if(published){report.status='FAIL';report.cleanupFailure='Draft restored, but public output still requires a cleanup publication'}
  return report
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){

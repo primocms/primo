@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDomainAttachPreservesPublication(t *testing.T) {
@@ -128,5 +129,72 @@ func TestFailedLegacyDomainMoveRemovesNewHostCopies(t *testing.T) {
 				t.Fatal("failed move changed host", err)
 			}
 		})
+	}
+}
+
+func TestConcurrentDomainAttachmentsPreserveWinningContent(t *testing.T) {
+	t.Setenv("PRIMO_DOMAIN_PROVIDER", "manual")
+	t.Setenv("PRIMO_BASE_DOMAIN", "")
+	app := newPushTestApp(t)
+	defer app.ResetBootstrapState()
+	first, _, _ := pushFixture(t, app)
+	first.Set("host", "first.localhost")
+	first.Set("name", "First site")
+	if err := app.Save(first); err != nil {
+		t.Fatal(err)
+	}
+	second, _, _ := pushFixture(t, app)
+	for _, item := range []struct {
+		site *core.Record
+		html string
+	}{{first, "<h1>First owner</h1>"}, {second, "<h1>Second owner</h1>"}} {
+		compiledHome(t, app, item.site, item.html)
+		if err := GenerateSite(app, item.site); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := RegisterDomainEndpoints(app); err != nil {
+		t.Fatal(err)
+	}
+	handler, token := publicationHTTP(t, app)
+	entered, release := make(chan struct{}), make(chan struct{})
+	app.OnRecordUpdate("sites").BindFunc(func(e *core.RecordEvent) error {
+		if e.Record.Id == first.Id && e.Record.GetString("host") == "shared.example.com" {
+			close(entered)
+			<-release
+		}
+		return e.Next()
+	})
+	request := func(site *core.Record, result chan<- int) {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, publicationRequest("POST", "/api/primo/sites/"+site.Id+"/domain", token, `{"host":"shared.example.com"}`))
+		result <- response.Code
+	}
+	one, two := make(chan int, 1), make(chan int, 1)
+	go request(first, one)
+	select {
+	case <-entered:
+	case <-time.After(5 * time.Second):
+		t.Fatal("first attach did not reach save")
+	}
+	go request(second, two)
+	select {
+	case status := <-two:
+		close(release)
+		<-one
+		t.Fatalf("second attach escaped ownership serialization: %d", status)
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	if status := <-one; status != 200 {
+		t.Fatalf("winning attach: %d", status)
+	}
+	if status := <-two; status != 400 {
+		t.Fatalf("competing attach: %d", status)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "https://shared.example.com/", nil))
+	if !strings.Contains(response.Body.String(), "First owner") || strings.Contains(response.Body.String(), "Second owner") {
+		t.Fatal("winner's content overwritten", response.Body.String())
 	}
 }

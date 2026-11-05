@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
@@ -42,9 +43,15 @@ func validHostLength(host string) bool {
 // heavy platform work is delegated to the configured DomainProvider; these
 // handlers own auth, validation, and persisting status onto the site record.
 func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
+	// Domain changes are infrequent administrative operations. Serialize these
+	// routes so ownership checks, file copies/cleanup and record saves form one
+	// operation, including status refreshes that could otherwise save stale hosts.
+	var domainMu sync.Mutex
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Attach (or change) a custom domain for a site.
 		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -62,7 +69,11 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			}
 
 			// Uniqueness: no other site may already own this host.
-			if existing, _ := pb.FindFirstRecordByData("sites", "host", host); existing != nil && existing.Id != site.Id {
+			existing, err := pb.FindFirstRecordByData("sites", "host", host)
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return e.InternalServerError("Failed to check domain ownership", err)
+			}
+			if existing != nil && existing.Id != site.Id {
 				return e.BadRequestError("That domain is already in use by another site.", nil)
 			}
 
@@ -106,6 +117,8 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 		// Railway domain's liveness is driven by the real cert status, so faking
 		// it there would lie about whether the cert actually issued.
 		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain/mark-live", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -127,6 +140,8 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 
 		// Re-check the status of a site's attached custom domain.
 		serveEvent.Router.GET("/api/primo/sites/{siteId}/domain/status", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -303,12 +318,12 @@ const domainErrorMax = 500
 // trips the empty-id guard and the domain is stuck forever. So we only advance
 // the provider id when the new result actually carries one.
 func applyDomainResult(pb *pocketbase.PocketBase, site *core.Record, host string, result DomainResult) error {
+	oldHost := site.GetString("host")
 	site.Set("host", host)
 	site.Set("domain_status", result.Status)
-	// Never overwrite a known provider id with an empty one — an empty id in a
-	// result means "couldn't resolve the domain this poll", not "the domain lost
-	// its id". Keep the last good id so polling can recover.
-	if result.ProviderID != "" {
+	// Preserve an unresolved provider id during a poll of the same host, but
+	// never carry the previous host's provider identity to a new attachment.
+	if result.ProviderID != "" || host != oldHost {
 		site.Set("domain_provider_id", result.ProviderID)
 	}
 

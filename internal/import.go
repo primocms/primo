@@ -2208,6 +2208,19 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		existing = nil
 	}
 
+	legacyPageContent := false
+	if existing != nil {
+		entries, err := app.FindRecordsByFilter("page_entries", "page = {:page}", "", 0, 0, dbx.Params{"page": existing.Id})
+		if err != nil {
+			return "", nil, err
+		}
+		fields, err := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": existing.GetString("page_type")})
+		if err != nil {
+			return "", nil, err
+		}
+		legacyPageContent = hasLegacyNestedContent(entries, fields)
+	}
+
 	// No-op guard: if the incoming page bytes are byte-identical to what we
 	// stored on the last import AND the page's file-derived location is
 	// unchanged (same parent + slug), the page is untouched since the dev's
@@ -2222,10 +2235,13 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	// identical bytes would skip and keep its stale parent/slug (and miss
 	// Pages.Modified in --preview). Mirrors the uploads sha256 skip. We return
 	// the existing page id + section ids so children still resolve.
-	if existing != nil && len(raw) > 0 && rawSourceUnchanged(raw, existing) &&
+	if existing != nil && !legacyPageContent && len(raw) > 0 && rawSourceUnchanged(raw, existing) &&
 		existing.GetString("parent") == parentId && existing.GetString("slug") == slug {
 		sectionIds, err := existingPageSectionIds(app, existing.Id)
 		if err != nil {
+			return "", nil, err
+		}
+		if err := warnUnchangedPageSections(app, site.Id, pageData, pagePath, folderToDisplayName, warnings); err != nil {
 			return "", nil, err
 		}
 		return existing.Id, sectionIds, nil
@@ -2523,6 +2539,11 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 					return "", nil, err
 				}
 				if unchanged {
+					for key, value := range content {
+						if field := fieldByKey[key]; field != nil {
+							warnNestedSectionContent(field, value, fieldsByParent, warnings, sourceFile, blockName, fmt.Sprintf("sections[%d].content.%s", i, key))
+						}
+					}
 					continue
 				}
 
@@ -4066,4 +4087,105 @@ func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[s
 		}
 	}
 	return changed
+}
+
+// Detect opaque legacy values that must become real nested editor entries even
+// when the incoming source bytes have not changed.
+func hasLegacyNestedContent(entries, fields []*core.Record) bool {
+	byID := map[string]*core.Record{}
+	children := map[string]bool{}
+	entryChildren := map[string]bool{}
+	for _, field := range fields {
+		byID[field.Id] = field
+		children[field.GetString("parent")] = true
+	}
+	for _, entry := range entries {
+		entryChildren[entry.GetString("parent")] = true
+	}
+	for _, entry := range entries {
+		field := byID[entry.GetString("field")]
+		if field == nil || entryChildren[entry.Id] {
+			continue
+		}
+		if field.GetString("type") == "group" && children[field.Id] {
+			return true
+		}
+		if field.GetString("type") == "repeater" {
+			if _, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Warning-only traversal preserves diagnostics without replacing unchanged rows.
+func warnNestedSectionContent(field *core.Record, value interface{}, children map[string][]*core.Record, warnings *[]ImportWarning, file, block, prefix string) {
+	if warnings == nil {
+		return
+	}
+	visit := func(values map[string]interface{}, path string) {
+		if len(values) > 0 && len(children[field.Id]) == 0 {
+			*warnings = append(*warnings, ImportWarning{Kind: "missing_subfields", File: file, Path: path, Field: field.GetString("key"), Block: block, Message: fmt.Sprintf("%s: %q in block %q has content but no declared subfields; fix blocks/%s/fields.yaml", file, path, block, sanitizeFilename(block))})
+		} else {
+			before := len(*warnings)
+			warnUnknownPageContent(values, children[field.Id], warnings, file, path)
+			for i := before; i < len(*warnings); i++ {
+				(*warnings)[i].Block = block
+			}
+		}
+		for _, child := range children[field.Id] {
+			key := child.GetString("key")
+			warnNestedSectionContent(child, values[key], children, warnings, file, block, path+"."+key)
+		}
+	}
+	switch field.GetString("type") {
+	case "group":
+		if values, ok := value.(map[string]interface{}); ok {
+			visit(values, prefix)
+		}
+	case "repeater":
+		if items, ok := value.([]interface{}); ok {
+			for i, item := range items {
+				if values, ok := item.(map[string]interface{}); ok {
+					visit(values, fmt.Sprintf("%s[%d]", prefix, i))
+				}
+			}
+		}
+	}
+}
+
+func warnUnchangedPageSections(app core.App, siteID string, page ExportedPage, route string, folders map[string]string, warnings *[]ImportWarning) error {
+	if warnings == nil || len(page.Sections) == 0 {
+		return nil
+	}
+	symbols, err := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": siteID})
+	if err != nil {
+		return err
+	}
+	lookup := importSymbolLookup(symbols, folders)
+	if route == "" {
+		route = "index"
+	}
+	file := "pages/" + route + ".yaml"
+	for index, section := range page.Sections {
+		block := getString(section, "block")
+		id := lookup[block]
+		if id == "" {
+			id = lookup[strings.ToLower(block)]
+		}
+		fields, err := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": id})
+		if err != nil {
+			return err
+		}
+		roots, children := contentFieldScopes(fields)
+		if content, ok := section["content"].(map[string]interface{}); ok {
+			for key, value := range content {
+				if field := roots[key]; field != nil {
+					warnNestedSectionContent(field, value, children, warnings, file, block, fmt.Sprintf("sections[%d].content.%s", index, key))
+				}
+			}
+		}
+	}
+	return nil
 }

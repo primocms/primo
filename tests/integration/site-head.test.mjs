@@ -29,3 +29,13 @@ test('newer head data wins over stale completion, and resume can retry the same 
  f.head.cancel();await f.head.update({html:'Head',data:{title:'New'}});assert.equal(calls,3)
  assert.deepEqual(f.results,['Current head','Current head']);assert.deepEqual(f.errors,[])
 })
+
+test('unresolved replacement data cancels the previous head and allows an identical retry',async()=>{
+ const old=deferred();let calls=0
+ const f=fixture(()=>++calls===1?old.promise:Promise.resolve('Current'))
+ const pending=f.head.update({html:'Head',data:{title:'Same'}})
+ f.head.update({html:'Head',data:undefined})
+ old.resolve('Stale');await pending;assert.deepEqual(f.results,[])
+ await f.head.update({html:'Head',data:{title:'Same'}})
+ assert.equal(calls,2);assert.deepEqual(f.results,['Current'])
+})

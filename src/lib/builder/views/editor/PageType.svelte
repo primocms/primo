@@ -55,6 +55,10 @@
 	// Head editor resize state
 	const storage_key = $derived(`head-editor-height-${page_type.id}`)
 	let head_editor_height = $state(untrack(() => typeof localStorage !== 'undefined' ? parseInt(localStorage.getItem(storage_key) || '50') : 50))
+	$effect(() => {
+		const saved = typeof localStorage !== 'undefined' ? Number.parseInt(localStorage.getItem(storage_key) || '50') : 50
+		head_editor_height = Number.isFinite(saved) ? Math.max(0, saved) : 50
+	})
 	let is_resizing = $state(false)
 	let resize_start_y = $state(0)
 	let resize_start_height = $state(0)

@@ -23,7 +23,8 @@ async function subscriptionProbe(spoofed=false) {
  }finally{controller.abort();await reader?.cancel().catch(()=>{})}
 }
 report.before=await subscriptionProbe()
-if(report.before.status!==204) {
+invariant([204,400].includes(report.before.status),'Unexpected realtime failure; proxy settings preserved')
+if(report.before.status===400) {
  await c.ok('/api/settings',{method:'PATCH',token:admin.token,body:{trustedProxy:{headers:['X-Real-IP'],useLeftmostIP:false}}})
  report.configurationChange='Only the dedicated Railway test service trusts Railway-managed X-Real-IP; it has no direct public TCP endpoint. Production and other projects untouched.'
 }

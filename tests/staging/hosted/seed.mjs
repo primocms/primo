@@ -17,6 +17,7 @@ const mcp=await mcpSession(c),yaml=c.requireCLI('js-yaml')
 const groups=await c.ok('/api/collections/site_groups/records?filter='+encodeURIComponent('name="RC.7 disposable agencies"'),{token:builder.token})
 const group=groups.items[0] ?? await c.create('site_groups',{name:'RC.7 disposable agencies',index:0},builder.token)
 const actors=await fs.readFile(path.join(run,'private/actors.json'),'utf8').then(JSON.parse,()=>[])
+const progress=await fs.readFile(path.join(run,'private/seed-progress.json'),'utf8').then(JSON.parse,()=>({}))
 const existing=(await c.ok('/api/collections/sites/records?perPage=200',{token:admin.token})).items
 invariant(existing.every(s=>/^PRIMO QA agency-(0[1-9]|10)$/.test(s.name) && s.group===group.id),'Unexpected records in the disposable seed project')
 const fixtures=path.resolve(import.meta.dirname,'../launch/fixtures')
@@ -45,8 +46,11 @@ try {
   const block=await mcp.call('validate_block',{site_path:local,name:'qa-probe'}),page=await mcp.call('validate_page',{site_path:local,page_path:'pages/index.yaml'})
   invariant(block.ok && page.ok,'Packaged MCP rejected the complete fixture')
   const empty=await c.ok('/api/collections/pages/records?filter='+encodeURIComponent('site="'+site.id+'"'),{token:admin.token})
-  invariant(empty.totalItems===0,'Initial seed overwrite is allowed only for an empty synthetic site')
+  invariant(empty.totalItems===0 || progress[name]===site.id,'Initial seed overwrite is allowed only for an empty synthetic site owned by this run')
+  if(empty.totalItems===0){
+  progress[name]=site.id;await c.save('seed-progress.json',progress,true)
   await c.command(['push','--dir',local,'--server',state.cmsOrigin,'--token',builder.token,'--force','--yes','--json'])
+  }
   await c.command(['publish','--server',state.cmsOrigin,'--site',site.id,'--token',builder.token,'--json'])
   const pages=(await c.ok('/api/collections/pages/records?perPage=200&filter='+encodeURIComponent('site="'+site.id+'"'),{token:admin.token})).items
   const home=pages.find(p=>!p.slug);invariant(home,'Imported fixture has no home page')
