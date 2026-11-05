@@ -82,6 +82,17 @@ func validateImportPageReferences(app core.App, site *core.Record, files map[str
 	for _, item := range incoming {
 		if item.page.ID != "" {
 			moves[item.page.ID] = item.path
+		} else {
+			var existing *core.Record
+			if item.page.Slug != "" {
+				existing, _ = app.FindFirstRecordByFilter("pages", "site = {:site} && slug = {:slug}", dbx.Params{"site": site.Id, "slug": item.page.Slug})
+			}
+			if existing == nil {
+				existing, _ = app.FindFirstRecordByFilter("pages", "site = {:site} && name = {:name}", dbx.Params{"site": site.Id, "name": item.page.Name})
+			}
+			if existing != nil {
+				moves[existing.Id] = item.path
+			}
 		}
 	}
 	paths = remapImportedPagePaths(paths, moves)

@@ -83,12 +83,16 @@
 
 	let selected = $state<'page' | 'url'>('page')
 	const entry_id = $derived(passedEntry?.id)
+	let previous_entry_id: string | undefined
 	// Opening an optional link must not create a destination. Keep the
 	// chosen input mode while the user clears or replaces a URL.
 	watch(
-		() => entry_id,
+		() => [entry_id, passedEntry?.value?.page, passedEntry?.value?.url],
 		() => {
-			selected = passedEntry?.value?.page ? 'page' : passedEntry?.value?.url ? 'url' : 'page'
+			if (previous_entry_id !== entry_id || passedEntry?.value?.page || passedEntry?.value?.url) {
+				selected = passedEntry?.value?.page ? 'page' : passedEntry?.value?.url ? 'url' : 'page'
+			}
+			previous_entry_id = entry_id
 		},
 		{ lazy: false }
 	)

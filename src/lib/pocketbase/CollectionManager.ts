@@ -95,8 +95,8 @@ export const createCollectionManager = (
 		}
 		// Preserve failed drafts without starving unrelated edits queued after them.
 		// Orders wait until their create/update dependencies have all succeeded.
-		if (failed) throw first_error
 		await entry_reordering.commit(instance, records, changes, on_committed)
+		if (failed) throw first_error
 		// Finish moves queued while an order request was in flight, including
 		// creating/deleting their dependencies, before reporting Save complete.
 		if (entry_reordering.pending.size > 0) await commitChanges()

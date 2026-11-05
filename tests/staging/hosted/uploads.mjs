@@ -36,7 +36,7 @@ try{
   await c.ok('/api/collections/site_uploads/records/'+upload.id,{method:'DELETE',token:auth.token});await publish()
   for(const name of names)invariant((await publicBytes(name)).status===404,'Deleted owned image still publicly served')
   report.cleanupVerified=true
- }else report.cleanupVerified=true
+ }else {report.cleanupVerified=false;report.cleanupUnknown='No confirmed upload ID; upload outcome and cleanup remain unverified'}
  }catch(error){report.cleanupFailure=c.redact(error.stack);process.exitCode=1}
  if(!report.failure && report.cleanupVerified)report.status='PASS_HOSTED_CLIENT_IMAGE_REPUBLICATION'
  await c.save('hosted-uploads.json',report);console.log(JSON.stringify({status:report.status,cleanupVerified:report.cleanupVerified}))

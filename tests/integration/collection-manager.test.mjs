@@ -82,3 +82,19 @@ test('retrying a partial content batch preserves acknowledged changes and saves 
  }
  assert.deepEqual(saved,['first','second'])
  })
+
+test('unrelated failed drafts do not block orders while dependent orders remain pending',async()=>{
+ const calls=[]
+ const manager=createCollectionManager({
+  collection:()=>({update:async()=>{throw new Error('failed draft')}}),
+  send:async(_path,{body})=>{calls.push(body.field);return {items:body.ids.map((id,index)=>({id,index}))}}
+ })
+ manager.changes.set('broken',{collection:'page_section_entries',operation:'update',committed:false,data:{field:'dependent',parent:'',locale:'en',section:'section'}})
+ for(const [field,ids] of [['independent',['a','b']],['dependent',['broken','c']]]){
+  manager.entry_reordering.stage({collection:'page_section_entries',owner:'section',ownerKey:'section',field,parent:'',locale:'en'},ids,Object.fromEntries(ids.map((id,i)=>[id,i])))
+ }
+ await assert.rejects(manager.commit(),/failed draft/)
+ assert.deepEqual(calls,['independent'])
+ assert.equal(manager.entry_reordering.pending.size,1)
+ assert.equal([...manager.entry_reordering.pending.values()][0].field,'dependent')
+})

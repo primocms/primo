@@ -1,7 +1,7 @@
 /**
  * Collaborator presence is best effort and uses its own collection manager.
  * Navigation can abort its requests; content-save failures must still propagate.
- * @param {{ update: () => Promise<void>, remove: () => Promise<void>, reportError?: (error: unknown) => void, setTimer?: typeof setTimeout, clearTimer?: typeof clearTimeout }} options
+ * @param {{ update: () => Promise<void>, remove: (options?: { hidden?: boolean }) => Promise<void>, reportError?: (error: unknown) => void, setTimer?: typeof setTimeout, clearTimer?: typeof clearTimeout }} options
  */
 export function createPresenceScheduler({ update, remove, reportError = (error) => console.warn('Could not update collaborator presence', error), setTimer = setTimeout, clearTimer = clearTimeout }) {
 	/** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -34,11 +34,12 @@ export function createPresenceScheduler({ update, remove, reportError = (error) 
 		// A pending response must not restart tracking after hide or destruction.
 		if (running && !disposed && current === generation) timer = setTimer(tick, 5000)
 	}
-	const stop = () => {
+	/** @param {{ hidden?: boolean }} [options] */
+	const stop = (options) => {
 		running = false
 		generation++
 		clear()
-		return safely(remove)
+		return safely(() => remove(options))
 	}
 	return {
 		start() {
@@ -53,9 +54,10 @@ export function createPresenceScheduler({ update, remove, reportError = (error) 
 			void tick()
 		},
 		stop,
-		dispose() {
+		/** @param {{ hidden?: boolean }} [options] */
+		dispose(options) {
 			disposed = true
-			return stop()
+			return stop(options)
 		}
 	}
 }

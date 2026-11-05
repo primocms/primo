@@ -75,3 +75,13 @@ test('hide cleanup follows a failed update and rapid resume still schedules a he
 	await f.fire(); assert.deepEqual(calls,['update','remove','update']); assert.deepEqual(f.errors,[])
 	await f.scheduler.dispose()
 })
+
+test('queued presence cleanup preserves the visibility decision made at stop time',async()=>{
+ let complete;const decisions=[]
+ const f=fixture({update:()=>new Promise(resolve=>{complete=resolve}),remove:async options=>{decisions.push(options.hidden)}})
+ f.scheduler.start();const update=f.fire();await new Promise(resolve=>setImmediate(resolve))
+ const stopped=f.scheduler.stop({hidden:true});f.scheduler.start()
+ complete();await update;await stopped
+ assert.deepEqual(decisions,[true])
+ await f.scheduler.dispose({hidden:false});assert.deepEqual(decisions,[true,false])
+})

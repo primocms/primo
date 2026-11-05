@@ -1,5 +1,5 @@
 """Read an owned synthetic native backup without extracting its storage tree."""
-import hashlib, json, sqlite3, sys, zipfile
+import hashlib, json, os, sqlite3, sys, zipfile
 from pathlib import Path
 archive=Path(sys.argv[1]).resolve()
 assert archive.parent.name=='private' and archive.name.startswith('rc7-owned-'), 'Only this run\'s private synthetic backup is accepted'
@@ -21,10 +21,9 @@ connection=None
 try:
  with zipfile.ZipFile(archive) as source:
   name=next(n for n in source.namelist() if n=='data.db')
-  with database.open('xb') as destination:
+  with os.fdopen(os.open(database, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as destination:
    created=True
    destination.write(source.read(name))
-  database.chmod(0o600)
   connection=sqlite3.connect('file:'+str(database)+'?mode=ro&immutable=1',uri=True)
   result={'archiveSha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'tables':{},'fileHashes':{}}
   for table,keys in fields.items():

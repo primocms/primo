@@ -52,6 +52,11 @@ export function createEntryReordering({ pending, indices, errors }) {
 			for (const key of [...pending.keys()]) {
 				const order = pending.get(key)
 				if (!order) continue
+				// A failed draft blocks only orders that depend on that draft.
+				if ([...changes].some(([id, change]) => !change.committed && (
+					[order.owner, order.field, order.parent, ...order.ids].includes(id) ||
+					(change.collection === order.collection && inOrderScope(change.data ?? records.get(id)?.data ?? {}, order))
+				))) continue
 				try {
 					const result = await instance.send('/api/primo/repeater-order', { method: 'POST', body: order, requestKey: null })
 					for (const record of result.items) {
