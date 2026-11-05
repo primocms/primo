@@ -34,6 +34,7 @@ test('package preparation excludes stale ignored output without modifying source
  const f=await fixture(t)
  for(const dir of Object.values(f.sources)){await fs.mkdir(path.join(dir,'dist'));await fs.writeFile(path.join(dir,'dist/removed.js'),'stale generated code')}
  await f.prepare()
+ assert.deepEqual((await fs.readdir(f.output)).sort(),['manifest.json','primo-cli-0.3.0.tgz','primo-mcp-0.1.11.tgz'])
  const manifest=JSON.parse(await fs.readFile(path.join(f.output,'manifest.json'),'utf8'))
  for(const [kind,item] of Object.entries(manifest.packages)){
   const listing=await exec('tar',['-tzf',path.join(f.output,item.archive)])

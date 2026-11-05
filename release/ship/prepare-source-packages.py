@@ -21,12 +21,13 @@ out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=True)
 if any(out.iterdir()):
     raise SystemExit('Output directory must be empty; preserve prior archives and manifests separately')
+npm_cache = tempfile.TemporaryDirectory(prefix='primo-package-cache-')
 manifest = {'state': 'prepared-unpublished', 'publicationAuthorized': False,
             'registryHandoffVerified': False, 'versions': versions, 'packages': {}}
 
 def run(command, cwd):
     if command[0] == 'npm':
-        command += ['--cache', str(out / '.npm-cache')]
+        command += ['--cache', npm_cache.name]
     return subprocess.check_output(command, cwd=cwd, text=True)
 
 @contextmanager
@@ -95,4 +96,5 @@ for kind in ['mcp', 'cli']:
             'integrity': 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode(),
             'files': len(final_files) + 1}
 (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+npm_cache.cleanup()
 print(json.dumps(manifest, indent=2))

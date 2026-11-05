@@ -25,9 +25,11 @@ Stable tarball hashes and offline handoff evidence remain in final-packages/.
 Registry publication/integrity handoff, integration merges, tags, containers,
 release publication and production deployment remain held.
 
-The local stable fresh-machine gate now also passes: private Node installation,
-exact npm archives, actual MCP connectivity, scoped pull, managed and tagged
-CMS installation, port recovery, file/visual mode switching, preview/build and
-shutdown. All 29 release-preparation tool regressions pass. RC-only escaped
-version assertions were updated to the stable identity; their behavior checks
-and timeouts remain enforced.
+The previously recorded local stable fresh-machine gate is historical. It used
+earlier package/source identities and does not qualify the current archives.
+Current exact-package local results and hashes are recorded in
+`final-packages/qualification-local.json`; the final-head cross-platform
+fresh-machine, native and browser qualification gate remains pending until its
+new CI run completes. Published-registry installation remains a separate held
+gate. RC-only version assertions use the stable identity; behavior checks and
+timeouts remain enforced.
