@@ -10,15 +10,15 @@
     },
     "cli": {
       "archive": "primo-cli-0.3.0.tgz",
-      "sourceCommit": "c114ca7207eb667f1163e89c97f7fb581935a4eb",
+      "sourceCommit": "77ec9e389eecc72400e7465d5369d6cde2fa3552",
       "sha256": "1883cdc7cd799ba3bb7265da041e6ff5d8642152169a66a8cbe964edfbb6fc13",
       "integrity": "sha512-mn8csoPbi8Qogh6Fgj3qE6o7rHUVtt0aduYn/lb92gNe9hC771/G4ZT1dWHrzHOtMLOHTx9vZLLfPMiiKe6heA=="
     }
   },
   "cms": {
-    "baseSourceCommit": "b755a8133e2d17627dad35e3ff3bd6a4ac3aad57",
-    "sha256": "042353e47acdf3b26eabe9797f27eec56b713eba226f11c7174b0a75da38af99",
-    "preparedInputs": "Stable merge including CMS 202ed7ff; subsequent archive and qualification-record updates do not change this executable.",
+    "baseSourceCommit": "aad83df09c97e785a8d1dc7e275c49aaa7c6f632",
+    "sha256": "c054f7febf7aba84dcf6e7085110038c1555f335c40d9d8c1a1300ae107a86da",
+    "preparedInputs": "Stable integration including CMS e51e30d5 and the exact candidate package hashes. Subsequent qualification record changes do not alter the executable.",
     "note": "Local build with Go 1.26.10. Final-head CI builds and qualifies its own native executables; no local executable was relabeled or published."
   },
   "checks": {
@@ -58,12 +58,13 @@
     },
     "cmsWebKitNavigation": {
       "passed": 20,
-      "failed": 0
+      "failed": 0,
+      "note": "20 cases passed before the Marketplace follow-up; its targeted Marketplace repeat passed 19 with two browser harness timeouts, and all four focused retries passed."
     },
     "stableWebKitNavigation": {
-      "passed": 4,
+      "passed": 7,
       "failed": 0,
-      "note": "Initial-session scroll, both editor Back cases and delayed departed-editor rejection."
+      "note": "All four Blocks Marketplace cases, both editor Back cases, and delayed departed-editor rejection."
     },
     "cmsJavaScript": {
       "passed": 187,
@@ -84,9 +85,14 @@
         "untracked source rejected",
         "tracked source mutation by build rejected",
         "nonempty output rejected without changing prior manifest"
-      ]
+      ],
+      "archiveReproduction": "Final source heads reproduce the exact prior candidate bytes; output contains only the two archives and manifest."
+    },
+    "stableInstalledCMSContracts": {
+      "passed": 5,
+      "failed": 0
     }
   },
   "hostedScripts": "syntax checked only; no hosted environment or real email exercised",
-  "codeRabbit": "CMS completion review at 202ed7ff has no substantive findings. SMTP review has no actionable findings. MCP conditional empty-document finding withdrawn and resolved after actual CMS rendering verification. Latest CLI bounded-drain finding fixed at c114ca7; final CLI and stable rereviews pending. Docstring coverage remains advisory; no approval claimed."
+  "codeRabbit": "CMS completion review at 202ed7ff has no substantive findings; Marketplace follow-up review requested. MCP empty-document finding withdrawn after actual CMS verification; SMTP review no actionable findings. CLI drain and test review findings addressed; exact final CLI SHA passed the dispatched Node 22/24 matrix. Final CLI rereview is quota-limited. Stable evidence and cache findings addressed, and proposed dashboard gate withdrawn and resolved. No approval claimed."
 }

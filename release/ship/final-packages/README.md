@@ -1,6 +1,6 @@
 # Prepared stable npm packages — unpublished
 
-Rebuilt November 5 from CLI `c114ca7207eb667f1163e89c97f7fb581935a4eb`
+Rebuilt November 5 from CLI `77ec9e389eecc72400e7465d5369d6cde2fa3552`
 and MCP `14d92557ee5387c7d7eab313b32e6b5632f48093`, including the remaining
 release-review fixes. `manifest.json` records the source commits, SHA-256,
 and npm integrity of these exact stable archives. Every shipped file except
