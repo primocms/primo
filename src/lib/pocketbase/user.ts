@@ -26,20 +26,23 @@ export const set_current_user = (site?: Site) => {
 	current_user_store.set(user && { id: user.id, email: user.email, serverRole: user.serverRole, siteRole, name: user.name, avatar: user.avatar })
 }
 
-export const check_session = async () => {
+export const check_session = async (is_current: () => boolean = () => true) => {
 	const client = self.instance
 	if (!client?.authStore.isValid) return false
 	const original_token = client.authStore.token
 	for (let attempt = 0; attempt < 2; attempt++) {
+		if (!is_current()) return false
 		// A different successful login/refresh owns its credentials now.
 		if (attempt && client.authStore.token !== original_token) return false
 		try {
 			await client.collection('users').authRefresh()
+			if (!is_current()) return false
 			track_cms_opened()
 			self.lists.clear()
 			self.records.clear()
 			return true
 		} catch (error) {
+			if (!is_current()) return false
 			const failure = error as { isAbort?: boolean; status?: number } | undefined
 			const temporary =
 				failure?.isAbort ||

@@ -459,3 +459,37 @@ for (const section of ['starters', 'blocks'] as const) {
 		)
 	}
 }
+
+test('a late editor session rejection cannot replace the restored Sites history entry', async ({ page }) => {
+ await loginAsDeveloperAtDashboard(page, siteGroups[1].id)
+ const cards=page.locator('.site-card-footer > div > a')
+ await expect(cards).toHaveCount(12)
+ await scrollContent(page,'.sites-content',280)
+ let release!:()=>void,settled!:()=>void,held=false
+ const gate=new Promise<void>(resolve=>{release=resolve}),done=new Promise<void>(resolve=>{settled=resolve})
+ await page.route('**/api/collections/users/auth-refresh',async route=>{
+  if(!held && new URL(page.url()).pathname.startsWith('/admin/sites/')){
+   held=true;await gate
+   try{await route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({message:'Delayed expired editor request'})})}catch{}finally{settled()}
+  }else await route.continue()
+ })
+ const index=await cards.evaluateAll(cards=>cards.findIndex(card=>{const box=card.getBoundingClientRect();return box.top>=80 && box.bottom<innerHeight-20}))
+ expect(index).toBeGreaterThanOrEqual(0)
+ // PocketBase JWTs have one-second issue times. Ensure the next refresh
+ // produces a distinct credential before the old editor's retry settles.
+ await page.waitForTimeout(1100)
+ try{
+  await cards.nth(index).click()
+  await expect(page.locator('#primo-toolbar .sites-link')).toBeVisible()
+  await expect.poll(()=>held).toBe(true)
+  await page.goBack()
+  await expect(page).toHaveURL(new RegExp(`/dashboard/sites\\?group=${siteGroups[1].id}$`))
+  release();await done
+  // The departed check may still be inside its bounded 250 ms retry delay.
+  await page.waitForTimeout(500)
+  await expect(cards).toHaveCount(12)
+  await expect.poll(()=>page.locator('html').evaluate(node=>node.scrollTop)).toBe(280)
+  await expect(page).toHaveURL(new RegExp(`/dashboard/sites\\?group=${siteGroups[1].id}$`))
+  expect(await page.evaluate(()=>!!JSON.parse(localStorage.getItem('pocketbase_auth')||'null')?.token)).toBe(true)
+ }finally{release()}
+})

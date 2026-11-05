@@ -28,3 +28,13 @@ test('a stale refresh failure cannot clear a newer signed-in session',async()=>{
 test('an unknown verification failure cannot grant access or erase the saved session',async()=>{
  for(const error of [new Error('Unexpected verification failure'),{status:404}]){const f=fixture([error]);assert.equal(await f.check(),false);assert.equal(f.observed.calls,1);assert.equal(f.observed.clears,0);assert.equal(f.observed.tracked,0)}
 })
+
+test('a completed refresh from an unmounted route cannot clear active caches or credentials',async()=>{
+ for(const rejected of [false,true]){
+  let active=true
+  const f=fixture([()=>{active=false;if(rejected)throw {status:401};return {}}])
+  assert.equal(await f.check(()=>active),false)
+  assert.equal(f.observed.clears,0);assert.equal(f.observed.cacheClears,0);assert.equal(f.observed.tracked,0)
+  assert.equal(f.store.token,'valid-original')
+ }
+})
