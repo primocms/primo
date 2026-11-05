@@ -69,6 +69,8 @@ test('native Safari sign-in, content-only edit/reorder/reload and synthetic loca
     // The block toolbar follows native pointer hover, including after reload.
     const hoverFrame=await element('main iframe[title=block]');await command('POST',session+'/frame',{id:{'element-6066-11e4-a52e-4f735466cecf':hoverFrame}})
     const hoverHeading=await element('h1[data-key=heading]')
+    record.phase='hover-reloaded-block'
+    await execute("arguments[0].scrollIntoView({block:'center',inline:'nearest'})",[{'element-6066-11e4-a52e-4f735466cecf':hoverHeading}])
     await command('POST',session+'/actions',{actions:[{type:'pointer',id:'mouse',parameters:{pointerType:'mouse'},actions:[{type:'pointerMove',duration:100,origin:{'element-6066-11e4-a52e-4f735466cecf':hoverHeading},x:0,y:0}]}]})
     await command('POST',session+'/frame',{id:null});await wait(()=>execute("return [...document.querySelectorAll('button')].some(b=>b.getAttribute('aria-label')==='Edit Block Content')"),'Safari block hover did not reveal its content action')
     record.phase='open-block-content';await click(await button('Edit Block Content'))

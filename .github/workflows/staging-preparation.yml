@@ -1,17 +1,6 @@
 name: Staging preparation regressions
 on:
   pull_request:
-    paths:
-      - '.github/workflows/staging-preparation.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/tag.yml'
-      - 'release/ship/release-channel.mjs'
-      - 'release/ship/candidate-asset.mjs'
-      - 'tests/release/**'
-      - 'tests/staging/launch/**'
-      - 'tests/staging/hosted/**'
-      - 'tests/staging/rc7-packages.json'
-      - 'package*.json'
 permissions:
   contents: read
 concurrency:
@@ -29,6 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
