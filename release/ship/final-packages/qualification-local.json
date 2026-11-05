@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-05",
+  "scope": "local qualification only; registry handoff and release publication remain held",
+  "packages": {
+    "mcp": {
+      "archive": "primo-mcp-0.1.11.tgz",
+      "sourceCommit": "14d92557ee5387c7d7eab313b32e6b5632f48093",
+      "sha256": "5b3a02d0a2ba8b0d1bdc03210d11bccac55be5011744a57b9ff0511ae28bb358",
+      "integrity": "sha512-EDExPMQWiLEeqEWg7d5AI5SSIv+jxK4k1mMsPPn9ViXksh1eMn6BbRkeOPToMWRvAaPsjZpjkbCyZJ5Xdfw7gg=="
+    },
+    "cli": {
+      "archive": "primo-cli-0.3.0.tgz",
+      "sourceCommit": "cd0eea1a21e9fca9390b6997a6111875937e8b97",
+      "sha256": "ab7df45fbefd6ab92f3a67424ed8dd68e9138e420c6f9fa462538fc918e5ead8",
+      "integrity": "sha512-ecElpfZzRN9zlINmgAOkbZl0H6FdPBHPH6nGJkPMsQNTBf8V3x1nAv5NMqt2kmeqVi1K9qknTzssHd44uSzlKg=="
+    }
+  },
+  "cms": {
+    "baseSourceCommit": "22458d6596986bb617c2f1adf1308a33b4d40191",
+    "preparedInputs": "refreshed stable archives and package-lock.json were present during this local build",
+    "sha256": "5087e64c1a952a2e83a05338c8ffe7c373a9822b8330e2e17b82e1ae91855391",
+    "note": "Final-head CI must build and qualify its own native executable; this local binary is not relabeled or published."
+  },
+  "checks": {
+    "cliFullSource": {
+      "passed": 241,
+      "failed": 0,
+      "runtime": "Node 24.22.2, full Chromium 156"
+    },
+    "mcpFullSource": {
+      "passed": 62,
+      "failed": 0,
+      "runtime": "Node 24.22.2, full Chromium 156"
+    },
+    "cliInstalledStable": {
+      "passed": 241,
+      "failed": 0
+    },
+    "mcpInstalledStable": {
+      "passed": 62,
+      "failed": 0,
+      "note": "60 tests in full run; both renderer-upgrade tests pass after supplying the test fixture lookup for hoisted dependencies"
+    },
+    "stableInstalledCMSContracts": {
+      "passed": 5,
+      "failed": 0
+    },
+    "cmsBrowserRegressions": {
+      "passed": 34,
+      "failed": 0
+    },
+    "webkitEditorReturn": {
+      "passed": 4,
+      "failed": 0,
+      "note": "Initial first context creation timed out before actions; unchanged four-case rerun passed"
+    },
+    "cmsJavaScript": {
+      "passed": 177,
+      "failed": 0
+    },
+    "cmsGo": "full suite and focused race regressions pass with Go 1.26.10",
+    "smtpGo": "hosting race suite and cmd/primo-hosting build pass with Go 1.26.10",
+    "stableJavaScript": {
+      "passed": 168,
+      "failed": 0
+    },
+    "stableReleaseSafeguards": {
+      "passed": 9,
+      "failed": 0
+    },
+    "stableSourceCheck": "0 errors, 0 warnings"
+  },
+  "hostedScripts": "syntax checked only; no hosted environment or real email exercised",
+  "codeRabbit": "SMTP new head reviewed with no actionable findings; latest CLI/MCP rereviews rate limited. CMS rereview pending."
+}
