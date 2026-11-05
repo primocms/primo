@@ -2,7 +2,9 @@ package internal
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/url"
 	"regexp"
@@ -72,10 +74,13 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			oldHost := site.GetString("host")
 			if host != oldHost {
 				if err := moveLegacyDomainFiles(pb, site, oldHost, host); err != nil {
-					return e.InternalServerError("Failed to move published domain files", err)
+					return e.InternalServerError("Failed to move published domain files", errors.Join(err, cleanupFailedDomainMove(pb, site.Id, host)))
 				}
 			}
 			if err := applyDomainResult(pb, site, host, result); err != nil {
+				if host != oldHost {
+					err = errors.Join(err, cleanupFailedDomainMove(pb, site.Id, host))
+				}
 				return e.InternalServerError("Failed to save domain", err)
 			}
 
@@ -146,6 +151,19 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 		return serveEvent.Next()
 	})
 	return nil
+}
+
+// A failed move must not leave copied content under an unassigned host.
+// A concurrent successful attachment by another site must remain untouched.
+func cleanupFailedDomainMove(pb *pocketbase.PocketBase, siteID, host string) error {
+	owner, err := pb.FindFirstRecordByData("sites", "host", host)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if owner != nil && owner.Id != siteID {
+		return nil
+	}
+	return DeleteSiteHostFiles(pb, host)
 }
 
 func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost, newHost string) error {

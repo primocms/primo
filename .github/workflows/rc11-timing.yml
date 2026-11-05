@@ -48,6 +48,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-${{ matrix.target }}
@@ -106,6 +111,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-linux_amd64
@@ -185,6 +195,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-darwin_arm64
@@ -238,6 +253,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-linux_amd64
@@ -282,6 +302,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-linux_amd64
@@ -337,6 +362,11 @@ jobs:
           node-version: 22.13.0
           cache: npm
       - run: npm ci
+      - name: Restore the sealed package manifest from the frozen candidate
+        shell: bash
+        run: |
+          git fetch --no-tags --depth=1 origin "$PRIMO_CANDIDATE_SHA"
+          git show "$PRIMO_CANDIDATE_SHA:tests/staging/rc8-packages.json" > tests/staging/rc8-packages.json
       - uses: actions/download-artifact@v4
         with:
           name: rc11-${{ matrix.target }}

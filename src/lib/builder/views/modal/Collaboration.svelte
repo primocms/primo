@@ -191,7 +191,7 @@
 	// affordance once this site is at its plan's per-site editor limit.
 	let site_editor_count = $derived(site.role_assignments()?.filter((a) => a.role === 'editor').length ?? 0)
 	let at_editor_cap = $derived(!!instance.editor_cap && site_editor_count >= instance.editor_cap)
-	let invite_disabled_reason = $derived(instance.owner_only ? 'Your plan includes only the owner account. Upgrade to invite collaborators.' : at_editor_cap ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined)
+	let invite_disabled_reason = $derived(instance.owner_only ? 'Your plan includes only the owner account. Upgrade to invite collaborators.' : at_editor_cap && role === 'editor' ? 'Editor limit reached for your plan. Upgrade to add more editors.' : undefined)
 	let removing_collaborator = $state(false)
 	let collaborator_to_remove = $state<{ user: User; assignment: SiteRoleAssignment }>()
 

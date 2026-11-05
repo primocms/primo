@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
       packages: write
       attestations: write
       id-token: write
@@ -47,11 +48,11 @@ jobs:
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir .release-image --pattern 'primo_linux_amd64' --pattern 'primo_linux_arm64' --pattern 'primo_linux_amd64.qualification.json' --pattern 'primo_linux_arm64.qualification.json'
           node --input-type=module <<'NODE'
           import fs from 'node:fs/promises';
-          import {verifyCandidateAsset} from './release/ship/candidate-asset.mjs';
+          import {verifyPublishedCandidateAsset} from './release/ship/candidate-asset.mjs';
           for (const target of ['linux_amd64', 'linux_arm64']) {
             const file = `.release-image/primo_${target}`;
             const report = JSON.parse(await fs.readFile(`${file}.qualification.json`, 'utf8'));
-            const sha256 = verifyCandidateAsset({target, report, bytes: await fs.readFile(file), source: process.env.GITHUB_SHA, version: process.env.RELEASE_TAG});
+            const sha256 = await verifyPublishedCandidateAsset({target, report, bytes: await fs.readFile(file), source: process.env.GITHUB_SHA, version: process.env.RELEASE_TAG}, {repository: process.env.GITHUB_REPOSITORY});
             console.log(`${sha256}  primo_${target}`);
           }
           NODE
