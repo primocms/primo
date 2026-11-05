@@ -8,7 +8,7 @@ function fixture(results){
  const observed={calls:0,clears:0,tracked:0,cacheClears:0,saves:0,waits:[]},store={isValid:true,token:'valid-original',record:{id:'editor'},save(token,record){observed.saves++;this.token=token;this.record=record},clear(){observed.clears++;this.token='';this.record=null}}
  const request=async()=>{observed.calls++;const result=results.shift();if(typeof result==='function')return result(store);if(result)throw result;return {token:store.token,record:store.record}}
  const self={instance:{authStore:store,
-  send:async(url,options)=>{assert.equal(url,'/api/collections/users/auth-refresh');assert.equal(options.method,'POST');assert.equal(options.headers.Authorization,'valid-original');return request()},
+  send:async(url,options)=>{assert.equal(url,'/api/collections/users/auth-refresh');assert.equal(options.method,'POST');assert.equal(options.headers.Authorization,store.token);return request()},
   // Model the SDK side effect so reverting to authRefresh reproduces the race.
   collection:()=>({authRefresh:async()=>{const response=await request();store.save(response.token,response.record);return response}})
  },lists:{clear(){observed.cacheClears++}},records:{clear(){observed.cacheClears++}}}
@@ -53,4 +53,20 @@ test('a late successful refresh cannot overwrite a later login',async()=>{
  release();assert.equal(await pending,false)
  assert.equal(f.store.token,'later-login');assert.equal(f.store.record.id,'new-editor')
  assert.equal(f.observed.saves,1);assert.equal(f.observed.cacheClears,0);assert.equal(f.observed.tracked,0)
+})
+
+
+test('a parallel refresh of the same account is verified once with its current token',async()=>{
+ for(const rejected of [false,true]){
+  const f=fixture([store=>{store.save('parallel-refresh',{id:'editor'});if(rejected)throw {status:401};return {token:'stale-response',record:{id:'editor'}}},null])
+  assert.equal(await f.check(),true);assert.equal(f.observed.calls,2)
+  assert.equal(f.store.token,'parallel-refresh');assert.equal(f.store.record.id,'editor')
+  assert.equal(f.observed.cacheClears,2);assert.equal(f.observed.tracked,1);assert.equal(f.observed.saves,2)
+ }
+})
+
+test('continuous token churn is bounded and cannot save an unowned refresh response',async()=>{
+ const change=store=>{store.save('changed-'+store.token,{id:'editor'});return {token:'stale',record:{id:'editor'}}}
+ const f=fixture([change,change]);assert.equal(await f.check(),false)
+ assert.equal(f.observed.calls,2);assert.equal(f.observed.saves,2);assert.equal(f.observed.cacheClears,0)
 })
