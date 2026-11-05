@@ -16,6 +16,7 @@ on:
       - 'playwright.config.ts'
       - 'package*.json'
       - 'release/vendor/**'
+      - 'release/ship/**'
 permissions:
   contents: read
 concurrency:

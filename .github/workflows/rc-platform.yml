@@ -25,6 +25,7 @@ on:
       - '*config*'
       - 'package*.json'
       - 'release/vendor/**'
+      - 'release/ship/**'
 permissions:
   contents: read
   actions: read
