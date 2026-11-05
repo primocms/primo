@@ -10,7 +10,7 @@
 	import { LayoutTemplate, Info, Globe, ExternalLink, SquarePen, CheckCircle } from 'lucide-svelte'
 	import MarketplaceStarterButton from '$lib/components/MarketplaceStarterButton.svelte'
 	import { Button } from '$lib/components/ui/button'
-	import { page } from '$app/state'
+	import { navigating, page } from '$app/state'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	import { goto } from '$app/navigation'
 	import { marketplace } from '$lib/pocketbase/managers'
@@ -28,7 +28,8 @@
 	// Auto-select first group if none is selected
 	$effect(() => {
 		const groups = SiteGroups.from(marketplace).list({ sort: 'index' }) ?? []
-		if (!group_id && groups.length > 0) {
+		// A late category response must not replace a user navigation.
+		if (!navigating.to && !group_id && groups.length > 0) {
 			const url = new URL(page.url.href)
 			url.searchParams.set('group', groups[0].id)
 			goto(url, { replace: true })

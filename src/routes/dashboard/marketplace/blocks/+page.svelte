@@ -14,7 +14,7 @@
 	import { toast } from 'svelte-sonner'
 	import * as RadioGroup from '$lib/components/ui/radio-group'
 	import { Label } from '$lib/components/ui/label'
-	import { page } from '$app/state'
+	import { navigating, page } from '$app/state'
 	import { goto } from '$app/navigation'
 	import { LibrarySymbolEntries, LibrarySymbolFields, LibrarySymbolGroups, LibrarySymbols } from '$lib/pocketbase/collections'
 	import { marketplace, self } from '$lib/pocketbase/managers'
@@ -35,7 +35,8 @@
 
 	// Auto-select first marketplace group if none is selected
 	$effect(() => {
-		if (!group_id && marketplace_symbol_groups.length > 0) {
+		// A late category response must not replace a user navigation.
+		if (!navigating.to && !group_id && marketplace_symbol_groups.length > 0) {
 			const url = new URL(page.url.href)
 			url.searchParams.set('group', marketplace_symbol_groups[0].id)
 			goto(url, { replace: true })
