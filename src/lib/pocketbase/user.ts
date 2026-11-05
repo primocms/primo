@@ -1,5 +1,6 @@
 import { track_cms_opened } from '$lib/analytics'
 import { self } from './managers'
+import type { RecordModel } from 'pocketbase'
 import type { Site } from '$lib/common/models/Site'
 import { SiteRoleAssignments, Users } from './collections'
 import { writable, readonly } from 'svelte/store'
@@ -35,8 +36,14 @@ export const check_session = async (is_current: () => boolean = () => true) => {
 		// A different successful login/refresh owns its credentials now.
 		if (attempt && client.authStore.token !== original_token) return false
 		try {
-			await client.collection('users').authRefresh()
-			if (!is_current()) return false
+			// authRefresh() saves before resolving. Fetch without that side effect,
+			// then let only the still-current request update the shared credentials.
+			const refreshed = await client.send<{ token: string; record: RecordModel }>('/api/collections/users/auth-refresh', {
+				method: 'POST', headers: { Authorization: original_token }
+			})
+			if (!is_current() || client.authStore.token !== original_token) return false
+			if (!refreshed.token || !refreshed.record?.id) return false
+			client.authStore.save(refreshed.token, refreshed.record)
 			track_cms_opened()
 			self.lists.clear()
 			self.records.clear()
