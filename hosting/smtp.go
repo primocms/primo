@@ -36,6 +36,8 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 			return err
 		}
 	}
+	// A failed create may have minted an orphan; its next attempt must rescan.
+	j.SMTPKeyScan = SMTPKeyScan{}
 	var key struct{ ID, Token string }
 	if err := request(ctx, p.Client, "POST", "https://api.resend.com/api-keys", p.Config.SMTPManagementToken,
 		map[string]string{"name": name, "permission": "sending_access", "domain_id": p.Config.SMTPDomainID}, &key); err != nil {
@@ -49,6 +51,8 @@ func (p *FlyProvisioner) createSMTPKey(ctx context.Context, j *Job, c *Credentia
 	return nil
 }
 
+const smtpKeyPagesPerAttempt = 5
+
 // Lookup is shared by lost-response recovery and explicit retirement. It never
 // returns keys belonging to another job, even on a paginated provider response.
 func (p *FlyProvisioner) jobSMTPKeyIDs(ctx context.Context, j *Job) ([]string, error) {
@@ -58,17 +62,22 @@ func (p *FlyProvisioner) jobSMTPKeyIDs(ctx context.Context, j *Job) ([]string, e
 	}
 	// Resend exposes a newly created token once. Reconcile a lost create response
 	// or checkpoint by revoking only orphan keys with this exact job-owned name.
-	orphanIDs := []string{}
-	after := ""
-	seenCursors := map[string]bool{}
-	for {
+	if j.SMTPKeyScan.Complete {
+		return j.SMTPKeyScan.IDs, nil
+	}
+	if j.SMTPKeyScan.Seen == nil {
+		j.SMTPKeyScan.Seen = map[string]bool{}
+	}
+	// Limit provider work per checkpoint, rather than restarting a large scan
+	// after the worker's or retirement handler's context deadline.
+	for page := 0; page < smtpKeyPagesPerAttempt; page++ {
 		var keys struct {
 			Data    []struct{ ID, Name string }
 			HasMore bool `json:"has_more"`
 		}
 		endpoint := "https://api.resend.com/api-keys?limit=100"
-		if after != "" {
-			endpoint += "&after=" + url.QueryEscape(after)
+		if j.SMTPKeyScan.After != "" {
+			endpoint += "&after=" + url.QueryEscape(j.SMTPKeyScan.After)
 		}
 		if err := request(ctx, p.Client, "GET", endpoint, p.Config.SMTPManagementToken, nil, &keys); err != nil {
 			return nil, err
@@ -78,19 +87,20 @@ func (p *FlyProvisioner) jobSMTPKeyIDs(ctx context.Context, j *Job) ([]string, e
 				return nil, errors.New("invalid SMTP key listing")
 			}
 			if key.Name == name {
-				orphanIDs = append(orphanIDs, key.ID)
+				j.SMTPKeyScan.IDs = append(j.SMTPKeyScan.IDs, key.ID)
 			}
 		}
 		if !keys.HasMore {
-			break
+			j.SMTPKeyScan.Complete = true
+			return j.SMTPKeyScan.IDs, nil
 		}
-		if len(keys.Data) == 0 || seenCursors[keys.Data[len(keys.Data)-1].ID] {
+		if len(keys.Data) == 0 || j.SMTPKeyScan.Seen[keys.Data[len(keys.Data)-1].ID] {
 			return nil, errors.New("invalid SMTP key pagination")
 		}
-		after = keys.Data[len(keys.Data)-1].ID
-		seenCursors[after] = true
+		j.SMTPKeyScan.After = keys.Data[len(keys.Data)-1].ID
+		j.SMTPKeyScan.Seen[j.SMTPKeyScan.After] = true
 	}
-	return orphanIDs, nil
+	return nil, errNotReady
 }
 
 func (p *FlyProvisioner) deleteSMTPKey(ctx context.Context, id string) error {
@@ -104,14 +114,21 @@ func (p *FlyProvisioner) deleteSMTPKey(ctx context.Context, id string) error {
 	return err
 }
 
+func (j *Job) mayHaveSMTPKey() bool {
+	return j.SMTPKeyID != "" || strings.HasPrefix(j.State, "smtp_") || strings.HasPrefix(j.Error, "smtp_") || j.SMTPKeyScan.After != "" || j.SMTPKeyScan.Complete || len(j.SMTPKeyScan.IDs) > 0
+}
+
 // Retirement is explicit operator bookkeeping after removing a customer app.
 // A failed or lost revocation response remains retryable; 404 means completed.
 func (p *FlyProvisioner) RevokeSMTPKey(ctx context.Context, j *Job) error {
 	if j.SMTPKeyID != "" {
 		return p.deleteSMTPKey(ctx, j.SMTPKeyID)
 	}
-	if p.Config.SMTPManagementToken == "" {
+	if !j.mayHaveSMTPKey() {
 		return nil
+	}
+	if p.Config.SMTPManagementToken == "" {
+		return errors.New("SMTP management credential missing")
 	}
 	ids, err := p.jobSMTPKeyIDs(ctx, j)
 	if err != nil {

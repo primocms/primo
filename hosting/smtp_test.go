@@ -293,8 +293,23 @@ func TestSMTPKeyPaginationExceedsTwentyPages(t *testing.T) {
 		return 500, nil
 	})
 	j := Job{ID: "00112233445566778899aabb", State: "smtp_key"}
-	if err := p.Step(context.Background(), &j, &Credentials{}); err != nil || pages != 22 {
-		t.Fatal("pagination stopped early", err)
+	for attempt := 0; attempt < 5; attempt++ {
+		before := pages
+		err := p.Step(context.Background(), &j, &Credentials{})
+		if pages-before > smtpKeyPagesPerAttempt {
+			t.Fatal("unbounded inventory request")
+		}
+		if attempt < 4 && !errors.Is(err, errNotReady) {
+			t.Fatal("scan did not checkpoint", err)
+		}
+		if attempt == 4 && (err != nil || pages != 22 || j.State != "smtp_settings") {
+			t.Fatal("pagination stopped early", err)
+		}
+		// Round-trip the encrypted job payload representation between attempts.
+		data, _ := json.Marshal(j)
+		if err := json.Unmarshal(data, &j); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
@@ -456,5 +471,87 @@ func TestRetiredInvitationCannotBeResentOrClaimed(t *testing.T) {
 	}
 	if _, err := s.Store.Claim(token, "retired-server", "valid-password-123", "session", s.now()); err == nil {
 		t.Fatal("retired claim transaction accepted token")
+	}
+}
+
+func TestSMTPRetirementScanCheckpointsBeforeRetiring(t *testing.T) {
+	s, _, _ := fixture(t)
+	j := enqueue(t, s)
+	j.State = "attention"
+	j.Error = "smtp_key"
+	if err := s.Store.Save(j); err != nil {
+		t.Fatal(err)
+	}
+	pages, deletes := 0, 0
+	s.Provisioner = smtpProvisioner(t, func(r *http.Request, _ map[string]any) (int, any) {
+		if r.Method == "DELETE" {
+			deletes++
+			if r.URL.Path != "/api-keys/owned" {
+				t.Fatal("foreign key deletion")
+			}
+			return 204, nil
+		}
+		if r.Method != "GET" {
+			t.Fatal("unexpected request")
+		}
+		pages++
+		expected := ""
+		if pages > 1 {
+			expected = fmt.Sprint(pages - 1)
+		}
+		if r.URL.Query().Get("after") != expected {
+			t.Fatalf("scan restarted: %s", r.URL.String())
+		}
+		keys := []map[string]string{{"id": fmt.Sprint(pages), "name": "unrelated"}}
+		if pages == 1 {
+			keys = append([]map[string]string{{"id": "owned", "name": "primo-hosted-" + j.ID}}, keys...)
+		}
+		return 200, map[string]any{"data": keys, "has_more": pages <= smtpKeyPagesPerAttempt}
+	})
+	retire := func() int {
+		r := httptest.NewRequest("POST", "/ops/jobs/"+j.ID+"/retire", nil)
+		r.Header.Set("Authorization", "Bearer "+s.Config.OpsToken)
+		w := httptest.NewRecorder()
+		s.Handler().ServeHTTP(w, r)
+		return w.Code
+	}
+	if status := retire(); status != 503 {
+		t.Fatal("incomplete scan retired job", status)
+	}
+	saved, err := s.Store.Get(j.ID)
+	if err != nil || saved.Retired || saved.SMTPKeyScan.After != fmt.Sprint(smtpKeyPagesPerAttempt) || len(saved.SMTPKeyScan.IDs) != 1 || deletes != 0 {
+		t.Fatal("scan not safely checkpointed", err)
+	}
+	if status := retire(); status != 202 || deletes != 1 {
+		t.Fatal("resumed retirement failed", status, deletes)
+	}
+	saved, err = s.Store.Get(j.ID)
+	if err != nil || !saved.Retired {
+		t.Fatal("retirement not persisted", err)
+	}
+}
+
+func TestSMTPRetirementWithoutManagementCredential(t *testing.T) {
+	for _, phase := range []string{"smtp_key", "smtp_settings", "volume"} {
+		t.Run(phase, func(t *testing.T) {
+			p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) { t.Fatal("unexpected provider lookup"); return 500, nil })
+			p.Config.SMTPManagementToken = ""
+			j := Job{ID: "00112233445566778899aabb", State: "attention", Error: phase}
+			err := p.RevokeSMTPKey(context.Background(), &j)
+			if (err != nil) != (phase != "volume") {
+				t.Fatal("unsafe credential decision", err)
+			}
+		})
+	}
+}
+
+func TestSMTPRetirementBeforeSMTPDoesNotDependOnProvider(t *testing.T) {
+	p := smtpProvisioner(t, func(*http.Request, map[string]any) (int, any) {
+		t.Fatal("never reached SMTP; provider must not be contacted")
+		return 503, nil
+	})
+	j := Job{ID: "00112233445566778899aabb", State: "attention", Error: "machine"}
+	if err := p.RevokeSMTPKey(context.Background(), &j); err != nil {
+		t.Fatal(err)
 	}
 }

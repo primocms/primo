@@ -451,7 +451,7 @@ func (s *Service) Handler() http.Handler {
 		revoker, canRevoke := s.Provisioner.(interface {
 			RevokeSMTPKey(context.Context, *Job) error
 		})
-		if !canRevoke && (j.SMTPKeyID != "" || s.Config.SMTPManagementToken != "") {
+		if !canRevoke && j.mayHaveSMTPKey() {
 			http.Error(w, "SMTP key revocation unavailable", 503)
 			return
 		}
@@ -459,6 +459,12 @@ func (s *Service) Handler() http.Handler {
 			ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 			defer cancel()
 			if err := revoker.RevokeSMTPKey(ctx, &j); err != nil {
+				// Preserve inventory progress without retiring an unrevoked credential.
+				if s.Store.Save(j) != nil {
+					http.Error(w, "SMTP revocation checkpoint failed; retirement not saved", 503)
+					return
+				}
+				w.Header().Set("Retry-After", "10")
 				http.Error(w, "SMTP key revocation failed; retirement not saved", 503)
 				return
 			}

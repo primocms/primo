@@ -32,10 +32,20 @@ type Job struct {
 	ReadyAt                                      int64
 	Retired                                      bool
 	SMTPKeyID                                    string
+	SMTPKeyScan                                  SMTPKeyScan
 	DomainParentHash                             string
 	DomainTokenUpdatedAt                         int64
 	DomainRotation                               DomainRotation
 	Suspension                                   Suspension
+}
+
+// SMTPKeyScan is encrypted with the job and resumes provider inventory across
+// bounded worker attempts and operator retirement requests.
+type SMTPKeyScan struct {
+	After    string
+	IDs      []string
+	Seen     map[string]bool
+	Complete bool
 }
 
 type Credentials struct{ Password, AdminPassword, DomainToken, SMTPPassword string }
