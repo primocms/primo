@@ -6,6 +6,7 @@ import { auth_url, auth_destination } from '../../src/lib/auth_navigation.js'
 const requested = new URL('http://localhost:3010/admin/dashboard/sites?group=selected-group#sites')
 
 async function mountCallback(route, scope) {
+	scope = { active: true, ...scope }
 	const source = await readFile(new URL(`../../src/routes/${route}`, import.meta.url), 'utf8')
 	const callback = source.match(/onMount\(async \(\) => \{([\s\S]*?)\n\t\}\)/)
 	assert(callback, 'Expected a route mount callback')

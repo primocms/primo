@@ -2,7 +2,7 @@
 	import Primo from '$lib/builder/Primo.svelte'
 	import { check_session } from '$lib/pocketbase/user'
 	import { refresh_author_mode } from '$lib/pocketbase/author_mode'
-	import { onMount } from 'svelte'
+	import { onMount, onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { auth_url } from '$lib/auth_navigation'
 	import { page } from '$app/state'
@@ -10,13 +10,18 @@
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 	import { Loader } from 'lucide-svelte'
 
+	let active = true
+	onDestroy(() => { active = false })
+
 	onMount(async () => {
 		const login_url = auth_url(page.url)
 		// Before any await: read_only must be pending-locked before Primo can
 		// render during check_session() with the writable 'both' default.
 		refresh_author_mode()
 
-		if (!(await check_session())) {
+		const verified = await check_session(() => active)
+		if (!active) return
+		if (!verified) {
 			await goto(login_url, { replace: true })
 			return
 		}
