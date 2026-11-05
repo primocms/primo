@@ -451,7 +451,10 @@ for (const section of ['starters', 'blocks'] as const) {
 				await page.route('https://rapid-preview.test/**', (route) => route.fulfill({ contentType: 'text/html', body: '<p>Preview</p>' }))
 				await loginAsDeveloperAtDashboard(page, siteGroups[0].id)
 				await page.getByRole('button', { name: 'Marketplace', exact: true }).click()
-				if (section === 'blocks') await page.getByRole('link', { name: 'Blocks', exact: true }).click()
+				if (section === 'blocks') {
+					await page.getByRole('link', { name: 'Blocks', exact: true }).click()
+					await expect(page).toHaveURL(/\/marketplace\/blocks(?:[?#]|$)/)
+				}
 				if (mode === 'history' || mode === 'layout') await checkGroupHistory(page, groups, records, '.catalog-name', '.marketplace-content', mode === 'layout')
 				else if (mode === 'refresh') await checkGroupRefresh(page, groups, records, '.catalog-name', '.marketplace-content')
 				else await checkRapidSwitches(page, groups, records, '.catalog-name', '.marketplace-content', true)
