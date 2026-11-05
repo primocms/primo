@@ -5,8 +5,9 @@ import os from 'node:os'
 import path from 'node:path'
 import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
+import {fileURLToPath} from 'node:url'
 const exec=promisify(execFile)
-const script=new URL('../../release/ship/prepare-source-packages.py',import.meta.url).pathname
+const script=fileURLToPath(new URL('../../release/ship/prepare-source-packages.py',import.meta.url))
 
 async function fixture(t,{mutate=false}={}){
  const root=await fs.mkdtemp(path.join(os.tmpdir(),'primo-pack-source-'));t.after(()=>fs.rm(root,{recursive:true,force:true}))
@@ -53,4 +54,12 @@ test('a build that changes tracked source cannot produce a qualification manifes
  await assert.rejects(f.prepare(),error=>/Build changed tracked source/.test(error.stderr))
  assert.equal(await fs.readFile(path.join(f.sources.mcp,'tracked.txt'),'utf8'),'committed source')
  await assert.rejects(fs.access(path.join(f.output,'manifest.json')),{code:'ENOENT'})
+})
+
+test('preparation cannot mix new archives with a previous qualification manifest',async t=>{
+ const f=await fixture(t)
+ await fs.mkdir(f.output);await fs.writeFile(path.join(f.output,'manifest.json'),'previous qualification')
+ await assert.rejects(f.prepare(),error=>/Output directory must be empty/.test(error.stderr))
+ assert.equal(await fs.readFile(path.join(f.output,'manifest.json'),'utf8'),'previous qualification')
+ assert.deepEqual(await fs.readdir(f.output),['manifest.json'])
 })

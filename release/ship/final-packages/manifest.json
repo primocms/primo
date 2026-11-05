@@ -20,11 +20,11 @@
     "cli": {
       "archive": "primo-cli-0.3.0.tgz",
       "version": "0.3.0",
-      "sourceCommit": "cd0eea1a21e9fca9390b6997a6111875937e8b97",
-      "sourceArchiveSHA256": "67923d7f3dbe124d819f609443de97afcfdc7bf0c6a6a27fb651747e86bd276a",
-      "sha256": "ab7df45fbefd6ab92f3a67424ed8dd68e9138e420c6f9fa462538fc918e5ead8",
-      "integrity": "sha512-ecElpfZzRN9zlINmgAOkbZl0H6FdPBHPH6nGJkPMsQNTBf8V3x1nAv5NMqt2kmeqVi1K9qknTzssHd44uSzlKg==",
-      "files": 95
+      "sourceCommit": "c114ca7207eb667f1163e89c97f7fb581935a4eb",
+      "sourceArchiveSHA256": "34b4cbb910c7e5bc3e5c3613ce02e0f6822a32998992495e06e1f771522fddea",
+      "sha256": "1883cdc7cd799ba3bb7265da041e6ff5d8642152169a66a8cbe964edfbb6fc13",
+      "integrity": "sha512-mn8csoPbi8Qogh6Fgj3qE6o7rHUVtt0aduYn/lb92gNe9hC771/G4ZT1dWHrzHOtMLOHTx9vZLLfPMiiKe6heA==",
+      "files": 2006
     }
   }
 }

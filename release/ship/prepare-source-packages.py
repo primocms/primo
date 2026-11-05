@@ -19,6 +19,8 @@ root = pathlib.Path(__file__).resolve().parents[2]
 versions = json.loads((root / 'release/ship/INPUTS.json').read_text())['plannedStableVersions']
 out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=True)
+if any(out.iterdir()):
+    raise SystemExit('Output directory must be empty; preserve prior archives and manifests separately')
 manifest = {'state': 'prepared-unpublished', 'publicationAuthorized': False,
             'registryHandoffVerified': False, 'versions': versions, 'packages': {}}
 

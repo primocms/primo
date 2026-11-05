@@ -1,6 +1,6 @@
 # Prepared stable npm packages — unpublished
 
-Rebuilt November 5 from CLI `cd0eea1a21e9fca9390b6997a6111875937e8b97`
+Rebuilt November 5 from CLI `c114ca7207eb667f1163e89c97f7fb581935a4eb`
 and MCP `14d92557ee5387c7d7eab313b32e6b5632f48093`, including the remaining
 release-review fixes. `manifest.json` records the source commits, SHA-256,
 and npm integrity of these exact stable archives. Every shipped file except
@@ -17,11 +17,12 @@ python3 release/ship/prepare-source-packages.py \
   --output /absolute/empty/output
 ```
 
-The previous stable archives and their qualification are superseded. Local qualification of these exact installed bytes is recorded in
-`qualification-local.json`: 241 CLI tests, 62 MCP tests and five installed
-contracts against an actual stable CMS executable pass. Full Chromium 156
-was used locally; final-head CI must supply its own pinned-browser and
-cross-platform native qualification.
+The previous stable archives and qualification are superseded. Local qualification
+of these exact installed bytes is recorded in `qualification-local.json`.
+The CLI bundles its patched ZIP dependency tree so plain consumer installs retain
+the source checkout's dependency fixes. A fresh consumer install reports zero
+audit findings. Full Chromium 156 is used locally; final-head CI supplies its own
+pinned-browser and cross-platform native qualification.
 Published RC.3 archives remain unchanged. No package, image, release or tag
 has been published, and registry handoff remains unverified.
 

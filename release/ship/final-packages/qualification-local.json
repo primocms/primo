@@ -10,80 +10,83 @@
     },
     "cli": {
       "archive": "primo-cli-0.3.0.tgz",
-      "sourceCommit": "cd0eea1a21e9fca9390b6997a6111875937e8b97",
-      "sha256": "ab7df45fbefd6ab92f3a67424ed8dd68e9138e420c6f9fa462538fc918e5ead8",
-      "integrity": "sha512-ecElpfZzRN9zlINmgAOkbZl0H6FdPBHPH6nGJkPMsQNTBf8V3x1nAv5NMqt2kmeqVi1K9qknTzssHd44uSzlKg=="
+      "sourceCommit": "c114ca7207eb667f1163e89c97f7fb581935a4eb",
+      "sha256": "1883cdc7cd799ba3bb7265da041e6ff5d8642152169a66a8cbe964edfbb6fc13",
+      "integrity": "sha512-mn8csoPbi8Qogh6Fgj3qE6o7rHUVtt0aduYn/lb92gNe9hC771/G4ZT1dWHrzHOtMLOHTx9vZLLfPMiiKe6heA=="
     }
   },
   "cms": {
-    "baseSourceCommit": "429c4095e2adad9c7466cdc6ab7761e1d3493a9b",
-    "preparedInputs": "Committed stable source and archives, including the session-lifecycle fix; subsequent preparation-tool changes do not change these product bytes",
-    "sha256": "59f4ee82b61d812894af7dc2ec80b9c5c644d57e799cfd90439e71914cb6abe0",
-    "note": "Final-head CI must build and qualify its own native executable; this local binary is not relabeled or published."
+    "baseSourceCommit": "b755a8133e2d17627dad35e3ff3bd6a4ac3aad57",
+    "sha256": "042353e47acdf3b26eabe9797f27eec56b713eba226f11c7174b0a75da38af99",
+    "preparedInputs": "Stable merge including CMS 202ed7ff; subsequent archive and qualification-record updates do not change this executable.",
+    "note": "Local build with Go 1.26.10. Final-head CI builds and qualifies its own native executables; no local executable was relabeled or published."
   },
   "checks": {
-    "cliFullSource": {
-      "passed": 241,
+    "cliInstalledStableNode22": {
+      "passed": 231,
       "failed": 0,
-      "runtime": "Node 24.22.2, full Chromium 156"
+      "runtime": "Node 22.13.0, full Chromium 156",
+      "note": "Includes real CMS contracts; 13 additional logging regressions run in an isolated subprocess."
     },
-    "mcpFullSource": {
-      "passed": 62,
+    "cliInstalledStableNode24": {
+      "passed": 231,
       "failed": 0,
-      "runtime": "Node 24.22.2, full Chromium 156"
-    },
-    "cliInstalledStable": {
-      "passed": 241,
-      "failed": 0
+      "runtime": "Node 24.22.2, full Chromium 156",
+      "note": "Includes real CMS contracts; 13 logging regressions run in an isolated subprocess."
     },
     "mcpInstalledStable": {
       "passed": 62,
       "failed": 0,
-      "note": "60 tests in full run; both renderer-upgrade tests pass after supplying the test fixture lookup for hoisted dependencies"
+      "runtime": "Node 24.22.2, full Chromium 156",
+      "note": "Test-only dependency fixture configured for hoisted installation."
     },
-    "stableInstalledCMSContracts": {
-      "passed": 5,
-      "failed": 0
+    "installedByteComparison": {
+      "cliFiles": 2006,
+      "mcpFiles": 129,
+      "result": "Every shipped file matched its archive before adding test fixtures."
+    },
+    "consumerAudit": {
+      "total": 0,
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "note": "Fresh plain consumer install of both stable archives; no consumer overrides."
     },
     "cmsBrowserRegressions": {
       "passed": 34,
       "failed": 0
     },
-    "webkitEditorReturn": {
-      "passed": 15,
+    "cmsWebKitNavigation": {
+      "passed": 20,
+      "failed": 0
+    },
+    "stableWebKitNavigation": {
+      "passed": 4,
       "failed": 0,
-      "note": "Five navigation cases, including delayed session rejection, repeated three times. The delayed-session regression fails against the pre-fix stable executable."
+      "note": "Initial-session scroll, both editor Back cases and delayed departed-editor rejection."
     },
     "cmsJavaScript": {
-      "passed": 184,
+      "passed": 187,
       "failed": 0
     },
-    "cmsGo": "full suite and focused race regressions pass with Go 1.26.10",
-    "smtpGo": "hosting race suite and cmd/primo-hosting build pass with Go 1.26.10",
     "stableJavaScript": {
-      "passed": 178,
+      "passed": 182,
       "failed": 0
     },
-    "stableReleaseSafeguards": {
-      "passed": 9,
-      "failed": 0
-    },
+    "cmsGo": "Full suite and focused race regressions pass with Go 1.26.10; subsequent changes are frontend only.",
+    "smtpGo": "Hosting race suite and cmd/primo-hosting build pass with Go 1.26.10.",
     "stableSourceCheck": "0 errors, 0 warnings",
-    "stableWebKitNavigation": {
-      "passed": 5,
-      "failed": 0
-    },
     "cleanSourcePreparation": {
-      "passed": 3,
+      "passed": 4,
       "failed": 0,
       "checks": [
         "stale ignored output excluded without changing original checkout",
         "untracked source rejected",
-        "tracked source mutation by build rejected"
-      ],
-      "archiveReproduction": "Both archives and manifest reproduce byte-for-byte using fresh locked installations in clean temporary worktrees"
+        "tracked source mutation by build rejected",
+        "nonempty output rejected without changing prior manifest"
+      ]
     }
   },
   "hostedScripts": "syntax checked only; no hosted environment or real email exercised",
-  "codeRabbit": "CMS prior review and SMTP head have no actionable findings. New CMS lifecycle review pending. Stable clean-build finding fixed. MCP conditional null/omitted rich-text finding verified against actual CMS rendering and answered without changing intentional empty-document support. Final CLI rereview pending."
+  "codeRabbit": "CMS completion review at 202ed7ff has no substantive findings. SMTP review has no actionable findings. MCP conditional empty-document finding withdrawn and resolved after actual CMS rendering verification. Latest CLI bounded-drain finding fixed at c114ca7; final CLI and stable rereviews pending. Docstring coverage remains advisory; no approval claimed."
 }
