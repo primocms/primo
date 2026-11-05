@@ -5,7 +5,9 @@ and MCP `14d92557ee5387c7d7eab313b32e6b5632f48093`, including the remaining
 release-review fixes. `manifest.json` records the source commits, SHA-256,
 and npm integrity of these exact stable archives. Every shipped file except
 package metadata is verified byte-identical to a fresh pack of its source build.
-CLI declares the matching stable MCP dependency.
+CLI declares the matching stable MCP dependency. Preparation uses temporary
+clean worktrees and fresh locked dependencies; stale ignored build output
+and untracked source cannot enter the archive.
 
 Reproduce from clean checkouts with locked dependencies installed:
 

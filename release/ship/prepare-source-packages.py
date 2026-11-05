@@ -2,6 +2,7 @@
 """Build unpublished stable archives from clean CLI/MCP source checkouts."""
 import argparse
 import base64
+from contextlib import contextmanager
 import hashlib
 import json
 import pathlib
@@ -26,16 +27,32 @@ def run(command, cwd):
         command += ['--cache', str(out / '.npm-cache')]
     return subprocess.check_output(command, cwd=cwd, text=True)
 
+@contextmanager
+def built_source(source, commit, stage):
+    """Build only committed source with fresh locked dependencies and output."""
+    worktree = stage / 'source'
+    subprocess.run(['git', '-C', str(source), 'worktree', 'add', '--detach',
+                    str(worktree), commit], check=True)
+    try:
+        run(['npm', 'ci', '--ignore-scripts'], worktree)
+        run(['npm', 'run', 'build'], worktree)
+        if run(['git', 'status', '--porcelain', '--untracked-files=no'], worktree).strip():
+            raise SystemExit('Build changed tracked source; commit generated source before packing')
+        yield worktree
+    finally:
+        subprocess.run(['git', '-C', str(source), 'worktree', 'remove', '--force',
+                        str(worktree)], check=True)
+
 for kind in ['mcp', 'cli']:
     source = getattr(args, kind + '_source').resolve()
-    if run(['git', 'status', '--porcelain', '--untracked-files=no'], source).strip():
-        raise SystemExit(f'{kind}: tracked source changes must be committed first')
+    if run(['git', 'status', '--porcelain', '--untracked-files=normal'], source).strip():
+        raise SystemExit(f'{kind}: source changes and untracked files must be committed first')
     commit = run(['git', 'rev-parse', 'HEAD'], source).strip()
-    subprocess.run(['npm', 'run', 'build'], cwd=source, check=True)
     with tempfile.TemporaryDirectory(prefix=f'primo-source-{kind}-') as temp:
         stage = pathlib.Path(temp)
-        packed = json.loads(run(['npm', 'pack', '--ignore-scripts', '--json',
-                                 '--pack-destination', str(stage)], source))[0]
+        with built_source(source, commit, stage) as clean:
+            packed = json.loads(run(['npm', 'pack', '--ignore-scripts', '--json',
+                                     '--pack-destination', str(stage)], clean))[0]
         original = stage / packed['filename']
         shipped = {}
         with tarfile.open(original) as archive:

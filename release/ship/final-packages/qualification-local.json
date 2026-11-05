@@ -16,9 +16,9 @@
     }
   },
   "cms": {
-    "baseSourceCommit": "22458d6596986bb617c2f1adf1308a33b4d40191",
-    "preparedInputs": "refreshed stable archives and package-lock.json were present during this local build",
-    "sha256": "5087e64c1a952a2e83a05338c8ffe7c373a9822b8330e2e17b82e1ae91855391",
+    "baseSourceCommit": "429c4095e2adad9c7466cdc6ab7761e1d3493a9b",
+    "preparedInputs": "Committed stable source and archives, including the session-lifecycle fix; subsequent preparation-tool changes do not change these product bytes",
+    "sha256": "59f4ee82b61d812894af7dc2ec80b9c5c644d57e799cfd90439e71914cb6abe0",
     "note": "Final-head CI must build and qualify its own native executable; this local binary is not relabeled or published."
   },
   "checks": {
@@ -50,26 +50,40 @@
       "failed": 0
     },
     "webkitEditorReturn": {
-      "passed": 4,
+      "passed": 15,
       "failed": 0,
-      "note": "Initial first context creation timed out before actions; unchanged four-case rerun passed"
+      "note": "Five navigation cases, including delayed session rejection, repeated three times. The delayed-session regression fails against the pre-fix stable executable."
     },
     "cmsJavaScript": {
-      "passed": 177,
+      "passed": 184,
       "failed": 0
     },
     "cmsGo": "full suite and focused race regressions pass with Go 1.26.10",
     "smtpGo": "hosting race suite and cmd/primo-hosting build pass with Go 1.26.10",
     "stableJavaScript": {
-      "passed": 168,
+      "passed": 178,
       "failed": 0
     },
     "stableReleaseSafeguards": {
       "passed": 9,
       "failed": 0
     },
-    "stableSourceCheck": "0 errors, 0 warnings"
+    "stableSourceCheck": "0 errors, 0 warnings",
+    "stableWebKitNavigation": {
+      "passed": 5,
+      "failed": 0
+    },
+    "cleanSourcePreparation": {
+      "passed": 3,
+      "failed": 0,
+      "checks": [
+        "stale ignored output excluded without changing original checkout",
+        "untracked source rejected",
+        "tracked source mutation by build rejected"
+      ],
+      "archiveReproduction": "Both archives and manifest reproduce byte-for-byte using fresh locked installations in clean temporary worktrees"
+    }
   },
   "hostedScripts": "syntax checked only; no hosted environment or real email exercised",
-  "codeRabbit": "SMTP new head reviewed with no actionable findings; latest CLI/MCP rereviews rate limited. CMS rereview pending."
+  "codeRabbit": "CMS prior review and SMTP head have no actionable findings. New CMS lifecycle review pending. Stable clean-build finding fixed. MCP conditional null/omitted rich-text finding verified against actual CMS rendering and answered without changing intentional empty-document support. Final CLI rereview pending."
 }
