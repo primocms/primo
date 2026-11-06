@@ -374,8 +374,10 @@ func importSnapshotRecords(app core.App, snapshot *Snapshot, name, host, groupId
 		newSite.Set("host", host)
 		newSite.Set("group", groupId)
 		newSite.Set("preview", nil)
-		// A copy is not the live site: it must not take over its sitemap base.
+		// A copy is not the live site: no sitemap base, no go-live target.
 		newSite.Set("live_url", "")
+		newSite.Set("go_live_webhook_url", "")
+		newSite.Set("go_live_webhook_secret", "")
 		if err := app.Save(newSite); err != nil {
 			return nil, err
 		}
@@ -779,8 +781,10 @@ func cloneSiteRecords(txApp core.App, pb *pocketbase.PocketBase, sourceSite *cor
 	newSite.Set("host", host)
 	newSite.Set("group", groupId)
 	newSite.Set("preview", nil)
-	// A copy is not the live site: it must not take over its sitemap base.
+	// A copy is not the live site: no sitemap base, no go-live target.
 	newSite.Set("live_url", "")
+	newSite.Set("go_live_webhook_url", "")
+	newSite.Set("go_live_webhook_secret", "")
 	if err := txApp.Save(newSite); err != nil {
 		return nil, err
 	}

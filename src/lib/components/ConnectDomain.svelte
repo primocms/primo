@@ -27,7 +27,8 @@
 	let {
 		site,
 		open = $bindable(false),
-		onconnected
+		onconnected,
+		onlivesite
 	}: {
 		site: Pick<Site, 'id' | 'host' | 'domain_status' | 'domain_dns_records' | 'domain_error'> | null | undefined
 		open?: boolean
@@ -36,6 +37,8 @@
 		// cached site record in place instead of refetching — the component itself
 		// talks raw fetch and never touches the collection cache.
 		onconnected?: (result: { host: string; status: string }) => void
+		// Fires after the live site settings were saved, for the same reason.
+		onlivesite?: (result: { live_url: string; go_live_webhook_url: string }) => void
 	} = $props()
 
 	let new_site_host = $state('')
@@ -323,15 +326,26 @@
 	let live_dirty = $state(false)
 	let live_saving = $state(false)
 	let live_error = $state('')
-	const live_changed = $derived(live_url.trim() !== live_saved_url)
+	// The webhook secret is write-only: an empty input keeps the stored one.
+	let webhook_url = $state('')
+	let webhook_saved_url = $state('')
+	let webhook_secret = $state('')
+	let webhook_secret_set = $state(false)
+	const live_changed = $derived(live_url.trim() !== live_saved_url || webhook_url.trim() !== webhook_saved_url || webhook_secret.trim() !== '')
 
 	function live_endpoint(site_id: string) {
 		return `${self.instance?.baseURL}/api/primo/sites/${site_id}/live-site`
 	}
 
-	function apply_live_site(data: { live_url?: string }) {
+	function apply_live_site(data: { live_url?: string; go_live_webhook_url?: string; go_live_webhook_secret_set?: boolean }) {
 		live_saved_url = data.live_url || ''
-		if (!untrack(() => live_dirty)) live_url = live_saved_url
+		webhook_saved_url = data.go_live_webhook_url || ''
+		webhook_secret_set = !!data.go_live_webhook_secret_set
+		if (!untrack(() => live_dirty)) {
+			live_url = live_saved_url
+			webhook_url = webhook_saved_url
+			webhook_secret = ''
+		}
 	}
 
 	$effect(() => {
@@ -357,7 +371,11 @@
 			const response = await fetch(live_endpoint(site.id), {
 				method: 'POST',
 				headers: auth_headers(true),
-				body: JSON.stringify({ live_url: live_url.trim() })
+				body: JSON.stringify({
+					live_url: live_url.trim(),
+					go_live_webhook_url: webhook_url.trim(),
+					...(webhook_secret.trim() ? { go_live_webhook_secret: webhook_secret.trim() } : {})
+				})
 			})
 			const data = await response.json().catch(() => ({}))
 			if (!response.ok) {
@@ -366,6 +384,7 @@
 			}
 			live_dirty = false
 			apply_live_site(data)
+			onlivesite?.({ live_url: live_saved_url, go_live_webhook_url: webhook_saved_url })
 		} catch (err) {
 			live_error = err instanceof Error ? err.message : 'Failed to save'
 		} finally {
@@ -518,6 +537,31 @@
 				</p>
 				<label for="live-site-url" class="block text-xs text-muted-foreground mt-3">Live URL</label>
 				<Input id="live-site-url" bind:value={live_url} oninput={() => (live_dirty = true)} placeholder="https://example.com" class="mt-1" autocomplete="off" spellcheck={false} />
+				<label for="go-live-webhook-url" class="block text-xs text-muted-foreground mt-3">Go-live webhook</label>
+				<Input
+					id="go-live-webhook-url"
+					bind:value={webhook_url}
+					oninput={() => (live_dirty = true)}
+					placeholder="https://api.github.com/repos/owner/repo/dispatches"
+					class="mt-1"
+					autocomplete="off"
+					spellcheck={false}
+				/>
+				{#if webhook_url.trim()}
+					<label for="go-live-webhook-secret" class="block text-xs text-muted-foreground mt-3">Secret</label>
+					<Input
+						id="go-live-webhook-secret"
+						type="password"
+						bind:value={webhook_secret}
+						oninput={() => (live_dirty = true)}
+						placeholder={webhook_secret_set ? '•••••••• set (type to replace)' : 'Sent as Authorization: Bearer …'}
+						class="mt-1"
+						autocomplete="new-password"
+					/>
+					<p class="text-[12px] leading-[1.6] text-[#a9a9b2] mt-1">
+						<span class="text-foreground">Go live</span> next to Publish sends the published build to this address, in the format of GitHub's repository_dispatch.
+					</p>
+				{/if}
 				{#if live_error}
 					<p class="text-red-500 text-sm mt-2">{live_error}</p>
 				{/if}

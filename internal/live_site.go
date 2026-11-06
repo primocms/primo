@@ -37,7 +37,12 @@ func siteBaseURL(site *core.Record) string {
 }
 
 func liveSiteResponse(site *core.Record) map[string]any {
-	return map[string]any{"live_url": site.GetString("live_url")}
+	// The webhook secret is write-only: callers only learn whether one is set.
+	return map[string]any{
+		"live_url":                   site.GetString("live_url"),
+		"go_live_webhook_url":        site.GetString("go_live_webhook_url"),
+		"go_live_webhook_secret_set": site.GetString("go_live_webhook_secret") != "",
+	}
 }
 
 // RegisterLiveSiteEndpoints wires the settings for a site whose live copy is
@@ -58,6 +63,9 @@ func RegisterLiveSiteEndpoints(pb *pocketbase.PocketBase) error {
 			}
 			body := struct {
 				LiveURL string `json:"live_url"`
+				// Absent: keep. Empty: clear. The secret is cleared with the URL.
+				WebhookURL    *string `json:"go_live_webhook_url"`
+				WebhookSecret *string `json:"go_live_webhook_secret"`
 			}{}
 			if err := e.BindBody(&body); err != nil {
 				return e.BadRequestError("Invalid request body", err)
@@ -67,6 +75,19 @@ func RegisterLiveSiteEndpoints(pb *pocketbase.PocketBase) error {
 				return e.BadRequestError(err.Error(), nil)
 			}
 			site.Set("live_url", liveURL)
+			if body.WebhookURL != nil {
+				webhookURL, err := normalizeWebhookURL(*body.WebhookURL)
+				if err != nil {
+					return e.BadRequestError(err.Error(), nil)
+				}
+				site.Set("go_live_webhook_url", webhookURL)
+				if webhookURL == "" {
+					site.Set("go_live_webhook_secret", "")
+				}
+			}
+			if body.WebhookSecret != nil && site.GetString("go_live_webhook_url") != "" {
+				site.Set("go_live_webhook_secret", strings.TrimSpace(*body.WebhookSecret))
+			}
 			if err := pb.Save(site); err != nil {
 				return e.InternalServerError("Failed to save live site settings", err)
 			}
