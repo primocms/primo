@@ -1,6 +1,6 @@
 import fs from 'fs'
 
-const PID_FILE = '/tmp/primo-e2e-server.pid'
+const PID_FILE = process.env.PRIMO_TEST_RUN_DIR ? `${process.env.PRIMO_TEST_RUN_DIR}/server.pid` : '/tmp/primo-e2e-server.pid'
 
 export default async function globalTeardown() {
 	if (!fs.existsSync(PID_FILE)) return

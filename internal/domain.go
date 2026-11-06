@@ -1,8 +1,15 @@
 package internal
 
 import (
+	"bytes"
+	"database/sql"
+	"encoding/xml"
+	"errors"
+	"io"
+	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
@@ -36,9 +43,15 @@ func validHostLength(host string) bool {
 // heavy platform work is delegated to the configured DomainProvider; these
 // handlers own auth, validation, and persisting status onto the site record.
 func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
+	// Domain changes are infrequent administrative operations. Serialize these
+	// routes so ownership checks, file copies/cleanup and record saves form one
+	// operation, including status refreshes that could otherwise save stale hosts.
+	var domainMu sync.Mutex
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Attach (or change) a custom domain for a site.
 		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -56,7 +69,11 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			}
 
 			// Uniqueness: no other site may already own this host.
-			if existing, _ := pb.FindFirstRecordByData("sites", "host", host); existing != nil && existing.Id != site.Id {
+			existing, err := pb.FindFirstRecordByData("sites", "host", host)
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return e.InternalServerError("Failed to check domain ownership", err)
+			}
+			if existing != nil && existing.Id != site.Id {
 				return e.BadRequestError("That domain is already in use by another site.", nil)
 			}
 
@@ -66,21 +83,22 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 			}
 
 			oldHost := site.GetString("host")
+			if host != oldHost {
+				if err := moveLegacyDomainFiles(pb, site, oldHost, host); err != nil {
+					return e.InternalServerError("Failed to move published domain files", errors.Join(err, cleanupFailedDomainMove(pb, site.Id, host)))
+				}
+			}
 			if err := applyDomainResult(pb, site, host, result); err != nil {
+				if host != oldHost {
+					err = errors.Join(err, cleanupFailedDomainMove(pb, site.Id, host))
+				}
 				return e.InternalServerError("Failed to save domain", err)
 			}
 
-			// Published files live under sites/{host}/..., so a host change would
-			// otherwise 404 at the new domain until the user re-publishes.
-			// Regenerate under the new host so the site is served immediately,
-			// then tear down the old host's tree — the file server routes purely
-			// by Host header, so leaving it would keep serving the site at the
-			// old domain. Both are best-effort: a site with nothing published yet
-			// has nothing to render, so don't fail the attach if either errors.
+			// Tracked publications use immutable prefixes independent of the
+			// hostname. Legacy output was copied above without compiling drafts.
+			// Retire the old host only after the new assignment is saved.
 			if host != oldHost {
-				if genErr := GenerateSite(pb, site); genErr != nil {
-					e.App.Logger().Warn("regenerate after domain change failed", "site", site.Id, "host", host, "error", genErr)
-				}
 				if oldHost != "" && oldHost != site.Id {
 					if delErr := DeleteSiteHostFiles(pb, oldHost); delErr != nil {
 						e.App.Logger().Warn("cleanup of old host files failed", "site", site.Id, "old_host", oldHost, "error", delErr)
@@ -99,6 +117,8 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 		// Railway domain's liveness is driven by the real cert status, so faking
 		// it there would lie about whether the cert actually issued.
 		serveEvent.Router.POST("/api/primo/sites/{siteId}/domain/mark-live", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -120,6 +140,8 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 
 		// Re-check the status of a site's attached custom domain.
 		serveEvent.Router.GET("/api/primo/sites/{siteId}/domain/status", func(e *core.RequestEvent) error {
+			domainMu.Lock()
+			defer domainMu.Unlock()
 			site, err := authorizeSiteDomain(pb, e)
 			if err != nil {
 				return err
@@ -146,6 +168,96 @@ func RegisterDomainEndpoints(pb *pocketbase.PocketBase) error {
 	return nil
 }
 
+// A failed move must not leave copied content under an unassigned host.
+// A concurrent successful attachment by another site must remain untouched.
+func cleanupFailedDomainMove(pb *pocketbase.PocketBase, siteID, host string) error {
+	owner, err := pb.FindFirstRecordByData("sites", "host", host)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if owner != nil && owner.Id != siteID {
+		return nil
+	}
+	return DeleteSiteHostFiles(pb, host)
+}
+
+func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost, newHost string) error {
+	publication, err := publicationRecord(pb, site.Id)
+	if err != nil {
+		return err
+	}
+	if publication.GetString("prefix") != "" {
+		return nil
+	}
+	if err := DeleteSiteHostFiles(pb, newHost); err != nil {
+		return err
+	}
+	if oldHost == "" {
+		return nil
+	}
+	system, err := pb.NewFilesystem()
+	if err != nil {
+		return err
+	}
+	defer system.Close()
+	oldPrefix := "sites/" + oldHost + "/"
+	files, err := system.List(oldPrefix)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir {
+			continue
+		}
+		if strings.TrimPrefix(file.Key, oldPrefix) == "sitemap.xml" {
+			reader, err := system.GetReader(file.Key)
+			if err != nil {
+				return err
+			}
+			data, err := io.ReadAll(reader)
+			reader.Close()
+			if err != nil {
+				return err
+			}
+			updated, err := rewriteSitemapHost(data, newHost)
+			if err != nil {
+				return err
+			}
+			if err := system.Upload(updated, "sites/"+newHost+"/sitemap.xml"); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := system.Copy(file.Key, "sites/"+newHost+"/"+strings.TrimPrefix(file.Key, oldPrefix)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func rewriteSitemapHost(data []byte, host string) ([]byte, error) {
+	var document sitemap
+	if err := xml.Unmarshal(data, &document); err != nil {
+		return nil, err
+	}
+	for i := range document.URLs {
+		location, err := url.Parse(document.URLs[i].Loc)
+		if err != nil {
+			return nil, err
+		}
+		location.Scheme, location.Host, location.User = "https", host, nil
+		document.URLs[i].Loc = location.String()
+	}
+	var buf bytes.Buffer
+	buf.WriteString(xml.Header)
+	encoder := xml.NewEncoder(&buf)
+	encoder.Indent("", "  ")
+	if err := encoder.Encode(document); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 // authorizeSiteDomain resolves the {siteId} route param and enforces that the
 // caller may update it (same rule the import/clone paths use). Localhost dev is
 // exempt, matching the rest of the codebase.
@@ -154,14 +266,17 @@ func authorizeSiteDomain(pb *pocketbase.PocketBase, e *core.RequestEvent) (*core
 	if siteId == "" {
 		return nil, e.BadRequestError("Missing site ID", nil)
 	}
-	if e.Auth == nil && !IsLocalhost(e) {
+	if e.Auth == nil && !(DevMode && IsLocalhost(e)) {
 		return nil, e.UnauthorizedError("Authentication required", nil)
 	}
 	site, err := pb.FindRecordById("sites", siteId)
 	if err != nil {
 		return nil, e.NotFoundError("Site not found", err)
 	}
-	if !IsLocalhost(e) {
+	if e.Auth != nil && !isSiteDeveloper(pb, e.Auth, site.Id) {
+		return nil, e.ForbiddenError("A developer is required to change domains", nil)
+	}
+	if !(DevMode && IsLocalhost(e)) {
 		info, err := e.RequestInfo()
 		if err != nil {
 			return nil, e.InternalServerError("Failed to get request info", err)
@@ -203,12 +318,12 @@ const domainErrorMax = 500
 // trips the empty-id guard and the domain is stuck forever. So we only advance
 // the provider id when the new result actually carries one.
 func applyDomainResult(pb *pocketbase.PocketBase, site *core.Record, host string, result DomainResult) error {
+	oldHost := site.GetString("host")
 	site.Set("host", host)
 	site.Set("domain_status", result.Status)
-	// Never overwrite a known provider id with an empty one — an empty id in a
-	// result means "couldn't resolve the domain this poll", not "the domain lost
-	// its id". Keep the last good id so polling can recover.
-	if result.ProviderID != "" {
+	// Preserve an unresolved provider id during a poll of the same host, but
+	// never carry the previous host's provider identity to a new attachment.
+	if result.ProviderID != "" || host != oldHost {
 		site.Set("domain_provider_id", result.ProviderID)
 	}
 

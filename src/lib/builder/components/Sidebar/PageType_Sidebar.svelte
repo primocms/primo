@@ -2,7 +2,7 @@
 	import * as Dialog from '$lib/components/ui/dialog'
 	import * as _ from 'lodash-es'
 	import { goto } from '$app/navigation'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { Skeleton } from '$lib/components/ui/skeleton'
 	// Icon component removed to prevent stack overflow issues
 	import Icon from '@iconify/svelte'
@@ -45,27 +45,24 @@
 
 	const { value: site } = site_context.getOr({ value: null })
 	const page_type_id = $derived(page.params.page_type)
-	const page_type = $derived(PageTypes.one(page_type_id))
+	const page_type = $derived(page_type_id ? PageTypes.one(page_type_id) : undefined)
 	const fields = $derived(page_type?.fields() ?? [])
 	const entries = $derived(page_type?.entries() ?? [])
 	const page_type_symbols = $derived(page_type?.symbols() ?? [])
 	const site_symbols = $derived(site?.symbols() ?? [])
 
 	// Set context so child components can access the page type (ie page-field field in sidebar symbol)
-	const context = $state({ value: page_type })
+	const context = { get value() { return page_type } }
 	page_type_context.set(context)
-	$effect(() => {
-		context.value = page_type
-	})
 
 	hide_page_field_field_type_context.set(true)
 
 	// get the query param to set the tab when navigating from page (i.e. 'Manage Fields')
 	let active_tab = $state(page.url.searchParams.get('tab') === 'fields' ? 'CONTENT' : 'BLOCKS')
 	if (browser) {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		url.searchParams.delete('tab')
-		goto(url, { replaceState: true })
+		goto(url, { replace: true })
 	}
 
 	async function create_block() {
@@ -93,7 +90,7 @@
 			console.log('Import successful!')
 		} catch (error) {
 			console.error('Failed to import symbol:', error)
-			console.error('Error details:', error.message, error.stack)
+			if (error instanceof Error) console.error('Error details:', error.message, error.stack)
 			upload_file_invalid = true
 			file = undefined
 		}
@@ -128,13 +125,11 @@
 			onDragStart() {
 				$dragging_symbol = true
 			},
-			onDragEnd() {
-				$dragging_symbol = false
-			},
 			onDrop({ self, source }) {
+				$dragging_symbol = false
 				if (!site) return
 				const closestEdgeOfTarget = extractClosestEdge(self.data)
-				const block_dragged_over = self.data.block
+				const block_dragged_over = block
 				const block_being_dragged = source.data.block
 				const block_dragged_over_index = site_symbols.findIndex((symbol) => symbol.id === block_dragged_over.id)
 				const target_index = closestEdgeOfTarget === 'top' ? block_dragged_over_index : block_dragged_over_index + 1
@@ -158,7 +153,7 @@
 	let editing_block_has_unsaved_changes = $state(false)
 	let creating_block_has_unsaved_changes = $state(false)
 
-	let commit_task = $state<number>()
+	let commit_task = $state<ReturnType<typeof setTimeout>>()
 </script>
 
 <Dialog.Root
@@ -178,7 +173,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			block={active_block}
 			bind:has_unsaved_changes={editing_block_has_unsaved_changes}
@@ -213,7 +208,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-2 gap-2">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-2 gap-2">
 		<BlockEditor
 			bind:has_unsaved_changes={creating_block_has_unsaved_changes}
 			header={{
@@ -236,10 +231,10 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100vh_-_1rem)] flex flex-col p-4">
+	<Dialog.Content class="z-[999] w-[calc(100vw_-_1rem)] max-w-none h-[calc(100dvh_-_1rem)] flex flex-col p-4">
 		<BlockPicker
-			{site}
 			onsave={async (blocks) => {
+				if (!site) return
 				try {
 					const {
 						symbols: source_symbols,
@@ -512,7 +507,7 @@
 		z-index: 9;
 		display: flex;
 		flex-direction: column;
-		height: calc(100vh - 59px);
+		height: calc(100dvh - 59px);
 		/* height: 100%; */
 		/* gap: 1rem; */
 		z-index: 9;

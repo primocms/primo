@@ -3,13 +3,13 @@
 	import IconPicker from '../../components/IconPicker.svelte'
 	import UI from '../../ui/index.js'
 	import Icon from '@iconify/svelte'
-	import { createEventDispatcher } from 'svelte'
+	import { createEventDispatcher, untrack } from 'svelte'
 
 	const { field }: { field: SelectField } = $props()
 	const dispatch = createEventDispatcher()
 
 	// Manage options separately since field.config keeps getting reset
-	let options = $state(field.config?.options || [])
+	let options = $state(untrack(() => field.config?.options || []))
 
 	function addOption() {
 		options = [...options, { value: '', label: '', icon: '' }]

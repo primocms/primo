@@ -1,6 +1,8 @@
 package migrations
 
 import (
+	"database/sql"
+	"errors"
 	"os"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -44,10 +46,17 @@ func init() {
 					return err
 				}
 
-				record := core.NewRecord(collection)
-				record.Set("email", superuserEmail)
-				record.Set("password", superuserPassword)
-				app.Save(record)
+				if _, err := app.FindAuthRecordByEmail(collection, superuserEmail); err != nil {
+					if !errors.Is(err, sql.ErrNoRows) {
+						return err
+					}
+					record := core.NewRecord(collection)
+					record.Set("email", superuserEmail)
+					record.Set("password", superuserPassword)
+					if err := app.Save(record); err != nil {
+						return err
+					}
+				}
 			}
 
 			userEmail := os.Getenv("PRIMO_USER_EMAIL")
@@ -64,31 +73,13 @@ func init() {
 				record.Set("name", "Primo Admin")
 				record.Set("serverRole", "developer")
 				record.SetVerified(true)
-				app.Save(record)
-			}
-
-			// Seed plan caps into config_values from env so a provisioned
-			// instance enforces its tier's limits (see internal/limits.go).
-			// Only written when the env var is a positive int; absent/0 leaves
-			// the instance unlimited, which is correct for self-host.
-			for _, cap := range []struct{ envVar, key string }{
-				{"PRIMO_SITE_CAP", "site_cap"},
-				{"PRIMO_EDITOR_CAP", "editor_cap"},
-			} {
-				if os.Getenv(cap.envVar) == "" {
-					continue
-				}
-				collection, err := app.FindCollectionByNameOrId("config_values")
-				if err != nil {
-					return err
-				}
-				record := core.NewRecord(collection)
-				record.Set("key", cap.key)
-				record.Set("value", os.Getenv(cap.envVar))
 				if err := app.Save(record); err != nil {
 					return err
 				}
 			}
+
+			// Plan caps are seeded by the hosted_plan_caps migration, after the
+			// configuration collection has been renamed and accepts cap keys.
 
 			return nil
 		},

@@ -1,51 +1,8 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
 import { test } from 'node:test'
-import ts from 'typescript'
+import { loadResolver } from '../helpers/content-resolver.mjs'
 
-// Exercise the actual content resolver with in-memory collection reads. Network
-// loading is represented by the same undefined/null states as CollectionMapping.
-async function loadResolver(collections, context) {
-	function evaluate(source, imports = {}) {
-		const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } })
-		const module = { exports: {} }
-		Function(
-			'require',
-			'exports',
-			'module',
-			outputText
-		)(
-			(name) => {
-				assert(name in imports, `Unexpected import: ${name}`)
-				return imports[name]
-			},
-			module.exports,
-			module
-		)
-		return module.exports
-	}
-	const entity = evaluate(await readFile(new URL('../../src/lib/Entity.ts', import.meta.url), 'utf8'), { './pocketbase/collections': collections })
-	const utilsSource = await readFile(new URL('../../src/lib/builder/utils.ts', import.meta.url), 'utf8')
-	const ast = ts.createSourceFile('utils.ts', utilsSource, ts.ScriptTarget.Latest)
-	const emptyValueFunction = ast.statements.find((statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === 'get_empty_value')
-	const utils = evaluate(emptyValueFunction.getText(ast))
-	utils.normalize_entry_value = (value) => value
-	const content = evaluate(await readFile(new URL('../../src/lib/Content.svelte.ts', import.meta.url), 'utf8'), {
-		'./pocketbase/collections': collections,
-		'$lib/builder/utils': utils,
-		'./pocketbase/managers': {},
-		'./pages': { build_live_page_url: (page) => ({ pathname: page.id === 'home' ? '/' : `/${page.slug}` }) },
-		'./builder/stores/context': {
-			page_context: { getOr: () => context },
-			page_type_context: { getOr: (fallback) => fallback },
-			site_context: { getOr: (fallback) => fallback }
-		},
-		'./Entity': entity
-	})
-	return { useContent: content.useContent, get_empty_value: utils.get_empty_value }
-}
-
-async function fixture() {
+async function fixture(mode = 'id') {
 	const siteFields = [
 		{ id: 'nav', key: 'nav', type: 'repeater', site: 'site' },
 		{ id: 'group', key: 'group', type: 'group', parent: 'nav', site: 'site' },
@@ -89,6 +46,33 @@ async function fixture() {
 			{ id: `link-${index}`, field: 'link', locale: 'en', parent: `group-${index}`, value }
 		)
 	})
+	// Root keys deliberately differ from IDs, including nested key collisions.
+	for (const field of siteFields) {
+		const old = field.id
+		field.id = `site-${old}-id`
+		for (const entry of siteEntries) if (entry.field === old) entry.field = field.id
+		for (const child of siteFields) if (child.parent === old) child.parent = field.id
+		for (const reference of symbolFields) if (reference.type === 'site-field' && reference.config.field === old) reference.config.field = mode === 'id' ? field.id : field.key
+	}
+	const extra = [
+		{ id: 'footer-id', key: 'footer_groups', type: 'repeater', site: 'site' },
+		{ id: 'footer-title', key: 'title', type: 'text', parent: 'footer-id', site: 'site' },
+		{ id: 'footer-links', key: 'links', type: 'repeater', parent: 'footer-id', site: 'site' },
+		{ id: 'footer-link', key: 'link', type: 'link', parent: 'footer-links', site: 'site' },
+		{ id: 'notice-id', key: 'notice', type: 'text', site: 'site' },
+		{ id: 'count-id', key: 'count', type: 'number', site: 'site' },
+		{ id: 'enabled-id', key: 'enabled', type: 'switch', site: 'site' },
+		{ id: 'empty-id', key: 'empty_list', type: 'repeater', site: 'site' },
+		{ id: 'nested-nav', key: 'nav', type: 'text', parent: 'footer-id', site: 'site' }
+	]
+	siteFields.push(...extra)
+	for (const field of extra.filter(field => !field.parent)) symbolFields.push({ id: `ref-${field.id}`, key: field.key, symbol: 'block', type: 'site-field', config: { field: mode === 'id' ? field.id : field.key } })
+	const entry = (id, field, value, parent) => ({ id, field, value, parent, locale: 'en' })
+	siteEntries.push(
+		entry('footer-item', 'footer-id', null), entry('footer-heading', 'footer-title', 'Explore', 'footer-item'),
+		entry('footer-list', 'footer-links', null, 'footer-item'), entry('footer-value', 'footer-link', { page: 'home', label: 'Home footer' }, 'footer-list'),
+		entry('notice-value', 'notice-id', 'Shared copyright'), entry('count-value', 'count-id', 0), entry('enabled-value', 'enabled-id', false)
+	)
 	const site = { id: 'site', host: 'example.com', fields: () => siteFields, entries: () => siteEntries, uploads: () => [] }
 	const block = { id: 'block', html: '', site: 'site', fields: () => symbolFields, entries: () => [] }
 	const section = { id: 'header', page_type: 'default', symbol: 'block', entries: () => [] }
@@ -102,7 +86,7 @@ async function fixture() {
 		PageTypeFields: { one: (id) => pageFields.find((field) => field.id === id) },
 		LibraryUploads: { list: () => [] }
 	}
-	return { ...(await loadResolver(collections, context)), context, site, section, block, records, home, about, siteEntries }
+	return { ...(await loadResolver(collections, context)), context, site, section, block, records, home, about, siteEntries, siteFields, symbolFields }
 }
 
 test('editor navigation follows the page context and an explicit page overrides it', async () => {
@@ -155,4 +139,42 @@ test('previews without a page and loading or deleted links are inactive', async 
 test('empty saved link defaults contain only content', async () => {
 	const { get_empty_value } = await fixture()
 	assert.deepEqual(get_empty_value({ type: 'link' }), { label: '', text: '', url: '' })
+})
+
+for (const mode of ['key', 'id']) {
+	test(`browser ${mode} references resolve shared navigation/footer values and editable entries without source changes`, async () => {
+		const { useContent, useEntries, assertSiteFieldReferences, site, section, block, home, siteFields, symbolFields, siteEntries } = await fixture(mode)
+		const before = structuredClone({ siteFields, symbolFields, siteEntries })
+		assertSiteFieldReferences(site, siteFields, symbolFields)
+		for (const target of ['cms', 'live']) {
+			for (const entity of [section, block]) {
+				const content = useContent(entity, { target, page: home }).en
+				assert.equal(content.nav[0].group.link.label, 'Home')
+				assert.equal(content.footer_groups[0].title, 'Explore')
+				assert.equal(content.footer_groups[0].links[0].link.active, true)
+				assert.equal(content.notice, 'Shared copyright')
+				assert.equal(content.count, 0)
+				assert.equal(content.enabled, false)
+				assert.deepEqual(content.empty_list, [])
+			}
+		}
+		assert.equal(useEntries(section, symbolFields.find(field => field.key === 'nav')).length, 7)
+		assert.equal(useEntries(block, symbolFields.find(field => field.key === 'footer_groups'))[0].id, 'footer-item')
+		assert.deepEqual({ siteFields, symbolFields, siteEntries }, before)
+	})
+}
+
+test('browser resolution waits for loaded site fields and validates missing, nested and ambiguous references', async () => {
+	const { useContent, useEntries, assertSiteFieldReferences, findSiteField, site, section, siteFields, symbolFields } = await fixture('key')
+	const fields = site.fields
+	site.fields = () => undefined
+	assert.equal(useContent(section, { target: 'live' }), undefined)
+	assert.equal(useEntries(section, symbolFields[0]), undefined)
+	site.fields = fields
+	for (const reference of ['missing', 'site-link-id', '', null]) {
+		symbolFields[0].config.field = reference
+		assert.throws(() => assertSiteFieldReferences(site, siteFields, symbolFields), /site-field reference.*block.*nav.*config.field.*top-level.*site\/fields.yaml/)
+	}
+	assert.equal(findSiteField([...siteFields, { id: 'decoy', key: 'site-nav-id' }], 'site-nav-id').id, 'site-nav-id')
+	assert.equal(findSiteField([...siteFields, { id: 'duplicate', key: 'nav' }], 'nav'), null)
 })

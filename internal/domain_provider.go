@@ -55,8 +55,23 @@ func getDomainProvider() DomainProvider {
 	switch strings.ToLower(strings.TrimSpace(os.Getenv("PRIMO_DOMAIN_PROVIDER"))) {
 	case "railway":
 		return newRailwayProvider()
+	case "fly":
+		return newFlyProvider()
 	default:
 		return manualProvider{}
+	}
+}
+
+// Readiness exposes configuration presence, never the credential itself. The
+// attach/status calls still verify actual access and certificate state remotely.
+func domainProviderReady(provider DomainProvider) bool {
+	switch p := provider.(type) {
+	case flyProvider:
+		return p.configured() == nil
+	case railwayProvider:
+		return p.configured() == nil
+	default:
+		return false
 	}
 }
 

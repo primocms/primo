@@ -1,5 +1,6 @@
 import { track_cms_opened } from '$lib/analytics'
 import { self } from './managers'
+import type { RecordModel } from 'pocketbase'
 import type { Site } from '$lib/common/models/Site'
 import { SiteRoleAssignments, Users } from './collections'
 import { writable, readonly } from 'svelte/store'
@@ -26,23 +27,57 @@ export const set_current_user = (site?: Site) => {
 	current_user_store.set(user && { id: user.id, email: user.email, serverRole: user.serverRole, siteRole, name: user.name, avatar: user.avatar })
 }
 
-export const check_session = async () => {
-	if (self.instance?.authStore.isValid) {
-		return self.instance
-			.collection('users')
-			.authRefresh()
-			.then(() => {
-				track_cms_opened()
-				// Clear cached data since auth was refreshed - forces refetch with valid token
-				self.lists.clear()
-				self.records.clear()
-				return true
+export const check_session = async (is_current: () => boolean = () => true) => {
+	const client = self.instance
+	if (!client?.authStore.isValid) return false
+	const account_id = client.authStore.record?.id
+	const same_account = () => client.authStore.record?.id === account_id
+	for (let attempt = 0; attempt < 2; attempt++) {
+		if (!is_current()) return false
+		if (!same_account()) return false
+		const request_token = client.authStore.token
+		try {
+			// authRefresh() saves before resolving. Fetch without that side effect,
+			// then let only the still-current request update the shared credentials.
+			const refreshed = await client.send<{ token: string; record: RecordModel }>('/api/collections/users/auth-refresh', {
+				method: 'POST', headers: { Authorization: request_token }
 			})
-			.catch(() => {
-				self.instance?.authStore.clear()
+			if (!is_current() || !same_account()) return false
+			if (client.authStore.token !== request_token) {
+				// Another refresh of this account may have won. Verify its token
+				// once rather than redirecting a valid session or saving stale data.
+				if (account_id && attempt === 0) continue
 				return false
-			})
-	} else {
-		return false
+			}
+			if (!refreshed.token || !refreshed.record?.id || (account_id && refreshed.record.id !== account_id)) return false
+			client.authStore.save(refreshed.token, refreshed.record)
+			track_cms_opened()
+			self.lists.clear()
+			self.records.clear()
+			return true
+		} catch (error) {
+			if (!is_current()) return false
+			const failure = error as { isAbort?: boolean; status?: number } | undefined
+			const temporary =
+				failure?.isAbort ||
+				failure?.status === 0 ||
+				failure?.status === 408 ||
+				failure?.status === 429 ||
+				(failure?.status !== undefined && failure.status >= 500)
+			if (!same_account()) return false
+			if (client.authStore.token !== request_token) {
+				if (account_id && attempt === 0) continue
+				return false
+			}
+			if (temporary && attempt === 0) {
+				await new Promise((resolve) => setTimeout(resolve, 250))
+				continue
+			}
+			// A transport/server outage does not establish that a token is bad.
+			// Return unverified after a bounded retry; only rejection signs out.
+			if (failure?.status === 400 || failure?.status === 401 || failure?.status === 403) client.authStore.clear()
+			return false
+		}
 	}
+	return false
 }

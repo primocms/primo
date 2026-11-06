@@ -4,11 +4,31 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
+
+func TestIncrementalPublishArtifactNames(t *testing.T) {
+	inputHash := strings.Repeat("a", 64)
+	outputHash := fmt.Sprintf("%x", sha256.Sum256([]byte("export const scope = 'new';")))
+	// Script names use a 99-character base, just under PocketBase's limit.
+	// The full output digest must survive normalization and its random suffix.
+	for name, pattern := range map[string]string{
+		"s_" + inputHash[:32] + "_" + outputHash + ".js": `^s_` + inputHash[:32] + `_` + outputHash + `_[a-z0-9]{10}\.js$`,
+		"p_" + inputHash + ".html": `^p_` + inputHash + `_[a-z0-9]{10}\.html$`,
+	} {
+		file, err := filesystem.NewFileFromBytes([]byte("artifact contents"), name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !regexp.MustCompile(pattern).MatchString(file.Name) {
+			t.Fatalf("cache metadata lost by file-name normalization: %s", file.Name)
+		}
+	}
+}
 
 func TestPublishedSymbolVersionURLs(t *testing.T) {
 	for _, tracked := range []bool{false, true} {

@@ -1,0 +1,30 @@
+{
+  "state": "prepared-unpublished",
+  "publicationAuthorized": false,
+  "registryHandoffVerified": false,
+  "versions": {
+    "cms": "3.3.2",
+    "cli": "0.3.0",
+    "mcp": "0.1.11"
+  },
+  "packages": {
+    "mcp": {
+      "archive": "primo-mcp-0.1.11.tgz",
+      "version": "0.1.11",
+      "sourceCommit": "14d92557ee5387c7d7eab313b32e6b5632f48093",
+      "sourceArchiveSHA256": "26ac350886ed0488fc564712d9e0c2a8835ea5135e4eaf8a28f16eac6a002537",
+      "sha256": "5b3a02d0a2ba8b0d1bdc03210d11bccac55be5011744a57b9ff0511ae28bb358",
+      "integrity": "sha512-EDExPMQWiLEeqEWg7d5AI5SSIv+jxK4k1mMsPPn9ViXksh1eMn6BbRkeOPToMWRvAaPsjZpjkbCyZJ5Xdfw7gg==",
+      "files": 129
+    },
+    "cli": {
+      "archive": "primo-cli-0.3.0.tgz",
+      "version": "0.3.0",
+      "sourceCommit": "77ec9e389eecc72400e7465d5369d6cde2fa3552",
+      "sourceArchiveSHA256": "34b4cbb910c7e5bc3e5c3613ce02e0f6822a32998992495e06e1f771522fddea",
+      "sha256": "1883cdc7cd799ba3bb7265da041e6ff5d8642152169a66a8cbe964edfbb6fc13",
+      "integrity": "sha512-mn8csoPbi8Qogh6Fgj3qE6o7rHUVtt0aduYn/lb92gNe9hC771/G4ZT1dWHrzHOtMLOHTx9vZLLfPMiiKe6heA==",
+      "files": 2006
+    }
+  }
+}

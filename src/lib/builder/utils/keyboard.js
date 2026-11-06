@@ -1,11 +1,10 @@
-import { browser } from '$app/environment'
+import { browser } from '$app/env'
 import { PressedKeys } from 'runed'
 
 /**
  * Register a cross-platform keyboard shortcut (Cmd on Mac, Ctrl on Windows/Linux)
- * @param {import('runed').PressedKeys} keys - PressedKeys instance
  * @param {string | string[]} key - Key or keys to combine with modifier
- * @param {Function} callback - Function to call when shortcut is pressed
+ * @param {() => void} callback - Function to call when shortcut is pressed
  */
 export function onModKey(key, callback) {
 	const pressed_keys = new PressedKeys()

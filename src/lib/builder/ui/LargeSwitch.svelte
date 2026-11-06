@@ -14,7 +14,7 @@
 	 */
 
 	/** @type {Props} */
-	let { active_tab_id = $bindable(tabs[0]?.id), variant = 'primary', disable_hotkeys = false, style = '' } = $props()
+	let { active_tab_id = $bindable('code'), variant = 'primary', disable_hotkeys = false, style = '' } = $props()
 
 	function toggle_switch() {
 		if (active_tab_id === 'code') {
@@ -30,7 +30,7 @@
 </script>
 
 <div class="LargeSwitch {variant}" in:fade={{ duration: 200 }} {style}>
-	<button onclick={toggle_switch}>
+	<button onclick={toggle_switch} aria-label={active_tab_id === 'code' ? 'Show fields' : 'Show code'}>
 		<div class="half" class:active={active_tab_id === 'code'} class:showing_key_hint={$mod_key_held && !disable_hotkeys && active_tab_id !== 'code'}>
 			{#if $mod_key_held && !disable_hotkeys && active_tab_id !== 'code'}
 				<span class="key-hint">&#8984; E</span>
@@ -120,5 +120,9 @@
 			align-items: center;
 			gap: 0.25rem;
 		}
+	}
+	@media (pointer: coarse) {
+		button { min-height: 44px; }
+		.toggle-back { top: calc(50% - 15px); }
 	}
 </style>

@@ -245,6 +245,24 @@ func TestRepeaterOrderSupportsEveryEntryCollection(t *testing.T) {
 					t.Fatal("incorrect order")
 				}
 			}
+			// Deliberately permissive collection rules isolate the additional
+			// content/design restriction that REST permission hooks would apply.
+			model, _ := app.FindCollectionByNameOrId(collection)
+			model.UpdateRule = types.Pointer("@request.auth.id != ''")
+			if err := app.Save(model); err != nil {
+				t.Fatal(err)
+			}
+			editor := permissionRecord(t, app, "users", map[string]any{"email": "reorder-editor@example.test", "serverRole": "editor"})
+			_, err = saveRepeaterOrder(app, &core.RequestInfo{Auth: editor}, request)
+			switch collection {
+			case "site_entries", "page_entries", "page_section_entries", "page_type_section_entries":
+				if err != nil {
+					t.Fatalf("content reorder denied: %v", err)
+				}
+			default:
+				requireOrderStatus(t, err, 403)
+			}
+
 		})
 	}
 }

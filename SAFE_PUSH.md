@@ -138,3 +138,48 @@ output, failed publication, retry, and preservation of the push baseline:
 ```sh
 PRIMO_TEST_CMS_BINARY=/path/to/primo node --test tests/push-cms.test.mjs tests/publish-cms.test.mjs
 ```
+
+## Batched archive transport
+
+The `import_chunks_v1` capability supports archive transport through proxies
+with request limits below the site's total size. Staging writes private local
+temporary files only. It never imports individual chunks or changes content.
+
+1. `POST /api/primo/import-uploads` with JSON `{ endpoint, size, sha256 }`
+   reserves a session for the authenticated principal and exact final route.
+   Allowed routes are site import, its preview, library import and bootstrap.
+   The response is `{ protocol: 1, upload_id, chunk_bytes: 4194304 }`.
+2. `PUT /api/primo/import-uploads/{upload_id}?offset=N` sends raw bytes with
+   `X-Primo-Chunk-SHA256`. Chunks append sequentially, up to 4 MiB each.
+   A byte-identical replay of an already accepted range is idempotent. Gaps,
+   overlaps, wrong digests and writes beyond the declared archive size reject.
+3. Send the original import multipart form with `upload_id` in place of `file`.
+   All other fields, including `expected_revision`, `force`, `deletes` and group
+   metadata, retain their meaning. The session must be complete and match the
+   caller and exact route. The CMS verifies its overall SHA-256, consumes it
+   once, and executes the existing import transaction and authorization.
+4. `DELETE /api/primo/import-uploads/{upload_id}` cancels private staging. The
+   CLI calls it after success or failure; expiry covers crashed clients.
+
+The CLI begins at 1 MiB per chunk, halves on HTTP 413 to a 64 KiB minimum,
+retries transient chunk failures at most three times, and never automatically
+retries the final import. Small imports retain multipart compatibility and
+switch to staging if rejected by a proxy. Servers without the protocol retain
+legacy multipart behavior and produce an actionable upgrade message on 413.
+
+Sessions expire after one hour, including while idle. The CMS removes leftover
+staging on restart. Files under `<data-dir>/.import-uploads/` are private and
+disposable, excluded from the portable site export. Reservations allow at most
+two sessions per principal, eight total, and 1 GiB total declared archive bytes.
+Anonymous fresh-instance requests share one principal and quota. Authorization
+is checked before staging, on each chunk and again at final import; bootstrap
+and library freshness are rechecked by the final transaction. Existing site
+updates still require a developer. Changing permissions during an upload does
+not grant continued access.
+
+Compressed archives and expanded library/site contents remain bounded at
+512 MiB, with existing asset-field limits. Batched transport does not bypass
+these storage/validation budgets. It sends the archive in chunks, while the
+existing importer preserves IDs and deduplicates unchanged stored assets.
+A stopped transfer changes no draft or publication. A failed final import
+consumes its staging; rerun after resolving its error or conflict.

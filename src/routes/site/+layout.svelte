@@ -3,7 +3,7 @@
 	import { check_session } from '$lib/pocketbase/user'
 	import { refresh_author_mode } from '$lib/pocketbase/author_mode'
 	import { self } from '$lib/pocketbase/managers'
-	import { onMount } from 'svelte'
+	import { onMount, onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { auth_url } from '$lib/auth_navigation'
 	import { page } from '$app/state'
@@ -22,6 +22,9 @@
 	let initial_check_done = $state(false)
 	let should_create_site = $state(false)
 
+	let active = true
+	onDestroy(() => { active = false })
+
 	onMount(async () => {
 		const login_url = auth_url(page.url)
 		// Start the author-mode refresh before any await — Primo can render
@@ -29,8 +32,10 @@
 		// 'both' default, and read_only must already be pending-locked then.
 		refresh_author_mode()
 
-		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+		const verified = await check_session(() => active)
+		if (!active) return
+		if (!verified) {
+			await goto(login_url, { replace: true })
 			return
 		}
 
@@ -39,19 +44,19 @@
 			try {
 				// Direct API call to get all sites - this ensures we have real data
 				const response = await self.instance?.collection('sites').getList(1, 1)
-				if (response && response.items.length > 0) {
+				if (active && response && response.items.length > 0) {
 					const first_site = response.items[0]
 					// Check if current host doesn't match any site
 					const host_match = await self.instance?.collection('sites').getFirstListItem(`host = "${host}"`)
 						.catch(() => null)
 
-					if (!host_match && first_site.host) {
+					if (active && !host_match && first_site.host) {
 						// Redirect to the first site's editor. Assigned sites live at
 						// their own vhost (//host/admin/site); unassigned sites
 						// (host === id) have no reachable vhost and must open by id at
 						// /admin/sites/{id} — otherwise the id gets used as a hostname
 						// and DNS fails. site_editor_url handles both cases.
-						window.location.href = site_editor_url(first_site)
+						window.location.href = site_editor_url({ id: first_site.id, host: first_site.host })
 						return
 					}
 				} else {
@@ -82,7 +87,7 @@
 	$effect(() => {
 		const list_loaded = sites_by_host !== undefined
 		if (initial_check_done && list_loaded && !site && !is_localhost && self.instance?.authStore.isValid) {
-			goto('/admin/dashboard', { replaceState: true })
+			goto('/admin/dashboard', { replace: true })
 		} else if (site) {
 			creating_site = false
 		}

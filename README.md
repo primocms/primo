@@ -98,6 +98,11 @@ primo publish               # publish the draft to the live site
 
 Clients manage content in the browser throughout. Revision checks protect their edits when you push changes; an explicit overwrite saves a backup. See [safe pushes and upgrade instructions](./SAFE_PUSH.md).
 
+Content editors can edit content, create child pages, and add or reorder body blocks allowed by the page type. The server restricts block source, field schemas, page types, layout structure, site settings, and role changes to developers. An empty `allowed_blocks` list locks body structure.
+
+Editors remain trusted publishers: the current browser/CLI publishing flow uploads compiled HTML and JavaScript using their account. These permissions protect design source records; they do not sandbox an editor who deliberately uploads executable compiled output. Use developer accounts for design and server administration.
+
+
 ## Built with
 
 One Go binary, PocketBase with SQLite for storage, and Svelte 5 for the editor and your blocks. The same server runs the CMS and serves your published sites.

@@ -140,6 +140,8 @@ func generateUploads(pb *pocketbase.PocketBase, system *filesystem.System, site 
 	return newFiles, nil
 }
 
+// generatePages validates the site’s page tree before copying compiled HTML
+// into the publication directory, returning the generated file paths.
 func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *core.Record, prefix string) ([]string, error) {
 	collection, err := pb.FindCollectionByNameOrId("pages")
 	if err != nil {
@@ -155,6 +157,10 @@ func generatePages(pb *pocketbase.PocketBase, system *filesystem.System, site *c
 		dbx.Params{"site": site.Id},
 	)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := validatePublicationPages(pages); err != nil {
 		return nil, err
 	}
 

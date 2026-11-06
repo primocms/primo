@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte'
 	import * as Dialog from '$lib/components/ui/dialog'
 	import Icon from '@iconify/svelte'
 	import { PaneGroup, Pane, PaneResizer } from 'paneforge'
@@ -9,24 +10,31 @@
 	import { site_context, hide_dynamic_field_types_context } from '$lib/builder/stores/context'
 	import { Sites, SiteFields, SiteEntries } from '$lib/pocketbase/collections'
 	import { current_user } from '$lib/pocketbase/user'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { useContent } from '$lib/Content.svelte'
 	import { locale } from '$lib/builder/stores/app/misc.js'
 	import { self } from '$lib/pocketbase/managers'
 	import { beforeNavigate } from '$app/navigation'
 	import { read_only } from '$lib/pocketbase/author_mode'
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte'
+	const mobile = new IsMobile()
 
 	let { onClose, has_unsaved_changes = $bindable(false) } = $props()
 
 	const { value: site } = site_context.get()
 	const fields = $derived(site?.fields() ?? [])
 	const entries = $derived(site?.entries() ?? [])
-	const site_data = $derived(useContent(site, { target: 'cms' })?.[$locale] ?? {})
+	const resolved_site_data = $derived(useContent(site, { target: 'cms' }))
+	const site_data = $derived(resolved_site_data?.[$locale] ?? {})
 
 	hide_dynamic_field_types_context.set(true)
 
-	const initial_code = { head: site?.head, foot: site?.foot }
-	const initial_data = _.cloneDeep(site_data)
+	const initial_code = { head: site?.head || '', foot: site?.foot || '' }
+	// Dirty comparison must retain the data from when this editing session opened.
+	let initial_data = $state.raw<Record<string, unknown> | undefined>(untrack(() => resolved_site_data ? _.cloneDeep(site_data) : undefined))
+	$effect(() => {
+		if (initial_data === undefined && resolved_site_data !== undefined) initial_data = _.cloneDeep(site_data)
+	})
 
 	let head = $state(site?.head || '')
 	let foot = $state(site?.foot || '')
@@ -44,7 +52,7 @@
 	// Compare current state to initial data
 	$effect(() => {
 		const code_changed = head !== initial_code.head || foot !== initial_code.foot
-		const data_changed = !_.isEqual(initial_data, site_data)
+		const data_changed = initial_data !== undefined && !_.isEqual(initial_data, site_data)
 		has_unsaved_changes = code_changed || data_changed
 	})
 
@@ -105,7 +113,8 @@
 {#if site}
 	<main class="SiteEditor">
 		{#if $current_user?.siteRole === 'developer'}
-			<PaneGroup direction="horizontal" style="display: flex;" autoSaveId="SiteEditor-horizontal">
+			{#key mobile.current}
+			<PaneGroup direction={mobile.current ? 'vertical' : 'horizontal'} style="display: flex;" autoSaveId={mobile.current ? 'SiteEditor-mobile' : 'SiteEditor-horizontal'}>
 				<Pane defaultSize={50}>
 					<Fields
 						entity={site}
@@ -173,6 +182,7 @@
 					</PaneGroup>
 				</Pane>
 			</PaneGroup>
+			{/key}
 		{:else}
 			<Content
 				entity={site}
@@ -199,6 +209,8 @@
 	.SiteEditor {
 	}
 	main {
+		min-height: 0;
+		min-width: 0;
 		display: flex; /* to help w/ positioning child items in code view */
 		background: var(--primo-color-black);
 		color: var(--color-gray-2);
@@ -241,9 +253,18 @@
 		}
 	}
 	.container {
+		min-height: 0;
 		padding-left: 0.75rem;
 		display: flex;
 		flex-direction: column;
 		max-height: 100%;
+	}
+	@media (max-width: 767px) {
+		.container { padding-left: 0; padding-top: 8px; }
+		:global(.SiteEditor .PaneResizer-primary) {
+			width: 100%;
+			height: 10px;
+		}
+		.icon.primary { transform: rotate(90deg); }
 	}
 </style>

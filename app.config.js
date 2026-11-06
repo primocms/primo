@@ -1,8 +1,27 @@
+import { fileURLToPath } from 'node:url'
+import adapter from '@sveltejs/adapter-static'
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
+import { createHash } from 'node:crypto'
+import { readFileSync, readdirSync } from 'node:fs'
+
+// Persisted publication caches must expire when the browser compiler changes,
+// even if the authored page content and the Svelte version are unchanged.
+function compilerFiles(directory) {
+	return readdirSync(new URL(directory, import.meta.url), { withFileTypes: true }).flatMap((entry) =>
+		entry.isDirectory() ? compilerFiles(`${directory}/${entry.name}`) : [`${directory}/${entry.name}`]
+	)
+}
+const publishCompilerHash = createHash('sha256')
+for (const file of [...compilerFiles('./src/lib/compiler'), './src/lib/builder/component.js', './src/lib/builder/utils.ts', './src/lib/Content.svelte.ts', './src/lib/PageData.svelte.ts', './src/lib/pages.ts', './src/lib/workers/Publish.svelte.ts', './src/lib/workers/publish-cache.js', './src/lib/workers/publish-assets.js', './src/lib/common/baseline-css.ts', './package-lock.json'].sort()) {
+	publishCompilerHash.update(file).update(readFileSync(new URL(file, import.meta.url)))
+}
 
 export default defineConfig({
+	resolve: { alias: { '$lib': fileURLToPath(new URL('./src/lib', import.meta.url)) } },
+	define: { __PRIMO_PUBLISH_COMPILER_VERSION__: JSON.stringify(publishCompilerHash.digest('hex')) },
 	optimizeDeps: {
 		exclude: ['@rollup/browser']
 	},
@@ -44,5 +63,10 @@ export default defineConfig({
 			}
 		}
 	},
-	plugins: [tailwindcss(), sveltekit()]
+	plugins: [tailwindcss(), sveltekit({
+		preprocess: vitePreprocess(),
+		adapter: adapter({ pages: 'internal/build', fallback: 'index.html' }),
+		paths: { base: '/admin' },
+		version: { pollInterval: 0 }
+	})]
 })

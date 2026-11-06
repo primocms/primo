@@ -6,6 +6,7 @@ import { auth_url, auth_destination } from '../../src/lib/auth_navigation.js'
 const requested = new URL('http://localhost:3010/admin/dashboard/sites?group=selected-group#sites')
 
 async function mountCallback(route, scope) {
+	scope = { active: true, ...scope }
 	const source = await readFile(new URL(`../../src/routes/${route}`, import.meta.url), 'utf8')
 	const callback = source.match(/onMount\(async \(\) => \{([\s\S]*?)\n\t\}\)/)
 	assert(callback, 'Expected a route mount callback')
@@ -26,7 +27,7 @@ test('a dashboard without a session returns to its selected group after dev logi
 		tryDevAuth: async () => true,
 		goto
 	})
-	assert.deepEqual(navigations[1], { url: requested.pathname + requested.search + requested.hash, options: { replaceState: true } })
+	assert.deepEqual(navigations[1], { url: requested.pathname + requested.search + requested.hash, options: { replace: true } })
 })
 
 test('existing login sessions also honor the requested dashboard', async () => {
@@ -55,6 +56,11 @@ test('authenticated dashboard visits do not redirect', async () => {
 test('login continuation preserves a specific site and page', () => {
 	const url = new URL('/admin/sites/site-id/about?view=content#details', requested.origin)
 	assert.equal(auth_destination(new URL(auth_url(url), url.origin)), url.pathname + url.search + url.hash)
+})
+
+test('browser sign-in returns to the pending CLI approval without losing its code', () => {
+	const url = new URL('/admin/cli-login?code=ABCD-1234-EF01-5678', requested.origin)
+	assert.equal(auth_destination(new URL(auth_url(url), url.origin)), url.pathname + url.search)
 })
 
 test('login without a continuation retains the default editor destination', () => {

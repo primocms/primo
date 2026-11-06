@@ -7,7 +7,7 @@ import { SvelteMap } from 'svelte/reactivity'
 export class OrderedSvelteMap<K, V> extends SvelteMap<K, V> {
 	private order: K[] = []
 
-	private *iterator(): IterableIterator<[K, V]> {
+	private *iterator(): Generator<[K, V], undefined, unknown> {
 		for (const key of this.order) {
 			const value = super.get(key) as V
 			yield [key, value]
@@ -39,17 +39,17 @@ export class OrderedSvelteMap<K, V> extends SvelteMap<K, V> {
 		super.clear()
 	}
 
-	*keys(): IterableIterator<K> {
+	*keys(): Generator<K, undefined, unknown> {
 		super.keys()
 		for (const [key] of this.iterator()) yield key
 	}
 
-	*values(): IterableIterator<V> {
+	*values(): Generator<V, undefined, unknown> {
 		super.values()
 		for (const [, value] of this.iterator()) yield value
 	}
 
-	entries(): IterableIterator<[K, V]> {
+	entries() {
 		super.entries()
 		return this.iterator()
 	}

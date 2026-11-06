@@ -4,15 +4,20 @@
 	import { Globe, LayoutTemplate, Store, Library, Cuboid } from 'lucide-svelte'
 	import { page } from '$app/state'
 	import { check_session } from '$lib/pocketbase/user'
-	import { onMount } from 'svelte'
+	import { onMount, onDestroy } from 'svelte'
 	import { goto } from '$app/navigation'
 	import { auth_url } from '$lib/auth_navigation'
 	import { current_user, set_current_user } from '$lib/pocketbase/user'
 
+	let active = true
+	onDestroy(() => { active = false })
+
 	onMount(async () => {
 		const login_url = auth_url(page.url)
-		if (!(await check_session())) {
-			await goto(login_url, { replaceState: true })
+		const verified = await check_session(() => active)
+		if (!active) return
+		if (!verified) {
+			await goto(login_url, { replace: true })
 		}
 	})
 
@@ -58,7 +63,7 @@
 	const is_sites_route = $derived(page.url.pathname === '/admin/dashboard/sites')
 	$effect(() => {
 		if ($current_user && !$current_user.serverRole && !is_sites_route) {
-			goto('/admin/dashboard/sites', { replaceState: true })
+			goto('/admin/dashboard/sites', { replace: true })
 		}
 	})
 </script>

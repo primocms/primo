@@ -39,8 +39,8 @@ export function content_editable(element, params) {
 	element.onfocus = () => {
 		const range = document.createRange()
 		const sel = window.getSelection()
-		range.setStart(element, 1)
-		range.collapse(true)
+		range.selectNodeContents(element)
+		range.collapse(false)
 
 		sel?.removeAllRanges()
 		sel?.addRange(range)
@@ -52,11 +52,11 @@ export function content_editable(element, params) {
 		if (e.code === 'Enter') {
 			e.preventDefault()
 			e.target?.blur()
-			params.on_submit(value)
+			params.on_submit(element.textContent)
 		}
 	}
 
-	element.onkeyup = (e) => {
+	element.oninput = (e) => {
 		value = e.target.textContent
 		params.on_change(value)
 	}
@@ -69,6 +69,7 @@ export function swap_array_item_index(arr, from, to) {
 	return new_array
 }
 
+/** @returns {import('svelte/action').ActionReturn<undefined, { onclick_outside?: (event: CustomEvent) => void }>} */
 export function clickOutside(node) {
 	const handleClick = (event) => {
 		if (node && !node.contains(event.target) && !event.defaultPrevented) {

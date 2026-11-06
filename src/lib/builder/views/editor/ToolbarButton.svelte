@@ -72,14 +72,14 @@
 			</div>
 			<span class="label" class:invisible={key && $mod_key_held}>{label}</span>
 		{:else if label && icon}
-			<Icon {icon} class={key && $mod_key_held ? 'invisible' : ''} />
+			<span class="toolbar-icon" class:invisible={key && $mod_key_held} aria-hidden="true"><Icon {icon} /></span>
 			<span class="label" class:invisible={key && $mod_key_held}>{label}</span>
 		{:else if svg}
 			<div class="svg" class:invisible={key && $mod_key_held}>
 				{@html svg}
 			</div>
 		{:else if icon}
-			<Icon {icon} class={key && $mod_key_held ? 'invisible' : ''} />
+			<span class="toolbar-icon" class:invisible={key && $mod_key_held} aria-hidden="true"><Icon {icon} /></span>
 		{/if}
 		{#if key && $mod_key_held && !loading}
 			<span class="key-hint" aria-hidden="true">
@@ -92,6 +92,17 @@
 </button>
 
 <style lang="postcss">
+	/* Iconify can resolve after pointer-down. Reserve its space so the button
+	   and its neighbors keep the same hit targets until pointer-up. */
+	.toolbar-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 14px;
+		width: 14px;
+		height: 14px;
+	}
+
 	.primo-button {
 		--Spinner-size: 0.75rem;
 		position: relative;

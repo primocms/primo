@@ -63,7 +63,7 @@ export function extract_styles_for_class(doc, class_name) {
 
 		CSSParser.traverse(ast, node => {
 			if (node.selector && class_pattern.test(node.selector)) {
-				const original_full = node.source || stringify_node(node)
+				const original_full = ('source' in node && typeof node.source === 'string' ? node.source : stringify_node(node))
 				rules.push({
 					selector: node.selector,
 					body: node.body || '',

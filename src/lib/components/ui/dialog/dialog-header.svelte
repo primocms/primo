@@ -31,15 +31,15 @@
 	> = $props()
 </script>
 
-<div bind:this={ref} class={cn('grid grid-cols-3 items-center', className)} {...restProps}>
-	<div class="ml-6">
+<div bind:this={ref} class={cn('dialog-header grid grid-cols-3 items-center shrink-0 min-w-0', className)} {...restProps}>
+	<div class="dialog-tools ml-6">
 		{@render children?.()}
 	</div>
-	<DialogTitle class="text-center flex items-center justify-center gap-2">
+	<DialogTitle class="dialog-heading min-w-0 text-center flex items-center justify-center gap-2">
 		{#if icon}
 			<Icon {icon} class="h-4 w-4" />
 		{/if}
-		<span>{title}</span>
+		<span class="truncate">{title}</span>
 	</DialogTitle>
 	{#if button?.label}
 		<Button variant="default" onclick={button.onclick} disabled={button.disabled} class="justify-self-end inline-flex justify-center items-center relative">
@@ -59,3 +59,14 @@
 		</Button>
 	{/if}
 </div>
+
+<style>
+	@media (max-width: 640px) {
+		.dialog-header { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+		.dialog-tools { grid-column: 1 / -1; grid-row: 2; margin-left: 0; }
+		.dialog-tools:empty { display: none; }
+		.dialog-header :global(.dialog-heading) { grid-column: 1; grid-row: 1; justify-content: flex-start; padding-left: 56px; font-size: 16px; }
+		.dialog-header :global(.dialog-heading svg) { flex-shrink: 0; }
+		.dialog-header :global(> button) { grid-column: 2; grid-row: 1; min-height: 40px; }
+	}
+</style>

@@ -18,6 +18,8 @@ scratchpad.md
 /playwright/.cache/
 pnpm-lock.yaml
 /playwright/.auth
+/presence-*.json
+/cache-*.json
 
 # Devenv
 .devenv*
@@ -62,3 +64,16 @@ bugs.md
 
 # Local-only internal design specs (kept out of version control)
 internal/SPEC-*.md
+
+/auth-*.json
+
+# Generated local browser/handoff evidence
+/tests/staging/evidence/
+
+# Generated onboarding qualification evidence
+/onboarding-*.json
+/fresh-machine-result.json
+
+# Official runtime staging for native onboarding checks
+/node-distributions/
+/frozen-node/

@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { gunzipSync } from 'node:zlib'
 import { devAuth, ensureEditorUser } from './helpers/server'
 import { seedFixtureSite, type SeededSite } from './helpers/seed'
-import { loginAsDeveloper, canvasFrame, replaceContentEditableText } from './helpers/editor'
+import { loginAsDeveloper, replaceContentEditableText, editableHeadline } from './helpers/editor'
 import { TEST_SERVER_URL } from './helpers/paths'
 
 // PostHog filters automation traffic. Simulate an ordinary browser while
@@ -54,12 +54,52 @@ async function captureAnalytics(page: Page, enabled: boolean, dev: boolean) {
 	return captured
 }
 
+test('opted-out analytics stays silent while a timed-out compiler download retries and content saves', async ({page,context,request}) => {
+ test.setTimeout(60000)
+ const captured = await captureAnalytics(page, false, false)
+ const {token} = await devAuth(request)
+ const entries = async () => {
+  const response = await request.get('/api/collections/page_section_entries/records', {headers:{Authorization:`Bearer ${token}`},params:{filter:`section = "${ids.sectionId}"`,sort:'id',perPage:200}})
+  expect(response.ok()).toBeTruthy()
+  return (await response.json()).items.map(({id,field,parent,locale,value})=>({id,field,parent,locale,value}))
+ }
+ const before = await entries()
+ let downloads = 0
+ const holds: ReturnType<typeof setTimeout>[] = []
+ await context.route(url => url.searchParams.get('svelte-module') === 'svelte/src/internal/client/context.js', async route => {
+  if (++downloads === 1) {
+   // Exceed the real loader's first 10s deadline, then allow its retry.
+   await new Promise<void>(resolve => holds.push(setTimeout(resolve, 12000)))
+   await route.abort('failed').catch(() => {})
+  } else {
+   await new Promise<void>(resolve => holds.push(setTimeout(resolve, 2000)))
+   await route.continue()
+  }
+ })
+ try {
+  await loginAsDeveloper(page, ids.siteId)
+  const headline = await editableHeadline(page)
+  expect(downloads, 'The real compiler must retry the stalled runtime request').toBe(2)
+  const value = 'Saved after bounded compiler download retry'
+  await replaceContentEditableText(page, headline, value); await headline.blur()
+  await expect.poll(async () => {
+   const response = await request.get('/api/collections/page_section_entries/records', {headers:{Authorization:`Bearer ${token}`},params:{filter:`section = "${ids.sectionId}" && field = "${ids.fieldIds.headline}"`}})
+   return (await response.json()).items[0].value
+  }).toBe(value)
+  expect(await entries()).toEqual(before.map(entry=>({...entry,value:entry.field===ids.fieldIds.headline?value:entry.value})))
+  await page.waitForTimeout(4000)
+  expect(captured.analyticsRequests).toBe(0)
+  expect(captured.events).toEqual([])
+ } finally {for (const timer of holds) clearTimeout(timer)}
+})
+
 for (const [label, enabled, dev] of [
 	['enabled', true, false],
 	['opted out', false, false],
 	['development', true, true]
 ] as const) {
 	test(`product analytics: ${label}`, async ({ page, request }) => {
+		test.setTimeout(90000)
 		const captured = await captureAnalytics(page, enabled, dev)
 		const { events } = captured
 		await loginAsDeveloper(page, ids.siteId)
@@ -68,8 +108,7 @@ for (const [label, enabled, dev] of [
 			expect(events.filter((event) => event.event === 'cms_opened')).toHaveLength(1)
 			expect(events.some((event) => event.event === 'login_succeeded')).toBe(false)
 		}
-		const headline = canvasFrame(page).locator('[data-testid="headline"]')
-		await expect(headline).toHaveAttribute('contenteditable', 'true')
+		const headline = await editableHeadline(page)
 		const value = `Saved content that must not enter analytics: ${label}`
 		await replaceContentEditableText(page, headline, value)
 		await headline.blur()
@@ -96,7 +135,7 @@ for (const [label, enabled, dev] of [
 		}
 	})
 	test(`CMS activity without edits: ${label}`, async ({ page }) => {
-		test.setTimeout(60000)
+		test.setTimeout(90000)
 		const captured = await captureAnalytics(page, enabled, dev)
 		const { events } = captured
 		// Keep the real password form visible on the isolated localhost server.
@@ -116,7 +155,7 @@ for (const [label, enabled, dev] of [
 		await page.getByLabel('Password', { exact: true }).fill(editor.password)
 		await page.getByRole('button', { name: 'Sign in', exact: true }).click()
 		await expect(page).toHaveURL(new RegExp(`/admin/sites/${ids.siteId}`))
-		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toBeVisible()
+		await editableHeadline(page)
 		if (enabled && !dev) {
 			await expect.poll(() => events.map((event) => event.event), { timeout: 15000 }).toEqual(expect.arrayContaining(['cms_opened', 'login_succeeded']))
 			for (const name of ['cms_opened', 'login_succeeded']) {

@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { snapshot } from '$app/navigation'
 	import MarketplaceTabs from '$lib/components/MarketplaceTabs.svelte'
-	import { rememberMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
+	import { createMarketplaceScroll } from '$lib/components/marketplace-navigation.svelte'
 
 	import * as Popover from '$lib/components/ui/popover'
 	import * as Sidebar from '$lib/components/ui/sidebar'
@@ -13,7 +14,7 @@
 	import { toast } from 'svelte-sonner'
 	import * as RadioGroup from '$lib/components/ui/radio-group'
 	import { Label } from '$lib/components/ui/label'
-	import { page } from '$app/state'
+	import { navigating, page } from '$app/state'
 	import { goto } from '$app/navigation'
 	import { LibrarySymbolEntries, LibrarySymbolFields, LibrarySymbolGroups, LibrarySymbols } from '$lib/pocketbase/collections'
 	import { marketplace, self } from '$lib/pocketbase/managers'
@@ -21,6 +22,10 @@
 	import { get } from 'svelte/store'
 	import { watch } from 'runed'
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
+
+	const marketplaceScroll = createMarketplaceScroll()
+	const rememberMarketplaceScroll = marketplaceScroll.action
+	snapshot({ id: 'dashboard-marketplace-blocks', ...marketplaceScroll.snapshot })
 
 	const group_id = $derived(page.url.searchParams.get('group') ?? undefined)
 	const marketplace_symbol_group = $derived(group_id ? LibrarySymbolGroups.from(marketplace).one(group_id) : undefined)
@@ -30,10 +35,11 @@
 
 	// Auto-select first marketplace group if none is selected
 	$effect(() => {
-		if (!group_id && marketplace_symbol_groups.length > 0) {
-			const url = new URL(page.url)
+		// A late category response must not replace a user navigation.
+		if (!navigating.to && !group_id && marketplace_symbol_groups.length > 0) {
+			const url = new URL(page.url.href)
 			url.searchParams.set('group', marketplace_symbol_groups[0].id)
-			goto(url, { replaceState: true })
+			goto(url, { replace: true })
 		}
 	})
 
@@ -66,7 +72,7 @@
 				sort: 'index'
 			})
 
-			if (marketplace_fields?.length > 0) {
+			if (marketplace_fields && marketplace_fields.length > 0) {
 				const field_map = new Map()
 
 				// Create fields in order, handling parent relationships
@@ -102,7 +108,7 @@
 							})
 						: []
 
-				if (marketplace_entries?.length > 0) {
+				if (marketplace_entries && marketplace_entries.length > 0) {
 					const entry_map = new Map()
 
 					// Create entries in order, handling parent relationships

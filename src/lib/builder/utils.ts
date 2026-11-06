@@ -114,7 +114,7 @@ function toCssCompilationError(error) {
 
 	const message = typeof error === 'string' ? error : error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : 'Unknown CSS compilation error'
 
-	const details = {}
+	const details: { line?: number; column?: number; reason?: string } = {}
 	if (error && typeof error === 'object') {
 		if ('line' in error && typeof error.line === 'number') {
 			details.line = error.line
@@ -348,7 +348,7 @@ function formatCssCompilationError(error) {
 		return `CSS Error: ${baseMessage}`
 	}
 
-	const positions = []
+	const positions: string[] = []
 	if ('line' in error && typeof error.line === 'number') {
 		positions.push(`line ${error.line}`)
 	}

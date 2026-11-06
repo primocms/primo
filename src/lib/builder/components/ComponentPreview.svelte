@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount, tick } from 'svelte'
+	import { onMount, tick, untrack } from 'svelte'
 	import { slide, fade } from 'svelte/transition'
 	import { dynamic_iframe_srcdoc } from './misc.js'
 	import { highlightedElement } from '../stores/app/misc'
@@ -22,7 +22,7 @@
 	import { site_html } from '$lib/builder/stores/app/page.js'
 	import { onModKey } from '$lib/builder/utils/keyboard'
 	import * as _ from 'lodash-es'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { current_user } from '$lib/pocketbase/user'
 
 	/**
@@ -191,11 +191,11 @@
 
 	// Set the refresh_preview store to the debounced compile function
 	$effect(() => {
-		$refresh_preview = setIframeApp
+		$refresh_preview = () => setIframeApp(true)
 	})
 
 	// Add Command+R keyboard shortcut to refresh preview
-	onModKey('r', setIframeApp)
+	onModKey('r', () => setIframeApp(true))
 
 	let channel
 	onMount(() => {
@@ -204,6 +204,9 @@
 			const { event, payload } = data
 			if (event === 'INITIALIZED') {
 				iframe_loaded = true
+				// Updating the inherited head recreates the iframe document even
+				// when the block's code is unchanged. Mount it in each new document.
+				if (componentApp) setIframeApp()
 			} else if (event === 'BEGIN') {
 				compilation_error = null
 				error_source = null
@@ -227,7 +230,7 @@
 		}
 	})
 
-	let consoleLog = $state()
+	let consoleLog = $state<string>('')
 
 	let iframe = <HTMLIFrameElement>$state()
 
@@ -235,7 +238,7 @@
 		var container = document.createElement('div')
 		container.innerHTML = code
 		Array.from(container.childNodes).forEach((node) => {
-			iframe.contentWindow.document.head.appendChild(node)
+			iframe.contentDocument?.head.appendChild(node)
 		})
 	}
 
@@ -283,11 +286,11 @@
 		}
 	)
 
-	let container = $state()
+	let container = $state<HTMLElement>()
 	let iframe_loaded = $state(false)
 
-	let scale = $state()
-	let height = $state()
+	let scale = $state('')
+	let height = $state('100%')
 	async function resizePreview() {
 		if (view && container && iframe) {
 			await tick()
@@ -325,11 +328,11 @@
 		}
 	}
 
-	async function setIframeApp() {
+	async function setIframeApp(reset = false) {
 		if (!channel) return
 		channel.postMessage({
 			event: 'SET_APP',
-			payload: { componentApp, data }
+			payload: { componentApp, data, reset }
 		})
 	}
 
@@ -420,7 +423,8 @@
 		}
 	}
 
-	let last_signature = `${code.html}--${code.js}`
+	// Comparison baselines intentionally capture the first render, then advance in the watchers.
+	let last_signature = untrack(() => `${code.html}--${code.js}`)
 	watch(
 		() => [code.html, code.js, $auto_refresh],
 		([html, js, refresh]) => {
@@ -435,7 +439,7 @@
 	$effect(() => {
 		if (iframe) {
 			// open clicked links in browser
-			iframe.contentWindow.document.querySelectorAll('a').forEach((link) => {
+			iframe.contentDocument?.querySelectorAll('a').forEach((link) => {
 				link.target = '_blank'
 			})
 			append_to_iframe(append)
@@ -443,17 +447,15 @@
 	})
 
 	watch(
-		() => [componentApp, iframe_loaded],
+		() => componentApp,
 		() => {
 			if (!componentApp || !iframe_loaded) return
 			setIframeApp()
 		}
 	)
 
-	let last_data = _.cloneDeep(data)
-	let last_data_keys = Object.keys(data || {})
-		.sort()
-		.join(',')
+	let last_data = untrack(() => _.cloneDeep(data))
+	let last_data_keys = untrack(() => Object.keys(data || {}).sort().join(','))
 	watch(
 		() => data,
 		(data) => {
@@ -477,7 +479,8 @@
 	)
 
 	$effect(() => {
-		;(previewWidth, resizePreview())
+		void previewWidth
+		resizePreview()
 	})
 	let active_dynamic_icon = $derived(getIcon(previewWidth))
 	let active_static_icon = $derived(getIcon(active_static_width))

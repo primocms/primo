@@ -1,0 +1,271 @@
+{
+  "canonicalCMS": "https://github.com/primocms/primo/pull/1363",
+  "closedSupersededPRs": 33,
+  "preservedHeads": true,
+  "mergedPRs": 0,
+  "deletedBranches": 0,
+  "deferredMobileRestored": true,
+  "components": [
+    {
+      "repo": "primocms/primo",
+      "number": 1362,
+      "state": "closed",
+      "draft": false,
+      "head": "3a0e2da925af2fa27084cccfef3c36834f300351"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1353,
+      "state": "closed",
+      "draft": true,
+      "head": "91ff71f82a7c276b609a6d861e22c48ef536c7d4"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1352,
+      "state": "closed",
+      "draft": true,
+      "head": "4cba6f958ccc0abeba26203356b32a88abe30c71"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1351,
+      "state": "closed",
+      "draft": true,
+      "head": "5642f312bd29b83dea7ed3c86c68581ad52c5db3"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1350,
+      "state": "open",
+      "draft": true,
+      "head": "a67e5c2995963ec6c97ba4e2b8ea7e10e754a9fa"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1349,
+      "state": "closed",
+      "draft": true,
+      "head": "6478ddb600ef1a058914ba323e6cc5886c795297"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1347,
+      "state": "closed",
+      "draft": true,
+      "head": "d6a58636042fab51340a8bfe091aeafdd043748f"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1346,
+      "state": "closed",
+      "draft": true,
+      "head": "15085e33013584ba47c581052997e93e7131a37d"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1345,
+      "state": "closed",
+      "draft": true,
+      "head": "af0f4aa73cb55e3565b53792bab91916d99a41b5"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1344,
+      "state": "closed",
+      "draft": true,
+      "head": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1343,
+      "state": "closed",
+      "draft": true,
+      "head": "ad2ab9e0411d6397ed0dcb80da6b30f232358436"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1342,
+      "state": "closed",
+      "draft": true,
+      "head": "e5491d12a1848f8b7f77f3035addae56ead404f0"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1341,
+      "state": "open",
+      "draft": false,
+      "head": "8ed3e7ee9e48f0f57c3aff649ffb447ed8e720be",
+      "decision": "deferred",
+      "restoredOriginalMetadata": true
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1340,
+      "state": "closed",
+      "draft": true,
+      "head": "925d4698ff2b8adf9c69ce38b1235fd8b6069637"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1339,
+      "state": "closed",
+      "draft": true,
+      "head": "7c1c7d4127479793c8b8856c102ef7d76fd75b80"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1338,
+      "state": "closed",
+      "draft": true,
+      "head": "789af72217204cdb0177b51851970871eae7a0d3"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1337,
+      "state": "closed",
+      "draft": true,
+      "head": "7d4f982ee1af1f8d7b1a6662364816ec9b15426c"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1336,
+      "state": "closed",
+      "draft": true,
+      "head": "5c6c3061572ac5b23234509c293f9080c4b4df0f"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1335,
+      "state": "closed",
+      "draft": true,
+      "head": "d9a4cd12cd74bb11bd44ef01bb81b6c854a60125"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1334,
+      "state": "closed",
+      "draft": true,
+      "head": "9af51545459af47fb9186f4cca60795822aa888e"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1333,
+      "state": "closed",
+      "draft": true,
+      "head": "80765f8b4aa4fb0363422fec5ea8dc8de65cc720"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1332,
+      "state": "closed",
+      "draft": true,
+      "head": "399b9a5c4e5532ac5da6dd5e03433d3dca8d1a36"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1331,
+      "state": "closed",
+      "draft": true,
+      "head": "5d146f95f365de6a2821c40ae9151bf1bdb96aa0"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1330,
+      "state": "closed",
+      "draft": true,
+      "head": "9c5335d304c6f52db8d77993ed5b1dcd534a1ab5"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1329,
+      "state": "closed",
+      "draft": true,
+      "head": "087c78cf11872640e8aadb89a53057de7ca95816"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1328,
+      "state": "closed",
+      "draft": true,
+      "head": "db9452113efb7abccf5fad972b7b2c6aa7f24f56"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1327,
+      "state": "closed",
+      "draft": true,
+      "head": "7883f4a3565d1a431fe5437a4719ed88f22e8ab4"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1326,
+      "state": "closed",
+      "draft": true,
+      "head": "392066ac855252151df06176729d5dc08a13a8f4"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1325,
+      "state": "closed",
+      "draft": true,
+      "head": "2d3cb7a5e9d6cc798db430467431b7e3ffee4128"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1324,
+      "state": "closed",
+      "draft": true,
+      "head": "ee867b06af5bd4b49c488edb7df74567c24d9361"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1323,
+      "state": "closed",
+      "draft": true,
+      "head": "4257412e0068f704194c8afb7b1d4cf8acd22562"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 67,
+      "state": "open",
+      "draft": true,
+      "head": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 66,
+      "state": "closed",
+      "draft": true,
+      "head": "ea41298f167d3b8db2358f08a993080fb7758bb3"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 65,
+      "state": "closed",
+      "draft": true,
+      "head": "1439c2a97ff8fab8ed83542415b713b06c42f797"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 64,
+      "state": "closed",
+      "draft": true,
+      "head": "22e713e5bf6d5af566f8a76f6e950eec2810704b"
+    },
+    {
+      "repo": "primocms/mcp",
+      "number": 30,
+      "state": "open",
+      "draft": true,
+      "head": "8c96de27908373983bfff831ee99e4231e0873c8"
+    },
+    {
+      "repo": "primocms/mcp",
+      "number": 29,
+      "state": "closed",
+      "draft": true,
+      "head": "1c323840a45b56104ecabc3ac398c9fc7e98c5cf"
+    }
+  ]
+}

@@ -5,12 +5,12 @@ COPY . /app
 WORKDIR /app
 
 # Build frontend
-RUN npm install
+RUN npm ci
 RUN npx svelte-kit sync
 RUN npx vite --config common.config.js build
 RUN npx vite --config app.config.js build
 
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.10-alpine AS go-builder
 
 # These arguments can be overridden on build
 ARG TARGETOS

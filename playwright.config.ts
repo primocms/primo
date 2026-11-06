@@ -1,5 +1,9 @@
 import { defineConfig } from '@playwright/test'
+type BrowserName = 'chromium' | 'firefox' | 'webkit'
 import { TEST_SERVER_URL } from './tests/e2e/helpers/paths'
+
+const browserName = process.env.PRIMO_TEST_BROWSER || 'chromium'
+if (!['chromium', 'firefox', 'webkit'].includes(browserName)) throw new Error('Unsupported test browser')
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -10,6 +14,7 @@ export default defineConfig({
 	globalTeardown: './tests/e2e/global-teardown.ts',
 	use: {
 		baseURL: TEST_SERVER_URL,
+		browserName: browserName as BrowserName,
 		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure'
 	},

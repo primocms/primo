@@ -1,9 +1,10 @@
 import { spawn, execSync } from 'child_process'
+import { createHash } from 'node:crypto'
 import fs from 'fs'
 import path from 'path'
 import { PRIMO_BINARY, PRIMOCMS_ROOT, CLI_ENTRY, TEST_DATA_DIR, SERVER_LOG, TEST_HTTP_ADDR, TEST_SERVER_URL } from './helpers/paths'
 
-const PID_FILE = '/tmp/primo-e2e-server.pid'
+const PID_FILE = process.env.PRIMO_TEST_RUN_DIR ? `${process.env.PRIMO_TEST_RUN_DIR}/server.pid` : '/tmp/primo-e2e-server.pid'
 const FRONTEND_BUILD_DIR = path.join(PRIMOCMS_ROOT, 'internal/build')
 const COMMON_BUNDLE = path.join(PRIMOCMS_ROOT, 'internal/common/index.cjs')
 
@@ -63,6 +64,15 @@ function newestSourceMtime(): number {
  * read; instead this fails fast with the exact command to run, per
  * `npm run test:e2e:build` in package.json / tests/e2e/build-under-test.sh. */
 function assertBuildIsFresh() {
+	// Frozen release candidates embed their frontend/common bundle. Verify the
+	// exact supplied executable rather than silently rebuilding different bytes.
+	if (process.env.PRIMO_TEST_CMS_SHA256) {
+		const actual = createHash('sha256').update(fs.readFileSync(PRIMO_BINARY)).digest('hex')
+		if (actual !== process.env.PRIMO_TEST_CMS_SHA256) throw new Error('Frozen CMS candidate SHA-256 mismatch')
+		if (!fs.existsSync(CLI_ENTRY)) throw new Error('Exact installed CLI is missing')
+		return
+	}
+
 	const missing = [PRIMO_BINARY, FRONTEND_BUILD_DIR, COMMON_BUNDLE, CLI_ENTRY].filter((p) => !fs.existsSync(p))
 	if (missing.length > 0) {
 		throw new Error(

@@ -14,6 +14,8 @@
 	 * @property {string} [toggledColor] - Specify the toggled switch background color
 	 * @property {string} [untoggledColor] - Specify the untoggled switch background color
 	 * @property {import('svelte').Snippet<[any]>} [children]
+	 * @property {import('svelte/elements').FocusEventHandler<HTMLButtonElement>} [onfocus]
+	 * @property {import('svelte/elements').FocusEventHandler<HTMLButtonElement>} [onblur]
 	 */
 
 	/** @type {Props & { [key: string]: any }} */
@@ -29,6 +31,8 @@
 		toggledColor = '#0f62fe',
 		untoggledColor = '#8d8d8d',
 		children,
+		onfocus = undefined,
+		onblur = undefined,
 		...rest
 	} = $props()
 

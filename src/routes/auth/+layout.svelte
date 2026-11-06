@@ -35,13 +35,13 @@
 	onMount(async () => {
 		// Check existing session first
 		if (await check_session()) {
-			await goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true })
+			await goto(auth_destination(page.url, self.instance?.authStore.record), { replace: true })
 			return
 		}
 
 		// Try auto-login on localhost
 		if (isLocalhost() && (await tryDevAuth())) {
-			await goto(auth_destination(page.url, self.instance?.authStore.record), { replaceState: true })
+			await goto(auth_destination(page.url, self.instance?.authStore.record), { replace: true })
 			return
 		}
 

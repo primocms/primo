@@ -369,3 +369,18 @@ func TestHostPattern(t *testing.T) {
 		}
 	}
 }
+
+func TestDomainHostChangeClearsOldProviderIdentity(t *testing.T) {
+	app := newPushTestApp(t)
+	defer app.ResetBootstrapState()
+	site := createImportTestSite(t, app)
+	if err := applyDomainResult(app, site, "old.example.com", DomainResult{ProviderID: "old-provider", Status: DomainStatusLive}); err != nil {
+		t.Fatal(err)
+	}
+	if err := applyDomainResult(app, site, "new.example.com", DomainResult{Status: DomainStatusPending}); err != nil {
+		t.Fatal(err)
+	}
+	if site.GetString("domain_provider_id") != "" {
+		t.Fatal("old host provider identity retained")
+	}
+}

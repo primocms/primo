@@ -7,7 +7,7 @@
 
 	let {
 		data = {},
-		completions,
+		completions = [],
 		html = $bindable(''),
 		css = $bindable(''),
 		js = $bindable(''),

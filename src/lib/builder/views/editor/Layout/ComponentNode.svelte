@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createResizeTask } from '$lib/resize_task.js'
 	import { onMount } from 'svelte'
 	import { X } from 'lucide-svelte'
 	import { fade } from 'svelte/transition'
@@ -20,6 +21,8 @@
 	import type { ObjectOf } from '$lib/pocketbase/CollectionMapping.svelte'
 	import { SiteSymbols, type PageSections, type PageTypeSections, PageSectionEntries, PageTypeSectionEntries, Sites, SiteUploads, LibraryUploads, Pages } from '$lib/pocketbase/collections'
 	import { self } from '$lib/pocketbase/managers'
+	import { toast } from 'svelte-sonner'
+	import { observeContentCommit } from '$lib/builder/content_commit.js'
 	import { site_context } from '$lib/builder/stores/context'
 	import { Editor, Extension } from '@tiptap/core'
 	import { rich_text_extensions } from '$lib/builder/rich-text/extensions'
@@ -37,7 +40,7 @@
 
 	let { block, section }: { block: ObjectOf<typeof SiteSymbols>; section: ObjectOf<typeof PageTypeSections> | ObjectOf<typeof PageSections> } = $props()
 
-	let node = $state() as HTMLIFrameElement
+	let node = $state<HTMLIFrameElement>() as HTMLIFrameElement
 
 	const fields = $derived(block.fields())
 	const entries = $derived('page_type' in section ? section.entries() : 'page' in section ? section.entries() : undefined)
@@ -124,8 +127,11 @@
 	}
 
 	let is_editing = $state(false)
+	const pending_text_restores = new Set<HTMLElement>()
+	let text_dom_restore_pending = $state(false)
 
 	let field_save_timeout: ReturnType<typeof setTimeout>
+	let pending_field_save = false
 
 	function update_formatting_state() {
 		if (active_editor) {
@@ -308,7 +314,10 @@
 				const text_matches = typeof value == 'string' && value.trim() === text
 
 				// All other field types are text
-				if (text_matches && text.length > 0) {
+				// An ancestor can have the same innerText as its only heading.
+				// Editing that wrapper lets select-all replace the component markup.
+				const matching_child = text_matches && valid_elements.some((candidate) => candidate !== element && element.contains(candidate) && candidate.innerText?.trim() === text)
+				if (text_matches && text.length > 0 && !matching_child) {
 					set_editable_text({ id, element })
 					return true
 				} else return false
@@ -361,6 +370,7 @@
 						},
 						onBlur: async () => {
 							clearTimeout(field_save_timeout)
+							pending_field_save = false
 							// Save the final edit before unlocking the renderer. Blurring
 							// within the debounce window must not discard that edit.
 							if (pending_save) {
@@ -379,9 +389,11 @@
 						onUpdate: async ({ editor }) => {
 							// Debounce saves to avoid constant re-renders while editing
 							pending_save = true
+							pending_field_save = true
 							clearTimeout(field_save_timeout)
 							field_save_timeout = setTimeout(async () => {
 								pending_save = false
+								pending_field_save = false
 								const json = editor.getJSON()
 								save_edited_value({ id, value: json })
 							}, 200)
@@ -534,9 +546,11 @@
 			}
 
 			const input_handler = (e: Event) => {
+				pending_field_save = true
 				// Debounce saves to avoid constant re-renders while editing
 				clearTimeout(field_save_timeout)
 				field_save_timeout = setTimeout(() => {
+					pending_field_save = false
 					const target = e.target as HTMLElement
 					if (target) save_edited_value({ id, value: target.innerText })
 				}, 200)
@@ -546,18 +560,21 @@
 				is_editing = false
 				// Final save on blur
 				clearTimeout(field_save_timeout)
+				pending_field_save = false
 				const target = e.target as HTMLElement
 				if (target) {
 					const value = target.innerText
-					// Browser editing can replace text nodes that Svelte still references.
-					// Restore those nodes before applying the saved value through props.
-					restoreTextDOM(element)
+					// Keep the edited text visible until the iframe applies its new props.
+					// Restoring Svelte's original nodes here would paint the old value
+					// while the asynchronous preview message is still in flight.
+					pending_text_restores.add(element)
+					text_dom_restore_pending = true
 					save_edited_value({ id, value })
 				}
 			}
 
 			const focus_handler = () => {
-				rememberTextDOM(element)
+				if (!pending_text_restores.has(element)) rememberTextDOM(element)
 				is_editing = true
 			}
 
@@ -583,13 +600,17 @@
 		editing_markdown = false
 	}
 
-	async function save_edited_value({ id, value }) {
+	function save_edited_value({ id, value }) {
 		// Find the entry by ID
 		const entry = entries?.find((entry) => entry.id === id)
 		if (!entry) {
 			console.error('Entry not found for ID:', id)
 			return
 		}
+
+		// Blur/re-render can repeat a value already queued or confirmed. Do not
+		// create a second autosave that races a reload of the saved content.
+		if (_.isEqual(entry.value, value)) return
 
 		// Update the entry based on section type
 		if ('page_type' in section) {
@@ -600,10 +621,21 @@
 
 		// Commit changes with a delay to batch multiple edits
 		clearTimeout(commit_task)
-		commit_task = setTimeout(() => self.commit(), 500)
+		commit_task = setTimeout(() => { commit_task = undefined; void commit_edited_values() }, 500)
 	}
 
-	let commit_task: ReturnType<typeof setTimeout>
+	let commit_task: ReturnType<typeof setTimeout> | undefined
+	function commit_edited_values() {
+		return observeContentCommit(self.commit(), {
+			onSaved: () => { if (!self.has_pending_changes()) toast.dismiss('inline-content-save-error') },
+			onError: () => {
+				toast.error('Changes could not be saved. Keep this page open and retry.', {
+					id: 'inline-content-save-error', duration: Infinity,
+					action: { label: 'Retry', onClick: () => { void commit_edited_values() } }
+				})
+			}
+		})
+	}
 
 	let mounted = false
 	function dispatch_mount() {
@@ -631,6 +663,7 @@
 
 	let mutation_observer: MutationObserver
 	let iframe_resize_observer: ResizeObserver
+	let iframe_resize_task: ReturnType<typeof createResizeTask> | undefined
 
 	onMount(() => {
 		mutation_observer = new MutationObserver(() => {
@@ -657,6 +690,7 @@
 		return () => {
 			mutation_observer?.disconnect()
 			iframe_resize_observer?.disconnect()
+			iframe_resize_task?.dispose()
 
 			// Clean up window message listener
 			if (window_message_handler) {
@@ -670,7 +704,7 @@
 
 			// Clear timeouts
 			if (field_save_timeout) clearTimeout(field_save_timeout)
-			if (commit_task) clearTimeout(commit_task)
+			if (commit_task) { clearTimeout(commit_task); commit_task = undefined; void commit_edited_values() }
 			if (suppress_timer) clearTimeout(suppress_timer)
 
 			document.querySelector('#Page')?.removeEventListener('scroll', on_page_scroll)
@@ -777,6 +811,23 @@
 			doc.addEventListener('primo-rendered', make_content_editable)
 			doc_event_listeners.set('content-render', () => doc.removeEventListener('primo-rendered', make_content_editable))
 
+			const restore_text_before_render = (event: Event) => {
+				// A preview message may arrive after the user has started another edit.
+				// Retry on blur instead of replacing the active editing surface.
+				if (is_editing) {
+					event.preventDefault()
+					text_dom_restore_pending = true
+					return
+				}
+				for (const element of pending_text_restores) {
+					if (element.ownerDocument === doc && element.isConnected) restoreTextDOM(element)
+				}
+				pending_text_restores.clear()
+				text_dom_restore_pending = false
+			}
+			doc.addEventListener('primo-before-render', restore_text_before_render)
+			doc_event_listeners.set('text-restore', () => doc.removeEventListener('primo-before-render', restore_text_before_render))
+
 			const select_section = () => dispatch('select')
 			doc.addEventListener('pointerdown', select_section, true)
 			doc.addEventListener('focusin', select_section, true)
@@ -794,8 +845,10 @@
 
 			// Disconnect previous observer if it exists
 			iframe_resize_observer?.disconnect()
+			iframe_resize_task?.dispose()
 
 			const update_height = () => {
+				if (!node || node.contentDocument !== doc) return
 				const height = doc.body.clientHeight
 				if (node) {
 					node.style.height = height + 'px'
@@ -803,7 +856,8 @@
 				dispatch('resize')
 			}
 
-			iframe_resize_observer = new ResizeObserver(update_height)
+			iframe_resize_task = createResizeTask(update_height)
+			iframe_resize_observer = new ResizeObserver(iframe_resize_task.schedule)
 			iframe_resize_observer.observe(doc.body)
 
 			// Add mutation observer for DOM changes
@@ -847,12 +901,12 @@
 	let last_sent_data = $state<any>()
 	let last_sent_js = $state<string>('')
 	watch(
-		() => ({ updated_js: generated_js, updated_data: component_data, ready: setup_complete && !is_editing }),
-		({ updated_js, updated_data, ready }) => {
+		() => ({ updated_js: generated_js, updated_data: component_data, ready: setup_complete && !is_editing, restore_text: text_dom_restore_pending }),
+		({ updated_js, updated_data, ready, restore_text }) => {
 			if (!(ready && updated_data && updated_js)) return
 
 			// Skip if updated_data is deeply equal to the last sent value
-			if (_.isEqual(last_sent_data, updated_data) && last_sent_js === updated_js) return
+			if (!restore_text && _.isEqual(last_sent_data, updated_data) && last_sent_js === updated_js) return
 
 			// Store a snapshot to avoid mutation side-effects
 			last_sent_data = _.cloneDeep(updated_data)
@@ -866,7 +920,7 @@
 			node.contentWindow!.postMessage({ type: 'component', payload: { js, data } }, '*')
 		} catch (e) {
 			console.error(e)
-			error = e
+			error = e instanceof Error ? e.message : String(e)
 			dispatch_mount()
 		}
 	}
@@ -897,12 +951,17 @@
 	})
 
 	const editing = $derived(is_editing || editing_video || editing_image || editing_existing_link || editing_link || editing_markdown)
-	if ('page_type' in section) {
-		$effect(() => setUserActivity(editing ? { page_type_section: section.id } : {}))
-	} else if ('page' in section) {
-		$effect(() => setUserActivity(editing ? { page_section: section.id } : {}))
-	}
+	setUserActivity(() => {
+		if (!editing) return {}
+		if ('page_type' in section) return { page_type_section: section.id }
+		if ('page' in section) return { page_section: section.id }
+		return {}
+	})
 </script>
+
+<svelte:window onbeforeunload={(event) => {
+	if (pending_field_save) { event.preventDefault(); event.returnValue = '' }
+}} />
 
 <Dialog.Root bind:open={editing_image}>
 	<Dialog.Content
@@ -1323,7 +1382,7 @@
 {/if}
 
 <Dialog.Root bind:open={editing_markdown}>
-	<Dialog.Content class="z-[999] sm:max-w-[720px] h-auto max-h-[calc(100vh_-_1rem)] w-full pt-4 gap-0 flex flex-col">
+	<Dialog.Content class="z-[999] sm:max-w-[720px] h-auto max-h-[calc(100dvh_-_1rem)] w-full pt-4 gap-0 flex flex-col">
 		<Dialog.Header
 			title="Edit Markdown"
 			icon="material-symbols:markdown"
@@ -1344,7 +1403,7 @@
 			<div class="bg-[var(--color-gray-8)] rounded-bl-lg rounded-br-lg p-2">
 				<Avatar.Root class="ring-background ring-2 size-8">
 					{#if user_avatar}
-						<Avatar.Image src={user_avatar} alt={user.name || user.email} class="object-cover object-center" />
+						<Avatar.Image src={user_avatar.toString()} alt={user.name || user.email} class="object-cover object-center" />
 					{/if}
 					<Avatar.Fallback>{(user.name || user.email).slice(0, 2)}</Avatar.Fallback>
 				</Avatar.Root>

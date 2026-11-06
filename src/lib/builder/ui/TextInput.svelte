@@ -11,6 +11,7 @@
 	 * @property {string | null} [label]
 	 * @property {string} [prefix]
 	 * @property {string} [prefix_icon]
+	 * @property {HTMLInputElement | undefined} [element]
 	 * @property {any} value
 	 * @property {string} [placeholder]
 	 * @property {string} [variants]
@@ -20,11 +21,11 @@
 	 * @property {boolean} [grow]
 	 * @property {boolean} [disabled]
 	 * @property {any} [options]
-	 * @property {{ label: string, onclick?: function, type?: string, disabled?: boolean } | null} [button]
-	 * @property {() => void} [oninput]?
-	 * @property {() => void} [onblur]?
-	 * @property {() => void} [onkeydown]?
-	 * @property {() => void} [onfocus]?
+	 * @property {{ label: string, onclick?: (event: MouseEvent) => void, type?: "button" | "submit" | "reset", disabled?: boolean } | null} [button]
+	 * @property {(value: string) => void} [oninput]?
+	 * @property {(event: FocusEvent) => void} [onblur]?
+	 * @property {(event: KeyboardEvent) => void} [onkeydown]?
+	 * @property {(event: FocusEvent) => void} [onfocus]?
 	 */
 
 	/** @type {Props} */
@@ -50,6 +51,7 @@
 		element = $bindable()
 	} = $props()
 
+	/** @type {HTMLTextAreaElement | undefined} */
 	let textarea_element = $state()
 	onMount(() => {
 		if (textarea_element) {
@@ -69,7 +71,7 @@
 	{#if label}<span class="primo--field-label">{label}</span>{/if}
 	<div style="display: flex;width: 100%;gap: 0.5rem;">
 		{#if options.length > 0}
-			<select class="options" onchange={(e) => dispatch('select', { value: e?.target?.value })} bind:value={selection}>
+			<select class="options" onchange={(e) => dispatch('select', { value: e.currentTarget.value })} bind:value={selection}>
 				{#each options as option}
 					<option value={option.value}>
 						{option.label}
@@ -85,15 +87,14 @@
 			{/if}
 			{#if grow}
 				<textarea
-					rows="1"
+					rows={1}
 					bind:this={textarea_element}
 					{value}
-					{type}
 					{placeholder}
 					{disabled}
 					{onfocus}
-					oninput={({ target }) => {
-						value = target.value
+					oninput={({ currentTarget }) => {
+						value = currentTarget.value
 						oninput(value)
 					}}
 					{onblur}
@@ -107,13 +108,13 @@
 					{placeholder}
 					{disabled}
 					{onfocus}
-					oninput={({ target }) => {
-						value = target.value
+					oninput={({ currentTarget }) => {
+						value = currentTarget.value
 						// dispatch('input', value)
 						oninput(value)
 					}}
-					onchange={({ target }) => {
-						value = target.value
+					onchange={({ currentTarget }) => {
+						value = currentTarget.value
 						// dispatch('input', value)
 						oninput(value)
 					}}

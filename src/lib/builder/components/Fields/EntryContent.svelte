@@ -2,10 +2,11 @@
 	import Card from '$lib/builder/ui/Card.svelte'
 	import type { Entry } from '$lib/common/models/Entry'
 	import type { Field } from '$lib/common/models/Field'
-	import { useContent, useEntries, type Entity } from '$lib/Content.svelte'
+	import { useContent, useEntries } from '$lib/Content.svelte'
+	import type { Entity } from '$lib/Entity'
 	import type { FieldValueHandler } from './FieldsContent.svelte'
 	import { fieldTypes } from '../../stores/app/index.js'
-	import type { Component } from 'svelte'
+	import type { FieldComponent } from './field-component'
 	import Icon from '@iconify/svelte'
 	import { EyeOff } from 'lucide-svelte'
 	import { current_user } from '$lib/pocketbase/user'
@@ -31,25 +32,12 @@
 		entries: Entry[]
 		level: number
 		onchange: FieldValueHandler
-		ondelete: (entry_id: string) => void
+		ondelete?: (entry_id: string) => void
 		minimal?: boolean
 	} = $props()
 
 	const field_type = $derived($fieldTypes.find((ft) => ft.id === field.type))
-	const Field_Component = $derived(
-		field_type?.component as
-			| Component<{
-					entity: Entity
-					field: Field
-					entry?: Entry
-					fields: Field[]
-					entries: Entry[]
-					onchange: FieldValueHandler
-					ondelete: (entry_id: string) => void
-					level: number
-			  }>
-			| undefined
-	)
+	const Field_Component = $derived(field_type?.component as FieldComponent | undefined)
 
 	const _data = $derived(useContent(entity, { target: 'cms' }))
 	const data = $derived(_data && (_data[$locale] ?? {}))
@@ -126,13 +114,13 @@
 		<Field_Component {entity} {field} {fields} {entries} {entry} {level} {onchange} {ondelete} {parent} />
 	</Card>
 {:else if $current_user?.siteRole === 'developer' && !is_visible}
-	<!-- <div class="hidden-field">
+	<div class="hidden-field">
 		<EyeOff size="14" />
 		<span>
 			<strong>{field.label}</strong>
-			 will be hidden from content editors
+			 is hidden from content editors by its display condition.
 		</span>
-	</div> -->
+	</div>
 {/if}
 
 <style>

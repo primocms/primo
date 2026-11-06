@@ -2,6 +2,7 @@
 	import type { Site } from '$lib/common/models/Site'
 	import { Globe } from 'lucide-svelte'
 	import { onDestroy, tick } from 'svelte'
+	import { createResizeTask } from '$lib/resize_task.js'
 
 	let { site, style, src }: { site?: Site; style?: string; src?: string } = $props()
 
@@ -13,25 +14,22 @@
 	const preview_token = $derived(typeof site?.preview === 'string' ? site.preview : '')
 	const iframe_src = $derived(src ?? `/?_site=${site?.id}&_preview=1${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
 
-	let container = $state()
-	let scale = $state()
-	let iframeHeight = $state()
-	let iframe = $state()
+	let container = $state<HTMLElement>()
+	let scale = $state(1)
+	let iframeHeight = $state('100%')
+	let iframe = $state<HTMLIFrameElement>()
 	let iframeLoaded = $state()
-	let resize_observer = $state()
+	let resize_observer = $state<ResizeObserver>()
+	const resize_task = createResizeTask(resize_preview)
 
 	async function init_preview() {
 		await tick()
+		if (!container || !iframe) return
 		// if (!iframe?.contentWindow?.document?.body) return
 		if (resize_observer) resize_observer?.disconnect()
 
-		resize_observer = new ResizeObserver((entries) => {
-			const { offsetWidth: parentWidth } = container
-			const { offsetWidth: childWidth } = iframe
-
-			if (parentWidth === 0) return
-			scale = parentWidth / childWidth
-			iframeHeight = `${100 / scale}%`
+		resize_observer = new ResizeObserver(() => {
+			resize_task.schedule()
 			// give it a sec to load in
 			setTimeout(() => {
 				iframeLoaded = true
@@ -45,16 +43,18 @@
 		if (!container || !iframe) return
 		const { clientWidth: parentWidth } = container
 		const { clientWidth: childWidth } = iframe
+		if (parentWidth === 0 || childWidth === 0) return
 		scale = parentWidth / childWidth
 		iframeHeight = `${100 / scale}%`
 	}
 
 	onDestroy(() => {
+		resize_task.dispose()
 		resize_observer?.disconnect()
 	})
 </script>
 
-<svelte:window onresize={resize_preview} />
+<svelte:window onresize={resize_task.schedule} />
 
 <div class="iframe-root bg-gray-900" {style}>
 	<div bind:this={container} class="iframe-container">

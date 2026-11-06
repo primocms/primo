@@ -5,7 +5,7 @@ import type { Sites, Pages, PageTypes } from '$lib/pocketbase/collections'
 // Define typed contexts
 export const site_context = new Context<{ value: ObjectOf<typeof Sites> }>('site')
 export const page_context = new Context<{ value: ObjectOf<typeof Pages> }>('page')
-export const page_type_context = new Context<{ value: ObjectOf<typeof PageTypes> }>('page_type')
+export const page_type_context = new Context<{ value: ObjectOf<typeof PageTypes> | null | undefined }>('page_type')
 
 // Environment and debugging contexts
 export const debugging_context = new Context<boolean>('DEBUGGING')

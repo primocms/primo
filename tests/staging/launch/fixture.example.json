@@ -1,0 +1,16 @@
+{
+  "sourcePrimoVersion": "REPLACE_SOURCE_VERSION",
+  "sourcePocketBaseVersion": "REPLACE_OR_DOCUMENT_UNKNOWN",
+  "sourceUpgradeHistory": [],
+  "backupPath": "REPLACE_WITH_SANITIZED_BACKUP_PATH",
+  "sha256": "REPLACE_WITH_OWNER_CHECKSUM",
+  "ownerVerifiedSanitized": false,
+  "ownerVerifiedConsistentOfflineBackup": false,
+  "customMigrations": [],
+  "expected": {
+    "sites": null,
+    "pages": null,
+    "uploads": null,
+    "notes": "Include record IDs, nested values/order, roles, draft/published pages, and representative reference screenshots/exports."
+  }
+}

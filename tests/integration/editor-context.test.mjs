@@ -120,7 +120,7 @@ async function previewRuntime(kind, { delayImports = false } = {}) {
 		'setTimeout',
 		'loadModule',
 		script
-	)(window, { body: target, querySelector: () => target, dispatchEvent() {} }, Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0, loadModule)
+	)(window, Object.assign(new EventTarget(), { body: target, querySelector: () => target }), Channel, SourceBlob, urls, { log() {}, info() {}, warn() {}, error() {} }, () => 0, loadModule)
 	return {
 		target,
 		messages,

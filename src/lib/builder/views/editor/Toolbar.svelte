@@ -148,7 +148,7 @@
 		const prev_page = pages_at_current_level.find((p) => p.index === active_page.index - 1)
 		if (!prev_page) return
 		const url = build_cms_page_url(prev_page, pageState.url)
-		if (url) goto(url, { replaceState: false })
+		if (url) goto(url, { replace: false })
 		setTimeout(() => (going_up = false), 150)
 	}
 
@@ -158,7 +158,7 @@
 		const next_page = pages_at_current_level.find((p) => p.index === active_page.index + 1)
 		if (!next_page) return
 		const url = build_cms_page_url(next_page, pageState.url)
-		if (url) goto(url, { replaceState: false })
+		if (url) goto(url, { replace: false })
 		setTimeout(() => (going_down = false), 150)
 	}
 
@@ -238,7 +238,7 @@
 		}
 	}}
 >
-	<Dialog.Content class="z-999 w-[calc(100vw-1rem)] max-w-none h-[calc(100vh-1rem)] max-h-none flex flex-col p-4">
+	<Dialog.Content class="z-999 w-[calc(100vw-1rem)] max-w-none h-[calc(100dvh-1rem)] max-h-none flex flex-col p-4">
 		<SiteEditor onClose={() => (editing_site = false)} bind:has_unsaved_changes={site_has_unsaved_changes} />
 	</Dialog.Content>
 </Dialog.Root>
@@ -257,7 +257,7 @@
 </Dialog.Root>
 
 <Dialog.Root bind:open={editing_page_types}>
-	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100vh-1rem)] max-h-none flex flex-col p-4 bg-[#1e1e20] border-[#343437] rounded-lg text-[#e4e4e7]">
+	<Dialog.Content class="z-999 max-w-[900px] h-[calc(100dvh-1rem)] max-h-none flex flex-col p-4 bg-[#1e1e20] border-[#343437] rounded-lg text-[#e4e4e7]">
 		<PageTypeModal />
 	</Dialog.Content>
 </Dialog.Root>
@@ -349,7 +349,7 @@
 			{/if}
 		</div>
 		<div class="right">
-			<div class="flex -space-x-1">
+			<div class="collaborator-avatars flex -space-x-1">
 				{#each user_activities as activities}
 					{@const { user, user_avatar } = activities[0]}
 					<div class="flex" transition:fade>
@@ -357,7 +357,7 @@
 							<Popover.Trigger aria-label={`Activity for ${user.name || user.email}`}>
 								<Avatar.Root class="ring-background transition-all ring-2 size-[27px]">
 									{#if user_avatar}
-										<Avatar.Image src={user_avatar} alt={user.name || user.email} class="grayscale hover:grayscale-0 object-cover object-center" />
+										<Avatar.Image src={user_avatar.toString()} alt={user.name || user.email} class="grayscale hover:grayscale-0 object-cover object-center" />
 									{/if}
 									<Avatar.Fallback>{(user.name || user.email).slice(0, 2).toUpperCase()}</Avatar.Fallback>
 								</Avatar.Root>
@@ -367,7 +367,7 @@
 									<Avatar.Root class="data-[status=loaded]:border-foreground bg-muted text-muted-foreground h-12 w-12 rounded-full border border-transparent text-[17px] font-medium uppercase">
 										<div class="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-transparent">
 											{#if user_avatar}
-												<Avatar.Image src={user_avatar} alt={user.name || user.email} class="object-cover object-center" />
+												<Avatar.Image src={user_avatar.toString()} alt={user.name || user.email} class="object-cover object-center" />
 											{/if}
 											<Avatar.Fallback class="border-muted border">{(user.name || user.email).slice(0, 2).toUpperCase()}</Avatar.Fallback>
 										</div>
@@ -422,6 +422,10 @@
 					{/if}
 					<DropdownMenu.Item
 						onclick={async () => {
+							if (self.has_pending_changes()) {
+								toast.error('Save or retry your changes before logging out.')
+								return
+							}
 							self.instance?.authStore.clear()
 							await goto('/admin/auth')
 						}}
@@ -601,5 +605,14 @@
 		.right :global(.primo-button) {
 			padding-inline: 8px;
 		}
+	}
+	@media (max-width: 640px) {
+		.menu-container { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 6px; }
+		.right { margin-left: auto; flex-wrap: wrap; }
+		.collaborator-avatars { display: none; }
+		.navigation-group { height: 44px; }
+		.left :global(.primo-button),
+		.right :global(.primo-button),
+		.more-menu-button { min-width: 44px; min-height: 44px; }
 	}
 </style>

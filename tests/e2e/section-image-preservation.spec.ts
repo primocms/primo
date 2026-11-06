@@ -34,7 +34,11 @@ test.describe('Section content updates', () => {
 		test.setTimeout(60000)
 		const { token } = await devAuth(request)
 		const errors: string[] = []
+		const blockCodeWrites: string[] = []
 		page.on('pageerror', (error) => errors.push(error.message))
+		page.on('request', (request) => {
+			if (request.method() === 'PATCH' && request.url().includes('/api/collections/site_symbols/records/')) blockCodeWrites.push(request.url())
+		})
 		await loginAsDeveloper(page, ids.siteId)
 		const frame = canvasFrame(page)
 		const headline = frame.locator('[data-testid="headline"]')
@@ -134,6 +138,7 @@ test.describe('Section content updates', () => {
 		await expect.poll(() => savedEntry('headline')).toBe('Saved a second time')
 		await expectRetained()
 		expect(errors).toEqual([])
+		expect(blockCodeWrites).toEqual([])
 
 		await page.reload()
 		await expect(canvasFrame(page).locator('[data-testid="headline"]')).toHaveText('Saved a second time', { timeout: 15000 })

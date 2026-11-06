@@ -1,0 +1,1101 @@
+[
+  {
+    "path": "primocms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "f5fa863c66e9c508f4a13b55075e8a9ab9769d18",
+    "branch": "main",
+    "tracked_changes": [
+      " M app.config.js",
+      " M go.mod",
+      " M go.sum",
+      " M internal/admin.go",
+      " M internal/bootstrap.go",
+      " M internal/domain_provider.go",
+      " M internal/import.go",
+      " M internal/import_library.go",
+      " M internal/info.go",
+      " M internal/limits.go",
+      " M internal/publish_cache_test.go",
+      " M migrations/1757326540_settings.go",
+      " M src/lib/builder/Primo.svelte",
+      " M src/lib/builder/components/ComponentPreview.svelte",
+      " M src/lib/builder/components/Fields/EntryContent.svelte",
+      " M src/lib/builder/components/Sidebar/PageType_Sidebar.svelte",
+      " M src/lib/builder/components/misc.js",
+      " M src/lib/builder/field-types/Link.svelte",
+      " M src/lib/builder/ui/LargeSwitch.svelte",
+      " M src/lib/builder/utilities.js",
+      " M src/lib/builder/views/editor/Layout/BlockToolbar.svelte",
+      " M src/lib/builder/views/editor/Layout/ComponentNode.svelte",
+      " M src/lib/builder/views/editor/Page.svelte",
+      " M src/lib/builder/views/editor/PageType.svelte",
+      " M src/lib/builder/views/editor/Toolbar.svelte",
+      " M src/lib/builder/views/modal/BlockEditor.svelte",
+      " M src/lib/builder/views/modal/Collaboration.svelte",
+      " M src/lib/builder/views/modal/SectionEditor/SectionEditor.svelte",
+      " M src/lib/builder/views/modal/SiteEditor/SiteEditor.svelte",
+      " M src/lib/builder/views/modal/SitePages/Item.svelte",
+      " M src/lib/builder/views/modal/SitePages/PageForm.svelte",
+      " M src/lib/builder/views/modal/SitePages/SitePages.svelte",
+      " M src/lib/common/models/Page.ts",
+      " M src/lib/common/models/SiteSymbol.ts",
+      " M src/lib/compiler/processors.js",
+      " M src/lib/compiler/workers/rollup.worker.js",
+      " M src/lib/components/app-sidebar.svelte",
+      " M src/lib/components/ui/dialog/dialog-content.svelte",
+      " M src/lib/components/ui/dialog/dialog-header.svelte",
+      " M src/lib/components/ui/sheet/sheet-content.svelte",
+      " M src/lib/components/ui/sidebar/sidebar.svelte",
+      " M src/lib/instance.ts",
+      " M src/lib/pocketbase/CollectionManager.ts",
+      " M src/lib/pocketbase/CollectionMapping.svelte.ts",
+      " M src/lib/workers/CopyEntries.svelte.ts",
+      " M src/lib/workers/Publish.svelte.ts",
+      " M src/routes/dashboard/library/+page.svelte",
+      " M src/routes/dashboard/sites/+page.svelte",
+      " M tests/browser/preview-runtime.test.mjs",
+      " M tests/e2e/helpers/editor.ts",
+      " M tests/e2e/page-creation.spec.ts",
+      " M tests/e2e/section-image-preservation.spec.ts",
+      " M tests/integration/publish-cache.test.mjs"
+    ],
+    "untracked": [
+      ".claude/",
+      "cmd/",
+      "deploy/",
+      "hosting/",
+      "internal/domain_fly.go",
+      "internal/domain_fly_test.go",
+      "internal/hosted_bootstrap.go",
+      "internal/import_upload.go",
+      "internal/import_upload_test.go",
+      "internal/owner_only.go",
+      "internal/owner_only_test.go",
+      "internal/provisioning_test.go",
+      "internal/snapshot_upload_test.go",
+      "migrations/1791148000_hosted_plan_caps.go",
+      "migrations/1791150000_hosted_owner_only.go",
+      "migrations/1792956000_recovery_snapshot_upload_limit.go",
+      "migrations/recovery_snapshot_upload_limit_test.go",
+      "src/lib/builder/views/modal/SitePages/page-order.ts",
+      "src/lib/workers/publish-cache.js",
+      "tests/e2e/client-editor-audit.spec.ts",
+      "tests/e2e/dashboard-groups.spec.ts",
+      "tests/e2e/dashboard-navigation.spec.ts",
+      "tests/e2e/inline-text-flicker.spec.ts",
+      "tests/e2e/link-editing.spec.ts",
+      "tests/e2e/page-management.spec.ts",
+      "tests/e2e/rich-text-flicker.spec.ts",
+      "tests/e2e/section-outline.spec.ts",
+      "tests/integration/publish-record-cache.test.mjs",
+      "tests/integration/publish-snapshot.test.mjs"
+    ],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "primocms-static-preview",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "835f6fbc76ab39398b975a38fa513a17c435bf3c",
+    "branch": "fix/static-dashboard-previews",
+    "tracked_changes": [
+      " M internal/import.go",
+      " M internal/import_library.go"
+    ],
+    "untracked": [
+      "internal/import_scope_test.go"
+    ],
+    "head_in_rc13": false,
+    "decision": "static-thumbnail behavior is upstream via #1276; remaining importer experiment superseded by scoped/nested import fixes in candidate"
+  },
+  {
+    "path": "primocms/.claude/worktrees/feature+plugin-capabilities",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "c7a6bc8bdb022a3725466eb0fd0d7d960a6b048b",
+    "branch": "feature/plugin-capabilities",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "unfinished WIP plugin/forms experiment; no current feature PR; preserved outside this release"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-hosting-rc10",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "a67e5c2995963ec6c97ba4e2b8ea7e10e754a9fa",
+    "branch": "fix/rc10-hosting-readiness",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc10-purchaser",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "76cd3955aa619489165b5987ec637880d343b45c",
+    "branch": "test/rc10-purchaser-flow",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc9-purchaser",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "f23e2c56b5b7c71de3ef2b762a8cec02173d0cce",
+    "branch": "test/rc9-purchaser-flow",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-testing/stack/primo",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "92984ea21e7643e67edf7a8da9bed4886fd9fa6e",
+    "branch": "",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "worktrees/agent-launch-cms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "57054ded7d411a7cd144982a9b32b4564c53e83b",
+    "branch": "feat/agent-launch-flow",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "browser approval superseded by #1357; domain publication preservation and capability regressions included from 57054ded7; baseline snapshot superseded"
+  },
+  {
+    "path": "worktrees/cms-activity-analytics",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "d901034bd8a900f4ce323a67e05285e09062672e",
+    "branch": "feat/cms-activity-analytics",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/cms-mobile-responsiveness",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "8ed3e7ee9e48f0f57c3aff649ffb447ed8e720be",
+    "branch": "codex/cms-mobile-responsiveness",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/cms-release-candidate",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "4b994903d4297e6e859df094289b1743d9f8dfde",
+    "branch": "fix/analytics-default-on",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/dashboard-login-return",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "3ffa4ad8d873017113b5d82ef6fb28ea2edd9110",
+    "branch": "fix/preserve-dashboard-after-login",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/dashboard-thumbnail-fade",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "9e0faca42848b8f23a4176e8df618f8a5bdaf496",
+    "branch": "codex/dashboard-thumbnail-fade",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/existing-site-invites",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "8d3cbd2fc249aaf9a6589e921c77e50f551aee2f",
+    "branch": "fix/existing-site-invites",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/explicit-publication-cms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "242323b3d12fc079af592ed176d678ccb15fc87c",
+    "branch": "feat/tracked-publication",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/import-field-scopes/primocms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "3a254719f5978fbf3210168b6bc68b9249e6129c",
+    "branch": "fix/import-field-scopes",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/incremental-publish-cms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "43eefcd861d898c0ce53eb832872ced1706c83da",
+    "branch": "codex/incremental-publishing",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/invite-review-1316",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "c3017288876fa48572c8e232829f273bbf6ef9f9",
+    "branch": "fix/invite-review-1316",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/link-active-state/primocms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "07586e4889085eb61cc3640587c799894ba0cb91",
+    "branch": "codex/link-active-state",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/local-viewer-code-formatting",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "5d49690660070eb3c6d8a696ab9b58f27d8c910b",
+    "branch": "fix/local-viewer-code-formatting",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/page-creation-loading",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "945bee248871a594a5549a5365327ede8f94c700",
+    "branch": "fix/page-creation-loading",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/page-creation-review",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "a2133e885268a146c07c8170f3b3345e4e58186a",
+    "branch": "fix/page-creation-submit-guard",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/page-creation-scroll",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "ffaa7d9e445f465fbd1f7d5d800f2c5f1cd1a023",
+    "branch": "fix/page-creation-scroll",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/page-list-sidebar-layout",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "ed4060f66983fa6ae1cc5c3e85a6ae3bce8aaa12",
+    "branch": "fix/page-list-sidebar-layout",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/pages-dialog-initial-jump",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "7c2a1b2132d30619274cc0f884c857d444d98a20",
+    "branch": "fix/pages-dialog-initial-jump",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/publish-cache-cms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "1d65770ef8ed94e2bb3b3c88e6f33e5d02574942",
+    "branch": "fix/publish-script-cache-version",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/release-empty-repeaters",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "f0d5a68c712a66d52954e1a543ae7eb81c6269a6",
+    "branch": "fix/preserve-empty-repeater-items",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/release-nested-defaults",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "82f9135384fe3a84e38bacb770c2a70e9e62fb29",
+    "branch": "fix/nested-section-defaults",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/release-repeater-thumbnails",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "7f3623e1cbe9b3098de1c44de1c8ef80bfacce5c",
+    "branch": "fix/uploaded-repeater-thumbnails",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/release-ui-polish",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "c90c5a42aaf535d3d537067c8402bb9c98d9143d",
+    "branch": "polish/release-ui",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/repeater-reordering",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "8f2657dc8497a3788339d11aab84537a550ca6b2",
+    "branch": "feat/repeater-reordering",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/section-image-flicker",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "23f50759aee2c954e61a69718ba4c695767a0cd9",
+    "branch": "fix/section-image-flicker",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/sidebar-resize-release",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "c4ed6721fd4b31bbad68221f6fd96528abee279c",
+    "branch": "fix/sidebar-resize-release",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/sidebar-sticky-tabs/primocms",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "832ea68060c184cce143fa6dc937e831e3a219d2",
+    "branch": "fix/sidebar-sticky-tabs",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/standalone-main",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "73f2664a39a73192f99128ba73663e9bc187260f",
+    "branch": "",
+    "tracked_changes": [
+      " M src/lib/builder/components/misc.js",
+      " M src/lib/builder/views/editor/Layout/ComponentNode.svelte",
+      " M src/lib/builder/views/modal/SitePages/PageForm.svelte"
+    ],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "temporary earlier inline-text/PageForm prototype; superseded by newer integrated editor fixes"
+  },
+  {
+    "path": "worktrees/tracked-publication-review",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "049c5845faaec76d58eceb8afc4f33eefe25d697",
+    "branch": "fix/tracked-publication-legacy-attempt",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "primo-cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "26043d87f0baa46d3c35318fd591e121ba9ccfe4",
+    "branch": "feat/dev-hosted-sync-check",
+    "tracked_changes": [
+      " M README.md",
+      " M src/commands/deploy.ts",
+      " M src/commands/dev.ts",
+      " M src/commands/login.ts",
+      " M src/commands/new.ts",
+      " M src/commands/preview.ts",
+      " M src/commands/push.ts",
+      " M src/commands/status.ts",
+      " M src/index.ts",
+      " M tests/dev-runtime.test.mjs",
+      " M tests/helpers/mock-server.mjs"
+    ],
+    "untracked": [
+      "src/commands/logs.ts",
+      "src/commands/publish.ts",
+      "src/utils/command-output.ts",
+      "src/utils/dev-logs.ts",
+      "src/utils/hosted-targets.ts",
+      "src/utils/portable-uploads.ts",
+      "src/utils/publication.ts",
+      "src/utils/read-dev-logs.ts",
+      "tests/dev-logs.test.mjs",
+      "tests/dev-upload-writeback.test.mjs",
+      "tests/portable-uploads.test.mjs",
+      "tests/publication.test.mjs",
+      "tests/publish-cms.test.mjs",
+      "tests/upload-roundtrip-cms.test.mjs"
+    ],
+    "head_in_rc13": null,
+    "decision": "current local changes compared file by file; product fixes included while preserving newer release security and compatibility work"
+  },
+  {
+    "path": "release-testing/stack/cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "3a37eabc3252b1ab64e82a2283a310fc6663a156",
+    "branch": "",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/agent-launch-cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "c9a31db6a11ee16e1a81063a05484d5646cd9abe",
+    "branch": "feat/agent-launch-flow",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/explicit-publication-cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "f418c1f56fdf997f621417d52d138f8ea7a82fd2",
+    "branch": "feat/explicit-publication",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/link-active-state/primo-cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "433cd1948bc24d5e2affa2e71fea23b895fa778d",
+    "branch": "codex/link-active-state",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/release-cli-package",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "7cedadbe0ea935128c751bb4cd1d4197ff1a0300",
+    "branch": "release/cli-0.2.1",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/release-sync-conflicts",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "5eeba6a09ccfa8657c1a138f52edc653a78e9fb2",
+    "branch": "fix/sticky-sync-conflicts",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/release-sync-warning",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "1b871e06094e11a6c19623944a69854b670fd2e5",
+    "branch": "fix/experimental-sync-warning",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "primo-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "0329f1610011228dca465814ab9ba7957189f592",
+    "branch": "fix/image-focal-point",
+    "tracked_changes": [
+      " M .github/workflows/ci.yml",
+      " M package-lock.json",
+      " M package.json",
+      " M scripts/smoke-tests.mjs",
+      " M scripts/test-dev-runtime.mjs",
+      " M src/index.ts",
+      " M src/reference/site-structure.md",
+      " M src/tools/build_preview.ts",
+      " M src/tools/get_dev_status.ts",
+      " M src/tools/publish_compiler.ts"
+    ],
+    "untracked": [
+      "scripts/benchmark-publish.mjs",
+      "scripts/publish-cache-fixture.mjs",
+      "scripts/test-incremental-publish-cms.mjs",
+      "scripts/test-incremental-publish.mjs",
+      "scripts/test-publish-cache-browser.mjs",
+      "scripts/test-publish-cache-version.mjs",
+      "src/tools/get_dev_logs.ts",
+      "src/tools/publish-cache.ts",
+      "src/tools/read-dev-logs.ts"
+    ],
+    "head_in_rc13": null,
+    "decision": "current local changes compared file by file; product fixes included while preserving newer release security and compatibility work"
+  },
+  {
+    "path": "release-testing/stack/mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "5133f7a837b1c94d35f9cc7224e51d3a88ea1db0",
+    "branch": "",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/agent-launch-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "9041d8173bdef8823b9272ac72eeb30e13471792",
+    "branch": "feat/agent-launch-flow",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/explicit-publication-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "dcb63281d40989917366243deb4017b14a957f4f",
+    "branch": "docs/explicit-publication",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/incremental-publish-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "9d108b583d404275d493afab2f4e851db369d1e4",
+    "branch": "codex/incremental-publishing",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/link-active-state/primo-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "fede6223e761c089d225c68af13630062ba5cbe9",
+    "branch": "codex/link-active-state",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/publish-cache-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "874859b32f5697dd67933dda86be9683f437f939",
+    "branch": "fix/publish-script-cache-version",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "worktrees/release-mcp-package",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "a943ed58927a7de8c7e8e52cd853d23acb741668",
+    "branch": "release/mcp-0.1.10",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "docs",
+    "remote": "https://github.com/primocms/docs.git",
+    "head": "cf57146b48505ae1a393f8dc4fc4b40885e28725",
+    "branch": "codex/publish-reviewed-docs",
+    "tracked_changes": [
+      " M cli/local-development.mdx",
+      " M reference/mcp-server.mdx"
+    ],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "current local changes compared file by file; product fixes included while preserving newer release security and compatibility work"
+  },
+  {
+    "path": "worktrees/docs-analytics",
+    "remote": "https://github.com/primocms/docs.git",
+    "head": "636244688f3ed6a387968eeaa31b0d08c30439ee",
+    "branch": "docs/analytics-self-hosted",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "focused feature/fix checkout: patch-equivalent upstream or integrated through current feature PR; superseded source preserved"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-hosted-staging",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "ad2ab9e0411d6397ed0dcb80da6b30f232358436",
+    "branch": "test/rc7-disposable-hosted-staging",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc7-verification",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "925d4698ff2b8adf9c69ce38b1235fd8b6069637",
+    "branch": "test/rc7-exact-package-handoff",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc10",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "6478ddb600ef1a058914ba323e6cc5886c795297",
+    "branch": "fix/rc10-hosted-provisioning",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-timing-recovery",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "4cba6f958ccc0abeba26203356b32a88abe30c71",
+    "branch": "fix/rc11-timing-checks",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-validation",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "9af51545459af47fb9186f4cca60795822aa888e",
+    "branch": "fix/production-validation-rc6",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-resolution",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "bc497df842b04c4a591c65f9b8552284c6e86e21",
+    "branch": "fix/installed-svelte-resolution",
+    "tracked_changes": [],
+    "untracked": [
+      "node_modules"
+    ],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc6-verification",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "789af72217204cdb0177b51851970871eae7a0d3",
+    "branch": "test/rc6-exact-package-handoff",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-hydration",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "2d3cb7a5e9d6cc798db430467431b7e3ffee4128",
+    "branch": "fix/published-section-hydration",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-static-review",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "22e713e5bf6d5af566f8a76f6e950eec2810704b",
+    "branch": "fix/static-section-hydration",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-browser",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "d9a4cd12cd74bb11bd44ef01bb81b6c854a60125",
+    "branch": "fix/browser-compatibility-rc6",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc9-canary",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "d6a58636042fab51340a8bfe091aeafdd043748f",
+    "branch": "test/rc9-hosted-canary",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-pilot-preparation",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f",
+    "branch": "docs/ten-builder-pilot-defaults",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-launch-prep",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "e5491d12a1848f8b7f77f3035addae56ead404f0",
+    "branch": "test/rc7-launch-gate-preparation",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-firefox-signin-stress",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "91ff71f82a7c276b609a6d861e22c48ef536c7d4",
+    "branch": "test/rc11-firefox-signin-stress",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-sync",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "1439c2a97ff8fab8ed83542415b713b06c42f797",
+    "branch": "fix/guard-two-way-imports",
+    "tracked_changes": [],
+    "untracked": [
+      "node_modules"
+    ],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-node",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "ea41298f167d3b8db2358f08a993080fb7758bb3",
+    "branch": "fix/supported-node-versions",
+    "tracked_changes": [],
+    "untracked": [
+      "node_modules"
+    ],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-headers",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "ee867b06af5bd4b49c488edb7df74567c24d9361",
+    "branch": "fix/published-response-headers",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc7",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "7c1c7d4127479793c8b8856c102ef7d76fd75b80",
+    "branch": "release/founding-builders-rc.7",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-rc5-staging",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "80765f8b4aa4fb0363422fec5ea8dc8de65cc720",
+    "branch": "test/rc5-disposable-staging",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-nested-review",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "4257412e0068f704194c8afb7b1d4cf8acd22562",
+    "branch": "fix/page-type-nested-fields",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "4ece4c555523650904216f4b19345b897422fdb9",
+    "branch": "qa/founding-builders",
+    "tracked_changes": [
+      " M tests/e2e/cli-roundtrip.spec.ts",
+      " M tests/e2e/global-setup.ts",
+      " M tests/e2e/global-teardown.ts",
+      " M tests/e2e/helpers/paths.ts"
+    ],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-mcp",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "1c323840a45b56104ecabc3ac398c9fc7e98c5cf",
+    "branch": "fix/published-section-hydration",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-mcp-rc",
+    "remote": "https://github.com/primocms/mcp.git",
+    "head": "8c96de27908373983bfff831ee99e4231e0873c8",
+    "branch": "release/founding-builders-rc.1",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "0412a5de1244d50ddd0505dfb47a3ada7f2bcd7a",
+    "branch": "qa/founding-builders",
+    "tracked_changes": [
+      " M tests/site-ids.test.mjs"
+    ],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-rc",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc",
+    "branch": "release/founding-builders-rc.1",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc8",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "af0f4aa73cb55e3565b53792bab91916d99a41b5",
+    "branch": "release/founding-builders-rc.8",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc6",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "7d4f982ee1af1f8d7b1a6662364816ec9b15426c",
+    "branch": "release/founding-builders-rc.6",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-permissions",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "392066ac855252151df06176729d5dc08a13a8f4",
+    "branch": "fix/content-only-editors",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-repeater",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "db9452113efb7abccf5fad972b7b2c6aa7f24f56",
+    "branch": "fix/editor-repeater-reordering",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-warnings",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "5d146f95f365de6a2821c40ae9151bf1bdb96aa0",
+    "branch": "fix/svelte-warning-readiness",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-firefox-compiler",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "5642f312bd29b83dea7ed3c86c68581ad52c5db3",
+    "branch": "fix/firefox-compiler-recovery",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-entry-safety",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "5c6c3061572ac5b23234509c293f9080c4b4df0f",
+    "branch": "fix/preserve-unchanged-section-entries",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "7883f4a3565d1a431fe5437a4719ed88f22e8ab4",
+    "branch": "release/founding-builders-rc.1",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-typecheck",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "087c78cf11872640e8aadb89a53057de7ca95816",
+    "branch": "fix/typecheck-readiness",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cli-security",
+    "remote": "https://github.com/primocms/primo-cli.git",
+    "head": "d634f426fa8e6e2d5d465738c126a1be09a7ea5d",
+    "branch": "fix/security-dependencies",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": null,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc4",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "9c5335d304c6f52db8d77993ed5b1dcd534a1ab5",
+    "branch": "release/founding-builders-rc.4",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-presence",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "15085e33013584ba47c581052997e93e7131a37d",
+    "branch": "fix/presence-reload",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "release-readiness-2026-10-14/primo-cms-rc5",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "399b9a5c4e5532ac5da6dd5e03433d3dca8d1a36",
+    "branch": "release/founding-builders-rc.5",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": false,
+    "decision": "historical qualification checkout; superseded by consolidated release and preserved as evidence"
+  },
+  {
+    "path": "worktrees/image-focal-point-ui",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "5337b8e62422e9f965c600da0b1dfac8f58af15f",
+    "branch": "improve/image-focal-point-ui",
+    "tracked_changes": [],
+    "untracked": [],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  },
+  {
+    "path": "worktrees/rc13-editor-reconciliation",
+    "remote": "https://github.com/primocms/primo.git",
+    "head": "3167081fddfe291613a0e19bcc26682ba9044ed2",
+    "branch": "codex/release-consolidation",
+    "tracked_changes": [],
+    "untracked": [
+      "release/ship/editor-audit/"
+    ],
+    "head_in_rc13": true,
+    "decision": "head is an ancestor of original RC.13; local changes separately reconciled when present"
+  }
+]

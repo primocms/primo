@@ -2,8 +2,9 @@
 	import { createDialogAction } from '$lib/components/dialog-action.svelte'
 	const save = createDialogAction()
 	import * as Dialog from '$lib/components/ui/dialog'
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
+	import { goto, onNavigate } from '$app/navigation'
+	import { toast } from 'svelte-sonner'
+	import { page } from '$app/state'
 	import * as Avatar from '$lib/components/ui/avatar/index.js'
 	import { Input } from '$lib/components/ui/input'
 	import { Button } from '$lib/components/ui/button'
@@ -19,6 +20,7 @@
 	import { CreditCard } from 'lucide-svelte'
 
 	const sidebar = useSidebar()
+	onNavigate(() => sidebar.setOpenMobile(false))
 
 	interface MenuItem {
 		title: string
@@ -37,9 +39,7 @@
 		buttons?: MenuButton[]
 	}
 
-	let { sidebar_menu = [] } = $props<{
-		sidebar_menu?: SidebarMenu
-	}>()
+	let { sidebar_menu = [] }: { sidebar_menu?: SidebarMenu[] } = $props()
 
 	let is_creating_site_group = $state(false)
 	let new_site_group_name = $state('')
@@ -76,18 +76,18 @@
 	}
 
 	function get_dashboard_url() {
-		if (typeof window === 'undefined') return '/admin/dashboard'
+		if (typeof window === 'undefined') return '/admin/dashboard/sites'
 		const { protocol, hostname, port } = window.location
 		if (hostname === 'localhost' || hostname === '127.0.0.1') {
-			return `${protocol}//${hostname}${port ? `:${port}` : ''}/`
+			return `${protocol}//${hostname}${port ? `:${port}` : ''}/admin/dashboard/sites`
 		}
 		if (hostname.endsWith('.localhost')) {
-			return `${protocol}//localhost${port ? `:${port}` : ''}/`
+			return `${protocol}//localhost${port ? `:${port}` : ''}/admin/dashboard/sites`
 		}
-		return '/admin/dashboard'
+		return '/admin/dashboard/sites'
 	}
 
-	const path = $derived($page.url.pathname.split('/').slice(0, 4).join('/'))
+	const path = $derived(page.url.pathname.split('/').slice(0, 4).join('/'))
 	$effect(() => {
 		is_creating_site_group
 		is_creating_symbol_group
@@ -124,7 +124,7 @@
 </Dialog.Root>
 
 <Sidebar.Root collapsible="icon" class="overflow-hidden *:data-[sidebar=sidebar]:flex-row">
-	<Sidebar.Root collapsible="none" class="w-[calc(var(--sidebar-width-icon)+1px)]! border-r">
+	<Sidebar.Root collapsible="none" class="app-rail w-[calc(var(--sidebar-width-icon)+1px)]! border-r">
 		<!-- <Sidebar.Header>
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>
@@ -144,12 +144,16 @@
 					<Sidebar.Menu>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/sites')}
+								aria-label="Sites"
+								isActive={page.url.pathname.startsWith('/admin/dashboard/sites')}
 								tooltipContentProps={{
 									hidden: false
 								}}
 								onclick={() => {
-									window.location.href = get_dashboard_url()
+									const url = new URL(get_dashboard_url(), window.location.href)
+									// Keep the dashboard mounted when staying on the same host.
+									if (url.origin === window.location.origin) goto(url)
+									else window.location.href = url.href
 									sidebar.setOpen(true)
 								}}
 								class="px-2.5 md:px-2"
@@ -163,7 +167,8 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/library')}
+								aria-label="Library"
+								isActive={page.url.pathname.startsWith('/admin/dashboard/library')}
 								tooltipContentProps={{
 									hidden: false
 								}}
@@ -182,12 +187,13 @@
 						</Sidebar.MenuItem>
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
-								isActive={$page.url.pathname.startsWith('/admin/dashboard/marketplace')}
+								aria-label="Marketplace"
+								isActive={page.url.pathname.startsWith('/admin/dashboard/marketplace')}
 								tooltipContentProps={{
 									hidden: false
 								}}
 								onclick={() => {
-									goto('/admin/dashboard/marketplace')
+									goto('/admin/dashboard/marketplace/starters')
 									sidebar.setOpen(true)
 								}}
 								class="px-2.5 md:px-2"
@@ -251,6 +257,10 @@
 							{/if}
 							<DropdownMenu.Item
 								onclick={async () => {
+									if (self.has_pending_changes()) {
+										toast.error('Save or retry your changes before logging out.')
+										return
+									}
 									self.instance?.authStore.clear()
 									await goto('/admin/auth')
 								}}
@@ -282,7 +292,7 @@
 					{#each SiteGroups.list() ?? [] as group}
 						{@const url = `/admin/dashboard/sites?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
+							<Sidebar.MenuButton isActive={page.url.pathname + page.url.search === url}>
 								{#snippet child({ props })}
 									<a href={url} {...props}>
 										<span>{group.name}</span>
@@ -315,7 +325,7 @@
 					{#each LibrarySymbolGroups.list() ?? [] as group}
 						{@const url = `/admin/dashboard/library?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.pathname + $page.url.search === url}>
+							<Sidebar.MenuButton isActive={page.url.pathname + page.url.search === url}>
 								{#snippet child({ props })}
 									<a href={url} {...props}>
 										<span>{group.name}</span>
@@ -344,13 +354,13 @@
 				</div>
 			</Sidebar.Header>
 			<Sidebar.Content class="p-2">
-				{@const browsing_blocks = $page.url.pathname.endsWith('/blocks')}
+				{@const browsing_blocks = page.url.pathname.endsWith('/blocks')}
 				<Sidebar.GroupLabel>{browsing_blocks ? 'Block categories' : 'Starter categories'}</Sidebar.GroupLabel>
 				<Sidebar.Menu>
 					{#each (browsing_blocks ? LibrarySymbolGroups.from(marketplace).list({ sort: 'index' }) : SiteGroups.from(marketplace).list({ sort: 'index' })) ?? [] as group}
 						{@const url = `/admin/dashboard/marketplace/${browsing_blocks ? 'blocks' : 'starters'}?group=${group.id}`}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton isActive={$page.url.searchParams.get('group') === group.id}>
+							<Sidebar.MenuButton isActive={page.url.searchParams.get('group') === group.id}>
 								{#snippet child({ props })}
 									<a href={url} {...props}><span>{group.name}</span></a>
 								{/snippet}
@@ -362,3 +372,10 @@
 		{/if}
 	</Sidebar.Root>
 </Sidebar.Root>
+
+<style>
+	@media (max-width: 767px) {
+		:global(.app-rail [data-sidebar='menu-button'] > span) { display: none; }
+		:global(.app-rail [data-sidebar='menu-button']) { min-height: 44px; }
+	}
+</style>

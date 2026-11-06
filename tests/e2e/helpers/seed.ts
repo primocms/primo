@@ -28,8 +28,10 @@ async function ensureSiteGroup(headers: Record<string, string>): Promise<string>
 	const listRes = await fetch(`${TEST_SERVER_URL}/api/collections/site_groups/records`, { headers })
 	const existing = (await listRes.json()).items
 	if (existing.length > 0) {
-		cachedGroupId = existing[0].id
-		return cachedGroupId
+		const groupId = existing[0].id
+		if (typeof groupId !== 'string' || !groupId) throw new Error('Site group is missing its ID')
+		cachedGroupId = groupId
+		return groupId
 	}
 	const createRes = await fetch(`${TEST_SERVER_URL}/api/collections/site_groups/records`, {
 		method: 'POST',
@@ -37,8 +39,10 @@ async function ensureSiteGroup(headers: Record<string, string>): Promise<string>
 		body: JSON.stringify({ name: 'Default', index: 0 })
 	})
 	const created = await createRes.json()
-	cachedGroupId = created.id
-	return cachedGroupId
+	const groupId = created.id
+	if (typeof groupId !== 'string' || !groupId) throw new Error('Created site group is missing its ID')
+	cachedGroupId = groupId
+	return groupId
 }
 
 /** Seeds a fresh, isolated copy of the fixture-site content under a

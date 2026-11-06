@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { LayoutTemplate, Cuboid } from 'lucide-svelte'
 	import { marketplaceNavigation } from './marketplace-navigation.svelte'
 

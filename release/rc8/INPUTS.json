@@ -1,0 +1,173 @@
+{
+  "scopeFrozen": true,
+  "upstreams": [
+    {
+      "repo": "primo",
+      "defaultBranch": "main",
+      "upstream": "24a39f045ab5bdcc935af9d2fbbf0cc7887d7f5a",
+      "localUpstream": "24a39f045ab5bdcc935af9d2fbbf0cc7887d7f5a",
+      "head": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f"
+    },
+    {
+      "repo": "primo-cli",
+      "defaultBranch": "master",
+      "upstream": "02c2914a5468d6b81ec70027601a543892e7f5a2",
+      "localUpstream": "02c2914a5468d6b81ec70027601a543892e7f5a2",
+      "head": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc"
+    },
+    {
+      "repo": "mcp",
+      "defaultBranch": "main",
+      "upstream": "a54199530d3af4818b705560cc495dc7090952a9",
+      "localUpstream": "a54199530d3af4818b705560cc495dc7090952a9",
+      "head": "8c96de27908373983bfff831ee99e4231e0873c8"
+    }
+  ],
+  "historicalDraftInputs": [
+    {
+      "repo": "primocms/primo",
+      "number": 1333,
+      "head": "80765f8b4aa4fb0363422fec5ea8dc8de65cc720"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1332,
+      "head": "399b9a5c4e5532ac5da6dd5e03433d3dca8d1a36"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1331,
+      "head": "5d146f95f365de6a2821c40ae9151bf1bdb96aa0"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1330,
+      "head": "9c5335d304c6f52db8d77993ed5b1dcd534a1ab5"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1329,
+      "head": "087c78cf11872640e8aadb89a53057de7ca95816"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1328,
+      "head": "db9452113efb7abccf5fad972b7b2c6aa7f24f56"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1327,
+      "head": "7883f4a3565d1a431fe5437a4719ed88f22e8ab4"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1326,
+      "head": "392066ac855252151df06176729d5dc08a13a8f4"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1325,
+      "head": "2d3cb7a5e9d6cc798db430467431b7e3ffee4128"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1324,
+      "head": "ee867b06af5bd4b49c488edb7df74567c24d9361"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1323,
+      "head": "4257412e0068f704194c8afb7b1d4cf8acd22562"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 67,
+      "head": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 66,
+      "head": "ea41298f167d3b8db2358f08a993080fb7758bb3"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 65,
+      "head": "1439c2a97ff8fab8ed83542415b713b06c42f797"
+    },
+    {
+      "repo": "primocms/primo-cli",
+      "number": 64,
+      "head": "22e713e5bf6d5af566f8a76f6e950eec2810704b"
+    },
+    {
+      "repo": "primocms/mcp",
+      "number": 30,
+      "head": "8c96de27908373983bfff831ee99e4231e0873c8"
+    },
+    {
+      "repo": "primocms/mcp",
+      "number": 29,
+      "head": "1c323840a45b56104ecabc3ac398c9fc7e98c5cf"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1334,
+      "head": "9af51545459af47fb9186f4cca60795822aa888e"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1335,
+      "head": "d9a4cd12cd74bb11bd44ef01bb81b6c854a60125"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1336,
+      "head": "5c6c3061572ac5b23234509c293f9080c4b4df0f"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1337,
+      "head": "7d4f982ee1af1f8d7b1a6662364816ec9b15426c"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1338,
+      "head": "789af72217204cdb0177b51851970871eae7a0d3"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1339,
+      "head": "7c1c7d4127479793c8b8856c102ef7d76fd75b80"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1340,
+      "head": "925d4698ff2b8adf9c69ce38b1235fd8b6069637"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1342,
+      "head": "e5491d12a1848f8b7f77f3035addae56ead404f0"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1343,
+      "head": "ad2ab9e0411d6397ed0dcb80da6b30f232358436"
+    },
+    {
+      "repo": "primocms/primo",
+      "number": 1344,
+      "head": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f"
+    }
+  ],
+  "cmsOriginalTree": "e9edab65ba4bfab2d35988b34c41e6642cd98f7f",
+  "cliSource": "d851dd980ad43ce3c44e5f03bf68048cd443f3bc",
+  "mcpSource": "8c96de27908373983bfff831ee99e4231e0873c8",
+  "cliArchiveSha256": "4d4dea80ac9bd3a3c4bc6721bd6320d83833f4c2ac6731148c0bc1be63349483",
+  "mcpArchiveSha256": "a7c32c82bc748b18cc694782493112937aec86c86cc056b407ab1a8e8b7c0a03",
+  "newProductDelta": [
+    "accepted same-origin framing policy",
+    "lazy compiler worker startup to remove idle-worker creation/teardown on authentication and dashboard redirects"
+  ],
+  "allPriorDraftsRetained": true
+}

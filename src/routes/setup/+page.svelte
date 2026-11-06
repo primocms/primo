@@ -27,7 +27,9 @@
 	const is_form_valid = $derived(email.trim() !== '' && password.length >= 8 && confirm_password !== '' && password === confirm_password)
 
 	const users = self.instance?.collection('users')
+	if (!users) throw new Error('Setup requires a server connection')
 	const superusers = self.instance?.collection('_superusers')
+	if (!superusers) throw new Error('Setup requires a server connection')
 
 	// Check if setup is already complete and redirect if so
 	$effect(() => {
@@ -82,7 +84,7 @@
 			}
 
 			// Go straight to site
-			goto('/admin/site', { replaceState: true })
+			goto('/admin/site', { replace: true })
 		} catch (err: any) {
 			console.error('User creation error:', err)
 

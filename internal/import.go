@@ -10,12 +10,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"golang.org/x/net/html"
@@ -288,16 +290,19 @@ type ImportResult struct {
 }
 
 func RegisterImportEndpoint(pb *pocketbase.PocketBase) error {
+	if err := registerImportUploads(pb); err != nil {
+		return err
+	}
 	pb.OnServe().BindFunc(func(serveEvent *core.ServeEvent) error {
 		// Preview endpoint - shows what would change
 		serveEvent.Router.POST("/api/primo/import/{siteId}/preview", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, true)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		// Apply endpoint - actually makes changes
 		serveEvent.Router.POST("/api/primo/import/{siteId}", func(e *core.RequestEvent) error {
 			return handleImport(pb, e, false)
-		})
+		}).Bind(apis.BodyLimit(maxImportRequestBytes))
 
 		return serveEvent.Next()
 	})
@@ -315,22 +320,25 @@ func handleImport(pb *pocketbase.PocketBase, e *core.RequestEvent, previewOnly b
 		return e.UnauthorizedError("Authentication required", nil)
 	}
 
-	// Parse multipart form (must read body before any access checks so we can
-	// peek at site.yaml when creating a new site).
-	if err := e.Request.ParseMultipartForm(32 << 20); err != nil { // 32MB max
+	// Check coarse access before reading multipart content. Full rule checks
+	// run after parsing site.yaml when creating a new site.
+	// Staging authorization checks identity and developer ownership without
+	// parsing a body or evaluating request-dependent update rules yet.
+	if err := authorizePushStateWithInfo(pb, e, siteId, nil, true); err != nil {
+		return err
+	}
+	release, err := acquireImportCapacity(pb, e)
+	if err != nil {
+		return err
+	}
+	defer release()
+	if err := e.Request.ParseMultipartForm(importMultipartMemoryBytes); err != nil {
 		return e.BadRequestError("Failed to parse form", err)
 	}
 
-	file, _, err := e.Request.FormFile("file")
+	zipData, err := readImportArchive(pb, e, false)
 	if err != nil {
-		return e.BadRequestError("No file uploaded", err)
-	}
-	defer file.Close()
-
-	// Read ZIP data
-	zipData, err := io.ReadAll(file)
-	if err != nil {
-		return e.InternalServerError("Failed to read file", err)
+		return err
 	}
 
 	// Pull name/group from site.yaml in the zip. These populate required
@@ -571,12 +579,14 @@ func readSiteConfigFromZip(zipData []byte) (string, string) {
 }
 
 // maxImportUncompressedBytes caps the total decompressed size of an import zip.
-// The multipart limit (32MB) only bounds the *compressed* upload; a small zip
-// can inflate to gigabytes and we buffer every entry in memory, so without a
-// decompressed budget a crafted zip bomb OOMs the server. 512MB is far above
-// any real site (the marketing site is <4MB) while still killing a bomb early.
+// The request body limit only bounds the compressed upload; a small zip can
+// inflate to gigabytes and we buffer every entry in memory, so a separate
+// decompressed budget prevents a crafted zip bomb from exhausting memory.
 const maxImportUncompressedBytes = 512 << 20
 
+// processImport validates archive dependencies, previews changes, or applies them
+// to the hosted draft. Apply callers must provide a transaction so errors roll
+// back schema, page, and content updates together.
 func processImport(app core.App, site *core.Record, zipData []byte, previewOnly bool) (*ImportResult, error) {
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
@@ -608,6 +618,10 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 			return nil, fmt.Errorf("import exceeds maximum decompressed size of %d bytes", maxImportUncompressedBytes)
 		}
 		files[f.Name] = data
+	}
+
+	if err := validateImportPageReferences(app, site, files); err != nil {
+		return nil, err
 	}
 
 	// Collects non-fatal import problems (orphaned fields, etc.) to surface
@@ -696,6 +710,14 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 
 	// Import site fields FIRST so we can resolve site-field references in blocks
 	siteFieldKeyToId := make(map[string]string)
+	// Partial block uploads must also resolve portable keys against existing roots.
+	existingSiteFields, err := app.FindRecordsByFilter("site_fields", "site = {:site} && parent = ''", "", 0, 0, dbx.Params{"site": siteId})
+	if err != nil {
+		return nil, fmt.Errorf("failed to load site fields: %w", err)
+	}
+	for _, field := range existingSiteFields {
+		siteFieldKeyToId[field.GetString("key")] = field.Id
+	}
 	if siteFieldsData, ok := files["site/fields.yaml"]; ok {
 		if !previewOnly {
 			var err error
@@ -751,7 +773,7 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				return nil, err
 			}
 			ptFields = parsed
-			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, false, &warnings)
+			warnFieldDefinitionIssues(ptFields, fieldsPath, ptName, true, &warnings)
 		}
 
 		// Read layout.yaml if it exists
@@ -1200,11 +1222,18 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 		}
 	}
 
-	// Map to track imported page paths to IDs
-	pathToId := make(map[string]string)
+	// Seed dependencies from this site so a partial upload can omit parents.
+	// Parents included in this archive overwrite these IDs as they are imported.
+	moves := map[string]string{}
+	for _, info := range allPages {
+		if info.existing != nil {
+			moves[info.existing.Id] = info.path
+		}
+	}
+	pathToId := remapImportedPagePaths(pathToPageId, moves)
 
-	// Import homepage first to get its ID
-	var homepageId string
+	// Import homepage first to get its ID, or retain the existing homepage.
+	homepageId := pathToId[""]
 	if homepageInfo != nil && !previewOnly {
 		pageId, sectionIds, err := importPage(app, site, homepageInfo.data, homepageInfo.raw, homepageInfo.existing, folderToDisplayName, "", "", &warnings)
 		if err != nil {
@@ -1231,20 +1260,9 @@ func processImport(app core.App, site *core.Record, zipData []byte, previewOnly 
 				lastSlash := strings.LastIndex(info.path, "/")
 				parentPath := info.path[:lastSlash]
 
-				// Look up the parent page ID. If the parent folder has no
-				// own yaml (e.g. pages/blog/ exists but pages/blog.yaml
-				// doesn't), skip the page rather than orphan it as a
-				// pseudo-homepage with parent="". Cascades: any child of a
-				// skipped page is also skipped because it won't find its
-				// parent in pathToId either.
 				pid, ok := pathToId[parentPath]
 				if !ok {
-					warnings = append(warnings, ImportWarning{
-						Kind:    "orphaned_page",
-						File:    "pages/" + info.path + ".yaml",
-						Message: fmt.Sprintf("Skipping page %q because its parent folder %q has no %s.yaml or %s/index.yaml", info.path, parentPath, parentPath, parentPath),
-					})
-					continue
+					return nil, fmt.Errorf("%s: parent page %q could not be resolved", info.file, parentPath)
 				}
 				parentId = pid
 			} else {
@@ -1541,8 +1559,21 @@ func importBlock(app core.App, site *core.Record, folderName, displayName string
 				if fieldType == "site-field" {
 					if configMap, ok := config.(map[string]interface{}); ok {
 						if fieldName, ok := configMap["field"].(string); ok && fieldName != "" {
-							if fieldId, found := siteFieldKeyToId[fieldName]; found {
-								configMap["field"] = fieldId
+							// IDs take precedence when an ID also happens to be a key.
+							resolved := ""
+							for _, id := range siteFieldKeyToId {
+								if id == fieldName {
+									resolved = id
+									break
+								}
+							}
+							if resolved == "" {
+								resolved = siteFieldKeyToId[fieldName]
+							}
+							if resolved != "" {
+								configMap["field"] = resolved
+							} else {
+								*warnings = append(*warnings, ImportWarning{File: sourceFile, Path: fieldPath + ".config.field", Field: fieldKey, Block: displayName, Message: fmt.Sprintf("Unresolved site-field reference %q. Use the ID or unique key of a top-level field in site/fields.yaml; publication will fail until this is corrected.", fieldName)})
 							}
 						}
 					}
@@ -2112,6 +2143,9 @@ func rekeyPage(app core.App, oldPage *core.Record, newId string) error {
 	return nil
 }
 
+// importPage reconciles a page at its file-derived route, retaining existing
+// section identities and resolving blocks already stored on the site. It
+// returns the page and section IDs for source-file writeback.
 func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []byte, existing *core.Record, folderToDisplayName map[string]string, parentId string, pagePath string, warnings *[]ImportWarning) (string, []string, error) {
 	// Derive slug from file path (last segment)
 	// e.g., "menu" -> "menu", "about/team" -> "team", "" -> ""
@@ -2174,6 +2208,19 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		existing = nil
 	}
 
+	legacyPageContent := false
+	if existing != nil {
+		entries, err := app.FindRecordsByFilter("page_entries", "page = {:page}", "", 0, 0, dbx.Params{"page": existing.Id})
+		if err != nil {
+			return "", nil, err
+		}
+		fields, err := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": existing.GetString("page_type")})
+		if err != nil {
+			return "", nil, err
+		}
+		legacyPageContent = hasLegacyNestedContent(entries, fields)
+	}
+
 	// No-op guard: if the incoming page bytes are byte-identical to what we
 	// stored on the last import AND the page's file-derived location is
 	// unchanged (same parent + slug), the page is untouched since the dev's
@@ -2188,10 +2235,13 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	// identical bytes would skip and keep its stale parent/slug (and miss
 	// Pages.Modified in --preview). Mirrors the uploads sha256 skip. We return
 	// the existing page id + section ids so children still resolve.
-	if existing != nil && len(raw) > 0 && rawSourceUnchanged(raw, existing) &&
+	if existing != nil && !legacyPageContent && len(raw) > 0 && rawSourceUnchanged(raw, existing) &&
 		existing.GetString("parent") == parentId && existing.GetString("slug") == slug {
 		sectionIds, err := existingPageSectionIds(app, existing.Id)
 		if err != nil {
+			return "", nil, err
+		}
+		if err := warnUnchangedPageSections(app, site.Id, pageData, pagePath, folderToDisplayName, warnings); err != nil {
 			return "", nil, err
 		}
 		return existing.Id, sectionIds, nil
@@ -2293,20 +2343,15 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 
 		// Get page type fields - map field key/name -> field id
 		ptFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageTypeId})
-		fieldByKey := make(map[string]string)
-		for _, f := range ptFields {
-			key := f.GetString("key")
-			if key == "" {
-				key = f.GetString("name")
-			}
-			fieldByKey[key] = f.Id
-		}
+		fieldByKey, fieldsByParent := contentFieldScopes(ptFields)
 
 		// Get existing page entries
 		existingEntries, _ := app.FindRecordsByFilter("page_entries", "page = {:page}", "", 0, 0, dbx.Params{"page": page.Id})
 		entryByField := make(map[string]*core.Record)
 		for _, e := range existingEntries {
-			entryByField[e.GetString("field")] = e
+			if e.GetString("parent") == "" {
+				entryByField[e.GetString("field")] = e
+			}
 		}
 
 		entriesColl, err := app.FindCollectionByNameOrId("page_entries")
@@ -2315,8 +2360,8 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		}
 
 		for fieldKey, value := range pageContent {
-			fieldId := fieldByKey[fieldKey]
-			if fieldId == "" {
+			field := fieldByKey[fieldKey]
+			if field == nil {
 				if warnings != nil {
 					pageTypeName := pageData.PageType
 					if pageTypeName == "" {
@@ -2332,6 +2377,52 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 							sourceFile, fieldKey, pageTypeName, sanitizeFilename(pageTypeName),
 						),
 					})
+				}
+				continue
+			}
+
+			fieldId := field.Id
+			if field.GetString("type") == "repeater" || field.GetString("type") == "group" {
+				// Processing a changed page file must not replace an unchanged
+				// subtree and invalidate other clients' pending entry edits.
+				ids := map[string]bool{}
+				for _, entry := range existingEntries {
+					if entry.GetString("parent") == "" && entry.GetString("field") == fieldId {
+						ids[entry.Id] = true
+					}
+				}
+				for changed := true; changed; {
+					changed = false
+					for _, entry := range existingEntries {
+						if ids[entry.GetString("parent")] && !ids[entry.Id] {
+							ids[entry.Id] = true
+							changed = true
+						}
+					}
+				}
+				tree := []*core.Record{}
+				for _, entry := range existingEntries {
+					if ids[entry.Id] {
+						tree = append(tree, entry)
+					}
+				}
+				unchanged, err := sectionContentUnchanged(tree, ptFields, map[string]interface{}{fieldKey: value})
+				if err != nil {
+					return "", nil, err
+				}
+				if unchanged {
+					continue
+				}
+				// Replace this field's item tree; unrelated scalar entries retain IDs.
+				for _, entry := range existingEntries {
+					if entry.GetString("field") == fieldId && entry.GetString("parent") == "" {
+						if err := app.Delete(entry); err != nil {
+							return "", nil, err
+						}
+					}
+				}
+				if err := importPageContentField(app, entriesColl, page.Id, field, value, "", 0, fieldsByParent, warnings, sourceFile); err != nil {
+					return "", nil, err
 				}
 				continue
 			}
@@ -2373,22 +2464,12 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 		sectionsColl, _ := app.FindCollectionByNameOrId("page_sections")
 		entriesColl, _ := app.FindCollectionByNameOrId("page_section_entries")
 
-		// Get symbol name -> id mapping (case-insensitive)
-		symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-		symbolByName := make(map[string]string)
-		for _, s := range symbols {
-			name := s.GetString("name")
-			symbolByName[name] = s.Id
-			symbolByName[strings.ToLower(name)] = s.Id
-			symbolByName[sanitizeFilename(name)] = s.Id
+		// Resolve existing folders even when their block files were not uploaded.
+		symbols, err := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
+		if err != nil {
+			return "", nil, err
 		}
-		// Also map folder names to symbol IDs (for export compatibility)
-		for folderName, displayName := range folderToDisplayName {
-			if symbolId := symbolByName[displayName]; symbolId != "" {
-				symbolByName[folderName] = symbolId
-				symbolByName[strings.ToLower(folderName)] = symbolId
-			}
-		}
+		symbolByName := importSymbolLookup(symbols, folderToDisplayName)
 
 		for i, sectionData := range pageData.Sections {
 			blockName := getString(sectionData, "block")
@@ -2398,16 +2479,7 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 				symbolId = symbolByName[strings.ToLower(blockName)]
 			}
 			if symbolId == "" {
-				if warnings != nil {
-					*warnings = append(*warnings, ImportWarning{
-						Kind:    "unknown_block",
-						File:    sourceFile,
-						Path:    fmt.Sprintf("sections[%d].block", i),
-						Block:   blockName,
-						Message: fmt.Sprintf("section %d references block %q which does not exist; section skipped", i, blockName),
-					})
-				}
-				continue
+				return "", nil, fmt.Errorf("%s: sections[%d].block references unknown block %q", sourceFile, i, blockName)
 			}
 
 			// Match by _id when present, else treat as a new section.
@@ -2450,13 +2522,32 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 			// Import section content
 			if content, ok := sectionData["content"].(map[string]interface{}); ok {
 				// Get symbol fields
-				symbolFields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbolId})
+				symbolFields, err := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": symbolId})
+				if err != nil {
+					return "", nil, err
+				}
 
 				// Build lookup maps
 				fieldByKey, fieldsByParent := contentFieldScopes(symbolFields)
 
-				// Delete ALL existing entries for this section (clean slate)
-				existingEntries, _ := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, dbx.Params{"section": section.Id})
+				existingEntries, err := app.FindRecordsByFilter("page_section_entries", "section = {:section}", "", 0, 0, dbx.Params{"section": section.Id})
+				if err != nil {
+					return "", nil, err
+				}
+				unchanged, err := sectionContentUnchanged(existingEntries, symbolFields, content)
+				if err != nil {
+					return "", nil, err
+				}
+				if unchanged {
+					for key, value := range content {
+						if field := fieldByKey[key]; field != nil {
+							warnNestedSectionContent(field, value, fieldsByParent, warnings, sourceFile, blockName, fmt.Sprintf("sections[%d].content.%s", i, key))
+						}
+					}
+					continue
+				}
+
+				// A changed tree still follows the existing replacement semantics.
 				for _, entry := range existingEntries {
 					app.Delete(entry)
 				}
@@ -2508,6 +2599,47 @@ func importPage(app core.App, site *core.Record, pageData ExportedPage, raw []by
 	return page.Id, sectionIds, nil
 }
 
+// Compare authoritative exported content before replacing a section's entries.
+// Dashboard-created pages and normalized exports do not necessarily have the
+// same raw_source bytes, even when every value and nested item is unchanged.
+func sectionContentUnchanged(entries, fields []*core.Record, incoming map[string]interface{}) (bool, error) {
+	fieldByID := make(map[string]*core.Record, len(fields))
+	children := make(map[string][]*core.Record)
+	for _, field := range fields {
+		fieldByID[field.Id] = field
+		children[field.GetString("parent")] = append(children[field.GetString("parent")], field)
+	}
+	byParent := make(map[string][]*core.Record)
+	for _, entry := range entries {
+		if fieldByID[entry.GetString("field")] == nil {
+			return false, nil
+		}
+		byParent[entry.GetString("parent")] = append(byParent[entry.GetString("parent")], entry)
+	}
+	for _, entry := range entries {
+		field := fieldByID[entry.GetString("field")]
+		if field.GetString("type") == "group" && len(children[field.Id]) > 0 && len(byParent[entry.Id]) == 0 {
+			return false, nil
+		}
+		if field.GetString("type") == "repeater" && len(byParent[entry.Id]) == 0 {
+			if _, legacy := normalizeValue(entry.Get("value")).([]interface{}); legacy {
+				return false, nil
+			}
+		}
+	}
+	// Marshal/unmarshal uses the exact export representation, including nested
+	// ordered maps and JSON-number normalization, without reading binary assets.
+	raw, err := yaml.Marshal(buildSectionContent(byParent[""], fieldByID, children, byParent))
+	if err != nil {
+		return false, err
+	}
+	var current map[string]interface{}
+	if err := yaml.Unmarshal(raw, &current); err != nil {
+		return false, err
+	}
+	return reflect.DeepEqual(current, incoming), nil
+}
+
 func importSiteFields(app core.App, site *core.Record, data []byte) error {
 	_, err := importSiteFieldsWithMap(app, site, data)
 	return err
@@ -2518,6 +2650,12 @@ func importSiteFields(app core.App, site *core.Record, data []byte) error {
 // resolution in blocks. The full importPageType still runs in pass 2 and
 // re-processes these rows idempotently.
 func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []interface{}, pageTypeNameToId map[string]string) (map[string]string, error) {
+	return importPageTypeFields(app, pageType, ptFields, pageTypeNameToId, false)
+}
+
+// Both import passes match fields by full ancestry so same-named children
+// cannot overwrite one another or be deleted during the second pass.
+func importPageTypeFields(app core.App, pageType *core.Record, ptFields []interface{}, pageTypeNameToId map[string]string, prune bool) (map[string]string, error) {
 	keyToId := make(map[string]string)
 
 	fieldsColl, err := app.FindCollectionByNameOrId("page_type_fields")
@@ -2525,24 +2663,35 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		return keyToId, err
 	}
 
-	existingFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
-	existingByKey := make(map[string]*core.Record)
-	for _, f := range existingFields {
-		existingByKey[f.GetString("key")] = f
+	existingFields, err := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
+	if err != nil {
+		return keyToId, err
 	}
+	existingByID := make(map[string]*core.Record)
+	for _, field := range existingFields {
+		existingByID[field.Id] = field
+	}
+	existingByCompositeKey := make(map[string]*core.Record)
+	for _, field := range existingFields {
+		existingByCompositeKey[buildBlockFieldCompositeKey(field, existingByID)] = field
+	}
+	matched := make(map[string]bool)
+	byPath := make(map[string]*core.Record)
+	parents := make(map[string]string)
 
-	for i, fieldEntry := range ptFields {
-		fieldData, ok := fieldEntry.(map[string]interface{})
-		if !ok {
-			continue
-		}
+	for i, fieldData := range flattenSubfields(fieldListToMaps(ptFields), "") {
 		fieldKey := getString(fieldData, "name")
 		if fieldKey == "" {
 			continue
 		}
 
+		parentKey := getString(fieldData, "parent")
+		fieldPath := fieldKey
+		if parentKey != "" {
+			fieldPath = parentKey + "/" + fieldKey
+		}
 		var field *core.Record
-		if existing, ok := existingByKey[fieldKey]; ok {
+		if existing, ok := existingByCompositeKey[fieldPath]; ok {
 			field = existing
 		} else {
 			field = core.NewRecord(fieldsColl)
@@ -2554,6 +2703,9 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		ptFieldType := getString(fieldData, "type")
 		field.Set("type", ptFieldType)
 		field.Set("index", i)
+		if parentKey == "" {
+			field.Set("parent", "")
+		}
 
 		ptFieldConfig, hasPtFieldConfig := fieldData["config"]
 		if !hasPtFieldConfig {
@@ -2575,10 +2727,106 @@ func importPageTypeFieldsOnly(app core.App, pageType *core.Record, ptFields []in
 		if err := app.Save(field); err != nil {
 			return keyToId, err
 		}
-		keyToId[fieldKey] = field.Id
+		matched[field.Id] = true
+		byPath[fieldPath] = field
+		parents[fieldPath] = parentKey
+		keyToId[fieldPath] = field.Id
 	}
 
+	for fieldPath, parentKey := range parents {
+		if parentKey == "" {
+			continue
+		}
+		parent := byPath[parentKey]
+		if parent == nil {
+			return keyToId, fmt.Errorf("page-type field %q has unknown parent %q", fieldPath, parentKey)
+		}
+		field := byPath[fieldPath]
+		field.Set("parent", parent.Id)
+		if err := app.Save(field); err != nil {
+			return keyToId, err
+		}
+	}
+	if prune {
+		for _, field := range existingFields {
+			if matched[field.Id] {
+				continue
+			}
+			if err := app.Delete(field); err != nil {
+				if _, missing := app.FindRecordById("page_type_fields", field.Id); missing == nil {
+					return keyToId, err
+				}
+			}
+		}
+	}
 	return keyToId, nil
+}
+
+// importPageContentField stores the same parent/item structure used by the
+// editor and other content scopes. Containers cannot be opaque JSON values.
+func importPageContentField(app core.App, collection *core.Collection, pageID string, field *core.Record, value interface{}, parentID string, index int, children map[string][]*core.Record, warnings *[]ImportWarning, sourceFile string) error {
+	if field.GetString("type") == "repeater" {
+		items, _ := value.([]interface{})
+		for i, item := range items {
+			entry := core.NewRecord(collection)
+			entry.Set("page", pageID)
+			entry.Set("field", field.Id)
+			entry.Set("parent", parentID)
+			entry.Set("index", i)
+			entry.Set("locale", "en")
+			if err := saveContentEntry(app, entry); err != nil {
+				return err
+			}
+			values, _ := item.(map[string]interface{})
+			warnUnknownPageContent(values, children[field.Id], warnings, sourceFile, fmt.Sprintf("%s[%d]", field.GetString("key"), i))
+			for _, child := range children[field.Id] {
+				if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children, warnings, sourceFile); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	entry := core.NewRecord(collection)
+	entry.Set("page", pageID)
+	entry.Set("field", field.Id)
+	entry.Set("parent", parentID)
+	entry.Set("index", index)
+	entry.Set("locale", "en")
+	entry.Set("value", normalizeValueForStorage(value))
+	if err := saveContentEntry(app, entry); err != nil {
+		return err
+	}
+	if field.GetString("type") == "group" {
+		values, _ := value.(map[string]interface{})
+		warnUnknownPageContent(values, children[field.Id], warnings, sourceFile, field.GetString("key"))
+		for _, child := range children[field.Id] {
+			if err := importPageContentField(app, collection, pageID, child, values[child.GetString("key")], entry.Id, 0, children, warnings, sourceFile); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func warnUnknownPageContent(values map[string]interface{}, fields []*core.Record, warnings *[]ImportWarning, file, path string) {
+	if warnings == nil {
+		return
+	}
+	known := map[string]bool{}
+	for _, field := range fields {
+		known[field.GetString("key")] = true
+	}
+	keys := []string{}
+	for key := range values {
+		if !known[key] {
+			keys = append(keys, key)
+		}
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		*warnings = append(*warnings, ImportWarning{Kind: "orphaned_field", File: file, Path: path + "." + key, Field: key, Message: fmt.Sprintf("%s: content key %q is not a declared subfield of %q and was not imported", file, key, path)})
+	}
 }
 
 // resolvePageFieldRef parses a page-field config.field value and returns the
@@ -2917,6 +3165,9 @@ func parseComponent(code string) (html, css, js string) {
 	return html, css, js
 }
 
+// importPageType reconciles a page type’s fields, allowed blocks, and supplied
+// layout using stable block folder keys. An omitted layout leaves existing
+// shared sections intact.
 func importPageType(app core.App, site *core.Record, ptFolder string, ptData ExportedPageType, ptFields []interface{}, existing *core.Record, folderToDisplayName map[string]string, layoutData *ExportedLayout, ptHead *string, ptFoot *string, pageTypeNameToId map[string]string, blockDefaultContent map[string]map[string]interface{}, warnings *[]ImportWarning) error {
 	configPath := fmt.Sprintf("page-types/%s/config.yaml", ptFolder)
 	layoutPath := fmt.Sprintf("page-types/%s/layout.yaml", ptFolder)
@@ -2955,116 +3206,9 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 		return err
 	}
 
-	// Import page type fields. Always run, even when ptFields is empty,
-	// so removing all fields from the YAML actually clears the DB.
-	{
-		fieldsColl, err := app.FindCollectionByNameOrId("page_type_fields")
-		if err != nil {
-			return err
-		}
-
-		existingFields, _ := app.FindRecordsByFilter("page_type_fields", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
-		existingByKey := make(map[string]*core.Record)
-		for _, f := range existingFields {
-			existingByKey[f.GetString("key")] = f
-		}
-
-		// Track which existing field records this import re-used. Anything
-		// not matched by the end is a field the user removed from the YAML.
-		matchedFieldIds := make(map[string]bool)
-
-		// Track field key -> record for parent resolution, and fields with parents
-		fieldKeyToRecord := make(map[string]*core.Record)
-		fieldsWithParent := make([]struct {
-			field     *core.Record
-			parentKey string
-		}, 0)
-
-		// First pass: Create/update all fields without parent relationships
-		for i, fieldEntry := range ptFields {
-			fieldData, ok := fieldEntry.(map[string]interface{})
-			if !ok {
-				continue
-			}
-			fieldKey := getString(fieldData, "name")
-			if fieldKey == "" {
-				continue
-			}
-
-			var field *core.Record
-			if existing, ok := existingByKey[fieldKey]; ok {
-				field = existing
-			} else {
-				field = core.NewRecord(fieldsColl)
-				field.Set("page_type", pageType.Id)
-			}
-
-			field.Set("key", fieldKey)
-			field.Set("label", getString(fieldData, "label"))
-			ptFieldType := getString(fieldData, "type")
-			field.Set("type", ptFieldType)
-			field.Set("index", i)
-
-			// Read config (preferred) or options (backwards compatibility)
-			ptFieldConfig, hasPtFieldConfig := fieldData["config"]
-			if !hasPtFieldConfig {
-				ptFieldConfig, hasPtFieldConfig = fieldData["options"]
-			}
-			if hasPtFieldConfig && ptFieldConfig != nil {
-				// For page-list and page types, convert page_type name to page_type ID
-				if ptFieldType == "page-list" || ptFieldType == "page" {
-					if configMap, ok := ptFieldConfig.(map[string]interface{}); ok {
-						if ptName, ok := configMap["page_type"].(string); ok && ptName != "" {
-							if ptId, found := pageTypeNameToId[ptName]; found {
-								configMap["page_type"] = ptId
-							}
-						}
-					}
-				}
-				field.Set("config", ptFieldConfig)
-			}
-
-			if err := app.Save(field); err != nil {
-				return err
-			}
-			matchedFieldIds[field.Id] = true
-
-			fieldKeyToRecord[fieldKey] = field
-
-			// Track fields that have a parent for second pass
-			if parentKey := getString(fieldData, "parent"); parentKey != "" {
-				fieldsWithParent = append(fieldsWithParent, struct {
-					field     *core.Record
-					parentKey string
-				}{field, parentKey})
-			}
-		}
-
-		// Second pass: Set parent relationships
-		for _, fp := range fieldsWithParent {
-			if parentRecord, ok := fieldKeyToRecord[fp.parentKey]; ok {
-				fp.field.Set("parent", parentRecord.Id)
-				if err := app.Save(fp.field); err != nil {
-					return err
-				}
-			}
-		}
-
-		// Delete fields the user removed from page-type config.yaml.
-		// Cascade rules on page_type_fields.parent and the entry tables
-		// handle subfield + content cleanup; tolerate already-cascaded
-		// records.
-		for _, existing := range existingFields {
-			if matchedFieldIds[existing.Id] {
-				continue
-			}
-			if err := app.Delete(existing); err != nil {
-				if _, notFound := app.FindRecordById("page_type_fields", existing.Id); notFound != nil {
-					continue
-				}
-				return err
-			}
-		}
+	// The second pass also removes definitions absent from the imported schema.
+	if _, err := importPageTypeFields(app, pageType, ptFields, pageTypeNameToId, true); err != nil {
+		return err
 	}
 
 	// Import page_type_symbols (allowed blocks on this page type).
@@ -3083,20 +3227,7 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 
 	// Get all symbols for this site
 	symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-	symbolByName := make(map[string]string)
-	for _, s := range symbols {
-		name := s.GetString("name")
-		symbolByName[name] = s.Id
-		symbolByName[strings.ToLower(name)] = s.Id
-		symbolByName[sanitizeFilename(name)] = s.Id
-	}
-	// Also map folder names to symbol IDs
-	for folderName, displayName := range folderToDisplayName {
-		if symbolId := symbolByName[displayName]; symbolId != "" {
-			symbolByName[folderName] = symbolId
-			symbolByName[strings.ToLower(folderName)] = symbolId
-		}
-	}
+	symbolByName := importSymbolLookup(symbols, folderToDisplayName)
 
 	// Get existing page_type_symbols
 	existingPtSymbols, _ := app.FindRecordsByFilter("page_type_symbols", "page_type = {:pt}", "", 0, 0, dbx.Params{"pt": pageType.Id})
@@ -3169,23 +3300,11 @@ func importPageType(app core.App, site *core.Record, ptFolder string, ptData Exp
 
 		// Get all symbols for this site
 		symbols, _ := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": site.Id})
-		symbolByName := make(map[string]string)
-		symbolFields := make(map[string][]*core.Record) // symbolId -> fields
-		for _, s := range symbols {
-			name := s.GetString("name")
-			symbolByName[name] = s.Id
-			symbolByName[strings.ToLower(name)] = s.Id
-			symbolByName[sanitizeFilename(name)] = s.Id
-			// Fetch fields for this symbol
-			fields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": s.Id})
-			symbolFields[s.Id] = fields
-		}
-		// Also map folder names to symbol IDs
-		for folderName, displayName := range folderToDisplayName {
-			if symbolId := symbolByName[displayName]; symbolId != "" {
-				symbolByName[folderName] = symbolId
-				symbolByName[strings.ToLower(folderName)] = symbolId
-			}
+		symbolByName := importSymbolLookup(symbols, folderToDisplayName)
+		symbolFields := make(map[string][]*core.Record)
+		for _, symbol := range symbols {
+			fields, _ := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "+index", 0, 0, dbx.Params{"symbol": symbol.Id})
+			symbolFields[symbol.Id] = fields
 		}
 
 		resolveLayoutContent := func(sectionData ExportedLayoutSection) map[string]interface{} {
@@ -3968,4 +4087,105 @@ func rewriteUploadRefs(value interface{}, refs map[string]string, validIDs map[s
 		}
 	}
 	return changed
+}
+
+// Detect opaque legacy values that must become real nested editor entries even
+// when the incoming source bytes have not changed.
+func hasLegacyNestedContent(entries, fields []*core.Record) bool {
+	byID := map[string]*core.Record{}
+	children := map[string]bool{}
+	entryChildren := map[string]bool{}
+	for _, field := range fields {
+		byID[field.Id] = field
+		children[field.GetString("parent")] = true
+	}
+	for _, entry := range entries {
+		entryChildren[entry.GetString("parent")] = true
+	}
+	for _, entry := range entries {
+		field := byID[entry.GetString("field")]
+		if field == nil || entryChildren[entry.Id] {
+			continue
+		}
+		if field.GetString("type") == "group" && children[field.Id] {
+			return true
+		}
+		if field.GetString("type") == "repeater" {
+			if _, ok := normalizeValue(entry.Get("value")).([]interface{}); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Warning-only traversal preserves diagnostics without replacing unchanged rows.
+func warnNestedSectionContent(field *core.Record, value interface{}, children map[string][]*core.Record, warnings *[]ImportWarning, file, block, prefix string) {
+	if warnings == nil {
+		return
+	}
+	visit := func(values map[string]interface{}, path string) {
+		if len(values) > 0 && len(children[field.Id]) == 0 {
+			*warnings = append(*warnings, ImportWarning{Kind: "missing_subfields", File: file, Path: path, Field: field.GetString("key"), Block: block, Message: fmt.Sprintf("%s: %q in block %q has content but no declared subfields; fix blocks/%s/fields.yaml", file, path, block, sanitizeFilename(block))})
+		} else {
+			before := len(*warnings)
+			warnUnknownPageContent(values, children[field.Id], warnings, file, path)
+			for i := before; i < len(*warnings); i++ {
+				(*warnings)[i].Block = block
+			}
+		}
+		for _, child := range children[field.Id] {
+			key := child.GetString("key")
+			warnNestedSectionContent(child, values[key], children, warnings, file, block, path+"."+key)
+		}
+	}
+	switch field.GetString("type") {
+	case "group":
+		if values, ok := value.(map[string]interface{}); ok {
+			visit(values, prefix)
+		}
+	case "repeater":
+		if items, ok := value.([]interface{}); ok {
+			for i, item := range items {
+				if values, ok := item.(map[string]interface{}); ok {
+					visit(values, fmt.Sprintf("%s[%d]", prefix, i))
+				}
+			}
+		}
+	}
+}
+
+func warnUnchangedPageSections(app core.App, siteID string, page ExportedPage, route string, folders map[string]string, warnings *[]ImportWarning) error {
+	if warnings == nil || len(page.Sections) == 0 {
+		return nil
+	}
+	symbols, err := app.FindRecordsByFilter("site_symbols", "site = {:site}", "", 0, 0, dbx.Params{"site": siteID})
+	if err != nil {
+		return err
+	}
+	lookup := importSymbolLookup(symbols, folders)
+	if route == "" {
+		route = "index"
+	}
+	file := "pages/" + route + ".yaml"
+	for index, section := range page.Sections {
+		block := getString(section, "block")
+		id := lookup[block]
+		if id == "" {
+			id = lookup[strings.ToLower(block)]
+		}
+		fields, err := app.FindRecordsByFilter("site_symbol_fields", "symbol = {:symbol}", "", 0, 0, dbx.Params{"symbol": id})
+		if err != nil {
+			return err
+		}
+		roots, children := contentFieldScopes(fields)
+		if content, ok := section["content"].(map[string]interface{}); ok {
+			for key, value := range content {
+				if field := roots[key]; field != nil {
+					warnNestedSectionContent(field, value, children, warnings, file, block, fmt.Sprintf("sections[%d].content.%s", index, key))
+				}
+			}
+		}
+	}
+	return nil
 }

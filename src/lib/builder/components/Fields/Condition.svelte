@@ -42,7 +42,7 @@
 			}}
 			value={condition?.field}
 			options={comparable_fields.map((f) => ({
-				icon: $fieldTypes.find((t) => t.id === f.type).icon,
+				icon: $fieldTypes.find((t) => t.id === f.type)?.icon ?? 'ph:text-t',
 				label: f.label,
 				value: f.id,
 				disabled: f.config?.condition
