@@ -117,6 +117,10 @@ func setup(pb *pocketbase.PocketBase) error {
 		return err
 	}
 
+	if err := internal.RegisterLiveSiteEndpoints(pb); err != nil {
+		return err
+	}
+
 	if err := internal.RegisterSiteLimit(pb); err != nil {
 		return err
 	}

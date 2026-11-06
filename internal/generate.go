@@ -244,8 +244,7 @@ type sitemap struct {
 }
 
 func generateSitemap(system *filesystem.System, site *core.Record, pages []*core.Record, prefix string) (string, error) {
-	host := site.GetString("host")
-	baseURL := "https://" + host
+	baseURL := siteBaseURL(site)
 
 	var urls []sitemapURL
 

@@ -315,6 +315,64 @@
 	// the self-rescheduling poll on destroy so it can't leak forever.
 	onDestroy(stop_poll)
 
+	// Live site hosted elsewhere (internal/live_site.go). Loaded per opening;
+	// the section stays hidden for callers the server refuses (non-developers).
+	let live_available = $state(false)
+	let live_url = $state('')
+	let live_saved_url = $state('')
+	let live_dirty = $state(false)
+	let live_saving = $state(false)
+	let live_error = $state('')
+	const live_changed = $derived(live_url.trim() !== live_saved_url)
+
+	function live_endpoint(site_id: string) {
+		return `${self.instance?.baseURL}/api/primo/sites/${site_id}/live-site`
+	}
+
+	function apply_live_site(data: { live_url?: string }) {
+		live_saved_url = data.live_url || ''
+		if (!untrack(() => live_dirty)) live_url = live_saved_url
+	}
+
+	$effect(() => {
+		if (!open || !site?.id) return
+		const site_id = site.id
+		untrack(async () => {
+			try {
+				const response = await fetch(live_endpoint(site_id), { headers: auth_headers() })
+				live_available = response.ok
+				if (response.ok) apply_live_site(await response.json())
+			} catch {
+				live_available = false
+			}
+		})
+	})
+
+	async function save_live_site(event: SubmitEvent) {
+		event.preventDefault()
+		if (!site || live_saving) return
+		live_error = ''
+		live_saving = true
+		try {
+			const response = await fetch(live_endpoint(site.id), {
+				method: 'POST',
+				headers: auth_headers(true),
+				body: JSON.stringify({ live_url: live_url.trim() })
+			})
+			const data = await response.json().catch(() => ({}))
+			if (!response.ok) {
+				live_error = data.message || `Failed to save (${response.status})`
+				return
+			}
+			live_dirty = false
+			apply_live_site(data)
+		} catch (err) {
+			live_error = err instanceof Error ? err.message : 'Failed to save'
+		} finally {
+			live_saving = false
+		}
+	}
+
 	async function copy_dns(value: string) {
 		try {
 			await navigator.clipboard.writeText(value)
@@ -346,6 +404,8 @@
 		if (!is_open) {
 			stop_poll()
 			changing = false
+			live_dirty = false
+			live_error = ''
 		}
 	}}
 >
@@ -362,7 +422,7 @@
 				Enter the domain you want this site served at. We'll show you the DNS records to add at your registrar.
 			{/if}
 		</p>
-		<form onsubmit={handle_connect} class="min-w-0">
+		<form id="connect-domain-form" onsubmit={handle_connect} class="min-w-0">
 			{#if show_input}
 				<Input bind:value={new_site_host} oninput={() => (dirty = true)} placeholder="example.com" class="mt-4" autocomplete="off" spellcheck={false} />
 			{:else}
@@ -447,40 +507,58 @@
 					</div>
 				{/if}
 			{/if}
-
-			<Dialog.Footer class="mt-4">
-				{#if changing && on_attached_host}
-					<!-- Revealed the input to change the domain but haven't typed a
-					new one yet: let the user back out to the live view. -->
-					<button
-						type="button"
-						class="pub-btn"
-						onclick={() => {
-							changing = false
-							dirty = false
-							new_site_host = attached_host
-						}}
-					>
-						Cancel
-					</button>
-				{:else}
-					<button type="button" class:primary={live} class="pub-btn" onclick={() => (open = false)}>
-						{show_records || live || manual_external ? 'Done' : 'Cancel'}
-					</button>
-				{/if}
-				{#if manual_external}
-					<button type="button" class="pub-btn primary" disabled={connecting} onclick={mark_live}>
-						{connecting ? 'Saving…' : 'Mark as connected'}
-					</button>
-				{:else if awaiting}
-					<button type="button" class="pub-btn" disabled={connecting} onclick={refresh_status}>
-						{connecting ? 'Checking…' : 'Refresh status'}
-					</button>
-				{:else if !live}
-					<button type="submit" class="pub-btn primary" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</button>
-				{/if}
-			</Dialog.Footer>
 		</form>
+
+		{#if live_available}
+			<form onsubmit={save_live_site} class="min-w-0 mt-6 pt-5 border-t border-[#343437]">
+				<h3 class="text-[13px] font-medium text-[#f4f4f5]">Live site hosted elsewhere</h3>
+				<p class="text-[12px] leading-[1.6] text-[#a9a9b2] mt-1">
+					If the published site is served from somewhere else (GitHub Pages, Netlify, your own server), enter its address. The sitemap uses it from the next publish on,
+					and this copy is hidden from search engines.
+				</p>
+				<label for="live-site-url" class="block text-xs text-muted-foreground mt-3">Live URL</label>
+				<Input id="live-site-url" bind:value={live_url} oninput={() => (live_dirty = true)} placeholder="https://example.com" class="mt-1" autocomplete="off" spellcheck={false} />
+				{#if live_error}
+					<p class="text-red-500 text-sm mt-2">{live_error}</p>
+				{/if}
+				<div class="mt-3 flex justify-end">
+					<button type="submit" class="pub-btn" disabled={live_saving || !live_changed}>{live_saving ? 'Saving…' : 'Save'}</button>
+				</div>
+			</form>
+		{/if}
+
+		<Dialog.Footer class="mt-4">
+			{#if changing && on_attached_host}
+				<!-- Revealed the input to change the domain but haven't typed a
+				new one yet: let the user back out to the live view. -->
+				<button
+					type="button"
+					class="pub-btn"
+					onclick={() => {
+						changing = false
+						dirty = false
+						new_site_host = attached_host
+					}}
+				>
+					Cancel
+				</button>
+			{:else}
+				<button type="button" class:primary={live} class="pub-btn" onclick={() => (open = false)}>
+					{show_records || live || manual_external ? 'Done' : 'Cancel'}
+				</button>
+			{/if}
+			{#if manual_external}
+				<button type="button" class="pub-btn primary" disabled={connecting} onclick={mark_live}>
+					{connecting ? 'Saving…' : 'Mark as connected'}
+				</button>
+			{:else if awaiting}
+				<button type="button" class="pub-btn" disabled={connecting} onclick={refresh_status}>
+					{connecting ? 'Checking…' : 'Refresh status'}
+				</button>
+			{:else if !live}
+				<button type="submit" form="connect-domain-form" class="pub-btn primary" disabled={connecting}>{connecting ? 'Connecting…' : 'Connect'}</button>
+			{/if}
+		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
 
