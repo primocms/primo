@@ -310,6 +310,7 @@ func RegisterPublicationEndpoints(pb *pocketbase.PocketBase, event *core.ServeEv
 		}
 		return e.JSON(http.StatusOK, status)
 	})
+	registerPublicationArchiveEndpoint(pb, event)
 	event.Router.POST("/api/primo/publication/{siteId}", func(e *core.RequestEvent) error {
 		site, err := authorizePublication(pb, e)
 		if err != nil {
