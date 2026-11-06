@@ -46,7 +46,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  const options={cwd:ws.work,home:ws.home,timeout_ms:45000}
  const cli=(args,opts={})=>run_cli(args,{...options,...opts})
  const ok=async(args,opts)=>{const r=await cli(args,opts);assert.equal(r.code,0,r.output);return r}
- assert.equal((await ok(['--version'])).stdout.trim(),'0.3.0-rc.3');
+ assert.equal((await ok(['--version'])).stdout.trim(),'0.3.0');
  await ok(['init','--no-mcp']); console.log('PASS initialize actual built CLI workspace')
  const port=await select_dev_port({port:Number(process.env.RC_PORT || 48500),explicit:false})
  const server=`http://127.0.0.1:${port}`
@@ -55,7 +55,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  const site=path.join(ws.work,'sites/client')
  mcp=new Client({name:'founding-handoff-qa',version:'1.0.0'})
  const transport=new StdioClientTransport({command:process.execPath,args:[mcpEntry],cwd:ws.work,stderr:'pipe'})
- await mcp.connect(transport);assert.equal(mcp.getServerVersion().version,'0.1.11-rc.3')
+ await mcp.connect(transport);assert.equal(mcp.getServerVersion().version,'0.1.11')
  const call=async(name,args={})=>{const result=await mcp.callTool({name,arguments:args});assert.ok(!result.isError,JSON.stringify(result));return result.structuredContent??JSON.parse(result.content.find(c=>c.type==='text').text)}
  await call('list_docs');await call('get_docs',{section:'recommended-defaults'})
  for(const [name,args] of [['scaffold_block',{name:'banner',fields:[{name:'heading',type:'text'}]}],['scaffold_page_type',{name:'default',allowed_blocks:['banner'],fields:[{name:'seo_title',type:'text'},{name:'seo_description',type:'text'},{name:'og_image',type:'image'}]}]]) {
@@ -83,7 +83,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  for(let i=0;i<200;i++){try{const r=await fetch(`${server}/api/primo/dev-auth`,{method:'POST'});if(r.ok){auth=await r.json();break}}catch{}if(dev.exitCode!==null)break;await delay(100)}
  assert.ok(auth?.token,logs)
  const api=async(route,{method='GET',data,token=auth.token}={})=>{const r=await fetch(server+route,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});assert.ok(r.ok,`${method} ${route}: ${r.status} ${await r.clone().text()}`);return r.status===204?null:r.json()}
- assert.equal((await api('/api/primo/info')).version,'v3.3.2-rc.13');console.log('PASS exact CLI, MCP and CMS candidate versions verified at runtime')
+ assert.equal((await api('/api/primo/info')).version,'v3.3.2');console.log('PASS exact CLI, MCP and CMS candidate versions verified at runtime')
  let sites
  for(let i=0;i<100;i++){sites=await api('/api/collections/sites/records');if(sites.items.length)break;await delay(100)}
  const id=sites.items.find(s=>s.name.toLowerCase().includes('client'))?.id;assert.ok(id)
@@ -94,7 +94,7 @@ test('founding builder: init, file authoring, dev, conflicts, publish, client in
  const configuredMCP=new Client({name:'configured-candidate-qa',version:'1.0.0'})
  try {
   await configuredMCP.connect(new StdioClientTransport({command:process.execPath,args:registered.args,cwd:ws.work,stderr:'pipe'}))
-  assert.equal(configuredMCP.getServerVersion().version,'0.1.11-rc.3')
+  assert.equal(configuredMCP.getServerVersion().version,'0.1.11')
   const status=await configuredMCP.callTool({name:'get_dev_status',arguments:{site_path:site}})
   assert.ok(!status.isError,JSON.stringify(status))
  } finally { await configuredMCP.close() }

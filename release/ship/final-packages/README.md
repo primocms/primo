@@ -1,38 +1,31 @@
 # Prepared stable npm packages — unpublished
 
-These archives are prepared for MCP 0.1.11 and CLI 0.3.0. They contain the
-site-field, batched-upload and publishing-content fixes (MCP #33). Rich-text
-marks/links/heading levels and image dimensions now survive CLI publication.
-`manifest.json` records SHA-256 and npm
-integrity, plus the candidate archive each was derived from. Preparation
-checks that all shipped files except package metadata are byte-identical to
-the candidate archives. CLI declares the exact stable MCP dependency.
+Rebuilt November 5 from CLI `77ec9e389eecc72400e7465d5369d6cde2fa3552`
+and MCP `14d92557ee5387c7d7eab313b32e6b5632f48093`, including the remaining
+release-review fixes. `manifest.json` records the source commits, SHA-256,
+and npm integrity of these exact stable archives. Every shipped file except
+package metadata is verified byte-identical to a fresh pack of its source build.
+CLI declares the matching stable MCP dependency. Preparation uses temporary
+clean worktrees and fresh locked dependencies; stale ignored build output
+and untracked source cannot enter the archive.
 
-Reproduce from the current release inputs:
+Reproduce from clean checkouts with locked dependencies installed:
 
 ```sh
-python3 release/ship/prepare-final-packages.py --output /absolute/empty/output
+python3 release/ship/prepare-source-packages.py \
+  --cli-source /absolute/cli-checkout --mcp-source /absolute/mcp-checkout \
+  --output /absolute/empty/output
 ```
 
-The refreshed candidates pass real-CMS browser/Node rich-text serialization
-parity, image-dimension preservation, cache/failure protection and all 214 CLI
-tests on Node 22.13/24.0, including the 36 MiB/256 KiB proxy round-trip.
-These stable archives retain the candidate shipped files except package metadata.
-A fresh install of both exact stable archives passed real-CMS publication and
-site-field/error preservation on Node 22.13 and 24.0, plus the 36 MiB/256 KiB
-proxy contract on Node 22.13. Earlier stable archive/native results keep their
-original source identities; these checks do not qualify a new stable CMS binary.
-The registry did not contain these proposed versions when last checked.
-No publication was performed. Do not install only the CLI archive until its
-matching MCP version is available: public dependency resolution is a later gate.
+The previous stable archives and qualification are superseded. Local qualification
+of these exact installed bytes is recorded in `qualification-local.json`.
+The CLI bundles its patched ZIP dependency tree so plain consumer installs retain
+the source checkout's dependency fixes. A fresh consumer install reports zero
+audit findings. Full Chromium 156 is used locally; final-head CI supplies its own
+pinned-browser and cross-platform native qualification.
+Published RC.3 archives remain unchanged. No package, image, release or tag
+has been published, and registry handoff remains unverified.
 
-These are npm package artifacts, not final CMS native executables. Stable CMS
-3.3.2 still needs its stable onboarding version tuple, fresh native builds and
-qualification. Current candidate native CI verifies RC.13 with matching RC
-archives. Do not relabel an earlier binary as the stable executable.
-
-Publication remains held. After explicit authorization, publish the exact MCP
-archive first, refresh source registry locks to its verified integrity, qualify
-those final sources/native bytes, make compatible CMS available, and publish
-CLI last. Final registry fresh-install verification cannot be completed while
-publication is prohibited. Regenerate these archives and hashes if inputs change.
+Publication remains held. Install both exact local archives together for
+qualification; registry installation is a separate gate after explicit
+publication authorization. Never relabel an older CMS executable as stable.
