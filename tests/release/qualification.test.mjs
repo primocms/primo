@@ -1,22 +1,18 @@
 import assert from 'node:assert/strict'
-import fs from 'node:fs/promises'
 import test from 'node:test'
-import { load } from 'js-yaml'
+import { requireQualification } from '../../release/ship/qualification.mjs'
 
-const workflow = load(await fs.readFile(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8'))
-const script = workflow.jobs.candidate.steps.find((step) => step.id === 'qualified').with.script
-const qualify = new (Object.getPrototypeOf(async function () {}).constructor)('github', 'context', 'core', script)
 const source = 'a'.repeat(40)
 const passing = { id: 123, head_sha: source, event: 'pull_request', conclusion: 'success' }
 
 async function runQualification(runs = {}) {
-	const output = {}, queried = []
-	await qualify({ rest: { actions: { listWorkflowRuns: async ({ workflow_id, head_sha }) => {
+	const queried = []
+	const run = await requireQualification({ rest: { actions: { listWorkflowRuns: async ({ workflow_id, head_sha }) => {
 		assert.equal(head_sha, source)
 		queried.push(workflow_id)
 		return { data: { workflow_runs: runs[workflow_id] ?? [passing] } }
-	} } } }, { sha: source, repo: { owner: 'primocms', repo: 'primo' } }, { setOutput: (key, value) => { output[key] = value } })
-	return { output, queried }
+	} } } }, { sha: source, repo: { owner: 'primocms', repo: 'primo' } })
+	return { output: { run }, queried }
 }
 
 test('release requires every qualification suite at the tagged source', async () => {
