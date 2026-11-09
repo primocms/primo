@@ -209,7 +209,8 @@ func moveLegacyDomainFiles(pb *pocketbase.PocketBase, site *core.Record, oldHost
 		if file.IsDir {
 			continue
 		}
-		if strings.TrimPrefix(file.Key, oldPrefix) == "sitemap.xml" {
+		// A sitemap based on a live URL does not depend on the host.
+		if strings.TrimPrefix(file.Key, oldPrefix) == "sitemap.xml" && site.GetString("live_url") == "" {
 			reader, err := system.GetReader(file.Key)
 			if err != nil {
 				return err

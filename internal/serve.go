@@ -115,6 +115,10 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 			requestEvent.Response.Header().Set("Content-Security-Policy", policy)
 			requestEvent.Response.Header().Set("X-Content-Type-Options", "nosniff")
 			requestEvent.Response.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+			if site != nil && site.GetString("live_url") != "" {
+				// The live copy is hosted elsewhere; only that one should be indexed.
+				requestEvent.Response.Header().Set("X-Robots-Tag", "noindex, nofollow")
+			}
 			if staticPreview && serveSitePreview(pb, requestEvent, fs, site) {
 				return nil
 			}

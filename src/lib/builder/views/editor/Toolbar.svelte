@@ -126,6 +126,30 @@
 		}
 	}
 
+	// Hands the published build to the site's go-live webhook (internal/go_live.go).
+	let going_live = $state(false)
+	async function handle_go_live() {
+		if (going_live) return
+		going_live = true
+		try {
+			const token = self.instance?.authStore.token
+			const response = await fetch(`${self.instance?.baseURL}/api/primo/publication/${site.id}/go-live`, {
+				method: 'POST',
+				headers: token ? { Authorization: `Bearer ${token}` } : {}
+			})
+			const data = await response.json().catch(() => ({}))
+			if (response.ok) {
+				toast.success('Sent the published build to the live site.')
+			} else {
+				toast.error(data.message || `Going live failed (${response.status})`)
+			}
+		} catch (e) {
+			toast.error(e instanceof Error ? e.message : 'Going live failed')
+		} finally {
+			going_live = false
+		}
+	}
+
 	let going_up = $state(false)
 	let going_down = $state(false)
 
@@ -296,7 +320,12 @@
 	</Dialog.Content>
 </Dialog.Root>
 
-<ConnectDomain {site} bind:open={connect_domain_open} onconnected={(result) => self.update_record(site.id, { host: result.host, domain_status: result.status })} />
+<ConnectDomain
+	{site}
+	bind:open={connect_domain_open}
+	onconnected={(result) => self.update_record(site.id, { host: result.host, domain_status: result.status })}
+	onlivesite={(result) => self.update_record(site.id, { go_live_webhook_url: result.go_live_webhook_url })}
+/>
 
 <nav aria-label="toolbar" id="primo-toolbar">
 	<div class="menu-container">
@@ -442,6 +471,9 @@
 			PRIMO_DEV_MODE=1), so this reads "Preview" and opens the build-preview
 			dialog — the in-editor counterpart of `primo preview`. In CMS mode it
 			reads "Preview" in dev and "Publish" in production. -->
+			{#if !instance.dev_mode && site?.go_live_webhook_url}
+				<ToolbarButton icon="lucide:rocket" label="Go live" title="Send the published build to the live site." loading={going_live} on:click={handle_go_live} />
+			{/if}
 			<ToolbarButton
 				type="primo"
 				icon={instance.dev_mode ? 'lucide:eye' : 'entypo:publish'}

@@ -17,7 +17,10 @@ export const Site = z.object({
 	domain_status: z.string().optional(),
 	domain_dns_records: z.any().optional(),
 	domain_provider_id: z.string().optional(),
-	domain_error: z.string().optional()
+	domain_error: z.string().optional(),
+	// Go-live webhook of a site hosted elsewhere (internal/go_live.go). Its
+	// secret is a hidden field and never reaches the client.
+	go_live_webhook_url: z.string().optional()
 })
 
 export type Site = z.infer<typeof Site>
