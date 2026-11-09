@@ -67,7 +67,7 @@
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^3.5.1",
 		"primo-cli": "file:release/ship/final-packages/primo-cli-0.3.0.tgz",
-		"primo-mcp": "file:release/ship/final-packages/primo-mcp-0.1.11.tgz",
+		"primo-mcp": "0.1.11",
 		"promise-worker": "^2.0.1",
 		"prosemirror-schema-basic": "^1.2.4",
 		"runed": "0.38.0",
