@@ -43,6 +43,8 @@ jobs:
       - name: Check all TypeScript, JavaScript and Svelte sources
         run: npm run check
       - run: npm run test:integration
+      - name: Test release provenance and package gates
+        run: node --test tests/release/*.test.mjs
 
       # Browser builds are pinned to the @playwright/test version, so key the
       # cache on that rather than on the lockfile hash.

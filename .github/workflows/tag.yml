@@ -39,8 +39,11 @@ jobs:
         id: channel
         run: node release/ship/release-channel.mjs
 
-      - name: Retrieve and verify the published qualified RC executables
-        if: github.event.release.prerelease
+      - name: Require the coordinated public npm packages
+        if: ${{ !github.event.release.prerelease }}
+        run: node release/ship/verify-release-packages.mjs
+
+      - name: Retrieve and verify the published qualified executables
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
@@ -75,7 +78,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ github.event.release.prerelease && 'release/ship/Dockerfile.native' || 'Dockerfile' }}
+          file: release/ship/Dockerfile.native
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.channel.outputs.tags }}

@@ -1,13 +1,17 @@
 package internal
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
@@ -76,6 +80,7 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				}
 			}
 			prefix := "sites/" + reqHost
+			trackedPublication := false
 			if site != nil {
 				publication, err := publicationRecord(pb, site.Id)
 				if err != nil {
@@ -83,6 +88,7 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				}
 				if active := publication.GetString("prefix"); active != "" {
 					prefix = active
+					trackedPublication = true
 				}
 			}
 			reqPath := requestEvent.Request.PathValue("path")
@@ -162,6 +168,25 @@ func ServeSites(pb *pocketbase.PocketBase) error {
 				requestEvent.Response.Header().Set("Cache-Control", "no-store")
 			} else {
 				requestEvent.Response.Header().Set("Cache-Control", "no-cache")
+			}
+
+			// Immutable publications retain their original sitemap. Resolve its
+			// host at serving time so domain moves don't publish pending drafts
+			// or mutate the qualified publication's files. Hash the response for
+			// revalidation: the file's mtime does not change when the host does.
+			if trackedPublication && reqPath == "sitemap.xml" {
+				content, err := io.ReadAll(reader)
+				if err != nil {
+					return err
+				}
+				content, err = rewriteSitemapHost(content, site.GetString("host"))
+				if err != nil {
+					return err
+				}
+				requestEvent.Response.Header().Set("Content-Type", "application/xml; charset=utf-8")
+				requestEvent.Response.Header().Set("ETag", fmt.Sprintf(`"%x"`, sha256.Sum256(content)))
+				http.ServeContent(requestEvent.Response, requestEvent.Request, fileName, time.Time{}, bytes.NewReader(content))
+				return nil
 			}
 
 			// In dev mode, inject the dev indicator into HTML files

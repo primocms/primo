@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pocketbase/pocketbase/core"
+	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -39,6 +40,32 @@ func TestDomainAttachPreservesPublication(t *testing.T) {
 			}
 			before, _ := publicationRecord(app, site.Id)
 			oldPrefix, oldRevision := before.GetString("prefix"), before.GetString("published_revision")
+			readSitemap := func() string {
+				t.Helper()
+				system, err := app.NewFilesystem()
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer system.Close()
+				reader, err := system.GetReader(oldPrefix + "/sitemap.xml")
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer reader.Close()
+				data, err := io.ReadAll(reader)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return string(data)
+			}
+			var storedSitemap string
+			var previousETag string
+			if mode == "tracked" {
+				storedSitemap = readSitemap()
+				response := httptest.NewRecorder()
+				handler.ServeHTTP(response, httptest.NewRequest("GET", "https://"+oldHost+"/sitemap.xml", nil))
+				previousETag = response.Header().Get("ETag")
+			}
 			entry.Set("value", "Unpublished draft")
 			if err := app.Save(entry); err != nil {
 				t.Fatal(err)
@@ -63,6 +90,28 @@ func TestDomainAttachPreservesPublication(t *testing.T) {
 				}
 				if response.Header().Get("X-Primo-Site") != site.Id {
 					t.Fatal("missing site routing identity")
+				}
+				request := httptest.NewRequest("GET", "https://"+host+"/sitemap.xml", nil)
+				request.Header.Set("If-None-Match", previousETag)
+				sitemapResponse := httptest.NewRecorder()
+				handler.ServeHTTP(sitemapResponse, request)
+				if sitemapResponse.Code != 200 || !strings.Contains(sitemapResponse.Body.String(), "https://"+host+"/") || strings.Contains(sitemapResponse.Body.String(), oldHost) {
+					t.Fatalf("domain move left stale sitemap: %d %s", sitemapResponse.Code, sitemapResponse.Body.String())
+				}
+				if mode == "tracked" {
+					if readSitemap() != storedSitemap {
+						t.Fatal("domain move mutated immutable publication")
+					}
+					etag := sitemapResponse.Header().Get("ETag")
+					if etag == "" || etag == previousETag {
+						t.Fatal("sitemap validator did not change with host")
+					}
+					request.Header.Set("If-None-Match", etag)
+					cached := httptest.NewRecorder()
+					handler.ServeHTTP(cached, request)
+					if cached.Code != 304 {
+						t.Fatalf("unchanged sitemap did not revalidate: %d", cached.Code)
+					}
 				}
 			}
 			after, _ := publicationRecord(app, site.Id)

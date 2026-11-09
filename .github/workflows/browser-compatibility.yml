@@ -1,5 +1,6 @@
 name: Browser compatibility regressions
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '.github/workflows/browser-compatibility.yml'
@@ -32,13 +33,13 @@ jobs:
         browser: [chromium, firefox, webkit]
     env:
       PRIMO_TEST_BROWSER: ${{ matrix.browser }}
-      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+      PRIMO_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       PLAYWRIGHT_JSON_OUTPUT_FILE: browser-results.json
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22.17.0

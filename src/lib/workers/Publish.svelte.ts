@@ -273,6 +273,7 @@ export const usePublishSite = (site_id?: string) => {
 								return [
 									{
 										filename: `symbol-${symbol.id}.svelte`,
+										idPrefix: `section-${section.id}`,
 										html,
 										js,
 										css,

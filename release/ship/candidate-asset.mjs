@@ -25,7 +25,7 @@ export async function verifyPublishedCandidateAsset(input, { repository, readRun
 	const runID = String(input.report.qualificationRun || '')
 	if (!/^[1-9]\d*$/.test(runID)) throw new Error('Qualification run is required')
 	const run = readRun ? await readRun(runID) : JSON.parse((await exec('gh', ['api', `repos/${repository}/actions/runs/${runID}`])).stdout)
-	if (String(run.id) !== runID || run.head_sha !== input.source || run.conclusion !== 'success' || run.event !== 'pull_request' ||
+	if (String(run.id) !== runID || run.head_sha !== input.source || run.conclusion !== 'success' || !['pull_request', 'workflow_dispatch'].includes(run.event) ||
 		run.path !== '.github/workflows/rc-platform.yml' || run.repository?.full_name !== repository) throw new Error('Untrusted qualification run')
 	const digest = verifyCandidateAsset(input)
 	let temporary
