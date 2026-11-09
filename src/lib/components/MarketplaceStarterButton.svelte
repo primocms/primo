@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './catalog-cards.css'
-	import SitePreview from '$lib/components/SitePreview.svelte'
+	import MarketplaceSitePreview from '$lib/components/MarketplaceSitePreview.svelte'
 	import { ExternalLink } from 'lucide-svelte'
 	import type { Site } from '$lib/common/models/Site'
 	import { marketplace_site_url } from '$lib/site_host'
@@ -11,7 +11,7 @@
 
 <a class="catalog-card starter-card" href={marketplace_site_url(site)} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${site.name} (opens in a new tab)`}>
 	<div class="catalog-preview">
-		<SitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" src={marketplace_site_url(site)} />
+		<MarketplaceSitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" />
 	</div>
 	<div class="starter-details">
 		<div class="starter-heading">

@@ -4,13 +4,15 @@
 	import { onDestroy, tick } from 'svelte'
 	import { createResizeTask } from '$lib/resize_task.js'
 
-	let { site, style, src }: { site?: Site; style?: string; src?: string } = $props()
+	let { site, style, src, preview_document, snapshot = false, placeholder }: {
+		site?: Site; style?: string; src?: string; preview_document?: string; snapshot?: boolean; placeholder?: string
+	} = $props()
 
 	// Dashboard thumbnails use the stored homepage preview, with scripts
 	// blocked by the server so hydration can't change its markup or styles.
 	// Keep the site ID in the URL so relative assets resolve to this site.
 	// The preview filename changes after publishing and reloads the iframe.
-	// Explicit src URLs (marketplace, starters) still load their live previews.
+	// Marketplace snapshots use an opaque-origin, script-free srcdoc instead.
 	const preview_token = $derived(typeof site?.preview === 'string' ? site.preview : '')
 	const iframe_src = $derived(src ?? `/?_site=${site?.id}&_preview=1${preview_token ? `&v=${encodeURIComponent(preview_token)}` : ''}`)
 
@@ -58,7 +60,7 @@
 
 <div class="iframe-root bg-gray-900" {style}>
 	<div bind:this={container} class="iframe-container">
-		{#if site && (src || site.preview)}
+		{#if site && (snapshot ? preview_document !== undefined : src || site.preview)}
 			<iframe
 				tabindex="-1"
 				bind:this={iframe}
@@ -67,14 +69,18 @@
 				style:height={iframeHeight}
 				class:fadein={iframeLoaded}
 				title="site preview"
-				src={iframe_src}
+				src={snapshot ? undefined : iframe_src}
+				srcdoc={snapshot ? preview_document : undefined}
+				sandbox={snapshot ? '' : undefined}
+				referrerpolicy={snapshot ? 'no-referrer' : undefined}
 				onload={async () => {
 					await init_preview()
 				}}
 			></iframe>
 		{:else}
-			<div class="h-full flex justify-center items-center">
+			<div class="h-full flex flex-col gap-3 justify-center items-center text-white">
 				<Globe color="white" size="5rem" />
+				{#if placeholder}<span role="status">{placeholder}</span>{/if}
 			</div>
 		{/if}
 	</div>

@@ -4,6 +4,7 @@
 	import './wizard.css'
 	import { Loader, Globe, Store, Check, SquarePen, Cuboid, ExternalLink, Upload, X, ChevronLeft } from 'lucide-svelte'
 	import SitePreview from '$lib/components/SitePreview.svelte'
+	import MarketplaceSitePreview from '$lib/components/MarketplaceSitePreview.svelte'
 	import * as Tabs from '$lib/components/ui/tabs'
 	import { Input } from '$lib/components/ui/input/index.js'
 	import { Label } from '$lib/components/ui/label/index.js'
@@ -468,7 +469,11 @@
 							{@const preview_url = selected_starter_source === 'marketplace' ? marketplace_site_url(selected_starter_site) : `/?_site=${selected_starter_site?.id}`}
 							<div class="wizard-preview-frame">
 								{#key selected_starter_id}
-									<SitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} src={selected_starter_site ? preview_url : ''} />
+									{#if selected_starter_source === 'marketplace'}
+										<MarketplaceSitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} />
+									{:else}
+										<SitePreview style="height: 100%; --thumbnail-height: 124%" site={selected_starter_site} src={preview_url} />
+									{/if}
 								{/key}
 							</div>
 							{#if preview_url}
@@ -607,7 +612,11 @@
 {#snippet StarterButton(site: Site, source: 'local' | 'marketplace' = 'local')}
 	<button onclick={() => select_starter(site.id, source)} class="catalog-card wizard-starter-card" type="button" aria-pressed={selected_starter_id === site.id}>
 		<span class="catalog-preview">
-			<SitePreview {site} src={source === 'marketplace' ? marketplace_site_url(site) : undefined} style="--thumbnail-height: 100%; background: #27272b;" />
+			{#if source === 'marketplace'}
+				<MarketplaceSitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" />
+			{:else}
+				<SitePreview {site} style="--thumbnail-height: 100%; background: #27272b;" />
+			{/if}
 		</span>
 		<span class="catalog-footer">
 			<span class="catalog-identity">
