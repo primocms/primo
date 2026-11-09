@@ -1,5 +1,6 @@
 name: Staging preparation regressions
 on:
+  workflow_dispatch:
   pull_request:
 permissions:
   contents: read
@@ -18,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}

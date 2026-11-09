@@ -162,6 +162,53 @@ for (const reversed of [false, true]) {
 }
 
 
+test('repeated blocks keep distinct generated IDs across section groups and hydration', async () => {
+	const f = await fixture()
+	const browser = await chromium.launch({ headless: true })
+	try {
+		const block = {
+			filename: 'symbol-form.svelte',
+			html: '<label for={uid}>Name</label><input id={uid} /><button onclick={() => count++}>{count}</button>',
+			js: 'const uid = $props.id(); let count = $state(0);', css: '', data: {}
+		}
+		let body = ''
+		// Header, body and footer are separate calls to the publisher. Include
+		// two copies in each group and roots without an explicit prefix too.
+		for (let group = 0; group < 3; group++) {
+			const sections = [0, 1].map((index) => {
+				const id = group * 2 + index
+				return { ...block, idPrefix: group === 2 ? undefined : `section-${id}`, wrapper_start: `<div id="section-${id}">`, wrapper_end: '</div>' }
+			})
+			const result = await f.html({ component: sections, independent: true })
+			assert.equal(result.error, undefined)
+			body += result.body
+		}
+		const client = await f.html({ component: block, buildStatic: false, runtime: ['hydrate'] })
+		assert.equal(client.error, undefined)
+		const page = await browser.newPage()
+		const errors = []
+		page.on('pageerror', (error) => errors.push(error.message))
+		page.on('console', (message) => { if (/hydrat|Failed/.test(message.text())) errors.push(message.text()) })
+		await page.setContent(`<html><body>${body}</body></html>`)
+		const before = await page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.id))
+		assert.equal(new Set(before).size, 6, 'each section instance needs a unique generated ID')
+		await page.evaluate(async (js) => {
+			window.originalInputs = [...document.querySelectorAll('input')]
+			const module = await import(URL.createObjectURL(new Blob([js], { type: 'text/javascript' })))
+			for (const target of [...document.querySelectorAll('div[id^="section-"]')].reverse()) module.hydrate(module.default, { target, props: {} })
+		}, client.js)
+		assert.deepEqual(await page.locator('input').evaluateAll((inputs) => inputs.map((input) => input.id)), before)
+		assert.equal(await page.evaluate(() => window.originalInputs.every((input) => input.isConnected)), true)
+		assert.equal(await page.locator('label').evaluateAll((labels) => labels.every((label) => label.control === label.nextElementSibling)), true)
+		await page.locator('#section-4 button').click()
+		assert.equal(await page.locator('#section-4 button').textContent(), '1')
+		assert.deepEqual(errors, [])
+	} finally {
+		await browser.close()
+		await f.cleanup()
+	}
+})
+
 test('imported components retain their own compiler identity', async () => {
 	const dependency = 'https://components.example.test/Child.svelte'
 	const f = await fixture({ transformSources: [{ id: dependency, source: '<h2>Child</h2><style>h2 { color: blue }</style>' }] })

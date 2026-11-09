@@ -1,5 +1,9 @@
 # Stable preparation — publication held
 
+For the current review fixes, compatibility notes, and exact-commit release
+procedure, see [RELEASE_3.3.2.md](RELEASE_3.3.2.md). The qualification
+records below are historical and do not qualify those fixes.
+
 This branch prepares the stable CMS 3.3.2 version tuple and consumes the exact
 unpublished MCP 0.1.11 / CLI 0.3.0 archives in final-packages/. Product onboarding,
 native build identity and active qualification expectations use those stable

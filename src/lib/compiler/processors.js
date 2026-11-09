@@ -15,6 +15,7 @@ const compile = createCompilerClient(() => {
 })
 
 const COMPILED_COMPONENTS_CACHE = new Map()
+let render_sequence = 0
 
 /**
  * Compiles and renders a given component or page, caching the result.
@@ -27,11 +28,12 @@ const COMPILED_COMPONENTS_CACHE = new Map()
  * @param {import('@rollup/browser').ModuleFormat} [options.format='esm'] - The module format to use, such as 'esm' for ES Modules.
  * @param {boolean} [options.dev_mode=false] - Whether Svelte should be compiled in dev mode (i.e. attaches LOC for inspecting) or not
  * @param {boolean} [options.independent=false]
+ * @param {string} [options.idPrefix] - Unique SSR root identity for Svelte-generated IDs.
  * @param {string[]} [options.runtime=[]] - Svelte runtime functions to include in bundle (eg. mount, unmount, hydrate).
  * @returns {Promise<Object>} Returns a payload containing the rendered HTML, CSS, JS, and other relevant data.
  * @throws {Error} Throws an error if the compilation or rendering fails.
  */
-export async function html({ component, head = { code: '', data: {} }, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [], independent = false }) {
+export async function html({ component, head = { code: '', data: {} }, buildStatic = true, css = 'external', format = 'esm', dev_mode = false, runtime = [], independent = false, idPrefix = `primo-${render_sequence++}` }) {
 	// Published sections are hydrated individually, so each must also be a
 	// separate SSR root. Render the page head once outside those roots.
 	if (buildStatic && independent && Array.isArray(component)) {
@@ -41,7 +43,7 @@ export async function html({ component, head = { code: '', data: {} }, buildStat
 		let body = ''
 		let rendered_head = page_head.head || ''
 		for (const section of component) {
-			const rendered = await html({ ...options, component: section })
+			const rendered = await html({ ...options, component: section, idPrefix: section.idPrefix })
 			if (rendered.error) return rendered
 			body += (section.wrapper_start || '') + (rendered.body || '') + (section.wrapper_end || '')
 			rendered_head += rendered.head || ''
@@ -121,7 +123,7 @@ export async function html({ component, head = { code: '', data: {} }, buildStat
 		}
 
 		try {
-			const rendered = render(App, { props: component_data })
+			const rendered = render(App, { props: component_data, idPrefix })
 			payload = {
 				head: rendered.head,
 				body: rendered.body,
